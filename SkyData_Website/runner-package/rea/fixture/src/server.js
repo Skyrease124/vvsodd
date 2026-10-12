@@ -1,0 +1,10 @@
+const fs = require('fs');
+fs.writeFileSync(__dirname + '/EXECUTED.txt', 'server.js was executed');
+const express = require('express');
+const users = require('./routes/users');
+const { priceOf } = require('./lib/pricing');
+const app = express();
+app.get('/health', (req, res) => res.send('ok'));
+app.use('/api/users', users);
+app.post('/api/orders', (req, res) => res.json({ total: priceOf(req.body) }));
+app.listen(3000);
