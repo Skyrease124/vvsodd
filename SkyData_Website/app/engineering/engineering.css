@@ -15,3 +15,21 @@
 .runner-file-list { max-height: 300px; overflow: auto; border: 1px solid #35425a; border-radius: 12px; padding: 12px; }
 .runner-file-list label { display: flex; align-items: center; gap: 12px; padding: 6px 0; overflow-wrap: anywhere; }
 .engineering-page input[type=file] { display: block; max-width: 100%; margin: 10px 0 18px; }
+
+/* Project files, proposals and diffs (same palette as the rest of Engineering Mode) */
+.project-files,.proposal-review{border-top:1px solid #344058;margin-top:20px;padding-top:16px;min-width:0;overflow-wrap:anywhere}
+.project-files input[type=search],.project-files input:not([type]),.proposal-review input:not([type]){display:block;width:100%;max-width:100%;box-sizing:border-box;margin-top:8px;background:#141e2e;color:#eef4fc;border:1px solid #344058;border-radius:10px;padding:12px;font:inherit}
+.project-files-tools{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}.project-files-tools>label{flex:1 1 220px;min-width:0}.project-files-tools .engineering-actions{flex:1 1 180px;margin:0}
+.project-file-table{max-height:360px;overflow:auto;border:1px solid #35425a;border-radius:12px;padding:8px 12px}
+.project-file-row{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;padding:6px 0;border-bottom:1px solid #1d2a3d}.project-file-row.active{background:#17243a}
+.project-file-row .file-meta{grid-column:2;font-size:.85em;color:#93a4bd}
+.link-button{background:none;border:0;padding:0;color:#9bdfff;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;overflow-wrap:anywhere}.link-button:disabled{color:#6f7f96;cursor:default}
+.kind-binary,.kind-too_large,.kind-unsupported,.kind-unsafe,.kind-duplicate{color:#ffcf8a}
+.project-search ul{max-height:240px;overflow:auto;padding-left:18px}.project-search code{color:#bbcadf}
+.code-view{white-space:pre;overflow:auto;font-size:.85em;max-height:520px}
+.diff-lines{white-space:pre;overflow:auto;font-size:.85em;max-height:560px}.diff-lines span{display:block}
+.diff-add{background:#12391f;color:#c9f5d4}.diff-del{background:#43181c;color:#ffd0d4}.diff-skip{color:#7f90a8}
+.proposal-file{border:1px solid #344058;border-radius:12px;padding:12px;margin:14px 0}.proposal-file.decision-approved{border-color:#3d8f5c}.proposal-file.decision-rejected{border-color:#8f3d47}
+.proposal-file h4{margin:0 0 8px}.proposal-source ul{padding-left:18px}
+.runner-history{width:100%;border-collapse:collapse;font-size:.9em}.runner-history td,.runner-history th{border-bottom:1px solid #1d2a3d;padding:6px;text-align:left;vertical-align:top}
+.runner-phase-bad{color:#ffb4bb}.runner-phase-ok{color:#b9f0c8}
