@@ -1,4 +1,11 @@
-SKYDATA HP RUNNER v2.2 - DOCKER PHASE DIAGNOSTICS
+SKYDATA HP RUNNER v2.3 - REA STATIC INVESTIGATION (adapter 1) + v2.2 DIAGNOSTICS
+
+v2.3 adds one separate, optional job type: REA static analysis
+(rea-agents 6.4.0). See REA_SETUP_WINDOWS.txt. JavaScript test jobs are
+unchanged from v2.2. REA support is tested on Linux Docker only; Windows
+HP verification is pending.
+
+v2.2 NOTES
 
 STATUS: verified against real Docker on a Linux test machine only.
 NOT yet verified on your HP (Windows 11 Home, Docker Desktop, WSL2).

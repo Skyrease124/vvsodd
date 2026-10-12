@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # SkyData REA adapter image 1: rea-agents 6.4.0, dependencies pinned by package-lock integrity hashes.
 # REA 6.4.0 requires a procps-compatible `ps` to own its analyzer process; it is copied (with its
 # licence notice) from the digest-pinned Debian bookworm Node image instead of using apt at build time.
@@ -14,6 +13,6 @@ RUN --mount=type=secret,id=ca,required=false if [ -f /run/secrets/ca ]; then exp
  && npm ci --ignore-scripts --omit=dev --no-audit --no-fund && npm cache clean --force \
  && mkdir -p /opt/rea/licenses && cp node_modules/rea-agents/LICENSE /opt/rea/licenses/rea-agents-LICENSE && cp node_modules/rea-agents/third_party/evmole/LICENSE /opt/rea/licenses/evmole-LICENSE && cp node_modules/rea-agents/third_party/pwndbg/LICENSE.md /opt/rea/licenses/pwndbg-LICENSE.md && cp node_modules/rea-agents/licenses/nativeaot-parser-MIT.txt /opt/rea/licenses/ \
  && ps --version && test "$(node node_modules/rea-agents/scripts/rea.mjs --version)" = "6.4.0"
-LABEL org.skydata.rea.version="6.4.0" org.skydata.adapter.version="1" org.skydata.untrusted=""
+LABEL org.skydata.rea.version="6.4.0" org.skydata.adapter.version="1"
 USER 1000:1000
 ENTRYPOINT ["node","/opt/rea/adapter.mjs"]

@@ -1,0 +1,60 @@
+SKYDATA REA STATIC INVESTIGATION - WINDOWS SETUP (runner v2.3, REA adapter 1)
+
+STATUS: tested with real REA 6.4.0 in Docker on a Linux test machine only.
+Windows HP setup and analysis are NOT yet verified.
+
+WHAT IT DOES
+REA (rea-agents 6.4.0, MIT licence, https://github.com/morluto/rea) reads the
+project files you approve as plain text and reports modules, imports, routes,
+network endpoints, storage keys and entrypoints with file locations.
+It does not run your project, install packages or use the network.
+
+WHY DOCKER
+REA's documented host platforms are macOS and Linux; Windows is not a listed
+host for this analysis. SkyData therefore runs REA inside a Linux container
+on Docker Desktop, with the same isolation as the test runner: no network,
+non-root user, read-only filesystem, no capabilities, no host folders.
+REA jobs get 768 MB of memory (REA's analyzer needs it) and a 3-minute limit.
+JavaScript test jobs keep their 256 MB and 10-second limits.
+
+YOU NEED
+- The existing setup: Windows 11, Docker Desktop with Linux containers
+  (WSL 2), Node 24, a paired SkyData runner.
+- About 1.5 GB of free disk space while preparing (about 0.5 GB afterwards).
+- Internet access ONCE while preparing the REA image.
+
+SETUP (once)
+1. Stop the old runner window with Ctrl+C.
+2. Extract this ZIP into a NEW folder. Do not run it from inside the ZIP.
+3. Make sure Docker Desktop is running.
+4. Double-click Prepare_REA.cmd. It builds the image "skydata-rea:6.4.0-a1"
+   from pinned base images and a package-lock with integrity hashes, then runs
+   the REA self-test. This can take 10 to 30 minutes on the HP.
+   The self-test writes rea-selftest-report.txt (no tokens or keys).
+5. Double-click Self_Test.cmd to confirm JavaScript tests still work.
+6. Double-click Start_Runner.cmd. Your existing pairing is kept.
+   The window shows "REA static analysis: available" when the image is ready.
+
+USING IT
+1. On the website open Engineering Mode, choose a saved project ZIP and set
+   "Investigation method" to "REA - static project investigation".
+2. Tick the files, press "Preview exact files for REA", check the list and
+   the exclusions, tick the approval box and press "Send to HP".
+3. In the runner window read the request (type show to print the files)
+   and type yes. Nothing runs until you do.
+4. Back on the website, choose the analysis to see REA's findings. Ask a
+   question and press "Explain REA findings" to have your selected AI model
+   explain them. That explanation is labelled as AI interpretation.
+
+IF SOMETHING FAILS
+- "REA image is not prepared": run Prepare_REA.cmd.
+- "Incompatible REA image": run Prepare_REA.cmd again (it rebuilds 6.4.0).
+- Build errors about the network: connect the HP to the internet and retry.
+- Anything else: send rea-selftest-report.txt.
+To remove REA completely: docker image rm skydata-rea:6.4.0-a1
+
+LICENCES
+REA is MIT-licensed (REA-6.4.0-LICENSE in the rea folder). The image keeps
+REA's shipped licence files in /opt/rea/licenses. The ps tool copied into the
+image is from Debian procps; its copyright file is kept in
+/usr/share/doc/procps/copyright.

@@ -3,8 +3,8 @@ import {PROJECT_LIMIT} from './project-types';
 // Reads and repackages the stored original ZIP directly from R2 with range requests.
 // Nothing here executes archive content; entries are only parsed, decompressed and copied.
 export type ArchiveBucket=Pick<R2Bucket,'get'|'head'|'put'|'createMultipartUpload'>;
-export type ArchiveEntry={index:number;path:string;size:number;compressed:number;offset:number;method:number;flags:number;crc:number;unsafe?:string};
-export type ArchiveDirectory={version:1;size:number;cdOffset:number;cdSize:number;entries:ArchiveEntry[];duplicates:string[];caseCollisions:string[]};
+export type ArchiveEntry={index:number;path:string;size:number;compressed:number;offset:number;method:number;flags:number;crc:number;unsafe?:string;symlink?:true};
+export type ArchiveDirectory={version:2;size:number;cdOffset:number;cdSize:number;entries:ArchiveEntry[];duplicates:string[];caseCollisions:string[]};
 export type FileKind='directory'|'text'|'binary'|'unknown'|'too_large'|'unsupported'|'unsafe'|'duplicate';
 export const VIEW_LIMIT=2*1024*1024,DIRECTORY_LIMIT=8*1024*1024,MAX_ENTRIES=20000;
 const TEXT_EXT=/\.(?:html?|css|scss|less|[cm]?[jt]sx?|json|jsonc|md|markdown|txt|py|rb|go|rs|java|kt|cs|c|cc|cpp|h|hpp|php|sh|bat|cmd|ps1|sql|glsl|vert|frag|wgsl|hlsl|shader|yaml|yml|toml|ini|cfg|conf|xml|svg|csv|tsv|lua|gd|gdshader|vue|svelte|astro|env\.example|gitignore|gitattributes|editorconfig|lock|mjs|cjs|log|tex|r|swift|dart|scala|pl)$/i;
@@ -40,15 +40,17 @@ export async function readArchiveDirectory(bucket:ArchiveBucket,key:string):Prom
   const raw=decoder.decode(dir.subarray(p+46,p+46+nameLen)),entry:ArchiveEntry={index:i,path:raw.replace(/\\/g,'/'),size:d.getUint32(p+24,true),compressed:d.getUint32(p+20,true),offset:d.getUint32(p+42,true),method:d.getUint16(p+10,true),flags:d.getUint16(p+8,true),crc:d.getUint32(p+16,true)};
   if(entry.size===0xffffffff||entry.compressed===0xffffffff||entry.offset===0xffffffff)throw Error('ZIP64 entries are not supported.');
   if(entry.offset+30>cdOffset)throw Error('A ZIP entry points outside the archive.');
-  const unsafe=unsafeReason(raw);if(unsafe)entry.unsafe=unsafe;entries.push(entry);p+=46+nameLen+extra+comment;
+  const unsafe=unsafeReason(raw);if(unsafe)entry.unsafe=unsafe;
+  // Unix-made entries carry st_mode in the high 16 bits of the external attributes (0xA000 = symbolic link).
+  if(d.getUint16(p+4,true)>>8===3&&((d.getUint32(p+38,true)>>>16)&0xf000)===0xa000)entry.symlink=true;entries.push(entry);p+=46+nameLen+extra+comment;
  }
  const seen=new Map<string,number>(),lower=new Map<string,Set<string>>();for(const e of entries){seen.set(e.path,(seen.get(e.path)||0)+1);const k=e.path.toLowerCase();if(!lower.has(k))lower.set(k,new Set());lower.get(k)!.add(e.path);}
- return {version:1,size,cdOffset,cdSize,entries,duplicates:[...seen].filter(([,n])=>n>1).map(([path])=>path),caseCollisions:[...lower.values()].filter(s=>s.size>1).flatMap(s=>[...s])};
+ return {version:2,size,cdOffset,cdSize,entries,duplicates:[...seen].filter(([,n])=>n>1).map(([path])=>path),caseCollisions:[...lower.values()].filter(s=>s.size>1).flatMap(s=>[...s])};
 }
 // The parsed directory is cached next to the original so browsing does not re-read it every time.
 export async function archiveDirectory(bucket:ArchiveBucket,projectId:string,key:string){
  const cacheKey='projects/'+projectId+'/archive-directory.json';const cached=await bucket.get(cacheKey);
- if(cached){try{const d=await cached.json<ArchiveDirectory>();if(d.version===1&&Array.isArray(d.entries))return d;}catch{}}
+ if(cached){try{const d=await cached.json<ArchiveDirectory>();if(d.version===2&&Array.isArray(d.entries))return d;}catch{}}
  const directory=await readArchiveDirectory(bucket,key);await bucket.put(cacheKey,JSON.stringify(directory),{httpMetadata:{contentType:'application/json'}});return directory;
 }
 export function entryKind(directory:ArchiveDirectory,e:ArchiveEntry):FileKind{

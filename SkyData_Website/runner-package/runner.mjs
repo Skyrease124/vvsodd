@@ -143,8 +143,8 @@ async function start(){
  }}finally{rl.close();}
 }
 // One REA static-analysis request: re-verify the prepared image, show the exact operation and files, ask locally.
-async function reaJob(job,rl,token){
- const rea=await checkReaImage(docker),send=result=>api('rea-result',{id:job.id,result},token);
+export async function reaJob(job,rl,token,{apiCall=api}={}){
+ const rea=await checkReaImage(docker),send=result=>apiCall('rea-result',{id:job.id,result},token);
  const bundle=parseReaJob(job);
  if(!bundle){await send({status:'rejected',adapter:null,stderr:'Invalid or expired REA request.',diagnostics:{runner:'rea-job/'+ADAPTER_VERSION,executionStatus:'not_started',cleanupConfirmed:true,totalMs:0,phases:[]}}).catch(()=>{});throw Error('Invalid or expired REA request; runner stopped.');}
  const total=bundle.files.reduce((s,f)=>s+Buffer.byteLength(f.text),0);
@@ -154,7 +154,7 @@ async function reaJob(job,rl,token){
  let answer=(await rl.question('Analyze these exact files with REA in Docker? Type yes (or show to print them first): ')).trim().toLowerCase();
  if(answer==='show'){for(const f of bundle.files)console.log('\nFILE: '+f.path+'\n'+display(f.text));answer=(await rl.question('Analyze these exact files with REA in Docker? Type yes: ')).trim().toLowerCase();}
  if(answer!=='yes'||job.expires<=Date.now()){await send({status:'declined',adapter:null,stderr:'Declined or expired before local approval.',diagnostics:{runner:'rea-job/'+ADAPTER_VERSION,executionStatus:'not_started',cleanupConfirmed:true,totalMs:0,phases:[]}});return rea;}
- const report=progress(token,job.id);report('docker_check');const check=await checkDocker();let result;
+ const report=phaseName=>{void apiCall('progress',{id:job.id,phase:phaseName},token).catch(()=>{});};report('docker_check');const check=await checkDocker();let result;
  if(!check.ok)result={status:'infrastructure_error',adapter:null,stderr:'Docker check failed: '+check.detail,diagnostics:{runner:'rea-job/'+ADAPTER_VERSION,executionStatus:'not_started',cleanupConfirmed:true,totalMs:check.ms,phases:[check]}};
  else{result=await executeRea(bundle,rea.imageId,{dockerCommand:docker,removeContainer:cleanup,report,cleanEnv});result.diagnostics.phases.unshift(check);}
  console.log('REA result: '+result.status+(result.adapter?.findings?' · '+result.adapter.findings.imports.total+' imports, '+result.adapter.findings.endpoints.total+' endpoints, coverage '+result.adapter.findings.graphCoverage?.status:''));printPhases(result);

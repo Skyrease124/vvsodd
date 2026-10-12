@@ -5,6 +5,7 @@ import {geminiUpstream,GEMINI_TEXT_MODEL} from './gemini-provider';
 import {isModelAvailable} from './models';
 import {validProject} from './projects';
 import {loadSelectedFiles,type WorkspaceProject} from './project-workspace';
+import {loadReaRun,compactFindings,reaInstructions} from './rea-explain';
 import {SUPERPOWERS_SKILLS} from './engineering-skills';
 import {ENGINEERING_WORKFLOWS,type EngineeringMode} from './engineering-contract';
 export {ENGINEERING_WORKFLOWS} from './engineering-contract';
@@ -34,19 +35,28 @@ export async function handleEngineering(request:Request,env:SecretEnv,generate:t
   try{for(;;){const part=await reader.read();if(part.done)break;size+=part.value.byteLength;if(size>180000){await reader.cancel();return Response.json({error:'Task is too large.'},{status:413,headers});}chunks.push(part.value);}}finally{reader.releaseLock();}
   const bytes=new Uint8Array(size);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.length;}body=JSON.parse(new TextDecoder().decode(bytes));
  }catch{return Response.json({error:'Invalid JSON.'},{status:400,headers});}
- const allowed=new Set(['mode','workflow','model','messages','approved','action']);
- if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!allowed.has(k))||!['research','development'].includes(body.mode)||!ENGINEERING_WORKFLOWS.some(w=>w.id===body.workflow)||!isModelAvailable(body.model)||body.mode==='development'&&(body.approved!==true||body.action!=='propose')||body.mode==='research'&&body.action!==undefined&&body.action!=='investigate'||!Array.isArray(body.messages)||body.messages.length<1||body.messages.length>12||body.messages.at(-1)?.role!=='user'||body.messages.some((m:any)=>!m||!['user','assistant'].includes(m.role)||typeof m.content!=='string'||!m.content.trim()||m.content.length>(m.role==='user'?8000:12000)||Object.keys(m).some(k=>!['role','content','project'].includes(k))||m.project!==undefined&&(m.role!=='user'||!validProject(m.project))))return Response.json({error:'Invalid engineering task or missing proposal authorization.'},{status:400,headers});
+ const allowed=new Set(['mode','workflow','model','messages','approved','action','investigation','reaRunId']);
+ // REA is a separate, explicit investigation method; omitting `investigation` keeps the Superpowers default.
+ const rea=body?.investigation==='rea';
+ if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!allowed.has(k))||!['research','development'].includes(body.mode)||!['superpowers','rea',undefined].includes(body.investigation)||(rea?body.workflow!==undefined||body.mode!=='research'||typeof body.reaRunId!=='string'||!/^[a-f0-9-]{36}$/.test(body.reaRunId):!ENGINEERING_WORKFLOWS.some(w=>w.id===body.workflow)||body.reaRunId!==undefined)||!isModelAvailable(body.model)||body.mode==='development'&&(body.approved!==true||body.action!=='propose')||body.mode==='research'&&body.action!==undefined&&body.action!=='investigate'||!Array.isArray(body.messages)||body.messages.length<1||body.messages.length>12||body.messages.at(-1)?.role!=='user'||body.messages.some((m:any)=>!m||!['user','assistant'].includes(m.role)||typeof m.content!=='string'||!m.content.trim()||m.content.length>(m.role==='user'?8000:12000)||Object.keys(m).some(k=>!['role','content','project'].includes(k))||m.project!==undefined&&(m.role!=='user'||!validProject(m.project))))return Response.json({error:'Invalid engineering task or missing proposal authorization.'},{status:400,headers});
  const taskId=crypto.randomUUID();
  // Audit metadata only. Never log source, prompts, responses, project IDs or credentials.
  console.info('SkyData engineering task',{taskId,mode:body.mode,workflow:body.workflow,selectedModel:body.model,status:'started'});
  try{
+  let system:string,reaRun:{id:string;status:string;reaVersion:unknown;evidenceId:unknown;coverage:unknown}|null=null;
+  if(rea){
+   const run=await loadReaRun(env,request.headers.get('oai-authenticated-user-id')||'',body.reaRunId);const findings=run?.analysis&&compactFindings(run.analysis);
+   if(!run||!findings||!['complete','partial'].includes(run.status))return Response.json({error:'Choose a completed REA analysis with findings.'},{status:400,headers});
+   system=reaInstructions(findings,run.status);reaRun={id:run.id,status:run.status,reaVersion:findings.reaVersion,evidenceId:findings.evidenceId,coverage:(findings.graphCoverage as {status?:string}|undefined)?.status??null};
+  }else system=engineeringInstructions(body.mode,body.workflow);
   const chat=new Request(request.url,{method:'POST',headers:request.headers,signal:request.signal,body:JSON.stringify({messages:body.messages,model:body.model,coding:true,aiRouting:false,stream:false})});
-  const response=await generate(chat,undefined,body.model,geminiUpstream(env),env,{system:engineeringInstructions(body.mode,body.workflow),live:false,maxTokens:8192},true);
+  const response=await generate(chat,undefined,body.model,geminiUpstream(env),env,{system,live:false,maxTokens:8192},true);
   console.info('SkyData engineering task',{taskId,status:response.status});
   if(!response.ok)return response;
   const result=await response.json() as {content?:string;sources?:unknown};
   if(typeof result.content!=='string'||!result.content.trim())return Response.json({error:'The model returned no engineering result.'},{status:502,headers});
   const projectFiles=await selectedFileReport(body.messages,request.headers.get('oai-authenticated-user-id'),env);
+  if(rea)return Response.json({taskId,content:result.content,sources:result.sources,selectedModel:body.model,actualProvider:'Google Gemini',actualModel:GEMINI_TEXT_MODEL,mode:body.mode,workflow:null,investigation:'rea',reaRun,interpretation:'AI interpretation of stored REA findings. This text is model advice, not REA output.',skills:[],status:'ADVICE_READY',tests:{status:'NOT_RUN',reason:'No qualified execution service connected.'},execution:'BLOCKED',modificationsApplied:false},{headers});
   return Response.json({taskId,projectFiles,content:result.content,sources:result.sources,selectedModel:body.model,actualProvider:'Google Gemini',actualModel:GEMINI_TEXT_MODEL,mode:body.mode,workflow:body.workflow,skills:['using-superpowers',ENGINEERING_WORKFLOWS.find(w=>w.id===body.workflow)!.skill,'verification-before-completion'],status:'ADVICE_READY',tests:{status:'NOT_RUN',reason:'No qualified execution service connected.'},execution:'BLOCKED',modificationsApplied:false},{headers});
  }catch{return Response.json({error:request.signal.aborted?'Engineering task cancelled.':'Engineering request failed. Try again.'},{status:request.signal.aborted?499:502,headers});}
 }

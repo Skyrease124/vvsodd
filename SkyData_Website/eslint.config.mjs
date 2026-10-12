@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Override default ignores of eslint-config-next.
   globalIgnores([
+    // REA analysis fixture: deliberately invalid and CommonJS sample code, analysed as data only.
+    "runner-package/rea/fixture/**",
     // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",

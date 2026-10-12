@@ -34,3 +34,5 @@
 .proposal-file h4{margin:0 0 8px}.proposal-source ul{padding-left:18px}
 .runner-history{width:100%;border-collapse:collapse;font-size:.9em}.runner-history td,.runner-history th{border-bottom:1px solid #1d2a3d;padding:6px;text-align:left;vertical-align:top}
 .runner-phase-bad{color:#ffb4bb}.runner-phase-ok{color:#b9f0c8}
+/* REA findings */
+.rea-table-wrap{max-width:100%;overflow-x:auto}.rea-findings h4{margin:18px 0 6px}.rea-findings td{overflow-wrap:anywhere}
