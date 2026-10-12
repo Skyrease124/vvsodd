@@ -29,7 +29,9 @@ async function saveProposal(env:SecretEnv,p:WorkspaceProject,proposal:Proposal,e
  proposal.updated=Date.now();const saved=await env.FILES!.put(proposalKey(p.id,proposal.id),JSON.stringify(proposal),{httpMetadata:{contentType:'application/json'},...(etag?{onlyIf:{etagMatches:etag}}:{})});
  if(!saved)throw new Rejected('This proposal changed in another tab. Reload it and try again.',409);
 }
-function summary(proposal:Proposal){return {id:proposal.id,title:proposal.title,origin:proposal.origin,taskId:proposal.taskId,created:proposal.created,updated:proposal.updated,files:proposal.files.map(f=>({path:f.path,isNew:f.isNew,decision:f.decision,proposedSha256:f.proposedSha256})),packages:proposal.packages.map(({key:_key,...pkg})=>pkg)};}
+function summary(proposal:Proposal){return {id:proposal.id,title:proposal.title,origin:proposal.origin,taskId:proposal.taskId,created:proposal.created,updated:proposal.updated,files:proposal.files.map(f=>({path:f.path,isNew:f.isNew,decision:f.decision,proposedSha256:f.proposedSha256})),packages:proposal.packages.map(visiblePackage)};}
+// Storage keys stay server-side; downloads go through the owner-checked route.
+const visiblePackage=(p:ProposalPackage)=>({id:p.id,created:p.created,size:p.size,entries:p.entries,name:p.name,approved:p.approved});
 // Exact complete files chosen for AI context; used by chat/engineering and to report what the model received.
 export async function loadSelectedFiles(env:SecretEnv,p:WorkspaceProject,paths:string[]){
  const directory=await archiveDirectory(env.FILES!,p.id,p.key);let budget=AI_CHAR_BUDGET;
@@ -133,7 +135,7 @@ export async function handleProjectWorkspace(request:Request,env:SecretEnv,p:Wor
     const pkg:ProposalPackage={id,created:Date.now(),size:result.size,entries:result.entries,name:p.name.replace(/\.zip$/i,'')+'-corrected.zip',key,approved:approved.map(f=>({path:f.path,sha256:f.proposedSha256,isNew:f.isNew}))};
     proposal.packages.unshift(pkg);for(const old of proposal.packages.splice(MAX_PACKAGES))await bucket.delete(old.key);
     try{await saveProposal(env,p,proposal,etag);}catch(e){await bucket.delete(key);throw e;}
-    const {key:_key,...visible}=pkg;return json({package:{...visible,unchanged:result.unchanged,replaced:result.replaced,added:result.added},proposal:summary(proposal)});
+    return json({package:{...visiblePackage(pkg),unchanged:result.unchanged,replaced:result.replaced,added:result.added},proposal:summary(proposal)});
    }
    if(subAction==='download'&&request.method==='GET'){
     const pkg=proposal.packages.find(x=>x.id===url.searchParams.get('package'));if(!pkg)throw new Rejected('Corrected ZIP not found.',404);

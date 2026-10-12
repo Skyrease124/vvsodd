@@ -23,7 +23,8 @@
 .project-file-table{max-height:360px;overflow:auto;border:1px solid #35425a;border-radius:12px;padding:8px 12px}
 .project-file-row{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;padding:6px 0;border-bottom:1px solid #1d2a3d}.project-file-row.active{background:#17243a}
 .project-file-row .file-meta{grid-column:2;font-size:.85em;color:#93a4bd}
-.link-button{background:none;border:0;padding:0;color:#9bdfff;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;overflow-wrap:anywhere}.link-button:disabled{color:#6f7f96;cursor:default}
+/* Scoped override: the global chat-composer rule `form button` positions buttons absolutely. */
+.engineering-page .link-button{position:static;inset:auto;display:inline;width:auto;height:auto;min-height:0;border-radius:0;background:none;border:0;padding:0;color:#9bdfff;font:inherit;text-align:left;cursor:pointer;text-decoration:underline;overflow-wrap:anywhere;place-items:normal}.engineering-page .link-button:disabled{color:#6f7f96;cursor:default}
 .kind-binary,.kind-too_large,.kind-unsupported,.kind-unsafe,.kind-duplicate{color:#ffcf8a}
 .project-search ul{max-height:240px;overflow:auto;padding-left:18px}.project-search code{color:#bbcadf}
 .code-view{white-space:pre;overflow:auto;font-size:.85em;max-height:520px}
