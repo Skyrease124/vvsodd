@@ -5,7 +5,7 @@ import {geminiUpstream,GEMINI_TEXT_MODEL} from './gemini-provider';
 import {isModelAvailable} from './models';
 import {validProject} from './projects';
 import {loadSelectedFiles,type WorkspaceProject} from './project-workspace';
-import {loadReaRun,compactFindings,reaInstructions} from './rea-explain';
+import {loadReaRun,compactFindings,reaInstructions,reaRunUsable} from './rea-explain';
 import {SUPERPOWERS_SKILLS} from './engineering-skills';
 import {ENGINEERING_WORKFLOWS,type EngineeringMode} from './engineering-contract';
 export {ENGINEERING_WORKFLOWS} from './engineering-contract';
@@ -46,7 +46,7 @@ export async function handleEngineering(request:Request,env:SecretEnv,generate:t
   let system:string,reaRun:{id:string;status:string;reaVersion:unknown;evidenceId:unknown;coverage:unknown}|null=null;
   if(rea){
    const run=await loadReaRun(env,request.headers.get('oai-authenticated-user-id')||'',body.reaRunId);const findings=run?.analysis&&compactFindings(run.analysis);
-   if(!run||!findings||!['complete','partial'].includes(run.status))return Response.json({error:'Choose a completed REA analysis with findings.'},{status:400,headers});
+   if(!run||!findings||!reaRunUsable(run.status,run.analysis))return Response.json({error:'This REA analysis is not usable for an explanation: it did not complete, or failed an integrity check (version, approved files, workspace or cleanup).'},{status:400,headers});
    system=reaInstructions(findings,run.status);reaRun={id:run.id,status:run.status,reaVersion:findings.reaVersion,evidenceId:findings.evidenceId,coverage:(findings.graphCoverage as {status?:string}|undefined)?.status??null};
   }else system=engineeringInstructions(body.mode,body.workflow);
   const chat=new Request(request.url,{method:'POST',headers:request.headers,signal:request.signal,body:JSON.stringify({messages:body.messages,model:body.model,coding:true,aiRouting:false,stream:false})});

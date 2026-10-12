@@ -2,6 +2,7 @@ import {loadRunnerProject,selectRunnerFiles,loadProposalBundle,type BundleFile} 
 import {PROJECT_PREFIX} from '../runner-package/project.mjs';
 import {isSiteAdmin} from './site-admin';
 import {buildReaSelection,REA_PREFIX,REA_VERSION,REA_ADAPTER,REA_OPERATION,REA_SELECTION_LIMITS} from './rea-selection';
+import {reaResultChecks,reaRunUsable} from './rea-explain';
 const reaKey=(projectId:string,id:string)=>'projects/'+projectId+'/rea/'+id+'.json';
 import type {SecretEnv} from './secret-store';
 const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
@@ -9,7 +10,7 @@ const json=(v:unknown,status=200)=>Response.json(v,{status,headers});
 const random=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,'0')).join('');
 const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
 const REA_STATUSES=['complete','partial','failed','timeout','output_limit','declined','unavailable','rejected','incompatible','workspace_changed','infrastructure_error'];
-const FINAL=['passed','failed','timeout','declined','infrastructure_error','output_limit',...REA_STATUSES],PHASES=['docker_check','container_start','executing','cleanup','rea_analysis'],HISTORY_KEEP=50;
+const FINAL=['passed','failed','timeout','declined','infrastructure_error','output_limit',...REA_STATUSES,'invalid_result'],PHASES=['docker_check','container_start','executing','cleanup','rea_analysis'],HISTORY_KEEP=50;
 async function schema(db:D1Database){
  for(const sql of [
  'CREATE TABLE IF NOT EXISTS engineering_runner_pair (owner TEXT PRIMARY KEY, code_hash TEXT UNIQUE NOT NULL, expires INTEGER NOT NULL)',
@@ -67,7 +68,8 @@ export async function handleRunnerOwner(req:Request,env:SecretEnv,path:string){
  const id=new URL(req.url).searchParams.get('id')||'';if(!/^[a-f0-9-]{36}$/.test(id))return json({error:'Choose an REA analysis.'},400);
  const row=await db.prepare("SELECT project_id,status,result FROM engineering_runner_history WHERE id=? AND owner=? AND kind='rea'").bind(id,owner).first<{project_id:string|null;status:string;result:string|null}>();if(!row)return json({error:'Analysis not found.'},404);
  const stored=row.project_id&&env.FILES?await env.FILES.get(reaKey(row.project_id,id)):null;
- return json({id,status:row.status,summary:row.result?JSON.parse(row.result):null,analysis:stored?await stored.json():null});
+ const analysis=stored?await stored.json<Record<string,unknown>>():null;
+ return json({id,status:row.status,summary:row.result?JSON.parse(row.result):null,analysis,usable:reaRunUsable(row.status,analysis)});
  }
  if(req.method!=='POST')return json({error:'Use POST.'},405);
  if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'Origin rejected.'},403);
@@ -151,12 +153,16 @@ export async function handleRunnerDevice(req:Request,env:SecretEnv,path:string){
  const stagedMatchesApproval=staged?JSON.stringify(staged)===JSON.stringify(approved):null;
  const f=r.adapter?.findings,history=await db.prepare('SELECT project_id FROM engineering_runner_history WHERE id=? AND owner=?').bind(b.id,device.owner).first<{project_id:string|null}>();
  const count=(x:{total?:number}|undefined)=>typeof x?.total==='number'?x.total:null;
- const summary={status:r.status,reaVersion:typeof r.adapter?.rea?.version==='string'?r.adapter.rea.version:null,operation:REA_OPERATION,evidenceId:typeof f?.evidenceId==='string'?f.evidenceId:null,coverage:typeof f?.graphCoverage?.status==='string'?f.graphCoverage.status:null,counts:f?{modules:count(f.modules),imports:count(f.imports),endpoints:count(f.endpoints),endpointCalls:count(f.endpointCalls),storage:count(f.storage),entrypoints:count(f.entrypoints),unknowns:count(f.unknowns)}:null,stagedMatchesApproval,workspaceUnchanged:typeof r.adapter?.workspaceUnchanged==='boolean'?r.adapter.workspaceUnchanged:null,diagnostics:diag,evidence:'Reported by the paired HP runner (REA adapter '+REA_ADAPTER+'); not independently verified by the server.'};
- const updated=await db.prepare("UPDATE engineering_runner_job SET status=?,result=?,code='' WHERE owner=? AND device=? AND id=? AND status='running' AND expires>? AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?)").bind(r.status,JSON.stringify(summary),device.owner,device.id,b.id,now,device.id,tokenHash,now).run();
+ // A reported complete/partial analysis becomes usable findings only if every integrity check holds; otherwise it is
+ // recorded (diagnostics preserved) as invalid_result and is never eligible for AI explanation.
+ const failedChecks=['complete','partial'].includes(r.status)?reaResultChecks({reaVersion:r.adapter?.rea?.version,operation:r.adapter?.rea?.operation,stagedMatchesApproval,workspaceUnchanged:r.adapter?.workspaceUnchanged,cleanupConfirmed:diag.cleanupConfirmed,hasFindings:!!f&&typeof f==='object'}):[];
+ const status=failedChecks.length?'invalid_result':r.status,usable=['complete','partial'].includes(status);
+ const summary={status,reportedStatus:r.status,usable,failedChecks,reaVersion:typeof r.adapter?.rea?.version==='string'?r.adapter.rea.version:null,operation:REA_OPERATION,evidenceId:typeof f?.evidenceId==='string'?f.evidenceId:null,coverage:typeof f?.graphCoverage?.status==='string'?f.graphCoverage.status:null,counts:f?{modules:count(f.modules),imports:count(f.imports),endpoints:count(f.endpoints),endpointCalls:count(f.endpointCalls),storage:count(f.storage),entrypoints:count(f.entrypoints),unknowns:count(f.unknowns)}:null,stagedMatchesApproval,workspaceUnchanged:typeof r.adapter?.workspaceUnchanged==='boolean'?r.adapter.workspaceUnchanged:null,diagnostics:diag,evidence:'Reported by the paired HP runner (REA adapter '+REA_ADAPTER+'); not independently verified by the server.'};
+ const updated=await db.prepare("UPDATE engineering_runner_job SET status=?,result=?,code='' WHERE owner=? AND device=? AND id=? AND status='running' AND expires>? AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?)").bind(status,JSON.stringify(summary),device.owner,device.id,b.id,now,device.id,tokenHash,now).run();
  if(updated.meta.changes!==1)return json({error:'Analysis expired, completed, or connection revoked.'},409);
  if(history?.project_id&&env.FILES)await env.FILES.put(reaKey(history.project_id,b.id),JSON.stringify({...summary,adapter:r.adapter,stderr:r.stderr,receivedAt:now}),{httpMetadata:{contentType:'application/json'}});
- await db.prepare('UPDATE engineering_runner_history SET status=?,completed=?,result=?,phase=NULL WHERE id=? AND owner=?').bind(r.status,now,JSON.stringify(summary),b.id,device.owner).run();
- return json({accepted:true,stagedMatchesApproval});
+ await db.prepare('UPDATE engineering_runner_history SET status=?,completed=?,result=?,phase=NULL WHERE id=? AND owner=?').bind(status,now,JSON.stringify(summary),b.id,device.owner).run();
+ return json({accepted:true,status,usable,failedChecks,stagedMatchesApproval});
  }
  if(path==='/api/engineering-runner/result'){
  const r=b.result;if(typeof b.id!=='string'||!r||!['passed','failed','timeout','declined','infrastructure_error','output_limit'].includes(r.status)||!(r.exitCode===null||Number.isInteger(r.exitCode)&&r.exitCode>=0&&r.exitCode<=255)||typeof r.stdout!=='string'||typeof r.stderr!=='string'||r.stdout.length+r.stderr.length>65000||!Number.isFinite(r.durationMs)||r.durationMs<0||r.durationMs>60000||r.status==='passed'&&r.exitCode!==0)return json({error:'Invalid test result.'},400);

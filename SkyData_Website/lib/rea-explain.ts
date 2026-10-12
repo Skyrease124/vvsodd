@@ -1,4 +1,18 @@
 import type {SecretEnv} from './secret-store';
+const REA_VERSION='6.4.0',REA_OPERATION='analyze-javascript-application';
+// Integrity checks shared by result acceptance and explanation eligibility. Returns the names of failed checks.
+export function reaResultChecks(c:{reaVersion:unknown;operation:unknown;stagedMatchesApproval:unknown;workspaceUnchanged:unknown;cleanupConfirmed:unknown;hasFindings:boolean}){
+ const failed:string[]=[];
+ if(c.reaVersion!==REA_VERSION)failed.push('rea_version');if(c.operation!==REA_OPERATION)failed.push('rea_operation');
+ if(c.stagedMatchesApproval!==true)failed.push('staged_files_match_approval');if(c.workspaceUnchanged!==true)failed.push('workspace_unchanged');
+ if(c.cleanupConfirmed!==true)failed.push('cleanup_confirmed');if(!c.hasFindings)failed.push('findings_present');return failed;
+}
+// Re-checks the stored record itself, so a run is explainable only if its stored evidence passes every check.
+export function reaRunUsable(status:string,analysis:Record<string,unknown>|null){
+ if(!analysis||!['complete','partial'].includes(status)||analysis.usable!==true)return false;
+ const adapter=analysis.adapter as {rea?:{version?:unknown;operation?:unknown};findings?:unknown;workspaceUnchanged?:unknown}|null,diag=analysis.diagnostics as {cleanupConfirmed?:unknown}|undefined;
+ return reaResultChecks({reaVersion:adapter?.rea?.version,operation:adapter?.rea?.operation,stagedMatchesApproval:analysis.stagedMatchesApproval,workspaceUnchanged:adapter?.workspaceUnchanged,cleanupConfirmed:diag?.cleanupConfirmed,hasFindings:!!adapter?.findings&&typeof adapter.findings==='object'}).length===0;
+}
 // Loads one owner's stored REA run and frames it for the existing model as untrusted tool output.
 export type ReaRun={id:string;status:string;summary:Record<string,unknown>|null;analysis:Record<string,unknown>|null};
 export async function loadReaRun(env:SecretEnv,owner:string,id:string):Promise<ReaRun|null>{

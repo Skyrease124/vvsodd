@@ -10,7 +10,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo Removing the large helper image used only to copy the ps tool...
-docker image rm node@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0 >/dev/null 2>nul
+docker image rm node@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0 >nul 2>&1
 cd /d "%~dp0"
 node runner.mjs rea-selftest
 pause

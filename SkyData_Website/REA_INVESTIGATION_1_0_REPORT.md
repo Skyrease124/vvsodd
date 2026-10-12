@@ -1,4 +1,4 @@
-# REA Investigation 1.0 — change report
+# REA Investigation 1.0 — change report (revision 2)
 
 Base: `SkyData_Website_v107_candidate_r2` (Engineering Workspace 1.0, HP Runner v2.2). **Not deployed. Windows HP verification pending.**
 
@@ -44,3 +44,24 @@ Not changed: authentication, owner/membership checks, models, chat, voice, Amazo
 | Live website | — | **NOT DEPLOYED** |
 
 Simulated in automated tests: the HP machine itself and the typed `yes`. The sandbox needed an extra CA build secret (optional in the Dockerfile) because its network intercepts TLS; package integrity is still enforced by the lockfile.
+
+## Review fixes (revision 2)
+Only these items changed; Superpowers, runner test behaviour, Polly, authentication and hosting are untouched.
+
+1. **REA result integrity and explanation eligibility** (`lib/engineering-runner.ts`, `lib/rea-explain.ts`, `lib/engineering.ts`).
+   Before: `/rea-result` stored any reported `complete`/`partial` result as usable even when `stagedMatchesApproval` was false, the workspace had changed or cleanup was unconfirmed, and `/api/engineering` explained it with Gemini.
+   Now a reported `complete`/`partial` result is usable only if **all** checks pass: REA version `6.4.0`, operation `analyze-javascript-application`, staged files exactly equal to the approved paths and SHA-256 values, `workspaceUnchanged === true`, `cleanupConfirmed === true`, findings present. Otherwise it is still recorded (diagnostics, stderr and adapter output preserved) with `status: invalid_result`, `reportedStatus` (what the HP claimed), `usable: false` and `failedChecks`; the response says so. Explanation eligibility (`reaRunUsable`) re-applies the same checks to the **stored record** at explanation time, so a record altered after acceptance is also refused. Genuine failures (`failed`, `timeout`, …) keep their status and are never explainable.
+2. **Wording** (`app/engineering/rea-panel.tsx`): "workspace unchanged (nothing executed or written)" → "staged files unchanged; no unexpected files detected". The panel shows failed checks for `invalid_result` runs and only enables "Explain" when the server reports `usable: true`. History label added for `invalid_result`.
+3. **`runner-package/Prepare_REA.cmd`**: `>/dev/null 2>nul` → `>nul 2>&1` (CRLF preserved). `public/SkyData_HP_Runner_v2_3.zip` regenerated; all 24 packaged files compared byte-for-byte with the source: 0 mismatches.
+
+### Revision 2 verification
+| Check | Kind | Result |
+|---|---|---|
+| `test-rea-result.mjs` (new) | built Worker + Miniflare D1/R2; HP simulated; Gemini mocked **and counted** | PASS — valid control usable and explained; separately: wrong staged hash, wrong staged paths, missing staged list, workspace changed, cleanup unconfirmed, wrong REA version, wrong operation, missing findings; plus the reviewer's combined case — each `invalid_result`, diagnostics and reported status preserved, explanation HTTP 400, Gemini not called; real failure keeps status/error; tampered stored record refused |
+| Same test against the previous code | local | FAILS as expected (first inconsistent result accepted as usable) |
+| `tsc --noEmit`, `npm run build` | local | PASS |
+| All 14 test scripts, incl. `test-runner-docker` and `test-rea-real` (real REA 6.4.0, real Docker, Linux) | as labelled | PASS (the two real-Docker tests first skipped because the local daemon had stopped; re-run after restarting it: PASS) |
+| `node runner.mjs rea-selftest` | real REA, Linux Docker | PASS |
+| ESLint on changed files | local | new code clean; `lib/engineering.ts` keeps its 2 pre-existing errors |
+| Windows HP | live | **NOT RUN — Windows verification pending** |
+| Live website | — | **NOT DEPLOYED** |
