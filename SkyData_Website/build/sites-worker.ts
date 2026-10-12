@@ -35,7 +35,7 @@ export default {
     const config = env as Cloudflare.Env & SecretEnv;
     let request=incoming;
     const incomingPath=new URL(incoming.url).pathname;
-    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/result'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
+    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/progress','/api/engineering-runner/result'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
     if(['/api/blender/pair','/api/blender/heartbeat','/api/blender/result'].includes(incomingPath))return handleBlenderDevice(incoming,config,incomingPath);
     // Static assets are public; every working surface and API checks membership.
     if(!incomingPath.startsWith('/assets/') && !incomingPath.startsWith('/_next/static/') && !['/favicon.svg','/favicon.ico','/robots.txt'].includes(incomingPath)){
