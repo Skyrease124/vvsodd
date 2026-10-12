@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {pathToFileURL} from 'node:url';
+const {streamReply}=await import(pathToFileURL(process.argv[2]).href);
+const upstream=()=>new Response('data: '+JSON.stringify({choices:[{delta:{content:'Pointer [K1, p.231]'}}]})+'\n\ndata: [DONE]\n\n');
+const checked=streamReply(upstream(),'unchanged-model',[],new AbortController().signal,()=>({content:'Pointer [C++.pdf · PDF page 252](https://example.test/knowledge)',sources:[]}));
+const events=(await checked.text()).trim().split('\n').map(JSON.parse);
+assert.equal(events.filter(e=>e.content).length,1);assert.equal(events.at(-1).model,'unchanged-model');assert.match(events.at(-1).content,/PDF page 252/);assert.doesNotMatch(JSON.stringify(events),/p\.231/);
+const normal=(await streamReply(upstream(),'unchanged-model',[],new AbortController().signal).text()).trim().split('\n').map(JSON.parse);
+assert.ok(normal.some(e=>e.content&&!e.done));
+console.log('PASS: document reply withheld until citation validation; ordinary chat still streams; selected model unchanged.');

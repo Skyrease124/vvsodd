@@ -1,0 +1,17 @@
+.engineering-page .engineering-toolbar{display:flex;flex-wrap:wrap;gap:16px;margin:20px 0}
+.engineering-page label{display:block;color:#bbcadf}.engineering-toolbar label{flex:1 1 220px;min-width:0}
+.engineering-page select,.engineering-page textarea{display:block;width:100%;max-width:100%;box-sizing:border-box;margin-top:8px;background:#141e2e;color:#eef4fc;border:1px solid #344058;border-radius:10px;padding:12px;font:inherit}
+.engineering-page input[type=checkbox]{width:auto;margin-right:8px}.engineering-approval{margin:18px 0;line-height:1.6}
+.engineering-page form{min-width:0;padding:20px}
+.engineering-page .engineering-actions{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+.engineering-page .engineering-actions button{position:static;inset:auto;display:flex;align-items:center;justify-content:center;flex:1 1 180px;min-width:0;width:auto;height:auto;min-height:48px;padding:12px 16px;border:1px solid #405674;border-radius:12px;background:#9bdfff;color:#082036;font:inherit;line-height:1.5;white-space:normal;overflow-wrap:anywhere;touch-action:manipulation}
+.engineering-page .engineering-actions button:disabled{background:#142034;color:#bbcadf;opacity:.65}
+.engineering-page .engineering-actions button:focus-visible{outline:2px solid #9bdfff;outline-offset:3px}
+.engineering-result{border-top:1px solid #344058;padding-top:18px;overflow-wrap:anywhere}.engineering-comparison{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:16px}.engineering-comparison pre{overflow:auto;max-height:420px;background:#141e2e;padding:12px;border-radius:10px}.engineering-page header{flex-wrap:wrap;gap:14px}.engineering-page details{margin-top:20px}
+@media(max-width:700px){.engineering-comparison{grid-template-columns:1fr}.engineering-page .debate-workspace{padding:16px}.engineering-toolbar label{flex-basis:100%}.engineering-page form{padding:16px}.engineering-page .engineering-actions button{flex-basis:100%;width:100%}}
+@media(max-height:500px) and (orientation:landscape){.engineering-page .engineering-toolbar label{flex-basis:220px}.engineering-page textarea{min-height:100px}}
+
+.runner-source { white-space: pre-wrap; overflow-wrap: anywhere; background: #141e2e; padding: 16px; max-height: 420px; overflow: auto; }
+.runner-file-list { max-height: 300px; overflow: auto; border: 1px solid #35425a; border-radius: 12px; padding: 12px; }
+.runner-file-list label { display: flex; align-items: center; gap: 12px; padding: 6px 0; overflow-wrap: anywhere; }
+.engineering-page input[type=file] { display: block; max-width: 100%; margin: 10px 0 18px; }

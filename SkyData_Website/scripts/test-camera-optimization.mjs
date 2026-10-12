@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
+const {joinRecognitionResults}=await load('lib/voice-results.ts');
+const results=(...strings)=>strings.map(transcript=>({0:{transcript}}));
+assert.equal(joinRecognitionResults(results('What about this','What about this')),'What about this');
+assert.equal(joinRecognitionResults(results('What do you see','What do you see now')),'What do you see now');
+assert.equal(joinRecognitionResults(results('Hello','what do you see')),'Hello what do you see');
+assert.equal(joinRecognitionResults(results('No no I meant the other one')),'No no I meant the other one');
+const {cleanCameraReply}=await load('lib/camera-reply.ts');
+const paragraph='The black drink can sits on the wooden table next to the keyboard.';
+assert.equal(cleanCameraReply(paragraph+'\n\n'+paragraph),paragraph);
+assert.equal(cleanCameraReply(paragraph+' '+paragraph),paragraph);
+assert.equal(cleanCameraReply('A blue container is visible.\n\nIts label is unreadable.'),'A blue container is visible.\n\nIts label is unreadable.');
+const code='```js\nrun();\nrun();\n```';assert.equal(cleanCameraReply(code),code);
+assert.equal(cleanCameraReply('- One\n- One'),'- One\n- One');
+console.log('PASS: repeated/overlapping speech results reconciled; intentional intra-segment repetition preserved; exact repeated camera paragraphs/answers removed; distinct observations, code and lists preserved.');

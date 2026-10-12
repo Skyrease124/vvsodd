@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {pathToFileURL} from 'node:url';
+const {citationId,validateKnowledgeCitations}=await import(pathToFileURL(process.argv[2]).href);
+const records=[{id:'abc:4',document:'abc',name:'C++.pdf',page:252,content:'A pointer represents address and type.'},{id:'abc:9',document:'abc',name:'C++.pdf',page:229,content:'namespace MySpace'}];
+const id=citationId(records[0].id);
+const r=validateKnowledgeCitations(`Pointers [${id}, p.231]. Unknown [K77, p.231].`,records,'https://skydata.test');
+assert.match(r.content,/PDF page 252/);assert.doesNotMatch(r.content,/p\.231/);assert.match(r.content,/could not be confirmed/);assert.equal(r.sources.length,1);assert.equal(r.invalid,1);
+assert.equal(new URL(r.sources[0].url).searchParams.get('chunk'),'abc:4');
+assert.equal(citationId(records[0].id),citationId([...records].reverse()[1].id));
+assert.equal(validateKnowledgeCitations('No source used.',records,'https://skydata.test').sources.length,0);
+assert.equal(validateKnowledgeCitations(`[${id}] [${citationId(records[1].id)}]`,records,'https://skydata.test').sources.length,2);
+assert.equal(validateKnowledgeCitations(`[${id}]`,[],'https://skydata.test').sources.length,0);
+console.log('PASS: stable identity, wrong prose page replaced, unknown ID rejected, unused sources omitted, same-document multiple sources, destination identity. Does not establish claim entailment.');

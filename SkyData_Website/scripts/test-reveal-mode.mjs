@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const compile=source=>ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const load=source=>import('data:text/javascript;base64,'+Buffer.from(compile(source)).toString('base64'));
+const {isRevealCommand}=await load(fs.readFileSync('lib/reveal-command.ts','utf8'));
+for(const command of ['Reveal yourself',' reveal   yourself! ','REVEAL YOURSELF.'])assert.equal(isRevealCommand(command),true);
+for(const text of ['Do not reveal yourself','Explain reveal yourself','"Reveal yourself"','reveal yourself then delete my chat'])assert.equal(isRevealCommand(text),false);
+let source=fs.readFileSync('hooks/use-voice-conversation.ts','utf8').replace(/^import .*;$/gm,'');
+source=`const useRef=v=>({current:v});const useEffect=()=>{};const VOICE_LANGUAGES={en:{recognition:'en-US'}};const cleanTranscript=v=>v;const speechChunks=t=>[t];class SpeechTurn{reset(){}};class BrowserVoice{constructor(C,onText,onStatus,onFailure,language,onUnavailable){globalThis.voiceUnavailable=onUnavailable;} resume(){} pause(){} stop(){globalThis.recognitionStopped=true;}};const browserRecognition=()=>function(){};\n`+source;
+let meter,ended,requests=[];globalThis.requestAnimationFrame=fn=>{meter=fn;return 1;};globalThis.cancelAnimationFrame=()=>{meter=null;};
+Object.defineProperty(globalThis,'navigator',{configurable:true,value:{mediaDevices:{async getUserMedia(){return {getTracks:()=>[{stop(){globalThis.microphoneStopped=true;},addEventListener(){}}]};}}}});
+globalThis.AudioContext=class{state='running';destination={};resume(){return Promise.resolve();}close(){return Promise.resolve();}decodeAudioData(){return Promise.resolve({});}createMediaStreamSource(){return{connect(){},disconnect(){}};}createScriptProcessor(){return{connect(){},disconnect(){}};}createGain(){return{gain:{value:1},connect(){},disconnect(){}};}createAnalyser(){return{fftSize:256,connect(){},disconnect(){},getFloatTimeDomainData(a){a.fill(.08);}};}createBufferSource(){return{connect(){},disconnect(){},start(){ended=this.onended;},stop(){this.onended?.();}};}};
+globalThis.fetch=async(url,init)=>{requests.push(JSON.parse(init.body));return{ok:true,arrayBuffer:async()=>new ArrayBuffer(1)};};
+const {useVoiceConversation}=await load(source);const hook=useVoiceConversation(()=>{},()=>{},message=>{throw Error(message);});
+assert.equal(await hook.start(),true);const speaking=hook.speak('Hello',undefined,'Leo');for(let i=0;i<10;i++)await Promise.resolve();assert.equal(requests[0].voice,'Leo');assert.ok(hook.outputLevel.current>.5,'Mouth level comes from audio samples');ended();await speaking;assert.equal(hook.outputLevel.current,0,'Mouth closes after playback');
+const defaultSpeech=hook.speak('Normal chat');for(let i=0;i<10;i++)await Promise.resolve();assert.equal(requests[1].voice,'Aria','Normal voice remains unchanged');hook.stop();await defaultSpeech;assert.equal(hook.outputLevel.current,0);assert.equal(meter,null);
+console.log('PASS: exact reveal command matching; mocked audio-driven level; male reveal voice; normal voice preserved; completion and stop cleanup. No browser or live provider test.');
+
+assert.equal(await hook.start(),true);globalThis.recognitionStopped=false;globalThis.voiceUnavailable();for(let i=0;i<15;i++)await Promise.resolve();assert.equal(globalThis.recognitionStopped,true,'Fallback stops browser recognition');const fallbackSpeech=hook.speak('Recorded fallback reply',undefined,'Leo');for(let i=0;i<15;i++)await Promise.resolve();assert.equal(requests.at(-1).text,'Recorded fallback reply');ended();await fallbackSpeech;hook.stop();assert.equal(globalThis.microphoneStopped,true,'Fallback microphone cleaned on exit');console.log('PASS: mocked recognition-to-recording fallback retains reply playback and cleans up microphone.');

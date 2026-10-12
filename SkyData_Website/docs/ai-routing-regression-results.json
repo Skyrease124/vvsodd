@@ -1,0 +1,102 @@
+[
+  {
+    "name": "test-avatar-render.mjs",
+    "exit": 0,
+    "output": "PASS: 900 tile paths converge monotonically; raster draw geometry stays finite across audio levels and blinks; reduced-motion baseline. Drawing context mocked; no browser/audio visual test.\nPASS: lip deformation confined to mouth; cheeks, silhouette and neck unchanged; no lower-face strip displacement.\n"
+  },
+  {
+    "name": "test-blender-pairing.mjs",
+    "exit": 0,
+    "output": "Pairing checks passed: owner-only access, cross-origin rejection, code replacement, single-use redemption, hashed credentials, expiry, heartbeat, revocation, cancellation; scene capability checks, owner access, validated results, replay safety, timeout and failure states.\n"
+  },
+  {
+    "name": "test-camera-dialogue.mjs",
+    "exit": 1,
+    "output": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert(page.includes('revealActive.current ? .92 : 1'))\n\n    at file:///workspace/sites/skydata-routing/scripts/test-camera-dialogue.mjs:17:1 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+  },
+  {
+    "name": "test-camera-optimization.mjs",
+    "exit": 0,
+    "output": "PASS: repeated/overlapping speech results reconciled; intentional intra-segment repetition preserved; exact repeated camera paragraphs/answers removed; distinct observations, code and lists preserved.\n"
+  },
+  {
+    "name": "test-conversation-style.mjs",
+    "exit": 0,
+    "output": "knowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nPASS: four mocked request contracts; conversational style delivered, raw messages preserved, translation-only mode excluded. No live model behavior tested.\n"
+  },
+  {
+    "name": "test-gemini-live.mjs",
+    "exit": 1,
+    "output": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n\n  assert.ok(worker.includes(\"!admin&&['/api/voice-preview'\"))\n\n    at file:///workspace/sites/skydata-routing/scripts/test-gemini-live.mjs:18:8 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: '==',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+  },
+  {
+    "name": "test-gemini-provider.mjs",
+    "exit": 0,
+    "output": "PASS: default WAV byte preservation, PCM compatibility, sanitized access/quota/model errors and missing-audio distinction (mock provider).\nPASS: mocked Gemini routing, context/media conversion, saved TTS voice, WAV playback format, free-tier refusal, 30-voice catalog and server-enforced owner-only settings. No real API or browser test.\nPASS: voice previews enforce owner access, reject unknown voices, synthesize requested sample voice, and never alter saved selection.\n"
+  },
+  {
+    "name": "test-gemini-token.mjs",
+    "exit": 0,
+    "output": "PASS: mocked token provider, origin/auth/voice/free-tier guards, lease collision/release, no key leakage, quota failure cleanup. Not a live API test.\nPASS: embedded opaque-origin form and token endpoint; signed user-bound CSRF; cross-site, missing-origin and invalid-token rejection. HTTP/browser headers and Google response mocked; no real iPhone session tested.\nPASS: member cannot override owner voice.\n"
+  },
+  {
+    "name": "test-knowledge-citations.mjs",
+    "exit": 0,
+    "output": "knowledge_citation_validation { referenced: 1, invalid: 1 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 2, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 1 }\nPASS: stable identity, wrong prose page replaced, unknown ID rejected, unused sources omitted, same-document multiple sources, destination identity. Does not establish claim entailment.\n"
+  },
+  {
+    "name": "test-knowledge-decisions.mjs",
+    "exit": null,
+    "reason": "Requires original C++.pdf page fixtures; absent from source"
+  },
+  {
+    "name": "test-knowledge-evidence.mjs",
+    "exit": null,
+    "reason": "Requires original C++.pdf page fixtures; absent from source"
+  },
+  {
+    "name": "test-knowledge-model-contracts.mjs",
+    "exit": 1,
+    "output": "knowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: {\"error\":\"This model is unavailable until further notice. Choose another model.\",\"code\":\"model_unavailable\"}\n\n503 !== 200\n\n    at file:///workspace/sites/skydata-routing/scripts/test-knowledge-model-contracts.mjs:7:37 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: 503,\n  expected: 200,\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+  },
+  {
+    "name": "test-knowledge-stream.mjs",
+    "exit": 0,
+    "output": "PASS: document reply withheld until citation validation; ordinary chat still streams; selected model unchanged.\n"
+  },
+  {
+    "name": "test-knowledge.mjs",
+    "exit": 0,
+    "output": "knowledge_retrieval {\n  milliseconds: 3,\n  candidates: 1,\n  hits: 1,\n  direct: 1,\n  context: 0,\n  mode: 'hybrid-rrf'\n}\nknowledge_retrieval {\n  milliseconds: 0,\n  candidates: 1,\n  hits: 1,\n  direct: 1,\n  context: 0,\n  mode: 'hybrid-rrf'\n}\nknowledge_retrieval {\n  milliseconds: 4,\n  candidates: 1,\n  hits: 1,\n  direct: 1,\n  context: 0,\n  mode: 'keyword'\n}\nknowledge_navigation { success: true }\nPASS: migrations, private access, multipart upload, idempotent extraction, 1,001-page checkpoints, embedding failure/retry, processor leases, semantic/keyword retrieval, citations, exclusions, and cascading deletion. NVIDIA/R2 mocked; no live provider assertion.\nKnowledge operation failed { action: 'list', kind: 'Error' }\nKnowledge operation failed { action: 'extract', kind: 'Error' }\nKnowledge operation failed { action: 'extract', kind: 'Error' }\nKnowledge operation failed { action: 'finish', kind: 'Error' }\n"
+  },
+  {
+    "name": "test-live-camera.mjs",
+    "exit": 0,
+    "output": "PASS: bounded chronological frames, stale/invalid rejection, camera switch without audio capture, track/timer cleanup, actual vision request validation and four-frame upstream conversion. Browser/camera and NVIDIA calls mocked; no live device test.\n"
+  },
+  {
+    "name": "test-polly-conversation.mjs",
+    "exit": 0,
+    "output": "PASS: microphone recognition persists; barge-in aborts synthesis and stops playback; stale audio is suppressed; new transcript is submitted; both debate sides use shared endpoint and finish playback before next turn. Browser, audio, and provider mocked; iPhone audio untested.\n"
+  },
+  {
+    "name": "test-polly.mjs",
+    "exit": 0,
+    "output": "PASS: real SQLite migrations; owner-only controls/previews; 4 engines; compatibility; saved global voice; private replay cache; concurrency deduplication; atomic character/dollar limits; sanitized failures; usage records; SSML escaping; catalog pagination; disabled Gemini zero requests. AWS responses mocked.\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nknowledge_citation_validation { referenced: 0, invalid: 0 }\nPASS: all three existing model selections still respond through the preserved text routing while Gemini audio is disabled. Text provider mocked.\n"
+  },
+  {
+    "name": "test-reply-performance.mjs",
+    "exit": 0,
+    "output": "PASS long response: 11500 characters, 11 paints, 400ms scheduled completion tail (fake clock).\nPASS cancellation clears timers and settles completion.\nPASS instant/reduced-motion output.\nPASS final content replacement and complete citation text.\n"
+  },
+  {
+    "name": "test-reveal-mode.mjs",
+    "exit": 1,
+    "output": "node:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\n\nAssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nundefined !== 'Leo'\n\n    at file:///workspace/sites/skydata-routing/scripts/test-reveal-mode.mjs:16:142 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: undefined,\n  expected: 'Leo',\n  operator: 'strictEqual',\n  diff: 'simple'\n}\n\nNode.js v24.19.0\n"
+  },
+  {
+    "name": "test-voice-startup.mjs",
+    "exit": 0,
+    "output": "PASS: silent startup fallback, hello submission, second turn, permission denial, unavailable service, stop cleanup. Recognition and timers mocked; no iPhone/provider test.\n"
+  }
+]

@@ -1,0 +1,5 @@
+Give this complete ZIP to Claude. CLAUDE_PROMPT.txt contains the task.
+SkyData_Website is the published version 106 source. HP_Runner_v2_1 is a separate, unverified local repair.
+No production secrets, user uploads or database contents are included.
+Dependencies and generated caches are excluded. Follow the existing README and package scripts for setup.
+Do not launch the HP runner inside this ZIP; extract it first.

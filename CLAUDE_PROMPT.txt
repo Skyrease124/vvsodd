@@ -1,0 +1,22 @@
+Work on my existing SkyData website using the attached ZIP. Preserve working behavior and the current design. Do not rebuild it from scratch or migrate hosting.
+
+Live website: https://skydata-ai.skyrease123.chatgpt.site
+The SkyData_Website folder is the source of published version 106, commit 8f6bb3286428f69f5540feb2cd8eab60549f8bcb. It uses React/Vinext and a Cloudflare Worker, with D1 and R2 through ChatGPT Sites. Read package.json, README.md, .openai/hosting.json and relevant source before editing. Preserve the site identity, authentication, owner checks, existing storage and secrets configuration. No live API keys, database contents or user uploads are included.
+
+CURRENT CAPABILITIES
+SkyData accepts saved project ZIPs. Engineering Mode supplies explicitly labeled source excerpts to the AI; it does not automatically edit or execute projects. The HP runner supports standalone JavaScript snippets and selected complete project files: up to 100 files / 400 KB, running one Node test entry with relative imports. Package installation, full project builds and automatic AI execution are unavailable. Engineering currently reports Gemini as the actual text backend for its model selections; do not claim the selected label proves another provider was used.
+
+UNRESOLVED RUNNER ISSUE
+A live HP snippet test passed earlier. ZIP upload and project delivery reached the HP, but its project run reported infrastructure_error and could not confirm cleanup. Self_Test subsequently showed spawnSync docker ETIMEDOUT. Docker Desktop displayed the cached node:24-alpine image and docker ps returned headings with no running containers. These observations do not identify the root cause or prove project execution works.
+HP: Windows 11 Home, Intel Celeron J4025, 2 cores, 8 GB RAM, Node v24.19.0, Docker 29.5.3, WSL 3.0.1. I am currently away from that computer.
+The separate HP_Runner_v2_1 folder contains a later local repair: readiness/image checks allow 60 seconds, cleanup 30 seconds, improved error details, and a project import self-test. This repair is NOT in the published website source and has NOT been verified on my HP. Review it rather than assuming it fixed Docker. Keep real code execution capped at 10 seconds and retain no-network, non-root, read-only-root, resource limits, dropped capabilities and no host mounts/provider credentials. Diagnose the specific failing command. Do not weaken isolation or repeatedly retry execution automatically.
+
+BUILD THESE FEATURES IN STAGES
+1. Project file browser: choose a saved ZIP, browse/search its files and open real source. Clearly label truncated, unavailable and non-text files. Let me choose exactly which files the AI receives. Enforce ownership server-side.
+2. Proposed code comparison: show original and proposed changes by filename. Keep proposals separate from stored originals. Require complete original source before presenting a complete replacement. Make approval explicit for each changed file.
+3. Corrected ZIP download: after approval, create a separate ZIP containing the approved replacements and all unchanged original entries. Preserve the original upload. Validate archive paths, duplicates, size limits and unsupported archive types. Do not run uploaded content during packaging.
+4. Test history and runner status: preserve run IDs, exact source fingerprints, selected paths, results and useful error details. Distinguish waiting for HP approval, Docker readiness, execution, timeout and cleanup failure. A connected polling process is not proof Docker is healthy.
+5. Connect proposals to tests: let me review an AI-generated JavaScript test, choose its required files, approve it on the website and confirm locally on the HP. No silent execution and no fabricated test results. Respect the supported Node-only scope; explain missing dependencies.
+
+Implement file browsing and comparison without requiring my HP to be online. Preserve chat, model settings, voice settings and other working features. This is SkyData work; do not modify my unrelated game or assume its files are present.
+Run meaningful checks in your available environment. Separate mocked/local validation from actual Docker and live HP verification. Return complete changed files or a complete updated source ZIP, a short explanation and the exact next HP check. Do not expose credentials, delete my data or deploy to the live website without my explicit approval. If you cannot perform an action, state what is missing instead of claiming completion.

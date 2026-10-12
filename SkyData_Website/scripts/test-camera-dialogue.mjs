@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const load=async path=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
+const {asksToSeeCamera}=await load('lib/camera-question.ts');
+for(const question of ['What do you see What do you see','Hello what do you see','Can you see me?','What am I holding?'])assert(asksToSeeCamera(question));
+for(const question of ['Yeo','Explain C++ pointers','What does this function do?'])assert(!asksToSeeCamera(question));
+const {DIRECT_ANSWER_STYLE}=await load('lib/clean-response.ts');
+assert(!DIRECT_ANSWER_STYLE.includes('SkyData: "Yeo! What’s up?"'));
+assert(DIRECT_ANSWER_STYLE.includes('Never prepend a greeting'));
+assert(DIRECT_ANSWER_STYLE.includes('Do not echo the question'));
+const page=fs.readFileSync('app/page.tsx','utf8');
+assert(page.indexOf('asksToSeeCamera(text)')<page.indexOf('cameraFrames=liveCamera.captureSequence()'));
+assert(page.includes("const opened=await liveCamera.start(false)"));
+assert(page.includes('if(!opened||!liveActive.current)'));
+assert(page.includes('if(liveCamera.isActive()'));
+assert(page.includes('revealActive.current ? .92 : 1'));
+console.log('PASS: screenshot camera questions recognized; unrelated questions excluded; repeated greeting example removed; explicit camera opening precedes fresh-frame submission; cancellation guard; Reveal-only slower playback. Routing assertions are source checks, not a real-device or model behavior test.');

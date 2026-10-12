@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/obra/superpowers",
+  "commit": "bb92a77741419a4ab5f06e711a283343f1ada0c3",
+  "version": "7.0.0",
+  "license": "MIT",
+  "files": [
+    "using-superpowers",
+    "writing-plans",
+    "systematic-debugging",
+    "test-driven-development",
+    "verification-before-completion",
+    "requesting-code-review",
+    "brainstorming"
+  ]
+}
