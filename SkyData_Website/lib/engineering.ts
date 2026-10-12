@@ -4,6 +4,7 @@ import {handleChat} from './nvidia';
 import {geminiUpstream,GEMINI_TEXT_MODEL} from './gemini-provider';
 import {isModelAvailable} from './models';
 import {validProject} from './projects';
+import {loadSelectedFiles,type WorkspaceProject} from './project-workspace';
 import {SUPERPOWERS_SKILLS} from './engineering-skills';
 import {ENGINEERING_WORKFLOWS,type EngineeringMode} from './engineering-contract';
 export {ENGINEERING_WORKFLOWS} from './engineering-contract';
@@ -45,6 +46,13 @@ export async function handleEngineering(request:Request,env:SecretEnv,generate:t
   if(!response.ok)return response;
   const result=await response.json() as {content?:string;sources?:unknown};
   if(typeof result.content!=='string'||!result.content.trim())return Response.json({error:'The model returned no engineering result.'},{status:502,headers});
-  return Response.json({taskId,content:result.content,sources:result.sources,selectedModel:body.model,actualProvider:'Google Gemini',actualModel:GEMINI_TEXT_MODEL,mode:body.mode,workflow:body.workflow,skills:['using-superpowers',ENGINEERING_WORKFLOWS.find(w=>w.id===body.workflow)!.skill,'verification-before-completion'],status:'ADVICE_READY',tests:{status:'NOT_RUN',reason:'No qualified execution service connected.'},execution:'BLOCKED',modificationsApplied:false},{headers});
+  const projectFiles=await selectedFileReport(body.messages,request.headers.get('oai-authenticated-user-id'),env);
+  return Response.json({taskId,projectFiles,content:result.content,sources:result.sources,selectedModel:body.model,actualProvider:'Google Gemini',actualModel:GEMINI_TEXT_MODEL,mode:body.mode,workflow:body.workflow,skills:['using-superpowers',ENGINEERING_WORKFLOWS.find(w=>w.id===body.workflow)!.skill,'verification-before-completion'],status:'ADVICE_READY',tests:{status:'NOT_RUN',reason:'No qualified execution service connected.'},execution:'BLOCKED',modificationsApplied:false},{headers});
  }catch{return Response.json({error:request.signal.aborted?'Engineering task cancelled.':'Engineering request failed. Try again.'},{status:request.signal.aborted?499:502,headers});}
+}
+// Reports which explicitly selected files the model received in full, with fingerprints of those complete originals.
+async function selectedFileReport(messages:{project?:{id:string;paths?:string[]}}[],owner:string|null,env:SecretEnv){
+ const ref=messages.findLast(m=>m.project)?.project;if(!ref?.paths?.length||!owner||!env.DB||!env.FILES)return null;
+ try{const p=await env.DB.prepare("SELECT * FROM projects WHERE id = ? AND owner = ? AND status = 'ready'").bind(ref.id,owner).first<WorkspaceProject>();if(!p)return null;
+  return (await loadSelectedFiles(env,p,ref.paths)).map(({text:_text,...f})=>f);}catch{return null;}
 }
