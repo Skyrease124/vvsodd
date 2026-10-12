@@ -1,4 +1,4 @@
-# Engineering Workspace 1.0 + HP Runner v2.2 — change report
+# Engineering Workspace 1.0 + HP Runner v2.2 — change report (revision 2)
 
 Base: published version 106 (commit 8f6bb32…) from the handoff ZIP. **Not deployed.** Hosting, auth, owner checks, models, voice, storage bindings and secrets configuration are unchanged.
 
@@ -24,7 +24,7 @@ Base: published version 106 (commit 8f6bb32…) from the handoff ZIP. **Not depl
 
 ## Stage 3 — Corrected ZIP
 - `POST …/proposals/:pid/package` builds a **new** archive: unchanged entries are copied byte-for-byte (compressed data included), approved files are replaced or added, and the archive comment is kept. Pending and rejected files keep the original.
-- Refuses ZIP64, split archives, unsafe paths, ambiguous duplicate targets, encrypted targets, overlapping entries, more than 65,534 entries or more than 500 MB. Uses R2 multipart (fixed 8 MiB parts). After building, it re-reads the new ZIP and checks every approved file's SHA-256; on mismatch the output is discarded. Nothing is executed. The original upload stays as it is. Keeps the 3 latest builds per proposal.
+- Refuses ZIP64, split archives, unsafe paths, ambiguous duplicate targets, encrypted targets, overlapping entries, more than 65,534 entries or more than 500 MB. Uses R2 multipart (fixed 8 MiB parts). The new package list is committed before evicted archives are deleted (see Review fixes). After building, it re-reads the new ZIP and checks every approved file's SHA-256; on mismatch the output is discarded. Nothing is executed. The original upload stays as it is. Keeps the 3 latest builds per proposal.
 - Not tested at the 500 MB limit inside the hosted Worker (CPU and time limits of the hosting plan are unknown); tested to >20 MB locally.
 
 ## Stage 4 — Test history and runner status
@@ -38,7 +38,7 @@ Base: published version 106 (commit 8f6bb32…) from the handoff ZIP. **Not depl
 ## HP runner v2.2 (`runner-package/`, `public/SkyData_HP_Runner_v2_2.zip`)
 Diagnosis from the code (not yet confirmed on the HP): v2/v2.1 start the 10-second timer when `docker run` is spawned, so Docker start-up counts as code time. On timeout they kill only the docker CLI. A cleanup `docker rm -f` that is slow (15 s limit in v2, 30 s in v2.1) **overwrites** the result with `infrastructure_error` and discards “timeout”. `spawnSync docker ETIMEDOUT` in Self_Test means `docker info` took longer than 15 s (v2). Simulated on real Docker with an artificially slow docker CLI: v2.1 reports `timeout` for a trivial snippet when start-up takes 11 s, and `infrastructure_error` + “Container cleanup could not be confirmed” when `rm` also takes 35 s (the observed symptom). v2.2 passes both and shows the slow phase.
 
-v2.2 changes: `docker create` + `docker start -a -i`. A preload writes a random start marker, and the **10-second limit is measured from code start**; container start-up has a separate 60 s cap and runs no code. A Docker check (90 s) runs after the local “yes”. On timeout it uses `docker kill`. Cleanup is confirmed with `docker container inspect`. Per-phase timings carry the exact command and error code, and the code's own result is kept when cleanup fails. Self_Test writes `selftest-report.txt` (no tokens). Isolation flags are identical to v2.1. Backward compatible with the current live site.
+v2.2 changes: `docker create` + `docker start -a -i`. A preload writes a random start marker, and the **10-second limit is measured from code start**; container start-up has a separate 60 s cap and runs no code. A Docker check (90 s) runs after the local “yes”. On timeout it uses `docker kill`. Cleanup is confirmed with `docker container inspect`. Per-phase timings carry the exact command and error code, and the code's own result is kept when cleanup fails. Self_Test writes `selftest-report.txt` (no tokens). Limit enforcement does not wait on the docker CLI (see Review fixes). Isolation flags are identical to v2.1. Backward compatible with the current live site.
 
 ## Evidence (what was and was not verified)
 | Check | Kind | Result |
@@ -51,5 +51,28 @@ v2.2 changes: `docker create` + `docker start -a -i`. A preload writes a random 
 | `test-runner-docker.mjs` | **real Docker 29.8.2 on a Linux machine**: uid 1000, read-only root, noexec /tmp, CapEff 0, no-new-privileges, 256 MB, 64 pids, loopback only, no DNS, no host secrets, 10 s limit, forged markers, output limit, no leftover containers | PASS |
 | v2.2 Self_Test | real Docker, Linux | PASS (4/4) |
 | Browser end-to-end (Playwright, built Worker under local Wrangler, identity headers injected) | local | upload → browse → search → view → select → proposal → diff → approve → corrected ZIP → proposal test preview; no horizontal scroll at 390 px |
+| HP (Windows 11, Docker Desktop, WSL2) | live | **NOT RUN — unverified** |
+| Live website | — | **NOT DEPLOYED** |
+
+## Review fixes (revision 2)
+Only these two issues were changed; no other behaviour was modified.
+
+1. **`runner-package/runner.mjs` — enforcement waited for `docker kill`.** Before, `stop()` awaited `docker kill` and only then killed the CLI and started its 1-second fallback, so a 20 ms limit with a 180 ms kill reported ~202 ms (reproduced by the new test against the old code). Now, when a limit is hit the runner records the enforcement moment, kills the docker CLI process immediately, and starts `docker kill` concurrently. That kill has its own bound (`cleanupMs` + 1 s), even if the command never returns. The run finishes after a fixed `graceMs` (1 s) even if the CLI never exits. Execution time is measured to the enforcement moment. A new `termination` phase says whether `docker kill` confirmed the stop. If not, it is marked **NOT confirmed** with the reason, and stderr says the container may have kept running until cleanup removed it. If neither kill nor cleanup is confirmed, the status is `infrastructure_error`, never a plain timeout. Isolation flags, the 10-second limit, cleanup confirmation and the no-retry rule are unchanged.
+   - Regression tests (`test-hp-runner.mjs`, docker CLI mocked): kill delayed 180 ms → execution < 60 ms with confirmed termination; kill that never returns → bounded, termination NOT confirmed, status timeout because cleanup confirmed removal; CLI that ignores the kill and never closes → finished after the grace period; hung kill plus unconfirmed cleanup → `infrastructure_error`, code result `timeout` preserved.
+   - Real Docker (Linux, not the HP): Self_Test timeout case now reports execution 10,001 ms (was 10,101 ms) with `termination ok`; `test-runner-docker.mjs` passes.
+2. **`lib/project-workspace.ts` — old corrected ZIPs deleted before the save committed.** Before, evicted archives were deleted before the conditional (ETag) proposal save; a 409 left metadata pointing at a deleted ZIP. Now the list is trimmed in memory, the metadata save is committed, and only then are evicted archives deleted (best-effort; a failed delete leaves an unreferenced file, never a broken link). On a failed save, only the new, unreferenced archive is removed.
+   - Regression test (`test-project-workspace.mjs`): three existing packages, next conditional save forced to conflict → HTTP 409, package list unchanged, all three previous downloads still return a ZIP (200, `PK\3\4`), no orphaned new archive; a following successful build evicts the oldest only after the commit. The test fails on the old code ("no archive deleted…").
+   - R2 conditional-write conflict is simulated with the in-memory bucket stand-in; not exercised against hosted R2.
+
+`public/SkyData_HP_Runner_v2_2.zip` was regenerated; its `runner.mjs` is byte-identical to `runner-package/runner.mjs`.
+
+### Revision 2 verification
+| Check | Kind | Result |
+|---|---|---|
+| `tsc --noEmit`, `npm run build` | local | PASS |
+| eslint on the changed files | local | 0 errors, 0 warnings |
+| All 11 test scripts listed above | local / mocked / real Linux Docker as labelled | PASS |
+| New kill-delay test against old runner | local | FAILS as expected (202 ms) |
+| New packaging-conflict test against old workspace | local | FAILS as expected |
 | HP (Windows 11, Docker Desktop, WSL2) | live | **NOT RUN — unverified** |
 | Live website | — | **NOT DEPLOYED** |

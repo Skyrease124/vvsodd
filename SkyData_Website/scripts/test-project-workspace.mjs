@@ -51,13 +51,13 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
   z.writestr('main.js','export const v=1;\\n')
 `,tmp+'/dupes.zip');
 // In-memory R2: ranged reads, conditional puts, multipart with R2's equal-part-size rule.
-const store=new Map();let etags=0;
+const store=new Map();let etags=0,failNextConditional=false;
 const object=(data,extra={})=>({size:data.length,etag:'e'+(++etags),...extra});
 const bucket={
  async head(k){const v=store.get(k);return v?{size:v.data.length,etag:v.etag}:null;},
  async get(k,o={}){const v=store.get(k);if(!v)return null;let d=v.data;if(o.range){const {offset,length}=o.range;assert.ok(offset>=0&&offset+length<=d.length,'range out of bounds');d=d.subarray(offset,offset+length);}
   return {etag:v.etag,body:new Blob([d]).stream(),async arrayBuffer(){return d.buffer.slice(d.byteOffset,d.byteOffset+d.byteLength);},async json(){return JSON.parse(Buffer.from(d).toString());},async text(){return Buffer.from(d).toString();}};},
- async put(k,body,o={}){const cur=store.get(k);if(o.onlyIf?.etagMatches&&cur?.etag!==o.onlyIf.etagMatches)return null;const data=typeof body==='string'?Buffer.from(body):Buffer.from(body);const v={data,etag:'e'+(++etags)};store.set(k,v);return object(data,{etag:v.etag});},
+ async put(k,body,o={}){const cur=store.get(k);if(o.onlyIf?.etagMatches&&(cur?.etag!==o.onlyIf.etagMatches||failNextConditional)){failNextConditional=false;return null;}const data=typeof body==='string'?Buffer.from(body):Buffer.from(body);const v={data,etag:'e'+(++etags)};store.set(k,v);return object(data,{etag:v.etag});},
  async delete(k){for(const x of [k].flat())store.delete(x);},
  async list({prefix}){return {objects:[...store.keys()].filter(k=>k.startsWith(prefix)).map(key=>({key})),truncated:false};},
  async createMultipartUpload(k){const parts=new Map();return {async uploadPart(n,d){parts.set(n,Buffer.from(d));return {partNumber:n,etag:'p'+n};},async abort(){parts.clear();},async complete(list){const bufs=list.map(p=>parts.get(p.partNumber));for(let i=0;i<bufs.length-1;i++){assert.equal(bufs[i].length,bufs[0].length,'R2 requires equal part sizes');assert.ok(bufs[i].length>=5*1024*1024,'R2 parts must be at least 5 MiB');}const data=Buffer.concat(bufs);store.set(k,{data,etag:'e'+(++etags)});return object(data);}};}
@@ -140,8 +140,23 @@ z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None
 print(json.dumps({'names':z.namelist(),'main':z.read('main.js').decode(),'apps':[z.open(i).read().decode() for i in z.infolist() if i.filename=='app.js']}))
 `,tmp+'/dupes-corrected.zip'));
  assert.deepEqual(dcheck.names,['app.js','app.js','media/huge.bin','main.js']);assert.equal(dcheck.main,'export const v=2;\n');assert.deepEqual(dcheck.apps,['console.log(1)\n','console.log(2)\n'],'unapproved duplicate entries preserved as uploaded');
+ // 7b. Regression: a conflicting metadata save must not delete previously listed corrected ZIPs.
+ const keep=addProject(tmp+'/fixture.zip'),kf=await call('GET',keep.id+'/file?path=src%2Fmath.mjs');
+ const kp=(await call('POST',keep.id+'/proposals',{origin:'manual',files:[{path:'src/math.mjs',text:'export const add=(a,b)=>a+b+0;\n',originalSha256:kf.data.sha256}]})).data.proposal.id;
+ const kd=await call('GET',keep.id+'/proposals/'+kp);await call('POST',keep.id+'/proposals/'+kp+'/decision',{path:'src/math.mjs',decision:'approved',proposedSha256:kd.data.proposal.files[0].proposedSha256});
+ for(let i=0;i<3;i++)assert.equal((await call('POST',keep.id+'/proposals/'+kp+'/package',{})).status,200);
+ const corrected=()=>[...store.keys()].filter(k=>k.startsWith('projects/'+keep.id+'/corrected/')).sort();
+ const listed=async()=>(await call('GET',keep.id+'/proposals')).data.proposals[0].packages.map(x=>x.id);
+ const before=await listed(),keysBefore=corrected();assert.equal(before.length,3);assert.equal(keysBefore.length,3);
+ failNextConditional=true;const conflict=await call('POST',keep.id+'/proposals/'+kp+'/package',{});assert.equal(conflict.status,409,JSON.stringify(conflict.data));
+ assert.deepEqual(await listed(),before,'metadata unchanged after the failed save');assert.deepEqual(corrected(),keysBefore,'no archive deleted and no orphaned new archive left');
+ for(const pk of before){const r=await call('GET',keep.id+'/proposals/'+kp+'/download?package='+pk);assert.equal(r.status,200,'previous download '+pk+' still works');assert.equal(r.data.subarray(0,4).toString('hex'),'504b0304');}
+ const ok4=await call('POST',keep.id+'/proposals/'+kp+'/package',{});assert.equal(ok4.status,200);const after=await listed();
+ assert.equal(after.length,3);assert.deepEqual(after.slice(1),before.slice(0,2),'oldest evicted only after a successful save');assert.equal(corrected().length,3,'evicted archive removed after commit');
+ for(const pk of after)assert.equal((await call('GET',keep.id+'/proposals/'+kp+'/download?package='+pk)).status,200);
+ assert.equal((await call('GET',keep.id+'/proposals/'+kp+'/download?package='+before[2])).status,404,'evicted package is no longer listed');
  // 8. Corrupted stored data is reported, never shown as complete.
  const corrupt=addProject(tmp+'/fixture.zip');const cd=store.get(corrupt.key).data;const at=cd.indexOf(Buffer.from('# Demo'));cd[at+2]^=1;
  const cr=await call('GET',corrupt.id+'/file?path=README.md');assert.equal(cr.data.complete,false);assert.match(cr.data.reason,/CRC-32/);
- console.log('PASS project workspace: owner-scoped browsing with honest kinds, complete CRC-verified source from the stored ZIP, index search labelled partial, proposals bound to complete-original SHA-256, per-file approvals, corrected ZIP (byte-identical unchanged entries, comment kept, original unchanged) validated by Python zipfile and unzip -t, multipart >8 MiB, unsafe-path refusal, duplicate handling, explicit AI file selection, safe proposal deletion. R2 is an in-memory stand-in here.');
+ console.log('PASS project workspace: owner-scoped browsing with honest kinds, complete CRC-verified source from the stored ZIP, index search labelled partial, proposals bound to complete-original SHA-256, per-file approvals, corrected ZIP (byte-identical unchanged entries, comment kept, original unchanged) validated by Python zipfile and unzip -t, multipart >8 MiB, failed metadata save preserves every previous corrected ZIP (evict only after commit), unsafe-path refusal, duplicate handling, explicit AI file selection, safe proposal deletion. R2 is an in-memory stand-in here.');
 }finally{fs.rmSync(tmp,{recursive:true,force:true});}

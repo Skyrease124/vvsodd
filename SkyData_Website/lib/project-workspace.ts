@@ -133,8 +133,11 @@ export async function handleProjectWorkspace(request:Request,env:SecretEnv,p:Wor
     try{const check=await readArchiveDirectory(bucket,key);if(check.entries.length!==result.entries)throw Error('entry count');for(const f of approved){const r=await readOriginalText(bucket,key,check,f.path);if(r.file?.sha256!==f.proposedSha256)throw Error(f.path);}}
     catch(e){await bucket.delete(key);throw new Rejected('The corrected ZIP failed verification and was discarded ('+(e instanceof Error?e.message:'unknown')+').',500);}
     const pkg:ProposalPackage={id,created:Date.now(),size:result.size,entries:result.entries,name:p.name.replace(/\.zip$/i,'')+'-corrected.zip',key,approved:approved.map(f=>({path:f.path,sha256:f.proposedSha256,isNew:f.isNew}))};
-    proposal.packages.unshift(pkg);for(const old of proposal.packages.splice(MAX_PACKAGES))await bucket.delete(old.key);
+    // Commit metadata first; evicted archives are deleted only after the conditional save succeeds,
+    // so a failed save (409) leaves every previously listed download intact.
+    proposal.packages.unshift(pkg);const evicted=proposal.packages.splice(MAX_PACKAGES);
     try{await saveProposal(env,p,proposal,etag);}catch(e){await bucket.delete(key);throw e;}
+    for(const old of evicted)try{await bucket.delete(old.key);}catch{console.warn('Old corrected ZIP could not be removed',{proposal:proposal.id});}
     return json({package:{...visiblePackage(pkg),unchanged:result.unchanged,replaced:result.replaced,added:result.added},proposal:summary(proposal)});
    }
    if(subAction==='download'&&request.method==='GET'){

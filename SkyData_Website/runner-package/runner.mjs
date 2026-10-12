@@ -12,7 +12,7 @@ const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the
 // container. Container start-up and Docker checks have their own separate limits and never run code.
-export const LIMITS={executionMs:10000,startupMs:60000,dockerCheckMs:90000,createMs:60000,cleanupMs:30000};
+export const LIMITS={executionMs:10000,startupMs:60000,dockerCheckMs:90000,createMs:60000,cleanupMs:30000,graceMs:1000};
 let activeContainer=null,dockerHealth={ok:false,checkedAt:0,detail:'Not checked yet.'};
 const display=text=>String(text).replace(/[\x00-\x08\x0b-\x1f\x7f]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));
 function cleanEnv(){return Object.fromEntries(Object.entries(process.env).filter(([key])=>['PATH','SYSTEMROOT','WINDIR','TEMP','TMP','HOME','USERPROFILE','APPDATA','LOCALAPPDATA','PROGRAMDATA','DOCKER_HOST','DOCKER_CONTEXT'].includes(key.toUpperCase())));}
@@ -55,14 +55,20 @@ export async function cleanup(name,{dockerCommand=docker,wait=ms=>new Promise(r=
 }
 export async function execute(code,image,{spawnProcess=spawn,dockerCommand=docker,removeContainer=cleanup,limits=LIMITS,report=()=>{},wait}={}){
  const name='skydata-test-'+randomUUID(),marker='SKYDATA_EXEC_START_'+randomUUID().replace(/-/g,''),phases=[],totalStart=Date.now();
- let executionStatus='not_started',stdout='',stderr='',exitCode=null,durationMs=0;activeContainer=name;
+ let terminationPhase=null,executionStatus='not_started',stdout='',stderr='',exitCode=null,durationMs=0;activeContainer=name;
  const created=await dockerCommand(containerArgs(name,image,marker),limits.createMs);phases.push(phase('container_create','docker create (isolated)',created));
  if(created.ok){
   report('container_start');
   const run=await new Promise(resolve=>{
    let bytes=0,started=0,ended=false,reason='',buffered='',child,startTimer,execTimer;const spawnedAt=Date.now();
-   const finish=(code,error)=>{if(ended)return;ended=true;clearTimeout(startTimer);clearTimeout(execTimer);resolve({code,error,reason,started,spawnedAt,ended:Date.now()});};
-   const stop=async why=>{if(reason)return;reason=why;await dockerCommand(['kill',name],limits.cleanupMs);try{child.kill();}catch{}setTimeout(()=>finish(null,true),1000).unref?.();};
+   let stoppedAt=0,termination=null;
+   const finish=(code,error)=>{if(ended)return;ended=true;clearTimeout(startTimer);clearTimeout(execTimer);resolve({code,error,reason,started,spawnedAt,stoppedAt,termination,ended:Date.now()});};
+   // Enforcement never waits on the docker CLI: the limit moment is recorded, the CLI process is killed at once,
+   // `docker kill` runs concurrently with its own bound, and the run is finished after a fixed grace period.
+   const stop=why=>{if(reason)return;reason=why;stoppedAt=Date.now();
+    const kill=Promise.resolve().then(()=>dockerCommand(['kill',name],limits.cleanupMs)).catch(e=>({ok:false,ms:Date.now()-stoppedAt,stdout:'',stderr:String(e?.message||e),code:'kill_failed'}));
+    termination=Promise.race([kill,new Promise(r=>{setTimeout(()=>r({ok:false,ms:limits.cleanupMs+1000,stdout:'',stderr:'docker kill did not return.',timedOut:true,code:'ETIMEDOUT'}),limits.cleanupMs+1000);})]);
+    try{child.kill();}catch{}setTimeout(()=>finish(null,true),limits.graceMs??1000);};
    const collect=(which,data)=>{bytes+=data.length;if(bytes>OUTPUT_LIMIT){void stop('output_limit');return;}if(which==='out')stdout+=data.toString();else{
     if(started){stderr+=data.toString();return;}buffered+=data.toString();const at=buffered.indexOf(marker+'\n');
     if(at>=0){started=Date.now();report('executing');stderr+=buffered.slice(0,at)+buffered.slice(at+marker.length+1);buffered='';clearTimeout(startTimer);execTimer=setTimeout(()=>void stop('timeout'),limits.executionMs);}}};
@@ -71,7 +77,10 @@ export async function execute(code,image,{spawnProcess=spawn,dockerCommand=docke
    child.on('close',code=>{if(!started){stderr+=buffered;buffered='';}finish(code,code===null);});child.stdin.on('error',()=>{});child.stdin.end(code);
    startTimer=setTimeout(()=>void stop('startup_timeout'),limits.startupMs);
   });
-  exitCode=run.code;durationMs=run.started?Math.max(0,(run.ended-run.started)):0;
+  exitCode=run.code;durationMs=run.started?Math.max(0,(run.stoppedAt||run.ended)-run.started):0;
+  if(run.termination){const k=await run.termination,closedAfter=run.ended-run.stoppedAt;
+   terminationPhase=({phase:'termination',command:'docker kill',ms:k.ms,ok:k.ok,detail:(k.ok?'Container stop confirmed by docker kill.':'Termination NOT confirmed: docker kill '+(k.timedOut?'timed out after '+Math.round(k.ms/1000)+' s':'failed ('+k.code+')')+'. The container may have kept running until cleanup removed it. '+(k.stderr||'').slice(0,300))+' Runner stopped waiting '+closedAfter+' ms after the limit.'});
+   if(!k.ok)stderr+='\nSkyData runner: the '+run.reason+' limit was enforced on the runner side, but docker kill did not confirm the container stopped; see the cleanup phase.';}
   phases.push({phase:'container_start',command:'docker start -a -i',ms:(run.started||run.ended)-run.spawnedAt,ok:!!run.started,...(run.started?{}:{code:run.reason||'no_start_marker',detail:run.reason==='startup_timeout'?'The container did not start Node within '+limits.startupMs/1000+' s. Your code did not run.':'Node did not reach the submitted code (exit '+run.code+'). '+stderr.slice(-400)})});
   // Node compiles stdin before the preload runs, so a syntax error exits without the marker: that is the code failing, not Docker.
   const dockerError=/Error response from daemon|Cannot connect to the Docker daemon|error during connect|^docker: /im.test(stderr);
@@ -84,6 +93,7 @@ export async function execute(code,image,{spawnProcess=spawn,dockerCommand=docke
    phases.push({phase:'execution',command:'node (inside container)',ms:durationMs,ok:executionStatus==='passed'||executionStatus==='failed',...(executionStatus==='timeout'?{code:'timeout',detail:'Stopped at the '+limits.executionMs/1000+'-second execution limit.'}:{})});
   }
  }
+ if(terminationPhase)phases.push(terminationPhase);
  report('cleanup');const clean=await removeContainer(name,{dockerCommand,...(wait?{wait}:{})});phases.push(clean);activeContainer=null;
  const status=!clean.ok||executionStatus==='not_started'||executionStatus==='infrastructure_error'?'infrastructure_error':executionStatus;
  const failed=phases.filter(p=>!p.ok);
