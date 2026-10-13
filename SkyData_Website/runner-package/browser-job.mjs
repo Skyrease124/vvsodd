@@ -3,10 +3,11 @@ import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
-import {executeRea,checkReaImage} from './rea-job.mjs';
+import {executeRea,checkReaImage,REA_LIMITS} from './rea-job.mjs';
 export const BROWSER_PREFIX='SKYDATA_BROWSER_V1\n',BROWSER_VERSION='4.2.1',BROWSER_ADAPTER='2';
 export const BROWSER_IMAGE='skydata-stagehand:4.2.1-a2',PROXY_IMAGE='skydata-browser-proxy:a2';
 const stampPath=join(homedir(),'.skydata-runner','browser-check.json');
+export const REA_BROWSER_BYTES=384*1024;
 export const BROWSER_LIMITS={deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
 export const activeBrowserResources=new Set();
 // Tasks (processes + threads) for the browser container. Measured with Chromium 155 + Stagehand 4.2.1 on Linux Docker:
@@ -89,12 +90,16 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
     const rea=await checkReaImage(dockerCommand);
     if(!rea.available||!evidence.scripts?.length){status='failed';error=!rea.available?rea.detail:'No eligible public JavaScript was captured for REA.';}
     else{
+     // REA time grows with input (Linux Docker: 965 KB took 91 s at 1 CPU; at 0.4 CPU 500 KB took 148 s of the adapter's 150 s). 384 KB leaves headroom on a slower HP.
+     // Scripts not sent are removed from the evidence, so the website's staged-equals-scripts check still compares exactly what REA analysed.
+     let used=0;const chosen=[];for(const s of evidence.scripts){const n=Buffer.byteLength(s.text);if(used+n<=REA_BROWSER_BYTES){used+=n;chosen.push(s);}}
+     if(chosen.length<evidence.scripts.length){evidence.limitations=[...(evidence.limitations||[]),'REA analysed '+chosen.length+' of '+evidence.scripts.length+' captured scripts ('+Math.round(used/1024)+' KB); the rest were left out to stay within the REA time limit on this HP.'];evidence.scripts=chosen;}
      report('rea_analysis');const files=evidence.scripts.map(({path,text,sha256})=>({path,text,sha256}));
      let reaContainer=null;const reaDocker=async(args,timeout)=>{if(args[0]==='create'){reaContainer=args[args.indexOf('--name')+1];activeBrowserResources.add(reaContainer);}return dockerCommand(args,timeout);};const stopRea=()=>{if(reaContainer)void dockerCommand(['kill',reaContainer],limits.cleanupMs);};signal?.addEventListener('abort',stopRea,{once:true});
-     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:{files:200,totalBytes:2*1024*1024,fileBytes:512*1024,payloadBytes:3*1024*1024,resultBytes:4*1024*1024,deadlineMs:90000,createMs:60000,cleanupMs:30000,graceMs:1000}});
+     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:REA_LIMITS});
      signal?.removeEventListener('abort',stopRea);if(r.diagnostics?.cleanupConfirmed&&reaContainer)activeBrowserResources.delete(reaContainer);
      const staged=r.adapter?.staged?.map(f=>f.path+'\0'+f.sha256).sort(),expected=files.map(f=>f.path+'\0'+f.sha256).sort();
-     if(!['complete','partial'].includes(r.status)||r.adapter?.rea?.version!=='6.4.0'||r.adapter?.workspaceUnchanged!==true||r.diagnostics?.cleanupConfirmed!==true||JSON.stringify(staged)!==JSON.stringify(expected)||!r.adapter?.findings){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error='REA capture analysis did not pass integrity checks.';}
+     if(!['complete','partial'].includes(r.status)||r.adapter?.rea?.version!=='6.4.0'||r.adapter?.workspaceUnchanged!==true||r.diagnostics?.cleanupConfirmed!==true||JSON.stringify(staged)!==JSON.stringify(expected)||!r.adapter?.findings){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within the '+REA_LIMITS.deadlineMs/1000+'-second REA limit on this HP.':r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks.';}
      else evidence.rea={...r.adapter,cleanupConfirmed:true};
     }
    }
