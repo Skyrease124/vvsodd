@@ -27,7 +27,8 @@ try{
  for(const engine of ['superpowers','rea']){
   await db.prepare('DELETE FROM request_limits').run();
   const created=await request('','POST',{...input,engine});assert.equal(created.status,202,await created.clone().text());const {id}=await created.json();assert.equal((await request('/'+id)).status,200);
-  const r=await request('/'+id+'/generate','POST');assert.equal(r.status,200,await r.clone().text());const report=await r.json();assert.equal(report.engine,engine);assert.ok(report.content.includes('CONFIRMED'));assert.equal(report.actualModel,'gemini-3.8-flash');assert.ok(!JSON.stringify(report).includes('synthetic-service-token'));
+  // Exactly what the Generate button sends: a POST with no body and no content type.
+  const r=await mf.dispatchFetch('http://localhost/api/engineering-browser/'+id+'/generate',{method:'POST',headers:{origin:'http://localhost','oai-authenticated-user-id':'owner'}});assert.equal(r.status,200,await r.clone().text());const report=await r.json();assert.equal(report.engine,engine);assert.ok(report.content.includes('CONFIRMED'));assert.equal(report.actualModel,'gemini-3.8-flash');assert.ok(!JSON.stringify(report).includes('synthetic-service-token'));
   const count=modelCalls;const repeat=await request('/'+id+'/generate','POST');assert.equal(repeat.status,200);assert.equal(modelCalls,count,'stored report does not call model again');assert.equal((await request('/'+id+'/report')).status,200);assert.equal((await request('/'+id+'/report','GET',null,'visitor')).status,403);
  }
  const {id}=await (await request('','POST',input)).json();clean=false;const count=modelCalls;assert.equal((await request('/'+id+'/generate','POST')).status,409);assert.equal(modelCalls,count);clean=true;
