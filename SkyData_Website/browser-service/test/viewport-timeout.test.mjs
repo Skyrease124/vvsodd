@@ -33,6 +33,15 @@ test('a screenshot that hits the extension TimeoutError is skipped and the busy 
  assert.ok(final.limitations.some(l=>l.startsWith('The page stayed busy')));
  assert.ok(!err.includes('OBSERVE_CALLED'));assert.ok(!phases.includes('Examining functionality'));
 });
+test('an unreachable AI relay stops navigation but keeps the collected evidence',async()=>{
+ const {final,err}=await run('relay');
+ assert.equal(final.type,'result');assert.equal(final.status,'complete');assert.ok(err.includes('OBSERVE_CALLED'));
+ assert.deepEqual(final.screenshots.map(s=>s.width),[1440,390]);assert.equal(final.pages.length,1);
+ assert.ok(final.limitations.some(l=>l.startsWith('AI-guided navigation stopped: Browser reasoning relay did not answer')),final.limitations.join(' | '));
+});
+test('a non-relay observe failure still fails the investigation',async()=>{
+ const {final}=await run('observeerror');assert.equal(final.type,'error');assert.equal(final.error,'Stagehand snapshot failed');assert.equal(final.failingPhase,'Examining functionality');
+});
 test('other viewport errors still fail the investigation',async()=>{
  const {final,code}=await run('error');
  assert.equal(final.type,'error');assert.equal(final.error,'Target closed');assert.equal(final.failingPhase,'Collecting evidence');assert.equal(code,1);

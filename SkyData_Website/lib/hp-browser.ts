@@ -60,5 +60,9 @@ export async function browserModel(req:Request,env:SecretEnv){
   const value=JSON.parse(result.text||'null');const inputTokens=result.usageMetadata?.promptTokenCount||0,outputTokens=result.usageMetadata?.candidatesTokenCount||0;
   await env.DB.prepare('UPDATE engineering_browser_relay SET input_tokens=input_tokens+?,output_tokens=output_tokens+? WHERE id=? AND owner=?').bind(inputTokens,outputTokens,b.id,permission.owner).run();
   return json({role:'assistant',outputFormat:'json_schema',structuredContent:value,content:[{type:'text',text:JSON.stringify(value)}],usage:{inputTokens,outputTokens,totalTokens:inputTokens+outputTokens}});
- }catch{return json({error:'Browser navigation model failed. No paid fallback.'},502);}
+ }catch(e){
+  // Keep Gemini's HTTP status (e.g. 429 quota) so the HP runner window shows why navigation stopped; no message text or key material is forwarded.
+  const status=typeof (e as {status?:unknown})?.status==='number'?(e as {status:number}).status:0;
+  return json({error:'Browser navigation model failed'+(status?' (Gemini HTTP '+status+')':'')+'. No paid fallback.'},status===429?429:502);
+ }
 }
