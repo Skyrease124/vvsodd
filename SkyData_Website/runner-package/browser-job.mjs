@@ -3,6 +3,7 @@ import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {homedir} from 'node:os';
+import {StringDecoder} from 'node:string_decoder';
 import {executeRea,checkReaImage,REA_LIMITS} from './rea-job.mjs';
 export const BROWSER_PREFIX='SKYDATA_BROWSER_V1\n',BROWSER_VERSION='4.2.1',BROWSER_ADAPTER='2';
 export const BROWSER_IMAGE='skydata-stagehand:4.2.1-a2',PROXY_IMAGE='skydata-browser-proxy:a2';
@@ -55,7 +56,9 @@ export async function attachBrowser(name,input,{dockerCommand,spawnProcess=spawn
   const cancel=()=>stop('cancelled');const timer=setTimeout(()=>stop('timeout'),limits.deadlineMs);signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted){stop('cancelled');return;}
   try{child=spawnProcess('docker',['start','-a','-i',name],{stdio:['pipe','pipe','pipe'],windowsHide:true,shell:false,env:cleanEnv()});}catch{finish(null,true);return;}
-  child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}pending+=d;const lines=pending.split('\n');pending=lines.pop();for(const line of lines){try{const e=JSON.parse(line);if(e.type==='phase'&&phaseMap[e.phase])report(phaseMap[e.phase]);if(e.type==='result')result=e;if(e.type==='error'){errorMessage=String(e.error||'Browser worker failed.').slice(0,400);startupDiagnostics=String(e.startupDiagnostics||'').slice(0,8192).replace(/[a-f0-9]{64}/gi,'[redacted]');failure=boundedFailure(e);}}catch{}}});
+  // One decoder for the whole stream: a multi-byte character split across chunks must not turn into replacement characters (it would break script SHA-256 checks).
+  const utf8=new StringDecoder('utf8');
+  child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}pending+=utf8.write(d);const lines=pending.split('\n');pending=lines.pop();for(const line of lines){try{const e=JSON.parse(line);if(e.type==='phase'&&phaseMap[e.phase])report(phaseMap[e.phase]);if(e.type==='result')result=e;if(e.type==='error'){errorMessage=String(e.error||'Browser worker failed.').slice(0,400);startupDiagnostics=String(e.startupDiagnostics||'').slice(0,8192).replace(/[a-f0-9]{64}/gi,'[redacted]');failure=boundedFailure(e);}}catch{}}});
   child.stderr.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes)stop('output_limit');});child.on('close',code=>finish(code,code!==0));child.on('error',()=>finish(null,true));child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify(input));
  });
 }
@@ -99,7 +102,9 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
      const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:REA_LIMITS});
      signal?.removeEventListener('abort',stopRea);if(r.diagnostics?.cleanupConfirmed&&reaContainer)activeBrowserResources.delete(reaContainer);
      const staged=r.adapter?.staged?.map(f=>f.path+'\0'+f.sha256).sort(),expected=files.map(f=>f.path+'\0'+f.sha256).sort();
-     if(!['complete','partial'].includes(r.status)||r.adapter?.rea?.version!=='6.4.0'||r.adapter?.workspaceUnchanged!==true||r.diagnostics?.cleanupConfirmed!==true||JSON.stringify(staged)!==JSON.stringify(expected)||!r.adapter?.findings){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within the '+REA_LIMITS.deadlineMs/1000+'-second REA limit on this HP.':r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks.';}
+     // The first failed check is named in the error so a failure on the HP can be diagnosed from the runner window.
+     const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):''):r.adapter?.rea?.version!=='6.4.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
+     if(failedCheck){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within the '+REA_LIMITS.deadlineMs/1000+'-second REA limit on this HP.':r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks ('+failedCheck+').';}
      else evidence.rea={...r.adapter,cleanupConfirmed:true};
     }
    }

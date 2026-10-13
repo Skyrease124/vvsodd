@@ -3,6 +3,7 @@
 // one allowed operation, no user-supplied commands or arguments, and nothing from the project is executed.
 import {spawn} from 'node:child_process';
 import {createHash,randomUUID} from 'node:crypto';
+import {StringDecoder} from 'node:string_decoder';
 export const REA_PREFIX='SKYDATA_REA_V1\n',REA_IMAGE='skydata-rea:6.4.0-a1',REA_VERSION='6.4.0',ADAPTER_VERSION='1',REA_OPERATION='analyze-javascript-application';
 export const REA_LIMITS={files:200,totalBytes:2*1024*1024,fileBytes:512*1024,payloadBytes:3*1024*1024,resultBytes:4*1024*1024,deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000};
 const sha=t=>createHash('sha256').update(t).digest('hex');
@@ -31,7 +32,7 @@ export async function checkReaImage(dockerCommand){
  return {available:!problems.length,reaVersion,adapterVersion,imageId:image?.Id??null,checkedAt:Date.now(),detail:problems.length?'Incompatible REA image: '+problems.join('; ')+'. Run Prepare_REA.cmd again.':'REA '+reaVersion+' · adapter '+adapterVersion+' · image '+String(image.Id).slice(7,19)};
 }
 export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,spawnProcess=spawn,limits=REA_LIMITS,report=()=>{},cleanEnv=()=>({})}){
- const name='skydata-rea-'+randomUUID(),phases=[],t0=Date.now();let stdout='',stderr='',bytes=0;
+ const name='skydata-rea-'+randomUUID(),phases=[],t0=Date.now();let stdout='',stderr='',bytes=0;const utf8=new StringDecoder('utf8');// one decoder: chunks may split multi-byte characters
  const created=await dockerCommand(reaContainerArgs(name,imageId),limits.createMs);phases.push({phase:'container_create',command:'docker create (REA image, isolated)',ms:created.ms,ok:created.ok,...(created.ok?{}:{code:String(created.code),detail:(created.stderr||'').slice(0,600)})});
  let run=null,terminationPhase=null;
  if(created.ok){
@@ -45,7 +46,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
     try{child.kill();}catch{}setTimeout(()=>finish(null,true),limits.graceMs);};
    const timer=setTimeout(()=>stop('timeout'),limits.deadlineMs);
    try{child=spawnProcess('docker',['start','-a','-i',name],{stdio:['pipe','pipe','pipe'],windowsHide:true,shell:false,env:cleanEnv()});}catch(e){stderr='Docker start failed ('+(e.code||'unknown')+')';finish(null,true);return;}
-   child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}stdout+=d.toString();});
+   child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}stdout+=utf8.write(d);});
    child.stderr.on('data',d=>{if(stderr.length<65536)stderr+=d.toString().slice(0,65536-stderr.length);});
    child.on('error',e=>{stderr+='\nDocker start failed ('+(e.code||'unknown')+')';finish(null,true);});child.on('close',code=>finish(code,code===null));
    child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({protocol:'skydata-rea-v1',operation:REA_OPERATION,files:bundle.files}));
@@ -55,7 +56,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
  }
  if(terminationPhase)phases.push(terminationPhase);
  report('cleanup');const clean=await removeContainer(name,{dockerCommand});phases.push(clean);
- let adapter=null;if(run&&!run.reason&&stdout){try{adapter=JSON.parse(stdout);}catch{adapter=null;}}
+ stdout+=utf8.end();let adapter=null;if(run&&!run.reason&&stdout){try{adapter=JSON.parse(stdout);}catch{adapter=null;}}
  let status;
  if(!created.ok||!run||run.error&&!run.reason)status='infrastructure_error';
  else if(run.reason)status=run.reason;
