@@ -11,7 +11,7 @@ import {readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {REA_PREFIX,REA_OPERATION,REA_VERSION,ADAPTER_VERSION,REA_LIMITS,parseReaJob,checkReaImage,executeRea} from './rea-job.mjs';
 const SITE='https://skydata-ai.skyrease123.chatgpt.site';
-export const VERSION='2.4.2';
+export const VERSION='2.4.3';
 const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json');
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the
@@ -164,7 +164,9 @@ export async function hpBrowserJob(job,rl,token,{apiCall=api,checkImages=checkBr
    }
   }
   console.log('Website investigation: '+result.status+(result.error?' · '+display(result.error):''));
-  const received=await apiCall('browser-result',{id:job.id,result},token);if(received.status==='invalid_result')console.log('The website refused this result after integrity checks.');
+  // Failure context stays on this HP (window only); the website receives the same result fields as before.
+  const {failure,...sent}=result;if(failure)console.log('Stopped at: '+display(failure.failingPhase||'unknown')+' · browser tasks '+(failure.resources?.pids?.current??'?')+'/'+(failure.resources?.pids?.max??'?')+' · task limit hits '+(failure.resources?.pids?.events?.max??'?'));
+  const received=await apiCall('browser-result',{id:job.id,result:sent},token);if(received.status==='invalid_result')console.log('The website refused this result after integrity checks.');
   if(result.status==='infrastructure_error')throw Error('Runner stopped after browser infrastructure/cleanup failure. No automatic retry.');
  }finally{clearInterval(timer);}
 }

@@ -6,8 +6,11 @@ import {publicUrl} from './url-policy.mjs';
 import {mkdir} from 'node:fs/promises';
 import {startupDiagnostics} from './startup-diagnostics.mjs';
 import {stagehandOrigin,verifyControlBoundary} from './browser-control.mjs';
+import {resourceDiagnostics} from './resource-diagnostics.mjs';
 const emit=value=>process.stdout.write(JSON.stringify(value)+'\n');
-const phase=value=>emit({type:'phase',phase:value,at:new Date().toISOString()});
+// The current phase and completed checks are kept so a failure report says where it stopped and what already passed.
+let currentPhase='Starting';const checks={},blocks=[];
+const phase=value=>{currentPhase=value;emit({type:'phase',phase:value,at:new Date().toISOString()});};
 const chunks=[];let size=0;for await(const c of process.stdin){size+=c.length;if(size>16000)throw Error('Input limit.');chunks.push(c);}
 const input=JSON.parse(Buffer.concat(chunks));const target=publicUrl(input.url);
 let browser,stagehand,pw;let calls=0,inputTokens=0,outputTokens=0;
@@ -19,7 +22,7 @@ try{
  for(const dir of [process.env.HOME,process.env.XDG_CONFIG_HOME,process.env.XDG_CACHE_HOME])if(dir)await mkdir(dir,{recursive:true,mode:0o700});
  const controlOrigin=await stagehandOrigin();
  browser=await localBrowser.launch({headless:true,executablePath:'/opt/browser/chromium-launch.sh',port:9222,userDataDir:'/tmp/profile',chromiumSandbox:false,ignoreHTTPSErrors:true,proxy:{server:'http://egress:8080',bypass:'<-loopback>;ws://127.0.0.1:9222'},acceptDownloads:false,ignoreDefaultArgs:['--remote-allow-origins=*'],args:['--remote-allow-origins='+controlOrigin,'--disable-quic','--force-webrtc-ip-handling-policy=disable_non_proxied_udp','--disable-background-networking']});
- const controlOriginGuard=await verifyControlBoundary();
+ const controlOriginGuard=await verifyControlBoundary();checks.controlOriginGuard=controlOriginGuard;checks.resourcesAfterLaunch=await resourceDiagnostics();
  // Public v4 custom-model callback; provider credentials stay in Node, outside the page/extension.
  const generate=async params=>{
   if(++calls>3)throw Error('Stagehand model-call budget exceeded.');
@@ -44,7 +47,7 @@ try{
    try{const length=Number(response.headers()['content-length']);if(!length||length>512000)return;const text=await response.text();const bytes=Buffer.byteLength(text);if(bytes>512000||scriptBytes+bytes>limits.scriptBytes)return;scriptBytes+=bytes;scripts.push({path:'public/script-'+scripts.length+'.js',url:redact(response.url()),sha256:createHash('sha256').update(text).digest('hex'),text});}catch{}
   }
  });
- phase('Connecting to website');const main=await page.goto(target.href,{timeout:25000,waitUntil:'domcontentloaded'});if(main&&main.status()>=400)throw Error('Public website did not load successfully (HTTP '+main.status()+'). No authentication or security bypass was attempted.');
+ phase('Connecting to website');const main=await page.goto(target.href,{timeout:25000,waitUntil:'domcontentloaded'});checks.initialNavigation={method:'Stagehand page.goto (domcontentloaded)',status:main?main.status():null};if(main&&main.status()>=400)throw Error('Public website did not load successfully (HTTP '+main.status()+'). No authentication or security bypass was attempted.');
  phase('Inspecting interface');
  for(let n=0;n<limits.pages;n++){
   const final=publicUrl(await page.url());
@@ -70,14 +73,18 @@ try{
   if(!performed)break;
  }
  if(input.selfTest){
+  phase('Self-test private-network probes');checks.resourcesBeforeProbes=await resourceDiagnostics();
   await context.unroute('**/*');const probe=await pw.contexts()[0].newPage();
-  const blocks=[];for(const url of ['http://127.0.0.1/','http://169.254.169.254/latest/meta-data/','http://10.0.0.1/','http://[::1]/']){try{const r=await probe.goto(url,{timeout:4000});blocks.push({url,blocked:r?.status()===403});}catch{blocks.push({url,blocked:true});}}
-  await probe.goto('https://example.com/',{timeout:25000});const postBlocked=await probe.evaluate(async()=>{const r=await fetch('https://example.com/',{method:'POST'});return r.status===403;});blocks.push({url:'https://example.com/ (POST)',blocked:postBlocked});
+  // Blocked means the egress policy answered HTTP 403. Any other outcome (including a crashed or aborted page) is recorded, not counted as blocked.
+  for(const url of ['http://127.0.0.1/','http://169.254.169.254/latest/meta-data/','http://10.0.0.1/','http://[::1]/']){try{const r=await probe.goto(url,{timeout:4000});blocks.push({url,blocked:r?.status()===403,status:r?.status()??null});}catch(e){blocks.push({url,blocked:false,error:String(e.message).split('\n')[0].slice(0,200)});}}
+  phase('Self-test public navigation');
+  const selfNav=await probe.goto('https://example.com/',{timeout:25000});checks.selfTestNavigation={method:'Playwright probe page.goto (load)',status:selfNav?selfNav.status():null};
+  const postBlocked=await probe.evaluate(async()=>{const r=await fetch('https://example.com/',{method:'POST'});return r.status===403;});blocks.push({url:'https://example.com/ (POST)',blocked:postBlocked});
   await probe.close();limitations.push('Self-test only: no model inference.');pages[0].privateNetworkProbes=blocks;
  }
  phase('Analyzing technologies');
  limitations.push('Public frontend only; server architecture, database, licensing, authentication and media origins cannot be established from this capture.','Only same-origin navigation links are clicked. Search submission, menu buttons, playback and authenticated flows are not tested.','Network records exclude bodies, credentials and query strings. Media streams, downloads, WebSockets and non-GET requests are blocked.','JavaScript capture is partial: up to 20 responses with declared sizes, 1 MB total. Accessibility checks are observations, not an audit.');
  await pw.close();pw=null;await stagehand.close();stagehand=null;await browser.close();browser=null;
  emit({type:'result',status:'complete',stagehandVersion:'4.2.1',browserExecuted:true,cleanupConfirmed:true,controlOriginGuard,pages,network,scripts,interactions,screenshots,limitations,usage:{calls,inputTokens,outputTokens,browserModel:'SkyData scoped relay / '+(input.model||'unknown')}});
-}catch(e){emit({type:'error',error:String(e.message).slice(0,300),startupDiagnostics:await startupDiagnostics()});process.exitCode=1;}
+}catch(e){emit({type:'error',error:String(e.message).slice(0,300),failingPhase:currentPhase,completedChecks:checks,probes:blocks,resources:await resourceDiagnostics().catch(()=>null),startupDiagnostics:await startupDiagnostics()});process.exitCode=1;}
 finally{await pw?.close().catch(()=>{});await stagehand?.close().catch(()=>{});await browser?.close().catch(()=>{});}

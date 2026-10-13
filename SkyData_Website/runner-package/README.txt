@@ -1,3 +1,5 @@
+Runner 2.4.3: rebuild with Prepare_Browser.cmd in a new folder (existing pairing is kept). Raises the browser container task limit from 128 to 512 processes+threads: on Linux Docker with Chromium 155 the self-test needed about 200 and failed at 128 with fork/pthread EAGAIN. Memory (1 GB), CPU, read-only root, no network except the egress proxy and all origin checks are unchanged. Failed self-tests now report the failing phase, completed checks, probe outcomes and cgroup pids/memory counters. Windows HP verification pending.
+
 Runner 2.4.2: rebuild with Prepare_Browser.cmd in a new folder. Fixes the Stagehand extension control WebSocket being sent to the public-network proxy. Only ws://127.0.0.1:9222 bypasses; Chrome accepts only the Stagehand extension origin. Every job checks rejected website origins before navigation. HP verification pending.
 
 Runner 2.4.1 startup patch: extract into a NEW folder and run Prepare_Browser.cmd again. Existing pairing is retained. Chrome now uses temporary writable home/config/cache paths; failed self-tests include bounded Chrome startup diagnostics. HP verification is pending.

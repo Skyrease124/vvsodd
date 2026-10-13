@@ -9,6 +9,10 @@ export const BROWSER_IMAGE='skydata-stagehand:4.2.1-a2',PROXY_IMAGE='skydata-bro
 const stampPath=join(homedir(),'.skydata-runner','browser-check.json');
 export const BROWSER_LIMITS={deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
 export const activeBrowserResources=new Set();
+// Tasks (processes + threads) for the browser container. Measured with Chromium 155 + Stagehand 4.2.1 on Linux Docker:
+// the self-test peaks at ~200-210 tasks and fails at 128 (pids.events > 0, pthread_create/fork EAGAIN). 512 keeps a hard cap
+// with headroom for extra site-isolated renderers on real pages; memory stays capped at 1 GB.
+export const BROWSER_PIDS=512;
 const sha=text=>createHash('sha256').update(text).digest('hex');
 export function parseBrowserJob(job){
  try{
@@ -31,13 +35,18 @@ export async function checkBrowserImages(dockerCommand,{readStamp=()=>readFile(s
   return {available:ignoreStamp||passed,stagehandVersion:BROWSER_VERSION,adapterVersion:BROWSER_ADAPTER,imageId,proxyId,selfTestPassed:passed,checkedAt:Date.now(),detail:passed?'Stagehand 4.2.1 browser image and public-network self-test verified on this HP.':'Browser images found. Run Browser_Self_Test.cmd (again after image updates or seven days).'};
  }catch(e){return {available:false,stagehandVersion:BROWSER_VERSION,adapterVersion:BROWSER_ADAPTER,selfTestPassed:false,checkedAt:Date.now(),detail:e.message};}
 }
-const createArgs=(name,image,network,proxy=false)=>['create','--name',name,'--pull','never','--network',network,'--memory',proxy?'256m':'1g','--memory-swap',proxy?'256m':'1g','--cpus','1','--pids-limit',proxy?'64':'128','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,nodev,size=256m','--log-driver','none',...(proxy?['--network-alias','egress']:['-i','-e','NO_PROXY=127.0.0.1,localhost']),image];
+const createArgs=(name,image,network,proxy=false)=>['create','--name',name,'--pull','never','--network',network,'--memory',proxy?'256m':'1g','--memory-swap',proxy?'256m':'1g','--cpus','1','--pids-limit',proxy?'64':String(BROWSER_PIDS),'--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,nodev,size=256m','--log-driver','none',...(proxy?['--network-alias','egress']:['-i','-e','NO_PROXY=127.0.0.1,localhost']),image];
 const phaseMap={'Launching browser':'browser_launching','Connecting to website':'browser_connecting','Inspecting interface':'browser_inspecting','Examining functionality':'browser_functionality','Collecting evidence':'browser_collecting','Analyzing technologies':'browser_technologies'};
+// Keeps the worker's failure context (phase, completed checks, probes, resource snapshot) within a fixed size; tokens redacted.
+export function boundedFailure(e){
+ const pick=value=>{try{const text=JSON.stringify(value??null).replace(/[a-f0-9]{64}/gi,'[redacted]');return text.length>6000?{truncated:true,preview:text.slice(0,6000)}:JSON.parse(text);}catch{return null;}};
+ return {failingPhase:typeof e.failingPhase==='string'?e.failingPhase.slice(0,80):null,completedChecks:pick(e.completedChecks),probes:Array.isArray(e.probes)?pick(e.probes.slice(0,8)):[],resources:pick(e.resources)};
+}
 // Bounded docker attach, enforcing stop independently of a hung docker CLI and confirming cleanup afterwards.
 export async function attachBrowser(name,input,{dockerCommand,spawnProcess=spawn,cleanEnv=()=>({}),report=()=>{},signal,limits=BROWSER_LIMITS}){
  return new Promise(resolve=>{
-  let child,ended=false,stdout='',pending='',bytes=0,result=null,errorMessage='',startupDiagnostics='',reason='',termination=null;const started=Date.now();
-  const finish=(code,error)=>{if(ended)return;ended=true;clearTimeout(timer);signal?.removeEventListener('abort',cancel);resolve({result,errorMessage,startupDiagnostics,reason,code,error,termination,ms:Date.now()-started});};
+  let child,ended=false,stdout='',pending='',bytes=0,result=null,errorMessage='',startupDiagnostics='',failure=null,reason='',termination=null;const started=Date.now();
+  const finish=(code,error)=>{if(ended)return;ended=true;clearTimeout(timer);signal?.removeEventListener('abort',cancel);resolve({result,errorMessage,startupDiagnostics,failure,reason,code,error,termination,ms:Date.now()-started});};
   const stop=why=>{if(reason)return;reason=why;try{child?.kill();}catch{}
    termination=Promise.race([Promise.resolve().then(()=>dockerCommand(['kill',name],limits.cleanupMs)).catch(()=>({ok:false})),new Promise(r=>setTimeout(()=>r({ok:false}),limits.cleanupMs+1000))]);
    setTimeout(()=>finish(null,true),limits.graceMs);
@@ -45,7 +54,7 @@ export async function attachBrowser(name,input,{dockerCommand,spawnProcess=spawn
   const cancel=()=>stop('cancelled');const timer=setTimeout(()=>stop('timeout'),limits.deadlineMs);signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted){stop('cancelled');return;}
   try{child=spawnProcess('docker',['start','-a','-i',name],{stdio:['pipe','pipe','pipe'],windowsHide:true,shell:false,env:cleanEnv()});}catch{finish(null,true);return;}
-  child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}pending+=d;const lines=pending.split('\n');pending=lines.pop();for(const line of lines){try{const e=JSON.parse(line);if(e.type==='phase'&&phaseMap[e.phase])report(phaseMap[e.phase]);if(e.type==='result')result=e;if(e.type==='error'){errorMessage=String(e.error||'Browser worker failed.').slice(0,400);startupDiagnostics=String(e.startupDiagnostics||'').slice(0,8192).replace(/[a-f0-9]{64}/gi,'[redacted]');}}catch{}}});
+  child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}pending+=d;const lines=pending.split('\n');pending=lines.pop();for(const line of lines){try{const e=JSON.parse(line);if(e.type==='phase'&&phaseMap[e.phase])report(phaseMap[e.phase]);if(e.type==='result')result=e;if(e.type==='error'){errorMessage=String(e.error||'Browser worker failed.').slice(0,400);startupDiagnostics=String(e.startupDiagnostics||'').slice(0,8192).replace(/[a-f0-9]{64}/gi,'[redacted]');failure=boundedFailure(e);}}catch{}}});
   child.stderr.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes)stop('output_limit');});child.on('close',code=>finish(code,code!==0));child.on('error',()=>finish(null,true));child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify(input));
  });
 }
@@ -93,14 +102,15 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
   evidence.scripts=evidence.scripts.map(({text,...meta})=>meta);
  }else if(status==='complete'){status='invalid_result';error='The browser did not report usable real execution.';}
  if(signal?.aborted&&clean&&status!=='infrastructure_error')status='cancelled';
- return {status,evidence:status==='complete'?evidence:null,cleanupConfirmed:clean,error,phases,startupDiagnostics:run?.startupDiagnostics||''};
+ return {status,evidence:status==='complete'?evidence:null,cleanupConfirmed:clean,error,phases,startupDiagnostics:run?.startupDiagnostics||'',failure:run?.failure||null};
 }
-export async function browserSelftest({dockerCommand,removeContainer,cleanEnv}){
+export async function browserSelftest({dockerCommand,removeContainer,cleanEnv,spawnProcess=spawn}){
  const cap=await checkBrowserImages(dockerCommand,{ignoreStamp:true});if(!cap.available)throw Error(cap.detail);
- const result=await executeBrowser({id:randomUUID()},{url:'https://example.com/',goal:'Public fixture connectivity self-test',engine:'superpowers',relayToken:'0'.repeat(64),selfTest:true},cap,{dockerCommand,removeContainer,cleanEnv});
+ const result=await executeBrowser({id:randomUUID()},{url:'https://example.com/',goal:'Public fixture connectivity self-test',engine:'superpowers',relayToken:'0'.repeat(64),selfTest:true},cap,{dockerCommand,removeContainer,cleanEnv,spawnProcess});
  const probes=result.evidence?.pages?.[0]?.privateNetworkProbes||[];
  const passed=result.status==='complete'&&result.evidence?.controlOriginGuard===true&&result.cleanupConfirmed&&result.evidence?.pages?.[0]?.title==='Example Domain'&&result.evidence.screenshots?.some(s=>s.width===390)&&probes.length===5&&probes.every(p=>p.blocked);
+ const f=result.failure,guard=result.evidence?.controlOriginGuard===true||f?.completedChecks?.controlOriginGuard===true?true:f&&f.completedChecks?.controlOriginGuard===undefined?'not_reached':false;
  await mkdir(join(homedir(),'.skydata-runner'),{recursive:true});await writeFile(stampPath,JSON.stringify({passed,imageId:cap.imageId,proxyId:cap.proxyId,at:Date.now()}));
- await writeFile('browser-selftest-report.txt',JSON.stringify({passed,status:result.status,error:result.error,startupDiagnostics:result.startupDiagnostics,phases:result.phases,cleanupConfirmed:result.cleanupConfirmed,probes,controlOriginGuard:result.evidence?.controlOriginGuard===true,stagehandVersion:BROWSER_VERSION,nativeChromeSandbox:false,note:'Public load, screenshots and private-request probes only; real AI navigation and HP website job require separate live testing.'},null,2));
+ await writeFile('browser-selftest-report.txt',JSON.stringify({passed,status:result.status,error:result.error,failingPhase:f?.failingPhase??null,completedChecks:f?.completedChecks??null,resources:f?.resources??null,configuredBrowserPidsLimit:BROWSER_PIDS,startupDiagnostics:result.startupDiagnostics,phases:result.phases,cleanupConfirmed:result.cleanupConfirmed,probes:probes.length?probes:f?.probes??[],controlOriginGuard:guard,stagehandVersion:BROWSER_VERSION,nativeChromeSandbox:false,note:'Public load, screenshots and private-request probes only; real AI navigation and HP website job require separate live testing.'},null,2));
  if(!passed)throw Error('Browser self-test failed. Send browser-selftest-report.txt (no tokens).');return 'Browser self-test passed: real public Chromium load, two viewport screenshots, private request probes and cleanup. Live AI navigation is still unverified.';
 }
