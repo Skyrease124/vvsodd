@@ -20,7 +20,7 @@ export function parseReaJob(job){
 }
 // Same isolation as test jobs; memory is 768 MB (REA's analyzer needs a V8 heap of 384 MB) and no command is passed:
 // the image's fixed entrypoint is the adapter, which accepts only REA_OPERATION.
-export function reaContainerArgs(name,imageId){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory','768m','--memory-swap','768m','--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--log-driver','none','-i',imageId];}
+export function reaContainerArgs(name,imageId,memory='768m'){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory',memory,'--memory-swap',memory,'--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--log-driver','none','-i',imageId];}
 // Verifies the locally prepared image instead of pulling anything during a job.
 export async function checkReaImage(dockerCommand){
  const r=await dockerCommand(['image','inspect',REA_IMAGE],60000);
@@ -33,7 +33,7 @@ export async function checkReaImage(dockerCommand){
 }
 export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,spawnProcess=spawn,limits=REA_LIMITS,report=()=>{},cleanEnv=()=>({})}){
  const name='skydata-rea-'+randomUUID(),phases=[],t0=Date.now();let stdout='',stderr='',bytes=0;const utf8=new StringDecoder('utf8');// one decoder: chunks may split multi-byte characters
- const created=await dockerCommand(reaContainerArgs(name,imageId),limits.createMs);phases.push({phase:'container_create',command:'docker create (REA image, isolated)',ms:created.ms,ok:created.ok,...(created.ok?{}:{code:String(created.code),detail:(created.stderr||'').slice(0,600)})});
+ const created=await dockerCommand(reaContainerArgs(name,imageId,limits.memory),limits.createMs);phases.push({phase:'container_create',command:'docker create (REA image, isolated)',ms:created.ms,ok:created.ok,...(created.ok?{}:{code:String(created.code),detail:(created.stderr||'').slice(0,600)})});
  let run=null,terminationPhase=null;
  if(created.ok){
   report('rea_analysis');
@@ -51,7 +51,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
    child.on('error',e=>{stderr+='\nDocker start failed ('+(e.code||'unknown')+')';finish(null,true);});child.on('close',code=>finish(code,code===null));
    child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({protocol:'skydata-rea-v1',operation:REA_OPERATION,files:bundle.files}));
   });
-  phases.push({phase:'container_run',command:'docker start -a -i (adapter → rea '+REA_OPERATION+')',ms:(run.stoppedAt||run.ended)-run.started,ok:!run.reason&&!run.error,...(run.reason?{code:run.reason,detail:run.reason==='timeout'?'Stopped at the '+limits.deadlineMs/1000+'-second REA analysis limit.':'Adapter output exceeded '+limits.resultBytes+' bytes.'}:run.error?{code:'container_error',detail:stderr.slice(-400)}:{})});
+  phases.push({phase:'container_run',command:'docker start -a -i (adapter → rea '+REA_OPERATION+')',ms:(run.stoppedAt||run.ended)-run.started,ok:!run.reason&&!run.error,exitCode:run.code,...(run.reason?{code:run.reason,detail:run.reason==='timeout'?'Stopped at the '+limits.deadlineMs/1000+'-second REA analysis limit.':'Adapter output exceeded '+limits.resultBytes+' bytes.'}:run.error?{code:'container_error',detail:stderr.slice(-400)}:{})});
   if(run.termination){const k=await run.termination;terminationPhase={phase:'termination',command:'docker kill',ms:k.ms,ok:k.ok,detail:k.ok?'Container stop confirmed by docker kill.':'Termination NOT confirmed: docker kill '+(k.timedOut?'timed out':'failed ('+k.code+')')+'. The container may have kept running until cleanup removed it.'};}
  }
  if(terminationPhase)phases.push(terminationPhase);
@@ -60,7 +60,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
  let status;
  if(!created.ok||!run||run.error&&!run.reason)status='infrastructure_error';
  else if(run.reason)status=run.reason;
- else if(!adapter||typeof adapter.status!=='string')status='infrastructure_error';
+ else if(!adapter||typeof adapter.status!=='string'){status='infrastructure_error';phases.push({phase:'adapter_output',ok:false,detail:'No readable REA adapter output (container exit '+run.code+(run.code===137?': killed, likely out of memory':'')+').'});}
  else status=adapter.status;
  if(!clean.ok)status='infrastructure_error';
  return {status,adapter,stderr:stderr.slice(0,4000),diagnostics:{runner:'rea-job/'+ADAPTER_VERSION,executionStatus:adapter?.status??(run?.reason||'not_started'),cleanupConfirmed:clean.ok,totalMs:Date.now()-t0,phases}};

@@ -9,6 +9,9 @@ export const BROWSER_PREFIX='SKYDATA_BROWSER_V1\n',BROWSER_VERSION='4.2.1',BROWS
 export const BROWSER_IMAGE='skydata-stagehand:4.2.1-a2',PROXY_IMAGE='skydata-browser-proxy:a2';
 const stampPath=join(homedir(),'.skydata-runner','browser-check.json');
 export const REA_BROWSER_BYTES=384*1024;
+// Measured on Linux Docker with 348 KB of real minified JS: REA peaked at 710 MB RSS plus 33 MB of tmpfs (counted in the same limit), 97% of the
+// 768 MB ZIP-REA limit. Website investigations use 1 GB (the HP already runs the 1 GB browser container, which is removed before REA starts).
+export const REA_BROWSER_MEMORY='1024m';
 export const BROWSER_LIMITS={deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
 export const activeBrowserResources=new Set();
 // Tasks (processes + threads) for the browser container. Measured with Chromium 155 + Stagehand 4.2.1 on Linux Docker:
@@ -99,11 +102,12 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
      if(chosen.length<evidence.scripts.length){evidence.limitations=[...(evidence.limitations||[]),'REA analysed '+chosen.length+' of '+evidence.scripts.length+' captured scripts ('+Math.round(used/1024)+' KB); the rest were left out to stay within the REA time limit on this HP.'];evidence.scripts=chosen;}
      report('rea_analysis');const files=evidence.scripts.map(({path,text,sha256})=>({path,text,sha256}));
      let reaContainer=null;const reaDocker=async(args,timeout)=>{if(args[0]==='create'){reaContainer=args[args.indexOf('--name')+1];activeBrowserResources.add(reaContainer);}return dockerCommand(args,timeout);};const stopRea=()=>{if(reaContainer)void dockerCommand(['kill',reaContainer],limits.cleanupMs);};signal?.addEventListener('abort',stopRea,{once:true});
-     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:REA_LIMITS});
+     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:{...REA_LIMITS,memory:REA_BROWSER_MEMORY}});
      signal?.removeEventListener('abort',stopRea);if(r.diagnostics?.cleanupConfirmed&&reaContainer)activeBrowserResources.delete(reaContainer);
      const staged=r.adapter?.staged?.map(f=>f.path+'\0'+f.sha256).sort(),expected=files.map(f=>f.path+'\0'+f.sha256).sort();
      // The first failed check is named in the error so a failure on the HP can be diagnosed from the runner window.
-     const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):''):r.adapter?.rea?.version!=='6.4.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
+     const failedPhase=(r.diagnostics?.phases||[]).find(p=>p&&p.ok===false);
+     const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):failedPhase?' at '+failedPhase.phase+(failedPhase.detail?': '+String(failedPhase.detail).slice(0,160):failedPhase.code?' ('+failedPhase.code+')':''):''):r.adapter?.rea?.version!=='6.4.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
      if(failedCheck){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within the '+REA_LIMITS.deadlineMs/1000+'-second REA limit on this HP.':r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks ('+failedCheck+').';}
      else evidence.rea={...r.adapter,cleanupConfirmed:true};
     }
