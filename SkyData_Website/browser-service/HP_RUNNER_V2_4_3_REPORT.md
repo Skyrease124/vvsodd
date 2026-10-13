@@ -1,6 +1,6 @@
 # HP runner 2.4.3 — browser task limit and failure diagnostics
 
-Base: published website v116 (commit a9b8242676d239914e90a145e236092acd165814), runner 2.4.2. **Not deployed. Windows HP verification pending.**
+Base: published website v116 (commit a9b8242676d239914e90a145e236092acd165814), runner 2.4.2. **Not deployed. Windows HP browser self-test PASSED with runner 2.4.3; a live AI-guided investigation is still unverified.**
 Inputs: the v116 source ZIP, the written failure description, and (received afterwards) three photos of the HP's v2.4.2 `browser-selftest-report.txt`.
 
 ### Evidence from the HP report photos (v2.4.2 run)
@@ -52,7 +52,8 @@ The self-test needs roughly 200 tasks, so **128 is exhausted**, and the kernel t
 | **Real self-test, runner code from the extracted 2.4.3 ZIP** | **real Linux Docker + real Chromium 155** | 4/4 PASS (2 CPUs ×3, 4 CPUs ×1): guard true, 4 probes answered 403 + POST blocked, cleanup confirmed, peak ~200 tasks, `pids.events` 0, ~450 MB |
 | Same with the limit forced to 128 | real Linux Docker | fails as on the HP class of error; report shows failing phase, guard `"not_reached"`, `pids.events` > 0 |
 | ZIP integrity | local | 39 packaged files = `runner-package/` byte-for-byte; 11 mirrored browser-service files = `browser-service/` |
-| **Windows HP self-test** | live | **NOT RUN — pending** |
+| **Windows HP self-test (runner 2.4.3, Prepare_Browser.cmd)** | **real Windows HP** | **PASS** (owner's screenshot, 2026-10-13): "Browser self-test passed: real public Chromium load, two viewport screenshots, private request probes and cleanup." Both images rebuilt; setup reported passed. |
+| Live AI-guided website investigation on the HP | live | **NOT RUN — still unverified** |
 
 Limits of this verification: this sandbox cannot reach Debian mirrors or the public internet from containers. The Chromium was Google Chrome for Testing 155.0.8059.39 (not Debian's `chromium` package) in a test-only image assembled from host libraries, with the same worker, labels, user, environment and Docker flags. The proxy was your unmodified `proxy.mjs`, with only `example.com`'s DNS answer pointed at a local HTTPS fixture. The fixture build files are not shipped.
 
