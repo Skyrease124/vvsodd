@@ -1,7 +1,13 @@
 # HP runner 2.4.3 — browser task limit and failure diagnostics
 
 Base: published website v116 (commit a9b8242676d239914e90a145e236092acd165814), runner 2.4.2. **Not deployed. Windows HP verification pending.**
-Inputs: the v116 source ZIP and the written failure description. The screenshots mentioned in the request were not attached, so details came from that description.
+Inputs: the v116 source ZIP, the written failure description, and (received afterwards) three photos of the HP's v2.4.2 `browser-selftest-report.txt`.
+
+### Evidence from the HP report photos (v2.4.2 run)
+- `error`: `page.goto: net::ERR_ABORTED at https://example.com/` with call log `navigating to "https://example.com/", waiting until "load"`. This is Playwright's format for the **self-test probe** navigation (Stagehand's first navigation uses `domcontentloaded`).
+- Chrome logged `DevTools listening on ws://127.0.0.1:9222/...`, then at 04:43:56–57 four `Rejected an incoming WebSocket connection from the https://example.com / http://example.com / null / chrome-extension://aaaa… origin` lines. These are exactly the four origin-guard checks, so **on the HP the guard ran and rejected every unsafe origin**. The report's `controlOriginGuard: false` was the evidence-discarding artifact described below, not a guard failure.
+- About 8 seconds later (04:44:05): `zygote_linux.cc:623] Zygote could not fork: process_type renderer numfds 6 child_pid -1`, then `Did not receive ping from zygote child`. `child_pid -1` means the kernel refused the fork for a new **renderer** process. That matches a new probe page needing a renderer, and it is the same failure class reproduced here at the 128-task limit. The log does not print the errno, so it cannot by itself separate task-limit exhaustion (EAGAIN) from memory (ENOMEM); the 2.4.3 report's `pids.events` and memory counters will.
+- `probes: []`, `cleanupConfirmed: true`, container and network cleanup ok. The D-Bus errors are present, as in every passing run here.
 
 ## Diagnosis
 
