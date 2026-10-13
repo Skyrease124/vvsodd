@@ -29,8 +29,8 @@ export async function checkReaImage(dockerCommand){
  const labels=image?.Config?.Labels||{},reaVersion=labels['org.skydata.rea.version']??null,adapterVersion=labels['org.skydata.adapter.version']??null;
  const problems=[];if(!/^sha256:[a-f0-9]{64}$/.test(image?.Id||''))problems.push('invalid image id');if(reaVersion!==REA_VERSION)problems.push('REA '+(reaVersion||'unknown')+' (needs '+REA_VERSION+')');if(adapterVersion!==ADAPTER_VERSION)problems.push('adapter '+(adapterVersion||'unknown')+' (needs '+ADAPTER_VERSION+')');
  if(image?.Config?.User!=='1000:1000')problems.push('image user is not 1000:1000');if(JSON.stringify(image?.Config?.Entrypoint)!==JSON.stringify(['node','/opt/rea/adapter.mjs']))problems.push('unexpected entrypoint');
- const requestDeadline=labels['org.skydata.rea.request-deadline']==='1';
- return {available:!problems.length,reaVersion,adapterVersion,requestDeadline,imageId:image?.Id??null,checkedAt:Date.now(),detail:problems.length?'Incompatible REA image: '+problems.join('; ')+'. Run Prepare_REA.cmd again.':'REA '+reaVersion+' · adapter '+adapterVersion+' · image '+String(image.Id).slice(7,19)+(requestDeadline?' · extended time limit for website investigations':'')};
+ const requestDeadline=labels['org.skydata.rea.request-deadline']==='1',outputFlush=labels['org.skydata.rea.output-flush']==='1';
+ return {available:!problems.length,reaVersion,adapterVersion,requestDeadline,outputFlush,imageId:image?.Id??null,checkedAt:Date.now(),detail:problems.length?'Incompatible REA image: '+problems.join('; ')+'. Run Prepare_REA.cmd again.':'REA '+reaVersion+' · adapter '+adapterVersion+' · image '+String(image.Id).slice(7,19)+(requestDeadline?' · extended time limit for website investigations':'')};
 }
 export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,spawnProcess=spawn,limits=REA_LIMITS,report=()=>{},cleanEnv=()=>({})}){
  const name='skydata-rea-'+randomUUID(),phases=[],t0=Date.now();let stdout='',stderr='',bytes=0;const utf8=new StringDecoder('utf8');// one decoder: chunks may split multi-byte characters
@@ -61,7 +61,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
  let status;
  if(!created.ok||!run||run.error&&!run.reason)status='infrastructure_error';
  else if(run.reason)status=run.reason;
- else if(!adapter||typeof adapter.status!=='string'){status='infrastructure_error';phases.push({phase:'adapter_output',ok:false,detail:'No readable REA adapter output (container exit '+run.code+(run.code===137?': killed, likely out of memory':'')+').'});}
+ else if(!adapter||typeof adapter.status!=='string'){status='infrastructure_error';phases.push({phase:'adapter_output',ok:false,detail:'No readable REA adapter output (container exit '+run.code+(run.code===137?': killed, likely out of memory':run.code===0&&Buffer.byteLength(stdout)===65536?': output cut off at 64 KB':'')+').'});}
  else status=adapter.status;
  if(!clean.ok)status='infrastructure_error';
  return {status,adapter,stderr:stderr.slice(0,4000),diagnostics:{runner:'rea-job/'+ADAPTER_VERSION,executionStatus:adapter?.status??(run?.reason||'not_started'),cleanupConfirmed:clean.ok,totalMs:Date.now()-t0,phases}};

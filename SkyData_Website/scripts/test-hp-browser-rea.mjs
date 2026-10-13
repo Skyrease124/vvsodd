@@ -6,7 +6,7 @@ import {REA_LIMITS,REA_IMAGE,executeRea,reaContainerArgs} from '../runner-packag
 const sha=t=>createHash('sha256').update(t).digest('hex');
 const id='10000000-0000-4000-8000-000000000002',bundle={url:'https://example.com/',goal:'Inspect scripts',engine:'rea',relayToken:'b'.repeat(64)},job={id,expires:Date.now()+600000,code:BROWSER_PREFIX+JSON.stringify(bundle)};
 const script=(i,kb)=>{const text='/*'+i+'*/'+'x'.repeat(kb*1024);return {path:'public/script-'+i+'.js',url:'https://example.com/s'+i+'.js',sha256:sha(text),text};};
-const image=extended=>JSON.stringify([{Id:'sha256:'+'c'.repeat(64),Config:{Labels:{'org.skydata.rea.version':'6.4.0','org.skydata.adapter.version':'1',...(extended?{'org.skydata.rea.request-deadline':'1'}:{})},User:'1000:1000',Entrypoint:['node','/opt/rea/adapter.mjs']}}]);
+const image=(extended,flush=extended)=>JSON.stringify([{Id:'sha256:'+'c'.repeat(64),Config:{Labels:{'org.skydata.rea.version':'6.4.0','org.skydata.adapter.version':'1',...(extended?{'org.skydata.rea.request-deadline':'1'}:{}),...(flush?{'org.skydata.rea.output-flush':'1'}:{})},User:'1000:1000',Entrypoint:['node','/opt/rea/adapter.mjs']}}]);
 async function run(scripts,reaStatus,{chunk=0,reaResult,extended=false,expires=Date.now()+600000}={}){
  let networkExists=false;const sent={};
  const docker=async args=>{if(args[0]==='image'&&args[2]===REA_IMAGE)return {ok:true,ms:1,stdout:image(extended),stderr:''};if(args[0]==='network'&&args[1]==='create')networkExists=true;if(args[0]==='network'&&args[1]==='rm')networkExists=false;if(args[0]==='network'&&args[1]==='inspect')return networkExists?{ok:true,ms:1,stdout:'[{"Internal":true}]',stderr:''}:{ok:false,ms:1,stderr:'network not found'};return {ok:true,ms:1,stdout:'',stderr:''};};
@@ -50,7 +50,12 @@ for(const [limit,expect] of [[undefined,undefined],[330000,330000]]){let sentIn=
 // No readable REA output: the failing step and exit code are named.
 {const reaResult={status:'infrastructure_error',adapter:null,diagnostics:{cleanupConfirmed:true,phases:[{phase:'container_create',ok:true},{phase:'container_run',ok:true,exitCode:137},{phase:'adapter_output',ok:false,detail:'No readable REA adapter output (container exit 137: killed, likely out of memory).'}]}};
  const {result}=await run([script(0,10)],'partial',{reaResult});assert.equal(result.status,'failed');
- assert.equal(result.error,'REA capture analysis did not pass integrity checks (REA status infrastructure_error at adapter_output: No readable REA adapter output (container exit 137: killed, likely out of memory).).');}
+ assert.equal(result.error,'REA capture analysis did not pass integrity checks (REA status infrastructure_error at adapter_output: No readable REA adapter output (container exit 137: killed, likely out of memory).). Run Prepare_REA.cmd once: older REA images cut off results larger than 64 KB.');
+ const fixedImage=await run([script(0,10)],'partial',{reaResult,extended:true});assert.ok(!fixedImage.result.error.includes('Prepare_REA'),'no hint with a fixed image');}
+// executeRea names a result cut off at 64 KB (container exit 0, exactly 65536 bytes).
+{const sp=()=>{const c=new EventEmitter();c.stdout=new EventEmitter();c.stderr=new EventEmitter();c.stdin=new EventEmitter();c.kill=()=>{};c.stdin.end=()=>setTimeout(()=>{c.stdout.emit('data',Buffer.from('{"adapter":"1","status":"partial","findings":'+'x'.repeat(65536-45)));c.emit('close',0);},1);return c;};
+ const r=await executeRea({name:'x',operation:'analyze-javascript-application',files:[]},'sha256:'+'c'.repeat(64),{dockerCommand:async()=>({ok:true,ms:1,stdout:'',stderr:''}),removeContainer:async()=>({phase:'cleanup',ok:true,ms:1}),spawnProcess:sp,limits:{...REA_LIMITS,deadlineMs:2000}});
+ assert.equal(r.status,'infrastructure_error');assert.equal(r.diagnostics.phases.find(p=>p.phase==='adapter_output').detail,'No readable REA adapter output (container exit 0: output cut off at 64 KB).');}
 // The REA container gets 1 GB only when asked; ZIP REA keeps 768 MB. Other isolation flags are unchanged.
 {const zip=reaContainerArgs('n','sha256:'+'a'.repeat(64)),web=reaContainerArgs('n','sha256:'+'a'.repeat(64),'1024m');
  assert.equal(zip[zip.indexOf('--memory')+1],'768m');assert.equal(zip[zip.indexOf('--memory-swap')+1],'768m');assert.equal(web[web.indexOf('--memory')+1],'1024m');assert.equal(web[web.indexOf('--memory-swap')+1],'1024m');
