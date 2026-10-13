@@ -38,7 +38,7 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
   const {job}=await ok(await device('poll',poll));assert.equal(job.id,q.id);
   const accepted=await ok(await device('rea-result',{id:job.id,result}));
   const run=await ok(await call('/api/engineering-runner/rea-run?id='+job.id));
-  const before=geminiCalls;const explain=await call('/api/engineering',{method:'POST',body:{mode:'research',model:'openai/gpt-oss-20b',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'Explain'}]}});
+  const before=geminiCalls;const explain=await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'Explain'}]}});
   return {jobId:job.id,accepted,run,explainStatus:explain.status,geminiCalled:geminiCalls>before};
  }
  const expectInvalid=async(label,result,check)=>{const r=await submit(result);
@@ -66,7 +66,7 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
  // Defence in depth: tampering with the stored record after acceptance makes the run ineligible again.
  const bucket=await mf.getR2Bucket('FILES'),key='projects/'+id+'/rea/'+control.jobId+'.json',rec=await (await bucket.get(key)).json();
  await bucket.put(key,JSON.stringify({...rec,diagnostics:{...rec.diagnostics,cleanupConfirmed:false}}));
- const tampered=await call('/api/engineering',{method:'POST',body:{mode:'research',model:'openai/gpt-oss-20b',investigation:'rea',reaRunId:control.jobId,messages:[{role:'user',content:'Explain'}]}});
+ const tampered=await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:control.jobId,messages:[{role:'user',content:'Explain'}]}});
  assert.equal(tampered.status,400);assert.equal((await ok(await call('/api/engineering-runner/rea-run?id='+control.jobId))).usable,false);
  const history=(await ok(await call('/api/engineering-runner/status'))).history.filter(h=>h.kind==='rea');assert.equal(history.filter(h=>h.status==='invalid_result').length,9);
  console.log('PASS REA result integrity (built Worker + Miniflare D1/R2; HP simulated, Gemini mocked and counted): valid control usable and explained; separately — wrong staged hash, wrong staged paths, missing staged list, workspace changed, cleanup unconfirmed, wrong REA version, wrong operation, missing findings — and the combined case are recorded as invalid_result with diagnostics and the reported status preserved, never usable and never sent to Gemini; a real failure keeps its status and error; tampering with the stored record after acceptance is caught at explanation time.');

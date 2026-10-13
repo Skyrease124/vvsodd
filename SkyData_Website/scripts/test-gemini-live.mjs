@@ -15,10 +15,10 @@ const hook=fs.readFileSync('hooks/use-gemini-live.ts','utf8'),worker=fs.readFile
 assert.ok(hook.includes('content?.interrupted){s.queue.interrupt();outputLevel.current=0'));
 assert.ok(hook.includes('echoCancellation:true,noiseSuppression:true'));
 assert.ok(hook.includes('s.retries++>=2'));assert.ok(hook.includes('s.toolCalls++>=3'));assert.ok(hook.includes('getTracks().forEach(t=>t.stop())'));
-assert.ok(worker.includes("!admin&&['/api/voice-preview'"));assert.ok(backend.includes('liveConnectConstraints'));assert.ok(backend.includes('uses:1'));assert.ok(backend.includes('billing-disabled'));assert.ok(!hook.includes('GEMINI_API_KEY'));
+assert.match(worker,/!admin&&\[[^\]]*'\/api\/voice-preview'[^\]]*\]\.includes\(path\)/);assert.ok(backend.includes('liveConnectConstraints'));assert.ok(backend.includes('uses:1'));assert.ok(backend.includes('billing-disabled'));assert.ok(!hook.includes('GEMINI_API_KEY'));
 console.log('PASS: PCM encoding/resampling, invalid audio rejection, mock playback ordering/interruption/backlog bound, model configuration and source-contract guards. No real Gemini or browser execution tested.');
 
-const {VISIBLE_MODELS,isModelAvailable}=await load('lib/models.ts');assert.equal(VISIBLE_MODELS.length,3);assert.equal(isModelAvailable('deepseek-flash'),false);assert.equal(isModelAvailable('inclusionai/ling-3.1-flash'),false);console.log('PASS: three visible models; DeepSeek and Ling disabled.');
+const {VISIBLE_MODELS,isModelAvailable}=await load('lib/models.ts');assert.equal(VISIBLE_MODELS.length,4);assert.equal(isModelAvailable('deepseek-flash'),false);assert.equal(isModelAvailable('inclusionai/ling-3.1-flash'),false);console.log('PASS: four visible models; DeepSeek and Ling disabled.');
 
 assert.deepEqual(config.tools[0],{googleSearch:{}});assert.match(config.systemInstruction,/use Google Search before answering/);
 const {readLiveGrounding,mergeLiveGrounding}=await load('lib/live-grounding.ts');

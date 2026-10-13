@@ -4,7 +4,8 @@ import {GEMINI_VOICES} from './gemini-config';
 import {GoogleGenAI, type Part} from '@google/genai';
 import {readKey,type SecretEnv} from './secret-store';
 import {geminiReady,geminiOriginAllowed,selectedGeminiVoice} from './gemini-live';
-export const GEMINI_TEXT_MODEL='gemini-3.8-flash';
+import {GEMINI_TEXT_MODEL} from './models';
+export {GEMINI_TEXT_MODEL} from './models';
 export const GEMINI_TTS_MODEL='gemini-3.8-flash-lite-tts';
 const headers={'Cache-Control':'private, no-store'};
 function mediaPart(value:string):Part{const match=value.match(/^data:([^;]+);base64,([A-Za-z0-9+/]+=*)$/);if(!match)throw Error('Invalid attachment');return {inlineData:{mimeType:match[1],data:match[2]}};}
@@ -13,11 +14,11 @@ export function geminiParts(content:unknown):Part[]{
  if(!Array.isArray(content))throw Error('Invalid content');
  return content.map(p=>p.type==='text'?{text:p.text}:mediaPart(p.image_url?.url||p.audio_url?.url||p.video_url?.url));
 }
-// Reuse the existing context, citations, validation, and stream display without calling NVIDIA.
+// Explicit Gemini adapter. Text callers select it only for the Gemini model; camera callers use it for their dedicated media service.
 export function geminiUpstream(env:SecretEnv,upstream:typeof fetch=fetch):typeof fetch{
  return (async(input:RequestInfo|URL,init?:RequestInit)=>{
   const url=typeof input==='string'?input:input instanceof URL?input.href:input.url;
-  if(!url.startsWith('https://integrate.api.nvidia.com/'))return upstream(input,init);
+  if(url!=='https://integrate.api.nvidia.com/v1/chat/completions')return upstream(input,init);
   if(!await geminiReady(env))return Response.json({error:'SkyData connection is unavailable. No paid fallback.'},{status:503});
   const key=(await readKey(env,'GEMINI_API_KEY'))!;
   const body=JSON.parse(String(init?.body));
@@ -26,11 +27,11 @@ export function geminiUpstream(env:SecretEnv,upstream:typeof fetch=fetch):typeof
   const config={systemInstruction:system,maxOutputTokens:body.max_tokens||4096,temperature:.6,abortSignal:init?.signal||undefined,httpOptions:{timeout:90000}};
   const ai=new GoogleGenAI({apiKey:key});
   try{
-   if(!body.stream){const result=await ai.models.generateContent({model:GEMINI_TEXT_MODEL,contents,config});return Response.json({choices:[{message:{content:result.text||''}}],usage:result.usageMetadata});}
+   if(!body.stream){const result=await ai.models.generateContent({model:GEMINI_TEXT_MODEL,contents,config});return Response.json({choices:[{message:{content:result.text||''}}],usage:result.usageMetadata},{headers:{'X-SkyData-Model':GEMINI_TEXT_MODEL}});}
    const chunks=await ai.models.generateContentStream({model:GEMINI_TEXT_MODEL,contents,config});
    const encoder=new TextEncoder();let cancelled=false;
    const stream=new ReadableStream<Uint8Array>({async start(controller){try{for await(const chunk of chunks){if(cancelled||init?.signal?.aborted)return;const text=chunk.text;if(text)controller.enqueue(encoder.encode('data: '+JSON.stringify({choices:[{delta:{content:text}}]})+'\n\n'));}if(!cancelled){controller.enqueue(encoder.encode('data: [DONE]\n\n'));controller.close();}}catch(e){if(!cancelled)controller.error(e);}},cancel(){cancelled=true;}});
-   return new Response(stream,{headers:{'Content-Type':'text/event-stream'}});
+   return new Response(stream,{headers:{'Content-Type':'text/event-stream','X-SkyData-Model':GEMINI_TEXT_MODEL}});
   }catch(e){const status=Number((e as {status?:number}).status)||502;return Response.json({error:'SkyData request failed. No paid fallback.'},{status:status>=400&&status<=599?status:502});}
  }) as typeof fetch;
 }

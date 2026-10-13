@@ -1,4 +1,5 @@
-export const MODELS = [{id:'nvidia/nemotron-3-ultra-550b-a55b',label:'Nemotron 3 Ultra',available:true},{id:'nvidia/nemotron-3.5-lightning-30b-a3b',label:'Nemotron 3.5 Lightning',available:true},{id:'deepseek-flash',label:'DeepSeek Flash',available:false},{id:'deepseek-v4-pro',label:'DeepSeek Pro',available:false},{id:'openai/gpt-oss-20b',label:'GPT-OSS 20B',available:true},{id:'inclusionai/ling-3.1-flash',label:'Ling 3.1 Flash',available:false}] as const;
+export const GEMINI_TEXT_MODEL='gemini-3.8-flash';
+export const MODELS = [{id:'nvidia/nemotron-3-ultra-550b-a55b',label:'Nemotron 3 Ultra',available:true},{id:'nvidia/nemotron-3.5-lightning-30b-a3b',label:'Nemotron 3.5 Lightning',available:true},{id:'deepseek-flash',label:'DeepSeek Flash',available:false},{id:'deepseek-v4-pro',label:'DeepSeek Pro',available:false},{id:'openai/gpt-oss-20b',label:'GPT-OSS 20B',available:true},{id:'inclusionai/ling-3.1-flash',label:'Ling 3.1 Flash',available:false},{id:GEMINI_TEXT_MODEL,label:'Gemini Flash',available:true}] as const;
 export const DEFAULT_MODEL = MODELS[0].id;
 export function isSupportedModel(value: unknown): value is typeof MODELS[number]['id'] { return MODELS.some(model => model.id === value); }
 
@@ -22,3 +23,5 @@ export function requestsPaidModel(payload:unknown){
 }
 
 export const VISIBLE_MODELS = MODELS.filter(model => model.available);
+
+export function modelProvider(model:string){return model===GEMINI_TEXT_MODEL?'Google Gemini':isDirectDeepseek(model)?'DeepSeek':model===LING_MODEL?'OpenRouter':'NVIDIA';}

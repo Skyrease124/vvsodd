@@ -35,7 +35,7 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  const readme=await ok(await call('/api/projects/'+id+'/file?path=README.md'));assert.equal(readme.text.split('\n').length,202,'complete file from the archive, although the upload index was truncated');
  assert.equal((await ok(await call('/api/projects/'+id+'/search?q=export'))).matches.length,1);
  // Engineering with explicit selection: the model gets complete files; the response says exactly what it received.
- const eng=await ok(await call('/api/engineering',{method:'POST',body:{mode:'development',approved:true,action:'propose',workflow:'debugging',model:'openai/gpt-oss-20b',messages:[{role:'user',content:'Fix add for strings',project:{id,name:'p.zip',paths:['src/math.mjs','assets/a.png']}}]}}));
+ const eng=await ok(await call('/api/engineering',{method:'POST',body:{mode:'development',approved:true,action:'propose',workflow:'debugging',model:'gemini-3.8-flash',messages:[{role:'user',content:'Fix add for strings',project:{id,name:'p.zip',paths:['src/math.mjs','assets/a.png']}}]}}));
  assert.ok(prompt.includes('export const add=(a,b)=>a+b;'),'complete selected file reached the model request');assert.ok(prompt.includes('UNAVAILABLE'));assert.ok(!prompt.includes('line\\nline'),'unselected README content not sent');
  assert.deepEqual(eng.projectFiles.map(f=>[f.path,f.status]),[['src/math.mjs','full'],['assets/a.png','unavailable']]);assert.equal(eng.projectFiles[0].sha256,math.sha256);assert.equal(eng.modificationsApplied,false);
  // Proposal from the AI blocks (math full + new test); README is refused because the model never saw it in full.

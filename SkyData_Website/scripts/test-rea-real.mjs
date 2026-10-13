@@ -86,12 +86,12 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  assert.ok(f.storage.items.some(s=>s.name==='theme'&&s.evidence.location.path==='public/app.mjs'));assert.ok(f.limitations.some(l=>/never executed|inert/.test(l)));
  assert.ok(a.diagnostics.phases.some(p=>p.phase==='docker_check'&&p.ok)&&a.diagnostics.phases.some(p=>p.phase==='container_run'&&p.ok));
  // Existing model explains the stored findings; the Superpowers default is unchanged.
- const explain=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',model:'openai/gpt-oss-20b',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'What routes does this project expose?'}]}}));
+ const explain=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'What routes does this project expose?'}]}}));
  assert.equal(explain.investigation,'rea');assert.match(explain.interpretation,/not REA output/);assert.equal(explain.reaRun.reaVersion,'6.4.0');assert.equal(explain.skills.length,0);
  const reaPrompt=prompts.at(-1);assert.ok(reaPrompt.includes('untrusted tool data'));assert.ok(reaPrompt.includes('src/routes/users.js'));assert.ok(!reaPrompt.includes('Superpowers workflow'));
- assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',model:'openai/gpt-oss-20b',investigation:'rea',reaRunId:crypto.randomUUID(),messages:[{role:'user',content:'x'}]}})).status,400);
- assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'openai/gpt-oss-20b',reaRunId:job.id,messages:[{role:'user',content:'x'}]}})).status,400,'reaRunId only with the REA method');
- const sp=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'openai/gpt-oss-20b',messages:[{role:'user',content:'Review my code'}]}}));
+ assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:crypto.randomUUID(),messages:[{role:'user',content:'x'}]}})).status,400);
+ assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'gemini-3.8-flash',reaRunId:job.id,messages:[{role:'user',content:'x'}]}})).status,400,'reaRunId only with the REA method');
+ const sp=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'gemini-3.8-flash',messages:[{role:'user',content:'Review my code'}]}}));
  assert.ok(sp.skills.includes('requesting-code-review'));assert.equal(sp.investigation,undefined);assert.ok(prompts.at(-1).includes('Superpowers'));
  // Real container: the adapter itself rejects unsafe or tampered requests, and a real REA run honours the deadline.
  const rea=await checkReaImage(docker);assert.equal(rea.available,true,rea.detail);

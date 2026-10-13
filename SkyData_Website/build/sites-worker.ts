@@ -1,3 +1,5 @@
+import {browserModel} from '../lib/hp-browser';
+import {handleWebsiteInvestigation} from '../lib/website-investigation';
 import {handleRunnerOwner,handleRunnerDevice} from '../lib/engineering-runner';
 import {handleEngineering} from '../lib/engineering';
 import {aiDashboard} from '../lib/ai-dashboard';
@@ -35,7 +37,8 @@ export default {
     const config = env as Cloudflare.Env & SecretEnv;
     let request=incoming;
     const incomingPath=new URL(incoming.url).pathname;
-    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/progress','/api/engineering-runner/result','/api/engineering-runner/rea-result'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
+    if(incomingPath==='/api/engineering-runner/browser-model')return browserModel(incoming,config);
+    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/progress','/api/engineering-runner/result','/api/engineering-runner/rea-result','/api/engineering-runner/browser-result','/api/engineering-runner/browser-control'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
     if(['/api/blender/pair','/api/blender/heartbeat','/api/blender/result'].includes(incomingPath))return handleBlenderDevice(incoming,config,incomingPath);
     // Static assets are public; every working surface and API checks membership.
     if(!incomingPath.startsWith('/assets/') && !incomingPath.startsWith('/_next/static/') && !['/favicon.svg','/favicon.ico','/robots.txt'].includes(incomingPath)){
@@ -47,6 +50,7 @@ export default {
           return incoming.headers.get('oai-authenticated-user-id')?waitingPage(incoming,config):loginPage(incoming,config);
         }
         request=access.request;
+        if(incomingPath==='/api/engineering-browser'||incomingPath.startsWith('/api/engineering-browser/')){if(!access.admin)return Response.json({error:'Engineering Mode is owner-only.'},{status:403});const limited=await enforceRequestLimit(request,config,'/api/engineering');if(limited)return limited;return handleWebsiteInvestigation(request,config);}
         if(incomingPath.startsWith('/api/engineering-runner/'))return handleRunnerOwner(request,config,incomingPath);
         if(incomingPath==='/engineering/runner'&&!access.admin)return accessPage('Owner access only','<p>Runner management is owner-only.</p>',403);
         if(incomingPath==='/engineering'||incomingPath==='/api/engineering'){
@@ -127,12 +131,12 @@ export default {
         if (path === "/connect") return handleConnectionPage(request, config);
         if (path === "/api/setup") return setupKey(request, config);
         const key = await readKey(config);
-        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:await geminiReady(config),isOwner:admin,geminiConfigured:await geminiReady(config),...(admin?{geminiVoice:await selectedGeminiVoice(config)}:{}),decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:await geminiReady(config),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&(speech.provider==='polly'?await pollyReady(config):await geminiReady(config)),nativeVoiceEnabled:speech.enabled&&speech.provider==='gemini'}, {headers:{"Cache-Control":"no-store"}});}
+        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY"))||await geminiReady(config),isOwner:admin,geminiConfigured:await geminiReady(config),...(admin?{geminiVoice:await selectedGeminiVoice(config)}:{}),decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:await geminiReady(config),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&(speech.provider==='polly'?await pollyReady(config):await geminiReady(config)),nativeVoiceEnabled:speech.enabled&&speech.provider==='gemini'}, {headers:{"Cache-Control":"no-store"}});}
         if(path==='/api/decisions')return run(()=>handleDecisions(request,config));
         if(path==='/api/debate-score')return run(()=>handleDebateScore(request,config));
         if(path==='/api/debate-check')return run(()=>handleDebateCheck(request,key,config));
         if(path==='/api/debate')return run(()=>handleDebate(request,key,config));
-        return run(()=>handleChat(request, key, config.NVIDIA_MODEL, geminiUpstream(config), config,undefined,true));
+        return run(()=>handleChat(request, key, config.NVIDIA_MODEL, fetch, config));
       } catch { console.error("SkyData protected route failed",{path}); return Response.json({error:"SkyData’s connection settings are unavailable. Try again."}, {status:503}); }
     }
     let binding = ctx.props?.CONNECTORS;

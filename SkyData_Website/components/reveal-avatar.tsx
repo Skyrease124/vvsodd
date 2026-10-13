@@ -1,4 +1,5 @@
 'use client';
+import {Camera,CameraOff,SwitchCamera,X,Mic} from 'lucide-react';
 import {LiveSearchSources} from './live-search-sources';
 import type {LiveGrounding} from '../lib/live-grounding';
 import {VoicePicker} from './voice-picker';
@@ -12,7 +13,7 @@ export function RevealAvatar({grounding,isOwner,onPreview,seconds,tokens,camera,
  const canvas=useRef<HTMLCanvasElement>(null),exit=useRef<HTMLButtonElement>(null);const [imageFailed,setImageFailed]=useState(false);
  useEffect(()=>{
   const old=document.body.style.overflow;document.body.style.overflow='hidden';const focus=document.activeElement as HTMLElement|null;exit.current?.focus();
-  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onExit();}if(e.key==='Tab'){const buttons=Array.from(document.querySelectorAll<HTMLElement>('.reveal-stage button:not(:disabled), .reveal-stage select, .reveal-stage a'));const first=buttons[0],last=buttons.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};
+  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onExit();}if(e.key==='Tab'){const buttons=Array.from(document.querySelectorAll<HTMLElement>('.reveal-stage button:not(:disabled), .reveal-stage select, .reveal-stage a, .reveal-stage summary'));const visible=buttons.filter(button=>button.getClientRects().length>0);const first=visible[0],last=visible.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};
   document.addEventListener('keydown',key);return()=>{document.body.style.overflow=old;document.removeEventListener('keydown',key);focus?.focus();};
  },[onExit]);
  useEffect(()=>{
@@ -43,5 +44,16 @@ export function RevealAvatar({grounding,isOwner,onPreview,seconds,tokens,camera,
   document.addEventListener('visibilitychange',visibility);
   return()=>{alive=false;cancelAnimationFrame(frame);image.onload=null;image.onerror=null;document.removeEventListener('visibilitychange',visibility);};
  },[level]);
- return <div className="reveal-stage" role="dialog" aria-modal="true" aria-label="SkyData live face conversation"><div className="reveal-top"><span>SKYDATA <i>LIVE</i></span><button ref={exit} onClick={onExit} aria-label="Exit face mode">✕</button></div><div className="reveal-portrait"><div className="reveal-camera" hidden={!camera.active&&!camera.opening}><video ref={camera.video} autoPlay playsInline muted aria-label="Live camera preview"/><span>{camera.opening?'Opening camera…':'Camera live'}</span></div><canvas ref={canvas} role="img" aria-label="Polished silver male SkyData android, assembled from nanobot tiles, with audio-driven mouth and blinking eyes"/>{imageFailed&&<p role="status">The face could not load. Voice controls remain available.</p>}</div><div className="reveal-bottom"><LiveSearchSources grounding={grounding}/><p role="status">{status||'Assembling…'}</p>{active?<span>Listening continuously · interrupt anytime</span>:<button onClick={onRetry}>Start microphone</button>}<div className="reveal-camera-controls">{camera.configured?<button onClick={camera.onToggle} aria-pressed={camera.active}>{camera.active||camera.opening?'Camera off':'Camera on'}</button>:<a href="/connect-camera">Connect camera</a>}{camera.active&&<button onClick={camera.onFlip} disabled={camera.opening}>Flip camera</button>}</div>{camera.error&&<p role="alert">{camera.error}</p>}{isOwner&&<><VoicePicker voice={voice} onSelect={onVoiceChange} onBeforePlay={onPreview}/><span>Session {seconds}s / 300s · {tokens===null?'Token usage not yet reported':tokens+' reported tokens'} · No paid fallback</span></>}<span>Camera streams while enabled · Exit returns to your chat</span></div></div>;
+ return <div className="reveal-stage" role="dialog" aria-modal="true" aria-label="SkyData live face conversation">
+  <div className="reveal-top"><div className="reveal-identity"><span>SKYDATA</span><i><b aria-hidden="true"/>{active?'LIVE':'VOICE'}</i></div><button ref={exit} onClick={onExit} aria-label="Exit face mode" title="Return to chat"><X size={20}/></button></div>
+  <div className="reveal-portrait"><div className="reveal-camera" hidden={!camera.active&&!camera.opening}><video ref={camera.video} autoPlay playsInline muted aria-label="Live camera preview"/><span>{camera.opening?'Opening camera…':'Camera live'}</span></div><canvas ref={canvas} role="img" aria-label="Polished silver male SkyData android, assembled from nanobot tiles, with audio-driven mouth and blinking eyes"/>{imageFailed&&<p role="status">The face could not load. Voice controls remain available.</p>}</div>
+  <div className="reveal-bottom">
+   <div className="reveal-status"><p role="status">{status||'Assembling…'}</p><span>{active?'You can interrupt anytime':'Start your voice conversation'}</span></div>
+   <div className="reveal-camera-controls">{!active&&<button className="reveal-primary" onClick={onRetry}><Mic size={17}/>Start microphone</button>}{camera.configured?<button onClick={camera.onToggle} aria-pressed={camera.active}>{camera.active||camera.opening?<CameraOff size={17}/>:<Camera size={17}/>}<span>{camera.active||camera.opening?'Camera off':'Camera on'}</span></button>:<a href="/connect-camera"><Camera size={17}/>Connect camera</a>}{camera.active&&<button onClick={camera.onFlip} disabled={camera.opening}><SwitchCamera size={17}/>Flip camera</button>}</div>
+   {camera.error&&<p className="reveal-error" role="alert">{camera.error}</p>}
+   <LiveSearchSources grounding={grounding}/>
+   {isOwner&&<details className="reveal-settings"><summary>Voice settings</summary><VoicePicker voice={voice} onSelect={onVoiceChange} onBeforePlay={onPreview}/><p className="reveal-session">Session {seconds}s / 300s · {tokens===null?'Token usage not yet reported':tokens+' reported tokens'} · No paid fallback</p></details>}
+   <p className="reveal-hint">{camera.active||camera.opening?'Camera shares while enabled':'Camera is optional'}<span aria-hidden="true"> · </span>Close to return to chat</p>
+  </div>
+ </div>;
 }

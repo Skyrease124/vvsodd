@@ -1,0 +1,10 @@
+FROM node:24.19.0-bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /opt/proxy
+COPY browser-service/package.json browser-service/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY browser-service/url-policy.mjs browser-service/proxy.mjs ./
+RUN openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=SkyData isolated job proxy" -keyout key.pem -out cert.pem && chown 1000:1000 key.pem && chmod 600 key.pem
+LABEL org.skydata.proxy.adapter="2"
+USER 1000:1000
+ENTRYPOINT ["node","proxy.mjs"]

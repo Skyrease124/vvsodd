@@ -1,0 +1,72 @@
+Runner 2.4.2: rebuild with Prepare_Browser.cmd in a new folder. Fixes the Stagehand extension control WebSocket being sent to the public-network proxy. Only ws://127.0.0.1:9222 bypasses; Chrome accepts only the Stagehand extension origin. Every job checks rejected website origins before navigation. HP verification pending.
+
+Runner 2.4.1 startup patch: extract into a NEW folder and run Prepare_Browser.cmd again. Existing pairing is retained. Chrome now uses temporary writable home/config/cache paths; failed self-tests include bounded Chrome startup diagnostics. HP verification is pending.
+
+SKYDATA HP RUNNER v2.4 - OPTIONAL STAGEHAND WEBSITE INVESTIGATIONS
+
+Your current pairing is reused from %USERPROFILE%\.skydata-runner\connection.json.
+No cloud-browser account, new API key or hosting subscription is required.
+Your HP must stay on, online, with Docker Desktop and Start_Runner open.
+
+INSTALL
+1. Press Ctrl+C in the old runner window. Keep that old folder as a backup.
+2. Extract the v2.4 ZIP into a NEW folder. Do not run files inside the ZIP.
+3. Keep Docker Desktop running with Linux containers. Node 24 is already
+   used by your existing runner. No npm install is needed on Windows.
+4. Double-click Prepare_Browser.cmd. This builds two Linux images and
+   downloads Chromium/dependencies once. The first build can take several
+   minutes and uses additional disk space. Do not close it early.
+5. Prepare_Browser runs a real browser self-test automatically. It writes
+   browser-selftest-report.txt. If it fails, send that file; no tokens in it.
+6. Double-click Self_Test.cmd to check that existing JavaScript tests still
+   work. Existing REA is reused; REA_Self_Test.cmd checks it separately.
+7. Double-click Start_Runner.cmd. Pair_Runner is unnecessary unless your
+   previous pairing expired (seven days) or you disconnected it.
+8. On your phone, open Engineering Mode. Choose Investigate Live Website,
+   select Superpowers first, enter a public URL and an investigation goal.
+9. Tick approval and Start Investigation. In the HP window, review the URL,
+   goal and engine, then type yes. After evidence returns, generate a report.
+
+REA WEBSITE INVESTIGATIONS
+The existing skydata-rea:6.4.0-a1 image is reused. REA analyzes eligible
+public JavaScript captured by the browser; it does not see private server
+source. Some sites expose no eligible scripts, so REA can return a clear
+failure instead of invented findings. ZIP REA remains a separate workflow.
+
+BROWSER SELF-TEST
+Double-click Browser_Self_Test.cmd after image updates and at least once
+per seven days. Its record is bound to the exact local image IDs. It tests
+actual HTTPS page loading, 1440/390 px screenshots, private-destination
+probes through the gateway, rejected public HTTPS POST and cleanup. It makes no AI calls. A live URL
+job is still needed to verify AI navigation and the full website/HP flow.
+
+SECURITY AND LIMITS
+Separate browser job type; local yes required. No host mounts, paired
+runner token or provider keys enter the browser container. A short-lived
+three-call capability lets the website use its existing Gemini key for
+navigation; the final report uses your selected existing text model.
+Requests go through a dedicated public-IP/DNS-pinning gateway. HTTPS is
+inspected there; upstream certificates are verified. Public browsing is
+GET/HEAD only; POST, WebSockets, cookies, authorization, media streams and
+download types are blocked. Private/loopback/metadata targets are blocked.
+Chromium trusts this isolated gateway's certificate inside the job only;
+no certificate is installed in Windows or your usual browser.
+Chromium's native sandbox is disabled for this container configuration.
+Docker isolation is used instead: non-root, read-only, no capabilities,
+no-new-privileges, internal network, 1 GB RAM, 1 CPU, 128 PIDs. The gateway
+has 256 MB RAM. No browser state is shared between jobs. Browser attachment
+has a 180-second limit; REA has a separate 90-second analysis limit; Docker
+startup/cleanup are separately bounded. Cancellation is polled every five
+seconds. Cleanup must be confirmed; otherwise the runner stops, no retries.
+
+No automatic paid services. Existing provider quotas apply. If Gemini's
+free quota is exhausted, browser navigation fails without paid fallback.
+Search submissions, media playback and full accessibility audits are not
+implemented. Reports clearly describe observations and unknowns.
+
+WINDOWS / REAL HP VERIFICATION
+This package was checked with mocked Docker and a simulated HP backend.
+The browser was NOT run on your Windows HP by the developer. Your local
+self-test and first live job are the verification steps. Keep v2.3 until
+those pass. To roll back, stop v2.4 and reopen the old Start_Runner folder;
+your pairing is preserved. No site/provider keys need to be pasted here.

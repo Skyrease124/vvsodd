@@ -1,3 +1,4 @@
+import {BROWSER_PREFIX,parseBrowserJob,checkBrowserImages,executeBrowser,browserSelftest,activeBrowserResources} from './browser-job.mjs';
 import {PROJECT_PREFIX,validBundle,projectScript} from './project.mjs';
 import {spawn,execFile,execFileSync} from 'node:child_process';
 import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
@@ -10,7 +11,7 @@ import {readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {REA_PREFIX,REA_OPERATION,REA_VERSION,ADAPTER_VERSION,REA_LIMITS,parseReaJob,checkReaImage,executeRea} from './rea-job.mjs';
 const SITE='https://skydata-ai.skyrease123.chatgpt.site';
-export const VERSION='2.3';
+export const VERSION='2.4.2';
 const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json');
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the
@@ -23,7 +24,7 @@ function cleanEnv(){return Object.fromEntries(Object.entries(process.env).filter
 // The --import preload only writes a start marker to stderr before the submitted code is loaded.
 export function containerArgs(name,image,marker='SKYDATA_EXEC_START'){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory','256m','--memory-swap','256m','--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=16m','--log-driver','none','-i',image,'node','--import','data:text/javascript,'+encodeURIComponent('process.stderr.write('+JSON.stringify(marker+'\n')+')'),'-'];}
 // REA analysis payloads are a separate job type and are never accepted as JavaScript test jobs.
-export function validJob(job){if(!job||typeof job.code==='string'&&job.code.startsWith(REA_PREFIX)||!/^[a-f0-9-]{36}$/.test(job.id)||typeof job.code!=='string'||!Number.isFinite(job.expires)||job.expires<=Date.now())return false;if(job.code.startsWith(PROJECT_PREFIX)){try{return Buffer.byteLength(job.code)<=900000&&validBundle(JSON.parse(job.code.slice(PROJECT_PREFIX.length)));}catch{return false;}}return Buffer.byteLength(job.code)>0&&Buffer.byteLength(job.code)<=16000;}
+export function validJob(job){if(!job||typeof job.code==='string'&&(job.code.startsWith(REA_PREFIX)||job.code.startsWith(BROWSER_PREFIX))||!/^[a-f0-9-]{36}$/.test(job.id)||typeof job.code!=='string'||!Number.isFinite(job.expires)||job.expires<=Date.now())return false;if(job.code.startsWith(PROJECT_PREFIX)){try{return Buffer.byteLength(job.code)<=900000&&validBundle(JSON.parse(job.code.slice(PROJECT_PREFIX.length)));}catch{return false;}}return Buffer.byteLength(job.code)>0&&Buffer.byteLength(job.code)<=16000;}
 // Runs one docker CLI command and always resolves with timing and the exact failure, never throws.
 export function docker(args,timeoutMs,{run=execFile}={}){
  const started=Date.now();
@@ -111,7 +112,7 @@ async function protectFile(){
  }else await chmod(configPath,0o600);
 }
 async function api(path,body,token){
- const r=await fetch(SITE+'/api/engineering-runner/'+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(15000)});
+ const r=await fetch(SITE+'/api/engineering-runner/'+path,{method:'POST',headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body),redirect:'error',signal:AbortSignal.timeout(path==='browser-result'?60000:15000)});
  const d=await r.json();if(!r.ok)throw Error(d.error||'Site request failed ('+r.status+').');return d;
 }
 // Progress is informational; an older website without this endpoint simply ignores it.
@@ -123,11 +124,12 @@ async function pair(){const rl=createInterface({input:process.stdin,output:proce
  }finally{rl.close();}}
 function printPhases(result){for(const p of result.diagnostics.phases)console.log('  '+(p.ok?'ok  ':'FAIL')+' '+p.phase.padEnd(16)+String(p.ms).padStart(7)+' ms  '+p.command+(p.ok?'':'  ['+p.code+'] '+display(p.detail||'')));}
 async function start(){
- const config=JSON.parse(await readFile(configPath,'utf8'));if(!/^[a-f0-9]{64}$/.test(config.token)||config.expires<=Date.now())throw Error('Pair again; connection expired.');await protectFile();const image=await pinnedImage();let rea=await checkReaImage(docker);console.log('REA static analysis: '+(rea.available?'available · ':'unavailable · ')+rea.detail);
+ const config=JSON.parse(await readFile(configPath,'utf8'));if(!/^[a-f0-9]{64}$/.test(config.token)||config.expires<=Date.now())throw Error('Pair again; connection expired.');await protectFile();const image=await pinnedImage();let rea=await checkReaImage(docker),browser=await checkBrowserImages(docker);console.log('Browser investigations: '+browser.detail);console.log('REA static analysis: '+(rea.available?'available · ':'unavailable · ')+rea.detail);
  const rl=createInterface({input:process.stdin,output:process.stdout});console.log('SkyData HP runner v'+VERSION+' connected. Keep this window open. Ctrl+C stops it.\nThe website shows when Docker was last verified; polling alone does not prove Docker is healthy.');
  try{for(;;){
- const {job}=await api('poll',{ready:true,protocol:2,version:VERSION,docker:dockerHealth,capabilities:{rea:{available:rea.available,reaVersion:rea.reaVersion,adapterVersion:rea.adapterVersion,checkedAt:rea.checkedAt,detail:rea.detail}}},config.token);
- if(job&&typeof job.code==='string'&&job.code.startsWith(REA_PREFIX))rea=await reaJob(job,rl,config.token);
+ const {job}=await api('poll',{ready:true,protocol:2,version:VERSION,docker:dockerHealth,capabilities:{browser,rea:{available:rea.available,reaVersion:rea.reaVersion,adapterVersion:rea.adapterVersion,checkedAt:rea.checkedAt,detail:rea.detail}}},config.token);
+ if(job&&typeof job.code==='string'&&job.code.startsWith(BROWSER_PREFIX)){await hpBrowserJob(job,rl,config.token);browser=await checkBrowserImages(docker);}
+ else if(job&&typeof job.code==='string'&&job.code.startsWith(REA_PREFIX))rea=await reaJob(job,rl,config.token);
  else if(job){if(!validJob(job))throw Error('Invalid or expired test; execution stopped.');const project=job.code.startsWith(PROJECT_PREFIX)?JSON.parse(job.code.slice(PROJECT_PREFIX.length)):null;console.log('\nTEST REQUEST '+job.id+'\n'+(project?'PROJECT: '+display(project.name)+'\nTest entry: '+project.entry+'\n'+project.files.map(f=>'\nFILE: '+f.path+'\n'+display(f.text)).join('\n'):display(job.code))+'\n');console.log('Approve within 10 minutes. Execution still stops after 10 seconds.');
  const answer=await rl.question('Run this exact JavaScript in Docker? Type yes: ');let result;
  if(answer.trim().toLowerCase()==='yes'&&job.expires>Date.now()){
@@ -141,6 +143,30 @@ async function start(){
  }
  await new Promise(resolve=>setTimeout(resolve,5000));
  }}finally{rl.close();}
+}
+export async function hpBrowserJob(job,rl,token,{apiCall=api,checkImages=checkBrowserImages,executeJob=executeBrowser}={}){
+ const bundle=parseBrowserJob(job);if(!bundle)throw Error('Invalid browser job. Runner stopped.');
+ console.log('\nWEBSITE INVESTIGATION '+job.id+'\nWebsite: '+display(bundle.url)+'\nEngine: '+bundle.engine+'\nGoal: '+display(bundle.goal)+'\nPublic pages only; no submissions, logins, media downloads or security bypass.');
+ const cap=await checkImages(docker);let result;const controller=new AbortController();let controlBusy=false;
+ const check=async()=>{if(controlBusy)return;controlBusy=true;try{const d=await apiCall('browser-control',{id:job.id},token);if(d.cancel)controller.abort();}catch{controller.abort();}finally{controlBusy=false;}};
+ const timer=setInterval(()=>void check(),5000);
+ try{
+  if(!cap.available)result={status:'unavailable',cleanupConfirmed:true,error:cap.detail};
+  else{
+   let answer='';try{answer=(await rl.question('Open this public website in isolated Docker? Type yes: ',{signal:controller.signal})).trim().toLowerCase();}catch{}
+   if(controller.signal.aborted)result={status:'cancelled',cleanupConfirmed:true,error:'Cancelled before browser execution.'};
+   else if(answer!=='yes'||job.expires<=Date.now())result={status:'declined',cleanupConfirmed:true,error:'Declined or expired before local approval.'};
+   else{
+    const report=phase=>{void apiCall('progress',{id:job.id,phase},token).catch(()=>controller.abort());};
+    const health=await checkDocker();
+    if(!health.ok)result={status:'infrastructure_error',cleanupConfirmed:true,error:'Docker check failed before browser execution.'};
+    else result=await executeJob(job,bundle,cap,{dockerCommand:docker,removeContainer:cleanup,cleanEnv,report,signal:controller.signal});
+   }
+  }
+  console.log('Website investigation: '+result.status+(result.error?' · '+display(result.error):''));
+  const received=await apiCall('browser-result',{id:job.id,result},token);if(received.status==='invalid_result')console.log('The website refused this result after integrity checks.');
+  if(result.status==='infrastructure_error')throw Error('Runner stopped after browser infrastructure/cleanup failure. No automatic retry.');
+ }finally{clearInterval(timer);}
 }
 // One REA static-analysis request: re-verify the prepared image, show the exact operation and files, ask locally.
 export async function reaJob(job,rl,token,{apiCall=api}={}){
@@ -198,6 +224,7 @@ async function selftest(){
  await writeFile('selftest-report.txt',lines.join('\n')+'\n').catch(()=>{});console.log('Saved selftest-report.txt in this folder.');if(failed)process.exitCode=1;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{if(activeContainer)try{execFileSync('docker',['rm','-f',activeContainer],{stdio:'ignore',timeout:LIMITS.cleanupMs,windowsHide:true});}catch{console.error('Could not confirm cleanup. Check Docker Desktop for '+activeContainer);}process.exit(130);});
- const mode=process.argv[2];try{if(mode==='pair')await pair();else if(mode==='start')await start();else if(mode==='selftest')await selftest();else if(mode==='rea-selftest')await reaSelftest();else console.log('Use: node runner.mjs pair | start | selftest | rea-selftest');}catch(e){console.error(e.message);process.exitCode=1;}
+ for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{for(const resource of activeBrowserResources)try{execFileSync('docker',[resource.startsWith('skydata-browser-net-')?'network':'container','rm','-f',resource],{stdio:'ignore',timeout:LIMITS.cleanupMs,windowsHide:true});}catch{console.error('Check Docker Desktop for '+resource);}
+ if(activeContainer)try{execFileSync('docker',['rm','-f',activeContainer],{stdio:'ignore',timeout:LIMITS.cleanupMs,windowsHide:true});}catch{console.error('Could not confirm cleanup. Check Docker Desktop for '+activeContainer);}process.exit(130);});
+ const mode=process.argv[2];try{if(mode==='pair')await pair();else if(mode==='start')await start();else if(mode==='selftest')await selftest();else if(mode==='rea-selftest')await reaSelftest();else if(mode==='browser-selftest')console.log(await browserSelftest({dockerCommand:docker,removeContainer:cleanup,cleanEnv}));else console.log('Use: node runner.mjs pair | start | selftest | rea-selftest | browser-selftest');}catch(e){console.error(e.message);process.exitCode=1;}
 }

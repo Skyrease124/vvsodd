@@ -1,3 +1,15 @@
+Runner 2.4.2: rebuild with Prepare_Browser.cmd in a new folder. Fixes the Stagehand extension control WebSocket being sent to the public-network proxy. Only ws://127.0.0.1:9222 bypasses; Chrome accepts only the Stagehand extension origin. Every job checks rejected website origins before navigation. HP verification pending.
+
+Runner 2.4.1 startup patch: extract into a NEW folder and run Prepare_Browser.cmd again. Existing pairing is retained. Chrome now uses temporary writable home/config/cache paths; failed self-tests include bounded Chrome startup diagnostics. HP verification is pending.
+
+SKYDATA HP RUNNER v2.4 - OPTIONAL STAGEHAND WEBSITE INVESTIGATIONS
+
+See BROWSER_SETUP_WINDOWS.txt for the new setup. Existing pairing, JavaScript
+tests and ZIP REA are kept. Browser support needs Prepare_Browser + a passing
+local Browser_Self_Test. Real Windows/browser verification is pending.
+
+PREVIOUS RUNNER NOTES (retained)
+
 SKYDATA HP RUNNER v2.3 - REA STATIC INVESTIGATION (adapter 1) + v2.2 DIAGNOSTICS
 
 v2.3 adds one separate, optional job type: REA static analysis

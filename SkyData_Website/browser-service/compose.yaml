@@ -1,0 +1,18 @@
+services:
+  egress:
+    build:
+      context: ..
+      dockerfile: browser-service/Dockerfile.proxy
+    restart: unless-stopped
+    networks: [browser, outbound]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 64
+    cpus: 0.5
+networks:
+  browser:
+    name: skydata-browser-internal
+    internal: true
+  outbound: {}

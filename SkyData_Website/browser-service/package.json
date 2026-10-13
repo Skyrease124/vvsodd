@@ -1,0 +1,9 @@
+{
+  "name": "skydata-stagehand-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24.19.0"},
+  "scripts": {"test": "node --test test/*.test.mjs", "start": "node server.mjs"},
+  "dependencies": {"@browserbasehq/stagehand": "4.2.1", "playwright-core": "1.58.2", "ipaddr.js": "2.2.0", "zod": "4.4.3"}
+}

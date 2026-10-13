@@ -36,3 +36,6 @@
 .runner-phase-bad{color:#ffb4bb}.runner-phase-ok{color:#b9f0c8}
 /* REA findings */
 .rea-table-wrap{max-width:100%;overflow-x:auto}.rea-findings h4{margin:18px 0 6px}.rea-findings td{overflow-wrap:anywhere}
+.engineering-website-panel{min-width:0;margin-top:1.25rem}.engineering-website-panel>label{display:grid;gap:.6rem;margin:1rem 0}.engineering-website-panel input,.engineering-website-panel textarea{width:100%;min-width:0;box-sizing:border-box}.engineering-website-panel figure{margin:1rem 0}.engineering-website-panel p,.engineering-website-panel figcaption{overflow-wrap:anywhere}.engineering-website-panel details button{margin:.4rem}
+
+.engineering-website-panel input[type=checkbox]{width:auto;min-width:initial}
