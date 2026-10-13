@@ -17,11 +17,13 @@ let browser,stagehand,pw;let calls=0,inputTokens=0,outputTokens=0;
 const limits={requests:180,pages:3,scriptBytes:1000000,scriptCount:20};
 let requests=0,scriptBytes=0;const network=[],scripts=[],interactions=[],screenshots=[],pages=[],limitations=[];
 // Stagehand 4.2.1 answers page.set_viewport_size within a fixed 10 s, while Chrome may still be re-laying out a heavy page.
-// After that timeout the page is given a bounded extra wait to report the new width; a viewport that never applies skips only its screenshot.
+// After that timeout the page is given a bounded extra wait to report the new width; a viewport or screenshot that times out skips only that screenshot.
+// All slow captures share one per-job budget. A page that stayed busy is not navigated further; the report uses what was collected.
 const sleep=ms=>new Promise(r=>setTimeout(r,ms)),within=(p,ms)=>{let t;return Promise.race([p,new Promise((_,j)=>{t=setTimeout(()=>j(Error('timed out')),ms);})]).finally(()=>clearTimeout(t));};
-const isRpcTimeout=e=>e?.name==='RPCResponseTimeoutError';
+// RPCResponseTimeoutError: the client stopped waiting. TimeoutError: the extension's own operation timeout (e.g. screenshot).
+const isTimeout=e=>e?.name==='RPCResponseTimeoutError'||e?.name==='TimeoutError';
 const note=text=>{if(!limitations.includes(text))limitations.push(text);};
-const viewportLimits={settleMs:20000,totalMs:60000};let viewportWaitUsed=0;const viewports=[];
+const viewportLimits={settleMs:20000,totalMs:60000};let viewportWaitUsed=0,pageBusy=false;const viewports=[];
 const redact=value=>{try{const u=new URL(value);u.username='';u.password='';u.search='';u.hash='';return u.href;}catch{return '[invalid URL]';}};
 try{
  phase('Launching browser');
@@ -63,19 +65,21 @@ try{
   const resize=async width=>{
    const started=Date.now();let applied=false;
    if(viewportWaitUsed>=viewportLimits.totalMs){viewports.push({page:n,width,applied,skipped:true});checks.viewports=viewports;note('The viewport time limit was used up on a busy page; the remaining viewport screenshots were skipped.');return false;}
-   try{await page.setViewportSize(width,900);applied=true;}catch(e){if(!isRpcTimeout(e))throw e;
+   try{await page.setViewportSize(width,900);applied=true;}catch(e){if(!isTimeout(e))throw e;
     const until=Date.now()+Math.min(viewportLimits.settleMs,Math.max(0,viewportLimits.totalMs-viewportWaitUsed));
     while(!applied&&Date.now()<until){try{applied=await within(observedPage.evaluate(()=>innerWidth),5000)===width;}catch{}if(!applied)await sleep(500);}
     viewportWaitUsed+=Date.now()-started;}
    viewports.push({page:n,width,applied,ms:Date.now()-started});checks.viewports=viewports;
-   if(!applied)note('The '+width+'px viewport did not finish resizing within the time limit because the page was busy; that screenshot was skipped.');
+   if(!applied){pageBusy=true;note('The '+width+'px viewport did not finish resizing within the time limit because the page was busy; that screenshot was skipped.');}
    return applied;
   };
   for(const width of [1440,390]){
    if(!await resize(width))continue;
-   try{const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);screenshots.push({page:n,width,overflow,png:Buffer.from(await page.screenshot({fullPage:false,timeout:20000})).toString('base64')});}
-   catch(e){if(!isRpcTimeout(e))throw e;note('The '+width+'px screenshot did not finish within the time limit because the page was busy; it was skipped.');}
+   const shotStarted=Date.now();
+   try{const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);screenshots.push({page:n,width,overflow,png:Buffer.from(await page.screenshot({fullPage:false,timeout:20000})).toString('base64')});viewports.at(-1).screenshot='ok';}
+   catch(e){if(!isTimeout(e))throw e;viewportWaitUsed+=Date.now()-shotStarted;pageBusy=true;viewports.at(-1).screenshot='timed out';note('The '+width+'px screenshot did not finish within the time limit because the page was busy; it was skipped.');}
   }
+  if(pageBusy&&!input.selfTest){note('The page stayed busy while evidence was collected, so further navigation was not attempted; the report uses the pages collected so far.');break;}
   await resize(1440);
   if(n===limits.pages-1)break;
   phase('Examining functionality');

@@ -24,6 +24,15 @@ test('a viewport that never applies skips only that screenshot, within the bound
  const v=final.viewports.find(v=>v.width===390);assert.equal(v.applied,false);assert.ok(v.ms>=20000&&v.ms<27000,'waited '+v.ms);
  assert.ok(final.limitations.some(l=>l.startsWith('The 390px viewport did not finish resizing')));
 });
+test('a screenshot that hits the extension TimeoutError is skipped and the busy page is not navigated further',async()=>{
+ const {final,err,phases}=await run('shot');
+ assert.equal(final.type,'result');assert.equal(final.status,'complete');
+ assert.deepEqual(final.screenshots.map(s=>s.width),[390]);
+ assert.equal(final.viewports.find(v=>v.width===1440).screenshot,'timed out');
+ assert.ok(final.limitations.some(l=>l.startsWith('The 1440px screenshot did not finish')));
+ assert.ok(final.limitations.some(l=>l.startsWith('The page stayed busy')));
+ assert.ok(!err.includes('OBSERVE_CALLED'));assert.ok(!phases.includes('Examining functionality'));
+});
 test('other viewport errors still fail the investigation',async()=>{
  const {final,code}=await run('error');
  assert.equal(final.type,'error');assert.equal(final.error,'Target closed');assert.equal(final.failingPhase,'Collecting evidence');assert.equal(code,1);
