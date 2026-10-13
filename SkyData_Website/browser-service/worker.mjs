@@ -16,6 +16,12 @@ const input=JSON.parse(Buffer.concat(chunks));const target=publicUrl(input.url);
 let browser,stagehand,pw;let calls=0,inputTokens=0,outputTokens=0;
 const limits={requests:180,pages:3,scriptBytes:1000000,scriptCount:20};
 let requests=0,scriptBytes=0;const network=[],scripts=[],interactions=[],screenshots=[],pages=[],limitations=[];
+// Stagehand 4.2.1 answers page.set_viewport_size within a fixed 10 s, while Chrome may still be re-laying out a heavy page.
+// After that timeout the page is given a bounded extra wait to report the new width; a viewport that never applies skips only its screenshot.
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)),within=(p,ms)=>{let t;return Promise.race([p,new Promise((_,j)=>{t=setTimeout(()=>j(Error('timed out')),ms);})]).finally(()=>clearTimeout(t));};
+const isRpcTimeout=e=>e?.name==='RPCResponseTimeoutError';
+const note=text=>{if(!limitations.includes(text))limitations.push(text);};
+const viewportLimits={settleMs:20000,totalMs:60000};let viewportWaitUsed=0;const viewports=[];
 const redact=value=>{try{const u=new URL(value);u.username='';u.password='';u.search='';u.hash='';return u.href;}catch{return '[invalid URL]';}};
 try{
  phase('Launching browser');
@@ -54,8 +60,23 @@ try{
   const evidence=await page.evaluate(()=>({title:document.title,exposedFrameworkVersions:{react:typeof window.React?.version==='string'?window.React.version:null,vue:typeof window.Vue?.version==='string'?window.Vue.version:null,jquery:typeof window.jQuery?.fn?.jquery==='string'?window.jQuery.fn.jquery:null},text:document.body?.innerText.slice(0,16000),headings:[...document.querySelectorAll('h1,h2,h3')].slice(0,40).map(e=>e.textContent),links:[...document.querySelectorAll('a[href]')].slice(0,80).map(e=>({text:e.textContent?.slice(0,100),href:e.href})),metadata:[...document.querySelectorAll('meta[name],meta[property]')].slice(0,40).map(e=>({name:e.getAttribute('name')||e.getAttribute('property'),content:e.getAttribute('content')?.slice(0,300)})),players:[...document.querySelectorAll('video,audio,iframe')].slice(0,20).map(e=>({tag:e.tagName,controls:e.hasAttribute('controls'),title:e.getAttribute('title')})),performance:performance.getEntriesByType('navigation').map(e=>({domContentLoaded:e.domContentLoadedEventEnd,load:e.loadEventEnd})),accessibility:{imagesWithoutAlt:document.querySelectorAll('img:not([alt])').length,unlabelledInputs:[...document.querySelectorAll('input:not([type=hidden])')].filter(e=>!e.getAttribute('aria-label')&&!e.labels?.length).length}}));
   evidence.links=evidence.links.map(l=>({...l,href:redact(l.href)}));pages.push({id:'page-'+n,url:redact(final.href),at:new Date().toISOString(),...evidence});
   phase('Collecting evidence');
-  for(const width of [1440,390]){await page.setViewportSize(width,900);const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);screenshots.push({page:n,width,overflow,png:Buffer.from(await page.screenshot({fullPage:false})).toString('base64')});}
-  await page.setViewportSize(1440,900);
+  const resize=async width=>{
+   const started=Date.now();let applied=false;
+   if(viewportWaitUsed>=viewportLimits.totalMs){viewports.push({page:n,width,applied,skipped:true});checks.viewports=viewports;note('The viewport time limit was used up on a busy page; the remaining viewport screenshots were skipped.');return false;}
+   try{await page.setViewportSize(width,900);applied=true;}catch(e){if(!isRpcTimeout(e))throw e;
+    const until=Date.now()+Math.min(viewportLimits.settleMs,Math.max(0,viewportLimits.totalMs-viewportWaitUsed));
+    while(!applied&&Date.now()<until){try{applied=await within(observedPage.evaluate(()=>innerWidth),5000)===width;}catch{}if(!applied)await sleep(500);}
+    viewportWaitUsed+=Date.now()-started;}
+   viewports.push({page:n,width,applied,ms:Date.now()-started});checks.viewports=viewports;
+   if(!applied)note('The '+width+'px viewport did not finish resizing within the time limit because the page was busy; that screenshot was skipped.');
+   return applied;
+  };
+  for(const width of [1440,390]){
+   if(!await resize(width))continue;
+   try{const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);screenshots.push({page:n,width,overflow,png:Buffer.from(await page.screenshot({fullPage:false,timeout:20000})).toString('base64')});}
+   catch(e){if(!isRpcTimeout(e))throw e;note('The '+width+'px screenshot did not finish within the time limit because the page was busy; it was skipped.');}
+  }
+  await resize(1440);
   if(n===limits.pages-1)break;
   phase('Examining functionality');
   if(input.selfTest)break;
@@ -85,6 +106,6 @@ try{
  phase('Analyzing technologies');
  limitations.push('Public frontend only; server architecture, database, licensing, authentication and media origins cannot be established from this capture.','Only same-origin navigation links are clicked. Search submission, menu buttons, playback and authenticated flows are not tested.','Network records exclude bodies, credentials and query strings. Media streams, downloads, WebSockets and non-GET requests are blocked.','JavaScript capture is partial: up to 20 responses with declared sizes, 1 MB total. Accessibility checks are observations, not an audit.');
  await pw.close();pw=null;await stagehand.close();stagehand=null;await browser.close();browser=null;
- emit({type:'result',status:'complete',stagehandVersion:'4.2.1',browserExecuted:true,cleanupConfirmed:true,controlOriginGuard,pages,network,scripts,interactions,screenshots,limitations,usage:{calls,inputTokens,outputTokens,browserModel:'SkyData scoped relay / '+(input.model||'unknown')}});
+ emit({type:'result',status:'complete',stagehandVersion:'4.2.1',browserExecuted:true,cleanupConfirmed:true,controlOriginGuard,pages,network,scripts,interactions,screenshots,viewports,limitations,usage:{calls,inputTokens,outputTokens,browserModel:'SkyData scoped relay / '+(input.model||'unknown')}});
 }catch(e){emit({type:'error',error:String(e.message).slice(0,300),failingPhase:currentPhase,completedChecks:checks,probes:blocks,resources:await resourceDiagnostics().catch(()=>null),startupDiagnostics:await startupDiagnostics()});process.exitCode=1;}
 finally{await pw?.close().catch(()=>{});await stagehand?.close().catch(()=>{});await browser?.close().catch(()=>{});}
