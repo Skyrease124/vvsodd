@@ -15,6 +15,8 @@ host for this analysis. SkyData therefore runs REA inside a Linux container
 on Docker Desktop, with the same isolation as the test runner: no network,
 non-root user, read-only filesystem, no capabilities, no host folders.
 REA jobs get 768 MB of memory (REA's analyzer needs it) and a 3-minute limit.
+REA inside website investigations gets 1 GB and up to 330 seconds (runner 2.4.10
+or later with an image prepared by this folder's Prepare_REA.cmd).
 JavaScript test jobs keep their 256 MB and 10-second limits.
 
 YOU NEED

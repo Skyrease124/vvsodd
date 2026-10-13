@@ -11,7 +11,7 @@ import {readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {REA_PREFIX,REA_OPERATION,REA_VERSION,ADAPTER_VERSION,REA_LIMITS,parseReaJob,checkReaImage,executeRea} from './rea-job.mjs';
 const SITE='https://skydata-ai.skyrease123.chatgpt.site';
-export const VERSION='2.4.9';
+export const VERSION='2.4.10';
 const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json');
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the

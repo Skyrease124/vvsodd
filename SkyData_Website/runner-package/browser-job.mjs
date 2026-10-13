@@ -12,6 +12,10 @@ export const REA_BROWSER_BYTES=384*1024;
 // Measured on Linux Docker with 348 KB of real minified JS: REA peaked at 710 MB RSS plus 33 MB of tmpfs (counted in the same limit), 97% of the
 // 768 MB ZIP-REA limit. Website investigations use 1 GB (the HP already runs the 1 GB browser container, which is removed before REA starts).
 export const REA_BROWSER_MEMORY='1024m';
+// On a slow PC most REA time is fixed start-up (Linux Docker at 0.12 CPU: ~105 s for 70 KB and for 303 KB alike), so website investigations
+// give REA the time left in the website's 10-minute job window: up to 330 s inside the container plus 20 s for the runner to collect the result.
+// This needs an REA image built with the request-deadline label (Prepare_REA.cmd); older images keep the 180 s limit.
+export const REA_BROWSER_MAX_MS=350000,REA_ADAPTER_GRACE_MS=20000,REA_RESULT_MARGIN_MS=60000,REA_MIN_MS=80000;
 export const BROWSER_LIMITS={deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
 export const activeBrowserResources=new Set();
 // Tasks (processes + threads) for the browser container. Measured with Chromium 155 + Stagehand 4.2.1 on Linux Docker:
@@ -100,16 +104,21 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
      // Scripts not sent are removed from the evidence, so the website's staged-equals-scripts check still compares exactly what REA analysed.
      let used=0;const chosen=[];for(const s of evidence.scripts){const n=Buffer.byteLength(s.text);if(used+n<=REA_BROWSER_BYTES){used+=n;chosen.push(s);}}
      if(chosen.length<evidence.scripts.length){evidence.limitations=[...(evidence.limitations||[]),'REA analysed '+chosen.length+' of '+evidence.scripts.length+' captured scripts ('+Math.round(used/1024)+' KB); the rest were left out to stay within the REA time limit on this HP.'];evidence.scripts=chosen;}
+     const left=Number.isFinite(job?.expires)?job.expires-Date.now()-REA_RESULT_MARGIN_MS:Infinity;
+     const reaMs=Math.floor(Math.min(rea.requestDeadline?REA_BROWSER_MAX_MS:REA_LIMITS.deadlineMs,left));
+     if(reaMs<REA_MIN_MS){status='timeout';error='Not enough time was left in the website job window to run REA.';}
+     else{
      report('rea_analysis');const files=evidence.scripts.map(({path,text,sha256})=>({path,text,sha256}));
      let reaContainer=null;const reaDocker=async(args,timeout)=>{if(args[0]==='create'){reaContainer=args[args.indexOf('--name')+1];activeBrowserResources.add(reaContainer);}return dockerCommand(args,timeout);};const stopRea=()=>{if(reaContainer)void dockerCommand(['kill',reaContainer],limits.cleanupMs);};signal?.addEventListener('abort',stopRea,{once:true});
-     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:{...REA_LIMITS,memory:REA_BROWSER_MEMORY}});
+     const r=await reaRunner({name:bundle.url,operation:'analyze-javascript-application',files},rea.imageId,{dockerCommand:reaDocker,removeContainer,spawnProcess,cleanEnv,report,limits:{...REA_LIMITS,memory:REA_BROWSER_MEMORY,deadlineMs:reaMs,...(rea.requestDeadline?{adapterDeadlineMs:reaMs-REA_ADAPTER_GRACE_MS}:{})}});
      signal?.removeEventListener('abort',stopRea);if(r.diagnostics?.cleanupConfirmed&&reaContainer)activeBrowserResources.delete(reaContainer);
      const staged=r.adapter?.staged?.map(f=>f.path+'\0'+f.sha256).sort(),expected=files.map(f=>f.path+'\0'+f.sha256).sort();
      // The first failed check is named in the error so a failure on the HP can be diagnosed from the runner window.
      const failedPhase=(r.diagnostics?.phases||[]).find(p=>p&&p.ok===false);
      const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):failedPhase?' at '+failedPhase.phase+(failedPhase.detail?': '+String(failedPhase.detail).slice(0,160):failedPhase.code?' ('+failedPhase.code+')':''):''):r.adapter?.rea?.version!=='6.4.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
-     if(failedCheck){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within the '+REA_LIMITS.deadlineMs/1000+'-second REA limit on this HP.':r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks ('+failedCheck+').';}
+     if(failedCheck){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within its '+Math.round((rea.requestDeadline?reaMs-REA_ADAPTER_GRACE_MS:REA_LIMITS.deadlineMs)/1000)+'-second limit on this HP.'+(rea.requestDeadline?'':' Run Prepare_REA.cmd once to allow REA up to 330 seconds in website investigations.'):r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks ('+failedCheck+').';}
      else evidence.rea={...r.adapter,cleanupConfirmed:true};
+     }
     }
    }
   }

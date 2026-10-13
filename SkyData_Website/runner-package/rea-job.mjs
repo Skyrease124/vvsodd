@@ -29,7 +29,8 @@ export async function checkReaImage(dockerCommand){
  const labels=image?.Config?.Labels||{},reaVersion=labels['org.skydata.rea.version']??null,adapterVersion=labels['org.skydata.adapter.version']??null;
  const problems=[];if(!/^sha256:[a-f0-9]{64}$/.test(image?.Id||''))problems.push('invalid image id');if(reaVersion!==REA_VERSION)problems.push('REA '+(reaVersion||'unknown')+' (needs '+REA_VERSION+')');if(adapterVersion!==ADAPTER_VERSION)problems.push('adapter '+(adapterVersion||'unknown')+' (needs '+ADAPTER_VERSION+')');
  if(image?.Config?.User!=='1000:1000')problems.push('image user is not 1000:1000');if(JSON.stringify(image?.Config?.Entrypoint)!==JSON.stringify(['node','/opt/rea/adapter.mjs']))problems.push('unexpected entrypoint');
- return {available:!problems.length,reaVersion,adapterVersion,imageId:image?.Id??null,checkedAt:Date.now(),detail:problems.length?'Incompatible REA image: '+problems.join('; ')+'. Run Prepare_REA.cmd again.':'REA '+reaVersion+' · adapter '+adapterVersion+' · image '+String(image.Id).slice(7,19)};
+ const requestDeadline=labels['org.skydata.rea.request-deadline']==='1';
+ return {available:!problems.length,reaVersion,adapterVersion,requestDeadline,imageId:image?.Id??null,checkedAt:Date.now(),detail:problems.length?'Incompatible REA image: '+problems.join('; ')+'. Run Prepare_REA.cmd again.':'REA '+reaVersion+' · adapter '+adapterVersion+' · image '+String(image.Id).slice(7,19)+(requestDeadline?' · extended time limit for website investigations':'')};
 }
 export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,spawnProcess=spawn,limits=REA_LIMITS,report=()=>{},cleanEnv=()=>({})}){
  const name='skydata-rea-'+randomUUID(),phases=[],t0=Date.now();let stdout='',stderr='',bytes=0;const utf8=new StringDecoder('utf8');// one decoder: chunks may split multi-byte characters
@@ -49,7 +50,7 @@ export async function executeRea(bundle,imageId,{dockerCommand,removeContainer,s
    child.stdout.on('data',d=>{bytes+=d.length;if(bytes>limits.resultBytes){stop('output_limit');return;}stdout+=utf8.write(d);});
    child.stderr.on('data',d=>{if(stderr.length<65536)stderr+=d.toString().slice(0,65536-stderr.length);});
    child.on('error',e=>{stderr+='\nDocker start failed ('+(e.code||'unknown')+')';finish(null,true);});child.on('close',code=>finish(code,code===null));
-   child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({protocol:'skydata-rea-v1',operation:REA_OPERATION,files:bundle.files}));
+   child.stdin.on('error',()=>{});child.stdin.end(JSON.stringify({protocol:'skydata-rea-v1',operation:REA_OPERATION,files:bundle.files,...(Number.isInteger(limits.adapterDeadlineMs)?{deadlineMs:limits.adapterDeadlineMs}:{})}));
   });
   phases.push({phase:'container_run',command:'docker start -a -i (adapter → rea '+REA_OPERATION+')',ms:(run.stoppedAt||run.ended)-run.started,ok:!run.reason&&!run.error,exitCode:run.code,...(run.reason?{code:run.reason,detail:run.reason==='timeout'?'Stopped at the '+limits.deadlineMs/1000+'-second REA analysis limit.':'Adapter output exceeded '+limits.resultBytes+' bytes.'}:run.error?{code:'container_error',detail:stderr.slice(-400)}:{})});
   if(run.termination){const k=await run.termination;terminationPhase={phase:'termination',command:'docker kill',ms:k.ms,ok:k.ok,detail:k.ok?'Container stop confirmed by docker kill.':'Termination NOT confirmed: docker kill '+(k.timedOut?'timed out':'failed ('+k.code+')')+'. The container may have kept running until cleanup removed it.'};}

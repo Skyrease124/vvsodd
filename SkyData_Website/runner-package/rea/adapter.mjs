@@ -6,7 +6,9 @@ import {createHash} from 'node:crypto';
 import {mkdirSync,writeFileSync,readFileSync,readdirSync,lstatSync,rmSync} from 'node:fs';
 import {join,dirname} from 'node:path';
 export const ADAPTER_VERSION='1',REA_VERSION='6.4.0',OPERATION='analyze-javascript-application';
-export const LIMITS={files:200,totalBytes:2*1024*1024,fileBytes:512*1024,reaStdoutBytes:32*1024*1024,stderrBytes:64*1024,listItems:400,heapMb:384,perSourceMs:60000,deadlineMs:150000};
+export const LIMITS={files:200,totalBytes:2*1024*1024,fileBytes:512*1024,reaStdoutBytes:32*1024*1024,stderrBytes:64*1024,listItems:400,heapMb:384,perSourceMs:60000,deadlineMs:150000,minDeadlineMs:60000,maxDeadlineMs:330000};
+// A request may ask for its own overall limit (website investigations on slow PCs); it is clamped, and requests without one keep 150 s.
+export const requestDeadline=r=>Number.isInteger(r?.deadlineMs)?Math.min(LIMITS.maxDeadlineMs,Math.max(LIMITS.minDeadlineMs,r.deadlineMs)):LIMITS.deadlineMs;
 const REA_CLI='/opt/rea/node_modules/rea-agents/scripts/rea.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 // Same path rules as the website: relative, no traversal, no drive letters, NUL, backslashes or control characters.
@@ -60,10 +62,11 @@ export async function analyze(request,{workRoot='/tmp/skydata-rea'}={}){
  const root=join(workRoot,'project');rmSync(workRoot,{recursive:true,force:true});mkdirSync(root,{recursive:true});mkdirSync('/tmp/rea-home',{recursive:true});
  const staged=request.files.map(f=>{const target=join(root,f.path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,f.text,{flag:'wx'});return {path:f.path,sha256:f.sha256,bytes:Buffer.byteLength(f.text)};});
  phases.push({phase:'stage',ms:Date.now()-t0,ok:true,detail:staged.length+' approved files written to tmpfs as data'});
- const ver=await run(['--version'],{timeoutMs:30000,maxStdout:1024});const version=ver.stdout.trim();
+ // Slow PCs: at 0.06 CPU on Linux Docker `rea --version` alone took over 30 s, so requests with their own limit allow it 90 s (ZIP REA keeps 30 s).
+ const ver=await run(['--version'],{timeoutMs:Number.isInteger(request.deadlineMs)?90000:30000,maxStdout:1024});const version=ver.stdout.trim();
  phases.push({phase:'rea_version',ms:ver.ms,ok:version===REA_VERSION,...(version===REA_VERSION?{}:{detail:'Expected REA '+REA_VERSION+', found '+(version||'none')+' '+ver.stderr.slice(0,200)})});
  if(version!==REA_VERSION)return {adapter:ADAPTER_VERSION,status:'incompatible',rea:{version:version||null,expected:REA_VERSION},staged,phases};
- const remaining=Math.max(1000,LIMITS.deadlineMs-(Date.now()-t0));
+ const remaining=Math.max(1000,requestDeadline(request)-(Date.now()-t0));
  const r=await run([OPERATION,root,'--artifact-format','directory','--format','json','--max-heap-mb',String(LIMITS.heapMb),'--analysis-timeout-ms',String(LIMITS.perSourceMs)],{timeoutMs:remaining,maxStdout:LIMITS.reaStdoutBytes});
  let doc=null,parseError=null;try{doc=r.stdout?JSON.parse(r.stdout):null;}catch(e){parseError=String(e.message).slice(0,200);}
  const reaError=doc&&doc.error?{code:doc.code??null,category:doc.category??null,message:String(doc.message??doc.error).slice(0,600)}:null;

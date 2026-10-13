@@ -13,6 +13,7 @@ RUN --mount=type=secret,id=ca,required=false if [ -f /run/secrets/ca ]; then exp
  && npm ci --ignore-scripts --omit=dev --no-audit --no-fund && npm cache clean --force \
  && mkdir -p /opt/rea/licenses && cp node_modules/rea-agents/LICENSE /opt/rea/licenses/rea-agents-LICENSE && cp node_modules/rea-agents/third_party/evmole/LICENSE /opt/rea/licenses/evmole-LICENSE && cp node_modules/rea-agents/third_party/pwndbg/LICENSE.md /opt/rea/licenses/pwndbg-LICENSE.md && cp node_modules/rea-agents/licenses/nativeaot-parser-MIT.txt /opt/rea/licenses/ \
  && ps --version && test "$(node node_modules/rea-agents/scripts/rea.mjs --version)" = "6.4.0"
-LABEL org.skydata.rea.version="6.4.0" org.skydata.adapter.version="1"
+# request-deadline=1: the adapter accepts a bounded per-request time limit (60-330 s); without one it keeps 150 s.
+LABEL org.skydata.rea.version="6.4.0" org.skydata.adapter.version="1" org.skydata.rea.request-deadline="1"
 USER 1000:1000
 ENTRYPOINT ["node","/opt/rea/adapter.mjs"]
