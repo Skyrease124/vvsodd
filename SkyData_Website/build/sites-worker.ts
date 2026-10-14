@@ -13,6 +13,7 @@ import { memberAllowance, withMemberAllowance } from '../lib/member-allowance';
 import { resolveAccess, handleLogin, accountPage, handleLogout, loginPage, waitingPage, accessPage } from '../lib/access';
 import { ownerDashboard } from '../lib/owner-dashboard';
 import { handleDecisions } from '../lib/decisions';
+import { handleEditorPlan } from '../lib/editor-plan';
 import { handleDebateScore } from '../lib/debate-score';
 import { handleDebateCheck } from '../lib/debate-check';
 import { handleDebate } from '../lib/debate';
@@ -96,7 +97,7 @@ export default {
       }catch{return incomingPath.startsWith('/api/')?Response.json({error:'Account access is temporarily unavailable.'},{status:503,headers:{'Cache-Control':'no-store'}}):accessPage('Temporarily unavailable','<p>Your account could not be checked. Please reload to try again.</p>',503);}
     }
     const path = new URL(request.url).pathname;
-    if (["/connect-polly", "/api/polly-settings", "/api/polly-preview", "/connect-gemini", "/api/gemini-token", "/api/voice-settings", "/api/voice-preview", "/api/decisions", "/api/debate-score", "/api/debate-check", "/api/debate", "/invite-requests", "/api/chat-backup", "/api/chat-state", "/connect-whisper", "/api/transcribe", "/api/status", "/api/chat", "/api/setup", "/connect", "/connect-voice", "/api/voice", "/api/vision", "/connect-camera", "/connect-web", "/connect-deepseek", "/connect-gpt", "/connect-openrouter", "/connect-openai", "/connect-crypto"].includes(path) || path === "/api/projects" || path.startsWith("/api/projects/")) {
+    if (["/api/editor-plan", "/connect-polly", "/api/polly-settings", "/api/polly-preview", "/connect-gemini", "/api/gemini-token", "/api/voice-settings", "/api/voice-preview", "/api/decisions", "/api/debate-score", "/api/debate-check", "/api/debate", "/invite-requests", "/api/chat-backup", "/api/chat-state", "/connect-whisper", "/api/transcribe", "/api/status", "/api/chat", "/api/setup", "/connect", "/connect-voice", "/api/voice", "/api/vision", "/connect-camera", "/connect-web", "/connect-deepseek", "/connect-gpt", "/connect-openrouter", "/connect-openai", "/connect-crypto"].includes(path) || path === "/api/projects" || path.startsWith("/api/projects/")) {
       // Membership was checked above; each user keeps a separate Site-scoped identity.
       if (!request.headers.get("oai-authenticated-user-id")) {console.warn("SkyData access denied",{path});return Response.json({ error: "Sign in with your SkyData owner account to continue." }, {status:403,headers:{"Cache-Control":"no-store"}});}
       try {
@@ -132,6 +133,7 @@ export default {
         if (path === "/api/setup") return setupKey(request, config);
         const key = await readKey(config);
         if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY"))||await geminiReady(config),isOwner:admin,geminiConfigured:await geminiReady(config),...(admin?{geminiVoice:await selectedGeminiVoice(config)}:{}),decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:await geminiReady(config),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&(speech.provider==='polly'?await pollyReady(config):await geminiReady(config)),nativeVoiceEnabled:speech.enabled&&speech.provider==='gemini'}, {headers:{"Cache-Control":"no-store"}});}
+        if(path==='/api/editor-plan')return run(()=>handleEditorPlan(request,key,config));
         if(path==='/api/decisions')return run(()=>handleDecisions(request,config));
         if(path==='/api/debate-score')return run(()=>handleDebateScore(request,config));
         if(path==='/api/debate-check')return run(()=>handleDebateCheck(request,key,config));

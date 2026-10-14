@@ -4,7 +4,7 @@
 // The engine starts when this page opens and is shut down when it closes, so it holds no memory elsewhere.
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Download, Undo2 } from 'lucide-react';
-import { planWithRules, type EditStep } from '../../lib/editor-planner';
+import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-planner';
 import './editor.css';
 
 type Info = { width: number; height: number };
@@ -56,7 +56,7 @@ function jpegOrientation(bytes: Uint8Array) {
 }
 
 export default function Editor() {
-  const [messages, setMessages] = useState<Msg[]>([{ id: 0, who: 'sky', text: 'Upload a photo, then tell me how to edit it: "brighter and more contrast", "black and white", "square crop" or "warmer and sharpen". Everything happens on your device; your photo is not uploaded.' }]);
+  const [messages, setMessages] = useState<Msg[]>([{ id: 0, who: 'sky', text: 'Upload a photo, then tell me how to edit it: "brighter and more contrast", "black and white", "make it look like an old 70s photo", "moody cinematic look". The editing happens on your device and your photo is never uploaded; for requests beyond the quick phrases, only your words are sent to SkyData AI.' }]);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -162,13 +162,24 @@ export default function Editor() {
       return;
     }
     const isUndo = text === 'undo';
-    const plan = isUndo ? { undo: true as const } : planWithRules(text, photo);
+    let plan: EditPlan = isUndo ? { undo: true } : planWithRules(text, photo);
     if (!isUndo) add({ who: 'me', text });
+    setBusy(true);
+    // Common phrases are planned instantly on the device; anything else goes to SkyData's AI planner. If the AI is
+    // unavailable, whatever the phrases understood is still applied.
+    if (!plan.undo && !plan.complete) {
+      setStatus('Asking SkyData AI how to edit it…');
+      const ai = await aiPlan(text, photo);
+      if ('steps' in ai) plan = { steps: ai.steps, reply: ai.reply, complete: true };
+      else if (plan.steps.length) plan = { ...plan, reply: `${plan.reply} (SkyData AI was unavailable: ${ai.error})` };
+      else plan = { steps: [], reply: `${ai.error} You can still use phrases like: brighter, black and white, warmer, sharpen, square crop, rotate right, blur 4, auto enhance.`, complete: true };
+    }
     if (!plan.undo && plan.steps.length === 0) {
       add({ who: 'sky', text: plan.reply });
+      setBusy(false);
+      setStatus(describe(photo));
       return;
     }
-    setBusy(true);
     setStatus(plan.undo ? 'Undoing…' : 'Editing…');
     try {
       const res = plan.undo ? await call('undo') : await call('run', { steps: plan.steps as EditStep[] });
@@ -181,6 +192,17 @@ export default function Editor() {
       setStatus(describe(photo));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function aiPlan(message: string, p: Photo): Promise<{ steps: EditStep[]; reply: string } | { error: string }> {
+    try {
+      const r = await fetch('/api/editor-plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, width: p.width, height: p.height }) });
+      const data = (await r.json().catch(() => ({}))) as { steps?: EditStep[]; reply?: string; error?: string };
+      if (r.ok && Array.isArray(data.steps)) return { steps: data.steps, reply: data.reply || 'Done.' };
+      return { error: data.error || 'SkyData AI could not plan that edit.' };
+    } catch {
+      return { error: 'SkyData AI could not be reached.' };
     }
   }
 

@@ -5,7 +5,8 @@
 
 export type EditStep = { command: string; params?: Record<string, unknown> };
 export type EditContext = { width: number; height: number };
-export type EditPlan = { undo: true; steps?: undefined; reply?: undefined } | { undo?: undefined; steps: EditStep[]; reply: string };
+// `complete` is false when part of the request matched no phrase (the Editor then asks SkyData's AI planner).
+export type EditPlan = { undo: true; steps?: undefined; reply?: undefined; complete?: undefined } | { undo?: undefined; steps: EditStep[]; reply: string; complete: boolean };
 type Rule = {
   re: RegExp;
   say?: string | ((text: string, ctx: EditContext) => string);
@@ -103,7 +104,7 @@ export function planWithRules(message: string, ctx: EditContext | null): EditPla
       continue;
     }
     if (rule.special === 'undo') return { undo: true };
-    if (rule.special === 'unsupported') return { steps: [], reply: rule.why ?? '' };
+    if (rule.special === 'unsupported') return { steps: [], reply: rule.why ?? '', complete: true };
     if (rule.needsSize && !ctx?.width) {
       unknown.push(clause);
       continue;
@@ -112,8 +113,8 @@ export function planWithRules(message: string, ctx: EditContext | null): EditPla
     said.push(typeof rule.say === 'function' ? rule.say(clause, ctx!) : rule.say ?? '');
   }
   if (steps.length === 0) {
-    return { steps: [], reply: `I could not match "${message}" to an edit yet. Try: brighter, darker, more contrast, black and white, sepia, warmer, cooler, vibrant, blur 4, sharpen, rotate left, flip, square crop, 9:16, resize 50%, oil paint, pixelate, auto enhance.` };
+    return { steps: [], reply: `I could not match "${message}" to an edit yet. Try: brighter, darker, more contrast, black and white, sepia, warmer, cooler, vibrant, blur 4, sharpen, rotate left, flip, square crop, 9:16, resize 50%, oil paint, pixelate, auto enhance.`, complete: false };
   }
   const extra = unknown.length ? ` (I skipped: ${unknown.map((u) => `"${u}"`).join(', ')})` : '';
-  return { steps, reply: `Done: ${said.join(', ')}${extra}.` };
+  return { steps, reply: `Done: ${said.join(', ')}${extra}.`, complete: unknown.length === 0 };
 }
