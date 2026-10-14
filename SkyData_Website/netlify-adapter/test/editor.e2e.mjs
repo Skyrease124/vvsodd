@@ -115,7 +115,9 @@ try {
     await page.fill('.editor-input', 'remove the person in the background');
     await page.click('.editor-send');
     await settle(page, n + 2);
-    check(`${label}: unsupported request is explained`, /could not match/i.test(await page.locator('.editor-msg').last().textContent()));
+    // Not a quick phrase, so it goes to SkyData AI; this test site has no AI key, so the Editor says so and nothing runs.
+    const unsupported = page.locator('.editor-msg').last();
+    check(`${label}: request beyond the quick phrases without AI is explained`, /You can still use phrases like/.test(await unsupported.textContent()) && (await unsupported.locator('img').count()) === 0, (await unsupported.textContent()).slice(0, 90));
 
     const [dl] = await Promise.all([page.waitForEvent('download'), page.locator('.editor-actions button', { hasText: 'Download JPG' }).last().click()]);
     const file = path.join(out, `${label}-${dl.suggestedFilename()}`);
