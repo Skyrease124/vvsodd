@@ -185,7 +185,98 @@ Either way, expect slow exports on a phone. Start with short clips (for example 
 4. **Later, optional:** switch the connector to `createModelPlanner()` using SkyData's existing model call, with both the catalogue validation and the bridge checks kept.
 5. **Before going live:** the real-iPhone checklist (section 5), a licence-notice file for all bundled code, and a size cap that matches what an iPhone actually handles.
 
-## 9. Reproduce
+## 9. Proposed architecture: Creative Files, chat previews and an on-demand full editor
+
+**Your question:**
+1. Can SkyData generate or edit images and videos and save them automatically to a separate Creative Files folder?
+2. Can it show only a light preview in chat?
+3. Can it let users open a saved file in the full editor, then save and return to chat, without keeping the heavy engine loaded?
+
+**Short answer:** editing, saving, previews and lazy loading are possible. **Generating** images or video from a text prompt is not something PhotoCraft or FilmCraft can do. For the full editor, FilmCraft is close to ready; PhotoCraft needs a small change to its web shell (the page code that wraps the editor). Phone use of the full editors is the weakest part.
+
+This section is investigation only, from the source and docs at the commits above. Nothing here was built or tested, apart from the memory figures, which come from the prototype.
+
+### 9.1 What each part supports
+
+| Need | PhotoCraft | FilmCraft |
+|---|---|---|
+| **Generate from a prompt** | **No.** No AI or generative features; its README calls this the biggest gap. It can make simple images from commands (new canvas, fills, gradients, shapes, text), so templates such as text cards are possible without AI. | **No.** Same: it edits and assembles media, it doesn't generate them. |
+| **AI-driven edits** | **Yes.** This prototype. | **Possible, not built:** its own command system (650+ commands, used by its MCP server) is reachable from JS through `filmcraft.execute`. |
+| **Full editor in the browser** | **Yes**, `photocraft-web`, a static site of about 23 MiB (10.5 MiB gzipped). It can be embedded in an iframe (documented), needs no COOP/COEP, and fits Cloudflare's 25 MiB per-file limit. | **Yes**, `filmcraft-web`, a static site. Bundle size isn't stated and I haven't built it. |
+| **SkyData opens a saved file in the editor** | **Not yet.** Open goes only through the file picker or drag-and-drop. The web shell already has an internal "inbox" of (file name, bytes) that dropped files go through. A small change to our own copy (the licence allows it) could feed it from SkyData, for example with a `postMessage` listener. | **Yes:** `filmcraft.importFiles(files)`, `filmcraft.openProject(file)`. If the editor is served from the same site, SkyData's page can call these directly. |
+| **Editor saves back to SkyData** | **Not yet.** Save and Export only download a file, and there is no web autosave. The same small change could send the bytes back to SkyData instead of, or as well as, downloading. | **Yes:** `filmcraft.files()` and `filmcraft.readFile(path)` return what it wrote; exports are kept in memory. |
+| **Re-editable project format** | Yes: `.pcraft` (native, keeps layers), plus PSD, TIFF, ORA and others. | Yes: `.fcproj` project files. |
+| **Crash recovery** | None on the web. | Yes: it auto-saves the project every 5 s to the browser's private file storage (OPFS) and restores it next visit. |
+| **Phone use** | Desktop Photoshop-style interface on a canvas; no mobile layout or touch mode is mentioned. Usable on an iPad, cramped on an iPhone. | Desktop Premiere-style interface; same concern. |
+| **HEIC (iPhone photos)** | Read-only, with the optional `heif` build feature. Official builds include it; this prototype's bridge doesn't yet. | Not documented. |
+
+### 9.2 The recommended shape
+
+```
+ AI chat (light, always loaded)
+ ├─ message bubbles show THUMBNAILS only (≈512 px JPEG, ≈50 KB)
+ ├─ "Edit with AI" ──► quick-edit worker (this prototype, ~7 MB gzipped, started on demand,
+ │                      terminated when idle) ──► saves result to Creative Files
+ └─ Creative Files panel (list of items: thumbnail + metadata; originals stored separately)
+       └─ "Open in editor" ──► full-screen editor page (PhotoCraft or FilmCraft web)
+              loaded only now; on "Save & return" it hands the file back, then is removed
+```
+
+- **Creative Files** is its own store, separate from chat history. Each item has:
+  - an id, name, kind (image/video/project), size and dates;
+  - the original;
+  - the latest version;
+  - the editable project file (`.pcraft` / `.fcproj`) where there is one;
+  - a small thumbnail.
+
+  Chat messages hold only the item id and the thumbnail, so loading the chat never loads a full-size file.
+- **Quick AI edits** use the lightweight bridge from this prototype, not the full editor. They are faster to load, need no GPU and use less memory.
+- **"Open in editor"** loads the full editor only when the user asks. It gets the file from Creative Files. On save, the new version and a new thumbnail are written back, and the user returns to the chat.
+
+### 9.3 Lazy loading and memory (the iPhone question)
+
+Lazy loading works, with one rule that matters most on iPhone:
+
+**WebAssembly memory never shrinks.** Once an engine has grown to, say, 270 MB, the only way to give that memory back is to end the thing that holds it: terminate the Web Worker, or remove the editor's iframe or page. Hiding it or closing a panel frees nothing.
+
+Measured in this prototype: about 4 MB when loaded, about 270 MB after opening a 12 MP photo. The full-size render peaked at 688 MB with the engine's default undo history (see section 5 for the figure with history reduced).
+
+So:
+1. **Nothing heavy at chat start-up.** Thumbnails only, and no engine.
+2. **One engine at a time.**
+   - Terminate the quick-edit worker after its download is done and after about 60 s idle. Restarting it costs well under a second once its file is cached.
+   - Before opening the full editor, end the quick-edit worker.
+   - On "Save & return", remove the full editor's iframe or page.
+3. **Open the full editor full-screen**, either as a separate page or a full-screen iframe that is removed afterwards. Don't keep it hidden behind the chat. On iPhone, Safari reloads a tab that uses too much memory, so do a "save to Creative Files first" before any heavy step.
+4. **Use size caps that match the phone.** Edit large photos on a reduced copy (as this prototype does). For video, start with short clips; FilmCraft's own read cache is 384 MiB.
+
+### 9.4 Where Creative Files are stored
+
+| Option | Good | Watch out |
+|---|---|---|
+| **On the device: IndexedDB** (or OPFS) | Free, private, no server change, works offline. IndexedDB is supported everywhere, including iPhone Safari. | Files exist only in that browser on that device. Safari can **delete a site's stored data after 7 days without a visit**, unless the user adds SkyData to the Home Screen as a web app, or the browser grants persistent storage (`navigator.storage.persist()`). Quotas vary by browser. Offer "Save to Photos / Files" for anything important. |
+| **On SkyData's servers** (per account) | Follows the user across devices and survives clearing the browser. | Changes SkyData's backend and accounts, and needs file storage (cost, privacy, size limits). That conflicts with "don't introduce paid services" unless an existing free allowance covers it. **Needs your decision.** |
+
+**Recommendation:** start on the device (IndexedDB) with a clear "stored on this device" label and an export button, then decide on cloud sync separately.
+
+### 9.5 Generation: options to decide on
+
+PhotoCraft and FilmCraft can't create content from a prompt. Possible routes:
+1. Use an image-generation model SkyData **already pays for or can use free**. Its result would go into Creative Files like any other upload, then on to quick edits or the full editor.
+2. Non-AI "generation" with PhotoCraft commands (backgrounds, gradients, text cards, collages) through the same allow-listed bridge.
+3. No new paid API, as you asked. Option 1 depends on what your current model plan already includes, and I haven't checked that.
+
+### 9.6 Suggested order (each step separate and testable, nothing touching current SkyData systems)
+
+1. **Creative Files on the device:** store, thumbnails, list, delete, export. Connect it to this prototype's quick-edit result.
+2. **Worker lifecycle:** terminate on idle and after export. Measure memory on a real iPhone.
+3. **Full editor for video:** FilmCraft web, opened from Creative Files through its existing JS API, saving `.fcproj` plus the exported MP4. Test on iPad and iPhone.
+4. **Full editor for photos:** a small change to our own copy of PhotoCraft web (open from SkyData, save back), saving `.pcraft` plus JPG/PNG. Keep the ArtCraft branding out.
+5. **Later:** a generation source (section 9.5) and optional cloud sync (section 9.4), only after your decision.
+
+**Honest risk:** the full editors are desktop-class interfaces. On an iPhone, the AI quick-edit path in chat will usually be the better experience, with the full editor as an option for iPad and desktop.
+
+## 10. Reproduce
 
 The build needs Rust with the `wasm32-unknown-unknown` target, `wasm-bindgen-cli` 0.2.129 and, optionally, binaryen `wasm-opt`.
 
