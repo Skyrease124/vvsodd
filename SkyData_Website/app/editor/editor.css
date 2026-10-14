@@ -7,7 +7,8 @@
 .editor-msg p{margin:0;white-space:pre-wrap}
 .editor-msg.me{align-self:flex-end;background:#1c2a47;border-color:#2e4370}
 .editor-msg.err{color:#ff9b9b;border-color:#ff9b9b33}
-.editor-msg img{display:block;max-width:100%;max-height:60vh;margin-top:10px;border-radius:12px;background:#000}
+/* The checkerboard shows through a see-through background (after Remove background). */
+.editor-msg img{display:block;max-width:100%;max-height:60vh;margin-top:10px;border-radius:12px;background:repeating-conic-gradient(#2b3447 0% 25%,#1a2130 0% 50%) 50%/18px 18px}
 .editor-meta{display:block;margin-top:6px;font-size:12px;color:#93a0b5}
 .editor-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .editor-actions button,.editor-actions a,.editor-chips button{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:7px 13px;cursor:pointer}

@@ -6,19 +6,22 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Download, FolderOpen, Save, Undo2 } from 'lucide-react';
 import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-planner';
 import { makeThumb, readFile, saveFile, takeHandOff } from '../../lib/creative-files';
+import { closeCutout, cutoutMask, type CutoutRegion } from '../../lib/cutout';
 import './editor.css';
 
 type Info = { width: number; height: number };
-type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob; skipped?: { command: string; error: string }[]; dropped?: { command: string; param: string }[] };
+type EngineState = { info: Info; steps: number; scale: number; full: Info; transparent?: boolean; preview?: Blob; skipped?: { command: string; error: string }[]; dropped?: { command: string; param: string }[] };
 // "image.adjustments.colorBalance" → "color balance"
 const stepName = (id: string) => (id.split('.').pop() ?? id).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 type Msg = { id: number; who: 'me' | 'sky' | 'err'; text: string; image?: string; meta?: string; actions?: boolean; filesLink?: boolean };
-type Photo = { name: string; width: number; height: number; steps: number; scale: number; full: Info };
+type Photo = { name: string; width: number; height: number; steps: number; scale: number; full: Info; transparent?: boolean };
+const isCutout = (s: EditStep) => s.command.startsWith('skydata.');
+const PART_NAMES: Record<CutoutRegion, string> = { background: 'a background', person: 'a person', hair: 'hair', face: 'a face', skin: 'skin', clothes: 'clothes' };
 
 // The browser's own decoder is the fallback for files the engine cannot open (HEIC on iPhone), limited to the
 // canvas area iOS Safari allows.
 const CANVAS_MAX_PIXELS = 16_000_000;
-const CHIPS = ['auto enhance', 'brighter', 'more contrast', 'black and white', 'warmer', 'vibrant', 'sharpen', 'square crop', 'rotate right', 'blur 4'];
+const CHIPS = ['blur background', 'remove background', 'auto enhance', 'brighter', 'more contrast', 'black and white', 'smooth skin', 'warmer', 'vibrant', 'sharpen', 'square crop', 'rotate right'];
 
 async function browserDecode(file: File) {
   const bitmap = await createImageBitmap(file);
@@ -59,7 +62,7 @@ function jpegOrientation(bytes: Uint8Array) {
 }
 
 export default function Editor() {
-  const [messages, setMessages] = useState<Msg[]>([{ id: 0, who: 'sky', text: 'Upload a photo, then tell me how to edit it: "brighter and more contrast", "black and white", "make it look like an old 70s photo", "moody cinematic look". The editing happens on your device and your photo is never uploaded; for requests beyond the quick phrases, only your words are sent to SkyData AI.' }]);
+  const [messages, setMessages] = useState<Msg[]>([{ id: 0, who: 'sky', text: 'Upload a photo, then tell me how to edit it: "brighter and more contrast", "make it look like an old 70s photo", "moody cinematic look". On photos of people: "blur the background", "remove the background", "put me on a white background", "make the background black and white", "smooth my skin". The editing happens on your device and your photo is never uploaded; for requests beyond the quick phrases, only your words are sent to SkyData AI.' }]);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
@@ -105,6 +108,7 @@ export default function Editor() {
     return () => {
       // Leaving the page frees all of the engine's memory.
       w.terminate();
+      void closeCutout();
       worker.current = null;
       for (const u of created) URL.revokeObjectURL(u);
     };
@@ -195,9 +199,11 @@ export default function Editor() {
     }
     setStatus(plan.undo ? 'Undoing…' : 'Editing…');
     try {
+      // People-photo steps: find the person first (on this device), on the picture as it will be at that step.
+      if (!plan.undo && plan.steps.some(isCutout)) plan = { ...plan, steps: await withMasks(plan.steps) };
       // AI plans may contain a step the engine rejects; that step is skipped and named, the rest still applies.
       const res = plan.undo ? await call('undo') : await call('run', { steps: plan.steps as EditStep[], skipFailing: fromAi });
-      const p = { ...photo, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
+      const p = { ...photo, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full, transparent: res.transparent };
       lastPreview.current = res.preview!;
       setPhoto(p);
       const skipped = res.skipped?.length ? ` (Skipped ${res.skipped.length === 1 ? 'one step' : res.skipped.length + ' steps'} the editor couldn't apply: ${res.skipped.map((k) => stepName(k.command)).join(', ')}.)` : '';
@@ -210,6 +216,30 @@ export default function Editor() {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Attaches the person's mask to each people-photo step. The model runs on the picture as it will be just before
+  // that step, so earlier steps in the same edit (a crop, another cutout) are taken into account.
+  async function withMasks(steps: EditStep[]): Promise<EditStep[]> {
+    const out: EditStep[] = [];
+    let first = true;
+    for (const step of steps) {
+      if (!isCutout(step)) {
+        out.push(step);
+        continue;
+      }
+      setStatus(first ? 'Finding the person in the photo… (the first time, this loads the cutout tool, about 30 MB)' : 'Finding the person in the photo…');
+      first = false;
+      const region = (step.command === 'skydata.removeBackground' ? 'person' : String(step.params?.region ?? 'person')) as CutoutRegion;
+      const { preview } = await call<{ preview: Blob }>('snapshot', { steps: out });
+      const mask = await cutoutMask(preview, region);
+      // A photo without people still gets a faint guess; at least 3% of it must clearly be a person (0.1% for a part).
+      const share = region === 'background' ? 1 - mask.coverage : mask.coverage;
+      if (share < (region === 'background' || region === 'person' ? 0.03 : 0.001)) throw new Error(`I couldn't find ${region === 'background' || region === 'person' ? 'a person' : PART_NAMES[region]} in this photo. The background and touch-up tools work on photos of people.`);
+      out.push({ ...step, mask: { width: mask.width, height: mask.height, data: mask.data } });
+    }
+    setStatus('Editing…');
+    return out;
   }
 
   async function aiPlan(message: string, p: Photo): Promise<{ steps: EditStep[]; reply: string; leftOut?: string[] } | { error: string }> {
@@ -229,7 +259,8 @@ export default function Editor() {
     setBusy(true);
     setStatus(photo.scale > 1 ? 'Saving the full-size photo to My Files; large photos can take a while…' : 'Saving to My Files…');
     try {
-      const { blob, width, height } = await call<{ blob: Blob; width: number; height: number }>('export', { format: 'jpg', quality: 92 });
+      // A see-through photo is kept as PNG (JPG has no transparency).
+      const { blob, width, height } = await call<{ blob: Blob; width: number; height: number }>('export', { format: photo.transparent ? 'png' : 'jpg', quality: 92 });
       const src = await call<{ name: string; bytes: Uint8Array; plans: EditStep[][] }>('source');
       const thumb = await makeThumb(lastPreview.current ?? blob);
       const updating = savedId.current;
@@ -253,7 +284,7 @@ export default function Editor() {
       const bytes = new Uint8Array(await saved.data.original.arrayBuffer());
       let res = await call('open', { name: saved.data.originalName, bytes: bytes.buffer }, [bytes.buffer]);
       if (saved.data.plans.length) res = await call('restore', { plans: saved.data.plans });
-      const p = { name: saved.item.name, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
+      const p = { name: saved.item.name, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full, transparent: res.transparent };
       savedId.current = id;
       lastPreview.current = res.preview!;
       setPhoto(p);
@@ -299,7 +330,8 @@ export default function Editor() {
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      add({ who: 'sky', text: `Saved ${a.download}: ${width}×${height} px, ${(blob.size / 1048576).toFixed(1)} MB, rendered in ${(ms / 1000).toFixed(1)} s.` });
+      const note = photo.transparent && format === 'jpg' ? ' JPG cannot be see-through, so the background is white; use Download PNG to keep it see-through.' : '';
+      add({ who: 'sky', text: `Saved ${a.download}: ${width}×${height} px, ${(blob.size / 1048576).toFixed(1)} MB, rendered in ${(ms / 1000).toFixed(1)} s.${note}` });
     } catch (e) {
       add({ who: 'err', text: 'Download failed: ' + (e as Error).message });
     } finally {

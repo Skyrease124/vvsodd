@@ -52,7 +52,9 @@ export default function Files() {
   async function image(f: CreativeFile) {
     const saved = await readFile(f.id);
     if (!saved) throw new Error('That file is no longer on this device.');
-    return new File([saved.data.image], `${f.name}-edited.jpg`, { type: 'image/jpeg' });
+    // See-through photos (background removed) are kept as PNG.
+    const png = saved.data.image.type === 'image/png';
+    return new File([saved.data.image], `${f.name}-edited.${png ? 'png' : 'jpg'}`, { type: png ? 'image/png' : 'image/jpeg' });
   }
 
   async function download(f: CreativeFile) {

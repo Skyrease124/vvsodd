@@ -6,6 +6,11 @@
 //
 // The worker keeps the original upload, the proxy bytes and the list of applied plans; "undo" replays every plan
 // but the last on a fresh proxy, so the image always matches the plans and memory holds one working document.
+//
+// Cutout steps (skydata.removeBackground, skydata.region) are done here, not by the engine: the page finds the
+// person (lib/cutout.ts) and attaches the mask to the step; this worker scales the mask to the document, blends
+// with OffscreenCanvas and opens the result as the new document. The mask stays with the step, so undo, the
+// full-size download and My Files apply the same cutout without running the model again.
 import init, { PhotoEditor, commandCatalog } from './pkg/skydata_photocraft_bridge.js';
 
 const PROXY_MAX_SIDE = 1600;
@@ -30,18 +35,115 @@ function load() {
 
 const info = (ed) => JSON.parse(ed.info());
 
-function reopen() {
+async function reopen() {
   editor?.free();
   editor = null;
   editor = proxyBytes ? new PhotoEditor('proxy.png', proxyBytes) : new PhotoEditor(original.name, original.bytes);
-  for (const p of plans) editor.run(JSON.stringify(p));
+  for (const p of plans) await runPlan(p);
+}
+
+const isCutout = (step) => typeof step?.command === 'string' && step.command.startsWith('skydata.');
+// Steps that change the picture's size or shape are not allowed inside one part of the photo.
+const NOT_IN_REGION = /^(image\.(crop|imageSize|canvasSize|trim|imageRotation\.|rotation\.|mode\.)|filter\.(convertForSmartFilters|vanishingPoint)$|skydata\.)/;
+
+const runStep = (ed, step) => ed.run(JSON.stringify([step]));
+
+/** Applies one plan to `editor`, replacing the document when a cutout step makes a new one. */
+async function runPlan(plan, engineStep = runStep) {
+  if (engineStep === runStep && !plan.some(isCutout)) {
+    editor.run(JSON.stringify(plan));
+    return;
+  }
+  for (const step of plan) await applyStep(step, engineStep);
+}
+
+async function applyStep(step, engineStep = runStep) {
+  if (!isCutout(step)) return engineStep(editor, step);
+  const next = await applyCutout(editor, step, engineStep);
+  editor.free();
+  editor = next;
+}
+
+function readMask(mask) {
+  if (!mask || !(mask.data instanceof Uint8Array) || !Number.isInteger(mask.width) || !Number.isInteger(mask.height) || mask.width < 1 || mask.height < 1 || mask.width * mask.height !== mask.data.length || mask.data.length > 1024 * 1024 + 4096) throw new Error('This cutout step has no valid mask.');
+  return mask;
+}
+
+// The mask at the document's size, as the alpha channel of a canvas.
+function maskCanvas(mask, width, height) {
+  const small = new OffscreenCanvas(mask.width, mask.height);
+  const pixels = new ImageData(mask.width, mask.height);
+  for (let i = 0; i < mask.data.length; i++) pixels.data[i * 4 + 3] = mask.data[i];
+  small.getContext('2d').putImageData(pixels, 0, 0);
+  const big = new OffscreenCanvas(width, height);
+  const g = big.getContext('2d');
+  g.imageSmoothingEnabled = true;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(small, 0, 0, width, height);
+  return big;
+}
+
+const bitmapOf = (png) => createImageBitmap(new Blob([png], { type: 'image/png' }), { colorSpaceConversion: 'none', premultiplyAlpha: 'default' });
+
+/** A new document: `ed` with the cutout step applied. `ed` itself is left unchanged. */
+async function applyCutout(ed, step, onEngineStep) {
+  const mask = readMask(step.mask);
+  const { width, height } = info(ed);
+  const basePng = ed.exportImage('png', 100);
+  const base = await bitmapOf(basePng);
+  const alpha = maskCanvas(mask, width, height);
+  const out = new OffscreenCanvas(width, height);
+  const g = out.getContext('2d');
+  const masked = (image) => {
+    const layer = new OffscreenCanvas(width, height);
+    const l = layer.getContext('2d');
+    l.drawImage(image, 0, 0);
+    l.globalCompositeOperation = 'destination-in';
+    l.drawImage(alpha, 0, 0);
+    return layer;
+  };
+  if (step.command === 'skydata.removeBackground') {
+    const color = step.params?.color;
+    if (color !== undefined && !/^#[0-9a-f]{6}$/i.test(String(color))) throw new Error('The background colour must look like #ffffff.');
+    if (color) {
+      g.fillStyle = color;
+      g.fillRect(0, 0, width, height);
+    }
+    g.drawImage(masked(base), 0, 0);
+  } else if (step.command === 'skydata.region') {
+    const steps = step.params?.steps;
+    if (!Array.isArray(steps) || !steps.length || steps.length > 12) throw new Error('Say what to change in that part of the photo.');
+    for (const s of steps) if (!s || typeof s.command !== 'string' || NOT_IN_REGION.test(s.command)) throw new Error(`"${String(s?.command).slice(0, 60)}" can't be used on one part of the photo.`);
+    const other = new PhotoEditor('part.png', basePng);
+    let otherPng;
+    try {
+      for (const s of steps) onEngineStep(other, s);
+      const i = info(other);
+      if (i.width !== width || i.height !== height) throw new Error('An edit inside one part of the photo cannot change its size.');
+      otherPng = other.exportImage('png', 100);
+    } finally {
+      other.free();
+    }
+    const edited = await bitmapOf(otherPng);
+    g.drawImage(base, 0, 0);
+    g.drawImage(masked(edited), 0, 0);
+    edited.close?.();
+  } else {
+    throw new Error(`Unknown cutout step ${step.command}.`);
+  }
+  base.close?.();
+  const png = new Uint8Array(await (await out.convertToBlob({ type: 'image/png' })).arrayBuffer());
+  return new PhotoEditor('cutout.png', png);
 }
 
 
 function state() {
   const i = info(editor);
   const k = proxyBytes ? original.width / proxyInfo.width : 1;
-  return { info: i, steps: plans.length, scale: k, full: { width: original.width, height: original.height } };
+  // See-through after a background removal without a colour (later colour fills cover it again).
+  let transparent = false;
+  for (const s of plans.flat()) if (s.command === 'skydata.removeBackground') transparent = !s.params?.color;
+  return { info: i, steps: plans.length, scale: k, full: { width: original.width, height: original.height }, transparent };
 }
 
 function preview() {
@@ -51,6 +153,9 @@ function preview() {
 // A proxy-space step converted to full-resolution parameters.
 function scaleStep(step, k, doc) {
   if (k === 1 || !step.params) return step;
+  // A part-of-the-photo step: scale the edits inside it (the mask is resolution-independent).
+  if (step.command === 'skydata.region' && Array.isArray(step.params.steps)) return { ...step, params: { ...step.params, steps: step.params.steps.map((s) => scaleStep(s, k, doc)) } };
+  if (isCutout(step)) return step;
   const params = structuredClone(step.params);
   const sizeCommand = SIZE_COMMANDS.has(step.command);
   for (const key of PIXEL_PARAMS) {
@@ -109,16 +214,16 @@ const handlers = {
         const left = [];
         for (let attempt = 0; ; attempt++) {
           try {
-            editor.run(JSON.stringify([step]));
+            await applyStep(step, isCutout(step) ? runClamped : runStep);
             ok.push(step);
             dropped.push(...left);
             break;
           } catch (e) {
             const error = errorText(e);
-            reopen();
-            if (ok.length) editor.run(JSON.stringify(ok));
+            await reopen();
+            if (ok.length) await runPlan(ok);
             const key = /`(\w+)` must /.exec(error)?.[1];
-            if (attempt < 8 && key && step.params && Object.hasOwn(step.params, key)) {
+            if (!isCutout(step) && attempt < 8 && key && step.params && Object.hasOwn(step.params, key)) {
               const params = { ...step.params };
               // An out-of-range number is brought into range ("must be a number in 0.1..1000"); anything else is dropped.
               const range = /must be a number in (-?[\d.]+)\.\.(-?[\d.]+)/.exec(error);
@@ -141,13 +246,26 @@ const handlers = {
       return { ...state(), done: ok.map((s) => s.command), skipped, dropped, preview: preview() };
     }
     try {
-      const out = JSON.parse(editor.run(JSON.stringify(steps)));
+      await runPlan(steps);
       plans.push(steps);
-      return { ...state(), done: out.done, preview: preview() };
+      return { ...state(), done: steps.map((s) => s.command), preview: preview() };
     } catch (e) {
       // A plan that fails part-way is rolled back, so the image always matches the applied plans.
-      reopen();
+      await reopen();
       throw e;
+    }
+  },
+  // The picture after `steps` (not kept), for the page to find the person in before a cutout step.
+  async snapshot({ steps = [] }) {
+    if (!editor) throw new Error('Upload a photo first.');
+    const current = editor;
+    editor = new PhotoEditor('snapshot.png', current.exportImage('png', 100));
+    try {
+      await runPlan(steps);
+      return { preview: preview() };
+    } finally {
+      editor.free();
+      editor = current;
     }
   },
   // My Files: what is needed to save the photo so it can be reopened and edited further.
@@ -160,12 +278,12 @@ const handlers = {
     if (!editor) throw new Error('Upload a photo first.');
     try {
       for (const plan of saved) {
-        editor.run(JSON.stringify(plan));
+        await runPlan(plan);
         plans.push(plan);
       }
     } catch (e) {
       plans = [];
-      reopen();
+      await reopen();
       throw e;
     }
     return { ...state(), preview: preview() };
@@ -173,7 +291,7 @@ const handlers = {
   async undo() {
     if (!editor || plans.length === 0) throw new Error('Nothing to undo.');
     plans.pop();
-    reopen();
+    await reopen();
     return { ...state(), preview: preview() };
   },
   async export({ format, quality }) {
@@ -181,10 +299,19 @@ const handlers = {
     if (!proxyBytes) return { blob: blob(editor.exportImage(format, quality), format), width: info(editor).width, height: info(editor).height };
     // Full-resolution render: replay every plan on the original, one step at a time.
     const k = original.width / proxyInfo.width;
-    const full = new PhotoEditor(original.name, original.bytes);
+    let full = new PhotoEditor(original.name, original.bytes);
     try {
       for (const plan of plans) {
-        for (const step of plan) runClamped(full, scaleStep(step, k, info(full)));
+        for (const step of plan) {
+          const scaled = scaleStep(step, k, info(full));
+          if (!isCutout(scaled)) {
+            runClamped(full, scaled);
+            continue;
+          }
+          const next = await applyCutout(full, scaled, runClamped);
+          full.free();
+          full = next;
+        }
       }
       const i = info(full);
       return { blob: blob(full.exportImage(format, quality), format), width: i.width, height: i.height };
@@ -220,14 +347,19 @@ function errorText(e) {
 
 const blob = (bytes, format) => new Blob([bytes], { type: format === 'png' ? 'image/png' : 'image/jpeg' });
 
-self.onmessage = async ({ data }) => {
-  const { id, type, payload } = data;
-  const started = performance.now();
-  try {
-    await load();
-    const result = await handlers[type](payload ?? {});
-    self.postMessage({ id, ok: true, result, ms: Math.round(performance.now() - started) });
-  } catch (e) {
-    self.postMessage({ id, ok: false, error: errorText(e), ms: Math.round(performance.now() - started) });
-  }
+// Requests run one at a time: cutout steps wait for the browser, and two requests must not edit the same document.
+let queue = Promise.resolve();
+self.onmessage = ({ data }) => {
+  queue = queue.then(async () => {
+    const { id, type, payload } = data;
+    const started = performance.now();
+    try {
+      await load();
+      if (!Object.hasOwn(handlers, type)) throw new Error('Unknown request.');
+      const result = await handlers[type](payload ?? {});
+      self.postMessage({ id, ok: true, result, ms: Math.round(performance.now() - started) });
+    } catch (e) {
+      self.postMessage({ id, ok: false, error: errorText(e), ms: Math.round(performance.now() - started) });
+    }
+  });
 };

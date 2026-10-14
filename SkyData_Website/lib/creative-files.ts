@@ -123,7 +123,11 @@ export async function makeThumb(image: Blob, side = 360): Promise<Blob> {
   const canvas = document.createElement('canvas');
   canvas.width = Math.max(1, Math.round(bitmap.width * k));
   canvas.height = Math.max(1, Math.round(bitmap.height * k));
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const g = canvas.getContext('2d')!;
+  // JPEG has no transparency: a see-through photo is shown on white.
+  g.fillStyle = '#fff';
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close?.();
   const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Thumbnail failed.'))), 'image/jpeg', 0.8));
   canvas.width = canvas.height = 0;
