@@ -112,6 +112,20 @@ try {
   r = await ask('sharpen and make it dreamy');
   check('if the AI fails, the understood phrases still apply', r.hasImage && /sharpened/.test(r.text) && /unavailable/.test(r.text), r.text);
 
+  // 7. Numbers written as text (what the live model sent for colour balance) are converted, and the edit applies.
+  nextReply = '{"steps":[{"command":"image.adjustments.colorBalance","params":{"shadows":["+10","0","-15"],"midtones":["20","-5","-25"]}},{"command":"filter.noise.addNoise","params":{"amount":"5"}}],"reply":"Warm 70s tones."}';
+  r = await ask('make it look like a 1970s postcard');
+  check('quoted numbers from the AI still work', r.hasImage && r.text === 'Warm 70s tones.', r.text);
+
+  // 8. One step the engine rejects is skipped and named; the rest of the AI plan still applies.
+  nextReply = '{"steps":[{"command":"image.adjustments.colorBalance","params":{"shadows":[10,0]}},{"command":"image.adjustments.hueSaturation","params":{"saturation":-40}}],"reply":"Faded the colours."}';
+  r = await ask('fade the colours like old film');
+  check('a bad AI step is skipped, the rest applies', r.hasImage && /^Faded the colours\. \(Skipped one step the editor couldn't apply: color balance\.\)$/.test(r.text), r.text);
+  n = await count();
+  await page.locator('.editor-actions button', { hasText: 'Undo' }).last().click();
+  await settle(n + 1);
+  check('undo after a skipped step works', (await page.locator('.editor-msg').last().locator('p').textContent()) === 'Undid the last edit.');
+
   check('no page errors', errors.length === 0, errors.join(' | '));
   console.log(`AI calls made: ${aiCalls.length}`);
 } finally {

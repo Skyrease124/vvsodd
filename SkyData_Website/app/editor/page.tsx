@@ -8,7 +8,9 @@ import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-pl
 import './editor.css';
 
 type Info = { width: number; height: number };
-type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob };
+type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob; skipped?: { command: string; error: string }[] };
+// "image.adjustments.colorBalance" → "color balance"
+const stepName = (id: string) => (id.split('.').pop() ?? id).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 type Msg = { id: number; who: 'me' | 'sky' | 'err'; text: string; image?: string; meta?: string; actions?: boolean };
 type Photo = { name: string; width: number; height: number; steps: number; scale: number; full: Info };
 
@@ -163,6 +165,7 @@ export default function Editor() {
     }
     const isUndo = text === 'undo';
     let plan: EditPlan = isUndo ? { undo: true } : planWithRules(text, photo);
+    let fromAi = false;
     if (!isUndo) add({ who: 'me', text });
     setBusy(true);
     // Common phrases are planned instantly on the device; anything else goes to SkyData's AI planner. If the AI is
@@ -170,7 +173,10 @@ export default function Editor() {
     if (!plan.undo && !plan.complete) {
       setStatus('Asking SkyData AI how to edit it…');
       const ai = await aiPlan(text, photo);
-      if ('steps' in ai) plan = { steps: ai.steps, reply: ai.reply, complete: true };
+      if ('steps' in ai) {
+        plan = { steps: ai.steps, reply: ai.reply, complete: true };
+        fromAi = true;
+      }
       else if (plan.steps.length) plan = { ...plan, reply: `${plan.reply} (SkyData AI was unavailable: ${ai.error})` };
       else plan = { steps: [], reply: `${ai.error} You can still use phrases like: brighter, black and white, warmer, sharpen, square crop, rotate right, blur 4, auto enhance.`, complete: true };
     }
@@ -182,10 +188,12 @@ export default function Editor() {
     }
     setStatus(plan.undo ? 'Undoing…' : 'Editing…');
     try {
-      const res = plan.undo ? await call('undo') : await call('run', { steps: plan.steps as EditStep[] });
+      // AI plans may contain a step the engine rejects; that step is skipped and named, the rest still applies.
+      const res = plan.undo ? await call('undo') : await call('run', { steps: plan.steps as EditStep[], skipFailing: fromAi });
       const p = { ...photo, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
       setPhoto(p);
-      add({ who: 'sky', text: plan.undo ? 'Undid the last edit.' : plan.reply, image: imageUrl(res.preview!), meta: `${res.info.width}×${res.info.height} px · ${res.ms} ms`, actions: true });
+      const skipped = res.skipped?.length ? ` (Skipped ${res.skipped.length === 1 ? 'one step' : res.skipped.length + ' steps'} the editor couldn't apply: ${res.skipped.map((k) => stepName(k.command)).join(', ')}.)` : '';
+      add({ who: 'sky', text: plan.undo ? 'Undid the last edit.' : plan.reply + skipped, image: imageUrl(res.preview!), meta: `${res.info.width}×${res.info.height} px · ${res.ms} ms`, actions: true });
       setStatus(describe(p));
     } catch (e) {
       add({ who: 'err', text: (e as Error).message });

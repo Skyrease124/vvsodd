@@ -96,8 +96,26 @@ const handlers = {
     }
     return { ...state(), preview: preview() };
   },
-  async run({ steps }) {
+  async run({ steps, skipFailing }) {
     if (!editor) throw new Error('Upload a photo first.');
+    if (skipFailing) {
+      // AI-planned edits: a step the engine rejects is left out (and reported) instead of failing the whole edit.
+      const ok = [];
+      const skipped = [];
+      for (const step of steps) {
+        try {
+          editor.run(JSON.stringify([step]));
+          ok.push(step);
+        } catch (e) {
+          skipped.push({ command: step.command, error: errorText(e) });
+          reopen();
+          if (ok.length) editor.run(JSON.stringify(ok));
+        }
+      }
+      if (!ok.length) throw new Error(skipped[0]?.error ?? 'Nothing to apply.');
+      plans.push(ok);
+      return { ...state(), done: ok.map((s) => s.command), skipped, preview: preview() };
+    }
     try {
       const out = JSON.parse(editor.run(JSON.stringify(steps)));
       plans.push(steps);
@@ -132,6 +150,16 @@ const handlers = {
   },
 };
 
+// Engine errors arrive as JSON text ({"done":[],"error":"…"}).
+function errorText(e) {
+  const message = e?.message ?? String(e);
+  try {
+    return JSON.parse(message).error ?? message;
+  } catch {
+    return message;
+  }
+}
+
 const blob = (bytes, format) => new Blob([bytes], { type: format === 'png' ? 'image/png' : 'image/jpeg' });
 
 self.onmessage = async ({ data }) => {
@@ -142,10 +170,6 @@ self.onmessage = async ({ data }) => {
     const result = await handlers[type](payload ?? {});
     self.postMessage({ id, ok: true, result, ms: Math.round(performance.now() - started) });
   } catch (e) {
-    let message = e?.message ?? String(e);
-    try {
-      message = JSON.parse(message).error ?? message;
-    } catch {}
-    self.postMessage({ id, ok: false, error: message, ms: Math.round(performance.now() - started) });
+    self.postMessage({ id, ok: false, error: errorText(e), ms: Math.round(performance.now() - started) });
   }
 };
