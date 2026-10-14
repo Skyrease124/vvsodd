@@ -14,7 +14,9 @@ SkyData was built on ChatGPT Sites, which runs it as a Cloudflare Worker with Ch
 
 ## What changed in SkyData's own code
 
-Two constants, only for the Netlify build (`VITE_SKYDATA_NETLIFY=1`): upload pieces are 3 MB instead of 8 MB (projects) and 5 MB (knowledge), because a Netlify Function accepts at most ~6 MB per request. The normal build is unchanged, so publishing to ChatGPT Sites still works as before. Nothing else in the site was modified.
+Only for the Netlify build (`VITE_SKYDATA_NETLIFY=1`); the normal build is unchanged, so publishing to ChatGPT Sites still works as before:
+- Upload pieces are 3 MB instead of 8 MB (projects) and 5 MB (knowledge), because a Netlify Function accepts at most ~6 MB per request.
+- **Invite links** (`lib/member-invites.ts`) replace "Verify email with ChatGPT". Approving an email on `/owner` shows a private one-time link (7 days); the member opens `/invite?t=…`, sees their approved email and creates a password, and is signed in. **Create sign-up link** / **Password reset link** on each member makes a new link (older ones stop working); revoking or banning cancels it. Only the link's SHA-256 is stored (`member_invites`, migration `20261014200000`).
 
 ## Build
 
@@ -45,12 +47,13 @@ Optional environment variables (Netlify → Site configuration → Environment v
 cd netlify-adapter && node test/d1.test.mjs                          # adapter unit tests on real Postgres
 cd .. && node netlify-adapter/test/run-repo-tests.mjs                # SkyData's own Worker tests: Cloudflare vs Netlify storage
 node netlify-adapter/test/run.mjs <deploy-folder> <code-file> <out>  # browser end-to-end on a local Netlify stand-in
+node netlify-adapter/test/invites.e2e.mjs <deploy-folder> <code-file> # invite links, resets, expiry, revoke
 ```
 
 ## Known differences on Netlify
 
 - **Your existing data stays on ChatGPT Sites.** The Netlify site starts with an empty database and file store.
-- **New members can't join yet.** SkyData verifies a new member's email with "Sign in with ChatGPT" before they create a password; that step doesn't exist here. The owner account works fully. Fix (not built): owner-issued one-time invite links.
+- **New members join with an invite link** instead of "Sign in with ChatGPT". The link proves the person is the one the owner sent it to; SkyData does not send email itself, so the owner sends the link (the dashboard prepares the message).
 - **ChatGPT connectors** (the platform's app connectors) are unavailable; the site already shows them as not connected.
 - **Limits:** 60 s per request (very long streamed replies are cut off), ~6 MB per request body, ~4 KB for all environment variables together.
 - **Cost:** Netlify Database uses your plan's credits for compute; check usage in the Netlify dashboard.

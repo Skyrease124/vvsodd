@@ -12,6 +12,7 @@ import { handleBlenderDevice, handleBlenderOwner } from '../lib/blender-pairing'
 import { memberAllowance, withMemberAllowance } from '../lib/member-allowance';
 import { resolveAccess, handleLogin, accountPage, handleLogout, loginPage, waitingPage, accessPage } from '../lib/access';
 import { ownerDashboard } from '../lib/owner-dashboard';
+import { INVITE_LINKS, handleInvite } from '../lib/member-invites';
 import { handleDecisions } from '../lib/decisions';
 import { handleEditorPlan } from '../lib/editor-plan';
 import { handleDebateScore } from '../lib/debate-score';
@@ -45,6 +46,7 @@ export default {
     if(!incomingPath.startsWith('/assets/') && !incomingPath.startsWith('/_next/static/') && !['/favicon.svg','/favicon.ico','/robots.txt'].includes(incomingPath)){
       try{
         if(incomingPath==='/login')return handleLogin(incoming,config);
+        if(INVITE_LINKS&&incomingPath==='/invite')return handleInvite(incoming,config);
         const access=await resolveAccess(incoming,config);
         if(!access){
           if(incomingPath.startsWith('/api/'))return Response.json({error:'Sign in with an approved SkyData account.',access_denied:true},{status:403,headers:{'Cache-Control':'no-store'}});
