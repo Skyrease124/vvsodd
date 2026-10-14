@@ -138,6 +138,12 @@ try {
   check('an art effect nobody asked for is left out, film grain stays', r.hasImage && r.text === "Gave it a faded 70s look. (Left out an art effect you didn't ask for: craquelure.)", r.text);
   check('the AI gets the natural-look rules and tested recipes', sys.includes('Keep it a natural-looking photo') && sys.includes('Skin should stay natural') && sys.includes('70s / vintage / old photo:'));
 
+  // 12. A reply that talks first and quotes settings before the plan (what the live model may do) still works.
+  nextReply = 'Let me think. Curves like {"points":[[0,28],[255,238]]} and color balance {"midtones":[8,0,-14]} fit a 70s look.\nFinal plan:\n{"steps":[{"command":"image.adjustments.hueSaturation","params":{"saturation":-18}},{"command":"image.adjustments.photoFilter","params":{"filter":"warming85","density":20}}],"reply":"Faded and warmed it like a 70s print."}';
+  r = await ask('give it that 1970s family album feel');
+  check('a plan after some talk and quoted settings is still found', r.hasImage && r.text === 'Faded and warmed it like a 70s print.', r.text);
+  check('the AI may answer at length (no early cut-off)', aiCalls.at(-1)?.max_tokens === 2500, String(aiCalls.at(-1)?.max_tokens));
+
   // 11. When the request names an art effect, it is kept.
   nextReply = '{"steps":[{"command":"filter.gallery.craquelure","params":{}}],"reply":"Added a cracked texture."}';
   r = await ask('give it a cracked old canvas texture');
