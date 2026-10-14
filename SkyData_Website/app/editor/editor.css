@@ -1,0 +1,26 @@
+/* SkyData Editor (app/editor/page.tsx). Same dark palette as the chat. */
+.editor-page{min-height:100dvh;display:flex;flex-direction:column}
+.editor-surface{flex:1;width:100%;max-width:820px;margin:0 auto;padding:18px 16px 240px;box-sizing:border-box}
+.editor-surface h1{font-size:22px;font-weight:600;margin:6px 0 16px;color:#edf4ff}
+.editor-log{display:flex;flex-direction:column;gap:12px}
+.editor-msg{max-width:92%;padding:11px 14px;border-radius:16px;background:#121a2a;border:1px solid #ffffff14;color:#e6edf8;line-height:1.5;overflow-wrap:anywhere;scroll-margin-bottom:240px}
+.editor-msg p{margin:0;white-space:pre-wrap}
+.editor-msg.me{align-self:flex-end;background:#1c2a47;border-color:#2e4370}
+.editor-msg.err{color:#ff9b9b;border-color:#ff9b9b33}
+.editor-msg img{display:block;max-width:100%;max-height:60vh;margin-top:10px;border-radius:12px;background:#000}
+.editor-meta{display:block;margin-top:6px;font-size:12px;color:#93a0b5}
+.editor-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.editor-actions button,.editor-chips button{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:7px 13px;cursor:pointer}
+.editor-actions button:disabled,.editor-chips button:disabled,.editor-bar button:disabled,.editor-input:disabled{opacity:.45;cursor:default}
+.editor-bar{position:fixed;left:0;right:0;bottom:0;padding:16px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#080d17 22%);border:0;border-radius:0;box-shadow:none}
+/* globals.css styles every `form button` as the chat's corner send button; the editor's buttons sit in rows. */
+.editor-bar button{position:static;inset:auto;width:auto;height:auto}
+.editor-bar>*{max-width:820px;margin-left:auto;margin-right:auto}
+.editor-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.editor-chips button{flex:none;font-size:13px;padding:5px 11px}
+.editor-line{display:flex;gap:8px}
+.editor-upload,.editor-send{flex:none;display:flex;align-items:center;justify-content:center;font:inherit;border-radius:14px;border:1px solid #ffffff24;cursor:pointer}
+.editor-bar .editor-upload{width:46px;height:46px;background:#1a2336;color:#dbe6f6}
+.editor-bar .editor-send{height:46px;padding:0 18px;background:#4c8dff;border-color:#4c8dff;color:#fff;font-weight:600}
+.editor-input{flex:1;min-width:0;font:inherit;font-size:16px;color:#edf4ff;background:#121a2a;border:1px solid #ffffff24;border-radius:14px;padding:11px 13px}
+.editor-status{margin-top:6px;font-size:12px;color:#93a0b5}
