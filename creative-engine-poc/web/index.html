@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Creative Engine Prototype</title>
+<style>
+  :root { --bg:#0f1115; --panel:#181b22; --line:#2a2f3a; --text:#e8eaf0; --muted:#9aa3b2; --accent:#5b8cff; --me:#24314f; --bad:#ff7a7a; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+  header { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; padding:14px 0 8px; }
+  header h1 { font-size:17px; margin:0; }
+  header .tag { font-size:12px; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
+  main { max-width: 760px; margin: 0 auto; display:flex; flex-direction:column; gap:12px; padding-bottom: calc(var(--bar-h, 150px) + 12px); }
+  .msg { scroll-margin-bottom: calc(var(--bar-h, 150px) + 12px); }
+  .log { display:flex; flex-direction:column; gap:10px; }
+  .msg { max-width: 92%; padding:10px 12px; border-radius:14px; background:var(--panel); border:1px solid var(--line); white-space:pre-wrap; word-wrap:break-word; }
+  .msg.me { align-self:flex-end; background:var(--me); border-color:#34446a; }
+  .msg.err { color:var(--bad); }
+  .msg img { display:block; max-width:100%; max-height:60vh; border-radius:10px; margin-top:8px; background:#000; }
+  .msg .meta { color:var(--muted); font-size:12px; margin-top:6px; }
+  .msg .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  button, .file { font:inherit; color:var(--text); background:#222836; border:1px solid var(--line); border-radius:10px; padding:8px 12px; cursor:pointer; }
+  button:disabled { opacity:.45; cursor:default; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .chips { display:flex; gap:6px; flex-wrap:wrap; }
+  .chips button { font-size:13px; padding:5px 10px; border-radius:999px; }
+  form.bar { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(transparent, var(--bg) 18%); padding:18px 16px calc(12px + env(safe-area-inset-bottom)); }
+  form.bar .inner { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:8px; }
+  form.bar .line { display:flex; gap:8px; }
+  form.bar input[type=text] { flex:1; min-width:0; font:inherit; font-size:16px; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .file input { display:none; }
+  #status { color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>SkyData Creative Engine</h1>
+    <span class="tag">isolated prototype · runs in your browser</span>
+  </header>
+  <div class="log" id="log">
+    <div class="msg">Upload a photo, then tell me how to edit it, for example "brighter and more contrast", "black and white", "square crop" or "warmer and sharpen". Everything runs on this device: the photo is not uploaded anywhere.</div>
+  </div>
+</main>
+<form class="bar" id="bar" autocomplete="off">
+  <div class="inner">
+    <div class="chips" id="chips"></div>
+    <div class="line">
+      <label class="file" title="Upload a photo">📷<input type="file" id="file" accept="image/*"></label>
+      <input type="text" id="prompt" placeholder="Describe the edit…" enterkeyhint="send" disabled>
+      <button class="primary" id="send" disabled>Edit</button>
+    </div>
+    <div id="status">Loading the editing engine…</div>
+  </div>
+</form>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

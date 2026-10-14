@@ -1,0 +1,31 @@
+# SkyData Creative Engine POC: a thin WebAssembly bridge over PhotoCraft's headless engine.
+# Isolated from the SkyData website; PhotoCraft is pinned to one commit (MIT OR Apache-2.0).
+[package]
+name = "skydata-photocraft-bridge"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "bridge-native"
+path = "src/native.rs"
+
+[dependencies]
+photocraft-engine = { git = "https://github.com/storytold/photocraft", rev = "99e1138877e6aa7e856c6883b415e708d042fc59" }
+photocraft-io = { git = "https://github.com/storytold/photocraft", rev = "99e1138877e6aa7e856c6883b415e708d042fc59" }
+photocraft-compose = { git = "https://github.com/storytold/photocraft", rev = "99e1138877e6aa7e856c6883b415e708d042fc59" }
+photocraft-codecs = { git = "https://github.com/storytold/photocraft", rev = "99e1138877e6aa7e856c6883b415e708d042fc59" }
+serde_json = "1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "=0.2.129"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
