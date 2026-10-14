@@ -15,11 +15,16 @@ const OWNER_KEY = 'AKIAOWNERTESTKEY0001';
 const RUNTIME_KEY = 'ASIANETLIFYRUNTIME01';
 
 const signedWith = [];
+const speechCalls = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
   const req = input instanceof Request ? input : new Request(input, init);
   if (/amazonaws\.com/.test(req.url)) {
     signedWith.push((req.headers.get('authorization') || '').match(/Credential=([A-Z0-9]+)\//)?.[1] ?? 'unsigned');
+    if (new URL(req.url).pathname.startsWith('/v1/speech')) {
+      speechCalls.push(await req.json());
+      return new Response(new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 0, 0, 0, 0, ...new Array(500).fill(0)]), { headers: { 'content-type': 'audio/mpeg', 'x-amzn-requestid': 'test', 'x-amzn-requestcharacters': '5' } });
+    }
     return Response.json({ Voices: [{ Id: 'Matthew', Name: 'Matthew', LanguageCode: 'en-US', LanguageName: 'US English', Gender: 'Male', SupportedEngines: ['generative', 'neural', 'long-form', 'standard'] }, { Id: 'Ruth', Name: 'Ruth', LanguageCode: 'en-US', LanguageName: 'US English', Gender: 'Female', SupportedEngines: ['generative', 'long-form', 'neural'] }] }, { headers: { 'x-amzn-requestid': 'test' } });
   }
   return realFetch(input, init);
@@ -61,6 +66,19 @@ try {
   console.log(`${usedOwner ? 'PASS' : 'FAIL'}  voice list calls AWS with the owner's key — keys used: ${catalogCalls.join(', ') || 'none'}`);
   console.log(`${voicesShown && !/Voice access was denied/.test(body) ? 'PASS' : 'FAIL'}  /owner/voice lists the voices (Matthew) and no "denied" message`);
   ok &&= usedOwner && voicesShown && !/Voice access was denied/.test(body);
+  // Press Preview: the site checks usage (a Postgres query), asks AWS for speech and returns the audio.
+  const preview = await page.evaluate(async () => {
+    const r = await fetch('/api/polly-preview', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text: 'Hello', engine: 'generative', voice: 'Matthew', speed: 1 }) });
+    const type = r.headers.get('content-type') || '';
+    return { status: r.status, type, body: type.includes('json') ? await r.text() : (await r.arrayBuffer()).byteLength + ' bytes' };
+  });
+  const previewOk = preview.status === 200 && preview.type.includes('audio/mpeg') && speechCalls.length === 1;
+  console.log(`${previewOk ? 'PASS' : 'FAIL'}  Preview plays Polly audio — ${preview.status} ${preview.type} ${preview.body}; AWS speech calls: ${speechCalls.length}`);
+  await page.goto('/owner/voice');
+  await page.waitForLoadState('networkidle');
+  const usage = (await page.textContent('body')).match(/(\d+) synthesis requests/)?.[1];
+  console.log(`${usage === '1' ? 'PASS' : 'FAIL'}  usage counter shows 1 synthesis request (shows ${usage})`);
+  ok &&= previewOk && usage === '1';
   console.log(`all AWS calls signed with: ${[...new Set(signedWith)].join(', ')}`);
 } finally {
   await browser.close();

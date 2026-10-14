@@ -42,6 +42,9 @@ export function translateSql(sql) {
       recent.length = 0;
     } else if (c === '?') {
       out += '$' + ++n;
+      // `? IS NULL` gives Postgres nothing to infer the parameter's type from ("could not determine data
+      // type of parameter"); SQLite doesn't care. Every value is sent as text, so a text cast is exact.
+      if (/^\s*IS\s+(NOT\s+)?NULL\b/i.test(sql.slice(i + 1))) out += '::text';
       i++;
       recent.length = 0;
     } else {

@@ -14,6 +14,7 @@ assert.equal(t('SELECT MAX(created) FROM t'), 'SELECT MAX(created) FROM t');
 assert.equal(t('SELECT x FROM t WHERE instr(code,?)!=1 AND code LIKE ?'), 'SELECT x FROM t WHERE STRPOS(code,$1)!=1 AND code ILIKE $2');
 assert.equal(t('SELECT SUM(c) AS estimatedCost FROM t'), 'SELECT SUM(c) AS "estimatedCost" FROM t');
 assert.equal(t("SELECT 'it''s LIKE window' AS x"), "SELECT 'it''s LIKE window' AS x");
+assert.equal(t('UPDATE m SET c=c+? WHERE (? IS NULL OR c<=?) AND ? IS NOT NULL'), 'UPDATE m SET c=c+$1 WHERE ($2::text IS NULL OR c<=$3) AND $4::text IS NOT NULL');
 assert.equal(t('CREATE TABLE IF NOT EXISTS a (n INTEGER NOT NULL, r REAL, b BLOB)'), 'CREATE TABLE IF NOT EXISTS a (n BIGINT NOT NULL, r DOUBLE PRECISION, b BYTEA)');
 
 const server = new NetlifyDB();
@@ -48,7 +49,14 @@ try {
   assert.equal(await db.prepare("SELECT COUNT(*) AS c FROM t WHERE id = 'b'").first('c'), 0, 'batch rolled back');
   const out = await db.batch([db.prepare("INSERT INTO t (id, n) VALUES ('b', 1)"), db.prepare('SELECT COUNT(*) AS c FROM t')]);
   assert.equal(out[1].results[0].c, 2);
-  console.log('PASS d1 adapter: SQL translation (10 cases) and D1 semantics on real Postgres (numbers, BLOBs, first/all/run/raw, INSERT OR IGNORE, upsert RETURNING, booleans, undefined, batch rollback)');
+  // Amazon Polly's monthly usage check (lib/polly.ts reserve()): an untyped `? IS NULL` parameter.
+  await db.prepare('CREATE TABLE IF NOT EXISTS polly_months (month TEXT PRIMARY KEY, characters INTEGER NOT NULL DEFAULT 0, requests INTEGER NOT NULL DEFAULT 0, estimated_cost REAL NOT NULL DEFAULT 0, unpriced_characters INTEGER NOT NULL DEFAULT 0)').run();
+  await db.prepare('INSERT INTO polly_months (month) VALUES (?) ON CONFLICT DO NOTHING').bind('2026-10').run();
+  const reserve = (budget) => db.prepare('UPDATE polly_months SET characters=characters+?,requests=requests+1,estimated_cost=estimated_cost+?,unpriced_characters=unpriced_characters+? WHERE month=? AND characters+?<=? AND (? IS NULL OR (unpriced_characters=0 AND estimated_cost+?<=?)) RETURNING characters').bind(43, 0.000688, 0, '2026-10', 43, 200000, budget, 0.000688, budget).first();
+  assert.equal((await reserve(null)).characters, 43, 'no budget set');
+  assert.equal((await reserve(5)).characters, 86, 'within budget');
+  assert.equal(await reserve(0.0001), null, 'over budget is refused');
+  console.log('PASS d1 adapter: SQL translation (11 cases) and D1 semantics on real Postgres (numbers, BLOBs, first/all/run/raw, INSERT OR IGNORE, upsert RETURNING, booleans, undefined, batch rollback, Polly usage check)');
 } finally {
   await pool.end();
   await server.stop();
