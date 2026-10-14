@@ -118,14 +118,29 @@ try {
   check('quoted numbers from the AI still work', r.hasImage && r.text === 'Warm 70s tones.', r.text);
 
   // 8. One step the engine rejects is skipped and named; the rest of the AI plan still applies.
-  nextReply = '{"steps":[{"command":"image.adjustments.colorBalance","params":{"shadows":[10,0]}},{"command":"image.adjustments.hueSaturation","params":{"saturation":-40}}],"reply":"Faded the colours."}';
+  nextReply = '{"steps":[{"command":"image.crop","params":{"x":0,"y":0,"width":0,"height":10}},{"command":"image.adjustments.hueSaturation","params":{"saturation":-40}},{"command":"filter.blur.gaussianBlur","params":{"radius":5000}}],"reply":"Faded the colours."}';
   r = await ask('fade the colours like old film');
-  check('a bad AI step is skipped, the rest applies', r.hasImage && /^Faded the colours\. \(Skipped one step the editor couldn't apply: color balance\.\)$/.test(r.text), r.text);
+  check('a step that cannot be fixed is skipped, an out-of-range number is brought into range, the rest applies', r.hasImage && /^Faded the colours\. \(Skipped one step the editor couldn't apply: crop\.\)$/.test(r.text), r.text);
   n = await count();
   await page.locator('.editor-actions button', { hasText: 'Undo' }).last().click();
   await settle(n + 1);
   check('undo after a skipped step works', (await page.locator('.editor-msg').last().locator('p').textContent()) === 'Undid the last edit.');
 
+  // 9. A setting in the wrong shape (what the live model sent for hue/saturation) is left out; the step still runs.
+  nextReply = '{"steps":[{"command":"image.adjustments.hueSaturation","params":{"saturation":-30,"reds":-20,"colorize":"false"}},{"command":"image.adjustments.photoFilter","params":{"filter":"sepia","density":40}}],"reply":"Old film colours."}';
+  r = await ask("make it look like a 1970s print from grandma's album");
+  check('a wrongly shaped setting is left out and the rest applies', r.hasImage && r.text === "Old film colours. (Left out settings the editor couldn't use: reds in hue saturation.)", r.text);
+
+  // The download re-renders at full size (the 4032×3024 photo is edited on a 1600 px copy), scaling the blur radius past
+  // the engine's 1000 limit; it is brought back to the limit.
+  n = await count();
+  await page.setInputFiles('input[type=file]', path.join(images, 'iphone12mp.jpg'));
+  await settle(n + 2);
+  nextReply = '{"steps":[{"command":"filter.blur.gaussianBlur","params":{"radius":1000}}],"reply":"Very soft."}';
+  r = await ask('make it as dreamy as a fog bank');
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 300_000 }), page.locator('.editor-actions button', { hasText: 'Download JPG' }).last().click()]);
+  const head = readFileSync(await dl.path()).subarray(0, 2);
+  check('full-size download works when a scaled setting passes the limit', r.hasImage && head[0] === 0xff && head[1] === 0xd8, r.text);
   check('no page errors', errors.length === 0, errors.join(' | '));
   console.log(`AI calls made: ${aiCalls.length}`);
 } finally {

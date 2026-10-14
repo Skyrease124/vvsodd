@@ -100,21 +100,45 @@ const handlers = {
     if (!editor) throw new Error('Upload a photo first.');
     if (skipFailing) {
       // AI-planned edits: a step the engine rejects is left out (and reported) instead of failing the whole edit.
+      // A setting the engine names as wrong ("`reds` must be an object") is dropped and the step tried again.
       const ok = [];
       const skipped = [];
-      for (const step of steps) {
-        try {
-          editor.run(JSON.stringify([step]));
-          ok.push(step);
-        } catch (e) {
-          skipped.push({ command: step.command, error: errorText(e) });
-          reopen();
-          if (ok.length) editor.run(JSON.stringify(ok));
+      const dropped = [];
+      for (const original of steps) {
+        let step = original;
+        const left = [];
+        for (let attempt = 0; ; attempt++) {
+          try {
+            editor.run(JSON.stringify([step]));
+            ok.push(step);
+            dropped.push(...left);
+            break;
+          } catch (e) {
+            const error = errorText(e);
+            reopen();
+            if (ok.length) editor.run(JSON.stringify(ok));
+            const key = /`(\w+)` must /.exec(error)?.[1];
+            if (attempt < 8 && key && step.params && Object.hasOwn(step.params, key)) {
+              const params = { ...step.params };
+              // An out-of-range number is brought into range ("must be a number in 0.1..1000"); anything else is dropped.
+              const range = /must be a number in (-?[\d.]+)\.\.(-?[\d.]+)/.exec(error);
+              const value = params[key];
+              if (range && typeof value === 'number' && (value < +range[1] || value > +range[2])) params[key] = Math.min(+range[2], Math.max(+range[1], value));
+              else {
+                delete params[key];
+                left.push({ command: step.command, param: key });
+              }
+              step = { ...step, params };
+              continue;
+            }
+            skipped.push({ command: step.command, error });
+            break;
+          }
         }
       }
       if (!ok.length) throw new Error(skipped[0]?.error ?? 'Nothing to apply.');
       plans.push(ok);
-      return { ...state(), done: ok.map((s) => s.command), skipped, preview: preview() };
+      return { ...state(), done: ok.map((s) => s.command), skipped, dropped, preview: preview() };
     }
     try {
       const out = JSON.parse(editor.run(JSON.stringify(steps)));
@@ -140,7 +164,7 @@ const handlers = {
     const full = new PhotoEditor(original.name, original.bytes);
     try {
       for (const plan of plans) {
-        for (const step of plan) full.run(JSON.stringify([scaleStep(step, k, info(full))]));
+        for (const step of plan) runClamped(full, scaleStep(step, k, info(full)));
       }
       const i = info(full);
       return { blob: blob(full.exportImage(format, quality), format), width: i.width, height: i.height };
@@ -149,6 +173,20 @@ const handlers = {
     }
   },
 };
+
+// Scaling a pixel setting up for the full-size render can pass the engine's limit ("must be a number in 0.1..1000"):
+// bring it back to the limit and run the step again.
+function runClamped(ed, step) {
+  try {
+    ed.run(JSON.stringify([step]));
+  } catch (e) {
+    const error = errorText(e);
+    const m = /`(\w+)` must be a number in (-?[\d.]+)\.\.(-?[\d.]+)/.exec(error);
+    const value = m && step.params?.[m[1]];
+    if (typeof value !== 'number') throw e;
+    ed.run(JSON.stringify([{ ...step, params: { ...step.params, [m[1]]: Math.min(+m[3], Math.max(+m[2], value)) } }]));
+  }
+}
 
 // Engine errors arrive as JSON text ({"done":[],"error":"…"}).
 function errorText(e) {

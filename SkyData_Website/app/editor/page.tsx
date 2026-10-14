@@ -8,7 +8,7 @@ import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-pl
 import './editor.css';
 
 type Info = { width: number; height: number };
-type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob; skipped?: { command: string; error: string }[] };
+type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob; skipped?: { command: string; error: string }[]; dropped?: { command: string; param: string }[] };
 // "image.adjustments.colorBalance" → "color balance"
 const stepName = (id: string) => (id.split('.').pop() ?? id).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 type Msg = { id: number; who: 'me' | 'sky' | 'err'; text: string; image?: string; meta?: string; actions?: boolean };
@@ -193,7 +193,8 @@ export default function Editor() {
       const p = { ...photo, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
       setPhoto(p);
       const skipped = res.skipped?.length ? ` (Skipped ${res.skipped.length === 1 ? 'one step' : res.skipped.length + ' steps'} the editor couldn't apply: ${res.skipped.map((k) => stepName(k.command)).join(', ')}.)` : '';
-      add({ who: 'sky', text: plan.undo ? 'Undid the last edit.' : plan.reply + skipped, image: imageUrl(res.preview!), meta: `${res.info.width}×${res.info.height} px · ${res.ms} ms`, actions: true });
+      const dropped = res.dropped?.length ? ` (Left out settings the editor couldn't use: ${res.dropped.map((d) => `${d.param} in ${stepName(d.command)}`).join(', ')}.)` : '';
+      add({ who: 'sky', text: plan.undo ? 'Undid the last edit.' : plan.reply + dropped + skipped, image: imageUrl(res.preview!), meta: `${res.info.width}×${res.info.height} px · ${res.ms} ms`, actions: true });
       setStatus(describe(p));
     } catch (e) {
       add({ who: 'err', text: (e as Error).message });
