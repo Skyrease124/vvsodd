@@ -78,8 +78,13 @@ export function assetsBinding(origin, downloads = protectedDownloads) {
 
 // Secrets and settings from Netlify environment variables, plus a site secret key kept in Blobs when the
 // SKYDATA_SECRET_KEY variable isn't set (ChatGPT Sites provided one automatically).
+// Netlify Functions run on AWS Lambda, which sets its own AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY /
+// AWS_SESSION_TOKEN / AWS_REGION for the function itself. SkyData reads those names before the owner's
+// saved Amazon Polly keys, so they must never reach the site: Polly would call AWS as Netlify and be denied.
+const RUNTIME_VAR = /^(AWS_|LAMBDA_|_X_AMZN|_HANDLER$|_LAMBDA)/;
+
 export async function siteEnv({ vars, pool, files, parts, system, origin }) {
-  const env = { ...vars };
+  const env = Object.fromEntries(Object.entries(vars).filter(([k]) => !RUNTIME_VAR.test(k)));
   if (!/^[a-f0-9]{64}$/.test(env.SKYDATA_SECRET_KEY ?? '')) {
     let key = await system.get('secret-key', { consistency: 'strong' });
     if (!key) {
