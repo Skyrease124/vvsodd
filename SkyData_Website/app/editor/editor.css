@@ -10,7 +10,7 @@
 .editor-msg img{display:block;max-width:100%;max-height:60vh;margin-top:10px;border-radius:12px;background:#000}
 .editor-meta{display:block;margin-top:6px;font-size:12px;color:#93a0b5}
 .editor-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.editor-actions button,.editor-chips button{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:7px 13px;cursor:pointer}
+.editor-actions button,.editor-actions a,.editor-chips button{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:7px 13px;cursor:pointer}
 .editor-actions button:disabled,.editor-chips button:disabled,.editor-bar button:disabled,.editor-input:disabled{opacity:.45;cursor:default}
 .editor-bar{position:fixed;left:0;right:0;bottom:0;padding:16px 16px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#080d17 22%);border:0;border-radius:0;box-shadow:none}
 /* globals.css styles every `form button` as the chat's corner send button; the editor's buttons sit in rows. */
@@ -24,3 +24,5 @@
 .editor-bar .editor-send{height:46px;padding:0 18px;background:#4c8dff;border-color:#4c8dff;color:#fff;font-weight:600}
 .editor-input{flex:1;min-width:0;font:inherit;font-size:16px;color:#edf4ff;background:#121a2a;border:1px solid #ffffff24;border-radius:14px;padding:11px 13px}
 .editor-status{margin-top:6px;font-size:12px;color:#93a0b5}
+.editor-actions a{text-decoration:none}
+.editor-files-link{display:inline-flex;align-items:center;gap:6px;margin-left:auto}

@@ -150,6 +150,26 @@ const handlers = {
       throw e;
     }
   },
+  // My Files: what is needed to save the photo so it can be reopened and edited further.
+  async source() {
+    if (!editor) throw new Error('Upload a photo first.');
+    return { name: original.name, bytes: original.bytes.slice(), plans: structuredClone(plans) };
+  },
+  // Reopening a saved file: apply its saved edits again, each kept as its own undo step.
+  async restore({ plans: saved }) {
+    if (!editor) throw new Error('Upload a photo first.');
+    try {
+      for (const plan of saved) {
+        editor.run(JSON.stringify(plan));
+        plans.push(plan);
+      }
+    } catch (e) {
+      plans = [];
+      reopen();
+      throw e;
+    }
+    return { ...state(), preview: preview() };
+  },
   async undo() {
     if (!editor || plans.length === 0) throw new Error('Nothing to undo.');
     plans.pop();

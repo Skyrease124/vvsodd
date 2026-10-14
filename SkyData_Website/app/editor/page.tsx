@@ -3,15 +3,16 @@
 // (PhotoCraft's engine as WebAssembly in a Web Worker, public/editor-engine/); photos are never uploaded.
 // The engine starts when this page opens and is shut down when it closes, so it holds no memory elsewhere.
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Camera, Download, Undo2 } from 'lucide-react';
+import { ArrowLeft, Camera, Download, FolderOpen, Save, Undo2 } from 'lucide-react';
 import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-planner';
+import { makeThumb, readFile, saveFile } from '../../lib/creative-files';
 import './editor.css';
 
 type Info = { width: number; height: number };
 type EngineState = { info: Info; steps: number; scale: number; full: Info; preview?: Blob; skipped?: { command: string; error: string }[]; dropped?: { command: string; param: string }[] };
 // "image.adjustments.colorBalance" → "color balance"
 const stepName = (id: string) => (id.split('.').pop() ?? id).replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-type Msg = { id: number; who: 'me' | 'sky' | 'err'; text: string; image?: string; meta?: string; actions?: boolean };
+type Msg = { id: number; who: 'me' | 'sky' | 'err'; text: string; image?: string; meta?: string; actions?: boolean; filesLink?: boolean };
 type Photo = { name: string; width: number; height: number; steps: number; scale: number; full: Info };
 
 // The browser's own decoder is the fallback for files the engine cannot open (HEIC on iPhone), limited to the
@@ -70,6 +71,9 @@ export default function Editor() {
   const urls = useRef<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const logEnd = useRef<HTMLDivElement>(null);
+  // My Files: the saved file this photo came from (saving again updates it) and the latest preview (its thumbnail).
+  const savedId = useRef<string | null>(null);
+  const lastPreview = useRef<Blob | null>(null);
 
   function call<T = EngineState & { ms: number }>(type: string, payload?: unknown, transfer: Transferable[] = []): Promise<T> {
     const id = nextId.current++;
@@ -143,6 +147,8 @@ export default function Editor() {
         note = d.scaled ? ' (converted by the browser and reduced to fit)' : ' (converted by the browser)';
       }
       const p = { name: file.name || 'photo', width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
+      savedId.current = null;
+      lastPreview.current = res.preview!;
       setPhoto(p);
       add({ who: 'me', text: label, image: imageUrl(res.preview!), meta: `${res.full.width}×${res.full.height} px${note}` });
       add({ who: 'sky', text: 'Got it. What would you like to change?' });
@@ -191,6 +197,7 @@ export default function Editor() {
       // AI plans may contain a step the engine rejects; that step is skipped and named, the rest still applies.
       const res = plan.undo ? await call('undo') : await call('run', { steps: plan.steps as EditStep[], skipFailing: fromAi });
       const p = { ...photo, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
+      lastPreview.current = res.preview!;
       setPhoto(p);
       const skipped = res.skipped?.length ? ` (Skipped ${res.skipped.length === 1 ? 'one step' : res.skipped.length + ' steps'} the editor couldn't apply: ${res.skipped.map((k) => stepName(k.command)).join(', ')}.)` : '';
       const dropped = res.dropped?.length ? ` (Left out settings the editor couldn't use: ${res.dropped.map((d) => `${d.param} in ${stepName(d.command)}`).join(', ')}.)` : '';
@@ -214,6 +221,62 @@ export default function Editor() {
       return { error: 'SkyData AI could not be reached.' };
     }
   }
+
+  // Save to My Files: the full-size JPG, plus the original photo and its edit steps so it can be edited further.
+  async function saveToFiles() {
+    if (!photo || busy) return;
+    setBusy(true);
+    setStatus(photo.scale > 1 ? 'Saving the full-size photo to My Files; large photos can take a while…' : 'Saving to My Files…');
+    try {
+      const { blob, width, height } = await call<{ blob: Blob; width: number; height: number }>('export', { format: 'jpg', quality: 92 });
+      const src = await call<{ name: string; bytes: Uint8Array; plans: EditStep[][] }>('source');
+      const thumb = await makeThumb(lastPreview.current ?? blob);
+      const updating = savedId.current;
+      const item = await saveFile({ id: updating ?? undefined, name: photo.name.replace(/\.\w+$/, ''), width, height, thumb, originalName: src.name, original: new Blob([src.bytes as BlobPart]), plans: src.plans, image: blob });
+      savedId.current = item.id;
+      add({ who: 'sky', text: `${updating ? 'Updated' : 'Saved'} "${item.name}" in My Files (${width}×${height} px). It's stored on this device only.`, filesLink: true });
+    } catch (e) {
+      add({ who: 'err', text: 'Could not save to My Files: ' + (e as Error).message });
+    } finally {
+      setBusy(false);
+      setStatus(describe(photo));
+    }
+  }
+
+  // Opened from My Files (/editor?file=…): the original photo with its saved edits applied again, ready to keep editing.
+  async function openSaved(id: string, saved: Awaited<ReturnType<typeof readFile>>) {
+    setBusy(true);
+    setStatus('Opening from My Files…');
+    try {
+      if (!saved) throw new Error('That file is no longer on this device.');
+      const bytes = new Uint8Array(await saved.data.original.arrayBuffer());
+      let res = await call('open', { name: saved.data.originalName, bytes: bytes.buffer }, [bytes.buffer]);
+      if (saved.data.plans.length) res = await call('restore', { plans: saved.data.plans });
+      const p = { name: saved.item.name, width: res.info.width, height: res.info.height, steps: res.steps, scale: res.scale, full: res.full };
+      savedId.current = id;
+      lastPreview.current = res.preview!;
+      setPhoto(p);
+      add({ who: 'sky', text: `Opened "${saved.item.name}" from My Files with its ${saved.data.plans.length === 1 ? 'edit' : saved.data.plans.length + ' edits'}. Keep editing, then save again to update it.`, image: imageUrl(res.preview!), meta: `${res.full.width}×${res.full.height} px`, actions: true });
+      setStatus(describe(p));
+    } catch (e) {
+      add({ who: 'err', text: 'Could not open from My Files: ' + (e as Error).message });
+      setStatus('Ready. Upload a photo to start.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // /editor?file=… opens that saved file once the engine is ready.
+  const openedSaved = useRef(false);
+  useEffect(() => {
+    if (!ready || openedSaved.current) return;
+    openedSaved.current = true;
+    const id = new URLSearchParams(location.search).get('file');
+    if (id)
+      readFile(id)
+        .then((saved) => openSaved(id, saved))
+        .catch((e: Error) => add({ who: 'err', text: 'Could not open from My Files: ' + e.message }));
+  });
 
   async function download(format: 'jpg' | 'png') {
     if (!photo || busy) return;
@@ -246,6 +309,7 @@ export default function Editor() {
             ("e is not a function"), and a full page load also shuts the editing engine down. */}
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a className="brand" href="/">skydata<span>✦</span></a>
+        <a href="/files" className="invite-inbox-link editor-files-link"><FolderOpen size={16} />My Files</a>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" className="new"><ArrowLeft size={18} />Back to chat</a>
       </header>
@@ -262,6 +326,12 @@ export default function Editor() {
                   <button type="button" disabled={!canEdit} onClick={() => submit('undo')}><Undo2 size={16} />Undo</button>
                   <button type="button" disabled={!canEdit} onClick={() => download('jpg')}><Download size={16} />Download JPG</button>
                   <button type="button" disabled={!canEdit} onClick={() => download('png')}><Download size={16} />Download PNG</button>
+                  <button type="button" disabled={!canEdit} onClick={() => saveToFiles()}><Save size={16} />Save to My Files</button>
+                </div>
+              )}
+              {m.filesLink && (
+                <div className="editor-actions">
+                  <a href="/files"><FolderOpen size={16} />Open My Files</a>
                 </div>
               )}
             </div>
