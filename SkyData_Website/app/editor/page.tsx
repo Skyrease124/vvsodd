@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Download, FolderOpen, Save, Undo2 } from 'lucide-react';
 import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-planner';
-import { makeThumb, readFile, saveFile } from '../../lib/creative-files';
+import { makeThumb, readFile, saveFile, takeHandOff } from '../../lib/creative-files';
 import './editor.css';
 
 type Info = { width: number; height: number };
@@ -180,7 +180,8 @@ export default function Editor() {
       setStatus('Asking SkyData AI how to edit it…');
       const ai = await aiPlan(text, photo);
       if ('steps' in ai) {
-        plan = { steps: ai.steps, reply: ai.reply, complete: true };
+        const art = ai.leftOut?.length ? ` (Left out an art effect you didn't ask for: ${ai.leftOut.map(stepName).join(', ')}.)` : '';
+        plan = { steps: ai.steps, reply: ai.reply + art, complete: true };
         fromAi = true;
       }
       else if (plan.steps.length) plan = { ...plan, reply: `${plan.reply} (SkyData AI was unavailable: ${ai.error})` };
@@ -211,11 +212,11 @@ export default function Editor() {
     }
   }
 
-  async function aiPlan(message: string, p: Photo): Promise<{ steps: EditStep[]; reply: string } | { error: string }> {
+  async function aiPlan(message: string, p: Photo): Promise<{ steps: EditStep[]; reply: string; leftOut?: string[] } | { error: string }> {
     try {
       const r = await fetch('/api/editor-plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, width: p.width, height: p.height }) });
-      const data = (await r.json().catch(() => ({}))) as { steps?: EditStep[]; reply?: string; error?: string };
-      if (r.ok && Array.isArray(data.steps)) return { steps: data.steps, reply: data.reply || 'Done.' };
+      const data = (await r.json().catch(() => ({}))) as { steps?: EditStep[]; reply?: string; leftOut?: string[]; error?: string };
+      if (r.ok && Array.isArray(data.steps)) return { steps: data.steps, reply: data.reply || 'Done.', leftOut: data.leftOut };
       return { error: data.error || 'SkyData AI could not plan that edit.' };
     } catch {
       return { error: 'SkyData AI could not be reached.' };
@@ -271,7 +272,13 @@ export default function Editor() {
   useEffect(() => {
     if (!ready || openedSaved.current) return;
     openedSaved.current = true;
-    const id = new URLSearchParams(location.search).get('file');
+    const query = new URLSearchParams(location.search);
+    // From the chat's "Edit in Editor": the photo waits in this device's hand-off spot.
+    if (query.get('from') === 'chat')
+      takeHandOff()
+        .then((h) => (h ? openFile(new File([h.photo], h.name, { type: h.photo.type || 'image/jpeg' })) : add({ who: 'err', text: 'The photo from the chat is no longer waiting. Go back to the chat and tap Edit in Editor again.' })))
+        .catch((e: Error) => add({ who: 'err', text: 'Could not open the photo from the chat: ' + e.message }));
+    const id = query.get('file');
     if (id)
       readFile(id)
         .then((saved) => openSaved(id, saved))

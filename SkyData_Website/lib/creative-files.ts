@@ -7,7 +7,7 @@ import type { EditStep } from './editor-planner';
 export type CreativeFile = { id: string; name: string; created: number; updated: number; width: number; height: number; size: number; edits: number; thumb: Blob };
 export type CreativeFileData = { id: string; originalName: string; original: Blob; plans: EditStep[][]; image: Blob };
 
-const VERSION = 1;
+const VERSION = 2; // 2: adds the chat → Editor hand-off store
 let opened: Promise<IDBDatabase> | null = null;
 
 async function accountKey() {
@@ -26,8 +26,7 @@ function db() {
           if (typeof indexedDB === 'undefined') return reject(new Error('This browser cannot store files.'));
           const req = indexedDB.open('skydata-creative-files-' + key, VERSION);
           req.onupgradeneeded = () => {
-            req.result.createObjectStore('items', { keyPath: 'id' });
-            req.result.createObjectStore('data', { keyPath: 'id' });
+            for (const name of ['items', 'data', 'handoff']) if (!req.result.objectStoreNames.contains(name)) req.result.createObjectStore(name, { keyPath: 'id' });
           };
           req.onsuccess = () => resolve(req.result);
           req.onerror = () => reject(req.error ?? new Error('My Files could not be opened.'));
@@ -92,6 +91,23 @@ export async function deleteFile(id: string) {
   tx.objectStore('items').delete(id);
   tx.objectStore('data').delete(id);
   await done(tx);
+}
+
+// "Edit in Editor" from the chat: the photo waits here (this account, this device) until the Editor picks it up.
+export async function handOffToEditor(photo: Blob, name: string) {
+  const tx = (await db()).transaction('handoff', 'readwrite');
+  tx.objectStore('handoff').put({ id: 'pending', photo, name, at: Date.now() });
+  await done(tx);
+}
+
+/** The photo handed over from the chat, removed as it is read; null if none (or older than 10 minutes). */
+export async function takeHandOff(): Promise<{ photo: Blob; name: string } | null> {
+  const tx = (await db()).transaction('handoff', 'readwrite');
+  const store = tx.objectStore('handoff');
+  const item = await result(store.get('pending') as IDBRequest<{ photo: Blob; name: string; at: number } | undefined>);
+  store.delete('pending');
+  await done(tx);
+  return item && Date.now() - item.at < 600_000 ? { photo: item.photo, name: item.name } : null;
 }
 
 export async function storageUse(): Promise<{ used: number; quota: number; persisted: boolean } | null> {

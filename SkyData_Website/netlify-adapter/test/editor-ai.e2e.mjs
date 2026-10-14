@@ -131,6 +131,18 @@ try {
   r = await ask("make it look like a 1970s print from grandma's album");
   check('a wrongly shaped setting is left out and the rest applies', r.hasImage && r.text === "Old film colours. (Left out settings the editor couldn't use: reds in hue saturation.)", r.text);
 
+  // 10. An art effect nobody asked for (the cracked-paint texture the live model once added to "old 70s photo") is left out.
+  nextReply = '{"steps":[{"command":"image.adjustments.hueSaturation","params":{"saturation":-18}},{"command":"filter.gallery.craquelure","params":{}},{"command":"filter.gallery.filmGrain","params":{"grain":3,"intensity":4}}],"reply":"Gave it a faded 70s look."}';
+  r = await ask('make it look like a snapshot from 1975');
+  const sys = aiCalls.at(-1)?.messages?.find((m) => m.role === 'system')?.content ?? '';
+  check('an art effect nobody asked for is left out, film grain stays', r.hasImage && r.text === "Gave it a faded 70s look. (Left out an art effect you didn't ask for: craquelure.)", r.text);
+  check('the AI gets the natural-look rules and tested recipes', sys.includes('Keep it a natural-looking photo') && sys.includes('Skin should stay natural') && sys.includes('70s / vintage / old photo:'));
+
+  // 11. When the request names an art effect, it is kept.
+  nextReply = '{"steps":[{"command":"filter.gallery.craquelure","params":{}}],"reply":"Added a cracked texture."}';
+  r = await ask('give it a cracked old canvas texture');
+  check('an art effect the user asked for is kept', r.hasImage && r.text === 'Added a cracked texture.', r.text);
+
   // The download re-renders at full size (the 4032×3024 photo is edited on a 1600 px copy), scaling the blur radius past
   // the engine's 1000 limit; it is brought back to the limit.
   n = await count();

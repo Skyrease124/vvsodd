@@ -137,3 +137,5 @@ form .stop-button{width:72px;display:flex;gap:6px;align-items:center;justify-con
 @keyframes skydata-star-playback{0%,100%{transform:scale(1.02);filter:drop-shadow(0 0 4px #71d7ff77)}50%{transform:scale(1.13);filter:drop-shadow(0 0 9px #71d7ffaa)}}
 .brand>span[data-speaking]{animation:none;transform:scale(calc(1 + var(--brand-level,0)*.18));filter:drop-shadow(0 0 calc(4px + var(--brand-level,0)*9px) #71d7ffaa)}
 @media(prefers-reduced-motion:reduce){.brand>span,.brand>span[data-playing],.brand>span[data-speaking]{animation:none;transform:none;filter:drop-shadow(0 0 3px #71d7ff55)}}
+
+.edit-photo-link{display:inline-flex;align-items:center;gap:6px;margin:8px 0 2px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:6px 12px;cursor:pointer}.edit-photo-link:disabled{opacity:.45;cursor:default}
