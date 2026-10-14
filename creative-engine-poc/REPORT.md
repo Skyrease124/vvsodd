@@ -102,8 +102,8 @@ The iPhone 13 emulation uses the iPhone screen size, touch and Safari user-agent
 | "remove the person in the background" | Clear explanation; nothing runs |
 | Download JPG | Valid JPEG |
 | `file.save`, `file.scripts.run`, a `file` parameter and a nested `url` parameter sent **directly** to the engine | All refused |
-| 12 MP (4032×3024) photo | Opens in about 1.6 s. "auto enhance, warmer and sharpen" (5 engine steps) takes about 4.5 s on the preview copy |
-| 12 MP full-size download after "square crop" | 3024×3024 JPEG; full-size render and export took about 30.6 s |
+| 12 MP (4032×3024) photo | Opens in about 1.6–1.7 s. "auto enhance, warmer and sharpen" (5 engine steps) takes about 4.5 s on the preview copy |
+| 12 MP full-size download after "square crop" | 3024×3024 JPEG; full-size render and export took 28–31 s |
 | JPEG with EXIF rotation (as iPhones save) | Comes in upright |
 | Not an image | "Could not open this photo: The source image could not be decoded." |
 | Page errors | None |
@@ -131,7 +131,8 @@ For comparison, natively vibrance takes about 0.8 s. A SIMD build of the WebAsse
 
 **Memory.** The engine's undo history was cut to one state: SkyData undoes by replaying edits instead.
 - With the default 50-step history, a 12 MP full-size render peaked at **688 MB** of WebAssembly memory. That is too much for an iPhone tab.
-- With one history state: re-measurement pending (the rebuilt WebAssembly was still compiling when this was committed).
+- With one history state, the same render peaks at **394 MB** (re-measured after rebuilding; all 26 browser checks re-run and passing on that build).
+- About 269 MB of that is already in use after opening the 12 MP photo, because the full image is decoded once to make the preview copy. Terminating the worker after each download would hand it back (section 9.3); the prototype doesn't do that yet.
 
 **Download size.** The engine is 17 MB of WebAssembly, 7.0 MB gzipped. That is under the 25 MiB per-file limit of Cloudflare Pages/Workers.
 
@@ -239,7 +240,7 @@ Lazy loading works, with one rule that matters most on iPhone:
 
 **WebAssembly memory never shrinks.** Once an engine has grown to, say, 270 MB, the only way to give that memory back is to end the thing that holds it: terminate the Web Worker, or remove the editor's iframe or page. Hiding it or closing a panel frees nothing.
 
-Measured in this prototype: about 4 MB when loaded, about 270 MB after opening a 12 MP photo. The full-size render peaked at 688 MB with the engine's default undo history (see section 5 for the figure with history reduced).
+Measured in this prototype: about 4 MB when loaded, about 270 MB after opening a 12 MP photo. The full-size render peaked at 688 MB with the engine's default undo history, and at 394 MB after reducing it to one state.
 
 So:
 1. **Nothing heavy at chat start-up.** Thumbnails only, and no engine.
