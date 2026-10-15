@@ -29,7 +29,13 @@ globalThis.fetch = async (input, init) => {
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
   if (url.startsWith('https://integrate.api.nvidia.com/')) {
     if (modelMode === 'fail') return Response.json({ error: 'busy' }, { status: 429 });
-    await new Promise((r) => setTimeout(r, REPORT_DELAY));
+    // Like a real connection, an aborted signal ends the request.
+    const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+    await new Promise((resolve, reject) => {
+      if (signal?.aborted) return reject(signal.reason);
+      const t = setTimeout(resolve, REPORT_DELAY);
+      signal?.addEventListener('abort', () => (clearTimeout(t), reject(signal.reason)));
+    });
     return Response.json({ choices: [{ message: { role: 'assistant', content: 'CONFIRMED [page-0]: Background report.' }, finish_reason: 'stop' }] });
   }
   return realFetch(input, init);

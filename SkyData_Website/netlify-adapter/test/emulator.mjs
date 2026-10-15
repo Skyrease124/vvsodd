@@ -49,12 +49,16 @@ export async function startEmulator(project, vars = {}) {
         res.writeHead(413);
         return res.end('Payload too large for a Netlify Function');
       }
-      const request = new Request(url, { method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : body });
+      let request = new Request(url, { method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : body });
       const waits = [];
       // Like Netlify's background functions: answer 202 at once and keep running (up to 15 minutes there).
       if (url.pathname.startsWith('/.netlify/functions/skydata-background/')) {
         res.writeHead(202);
         res.end();
+        // Netlify has already answered, so the request's own signal is aborted while the background work runs.
+        const done = new AbortController();
+        done.abort();
+        request = new Request(request, { signal: done.signal });
         await fn(request, { ip: req.socket.remoteAddress, waitUntil: (p) => waits.push(p) }).then((r) => r.arrayBuffer()).catch((e) => console.error('background error', e));
         await Promise.allSettled(waits);
         return;
