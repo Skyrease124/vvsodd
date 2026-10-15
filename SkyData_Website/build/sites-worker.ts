@@ -28,7 +28,6 @@ import { handleVision } from '../lib/vision';
 import { handleVoice } from '../lib/voice';
 import { readKey, setupKey, type SecretEnv } from "../lib/secret-store";
 import { handleConnectionPage } from "../lib/connection-page";
-import { handleOpenCodeConnection } from "../lib/opencode";
 import { requestsPaidModel, isPaidModel, MODELS } from "../lib/models";
 import { handleChat } from "../lib/nvidia";
 import handler from "vinext/server/fetch-handler";
@@ -100,7 +99,7 @@ export default {
       }catch{return incomingPath.startsWith('/api/')?Response.json({error:'Account access is temporarily unavailable.'},{status:503,headers:{'Cache-Control':'no-store'}}):accessPage('Temporarily unavailable','<p>Your account could not be checked. Please reload to try again.</p>',503);}
     }
     const path = new URL(request.url).pathname;
-    if (["/api/editor-plan", "/connect-polly", "/api/polly-settings", "/api/polly-preview", "/connect-gemini", "/api/gemini-token", "/api/voice-settings", "/api/voice-preview", "/api/decisions", "/api/debate-score", "/api/debate-check", "/api/debate", "/invite-requests", "/api/chat-backup", "/api/chat-state", "/connect-whisper", "/api/transcribe", "/api/status", "/api/chat", "/api/setup", "/connect", "/connect-voice", "/api/voice", "/api/vision", "/connect-camera", "/connect-web", "/connect-deepseek", "/connect-gpt", "/connect-openrouter", "/connect-openai", "/connect-crypto", "/connect-opencode"].includes(path) || path === "/api/projects" || path.startsWith("/api/projects/")) {
+    if (["/api/editor-plan", "/connect-polly", "/api/polly-settings", "/api/polly-preview", "/connect-gemini", "/api/gemini-token", "/api/voice-settings", "/api/voice-preview", "/api/decisions", "/api/debate-score", "/api/debate-check", "/api/debate", "/invite-requests", "/api/chat-backup", "/api/chat-state", "/connect-whisper", "/api/transcribe", "/api/status", "/api/chat", "/api/setup", "/connect", "/connect-voice", "/api/voice", "/api/vision", "/connect-camera", "/connect-web", "/connect-deepseek", "/connect-gpt", "/connect-openrouter", "/connect-openai", "/connect-crypto"].includes(path) || path === "/api/projects" || path.startsWith("/api/projects/")) {
       // Membership was checked above; each user keeps a separate Site-scoped identity.
       if (!request.headers.get("oai-authenticated-user-id")) {console.warn("SkyData access denied",{path});return Response.json({ error: "Sign in with your SkyData owner account to continue." }, {status:403,headers:{"Cache-Control":"no-store"}});}
       try {
@@ -114,7 +113,6 @@ export default {
         if(path === "/api/projects" || path.startsWith("/api/projects/")) return handleProjects(request, config);
         if (path === "/api/chat-state" || path === "/api/chat-backup") return handleChatState(request, config);
         if (path === "/connect-whisper") return handleWhisperConnection(request, config);
-        if (path === "/connect-opencode") return handleOpenCodeConnection(request, config);
         if (path === "/connect-crypto") return handleConnectionPage(request, config, false, false, false, false, false, false, false, true);
         if (path === "/connect-openai") return handleConnectionPage(request, config, false, false, false, false, false, false, true);
         if (path === "/connect-openrouter") return handleConnectionPage(request, config, false, false, false, false, false, true);
@@ -123,20 +121,18 @@ export default {
         if (path === "/connect-web") return handleConnectionPage(request, config, false, false, true);
         if (path === "/connect-camera") return handleConnectionPage(request, config, false, true);
         if (path === "/api/transcribe") return run(()=>handleTranscribe(request, config));
-        if (path === "/api/vision") return run(()=>handleVision(request, config,geminiUpstream(config),true));
+        if (path === "/api/vision") return run(()=>handleVision(request, config));
         if(path==='/connect-polly')return pollyConnection(request,config);
         if(path==='/api/polly-settings')return pollyManagement(request,config);
         if(path==='/api/polly-preview')return pollySpeech(request,config,true);
-        if(path==='/connect-gemini')return geminiConnection(request,config);
-        if(path==='/api/gemini-token')return run(()=>geminiToken(request,config));
-        if(path==='/api/voice-preview')return geminiSpeech(request,config,true);
-        if(path==='/api/voice-settings')return geminiVoiceSettings(request,config);
+        // Gemini is switched off on this site: its connection, live voice token and voice settings are gone.
+        if(path==='/connect-gemini'||path==='/api/gemini-token'||path==='/api/voice-preview'||path==='/api/voice-settings')return Response.json({error:'Gemini is not used on this site.'},{status:404,headers:{'Cache-Control':'no-store'}});
         if (path === "/connect-voice") return Response.redirect(new URL("/owner/voice",request.url),303);
-        if (path === "/api/voice") return run(async()=>{const settings=await voiceSettings(config);return settings.provider==='polly'?pollySpeech(request,config):geminiSpeech(request,config);});
+        if (path === "/api/voice") return run(()=>pollySpeech(request,config));
         if (path === "/connect") return handleConnectionPage(request, config);
         if (path === "/api/setup") return setupKey(request, config);
         const key = await readKey(config);
-        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY"))||await geminiReady(config),isOwner:admin,geminiConfigured:await geminiReady(config),...(admin?{geminiVoice:await selectedGeminiVoice(config)}:{}),decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:await geminiReady(config),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&(speech.provider==='polly'?await pollyReady(config):await geminiReady(config)),nativeVoiceEnabled:speech.enabled&&speech.provider==='gemini'}, {headers:{"Cache-Control":"no-store"}});}
+        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY")),isOwner:admin,geminiConfigured:false,decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:Boolean(await readKey(config,"NVIDIA_VISION_API_KEY")),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&await pollyReady(config),nativeVoiceEnabled:false}, {headers:{"Cache-Control":"no-store"}});}
         if(path==='/api/editor-plan')return run(()=>handleEditorPlan(request,key,config));
         if(path==='/api/decisions')return run(()=>handleDecisions(request,config));
         if(path==='/api/debate-score')return run(()=>handleDebateScore(request,config));
