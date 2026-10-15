@@ -114,6 +114,17 @@ try {
   for (let i = 0; i < 30 && (s = await statusOf(stuck)).status === 'generating'; i++) await new Promise((r) => setTimeout(r, 500));
   check('after that, Generate works again', retry.status === 202 && s.status === 'report_ready', JSON.stringify(s));
 
+  // History downloads: the collected evidence of a "complete" investigation, and a stuck one listed as complete.
+  const evidence = await api('/api/engineering-browser/' + stuck + '/evidence');
+  check('the evidence of an investigation can be downloaded', evidence.status === 200 && evidence.body.evidence?.pages?.[0]?.title === 'Public fixture' && evidence.body.url === 'https://example.com/', String(evidence.status));
+  const db2 = new pg.Client({ connectionString: emu.connectionString });
+  await db2.connect();
+  const listed = await investigate();
+  await db2.query("UPDATE engineering_browser_jobs SET status='generating' WHERE id=$1", [listed]);
+  await db2.end();
+  const history = (await api('/api/engineering-browser')).body.jobs;
+  check('the history no longer shows a stuck run as "generating"', history.find((j) => j.id === listed)?.status === 'complete', JSON.stringify(history.find((j) => j.id === listed)));
+
   // 4. The real page: Generate, then the report shows up without pressing anything else.
   const id3 = await investigate();
   await page.goto('/engineering');
@@ -123,6 +134,18 @@ try {
   check('the page’s Generate request is accepted', opened === 202, String(opened));
   for (let i = 0; i < 30 && (s = await statusOf(id3)).status === 'generating'; i++) await new Promise((r) => setTimeout(r, 500));
   check('the report is saved for the page to show', s.status === 'report_ready', JSON.stringify(s));
+  await page.reload();
+  const toggle = page.locator('input[type=checkbox]').first();
+  if (!(await toggle.isChecked())) await toggle.check();
+  await page.locator('select').filter({ has: page.locator('option[value=website]') }).selectOption('website');
+  await page.locator('summary', { hasText: 'Website investigation history' }).click();
+  await page.locator('summary', { hasText: 'Website investigation history' }).scrollIntoViewIfNeeded();
+  if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
+  const [file] = await Promise.all([page.waitForEvent('download', { timeout: 15000 }), page.locator('button', { hasText: 'Download report' }).first().click()]).catch(async (e) => { console.log('buttons:', await page.locator('button', { hasText: 'Download report' }).evaluateAll((b) => b.map((x) => x.outerHTML + ' in ' + x.closest('details,article,section')?.tagName))); console.log('panel:', (await page.locator('.engineering-website-panel').innerText()).slice(-300), errors, await page.evaluate(async () => { const r = await fetch('/api/engineering-browser'); return (await r.text()).slice(0, 300); })); throw e; });
+  const md = readFileSync(await file.path(), 'utf8');
+  check('the history has a Download report button that saves the report', md.includes('Background report') && file.suggestedFilename().endsWith('.md'), file.suggestedFilename());
+  const [ev] = await Promise.all([page.waitForEvent('download'), page.locator('button', { hasText: 'Download evidence' }).first().click()]);
+  check('a complete investigation has a Download evidence button', JSON.parse(readFileSync(await ev.path(), 'utf8')).evidence?.pages?.length === 1, ev.suggestedFilename());
   check('no page errors', errors.length === 0, errors.join(' | '));
 } finally {
   await browser.close();

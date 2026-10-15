@@ -35,7 +35,10 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
  await env.DB.prepare('CREATE TABLE IF NOT EXISTS engineering_browser_jobs (id TEXT PRIMARY KEY,owner TEXT NOT NULL,url TEXT NOT NULL,goal TEXT NOT NULL,engine TEXT NOT NULL,model TEXT NOT NULL,workflow TEXT NOT NULL,created TEXT NOT NULL,status TEXT NOT NULL)').run();
  await env.DB.prepare('CREATE TABLE IF NOT EXISTS engineering_browser_hp (id TEXT PRIMARY KEY,owner TEXT NOT NULL)').run();
  await runnerSchema(env.DB);
- if(!path.length&&request.method==='GET'){const list=await env.DB.prepare('SELECT id,url,engine,created,status FROM engineering_browser_jobs WHERE owner = ? ORDER BY created DESC LIMIT 50').bind(owner).all();return json({jobs:list.results});}
+ if(!path.length&&request.method==='GET'){const list=await env.DB.prepare('SELECT id,url,engine,created,status FROM engineering_browser_jobs WHERE owner = ? ORDER BY created DESC LIMIT 50').bind(owner).all<{id:string;status:string}>();
+  // A report run that never finished (on Netlify, started more than 16 minutes ago) is shown as complete so it can be generated again.
+  for(const job of list.results)if(job.status==='generating'&&env.FILES){const m=await env.FILES.get('engineering-browser/'+owner+'/'+job.id+'/generating.json');const started=m?((await m.json().catch(()=>({}))) as {started?:number}).started:undefined;if(!started||Date.now()-started>16*60000){if(await env.FILES.get('engineering-browser/'+owner+'/'+job.id+'/report.json'))continue;await env.DB.prepare("UPDATE engineering_browser_jobs SET status='complete' WHERE id=? AND owner=? AND status='generating'").bind(job.id,owner).run();job.status='complete';}}
+  return json({jobs:list.results});}
  if(!path.length&&request.method==='POST'){
 
   try{
@@ -66,6 +69,8 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
   const index=new URL(request.url).searchParams.get('index');if(!/^\d{1,2}$/.test(index||''))return json({error:'Not found.'},404);const object=await env.FILES.get(key+'/screenshot-'+index+'.png');return object?new Response(object.body,{headers:{...headers,'Content-Type':'image/png','X-Content-Type-Options':'nosniff'}}):json({error:'Not found.'},404);
  }
  const hp=!!await env.DB.prepare('SELECT id FROM engineering_browser_hp WHERE id=? AND owner=?').bind(id,owner).first();
+ // The evidence the browser collected, without screenshot data, for download from the history.
+ if(path[1]==='evidence'&&request.method==='GET'&&hp){const data=await hpBrowserData(env,owner,id);if(data.status!=='complete'||!data.result)return json({error:'No evidence was collected for this investigation.'},404);const {screenshots,...evidence}=data.result as {screenshots?:unknown[]};return json({id,url:row.url,goal:row.goal,engine:row.engine,date:row.created,screenshots:Array.isArray(screenshots)?screenshots.length:0,evidence});}
  if(!configured&&!hp)return json({error:'Browser backend is not connected.'},503);
  try{
   if(request.method==='DELETE'){if(hp){await cancelHpBrowser(env,owner,id);const state=await hpBrowserData(env,owner,id);if(state.status==='running')return json({id,status:'running',phase:'Cancellation requested; waiting for HP cleanup'});}else await service(env,'/jobs/'+id,'DELETE');await env.DB.prepare('UPDATE engineering_browser_jobs SET status = ? WHERE id = ? AND owner = ?').bind('cancelled',id,owner).run();return json({id,status:'cancelled'});}

@@ -39,3 +39,6 @@
 .engineering-website-panel{min-width:0;margin-top:1.25rem}.engineering-website-panel>label{display:grid;gap:.6rem;margin:1rem 0}.engineering-website-panel input,.engineering-website-panel textarea{width:100%;min-width:0;box-sizing:border-box}.engineering-website-panel figure{margin:1rem 0}.engineering-website-panel p,.engineering-website-panel figcaption{overflow-wrap:anywhere}.engineering-website-panel details button{margin:.4rem}
 
 .engineering-website-panel input[type=checkbox]{width:auto;min-width:initial}
+/* History rows: one line per investigation with its actions inline (other Engineering button styles must not apply). */
+.engineering-website-panel details p{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem;margin:.5rem 0}
+.engineering-website-panel details p button{position:static;inset:auto;width:auto;height:auto;min-width:0;min-height:0;margin:0;padding:.35rem .8rem;border-radius:999px;transform:none;font-size:.9rem;line-height:1.2;white-space:nowrap}
