@@ -1,4 +1,4 @@
-// Runs PhotoCraft's engine (WebAssembly, built from creative-engine-poc/bridge on branch claude/creative-engine-poc) off the main thread.
+// Runs PhotoCraft's engine (WebAssembly, built from editor-engine-bridge/) off the main thread.
 //
 // Proxy editing: the engine runs single-threaded in the browser, so per-pixel edits on a 12 MP phone photo take
 // seconds each. Chat edits therefore run on a copy no larger than PROXY_MAX_SIDE, which the user sees. Download
@@ -44,13 +44,35 @@ async function reopen() {
 
 const isCutout = (step) => typeof step?.command === 'string' && step.command.startsWith('skydata.');
 // Steps that change the picture's size or shape are not allowed inside one part of the photo.
-const NOT_IN_REGION = /^(image\.(crop|imageSize|canvasSize|trim|imageRotation\.|rotation\.|mode\.)|filter\.(convertForSmartFilters|vanishingPoint)$|skydata\.)/;
+const NOT_IN_REGION = /^(image\.(crop|imageSize|canvasSize|trim|imageRotation\.|rotation\.|mode\.)|filter\.(convertForSmartFilters|vanishingPoint)$|skydata\.|photo\.|select\.)/;
 
-const runStep = (ed, step) => ed.run(JSON.stringify([step]));
+// An area step (photo.area) limits its edits to the subject or the sky (or everything else), using PhotoCraft's
+// on-device Select Subject / Select Sky. The selection is made, optionally feathered, the edits run inside it, and it is
+// always removed again, so later steps apply to the whole photo.
+const AREAS = { subject: ['select.subject', false], sky: ['select.sky', false], notSubject: ['select.subject', true], notSky: ['select.sky', true] };
+const isArea = (step) => step?.command === 'photo.area';
+function runArea(ed, step, run) {
+  const area = AREAS[step.params?.area];
+  const steps = step.params?.steps;
+  if (!area) throw new Error('Choose the subject or the sky.');
+  if (!Array.isArray(steps) || !steps.length || steps.length > 12) throw new Error('Say what to change in that part of the photo.');
+  for (const s of steps) if (!s || typeof s.command !== 'string' || NOT_IN_REGION.test(s.command) || isArea(s)) throw new Error(`"${String(s?.command).slice(0, 60)}" can't be used on one part of the photo.`);
+  const selected = JSON.parse(ed.run(JSON.stringify([{ command: area[0] }]))).done?.[0]?.result;
+  try {
+    if (!selected?.selected) throw new Error(area[0] === 'select.sky' ? 'No sky was found in this photo.' : 'No clear subject was found in this photo.');
+    if (area[1]) ed.run(JSON.stringify([{ command: 'select.inverse' }]));
+    const feather = Number(step.params?.feather ?? 0);
+    if (feather > 0) ed.run(JSON.stringify([{ command: 'select.modify.feather', params: { radius: Math.min(250, feather) } }]));
+    for (const s of steps) run(ed, s);
+  } finally {
+    ed.run(JSON.stringify([{ command: 'select.deselect' }]));
+  }
+}
+const runStep = (ed, step) => (isArea(step) ? runArea(ed, step, runStep) : ed.run(JSON.stringify([step])));
 
 /** Applies one plan to `editor`, replacing the document when a cutout step makes a new one. */
 async function runPlan(plan, engineStep = runStep) {
-  if (engineStep === runStep && !plan.some(isCutout)) {
+  if (engineStep === runStep && !plan.some(isCutout) && !plan.some(isArea)) {
     editor.run(JSON.stringify(plan));
     return;
   }
@@ -154,7 +176,7 @@ function preview() {
 function scaleStep(step, k, doc) {
   if (k === 1 || !step.params) return step;
   // A part-of-the-photo step: scale the edits inside it (the mask is resolution-independent).
-  if (step.command === 'skydata.region' && Array.isArray(step.params.steps)) return { ...step, params: { ...step.params, steps: step.params.steps.map((s) => scaleStep(s, k, doc)) } };
+  if ((step.command === 'skydata.region' || isArea(step)) && Array.isArray(step.params.steps)) return { ...step, params: { ...step.params, ...(typeof step.params.feather === 'number' ? { feather: Math.round(step.params.feather * k * 100) / 100 } : {}), steps: step.params.steps.map((s) => scaleStep(s, k, doc)) } };
   if (isCutout(step)) return step;
   const params = structuredClone(step.params);
   const sizeCommand = SIZE_COMMANDS.has(step.command);
@@ -324,6 +346,7 @@ const handlers = {
 // Scaling a pixel setting up for the full-size render can pass the engine's limit ("must be a number in 0.1..1000"):
 // bring it back to the limit and run the step again.
 function runClamped(ed, step) {
+  if (isArea(step)) return runArea(ed, step, runClamped);
   try {
     ed.run(JSON.stringify([step]));
   } catch (e) {

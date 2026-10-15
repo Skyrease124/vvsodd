@@ -149,6 +149,48 @@ try {
   r = await ask('give it a cracked old canvas texture');
   check('an art effect the user asked for is kept', r.hasImage && r.text === 'Added a cracked texture.', r.text);
 
+  // 11. PhotoCraft tools added in engine build 2: edits limited to the sky or the subject, and render effects.
+  // test.jpg: blue sky in the top half, a red figure in the middle, green grass below.
+  const avg = (fx, fy, fw, fh) => page.evaluate(async ([fx, fy, fw, fh]) => {
+    const img = [...document.querySelectorAll('.editor-msg img')].pop();
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(img, 0, 0);
+    const d = g.getImageData(Math.round(fx * c.width), Math.round(fy * c.height), Math.round(fw * c.width), Math.round(fh * c.height)).data;
+    const s = [0, 0, 0];
+    for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) s[k] += d[i + k];
+    return s.map((v) => Math.round(v / (d.length / 4)));
+  }, [fx, fy, fw, fh]);
+  n = await count();
+  await page.setInputFiles('input[type=file]', path.join(images, 'test.jpg'));
+  await settle(n + 2);
+  const skyBefore = await avg(0.05, 0.05, 0.2, 0.2), figureBefore = await avg(0.45, 0.5, 0.1, 0.2), grassBefore = await avg(0.05, 0.8, 0.2, 0.15);
+  nextReply = '{"steps":[{"command":"photo.area","params":{"area":"sky","feather":4,"steps":[{"command":"image.adjustments.hueSaturation","params":{"hue":150}}]}}],"reply":"Turned the sky pink."}';
+  r = await ask('make the sky pink');
+  const skyAfter = await avg(0.05, 0.05, 0.2, 0.2), grassAfter = await avg(0.05, 0.8, 0.2, 0.15);
+  check('photo.area sky: only the sky changes', r.hasImage && r.text === 'Turned the sky pink.' && skyAfter[0] > skyBefore[0] + 60 && Math.abs(grassAfter[1] - grassBefore[1]) < 8, `sky ${skyBefore} → ${skyAfter}, grass ${grassBefore} → ${grassAfter} · ${r.text}`);
+  nextReply = '{"steps":[{"command":"photo.area","params":{"area":"notSubject","steps":[{"command":"image.adjustments.hueSaturation","params":{"saturation":-100}}]}}],"reply":"Kept colour only on the subject."}';
+  r = await ask('colour splash, keep only the person in colour');
+  const figureAfter = await avg(0.45, 0.5, 0.1, 0.2), grassGrey = await avg(0.05, 0.8, 0.2, 0.15);
+  const spread = (c) => Math.max(...c) - Math.min(...c);
+  check('photo.area notSubject: the subject keeps its colour, the rest turns grey', r.hasImage && spread(figureAfter) > spread(figureBefore) * 0.7 && spread(grassGrey) < 12, `figure ${figureBefore} → ${figureAfter}, grass → ${grassGrey}`);
+  const flareBefore = await avg(0.76, 0.11, 0.08, 0.08);
+  nextReply = '{"steps":[{"command":"filter.render.lensFlare","params":{"centerX":0.8,"centerY":0.15,"brightness":120}},{"command":"filter.render.relight","params":{"angle":-30,"intensity":30,"warmth":30}}],"reply":"Added a sun flare and warm side light."}';
+  r = await ask('add a sun flare in the top right and warm light');
+  const flare = await avg(0.76, 0.11, 0.08, 0.08);
+  check('render effects: lens flare and relight apply', r.hasImage && r.text === 'Added a sun flare and warm side light.' && flare.reduce((a, b) => a + b) > flareBefore.reduce((a, b) => a + b) + 20 && flare[0] - flare[2] > flareBefore[0] - flareBefore[2] + 15, `flare spot ${flareBefore} → ${flare} · ${r.text}`);
+  nextReply = '{"steps":[{"command":"filter.render.pictureFrame","params":{"frame":"roses"}}],"reply":"Added a frame."}';
+  r = await ask('make this look nicer for my profile');
+  check('a frame nobody asked for is left out', !r.hasImage && /art effect you didn't ask for/.test(r.text), r.text);
+  nextReply = '{"steps":[{"command":"photo.area","params":{"area":"sky","steps":[{"command":"image.crop","params":{"x":0,"y":0,"width":10,"height":10}}]}}],"reply":"Cropped."}';
+  r = await ask('crop the sky');
+  check('photo.area refuses size-changing steps', !r.hasImage && /can't be used on one part/.test(r.text), r.text);
+  const sys2 = aiCalls.at(-1)?.messages?.find((m) => m.role === 'system')?.content ?? '';
+  check('the AI is told about photo.area and the render effects', sys2.includes('photo.area |') && sys2.includes('filter.render.relight |') && sys2.includes('filter.render.lensFlare |'));
+
   // The download re-renders at full size (the 4032×3024 photo is edited on a 1600 px copy), scaling the blur radius past
   // the engine's 1000 limit; it is brought back to the limit.
   n = await count();
