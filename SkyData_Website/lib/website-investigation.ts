@@ -55,6 +55,12 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
  const row=await env.DB.prepare('SELECT * FROM engineering_browser_jobs WHERE id = ? AND owner = ?').bind(id,owner).first<Row>();if(!row)return json({error:'Not found.'},404);
  const key='engineering-browser/'+owner+'/'+id;
  const saved=await env.FILES.get(key+'/report.json');
+ // On Netlify a request is cut off after 30 seconds, but a report can take minutes: the report is written by the
+ // background function (BACKGROUND_URL) while the page polls. generating.json records when it started and why it failed.
+ const bg=env as SecretEnv&{BACKGROUND_URL?:string;BACKGROUND_SECRET?:string};
+ const inBackground=!!bg.BACKGROUND_SECRET&&request.headers.get('x-skydata-background')===bg.BACKGROUND_SECRET;
+ const marker=async()=>{const m=await env.FILES!.get(key+'/generating.json');return (m?await m.json().catch(()=>({})):{}) as {started?:number;error?:string};};
+ if(row.status==='generating'&&!inBackground&&!saved){const m=await marker();if(!m.started||Date.now()-m.started>16*60000){await env.DB.prepare("UPDATE engineering_browser_jobs SET status='complete' WHERE id=? AND owner=? AND status='generating'").bind(id,owner).run();row.status='complete';if(!m.error)await env.FILES.put(key+'/generating.json',JSON.stringify({...m,error:'Report generation stopped before it finished. Press Generate report again.'}));}}
  if(path[1]==='report'&&request.method==='GET')return saved?new Response(saved.body,{headers:{...headers,'Content-Type':'application/json'}}):json({error:'Report not generated.'},404);
  if(path[1]==='screenshot'&&request.method==='GET'){
   const index=new URL(request.url).searchParams.get('index');if(!/^\d{1,2}$/.test(index||''))return json({error:'Not found.'},404);const object=await env.FILES.get(key+'/screenshot-'+index+'.png');return object?new Response(object.body,{headers:{...headers,'Content-Type':'image/png','X-Content-Type-Options':'nosniff'}}):json({error:'Not found.'},404);
@@ -68,7 +74,18 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
    if(row.status==='cancelled')return json({error:'This investigation was cancelled.'},409);
    const data=hp?await hpBrowserData(env,owner,id):await service(env,'/jobs/'+id),e=data.result;
    if(data.id!==id||data.status!=='complete'||e?.browserExecuted!==true||e?.cleanupConfirmed!==true||e?.stagehandVersion!=='4.2.1'||!Array.isArray(e.pages)||!e.pages.length||row.engine==='rea'&&(!e.rea?.findings||e.rea?.workspaceUnchanged!==true||e.rea?.cleanupConfirmed!==true||e.rea?.rea?.version!=='6.5.0'||e.rea?.rea?.operation!=='analyze-javascript-application'||!Array.isArray(e.rea?.staged)||!Array.isArray(e.scripts)||!e.scripts.length||JSON.stringify(e.rea.staged.map((f:{path:string;sha256:string})=>({path:f.path,sha256:f.sha256})).sort((a:{path:string},b:{path:string})=>a.path.localeCompare(b.path)))!==JSON.stringify(e.scripts.map((f:{path:string;sha256:string})=>({path:f.path,sha256:f.sha256})).sort((a:{path:string},b:{path:string})=>a.path.localeCompare(b.path)))))return json({error:'Usable verified browser evidence is not ready.'},409);
-   const acquired=await env.DB.prepare("UPDATE engineering_browser_jobs SET status='generating' WHERE id=? AND owner=? AND status NOT IN ('generating','cancelled','report_ready')").bind(id,owner).run();if(!acquired.meta.changes)return json({error:'Report generation is already in progress.'},409);
+   if(inBackground){if(row.status!=='generating')return json({error:'Report generation was not started.'},409);}
+   else{
+    const acquired=await env.DB.prepare("UPDATE engineering_browser_jobs SET status='generating' WHERE id=? AND owner=? AND status NOT IN ('generating','cancelled','report_ready')").bind(id,owner).run();
+    if(!acquired.meta.changes)return bg.BACKGROUND_URL&&row.status==='generating'?json({id,status:'generating',phase:'Generating report'},202):json({error:'Report generation is already in progress.'},409);
+    if(bg.BACKGROUND_URL){
+     await env.FILES.put(key+'/generating.json',JSON.stringify({started:Date.now()}));
+     const forward=new Headers(request.headers);forward.set('x-skydata-background',bg.BACKGROUND_SECRET!);forward.set('content-type','application/json');forward.delete('content-length');
+     const started=await fetch(bg.BACKGROUND_URL+new URL(request.url).pathname,{method:'POST',headers:forward,body:'{}'}).catch(()=>null);
+     if(!started||started.status>=300){await env.DB.prepare("UPDATE engineering_browser_jobs SET status='complete' WHERE id=? AND owner=? AND status='generating'").bind(id,owner).run();return json({error:'Report generation could not start ('+(started?.status??'no answer')+'). Try again.'},502);}
+     return json({id,status:'generating',phase:'Generating report'},202);
+    }
+   }
    try{
     const screenshots=[];for(const [index,shot] of (e.screenshots||[]).slice(0,6).entries()){
      if(typeof shot.png!=='string'||shot.png.length>2000000)throw Error('Screenshot limit.');const bytes=Uint8Array.from(atob(shot.png),(c:string)=>c.charCodeAt(0));if(bytes.length<8||bytes[0]!==137||bytes[1]!==80||bytes[2]!==78||bytes[3]!==71)throw Error('Invalid screenshot.');await env.FILES.put(key+'/screenshot-'+index+'.png',bytes);screenshots.push({index,width:shot.width,overflow:shot.overflow,url:'/api/engineering-browser/'+id+'/screenshot?index='+index});
@@ -83,13 +100,14 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
     const response=await generate(req,undefined,row.model,fetch,env,{system,live:false,maxTokens:8192});if(!response.ok){const problem=await response.json().catch(()=>({})) as {error?:unknown};throw Error('Report model failed ('+response.status+'): '+(typeof problem.error==='string'?problem.error.slice(0,200):'no detail from the model service.'));}const result=await response.json() as {content?:string;model?:string};if(!result.content)throw Error('Empty report.');
     const report={id,url:row.url,goal:row.goal,engine:row.engine,date:row.created,content:result.content,actualModel:result.model||row.model,actualProvider:modelProvider(result.model||row.model),screenshots,evidence,provenance:hp?'Reported by your paired HP browser runner; not independently verified by the Sites Worker.':'Reported by the configured isolated backend; not independently verified by the Sites Worker.'};
     await env.FILES.put(key+'/report.json',JSON.stringify(report));await env.DB.prepare("UPDATE engineering_browser_jobs SET status='report_ready' WHERE id=? AND owner=?").bind(id,owner).run();return json(report);
-   }catch(e){await env.DB.prepare("UPDATE engineering_browser_jobs SET status='complete' WHERE id=? AND owner=? AND status='generating'").bind(id,owner).run();throw e;}
+   }catch(e){await env.DB.prepare("UPDATE engineering_browser_jobs SET status='complete' WHERE id=? AND owner=? AND status='generating'").bind(id,owner).run();if(inBackground)await env.FILES.put(key+'/generating.json',JSON.stringify({error:e instanceof Error?e.message.slice(0,300):'Report failed.'}));throw e;}
   }
   if(request.method!=='GET')return json({error:'Method not supported.'},405);
   if(saved)return json({id,status:'report_ready',phase:'Report saved'});
   if(row.status==='generating'||row.status==='cancelled')return json({id,status:row.status,phase:row.status==='generating'?'Generating report':'Cancelled'});
+  const failed=bg.BACKGROUND_URL?(await marker()).error:undefined;
   const data=hp?await hpBrowserData(env,owner,id):await service(env,'/jobs/'+id);if(!['queued','running','complete','failed','timeout','cancelled','infrastructure_error','declined','unavailable','invalid_result','output_limit'].includes(data.status))throw Error('Invalid backend status.');
   await env.DB.prepare('UPDATE engineering_browser_jobs SET status=? WHERE id=? AND owner=? AND status NOT IN (?,?,?)').bind(data.status,id,owner,'generating','report_ready','cancelled').run();
-  return json({id,status:data.status,phase:data.phase,error:data.error});
+  return json({id,status:data.status,phase:data.phase,error:data.error||(data.status==='complete'?failed:undefined)});
  }catch(e){return json({error:e instanceof Error?e.message:'Browser service unavailable.'},502);}
 }

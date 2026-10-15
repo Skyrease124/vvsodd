@@ -55,7 +55,7 @@ await build({
   format: 'esm',
   target: 'node22',
   external: ['pg-native'],
-  define: { __SETUP_CODE_HASH__: JSON.stringify(codeHash) },
+  define: { __SETUP_CODE_HASH__: JSON.stringify(codeHash), __BACKGROUND_SECRET__: JSON.stringify(randomBytes(32).toString('hex')) },
   banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
   legalComments: 'none',
   logLevel: 'warning',
@@ -65,6 +65,15 @@ await build({
 writeFileSync(
   path.join(out, 'netlify/functions/skydata/skydata.mjs'),
   "// Every request that isn't a static file goes to SkyData's server (server.mjs, built by netlify-adapter/build.mjs).\nexport { default } from './server.mjs';\n\nexport const config = {\n  path: '/*',\n  preferStatic: true,\n};\n",
+);
+
+// The same server as a background function (Netlify keeps it running up to 15 minutes) for long jobs such as
+// website investigation reports. It answers only requests carrying this build's secret (see entry.mjs).
+mkdirSync(path.join(out, 'netlify/functions/skydata-background'), { recursive: true });
+cpSync(path.join(out, 'netlify/functions/skydata/server.mjs'), path.join(out, 'netlify/functions/skydata-background/server.mjs'));
+writeFileSync(
+  path.join(out, 'netlify/functions/skydata-background/skydata-background.mjs'),
+  "// Background copy of SkyData's server for long jobs; reached only from the site itself with its build secret.\nexport { default } from './server.mjs';\n",
 );
 
 // 5. Database tables, applied by Netlify before each production deploy goes live.

@@ -53,7 +53,7 @@ export default {
           return incoming.headers.get('oai-authenticated-user-id')?waitingPage(incoming,config):loginPage(incoming,config);
         }
         request=access.request;
-        if(incomingPath==='/api/engineering-browser'||incomingPath.startsWith('/api/engineering-browser/')){if(!access.admin)return Response.json({error:'Engineering Mode is owner-only.'},{status:403});const limited=await enforceRequestLimit(request,config,'/api/engineering');if(limited)return limited;return handleWebsiteInvestigation(request,config);}
+        if(incomingPath==='/api/engineering-browser'||incomingPath.startsWith('/api/engineering-browser/')){if(!access.admin)return Response.json({error:'Engineering Mode is owner-only.'},{status:403});const background=!!(config as {BACKGROUND_SECRET?:string}).BACKGROUND_SECRET&&request.headers.get('x-skydata-background')===(config as {BACKGROUND_SECRET?:string}).BACKGROUND_SECRET;const limited=background?null:await enforceRequestLimit(request,config,'/api/engineering');if(limited)return limited;return handleWebsiteInvestigation(request,config);}
         if(incomingPath.startsWith('/api/engineering-runner/'))return handleRunnerOwner(request,config,incomingPath);
         if(incomingPath==='/engineering/runner'&&!access.admin)return accessPage('Owner access only','<p>Runner management is owner-only.</p>',403);
         if(incomingPath==='/engineering'||incomingPath==='/api/engineering'){

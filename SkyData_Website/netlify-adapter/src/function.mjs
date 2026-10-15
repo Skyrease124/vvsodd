@@ -5,7 +5,7 @@ import pg from 'pg';
 import { createHandler, siteEnv } from './entry.mjs';
 import { R2OnBlobs } from './r2.mjs';
 
-/* global Netlify, __SETUP_CODE_HASH__ */
+/* global Netlify, __SETUP_CODE_HASH__, __BACKGROUND_SECRET__ */
 function databasePool() {
   const pool = new pg.Pool({ connectionString: getConnectionString(), max: 5, idleTimeoutMillis: 10000 });
   // An idle connection closed by the database server must not crash the function; the pool reconnects.
@@ -19,6 +19,7 @@ const blobStore = (name) => getStore({ name, consistency: 'strong' });
 
 const handler = createHandler({
   setupCodeHash: __SETUP_CODE_HASH__,
+  backgroundSecret: __BACKGROUND_SECRET__,
   requestEnv: (env) => ({ ...env, FILES: new R2OnBlobs(blobStore('skydata-files'), blobStore('skydata-file-parts')) }),
   makeEnv: (origin) =>
     siteEnv({

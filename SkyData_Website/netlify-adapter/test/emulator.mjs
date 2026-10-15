@@ -51,6 +51,14 @@ export async function startEmulator(project, vars = {}) {
       }
       const request = new Request(url, { method: req.method, headers, body: ['GET', 'HEAD'].includes(req.method) ? undefined : body });
       const waits = [];
+      // Like Netlify's background functions: answer 202 at once and keep running (up to 15 minutes there).
+      if (url.pathname.startsWith('/.netlify/functions/skydata-background/')) {
+        res.writeHead(202);
+        res.end();
+        await fn(request, { ip: req.socket.remoteAddress, waitUntil: (p) => waits.push(p) }).then((r) => r.arrayBuffer()).catch((e) => console.error('background error', e));
+        await Promise.allSettled(waits);
+        return;
+      }
       const response = await fn(request, { ip: req.socket.remoteAddress, waitUntil: (p) => waits.push(p) });
       const out = {};
       response.headers.forEach((v, k) => {

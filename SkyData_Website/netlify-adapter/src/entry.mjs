@@ -12,6 +12,8 @@ import { protectedDownloads } from './downloads.mjs';
 // (which sets them internally after checking the password) is the only way in.
 const UNTRUSTED_HEADER = /^(oai-|cf-|x-forwarded-for$|x-real-ip$|true-client-ip$)/i;
 const ASSET_LOOP = 'x-skydata-asset-fetch';
+export const BACKGROUND_PREFIX = '/.netlify/functions/skydata-background';
+export const BACKGROUND_HEADER = 'x-skydata-background';
 
 function safeReturn(url) {
   const r = url.searchParams.get('return_to') || '/';
@@ -23,7 +25,14 @@ export function createHandler(deps) {
   const getEnv = (origin) => (envPromise ??= deps.makeEnv(origin));
 
   return async function handle(incoming, context = {}) {
-    const url = new URL(incoming.url);
+    let url = new URL(incoming.url);
+    // Long jobs (a website investigation report can take minutes) run in the background function, which Netlify keeps
+    // going for up to 15 minutes instead of 30 seconds. Only this function itself may start one: the request must
+    // carry this build's secret. The member's own cookie still decides who is signed in.
+    if (url.pathname.startsWith(BACKGROUND_PREFIX + '/')) {
+      if (!deps.backgroundSecret || incoming.headers.get(BACKGROUND_HEADER) !== deps.backgroundSecret) return new Response('Not found', { status: 404 });
+      url = new URL(url.pathname.slice(BACKGROUND_PREFIX.length) + url.search, url);
+    }
     // A static file the CDN did not have: never loop back into the site.
     if (incoming.headers.get(ASSET_LOOP)) return new Response('Not found', { status: 404 });
 
@@ -52,6 +61,7 @@ export function createHandler(deps) {
     // Netlify Blobs access is tied to the current invocation (its token expires), so file storage is opened per
     // request; the database pool and settings are reused across requests of a warm function.
     if (deps.requestEnv) env = deps.requestEnv(env);
+    if (deps.backgroundSecret) env = { ...env, BACKGROUND_URL: url.origin + BACKGROUND_PREFIX, BACKGROUND_SECRET: deps.backgroundSecret };
     if (url.pathname === OWNER_SETUP_PATH) return ownerSetup(request, env, deps.setupCodeHash);
 
     const ctx = {
