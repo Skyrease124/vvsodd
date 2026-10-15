@@ -28,7 +28,7 @@ import { handleVision } from '../lib/vision';
 import { handleVoice } from '../lib/voice';
 import { readKey, setupKey, type SecretEnv } from "../lib/secret-store";
 import { handleConnectionPage } from "../lib/connection-page";
-import { requestsPaidModel, isPaidModel, MODELS } from "../lib/models";
+import { requestsPaidModel, isPaidModel, isOwnerOnlyModel, MODELS } from "../lib/models";
 import { handleChat } from "../lib/nvidia";
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
@@ -88,7 +88,7 @@ export default {
         if(!access.admin&&['/decisions','/debate','/api/decisions','/api/debate','/api/debate-check','/api/debate-score'].includes(incomingPath.replace(/\/+$/, '')))return incomingPath.startsWith('/api/')?Response.json({error:'This feature is owner-only.',code:'owner_only'},{status:403,headers:{'Cache-Control':'no-store'}}):accessPage('Owner access only','<p>Decisions and Debate mode are available only to the SkyData owner.</p>',403);
         if(!access.admin&&incoming.method==='POST'&&['/api/chat','/api/debate','/api/vision'].includes(incomingPath)){
           let payload;try{payload=await incoming.clone().json();}catch{return Response.json({error:'Send valid JSON.'},{status:400});}
-          if(requestsPaidModel(payload))return Response.json({error:'Paid models are currently owner-only. Choose a free model.',code:'owner_only'},{status:403,headers:{'Cache-Control':'no-store'}});
+          if(requestsPaidModel(payload))return Response.json({error:'That model is owner-only. Choose another model.',code:'owner_only'},{status:403,headers:{'Cache-Control':'no-store'}});
         }
         if(incomingPath==='/api/auth/session')return Response.json({signedIn:true,isOwner:access.admin,email:access.member.email,allowance:await memberAllowance(config,access.member.user_id!,access.admin)},{headers:{'Cache-Control':'private, no-store'}});
         if(incomingPath==='/account')return accountPage(request,config,access);
@@ -132,7 +132,7 @@ export default {
         if (path === "/connect") return handleConnectionPage(request, config);
         if (path === "/api/setup") return setupKey(request, config);
         const key = await readKey(config);
-        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY")),isOwner:admin,geminiConfigured:false,decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available),visionConfigured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_VISION_API_KEY")),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&await pollyReady(config),nativeVoiceEnabled:false}, {headers:{"Cache-Control":"no-store"}});}
+        if (path === "/api/status") {const speech=await voiceSettings(config);return Response.json({configured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_GPT_OSS_API_KEY")),isOwner:admin,geminiConfigured:false,decisionsConfigured:admin&&Boolean(await readKey(config,"OPENAI_API_KEY")),debateScoringConfigured:admin&&Boolean(await readKey(config,"OPENROUTER_API_KEY")),deepseekConfigured:admin&&Boolean(await readKey(config,"DEEPSEEK_API_KEY")),models:MODELS.filter(m=>m.available&&(admin||!isOwnerOnlyModel(m.id))),visionConfigured:Boolean(key)||Boolean(await readKey(config,"NVIDIA_VISION_API_KEY")),webConfigured:Boolean(await readKey(config,"TAVILY_API_KEY")),voiceConfigured:speech.enabled&&await pollyReady(config),nativeVoiceEnabled:false}, {headers:{"Cache-Control":"no-store"}});}
         if(path==='/api/editor-plan')return run(()=>handleEditorPlan(request,key,config));
         if(path==='/api/decisions')return run(()=>handleDecisions(request,config));
         if(path==='/api/debate-score')return run(()=>handleDebateScore(request,config));

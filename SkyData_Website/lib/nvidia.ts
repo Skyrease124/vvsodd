@@ -15,7 +15,7 @@ import { providerFetch, retryableStatus } from './provider-retry';
 import { cleanResponse, DIRECT_ANSWER_STYLE } from './clean-response';
 import { isReplyLanguage, replyLanguageInstruction, questionInReplyLanguage } from './languages';
 import { readKey } from './secret-store';
-import { isDirectDeepseek, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, GPT_OSS_MODEL, LING_MODEL, OPENROUTER_ENDPOINT, modelSettings, DEFAULT_MODEL, isSupportedModel, isModelAvailable } from './models';
+import { isDirectDeepseek, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, GPT_OSS_MODEL, LING_MODEL, HERMES_MODEL, OPENROUTER_ENDPOINT, modelSettings, DEFAULT_MODEL, isSupportedModel, isModelAvailable } from './models';
 export async function handleChat(request: Request, key?: string, model: string = DEFAULT_MODEL, upstream: typeof fetch = fetch, env:SecretEnv = {}, debate?:{system:string;live?:boolean;maxTokens?:number;timeoutMs?:number}, _legacyGemini=false) {
   const origin = request.headers.get('origin');
   if (origin && origin !== new URL(request.url).origin) return Response.json({error:'Request origin is not allowed.'},{status:403});
@@ -45,14 +45,14 @@ export async function handleChat(request: Request, key?: string, model: string =
   if(gemini)upstream=geminiUpstream(env,upstream);
   else if(!key)key=await readKey(env);
   const directDeepseek=isDirectDeepseek(selectedModel);
-  const provider=gemini?'Google Gemini':directDeepseek?"DeepSeek":selectedModel===LING_MODEL?"OpenRouter":"NVIDIA";
-  const ling=selectedModel===LING_MODEL;
+  const ling=selectedModel===LING_MODEL||selectedModel===HERMES_MODEL;
+  const provider=gemini?'Google Gemini':directDeepseek?"DeepSeek":ling?"OpenRouter":"NVIDIA";
   if(!gemini&&directDeepseek)key=await readKey(env,"DEEPSEEK_API_KEY");
   if(!gemini&&ling)key=await readKey(env,'OPENROUTER_API_KEY');
   if(!gemini&&selectedModel===GPT_OSS_MODEL)key=await readKey(env,'NVIDIA_GPT_OSS_API_KEY')||key;
   if(!gemini&&(selectedModel as string)===DEEPSEEK_MODEL)key=await readKey(env,'NVIDIA_DEEPSEEK_API_KEY')||key;
   if(gemini&&payload.aiRouting!==true)key=await readKey(env,'GEMINI_API_KEY');
-  if (!key && payload.aiRouting!==true) return Response.json({error:gemini?'SkyData is not connected yet.':directDeepseek?'Open Connect DeepSeek in the plus menu and add your DeepSeek key.':ling?'Open Connect OpenRouter in the plus menu and add your key for Ling.':'SkyData needs its NVIDIA API key before it can reply.',code:'setup_required'},{status:503});
+  if (!key && payload.aiRouting!==true) return Response.json({error:gemini?'SkyData is not connected yet.':directDeepseek?'Open Connect DeepSeek in the plus menu and add your DeepSeek key.':ling?'Open Connect OpenRouter in the plus menu and add your OpenRouter key.':'SkyData needs its NVIDIA API key before it can reply.',code:'setup_required'},{status:503});
   try {
     const cryptoContext=await cryptoConnectionContext(env);
     const project=await projectContext(messages,request.headers.get('oai-authenticated-user-id'),env);
