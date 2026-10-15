@@ -48,6 +48,8 @@ cd netlify-adapter && node test/d1.test.mjs                          # adapter u
 cd .. && node netlify-adapter/test/run-repo-tests.mjs                # SkyData's own Worker tests: Cloudflare vs Netlify storage
 node netlify-adapter/test/run.mjs <deploy-folder> <code-file> <out>  # browser end-to-end on a local Netlify stand-in
 node netlify-adapter/test/invites.e2e.mjs <deploy-folder> <code-file> # invite links, resets, expiry, revoke
+node netlify-adapter/test/engineering.e2e.mjs <deploy-folder> <code-file>      # Engineering/Superpowers: every workflow, each model (AI stand-in)
+node netlify-adapter/test/runner.e2e.mjs <deploy-folder> <code-file> public/SkyData_HP_Runner_v2_5_0.zip  # HP runner from the ZIP + real Docker + REA 6.5.0
 ```
 
 ## Known differences on Netlify
