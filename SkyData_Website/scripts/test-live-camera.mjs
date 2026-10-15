@@ -22,8 +22,8 @@ let upstreamBody;
 // Reload with dependency adapters; no credentials or live provider calls.
 const vision=await load('lib/vision.ts',code=>`const {validCameraFrames}=globalThis.cameraHelpers;const {cleanCameraReply}=globalThis.cameraReply;
 const validProject=()=>true, projectContext=async()=>'',validDocument=()=>true,documentContext=()=>'';
-const isDirectDeepseek=()=>false,DEEPSEEK_MODEL='deepseek',DEEPSEEK_ENDPOINT='',modelSettings=()=>({});
-const retryableStatus=()=>false,readKey=async()=>'test-only',saveKey=async()=>{};
+const isDirectDeepseek=()=>false,DEEPSEEK_MODEL='deepseek',SUPER_VL_MODEL='nvidia/nemotron-3.5-super-vl-120b-a12b',DEEPSEEK_ENDPOINT='',modelSettings=()=>({});
+const naturalWritingInstructions=()=>'';const retryableStatus=()=>false,readKey=async()=>'test-only',saveKey=async()=>{};
 const getLiveInfo=async()=>({context:'',sources:[]}),cleanResponse=x=>x,DIRECT_ANSWER_STYLE='';
 const isReplyLanguage=()=>true,replyLanguageInstruction=()=>'',questionInReplyLanguage=x=>x;
 const providerFetch=(url,options,upstream)=>upstream(url,options),streamReply=()=>{};
@@ -31,11 +31,12 @@ const providerFetch=(url,options,upstream)=>upstream(url,options),streamReply=()
 const req=frames=>new Request('https://skydata.test/api/vision',{method:'POST',headers:{Origin:'https://skydata.test','Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:'What moved?',cameraFrames:frames}]})});
 const upstream=async(url,options)=>{upstreamBody=JSON.parse(options.body);return Response.json({choices:[{message:{content:'Test response'}}]});};
 assert.equal((await vision.handleVision(req(recent),{},upstream)).status,200);
-assert.equal(upstreamBody.messages[1].content.filter(part=>part.type==='image_url').length,4);
+assert.equal(upstreamBody.messages[1].content.filter(part=>part.type==='image_url').length,4);assert.equal(upstreamBody.model,'nvidia/nemotron-3.5-super-vl-120b-a12b','photos and camera frames go to Super VL');assert.equal(upstreamBody.reasoning_budget,undefined);
+{const audio=new Request('https://skydata.test/api/vision',{method:'POST',headers:{Origin:'https://skydata.test','Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:'What is said?',media:{kind:'audio',name:'a.mp3',data:'data:audio/mpeg;base64,YQ=='}}]})});assert.equal((await vision.handleVision(audio,{},upstream)).status,200);assert.equal(upstreamBody.model,'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning','recordings still go to Nano Omni');}
 assert(upstreamBody.messages[0].content.includes('never claim continuous monitoring'));
 assert.equal((await vision.handleVision(req(Array(5).fill({image,ageMs:0})),{},upstream)).status,400);
 const repeated='The black drink can is on the wooden table near the keyboard.';
 const spokenRequest=new Request('https://skydata.test/api/vision',{method:'POST',headers:{Origin:'https://skydata.test','Content-Type':'application/json'},body:JSON.stringify({voiceChat:true,messages:[...Array.from({length:12},(_,i)=>({role:i%2?'assistant':'user',content:'Old turn '+i})),{role:'user',content:'What about this?',cameraFrames:recent}]})});
 const spokenResponse=await vision.handleVision(spokenRequest,{},async(url,options)=>{upstreamBody=JSON.parse(options.body);return Response.json({choices:[{message:{content:repeated+'\n\n'+repeated}}]});});
 assert.equal((await spokenResponse.json()).content,repeated);assert.equal(upstreamBody.max_tokens,512);assert.equal(upstreamBody.messages.length,10);assert.equal(upstreamBody.messages.at(-1).content.filter(part=>part.type==='image_url').length,4);
-console.log('PASS: bounded chronological frames, stale/invalid rejection, camera switch without audio capture, track/timer cleanup, actual vision request validation and four-frame upstream conversion. Browser/camera and NVIDIA calls mocked; no live device test.');
+console.log('PASS: bounded chronological frames, stale/invalid rejection, camera switch without audio capture, track/timer cleanup, actual vision request validation and four-frame upstream conversion; photos/camera frames use Nemotron 3.5 Super VL, recordings use Nano Omni. Browser/camera and NVIDIA calls mocked; no live device test.');
