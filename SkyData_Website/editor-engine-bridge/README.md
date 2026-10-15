@@ -7,6 +7,7 @@ build 2's additions to `ALLOWED` in `src/lib.rs`:
 - `select.subject`, `select.sky` and `select.modify.feather/expand/contract/smooth` (the Editor's `photo.area` step);
 - the `filter.render.*` filters (clouds, lens flare, lighting effects, relight, picture frame, …);
 - `type.create`, `type.edit`, `layer.layerStyle.dropShadow/stroke/outerGlow` and `layer.flattenImage` (the Editor's `photo.text` step).
+- `paint.gradient`, `shape.create`, `shape.presets.place/list` (built-in shapes only), `paint.bucket` and `select.colorRange` (`photo.gradient`, `photo.shape`, `photo.fill` and colour areas).
 
 Build (Rust with the `wasm32-unknown-unknown` target and `wasm-bindgen-cli` 0.2.129):
 

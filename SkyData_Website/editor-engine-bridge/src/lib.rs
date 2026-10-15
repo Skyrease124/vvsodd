@@ -32,7 +32,9 @@ pub fn allowed(id: &str) -> bool {
     // Render filters (clouds, lens flare, lighting effects, relight, …) only draw into the image; "render" stays blocked elsewhere.
     let parts: Vec<&str> = lower.split('.').collect();
     let blocked = parts.iter().enumerate().any(|(i, part)| BLOCKED_PARTS.iter().any(|b| part.starts_with(b) && !(i == 1 && *b == "render" && parts[0] == "filter")));
-    ALLOWED.iter().any(matches) && !DENIED.contains(&id) && !blocked
+    // Built-in custom shapes are read-only presets; every other preset command (import, save, edit) stays blocked.
+    let shape_preset = matches!(id, "shape.presets.place" | "shape.presets.list");
+    ALLOWED.iter().any(matches) && !DENIED.contains(&id) && (!blocked || shape_preset)
 }
 
 fn params_ok(params: &Value) -> Result<(), String> {
