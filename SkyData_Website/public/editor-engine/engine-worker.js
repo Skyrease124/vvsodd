@@ -68,11 +68,46 @@ function runArea(ed, step, run) {
     ed.run(JSON.stringify([{ command: 'select.deselect' }]));
   }
 }
-const runStep = (ed, step) => (isArea(step) ? runArea(ed, step, runStep) : ed.run(JSON.stringify([step])));
+// A text step (photo.text) adds a caption or title with PhotoCraft's type tool, then flattens the photo again so later
+// edits apply to everything. Sizes are relative to the photo, so the full-size download matches the preview.
+const isText = (step) => step?.command === 'photo.text';
+const TEXT_SIZES = { small: 0.04, medium: 0.065, large: 0.1, huge: 0.15 };
+const TEXT_FONTS = { sans: ['Inter', 'Regular'], bold: ['Inter', 'Semi Bold'], mono: ['JetBrains Mono', 'Regular'] };
+const TEXT_PLACES = ['top', 'center', 'bottom', 'topLeft', 'topRight', 'bottomLeft', 'bottomRight'];
+function runText(ed) {
+  return (step) => {
+    const p = step.params ?? {};
+    const text = typeof p.text === 'string' ? p.text.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim().slice(0, 200) : '';
+    if (!text) throw new Error('Say what the text should be.');
+    const place = TEXT_PLACES.includes(p.position) ? p.position : 'bottom';
+    const [font, fontStyle] = TEXT_FONTS[p.font] ?? TEXT_FONTS.bold;
+    const color = /^#[0-9a-f]{6}$/i.test(String(p.color ?? '')) ? p.color : '#ffffff';
+    const { width, height } = info(ed);
+    const short = Math.min(width, height);
+    const size = Math.max(8, Math.round(short * (TEXT_SIZES[p.size] ?? TEXT_SIZES.medium)));
+    const margin = Math.round(short * 0.05);
+    const align = /Left$/.test(place) ? 'left' : /Right$/.test(place) ? 'right' : 'center';
+    const made = JSON.parse(ed.run(JSON.stringify([{ command: 'type.create', params: { box: [margin, margin, width - 2 * margin, height - 2 * margin], text, font, fontStyle, size, color, align } }]))).done?.[0]?.result;
+    const b = made?.bounds;
+    if (Array.isArray(b) && b.length === 4) {
+      // The box starts at the top; move the laid-out text to the chosen place.
+      const top = /^top/.test(place) ? margin : place === 'center' ? Math.round((height - b[3]) / 2) : height - margin - b[3];
+      if (top !== b[1]) ed.run(JSON.stringify([{ command: 'type.edit', params: { move: [0, top - b[1]] } }]));
+    }
+    const light = parseInt(color.slice(1, 3), 16) + parseInt(color.slice(3, 5), 16) + parseInt(color.slice(5, 7), 16) > 384;
+    const edge = light ? '#000000' : '#ffffff';
+    const style = ['plain', 'outline', 'shadow', 'glow'].includes(p.style) ? p.style : 'shadow';
+    if (style === 'outline') ed.run(JSON.stringify([{ command: 'layer.layerStyle.stroke', params: { size: Math.max(1, Math.round(size * 0.06)), color: edge, position: 'outside' } }]));
+    if (style === 'shadow') ed.run(JSON.stringify([{ command: 'layer.layerStyle.dropShadow', params: { color: '#000000', opacity: 65, distance: Math.max(1, Math.round(size * 0.06)), size: Math.max(2, Math.round(size * 0.14)) } }]));
+    if (style === 'glow') ed.run(JSON.stringify([{ command: 'layer.layerStyle.outerGlow', params: { color: edge, opacity: 80, size: Math.max(2, Math.round(size * 0.3)) } }]));
+    ed.run(JSON.stringify([{ command: 'layer.flattenImage' }]));
+  };
+}
+const runStep = (ed, step) => (isArea(step) ? runArea(ed, step, runStep) : isText(step) ? runText(ed)(step) : ed.run(JSON.stringify([step])));
 
 /** Applies one plan to `editor`, replacing the document when a cutout step makes a new one. */
 async function runPlan(plan, engineStep = runStep) {
-  if (engineStep === runStep && !plan.some(isCutout) && !plan.some(isArea)) {
+  if (engineStep === runStep && !plan.some(isCutout) && !plan.some(isArea) && !plan.some(isText)) {
     editor.run(JSON.stringify(plan));
     return;
   }
@@ -347,6 +382,7 @@ const handlers = {
 // bring it back to the limit and run the step again.
 function runClamped(ed, step) {
   if (isArea(step)) return runArea(ed, step, runClamped);
+  if (isText(step)) return runText(ed)(step);
   try {
     ed.run(JSON.stringify([step]));
   } catch (e) {

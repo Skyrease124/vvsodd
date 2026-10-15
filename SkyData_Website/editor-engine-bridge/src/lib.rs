@@ -16,7 +16,9 @@ const HISTORY_STATES: u32 = 1;
 /// Everything that touches files, scripts, actions, plug-ins, preferences, other documents or the UI is excluded.
 const ALLOWED: &[&str] = &["image.adjustments.", "image.imageRotation.", "image.rotation.arbitrary", "image.crop", "image.imageSize", "image.canvasSize", "image.trim", "image.autoTone", "image.autoContrast", "image.autoColor", "image.mode.grayscale", "image.mode.rgb", "filter.", "edit.undo", "edit.redo", "select.all", "select.deselect", "select.inverse",
     // Smart selections (classical, on-device), so an edit can be limited to the subject or the sky, and their refinements.
-    "select.subject", "select.sky", "select.modify.feather", "select.modify.expand", "select.modify.contract", "select.modify.smooth"];
+    "select.subject", "select.sky", "select.modify.feather", "select.modify.expand", "select.modify.contract", "select.modify.smooth",
+    // Text on a photo (the Editor's photo.text step): a type layer, its outline/shadow/glow, then one flat layer again.
+    "type.create", "type.edit", "layer.layerStyle.dropShadow", "layer.layerStyle.stroke", "layer.layerStyle.outerGlow", "layer.flattenImage"];
 const DENIED: &[&str] = &["image.adjustments.matchColor", "image.adjustments.colorLookup.list"];
 const BLOCKED_PARTS: &[&str] = &["file", "script", "plugin", "actions", "automate", "preset", "pref", "batch", "droplet", "export", "import", "place", "link", "render", "video", "3d", "share", "neural"];
 /// Parameter keys that would name a file, path, URL or another document: refused in any step.
