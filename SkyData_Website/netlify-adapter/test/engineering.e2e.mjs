@@ -67,7 +67,7 @@ try {
     { id: 'performance', skill: 'systematic-debugging' },
   ];
   const status = await (await page.request.get('/api/status')).json();
-  const models = (status.models ?? []).map((m) => m.id).filter((id) => !id.startsWith("gemini") && id !== "nvidia/nemotron-3.5-super-vl-120b-a12b" && id !== "stepfun-ai/step-5-preview" && id !== "nousresearch/hermes-3-llama-3.1-405b:free");
+  const models = (status.models ?? []).map((m) => m.id).filter((id) => !id.startsWith("gemini") && id !== "nvidia/nemotron-3.5-super-vl-120b-a12b" && id !== "stepfun-ai/step-5-preview");
   const gemini = await page.request.post('/api/engineering', { headers: { origin: base }, data: { mode: 'research', workflow: 'planning', model: 'gemini-3.8-flash', messages: [{ role: 'user', content: 'Hi' }] } });
   check('Gemini is refused in Engineering', gemini.status() === 400, String(gemini.status()));
   check('Engineering has the three NVIDIA models', models.length === 3, models.join(', '));

@@ -15,7 +15,7 @@ import { providerFetch, retryableStatus } from './provider-retry';
 import { cleanResponse, DIRECT_ANSWER_STYLE } from './clean-response';
 import { isReplyLanguage, replyLanguageInstruction, questionInReplyLanguage } from './languages';
 import { readKey } from './secret-store';
-import { isDirectDeepseek, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, GPT_OSS_MODEL, LING_MODEL, HERMES_MODEL, OPENROUTER_ENDPOINT, modelSettings, DEFAULT_MODEL, isSupportedModel, isModelAvailable } from './models';
+import { isDirectDeepseek, DEEPSEEK_ENDPOINT, DEEPSEEK_MODEL, GPT_OSS_MODEL, LING_MODEL, OWNER_ONLY_MODELS, OPENROUTER_ENDPOINT, modelSettings, DEFAULT_MODEL, isSupportedModel, isModelAvailable } from './models';
 export async function handleChat(request: Request, key?: string, model: string = DEFAULT_MODEL, upstream: typeof fetch = fetch, env:SecretEnv = {}, debate?:{system:string;live?:boolean;maxTokens?:number;timeoutMs?:number}, _legacyGemini=false) {
   const origin = request.headers.get('origin');
   if (origin && origin !== new URL(request.url).origin) return Response.json({error:'Request origin is not allowed.'},{status:403});
@@ -45,7 +45,7 @@ export async function handleChat(request: Request, key?: string, model: string =
   if(gemini)upstream=geminiUpstream(env,upstream);
   else if(!key)key=await readKey(env);
   const directDeepseek=isDirectDeepseek(selectedModel);
-  const ling=selectedModel===LING_MODEL||selectedModel===HERMES_MODEL;
+  const ling=selectedModel===LING_MODEL||OWNER_ONLY_MODELS.has(selectedModel);
   const provider=gemini?'Google Gemini':directDeepseek?"DeepSeek":ling?"OpenRouter":"NVIDIA";
   if(!gemini&&directDeepseek)key=await readKey(env,"DEEPSEEK_API_KEY");
   if(!gemini&&ling)key=await readKey(env,'OPENROUTER_API_KEY');
