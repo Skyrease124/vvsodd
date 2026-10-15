@@ -2,7 +2,7 @@ import {isSiteAdmin} from './site-admin';
 import type {SecretEnv} from './secret-store';
 import {handleChat} from './nvidia';
 import {modelProvider} from './models';
-import {isModelAvailable} from './models';
+import {GEMINI_TEXT_MODEL,isModelAvailable} from './models';
 import {validProject} from './projects';
 import {loadSelectedFiles,type WorkspaceProject} from './project-workspace';
 import {loadReaRun,compactFindings,reaInstructions,reaRunUsable} from './rea-explain';
@@ -41,6 +41,7 @@ export async function handleEngineering(request:Request,env:SecretEnv,generate:t
  if(body?.naturalWriting!==undefined&&typeof body.naturalWriting!=='boolean')return Response.json({error:'Choose a valid writing setting.'},{status:400,headers});
  if(!body||typeof body!=='object'||Array.isArray(body)||Object.keys(body).some(k=>!allowed.has(k))||!['research','development'].includes(body.mode)||!['superpowers','rea',undefined].includes(body.investigation)||(rea?body.workflow!==undefined||body.mode!=='research'||typeof body.reaRunId!=='string'||!/^[a-f0-9-]{36}$/.test(body.reaRunId):!ENGINEERING_WORKFLOWS.some(w=>w.id===body.workflow)||body.reaRunId!==undefined)||!isModelAvailable(body.model)||body.mode==='development'&&(body.approved!==true||body.action!=='propose')||body.mode==='research'&&body.action!==undefined&&body.action!=='investigate'||!Array.isArray(body.messages)||body.messages.length<1||body.messages.length>12||body.messages.at(-1)?.role!=='user'||body.messages.some((m:any)=>!m||!['user','assistant'].includes(m.role)||typeof m.content!=='string'||!m.content.trim()||m.content.length>(m.role==='user'?8000:12000)||Object.keys(m).some(k=>!['role','content','project'].includes(k))||m.project!==undefined&&(m.role!=='user'||!validProject(m.project))))return Response.json({error:'Invalid engineering task or missing proposal authorization.'},{status:400,headers});
  const taskId=crypto.randomUUID();
+ if(body.model===GEMINI_TEXT_MODEL)return Response.json({error:'Engineering uses Nemotron 3 Ultra, Nemotron 3.5 Lightning or GPT-OSS 20B, not Gemini.'},{status:400,headers});
  // Audit metadata only. Never log source, prompts, responses, project IDs or credentials.
  console.info('SkyData engineering task',{taskId,mode:body.mode,workflow:body.workflow,selectedModel:body.model,status:'started'});
  try{

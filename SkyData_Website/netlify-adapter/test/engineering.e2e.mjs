@@ -57,7 +57,7 @@ try {
   await Promise.all([page.waitForURL('**/owner'), page.click('form[action="/login"] button')]);
 
   // Every workflow through the API, rotating through the selectable models. Engineering allows 12 requests per minute,
-  // so the test stays under that (7 requests in total).
+  // so the test stays under that (8 requests in total).
   const { ENGINEERING_WORKFLOWS } = await import(path.resolve('lib/engineering-contract.ts')).catch(() => ({ ENGINEERING_WORKFLOWS: null }));
   const workflows = ENGINEERING_WORKFLOWS ?? [
     { id: 'planning', skill: 'writing-plans' },
@@ -67,8 +67,10 @@ try {
     { id: 'performance', skill: 'systematic-debugging' },
   ];
   const status = await (await page.request.get('/api/status')).json();
-  const models = (status.models ?? []).map((m) => m.id);
-  check('the site lists models for Engineering', models.length > 0, models.join(', '));
+  const models = (status.models ?? []).map((m) => m.id).filter((id) => !id.startsWith('gemini'));
+  const gemini = await page.request.post('/api/engineering', { headers: { origin: base }, data: { mode: 'research', workflow: 'planning', model: 'gemini-3.8-flash', messages: [{ role: 'user', content: 'Hi' }] } });
+  check('Gemini is refused in Engineering', gemini.status() === 400, String(gemini.status()));
+  check('Engineering has the three NVIDIA models', models.length === 3, models.join(', '));
   const rounds = Math.max(workflows.length, models.length);
   for (let i = 0; i < rounds; i++) {
     {

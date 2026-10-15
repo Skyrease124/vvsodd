@@ -23,5 +23,7 @@ export function requestsPaidModel(payload:unknown){
 }
 
 export const VISIBLE_MODELS = MODELS.filter(model => model.available);
+// Engineering (Superpowers, REA explanations, website investigations) uses the NVIDIA-hosted models only, never Gemini.
+export const ENGINEERING_MODELS = VISIBLE_MODELS.filter(model => model.id !== GEMINI_TEXT_MODEL);
 
 export function modelProvider(model:string){return model===GEMINI_TEXT_MODEL?'Google Gemini':isDirectDeepseek(model)?'DeepSeek':model===LING_MODEL?'OpenRouter':'NVIDIA';}

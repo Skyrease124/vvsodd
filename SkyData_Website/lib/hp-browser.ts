@@ -1,7 +1,7 @@
 import {GoogleGenAI} from '@google/genai';
 import {readKey,type SecretEnv} from './secret-store';
 import {geminiReady} from './gemini-live';
-import {GEMINI_TEXT_MODEL,MODELS} from './models';
+import {DEFAULT_MODEL,GEMINI_TEXT_MODEL,MODELS} from './models';
 import {handleChat} from './nvidia';
 export const BROWSER_PREFIX='SKYDATA_BROWSER_V1\n',BROWSER_VERSION='4.2.1',BROWSER_ADAPTER='2';
 const sha=async(text:string)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text))),b=>b.toString(16).padStart(2,'0')).join('');
@@ -15,8 +15,9 @@ export async function hpBrowserHealth(env:SecretEnv,owner:string){
  if(!env.DB)return {available:false,reason:'Runner storage unavailable.'};await browserSchema(env.DB);
  const row=await env.DB.prepare('SELECT b.*,d.last_seen,d.expires,d.ready FROM engineering_runner_browser b JOIN engineering_runner_device d ON b.owner=d.owner WHERE b.owner=?').bind(owner).first<{available:number;rea:number;detail:string;updated:number;last_seen:number;expires:number;ready:number}>();
  const online=!!row&&row.last_seen>Date.now()-30000&&row.expires>Date.now()&&row.ready>=2;
- const modelReady=await geminiReady(env);
- return {available:!!row&&online&&row.available===1&&modelReady,transport:'hp',engines:row?.rea===1?['superpowers','rea']:['superpowers'],reason:!online?'Start the updated HP runner v2.4. Your HP must stay on during website investigations.':row?.available!==1?row?.detail||'Run Prepare_Browser and Browser_Self_Test on the HP first.':!modelReady?'Connect Gemini with your existing billing-disabled project for browser navigation. Report models remain selectable.':'HP browser ready (self-test reported by your paired runner).'};
+ // Browser navigation uses the selected NVIDIA-hosted model (never Gemini), so it needs the NVIDIA connection.
+ const modelReady=Boolean(await readKey(env))||Boolean(await readKey(env,'NVIDIA_GPT_OSS_API_KEY'));
+ return {available:!!row&&online&&row.available===1&&modelReady,transport:'hp',engines:row?.rea===1?['superpowers','rea']:['superpowers'],reason:!online?'Start the updated HP runner v2.4. Your HP must stay on during website investigations.':row?.available!==1?row?.detail||'Run Prepare_Browser and Browser_Self_Test on the HP first.':!modelReady?'Connect NVIDIA (Connect in the plus menu) for browser navigation with your selected model.':'HP browser ready (self-test reported by your paired runner).'};
 }
 export async function queueHpBrowser(env:SecretEnv,owner:string,id:string,input:{url:string;goal:string;engine:string}){
  const db=env.DB!;await browserSchema(db);const now=Date.now(),token=random();const publicRequest={url:input.url,goal:input.goal,engine:input.engine};
@@ -85,7 +86,8 @@ export async function browserModel(req:Request,env:SecretEnv){
   if(!/^[a-f0-9-]{36}$/.test(b.id||'')||!p||p.responseFormat?.type!=='json_schema'||!p.responseFormat.schema||!Array.isArray(p.messages)||p.messages.length<1||p.messages.length>12||p.messages.some((m:{role?:string;content?:unknown})=>!['user','assistant'].includes(m?.role||''))||JSON.stringify(p.responseFormat.schema).length>16000)return json({error:'Invalid bounded Stagehand model request.'},400);
   const permission=await env.DB.prepare("UPDATE engineering_browser_relay SET calls=calls+1 WHERE id=? AND token_hash=? AND expires>? AND calls<3 AND EXISTS(SELECT 1 FROM engineering_runner_job j WHERE j.id=engineering_browser_relay.id AND j.owner=engineering_browser_relay.owner AND j.status='running' AND j.expires>?) AND EXISTS(SELECT 1 FROM engineering_runner_history h WHERE h.id=engineering_browser_relay.id AND h.status='awaiting_local_approval' AND h.phase IN ('browser_launching','browser_connecting','browser_inspecting','browser_functionality','browser_collecting','browser_technologies')) RETURNING owner").bind(b.id,await sha(token),Date.now(),Date.now()).first<{owner:string}>();
   if(!permission)return json({error:'Browser relay expired, cancelled or its three-call budget is exhausted.'},403);
-  const selected=(await env.DB.prepare('SELECT model FROM engineering_browser_jobs WHERE id=? AND owner=?').bind(b.id,permission.owner).first<{model:string}>())?.model||GEMINI_TEXT_MODEL;
+  const selected=(await env.DB.prepare('SELECT model FROM engineering_browser_jobs WHERE id=? AND owner=?').bind(b.id,permission.owner).first<{model:string}>())?.model||DEFAULT_MODEL;
+  if(selected===GEMINI_TEXT_MODEL)return json({error:'Website investigations no longer use Gemini. Start a new investigation with an NVIDIA model.'},400);
   if(selected!==GEMINI_TEXT_MODEL){
    const value=await selectedModelNavigation(req,env,selected,p);
    return json({role:'assistant',outputFormat:'json_schema',structuredContent:value,content:[{type:'text',text:JSON.stringify(value)}],usage:{inputTokens:0,outputTokens:0,totalTokens:0}});

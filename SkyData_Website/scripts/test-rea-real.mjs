@@ -11,8 +11,8 @@ import {createHash} from 'node:crypto';
 try{execFileSync('docker',['image','inspect',REA_IMAGE],{stdio:'ignore',timeout:20000});}catch{console.log('SKIP real REA test: Docker or the '+REA_IMAGE+' image is not available here. Nothing was verified.');process.exit(0);}
 const dir=fs.readdirSync('node_modules/.pnpm').find(n=>n.startsWith('miniflare@'));const {Miniflare}=await import('../node_modules/.pnpm/'+dir+'/node_modules/miniflare/dist/src/index.js');const root=process.cwd()+'/dist/server/';
 let prompts=[];
-const mf=new Miniflare({modules:[{type:'ESModule',path:root+'index.js'},...fs.readdirSync(root,{recursive:true}).filter(p=>p.endsWith('.js')&&p!=='index.js').map(p=>({type:'ESModule',path:root+p}))],compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['FILES'],bindings:{GEMINI_API_KEY:'synthetic-key',GEMINI_FREE_TIER_CONFIRMED:'true'},
- outboundService:async req=>{prompts.push(JSON.stringify(await req.json()));return Response.json({candidates:[{content:{role:'model',parts:[{text:'REA reported: GET /health at src/server.js:7. Interpretation: model advice. Tests NOT_RUN.'}]},finishReason:'STOP'}]});}});
+const mf=new Miniflare({modules:[{type:'ESModule',path:root+'index.js'},...fs.readdirSync(root,{recursive:true}).filter(p=>p.endsWith('.js')&&p!=='index.js').map(p=>({type:'ESModule',path:root+p}))],compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['FILES'],bindings:{NVIDIA_API_KEY:'synthetic-nvidia'},
+ outboundService:async req=>{prompts.push(JSON.stringify(await req.json()));return Response.json({choices:[{message:{role:'assistant',content:'REA reported: GET /health at src/server.js:7. Interpretation: model advice. Tests NOT_RUN.'},finish_reason:'stop'}]});}});
 const tmp=fs.mkdtempSync(os.tmpdir()+'/skydata-rea-');
 try{
  const db=await mf.getD1Database('DB');for(const p of fs.readdirSync('drizzle').filter(p=>p.endsWith('.sql')).sort())for(const part of fs.readFileSync('drizzle/'+p,'utf8').split('--> statement-breakpoint').join('\n').split(';').map(s=>s.trim()).filter(Boolean))await db.prepare(part).run();
@@ -91,12 +91,12 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  assert.ok(f.storage.items.some(s=>s.name==='theme'&&s.evidence.location.path==='public/app.mjs'));assert.ok(f.limitations.some(l=>/never executed|inert/.test(l)));
  assert.ok(a.diagnostics.phases.some(p=>p.phase==='docker_check'&&p.ok)&&a.diagnostics.phases.some(p=>p.phase==='container_run'&&p.ok));
  // Existing model explains the stored findings; the Superpowers default is unchanged.
- const explain=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'What routes does this project expose?'}]}}));
+ const explain=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',model:'nvidia/nemotron-3-ultra-550b-a55b',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'What routes does this project expose?'}]}}));
  assert.equal(explain.investigation,'rea');assert.match(explain.interpretation,/not REA output/);assert.equal(explain.reaRun.reaVersion,'6.5.0');assert.equal(explain.skills.length,0);
  const reaPrompt=prompts.at(-1);assert.ok(reaPrompt.includes('untrusted tool data'));assert.ok(reaPrompt.includes('src/routes/users.js'));assert.ok(!reaPrompt.includes('Superpowers workflow'));
- assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:crypto.randomUUID(),messages:[{role:'user',content:'x'}]}})).status,400);
- assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'gemini-3.8-flash',reaRunId:job.id,messages:[{role:'user',content:'x'}]}})).status,400,'reaRunId only with the REA method');
- const sp=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'gemini-3.8-flash',messages:[{role:'user',content:'Review my code'}]}}));
+ assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',model:'nvidia/nemotron-3-ultra-550b-a55b',investigation:'rea',reaRunId:crypto.randomUUID(),messages:[{role:'user',content:'x'}]}})).status,400);
+ assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'nvidia/nemotron-3-ultra-550b-a55b',reaRunId:job.id,messages:[{role:'user',content:'x'}]}})).status,400,'reaRunId only with the REA method');
+ const sp=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'nvidia/nemotron-3-ultra-550b-a55b',messages:[{role:'user',content:'Review my code'}]}}));
  assert.ok(sp.skills.includes('requesting-code-review'));assert.equal(sp.investigation,undefined);assert.ok(prompts.at(-1).includes('Superpowers'));
  // Real container: the adapter itself rejects unsafe or tampered requests, and a real REA run honours the deadline.
  const rea=await checkReaImage(docker);assert.equal(rea.available,true,rea.detail);

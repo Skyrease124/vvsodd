@@ -21,10 +21,10 @@ return Response.json(google?{candidates:[{content:{role:'model',parts:[{text:con
 try{
 assert.equal((await handleEngineering(req('openai/gpt-oss-20b','member'),env)).status,403);assert.equal(calls,0);
 assert.equal((await handleEngineering(req('openai/gpt-oss-20b','owner','https://evil.test'),env)).status,403);assert.equal(calls,0);
-for(const model of ['nvidia/nemotron-3-ultra-550b-a55b','nvidia/nemotron-3.5-lightning-30b-a3b','openai/gpt-oss-20b','gemini-3.8-flash']){const response=await handleEngineering(req(model),env);assert.equal(response.status,200,await response.clone().text());const data=await response.json();assert.equal(data.selectedModel,model);assert.equal(data.actualModel,model);assert.equal(data.actualProvider,model==='gemini-3.8-flash'?'Google Gemini':'NVIDIA');assert.ok(data.content.includes('Tests NOT_RUN'));assert.equal(data.tests.status,'NOT_RUN');}
-assert.equal(calls,4);
-assert.equal((await handleEngineering(req('gemini-3.8-flash'),{...env,GEMINI_FREE_TIER_CONFIRMED:'false'})).status,502);assert.equal(calls,4);
-assert.equal((await handleEngineering(req('nvidia/nemotron-3-ultra-550b-a55b'),{...env,NVIDIA_API_KEY:undefined})).status,503);assert.equal(calls,4,'Missing NVIDIA key never falls back to Google');
+for(const model of ['nvidia/nemotron-3-ultra-550b-a55b','nvidia/nemotron-3.5-lightning-30b-a3b','openai/gpt-oss-20b']){const response=await handleEngineering(req(model),env);assert.equal(response.status,200,await response.clone().text());const data=await response.json();assert.equal(data.selectedModel,model);assert.equal(data.actualModel,model);assert.equal(data.actualProvider,model==='gemini-3.8-flash'?'Google Gemini':'NVIDIA');assert.ok(data.content.includes('Tests NOT_RUN'));assert.equal(data.tests.status,'NOT_RUN');}
+assert.equal(calls,3);
+assert.equal((await handleEngineering(req('gemini-3.8-flash'),env)).status,400);assert.equal(calls,3);
+assert.equal((await handleEngineering(req('nvidia/nemotron-3-ultra-550b-a55b'),{...env,NVIDIA_API_KEY:undefined})).status,503);assert.equal(calls,3,'Missing NVIDIA key never falls back to Google');
 assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM projects').get().n,0);
-console.log('PASS real engineering handler → handleChat → selected NVIDIA or Gemini API → response, all four selections; real SQLite owner checks and free-tier fail-closed behavior. Only external inference mocked; no live model health claim.');
+console.log('PASS real engineering handler → handleChat → selected NVIDIA API → response, all three selections, Gemini refused; real SQLite owner checks and free-tier fail-closed behavior. Only external inference mocked; no live model health claim.');
 }finally{globalThis.fetch=old;}

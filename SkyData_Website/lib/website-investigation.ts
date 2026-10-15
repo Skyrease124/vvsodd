@@ -3,7 +3,7 @@ import {hpBrowserHealth,queueHpBrowser,hpBrowserData,cancelHpBrowser} from './hp
 import type {SecretEnv} from './secret-store';
 import {isSiteAdmin} from './site-admin';
 import {handleChat} from './nvidia';
-import {isModelAvailable,modelProvider} from './models';
+import {GEMINI_TEXT_MODEL,isModelAvailable,modelProvider} from './models';
 import {engineeringInstructions} from './engineering';
 const headers={'Cache-Control':'private, no-store'};
 const json=(data:unknown,status=200)=>Response.json(data,{status,headers});
@@ -40,7 +40,7 @@ export async function handleWebsiteInvestigation(request:Request,env:SecretEnv,g
 
   try{
    const body=await bounded(request,12000);const url=websiteUrl(body.url);
-   if(!['rea','superpowers'].includes(body.engine)||!isModelAvailable(body.model)||typeof body.goal!=='string'||!body.goal.trim()||body.goal.length>8000)throw Error('Choose an engine, model and investigation goal.');
+   if(!['rea','superpowers'].includes(body.engine)||!isModelAvailable(body.model)||body.model===GEMINI_TEXT_MODEL||typeof body.goal!=='string'||!body.goal.trim()||body.goal.length>8000)throw Error('Choose an engine, model and investigation goal.');
    engineeringInstructions('research',body.workflow||'planning');
    const health=configured?await service(env,'/health'):await hpBrowserHealth(env,owner);
    if(configured?(health.verified!==true||health.configured!==true||health.stagehandVersion!=='4.2.1'||!health.engines?.includes(body.engine)):(!health.available||!health.engines?.includes(body.engine)))return json({error:'Start HP runner v2.4 and complete its browser self-test for this engine.'},503);
