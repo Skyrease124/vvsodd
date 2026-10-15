@@ -108,7 +108,8 @@ try {
     console.log('runner output:\n' + out.slice(-1500) + '\nlast status: ' + JSON.stringify(lastStatus).slice(0, 1200));
     throw e;
   });
-  check('the site sees runner 2.5.0 online', status.device.online === true && status.device.runnerVersion === '2.5.0', 'runner ' + status.device.runnerVersion);
+  const zipVersion = readFileSync(path.join(runnerDir, 'runner.mjs'), 'utf8').match(/VERSION='([^']+)'/)[1];
+  check('the site sees runner ' + zipVersion + ' online', status.device.online === true && status.device.runnerVersion === zipVersion, 'runner ' + status.device.runnerVersion);
   check('the site sees REA 6.5.0 available on the runner', status.device.rea?.available && JSON.stringify(status.device.rea).includes('6.5.0'), JSON.stringify(status.device.rea).slice(0, 160));
 
   // 1. JavaScript test.

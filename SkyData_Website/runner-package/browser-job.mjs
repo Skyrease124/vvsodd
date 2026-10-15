@@ -17,7 +17,8 @@ export const REA_BROWSER_MEMORY='1024m';
 // give REA the time left in the website's 10-minute job window: up to 330 s inside the container plus 20 s for the runner to collect the result.
 // This needs an REA image built with the request-deadline label (Prepare_REA.cmd); older images keep the 180 s limit.
 export const REA_BROWSER_MAX_MS=350000,REA_ADAPTER_GRACE_MS=20000,REA_RESULT_MARGIN_MS=60000,REA_MIN_MS=80000;
-export const BROWSER_LIMITS={deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
+// 300 s: Stagehand start-up alone may take up to 150 s on a slow PC (see Dockerfile), leaving time for the pages.
+export const BROWSER_LIMITS={deadlineMs:300000,createMs:60000,cleanupMs:30000,graceMs:1000,resultBytes:7500000};
 export const activeBrowserResources=new Set();
 // Tasks (processes + threads) for the browser container. Measured with Chromium 155 + Stagehand 4.2.1 on Linux Docker:
 // the self-test peaks at ~200-210 tasks and fails at 128 (pids.events > 0, pthread_create/fork EAGAIN). 512 keeps a hard cap
@@ -34,11 +35,11 @@ export function parseBrowserJob(job){
 }
 async function inspected(dockerCommand,name,labels,entrypoint){
  const r=await dockerCommand(['image','inspect',name],60000);if(!r.ok)throw Error('Image '+name+' is not prepared. Run Prepare_Browser.cmd.');
- const i=JSON.parse(r.stdout)[0];if(!/^sha256:[a-f0-9]{64}$/.test(i?.Id||'')||i.Config?.User!=='1000:1000'||JSON.stringify(i.Config?.Entrypoint)!==JSON.stringify(entrypoint)||Object.entries(labels).some(([k,v])=>i.Config?.Labels?.[k]!==v))throw Error('Image '+name+' has incompatible labels, user or entrypoint.');return i.Id;
+ const i=JSON.parse(r.stdout)[0];if(!/^sha256:[a-f0-9]{64}$/.test(i?.Id||'')||i.Config?.User!=='1000:1000'||JSON.stringify(i.Config?.Entrypoint)!==JSON.stringify(entrypoint)||Object.entries(labels).some(([k,v])=>i.Config?.Labels?.[k]!==v))throw Error('Image '+name+' is from an older runner (labels, user or entrypoint differ). Run Prepare_Browser.cmd in this runner folder.');return i.Id;
 }
 export async function checkBrowserImages(dockerCommand,{readStamp=()=>readFile(stampPath,'utf8'),ignoreStamp=false}={}){
  try{
-  const imageId=await inspected(dockerCommand,BROWSER_IMAGE,{'org.skydata.stagehand.version':BROWSER_VERSION,'org.skydata.browser.adapter':BROWSER_ADAPTER},['node','worker.mjs']);
+  const imageId=await inspected(dockerCommand,BROWSER_IMAGE,{'org.skydata.stagehand.version':BROWSER_VERSION,'org.skydata.browser.adapter':BROWSER_ADAPTER,'org.skydata.stagehand.init-timeout':'150'},['node','worker.mjs']);
   // site=env: the proxy relays model calls to the site the runner is paired with (SKYDATA_SITE), not a built-in address.
   const proxyId=await inspected(dockerCommand,PROXY_IMAGE,{'org.skydata.proxy.adapter':BROWSER_ADAPTER,'org.skydata.proxy.site':'env'},['node','proxy.mjs']);
   let stamp=null;try{stamp=JSON.parse(await readStamp());}catch{}
