@@ -1,4 +1,4 @@
-bl_info = {'name': 'SkyData PC Connector', 'author': 'SkyData', 'version': (1, 4, 0),
+bl_info = {'name': 'SkyData PC Connector', 'author': 'SkyData', 'version': (1, 5, 0),
            'blender': (4, 2, 0), 'location': '3D View > Sidebar > SkyData',
            'description': 'Connect Blender, read scenes and run modeling instructions', 'category': 'System'}
 
@@ -183,7 +183,7 @@ class SKYDATA_PT_connector(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.label(text=_state['message'])
-        layout.label(text='Version 1.4 · Detailed modeling and materials')
+        layout.label(text='Version 1.5 · Detailed modeling and materials')
         layout.operator('wm.url_open', text='Open SkyData pairing page', icon='URL').url = transport.SITE + '/blender'
         column = layout.column()
         column.enabled = not _state['busy'] and not _state['running']

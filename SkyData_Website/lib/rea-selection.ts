@@ -3,7 +3,7 @@ import {archiveDirectory,readOriginalText,sha256} from './project-archive';
 import {analyzeImports} from './runner-project';
 // Builds the exact file set for one REA static-analysis request from complete originals in the stored ZIP.
 // Limits mirror the HP adapter (runner-package/rea/adapter.mjs) so both sides reject the same requests.
-export const REA_PREFIX='SKYDATA_REA_V1\n',REA_VERSION='6.4.0',REA_ADAPTER='1',REA_OPERATION='analyze-javascript-application';
+export const REA_PREFIX='SKYDATA_REA_V1\n',REA_VERSION='6.5.0',REA_ADAPTER='1',REA_OPERATION='analyze-javascript-application';
 // totalBytes stays below D1's ~2 MB value limit for the queued job payload; the HP adapter accepts up to 2 MB.
 export const REA_SELECTION_LIMITS={files:200,totalBytes:1024*1024,fileBytes:512*1024,payloadBytes:1800000};
 const ANALYZABLE=/\.(?:[cm]?jsx?|[cm]?tsx?|json|html?)$/i;

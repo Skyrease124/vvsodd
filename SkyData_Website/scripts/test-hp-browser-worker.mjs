@@ -9,7 +9,7 @@ try{
  const owner=(path,method='GET',body)=>mf.dispatchFetch('http://localhost'+path,{method,headers:{origin:'http://localhost','content-type':'application/json','oai-authenticated-user-id':'owner'},...(body?{body:JSON.stringify(body)}:{})});
  const {code}=await ok(await owner('/api/engineering-runner/code','POST',{}));const {token}=await ok(await mf.dispatchFetch('http://localhost/api/engineering-runner/pair',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code})}));
  const device=(path,b)=>mf.dispatchFetch('http://localhost/api/engineering-runner/'+path,{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+token},body:JSON.stringify(b)});
- const older={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.4.0',adapterVersion:'1'}}};
+ const older={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.5.0',adapterVersion:'1'}}};
  await ok(await device('poll',older));assert.equal((await ok(await owner('/api/engineering-browser/status'))).available,false);
  const poll={...older,version:'2.4',capabilities:{...older.capabilities,browser:{available:true,selfTestPassed:true,stagehandVersion:'4.2.1',adapterVersion:'2',checkedAt:Date.now(),detail:'Simulated HP self-test'}}};await ok(await device('poll',poll));assert.equal((await ok(await owner('/api/engineering-browser/status'))).available,true);
  const input={url:'https://example.com/',goal:'Inspect public navigation',engine:'superpowers',model:'gemini-3.8-flash',workflow:'planning',approved:true};

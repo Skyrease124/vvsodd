@@ -1,10 +1,10 @@
 SKYDATA REA STATIC INVESTIGATION - WINDOWS SETUP (runner v2.3, REA adapter 1)
 
-STATUS: tested with real REA 6.4.0 in Docker on a Linux test machine only.
+STATUS: tested with real REA 6.5.0 in Docker on a Linux test machine only.
 Windows HP setup and analysis are NOT yet verified.
 
 WHAT IT DOES
-REA (rea-agents 6.4.0, MIT licence, https://github.com/morluto/rea) reads the
+REA (rea-agents 6.5.0, MIT licence, https://github.com/morluto/rea) reads the
 project files you approve as plain text and reports modules, imports, routes,
 network endpoints, storage keys and entrypoints with file locations.
 It does not run your project, install packages or use the network.
@@ -14,7 +14,7 @@ REA's documented host platforms are macOS and Linux; Windows is not a listed
 host for this analysis. SkyData therefore runs REA inside a Linux container
 on Docker Desktop, with the same isolation as the test runner: no network,
 non-root user, read-only filesystem, no capabilities, no host folders.
-REA jobs get 768 MB of memory (REA's analyzer needs it) and a 3-minute limit.
+REA jobs get 1 GB of memory (REA 6.5.0 needs it to analyse every file) and a 3-minute limit.
 REA inside website investigations gets 1 GB and up to 330 seconds (runner 2.4.10
 or later with an image prepared by this folder's Prepare_REA.cmd).
 JavaScript test jobs keep their 256 MB and 10-second limits.
@@ -29,7 +29,7 @@ SETUP (once)
 1. Stop the old runner window with Ctrl+C.
 2. Extract this ZIP into a NEW folder. Do not run it from inside the ZIP.
 3. Make sure Docker Desktop is running.
-4. Double-click Prepare_REA.cmd. It builds the image "skydata-rea:6.4.0-a1"
+4. Double-click Prepare_REA.cmd. It builds the image "skydata-rea:6.5.0-a1"
    from pinned base images and a package-lock with integrity hashes, then runs
    the REA self-test. This can take 10 to 30 minutes on the HP.
    The self-test writes rea-selftest-report.txt (no tokens or keys).
@@ -50,13 +50,13 @@ USING IT
 
 IF SOMETHING FAILS
 - "REA image is not prepared": run Prepare_REA.cmd.
-- "Incompatible REA image": run Prepare_REA.cmd again (it rebuilds 6.4.0).
+- "Incompatible REA image": run Prepare_REA.cmd again (it rebuilds 6.5.0).
 - Build errors about the network: connect the HP to the internet and retry.
 - Anything else: send rea-selftest-report.txt.
-To remove REA completely: docker image rm skydata-rea:6.4.0-a1
+To remove REA completely: docker image rm skydata-rea:6.5.0-a1
 
 LICENCES
-REA is MIT-licensed (REA-6.4.0-LICENSE in the rea folder). The image keeps
+REA is MIT-licensed (REA-6.5.0-LICENSE in the rea folder). The image keeps
 REA's shipped licence files in /opt/rea/licenses. The ps tool copied into the
 image is from Debian procps; its copyright file is kept in
 /usr/share/doc/procps/copyright.

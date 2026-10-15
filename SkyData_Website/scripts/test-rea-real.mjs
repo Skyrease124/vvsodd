@@ -6,7 +6,7 @@ import {reaJob} from '../runner-package/runner.mjs';
 import {REA_IMAGE,REA_LIMITS,executeRea,checkReaImage} from '../runner-package/rea-job.mjs';
 import {docker,cleanup} from '../runner-package/runner.mjs';
 import {createHash} from 'node:crypto';
-// REAL REA path: built Worker + Miniflare D1/R2 → runner reaJob (scripted "yes") → real Docker → real REA 6.4.0
+// REAL REA path: built Worker + Miniflare D1/R2 → runner reaJob (scripted "yes") → real Docker → real REA 6.5.0
 // → rea-result → stored findings → AI explanation (Gemini mocked). Not the Windows HP. Skips without Docker/REA image.
 try{execFileSync('docker',['image','inspect',REA_IMAGE],{stdio:'ignore',timeout:20000});}catch{console.log('SKIP real REA test: Docker or the '+REA_IMAGE+' image is not available here. Nothing was verified.');process.exit(0);}
 const dir=fs.readdirSync('node_modules/.pnpm').find(n=>n.startsWith('miniflare@'));const {Miniflare}=await import('../node_modules/.pnpm/'+dir+'/node_modules/miniflare/dist/src/index.js');const root=process.cwd()+'/dist/server/';
@@ -61,7 +61,7 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  // Pair a runner; a v2.2-style poll (no REA capability) must never receive the REA job.
  const {code}=await ok(await call('/api/engineering-runner/code',{method:'POST',body:{}}));const {token}=await ok(await call('/api/engineering-runner/pair',{method:'POST',body:{code},user:null}));
  const apiCall=async(path,body)=>{const r=await call('/api/engineering-runner/'+path,{method:'POST',body,user:null,token});const d=await r.json();if(!r.ok)throw Error(d.error||String(r.status));return d;};
- const capable={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.4.0',adapterVersion:'1',checkedAt:Date.now(),detail:'REA 6.4.0 · adapter 1'}}};
+ const capable={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.5.0',adapterVersion:'1',checkedAt:Date.now(),detail:'REA 6.5.0 · adapter 1'}}};
  await apiCall('poll',capable);
  const queued=await ok(await call('/api/engineering-runner/rea-analyze',{method:'POST',body:{projectId:id,paths:subset,approved:true,fingerprint:p2.fingerprint}}));assert.equal(queued.fingerprint,p2.fingerprint);
  assert.equal((await apiCall('poll',{ready:true,protocol:2,version:'2.2'})).job,null,'runner without REA capability cannot claim');
@@ -76,18 +76,23 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  const run=await ok(await call('/api/engineering-runner/rea-run?id='+job.id));
  assert.equal((await call('/api/engineering-runner/rea-run?id='+job.id,{user:'member'})).status,403);
  const a=run.analysis,f=a.adapter.findings;
- assert.equal(a.reaVersion,'6.4.0');assert.equal(a.adapter.rea.operation,'analyze-javascript-application');assert.equal(a.stagedMatchesApproval,true,'REA analysed exactly the approved files');
+ assert.equal(a.reaVersion,'6.5.0');assert.equal(a.adapter.rea.operation,'analyze-javascript-application');assert.equal(a.stagedMatchesApproval,true,'REA analysed exactly the approved files');
  assert.equal(a.workspaceUnchanged,true,'nothing executed: no canary file, staged files unchanged');assert.ok(!a.adapter.staged.some(s=>s.path.endsWith('EXECUTED.txt')));assert.equal(a.diagnostics.cleanupConfirmed,true);
  assert.equal(f.graphCoverage.status,'partial','partial coverage surfaced');assert.ok(f.unknowns.items.some(u=>u.path==='src/broken.js'));
  const ep=f.endpoints.items.map(e=>e.value+'@'+e.evidence.location.path+':'+e.evidence.location.line);
- for(const want of ['/health@src/server.js:7','/api/orders@src/server.js:9','/:id@src/routes/users.js:2','https://api.example.test/v1/products@public/app.mjs:4'])assert.ok(ep.includes(want),want+' in '+ep.join(', '));
+ for(const want of ['/health@src/server.js:7','/api/orders@src/server.js:9','https://api.example.test/v1/products@public/app.mjs:4'])assert.ok(ep.includes(want),want+' in '+ep.join(', '));
+ // REA merges identical endpoint values into one node: 6.4.0 placed '/:id' at its first call (line 2), 6.5.0 at its last (line 3).
+ // Both calling sites stay on the `calls` edges, so check those exactly.
+ assert.ok(ep.some(e=>/^\/:id@src\/routes\/users\.js:[23]$/.test(e)),'/:id in users.js in '+ep.join(', '));
+ const idCalls=f.endpointCalls.items.filter(c=>c.endpoint==='/:id').map(c=>c.mechanism+'@'+c.evidence.location.path+':'+c.evidence.location.line).sort();
+ assert.deepEqual(idCalls,['call:router.delete@src/routes/users.js:3','call:router.get@src/routes/users.js:2']);
  assert.ok(f.endpointCalls.items.some(c=>c.mechanism==='call:router.delete'&&c.evidence.location.line===3),'DELETE /:id call site kept');
  const imp=f.imports.items.map(i=>i.specifier+'→'+(i.resolvedPath||'unresolved'));for(const want of ['./routes/users→src/routes/users.js','./view.mjs→public/view.mjs','./settings.mjs→public/settings.mjs','express→unresolved'])assert.ok(imp.includes(want),want);
  assert.ok(f.storage.items.some(s=>s.name==='theme'&&s.evidence.location.path==='public/app.mjs'));assert.ok(f.limitations.some(l=>/never executed|inert/.test(l)));
  assert.ok(a.diagnostics.phases.some(p=>p.phase==='docker_check'&&p.ok)&&a.diagnostics.phases.some(p=>p.phase==='container_run'&&p.ok));
  // Existing model explains the stored findings; the Superpowers default is unchanged.
  const explain=await ok(await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:job.id,messages:[{role:'user',content:'What routes does this project expose?'}]}}));
- assert.equal(explain.investigation,'rea');assert.match(explain.interpretation,/not REA output/);assert.equal(explain.reaRun.reaVersion,'6.4.0');assert.equal(explain.skills.length,0);
+ assert.equal(explain.investigation,'rea');assert.match(explain.interpretation,/not REA output/);assert.equal(explain.reaRun.reaVersion,'6.5.0');assert.equal(explain.skills.length,0);
  const reaPrompt=prompts.at(-1);assert.ok(reaPrompt.includes('untrusted tool data'));assert.ok(reaPrompt.includes('src/routes/users.js'));assert.ok(!reaPrompt.includes('Superpowers workflow'));
  assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',model:'gemini-3.8-flash',investigation:'rea',reaRunId:crypto.randomUUID(),messages:[{role:'user',content:'x'}]}})).status,400);
  assert.equal((await call('/api/engineering',{method:'POST',body:{mode:'research',workflow:'review',model:'gemini-3.8-flash',reaRunId:job.id,messages:[{role:'user',content:'x'}]}})).status,400,'reaRunId only with the REA method');
@@ -104,5 +109,5 @@ with zipfile.ZipFile(sys.argv[1],'w',zipfile.ZIP_DEFLATED) as z:
  const slow=await executeRea({name:'deadline',operation:'analyze-javascript-application',files:[t({path:'a.js',text:'export const a=1;'})]},rea.imageId,{dockerCommand:docker,removeContainer:cleanup,limits:{...REA_LIMITS,deadlineMs:800}});
  assert.equal(slow.status,'timeout','real REA run stopped at its deadline');assert.equal(slow.diagnostics.cleanupConfirmed,true);assert.ok(slow.diagnostics.phases.find(p=>p.phase==='termination').ok,'docker kill confirmed');
  assert.equal(execFileSync('docker',['ps','-a','-q','--filter','name=skydata-rea-'],{encoding:'utf8'}).trim(),'','no REA containers left');
- console.log('PASS REAL REA path (built Worker + Miniflare D1/R2 + runner reaJob + real Docker + real REA 6.4.0, '+elapsed+' ms): owner/member/origin protections, exclusions (unsafe path, credential, dependency folder, symlink, duplicate, case collision, non-source, oversized), omitted dependency, fingerprint-bound approval, capability-gated claim (no REA / wrong version), separate result endpoint, staged files = approved files, no execution, partial coverage and unknowns, routes/imports/storage with exact locations, cleanup confirmed, adapter rejections inside the real container (traversal, tampered SHA-256, case duplicate), real deadline with confirmed kill and cleanup, AI explanation labelled as interpretation, Superpowers default unchanged. Simulated: the HP machine and the typed yes; Gemini mocked.');
+ console.log('PASS REAL REA path (built Worker + Miniflare D1/R2 + runner reaJob + real Docker + real REA 6.5.0, '+elapsed+' ms): owner/member/origin protections, exclusions (unsafe path, credential, dependency folder, symlink, duplicate, case collision, non-source, oversized), omitted dependency, fingerprint-bound approval, capability-gated claim (no REA / wrong version), separate result endpoint, staged files = approved files, no execution, partial coverage and unknowns, routes/imports/storage with exact locations, cleanup confirmed, adapter rejections inside the real container (traversal, tampered SHA-256, case duplicate), real deadline with confirmed kill and cleanup, AI explanation labelled as interpretation, Superpowers default unchanged. Simulated: the HP machine and the typed yes; Gemini mocked.');
 }finally{await mf.dispose();fs.rmSync(tmp,{recursive:true,force:true});}

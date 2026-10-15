@@ -5,6 +5,6 @@ COPY browser-service/package.json browser-service/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY browser-service/url-policy.mjs browser-service/proxy.mjs ./
 RUN openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=SkyData isolated job proxy" -keyout key.pem -out cert.pem && chown 1000:1000 key.pem && chmod 600 key.pem
-LABEL org.skydata.proxy.adapter="2"
+LABEL org.skydata.proxy.adapter="2" org.skydata.proxy.site="env"
 USER 1000:1000
 ENTRYPOINT ["node","proxy.mjs"]

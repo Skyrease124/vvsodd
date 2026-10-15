@@ -3,7 +3,8 @@ import json
 import urllib.request
 import urllib.error
 
-SITE = 'https://skydata-ai.skyrease123.chatgpt.site'
+# 1.5 moved from ChatGPT Sites (skydata-ai.skyrease123.chatgpt.site) to the Netlify SkyData; pair again there.
+SITE = 'https://845-nbny-v36.netlify.app'
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -18,7 +19,7 @@ class ConnectionError(Exception):
 def send(action, data, token=None):
     if action not in ('pair', 'heartbeat', 'result'):
         raise ValueError('Unsupported action')
-    headers = {'Content-Type': 'application/json', 'User-Agent': 'SkyData-Blender/1.4'}
+    headers = {'Content-Type': 'application/json', 'User-Agent': 'SkyData-Blender/1.5'}
     if token:
         headers['Authorization'] = 'Bearer ' + token
     request = urllib.request.Request(SITE + '/api/blender/' + action,

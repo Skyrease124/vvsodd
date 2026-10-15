@@ -60,7 +60,7 @@ export function ReaPanel({projectId,files,onRun}:{projectId:string;files:Browser
  const reset=()=>{setPreview(null);setApproved(false);};
  return <section className="proposal-review" aria-label="REA static investigation">
   <h2>REA — static project investigation</h2>
-  <p className="score-note">REA {expected?.reaVersion||'6.4.0'} reads the files you approve as text inside an isolated Docker container on your HP and reports modules, imports, routes, endpoints, storage and entrypoints with locations. It never runs your project, installs packages or uses the network. Your selected AI model can then explain the findings; its explanation is labelled as interpretation.</p>
+  <p className="score-note">REA {expected?.reaVersion||'6.5.0'} reads the files you approve as text inside an isolated Docker container on your HP and reports modules, imports, routes, endpoints, storage and entrypoints with locations. It never runs your project, installs packages or uses the network. Your selected AI model can then explain the findings; its explanation is labelled as interpretation.</p>
   <div className="runner-status" role="status">
    <p><strong>Requirements:</strong> HP runner v2.3 running · Docker Desktop · the prepared REA image (Prepare_REA.cmd, once).</p>
    <p>{!device?'No HP runner paired.':!device.online?'HP runner offline.':'HP runner v'+(device.runnerVersion||'?')+' connected.'} {device?.online&&(device.rea?(device.rea.available?<span className="runner-phase-ok">REA available: {device.rea.detail}</span>:<span className="runner-phase-bad">REA unavailable: {device.rea.detail}</span>):<span className="runner-phase-bad">This runner does not report REA support (needs v2.3).</span>)}</p>

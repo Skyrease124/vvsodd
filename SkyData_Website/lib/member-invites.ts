@@ -6,7 +6,7 @@ import type { SecretEnv } from './secret-store';
 import { OWNER_EMAIL, type Member, accessPage, authLimit, escape, hex, memberForm, newSession, passwordHash, sha } from './access';
 import { issueCsrf } from './connection-page';
 
-export const INVITE_LINKS = Boolean(import.meta.env.VITE_SKYDATA_NETLIFY);
+export const INVITE_LINKS = Boolean(import.meta.env?.VITE_SKYDATA_NETLIFY);
 const INVITE_DAYS = 7;
 const tokenFrom = (value: string | null) => (value && /^[a-f0-9]{64}$/.test(value) ? value : null);
 

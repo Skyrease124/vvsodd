@@ -1,10 +1,10 @@
-// REA static-analysis jobs for the HP runner (REA adapter 1, rea-agents 6.4.0).
+// REA static-analysis jobs for the HP runner (REA adapter 1, rea-agents 6.5.0).
 // Separate from JavaScript test jobs: different payload prefix, fixed container image and entrypoint,
 // one allowed operation, no user-supplied commands or arguments, and nothing from the project is executed.
 import {spawn} from 'node:child_process';
 import {createHash,randomUUID} from 'node:crypto';
 import {StringDecoder} from 'node:string_decoder';
-export const REA_PREFIX='SKYDATA_REA_V1\n',REA_IMAGE='skydata-rea:6.4.0-a1',REA_VERSION='6.4.0',ADAPTER_VERSION='1',REA_OPERATION='analyze-javascript-application';
+export const REA_PREFIX='SKYDATA_REA_V1\n',REA_IMAGE='skydata-rea:6.5.0-a1',REA_VERSION='6.5.0',ADAPTER_VERSION='1',REA_OPERATION='analyze-javascript-application';
 export const REA_LIMITS={files:200,totalBytes:2*1024*1024,fileBytes:512*1024,payloadBytes:3*1024*1024,resultBytes:4*1024*1024,deadlineMs:180000,createMs:60000,cleanupMs:30000,graceMs:1000};
 const sha=t=>createHash('sha256').update(t).digest('hex');
 export function safeReaPath(p){return typeof p==='string'&&p.length>0&&p.length<=240&&!p.startsWith('/')&&!p.includes('\\')&&!/^[a-zA-Z]:/.test(p)&&!p.endsWith('/')&&p.split('/').every(s=>s&&s!=='.'&&s!=='..'&&!/[\x00-\x1f<>:"|?*]/.test(s));}
@@ -18,9 +18,10 @@ export function parseReaJob(job){
  if(!job||typeof job.code!=='string'||!job.code.startsWith(REA_PREFIX)||Buffer.byteLength(job.code)>REA_LIMITS.payloadBytes||!/^[a-f0-9-]{36}$/.test(job.id)||!Number.isFinite(job.expires)||job.expires<=Date.now())return null;
  try{const b=JSON.parse(job.code.slice(REA_PREFIX.length));return validReaBundle(b)?b:null;}catch{return null;}
 }
-// Same isolation as test jobs; memory is 768 MB (REA's analyzer needs a V8 heap of 384 MB) and no command is passed:
+// Same isolation as test jobs; memory is 1 GB: REA 6.5.0 sizes its result budget from the container's memory and at 768 MB
+// skipped semantic analysis of files that 6.4.0 analysed (REA's analyzer itself needs a V8 heap of 384 MB) and no command is passed:
 // the image's fixed entrypoint is the adapter, which accepts only REA_OPERATION.
-export function reaContainerArgs(name,imageId,memory='768m'){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory',memory,'--memory-swap',memory,'--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--log-driver','none','-i',imageId];}
+export function reaContainerArgs(name,imageId,memory='1024m'){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory',memory,'--memory-swap',memory,'--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=64m','--log-driver','none','-i',imageId];}
 // Verifies the locally prepared image instead of pulling anything during a job.
 export async function checkReaImage(dockerCommand){
  const r=await dockerCommand(['image','inspect',REA_IMAGE],60000);

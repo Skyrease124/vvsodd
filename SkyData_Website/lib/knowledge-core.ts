@@ -3,7 +3,7 @@ export const EMBEDDING_MODEL='nvidia/nemotron-3-embed-1b';
 export const KNOWLEDGE_CATEGORIES=['PROGRAMMING','MATHEMATICS','SCIENCE','ENGINEERING','ARTIFICIAL INTELLIGENCE','RESEARCH'] as const;
 export const KNOWLEDGE_EXTENSIONS='pdf docx txt md markdown json jsonl js jsx ts tsx py html htm css c cpp h cs java go rs rb php sql sh yaml yml toml xml csv glsl wgsl'.split(' ');
 // 3 MiB on Netlify (6 MB request limit); R2 on Cloudflare needs 5 MiB+ parts.
-export const KNOWLEDGE_PART_SIZE=(import.meta.env.VITE_SKYDATA_NETLIFY?3:5)*1024*1024;
+export const KNOWLEDGE_PART_SIZE=(import.meta.env?.VITE_SKYDATA_NETLIFY?3:5)*1024*1024;
 export const KNOWLEDGE_MAX_FILE=100*1024*1024;
 export type KnowledgeDocument={id:string;owner:string;name:string;size:number;kind:string;category:string;status:string;key:string;upload:string;next_batch:number;units:number;chunks:number;indexed:number;empty_units:number;error:string|null;enabled:number;review:string;created:number;updated:number;lease:string|null;lease_until:number;attempts:number;retry_at:number;metadata:string};
 export function chunkText(text:string):{text:string;section:string}[]{

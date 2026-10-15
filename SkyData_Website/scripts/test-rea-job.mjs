@@ -17,14 +17,14 @@ for(const p of ['a/../b.js','a//b.js','./a.js','a.js/'])assert.equal(safeReaPath
 // Fixed, isolated container arguments: no command, mounts, env, privileges or network.
 const args=reaContainerArgs('n','sha256:'+'a'.repeat(64));
 assert.equal(args[0],'create');assert.equal(args.at(-1),'sha256:'+'a'.repeat(64),'image is the last argument: no command override');
-for(const [flag,value] of [['--network','none'],['--user','1000:1000'],['--cap-drop','ALL'],['--pull','never'],['--security-opt','no-new-privileges'],['--pids-limit','64'],['--memory','768m'],['--memory-swap','768m']])assert.equal(args[args.indexOf(flag)+1],value,flag);
+for(const [flag,value] of [['--network','none'],['--user','1000:1000'],['--cap-drop','ALL'],['--pull','never'],['--security-opt','no-new-privileges'],['--pids-limit','64'],['--memory','1024m'],['--memory-swap','1024m']])assert.equal(args[args.indexOf(flag)+1],value,flag);
 assert.ok(args.includes('--read-only')&&args.includes('--rm'));assert.ok(!args.some(a=>/^(-v|--volume|--mount|--privileged|-e|--env|--env-file|--cap-add|--entrypoint)$/.test(a)));
 // Image verification: missing, incompatible versions and a good image.
-const inspect=(labels,{user='1000:1000',entry=['node','/opt/rea/adapter.mjs'],ok=true}={})=>async a=>a[0]==='image'?(ok?{ok:true,ms:3,stdout:JSON.stringify([{Id:'sha256:'+'b'.repeat(64),Config:{User:user,Entrypoint:entry,Labels:labels}}]),stderr:'',code:0}:{ok:false,ms:3,stdout:'',stderr:'Error: No such image: skydata-rea:6.4.0-a1',code:1}):{ok:true,ms:1,stdout:'',stderr:'',code:0};
-const good={'org.skydata.rea.version':'6.4.0','org.skydata.adapter.version':'1'};
+const inspect=(labels,{user='1000:1000',entry=['node','/opt/rea/adapter.mjs'],ok=true}={})=>async a=>a[0]==='image'?(ok?{ok:true,ms:3,stdout:JSON.stringify([{Id:'sha256:'+'b'.repeat(64),Config:{User:user,Entrypoint:entry,Labels:labels}}]),stderr:'',code:0}:{ok:false,ms:3,stdout:'',stderr:'Error: No such image: skydata-rea:6.5.0-a1',code:1}):{ok:true,ms:1,stdout:'',stderr:'',code:0};
+const good={'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1'};
 assert.equal((await checkReaImage(inspect(good))).available,true);
 const missing=await checkReaImage(inspect(good,{ok:false}));assert.equal(missing.available,false);assert.match(missing.detail,/not prepared.*Prepare_REA/);
-const old=await checkReaImage(inspect({...good,'org.skydata.rea.version':'6.3.0'}));assert.equal(old.available,false);assert.match(old.detail,/REA 6\.3\.0 \(needs 6\.4\.0\)/);
+const old=await checkReaImage(inspect({...good,'org.skydata.rea.version':'6.3.0'}));assert.equal(old.available,false);assert.match(old.detail,/REA 6\.3\.0 \(needs 6\.5\.0\)/);
 assert.equal((await checkReaImage(inspect({...good,'org.skydata.adapter.version':'2'}))).available,false);
 assert.match((await checkReaImage(inspect(good,{user:'0:0'}))).detail,/user/);assert.match((await checkReaImage(inspect(good,{entry:['sh']}))).detail,/entrypoint/);
 // Execution contract with a fake docker start.
@@ -32,8 +32,8 @@ function fakeStart({reply,hang=false,big=false}={}){return (cmd,a,o)=>{assert.eq
  c.stdin.on('finish',()=>{const req=JSON.parse(input);assert.equal(req.operation,'analyze-javascript-application');assert.equal(req.protocol,'skydata-rea-v1');assert.deepEqual(req.files.map(f=>f.path),bundle.files.map(f=>f.path));if(hang)return;setImmediate(()=>{c.stdout.write(big?'x'.repeat(500):JSON.stringify(reply));c.emit('close',0);});});c.kill=()=>{setImmediate(()=>c.emit('close',null));return true;};return c;};}
 const docker=({rm=true,gone=true,kill='ok'}={})=>async a=>{if(a[0]==='create')return {ok:true,ms:2,stdout:'id',stderr:'',code:0};if(a[0]==='kill')return kill==='hang'?new Promise(()=>{}):{ok:true,ms:2,stdout:'',stderr:'',code:0};if(a[0]==='rm')return rm?{ok:true,ms:2,stdout:'',stderr:'',code:0}:{ok:false,ms:30000,stdout:'',stderr:'',timedOut:true,code:'ETIMEDOUT'};if(a[0]==='container')return gone?{ok:false,ms:1,stdout:'',stderr:'Error: No such container',code:1}:{ok:true,ms:1,stdout:'running',stderr:'',code:0};return {ok:true,ms:1,stdout:'',stderr:'',code:0};};
 const {cleanup}=await import('../runner-package/runner.mjs');const remove=(name,o)=>cleanup(name,{...o,wait:async()=>{}});
-const reply={adapter:'1',status:'partial',rea:{version:'6.4.0'},staged:bundle.files.map(f=>({path:f.path,sha256:f.sha256,bytes:17})),workspaceUnchanged:true,findings:{imports:{items:[],total:0}},phases:[]};
-const ok=await executeRea(bundle,'sha256:x',{dockerCommand:docker(),removeContainer:remove,spawnProcess:fakeStart({reply})});assert.equal(ok.status,'partial');assert.equal(ok.diagnostics.cleanupConfirmed,true);assert.equal(ok.adapter.rea.version,'6.4.0');
+const reply={adapter:'1',status:'partial',rea:{version:'6.5.0'},staged:bundle.files.map(f=>({path:f.path,sha256:f.sha256,bytes:17})),workspaceUnchanged:true,findings:{imports:{items:[],total:0}},phases:[]};
+const ok=await executeRea(bundle,'sha256:x',{dockerCommand:docker(),removeContainer:remove,spawnProcess:fakeStart({reply})});assert.equal(ok.status,'partial');assert.equal(ok.diagnostics.cleanupConfirmed,true);assert.equal(ok.adapter.rea.version,'6.5.0');
 const fast={...REA_LIMITS,deadlineMs:30,cleanupMs:200,graceMs:30};let t=Date.now();
 const slow=await executeRea(bundle,'sha256:x',{dockerCommand:docker({kill:'hang'}),removeContainer:remove,spawnProcess:fakeStart({hang:true}),limits:fast});
 assert.equal(slow.status,'timeout');assert.ok(Date.now()-t<3000,'bounded even with a hung docker kill');const term=slow.diagnostics.phases.find(p=>p.phase==='termination');assert.equal(term.ok,false);assert.match(term.detail,/NOT confirmed/);

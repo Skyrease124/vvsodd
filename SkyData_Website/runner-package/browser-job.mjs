@@ -1,3 +1,4 @@
+import {SITE} from './site.mjs';
 import {spawn} from 'node:child_process';
 import {randomUUID,createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
@@ -10,7 +11,7 @@ export const BROWSER_IMAGE='skydata-stagehand:4.2.1-a2',PROXY_IMAGE='skydata-bro
 const stampPath=join(homedir(),'.skydata-runner','browser-check.json');
 export const REA_BROWSER_BYTES=384*1024;
 // Measured on Linux Docker with 348 KB of real minified JS: REA peaked at 710 MB RSS plus 33 MB of tmpfs (counted in the same limit), 97% of the
-// 768 MB ZIP-REA limit. Website investigations use 1 GB (the HP already runs the 1 GB browser container, which is removed before REA starts).
+// ZIP-REA limit (1 GB since runner 2.5.0). Website investigations use 1 GB (the HP already runs the 1 GB browser container, which is removed before REA starts).
 export const REA_BROWSER_MEMORY='1024m';
 // On a slow PC most REA time is fixed start-up (Linux Docker at 0.12 CPU: ~105 s for 70 KB and for 303 KB alike), so website investigations
 // give REA the time left in the website's 10-minute job window: up to 330 s inside the container plus 20 s for the runner to collect the result.
@@ -38,7 +39,8 @@ async function inspected(dockerCommand,name,labels,entrypoint){
 export async function checkBrowserImages(dockerCommand,{readStamp=()=>readFile(stampPath,'utf8'),ignoreStamp=false}={}){
  try{
   const imageId=await inspected(dockerCommand,BROWSER_IMAGE,{'org.skydata.stagehand.version':BROWSER_VERSION,'org.skydata.browser.adapter':BROWSER_ADAPTER},['node','worker.mjs']);
-  const proxyId=await inspected(dockerCommand,PROXY_IMAGE,{'org.skydata.proxy.adapter':BROWSER_ADAPTER},['node','proxy.mjs']);
+  // site=env: the proxy relays model calls to the site the runner is paired with (SKYDATA_SITE), not a built-in address.
+  const proxyId=await inspected(dockerCommand,PROXY_IMAGE,{'org.skydata.proxy.adapter':BROWSER_ADAPTER,'org.skydata.proxy.site':'env'},['node','proxy.mjs']);
   let stamp=null;try{stamp=JSON.parse(await readStamp());}catch{}
   const passed=stamp?.passed===true&&stamp.imageId===imageId&&stamp.proxyId===proxyId&&stamp.at>Date.now()-7*86400000;
   return {available:ignoreStamp||passed,stagehandVersion:BROWSER_VERSION,adapterVersion:BROWSER_ADAPTER,imageId,proxyId,selfTestPassed:passed,checkedAt:Date.now(),detail:passed?'Stagehand 4.2.1 browser image and public-network self-test verified on this HP.':'Browser images found. Run Browser_Self_Test.cmd (again after image updates or seven days).'};
@@ -77,7 +79,7 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
   activeBrowserResources.add(network);await command(['network','create','--internal',network]);
   const [net]=JSON.parse((await command(['network','inspect',network])).stdout);if(net.Internal!==true)throw Error('Browser network is not internal.');
   activeBrowserResources.add(proxy);
-  const args=createArgs(proxy,cap.proxyId,network,true);args.splice(args.length-1,0,'-e','SKYDATA_JOB_TOKEN='+bundle.relayToken,'-e','SKYDATA_JOB_ID='+job.id);
+  const args=createArgs(proxy,cap.proxyId,network,true);args.splice(args.length-1,0,'-e','SKYDATA_JOB_TOKEN='+bundle.relayToken,'-e','SKYDATA_JOB_ID='+job.id,'-e','SKYDATA_SITE='+SITE);
   await command(args);await command(['network','connect','bridge',proxy]);await command(['start',proxy]);
   activeBrowserResources.add(name);await command(createArgs(name,cap.imageId,network));
   report('browser_launching');run=await attachBrowser(name,{url:bundle.url,goal:bundle.goal,relayToken:bundle.relayToken,model:'gemini-3.8-flash',...(bundle.selfTest?{selfTest:true}:{})},{dockerCommand,spawnProcess,cleanEnv,report,signal,limits});
@@ -115,7 +117,7 @@ export async function executeBrowser(job,bundle,cap,{dockerCommand,removeContain
      const staged=r.adapter?.staged?.map(f=>f.path+'\0'+f.sha256).sort(),expected=files.map(f=>f.path+'\0'+f.sha256).sort();
      // The first failed check is named in the error so a failure on the HP can be diagnosed from the runner window.
      const failedPhase=(r.diagnostics?.phases||[]).find(p=>p&&p.ok===false);
-     const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):failedPhase?' at '+failedPhase.phase+(failedPhase.detail?': '+String(failedPhase.detail).slice(0,160):failedPhase.code?' ('+failedPhase.code+')':''):''):r.adapter?.rea?.version!=='6.4.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
+     const failedCheck=!['complete','partial'].includes(r.status)?'REA status '+r.status+(r.adapter?.error?': '+String(r.adapter.error).slice(0,160):r.adapter?.rea?.error?.message?': '+String(r.adapter.rea.error.message).slice(0,160):failedPhase?' at '+failedPhase.phase+(failedPhase.detail?': '+String(failedPhase.detail).slice(0,160):failedPhase.code?' ('+failedPhase.code+')':''):''):r.adapter?.rea?.version!=='6.5.0'?'REA version '+(r.adapter?.rea?.version||'unknown'):r.adapter?.workspaceUnchanged!==true?'staged files changed':r.diagnostics?.cleanupConfirmed!==true?'REA cleanup not confirmed':JSON.stringify(staged)!==JSON.stringify(expected)?'staged files differ from captured scripts':!r.adapter?.findings?'no findings returned':null;
      if(failedCheck){status=r.diagnostics?.cleanupConfirmed===false?'infrastructure_error':['timeout','output_limit'].includes(r.status)?r.status:'failed';error=r.status==='timeout'?'REA analysis did not finish within its '+Math.round((rea.requestDeadline?reaMs-REA_ADAPTER_GRACE_MS:REA_LIMITS.deadlineMs)/1000)+'-second limit on this HP.'+(rea.requestDeadline?'':' Run Prepare_REA.cmd once to allow REA up to 330 seconds in website investigations.'):r.status==='output_limit'?'REA output exceeded its size limit.':'REA capture analysis did not pass integrity checks ('+failedCheck+').'+(rea.outputFlush||r.status!=='infrastructure_error'?'':' Run Prepare_REA.cmd once: older REA images cut off results larger than 64 KB.');}
      else evidence.rea={...r.adapter,cleanupConfirmed:true};
      }

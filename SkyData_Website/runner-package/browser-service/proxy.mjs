@@ -4,7 +4,9 @@ import https from 'node:https';
 import tls from 'node:tls';
 import {readFileSync} from 'node:fs';
 import {publicUrl,resolvePublic} from './url-policy.mjs';
-const SITE='https://skydata-ai.skyrease123.chatgpt.site';
+// The runner passes the site it is paired with; only an https:// origin (or http://localhost for local tests) is used.
+const site=value=>{try{const u=new URL(value);return u.protocol==='https:'||u.protocol==='http:'&&['localhost','127.0.0.1'].includes(u.hostname)?u.origin:null;}catch{return null;}};
+const SITE=site(process.env.SKYDATA_SITE);
 export function createProxy({certificate='/opt/proxy/cert.pem',privateKey='/opt/proxy/key.pem',relayToken=process.env.SKYDATA_JOB_TOKEN,jobId=process.env.SKYDATA_JOB_ID,resolveAddress=resolvePublic}={}){
  let total=0,requests=0,relayCalls=0;const sockets=new Set();
  const denied=(res,status=403)=>{res.writeHead(status);res.end('Blocked by SkyData public read-only browser policy.');};
@@ -12,7 +14,7 @@ export function createProxy({certificate='/opt/proxy/cert.pem',privateKey='/opt/
   try{
    // This is a fixed local broker capability, not a user-controlled HTTP proxy target.
    if(req.url==='/__skydata_model'&&req.method==='POST'&&!req.socket.skydataTunnel){
-    if(!relayToken||req.headers['x-skydata-job-token']!==relayToken||++relayCalls>3)return denied(res);
+    if(!SITE||!relayToken||req.headers['x-skydata-job-token']!==relayToken||++relayCalls>3)return denied(res);
     req.socket.setTimeout(50000);let raw='',bytes=0;for await(const c of req){bytes+=c.length;if(bytes>160000)return denied(res,413);raw+=c;}
     const params=JSON.parse(raw);
     const response=await fetch(SITE+'/api/engineering-runner/browser-model',{method:'POST',headers:{authorization:'Browser '+relayToken,'content-type':'application/json'},body:JSON.stringify({id:jobId,params}),redirect:'error',signal:AbortSignal.timeout(45000)});

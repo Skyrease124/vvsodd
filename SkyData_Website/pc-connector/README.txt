@@ -1,4 +1,7 @@
-SkyData Blender Connector 1.4 - Windows / Blender 4.2 or newer
+SkyData Blender Connector 1.5 - Windows / Blender 4.2 or newer
+
+1.5: connects to the SkyData site on Netlify (https://845-nbny-v36.netlify.app) instead of
+the old ChatGPT Sites address. Install it over 1.4, then pair again from SkyData's Blender page.
 
 1. Download the ZIP on your PC, right-click it and choose Extract All.
 2. In the extracted folder, double-click Install-SkyData.cmd.

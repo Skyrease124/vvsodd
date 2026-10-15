@@ -1,8 +1,8 @@
 @echo off
 cd /d "%~dp0rea"
-echo Preparing the SkyData REA image (rea-agents 6.4.0, SkyData adapter 1).
+echo Preparing the SkyData REA image (rea-agents 6.5.0, SkyData adapter 1).
 echo This downloads pinned base images and npm packages ONCE. Jobs never download anything.
-docker build -t skydata-rea:6.4.0-a1 .
+docker build -t skydata-rea:6.5.0-a1 .
 if errorlevel 1 (
   echo.
   echo The REA image could not be built. Check that Docker Desktop is running with Linux containers and that this PC is online.

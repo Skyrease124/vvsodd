@@ -23,14 +23,14 @@ with zipfile.ZipFile(sys.argv[1],'w') as z:
  await ok(await call('/api/projects/'+id+'/index',{method:'POST',body:{number:0,files:[{path:'src/a.js',text:'x'}]}}));await ok(await call('/api/projects/'+id+'/ready',{method:'POST',body:{files:[{path:'src/a.js',size:1,chunk:0},{path:'src/b.js',size:1}]}}));
  const {code}=await ok(await call('/api/engineering-runner/code',{method:'POST',body:{}}));const {token}=await ok(await call('/api/engineering-runner/pair',{method:'POST',body:{code},user:null}));
  const device=(path,body)=>call('/api/engineering-runner/'+path,{method:'POST',body,user:null,token});
- const poll={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.4.0',adapterVersion:'1',checkedAt:Date.now(),detail:'test'}}};
+ const poll={ready:true,protocol:2,version:'2.3',capabilities:{rea:{available:true,reaVersion:'6.5.0',adapterVersion:'1',checkedAt:Date.now(),detail:'test'}}};
  await ok(await device('poll',poll));
  const paths=['src/a.js','src/b.js'],preview=await ok(await call('/api/engineering-runner/rea-preview',{method:'POST',body:{projectId:id,paths}}));
  const approvedStaged=preview.files.map(f=>({path:f.path,sha256:f.sha256,bytes:f.bytes}));
  const findings={evidenceId:'ev_x',rootArtifactSha256:'0'.repeat(64),graphCoverage:{status:'partial',truncated:false,omitted_count:null,limits:[]},statistics:{parsed_javascript_files:2,parse_failures:0,relevant_files:2},limitations:['static only'],
   modules:{items:[],total:0,truncatedByAdapter:false},imports:{items:[{from:'src/a.js',to:'src/b.js',specifier:'./b',linkKind:'require',resolvedPath:'src/b.js',evidence:{location:{available:true,path:'src/a.js',line:1}}}],total:1,truncatedByAdapter:false},endpoints:{items:[],total:0,truncatedByAdapter:false},endpointCalls:{items:[],total:0,truncatedByAdapter:false},storage:{items:[],total:0,truncatedByAdapter:false},entrypoints:{items:[],total:0,truncatedByAdapter:false},unknowns:{items:[],total:0,truncatedByAdapter:false}};
  const phases=[{phase:'container_run',command:'docker start',ms:5,ok:true},{phase:'cleanup',command:'docker rm -f',ms:2,ok:true}];
- const valid=()=>({status:'partial',stderr:'',adapter:{adapter:'1',status:'partial',rea:{version:'6.4.0',operation:'analyze-javascript-application',exitCode:0,error:null},staged:approvedStaged,workspaceUnchanged:true,findings,phases:[]},diagnostics:{runner:'rea-job/1',executionStatus:'partial',cleanupConfirmed:true,totalMs:10,phases}});
+ const valid=()=>({status:'partial',stderr:'',adapter:{adapter:'1',status:'partial',rea:{version:'6.5.0',operation:'analyze-javascript-application',exitCode:0,error:null},staged:approvedStaged,workspaceUnchanged:true,findings,phases:[]},diagnostics:{runner:'rea-job/1',executionStatus:'partial',cleanupConfirmed:true,totalMs:10,phases}});
  // Queue → claim → submit one result; returns the server response, stored run and explanation outcome.
  async function submit(result){
   await db.prepare('DELETE FROM request_limits').run(); // the per-minute owner limit stays in force; this test just exceeds a human's pace

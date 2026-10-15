@@ -46,7 +46,7 @@ INSTALL
    goal and engine, then type yes. After evidence returns, generate a report.
 
 REA WEBSITE INVESTIGATIONS
-The existing skydata-rea:6.4.0-a1 image is reused. REA analyzes eligible
+The existing skydata-rea:6.5.0-a1 image is reused. REA analyzes eligible
 public JavaScript captured by the browser; it does not see private server
 source. Some sites expose no eligible scripts, so REA can return a clear
 failure instead of invented findings. ZIP REA remains a separate workflow.

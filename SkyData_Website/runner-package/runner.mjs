@@ -10,8 +10,8 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 import {readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {REA_PREFIX,REA_OPERATION,REA_VERSION,ADAPTER_VERSION,REA_LIMITS,parseReaJob,checkReaImage,executeRea} from './rea-job.mjs';
-const SITE='https://skydata-ai.skyrease123.chatgpt.site';
-export const VERSION='2.4.11';
+import {SITE} from './site.mjs';
+export const VERSION='2.5.0';
 const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json');
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the
@@ -120,12 +120,14 @@ const progress=(token,id)=>phaseName=>{void api('progress',{id,phase:phaseName},
 async function pair(){const rl=createInterface({input:process.stdin,output:process.stdout});try{
  const code=(await rl.question('Paste the pairing code from SkyData: ')).trim();if(!/^[a-f0-9]{64}$/.test(code))throw Error('Invalid code.');
  const d=await api('pair',{code});if(!/^[a-f0-9]{64}$/.test(d.token))throw Error('Site returned an invalid token.');
- await mkdir(dir,{recursive:true,mode:0o700});await writeFile(configPath,JSON.stringify({token:d.token,expires:d.expires}),{mode:0o600});await protectFile();console.log('Paired. Now run: node runner.mjs start');
+ await mkdir(dir,{recursive:true,mode:0o700});await writeFile(configPath,JSON.stringify({site:SITE,token:d.token,expires:d.expires}),{mode:0o600});await protectFile();console.log('Paired with '+SITE+'. Now run: node runner.mjs start');
  }finally{rl.close();}}
 function printPhases(result){for(const p of result.diagnostics.phases)console.log('  '+(p.ok?'ok  ':'FAIL')+' '+p.phase.padEnd(16)+String(p.ms).padStart(7)+' ms  '+p.command+(p.ok?'':'  ['+p.code+'] '+display(p.detail||'')));}
 async function start(){
- const config=JSON.parse(await readFile(configPath,'utf8'));if(!/^[a-f0-9]{64}$/.test(config.token)||config.expires<=Date.now())throw Error('Pair again; connection expired.');await protectFile();const image=await pinnedImage();let rea=await checkReaImage(docker),browser=await checkBrowserImages(docker);console.log('Browser investigations: '+browser.detail);console.log('REA static analysis: '+(rea.available?'available · ':'unavailable · ')+rea.detail);
- const rl=createInterface({input:process.stdin,output:process.stdout});console.log('SkyData HP runner v'+VERSION+' connected. Keep this window open. Ctrl+C stops it.\nThe website shows when Docker was last verified; polling alone does not prove Docker is healthy.');
+ const config=JSON.parse(await readFile(configPath,'utf8'));if(!/^[a-f0-9]{64}$/.test(config.token)||config.expires<=Date.now())throw Error('Pair again; connection expired.');
+ // Runners before 2.5.0 saved no site: their pairing belongs to the old ChatGPT Sites SkyData, not this one.
+ if(config.site!==SITE)throw Error('This runner is paired with '+(config.site||'the old ChatGPT Sites SkyData')+', not '+SITE+'. Open Engineering → Runner on '+SITE+', create a pairing code and run Pair_Runner.cmd.');await protectFile();const image=await pinnedImage();let rea=await checkReaImage(docker),browser=await checkBrowserImages(docker);console.log('Browser investigations: '+browser.detail);console.log('REA static analysis: '+(rea.available?'available · ':'unavailable · ')+rea.detail);
+ const rl=createInterface({input:process.stdin,output:process.stdout});console.log('SkyData HP runner v'+VERSION+' connected to '+SITE+'. Keep this window open. Ctrl+C stops it.\nThe website shows when Docker was last verified; polling alone does not prove Docker is healthy.');
  try{for(;;){
  const {job}=await api('poll',{ready:true,protocol:2,version:VERSION,docker:dockerHealth,capabilities:{browser,rea:{available:rea.available,reaVersion:rea.reaVersion,adapterVersion:rea.adapterVersion,checkedAt:rea.checkedAt,detail:rea.detail}}},config.token);
  if(job&&typeof job.code==='string'&&job.code.startsWith(BROWSER_PREFIX)){await hpBrowserJob(job,rl,config.token);browser=await checkBrowserImages(docker);}

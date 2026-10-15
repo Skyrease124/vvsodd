@@ -32,14 +32,14 @@ async function run(job){
   if(job.engine==='rea'){
    job.phase='Analyzing public JavaScript with REA';
    if(!result.scripts.length)throw Error('No eligible public JavaScript was captured for real REA analysis.');
-   const reaImage=await imageId('skydata-rea:6.4.0-a1',{'org.skydata.rea.version':'6.4.0','org.skydata.adapter.version':'1'},['node','/opt/rea/adapter.mjs']);
+   const reaImage=await imageId('skydata-rea:6.5.0-a1',{'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1'},['node','/opt/rea/adapter.mjs']);
    const reaName='skydata-browser-rea-'+job.id;job.name=reaName;
    try{
     await docker(['create','-i','--name',reaName,'--network','none','--memory','768m','--cpus','1','--pids-limit','64','--read-only','--tmpfs','/tmp:rw,noexec,nosuid,nodev,size=64m','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--log-driver','none','--pull','never',reaImage]);
     const raw=await docker(['start','-a','-i',reaName],{input:JSON.stringify({protocol:'skydata-rea-v1',operation:'analyze-javascript-application',files:result.scripts.map(({path,text,sha256})=>({path,text,sha256}))}),timeout:160000,maxBytes:4*1024*1024});
     const rea=JSON.parse(raw);const expected=result.scripts.map(({path,sha256})=>({path,sha256}));
     const matched=JSON.stringify([...(rea.staged||[])].map(({path,sha256})=>({path,sha256})).sort((a,b)=>a.path.localeCompare(b.path)))===JSON.stringify(expected.sort((a,b)=>a.path.localeCompare(b.path)));
-    if(!['complete','partial'].includes(rea.status)||rea.rea?.version!=='6.4.0'||rea.workspaceUnchanged!==true||!rea.findings||!matched)throw Error('REA result failed integrity checks.');
+    if(!['complete','partial'].includes(rea.status)||rea.rea?.version!=='6.5.0'||rea.workspaceUnchanged!==true||!rea.findings||!matched)throw Error('REA result failed integrity checks.');
     result.rea={...rea,cleanupConfirmed:true};
    }finally{if(!await remove(reaName))throw Error('REA cleanup unconfirmed.');}
   }
@@ -59,7 +59,7 @@ http.createServer(async(req,res)=>{
    // Administrative verification is also required; image presence is not a browser test.
    await imageId(IMAGE,{'org.skydata.stagehand.version':'4.2.1','org.skydata.browser.adapter':'1'},['node','worker.mjs']);
    const [network]=JSON.parse(await docker(['network','inspect','skydata-browser-internal']));if(network.Internal!==true)throw Error('Browser network must be internal.');
-   if(process.env.SKYDATA_REA_VERIFIED==='true')await imageId('skydata-rea:6.4.0-a1',{'org.skydata.rea.version':'6.4.0','org.skydata.adapter.version':'1'},['node','/opt/rea/adapter.mjs']);
+   if(process.env.SKYDATA_REA_VERIFIED==='true')await imageId('skydata-rea:6.5.0-a1',{'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1'},['node','/opt/rea/adapter.mjs']);
    return reply(200,{stagehandVersion:'4.2.1',configured:!!process.env.GEMINI_API_KEY&&process.env.GEMINI_FREE_TIER_CONFIRMED==='true',verified:process.env.SKYDATA_BROWSER_VERIFIED==='true',engines:['superpowers',...(process.env.SKYDATA_REA_VERIFIED==='true'?['rea']:[])],busy:!!active});
   }
   if(url.pathname==='/jobs'&&req.method==='POST'){

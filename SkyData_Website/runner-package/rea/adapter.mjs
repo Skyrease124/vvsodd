@@ -1,11 +1,11 @@
 // SkyData REA adapter 1 — runs INSIDE the isolated skydata-rea image only.
-// Accepts exactly one operation (REA 6.4.0 `analyze-javascript-application`) over files supplied on stdin,
+// Accepts exactly one operation (REA 6.5.0 `analyze-javascript-application`) over files supplied on stdin,
 // stages them as inert data in tmpfs, and returns only facts REA reported. It never executes the files.
 import {spawn} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {mkdirSync,writeFileSync,readFileSync,readdirSync,lstatSync,rmSync} from 'node:fs';
 import {join,dirname} from 'node:path';
-export const ADAPTER_VERSION='1',REA_VERSION='6.4.0',OPERATION='analyze-javascript-application';
+export const ADAPTER_VERSION='1',REA_VERSION='6.5.0',OPERATION='analyze-javascript-application';
 export const LIMITS={files:200,totalBytes:2*1024*1024,fileBytes:512*1024,reaStdoutBytes:32*1024*1024,stderrBytes:64*1024,listItems:400,heapMb:384,perSourceMs:60000,deadlineMs:150000,minDeadlineMs:60000,maxDeadlineMs:330000};
 // A request may ask for its own overall limit (website investigations on slow PCs); it is clamped, and requests without one keep 150 s.
 export const requestDeadline=r=>Number.isInteger(r?.deadlineMs)?Math.min(LIMITS.maxDeadlineMs,Math.max(LIMITS.minDeadlineMs,r.deadlineMs)):LIMITS.deadlineMs;

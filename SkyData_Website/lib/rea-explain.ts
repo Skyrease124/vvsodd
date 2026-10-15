@@ -1,5 +1,5 @@
 import type {SecretEnv} from './secret-store';
-const REA_VERSION='6.4.0',REA_OPERATION='analyze-javascript-application';
+const REA_VERSION='6.5.0',REA_OPERATION='analyze-javascript-application';
 // Integrity checks shared by result acceptance and explanation eligibility. Returns the names of failed checks.
 export function reaResultChecks(c:{reaVersion:unknown;operation:unknown;stagedMatchesApproval:unknown;workspaceUnchanged:unknown;cleanupConfirmed:unknown;hasFindings:boolean}){
  const failed:string[]=[];
