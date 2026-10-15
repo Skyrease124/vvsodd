@@ -49,6 +49,9 @@ export function createHandler(deps) {
       console.error('SkyData storage is unavailable', e);
       return new Response('SkyData is starting up or its storage is unavailable. Reload in a moment.', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'retry-after': '5' } });
     }
+    // Netlify Blobs access is tied to the current invocation (its token expires), so file storage is opened per
+    // request; the database pool and settings are reused across requests of a warm function.
+    if (deps.requestEnv) env = deps.requestEnv(env);
     if (url.pathname === OWNER_SETUP_PATH) return ownerSetup(request, env, deps.setupCodeHash);
 
     const ctx = {

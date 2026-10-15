@@ -22,7 +22,7 @@ export async function startEmulator(project, vars = {}) {
 
   const blobDir = mkdtempSync(path.join(tmpdir(), 'skydata-blobs-'));
   const token = 'local-token';
-  const blobs = new BlobsServer({ directory: blobDir, token });
+  let blobs = new BlobsServer({ directory: blobDir, token });
   const { port: blobPort } = await blobs.start();
   const blobURL = `http://127.0.0.1:${blobPort}`;
   process.env.NETLIFY_BLOBS_CONTEXT = Buffer.from(JSON.stringify({ edgeURL: blobURL, uncachedEdgeURL: blobURL, siteID: 'local-site', token })).toString('base64');
@@ -74,6 +74,17 @@ export async function startEmulator(project, vars = {}) {
   return {
     url,
     connectionString,
+    // Like Netlify, where each invocation gets a short-lived Blobs token: serve the same data under a new token and
+    // retire the old one, so anything still holding the old token fails.
+    async rotateBlobsToken() {
+      const fresh = new BlobsServer({ directory: blobDir, token: 'rotated-' + Date.now() });
+      const { port } = await fresh.start();
+      const url = `http://127.0.0.1:${port}`;
+      process.env.NETLIFY_BLOBS_CONTEXT = Buffer.from(JSON.stringify({ edgeURL: url, uncachedEdgeURL: url, siteID: 'local-site', token: fresh.token ?? 'rotated' })).toString('base64');
+      env.NETLIFY_BLOBS_CONTEXT = process.env.NETLIFY_BLOBS_CONTEXT;
+      await blobs.stop();
+      blobs = fresh;
+    },
     async stop() {
       server.close();
       await blobs.stop();
