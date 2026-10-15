@@ -205,8 +205,32 @@ try {
   nextReply = '{"steps":[{"command":"photo.text","params":{"text":"","position":"top"}}],"reply":"Added."}';
   r = await ask('add some text');
   check('a text step without words is refused', !r.hasImage && /what the text should be/.test(r.text), r.text);
+  // 13. Gradients, shapes, paint bucket and colour areas (positions are fractions of the photo).
+  n = await count();
+  await page.setInputFiles('input[type=file]', path.join(images, 'test.jpg'));
+  await settle(n + 2);
+  nextReply = '{"steps":[{"command":"photo.gradient","params":{"where":"bottom","color":"#000000","opacity":80,"size":0.3}}],"reply":"Darkened the bottom."}';
+  r = await ask('add a dark fade at the bottom for a caption');
+  const fadeBottom = await avg(0.05, 0.93, 0.2, 0.05), fadeTop = await avg(0.05, 0.05, 0.2, 0.2);
+  check('photo.gradient darkens only the bottom', r.hasImage && lum(fadeBottom) < lum(grassBefore) - 60 && Math.abs(lum(fadeTop) - lum(skyBefore)) < 20, `bottom ${fadeBottom}, top ${fadeTop}`);
+  nextReply = '{"steps":[{"command":"photo.shape","params":{"shape":"rectangle","box":[0,0,0.2,0.2],"color":"#ffff00"}},{"command":"photo.shape","params":{"shape":"heart","box":[0.8,0.05,0.15,0.2],"color":"#ff0000"}}],"reply":"Added a yellow box and a heart."}';
+  r = await ask('add a yellow square in the top left and a red heart top right');
+  const box = await avg(0.02, 0.02, 0.12, 0.12), heart = await avg(0.855, 0.12, 0.04, 0.04);
+  check('photo.shape draws a rectangle and a heart', r.hasImage && box[0] > 220 && box[1] > 220 && box[2] < 60 && heart[0] > 200 && heart[1] < 60, `box ${box}, heart ${heart}`);
+  nextReply = '{"steps":[{"command":"photo.area","params":{"area":"reds","steps":[{"command":"image.adjustments.hueSaturation","params":{"hue":-120}}]}}],"reply":"Made the reds blue."}';
+  const figBefore = await avg(0.45, 0.5, 0.1, 0.2);
+  r = await ask('make the red things blue');
+  const figBlue = await avg(0.45, 0.5, 0.1, 0.2), grassStill = await avg(0.05, 0.6, 0.2, 0.1);
+  check('photo.area reds changes only red things', r.hasImage && figBlue[2] > figBlue[0] && Math.abs(lum(grassStill) - lum(grassBefore)) < 25, `figure ${figBefore} → ${figBlue}, grass ${grassStill}`);
+  nextReply = '{"steps":[{"command":"photo.fill","params":{"x":0.5,"y":0.02,"color":"#ff8800","tolerance":60}}],"reply":"Filled the sky orange."}';
+  r = await ask('fill the sky with flat orange');
+  const sky2 = await avg(0.4, 0.02, 0.2, 0.05);
+  check('photo.fill fills from a point', r.hasImage && sky2[0] > 220 && sky2[2] < 80, `sky ${sky2}`);
+  nextReply = '{"steps":[{"command":"photo.shape","params":{"shape":"rocket","box":[0,0,1,1]}}],"reply":"Rocket."}';
+  r = await ask('draw a rocket');
+  check('an unknown shape is refused', !r.hasImage && /drawing settings/.test(r.text), r.text);
   const sys2 = aiCalls.at(-1)?.messages?.find((m) => m.role === 'system')?.content ?? '';
-  check('the AI is told about photo.area, photo.text and the render effects', sys2.includes('photo.text |') && sys2.includes('photo.area |') && sys2.includes('filter.render.relight |') && sys2.includes('filter.render.lensFlare |'));
+  check('the AI is told about photo.area, photo.text, the drawing steps and the render effects', sys2.includes('photo.gradient |') && sys2.includes('photo.shape |') && sys2.includes('photo.fill |') && sys2.includes('photo.text |') && sys2.includes('photo.area |') && sys2.includes('filter.render.relight |') && sys2.includes('filter.render.lensFlare |'));
 
   // The download re-renders at full size (the 4032×3024 photo is edited on a 1600 px copy), scaling the blur radius past
   // the engine's 1000 limit; it is brought back to the limit.

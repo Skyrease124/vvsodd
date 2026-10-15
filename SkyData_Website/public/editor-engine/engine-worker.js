@@ -50,6 +50,8 @@ const NOT_IN_REGION = /^(image\.(crop|imageSize|canvasSize|trim|imageRotation\.|
 // on-device Select Subject / Select Sky. The selection is made, optionally feathered, the edits run inside it, and it is
 // always removed again, so later steps apply to the whole photo.
 const AREAS = { subject: ['select.subject', false], sky: ['select.sky', false], notSubject: ['select.subject', true], notSky: ['select.sky', true] };
+// Colour and tone areas (PhotoCraft's Color Range, the Magic Wand by colour): "make the reds blue", "brighten the shadows".
+for (const c of ['reds', 'yellows', 'greens', 'cyans', 'blues', 'magentas', 'highlights', 'midtones', 'shadows', 'skinTones']) AREAS[c] = ['select.colorRange', false, { select: c }];
 const isArea = (step) => step?.command === 'photo.area';
 function runArea(ed, step, run) {
   const area = AREAS[step.params?.area];
@@ -57,9 +59,9 @@ function runArea(ed, step, run) {
   if (!area) throw new Error('Choose the subject or the sky.');
   if (!Array.isArray(steps) || !steps.length || steps.length > 12) throw new Error('Say what to change in that part of the photo.');
   for (const s of steps) if (!s || typeof s.command !== 'string' || NOT_IN_REGION.test(s.command) || isArea(s)) throw new Error(`"${String(s?.command).slice(0, 60)}" can't be used on one part of the photo.`);
-  const selected = JSON.parse(ed.run(JSON.stringify([{ command: area[0] }]))).done?.[0]?.result;
+  const selected = JSON.parse(ed.run(JSON.stringify([{ command: area[0], ...(area[2] ? { params: area[2] } : {}) }]))).done?.[0]?.result;
   try {
-    if (!selected?.selected) throw new Error(area[0] === 'select.sky' ? 'No sky was found in this photo.' : 'No clear subject was found in this photo.');
+    if (area[0] !== 'select.colorRange' && !selected?.selected) throw new Error(area[0] === 'select.sky' ? 'No sky was found in this photo.' : 'No clear subject was found in this photo.');
     if (area[1]) ed.run(JSON.stringify([{ command: 'select.inverse' }]));
     const feather = Number(step.params?.feather ?? 0);
     if (feather > 0) ed.run(JSON.stringify([{ command: 'select.modify.feather', params: { radius: Math.min(250, feather) } }]));
@@ -87,12 +89,15 @@ function runText(ed) {
     const size = Math.max(8, Math.round(short * (TEXT_SIZES[p.size] ?? TEXT_SIZES.medium)));
     const margin = Math.round(short * 0.05);
     const align = /Left$/.test(place) ? 'left' : /Right$/.test(place) ? 'right' : 'center';
-    const made = JSON.parse(ed.run(JSON.stringify([{ command: 'type.create', params: { box: [margin, margin, width - 2 * margin, height - 2 * margin], text, font, fontStyle, size, color, align } }]))).done?.[0]?.result;
+    const vertical = p.vertical === true;
+    const create = vertical ? { x: margin, y: margin + size, text, font, fontStyle, size, color, orientation: 'vertical' } : { box: [margin, margin, width - 2 * margin, height - 2 * margin], text, font, fontStyle, size, color, align };
+    const made = JSON.parse(ed.run(JSON.stringify([{ command: 'type.create', params: create }]))).done?.[0]?.result;
     const b = made?.bounds;
     if (Array.isArray(b) && b.length === 4) {
-      // The box starts at the top; move the laid-out text to the chosen place.
+      // Move the laid-out text to the chosen place (a text box starts at the top; vertical text at the top left).
       const top = /^top/.test(place) ? margin : place === 'center' ? Math.round((height - b[3]) / 2) : height - margin - b[3];
-      if (top !== b[1]) ed.run(JSON.stringify([{ command: 'type.edit', params: { move: [0, top - b[1]] } }]));
+      const left = !vertical ? b[0] : align === 'left' ? margin : align === 'right' ? width - margin - b[2] : Math.round((width - b[2]) / 2);
+      if (top !== b[1] || left !== b[0]) ed.run(JSON.stringify([{ command: 'type.edit', params: { move: [left - b[0], top - b[1]] } }]));
     }
     const light = parseInt(color.slice(1, 3), 16) + parseInt(color.slice(3, 5), 16) + parseInt(color.slice(5, 7), 16) > 384;
     const edge = light ? '#000000' : '#ffffff';
@@ -103,11 +108,56 @@ function runText(ed) {
     ed.run(JSON.stringify([{ command: 'layer.flattenImage' }]));
   };
 }
-const runStep = (ed, step) => (isArea(step) ? runArea(ed, step, runStep) : isText(step) ? runText(ed)(step) : ed.run(JSON.stringify([step])));
+// Gradients, shapes and fills (photo.gradient, photo.shape, photo.fill) give positions as fractions of the photo, so the
+// AI never needs pixel sizes and the full-size download matches the preview.
+const DRAW = new Set(['photo.gradient', 'photo.shape', 'photo.fill']);
+const isDraw = (step) => DRAW.has(step?.command);
+const hex = (v, fallback) => (/^#[0-9a-f]{6}$/i.test(String(v ?? '')) ? v : fallback);
+const frac = (v, fallback) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback);
+const rgba = (color, opacity) => [parseInt(color.slice(1, 3), 16), parseInt(color.slice(3, 5), 16), parseInt(color.slice(5, 7), 16), Math.round(255 * opacity)];
+const SHAPE_KINDS = { rectangle: 'rect', roundedRectangle: 'roundedRect', ellipse: 'ellipse', circle: 'ellipse', triangle: 'polygon', polygon: 'polygon', star: 'star', line: 'line' };
+const SHAPE_PRESETS = { heart: 'Heart', burst: 'Burst', checkMark: 'Check Mark', cross: 'Cross', plus: 'Plus', ring: 'Ring', lightning: 'Lightning', diamond: 'Diamond', arrowRight: 'Arrow Right', arrowLeft: 'Arrow Left', arrowUp: 'Arrow Up', arrowDown: 'Arrow Down', speechBubble: 'Round Bubble', thoughtBubble: 'Thought Bubble', sun: 'Sun', moon: 'Crescent Moon', raindrop: 'Raindrop', flower: 'Flower' };
+function runDraw(ed, step) {
+  const p = step.params ?? {};
+  const { width: W, height: H } = info(ed);
+  const run = (command, params) => ed.run(JSON.stringify([{ command, params }]));
+  if (step.command === 'photo.gradient') {
+    const color = hex(p.color, '#000000');
+    const opacity = Math.round(frac(typeof p.opacity === 'number' ? p.opacity / 100 : undefined, 0.7) * 100);
+    const size = Math.max(0.05, frac(p.size, 0.4));
+    const where = ['top', 'bottom', 'left', 'right', 'full', 'edges'].includes(p.where) ? p.where : 'bottom';
+    if (where === 'full') return run('paint.gradient', { from: [W / 2, 0], to: [W / 2, H], stops: [[0, color], [1, hex(p.color2, color)]], transparency: [[0, opacity], [1, opacity]] });
+    if (where === 'edges') return run('paint.gradient', { from: [W / 2, H / 2], to: [0, 0], style: 'radial', stops: [[0, color], [1, color]], transparency: [[Math.max(0, 1 - size), 0], [1, opacity]] });
+    const line = { top: [[W / 2, 0], [W / 2, size * H]], bottom: [[W / 2, H], [W / 2, H - size * H]], left: [[0, H / 2], [size * W, H / 2]], right: [[W, H / 2], [W - size * W, H / 2]] }[where];
+    return run('paint.gradient', { from: line[0], to: line[1], stops: [[0, color], [1, color]], transparency: [[0, opacity], [1, 0]] });
+  }
+  if (step.command === 'photo.fill') {
+    return run('paint.bucket', { x: Math.round(frac(p.x, 0) * (W - 1)), y: Math.round(frac(p.y, 0) * (H - 1)), color: hex(p.color, '#ffffff'), tolerance: Math.min(255, Math.max(0, Number(p.tolerance) || 32)), contiguous: p.contiguous !== false });
+  }
+  // photo.shape: a shape layer, then one flat layer again so later edits apply to everything.
+  const box = Array.isArray(p.box) && p.box.length === 4 ? p.box.map((v) => frac(v, 0)) : [0.25, 0.25, 0.5, 0.5];
+  const rect = [Math.round(box[0] * W), Math.round(box[1] * H), Math.max(2, Math.round(box[2] * W)), Math.max(2, Math.round(box[3] * H))];
+  const fill = p.fill === false ? null : rgba(hex(p.color, '#ffffff'), frac(typeof p.opacity === 'number' ? p.opacity / 100 : undefined, 1));
+  const short = Math.min(W, H);
+  const lineWidth = Math.max(1, Math.round(short * Math.min(0.05, frac(p.outlineWidth, 0.006))));
+  const stroke = p.outline ? { width: lineWidth, color: hex(p.outline, '#000000'), align: 'center' } : undefined;
+  const preset = SHAPE_PRESETS[p.shape];
+  if (preset) run('shape.presets.place', { preset, rect, keepAspect: true, fill, ...(stroke ? { stroke } : {}) });
+  else {
+    const kind = SHAPE_KINDS[p.shape] ?? 'rect';
+    const params = { kind, fill, ...(stroke ? { stroke } : {}) };
+    if (kind === 'line') Object.assign(params, { from: [rect[0], rect[1]], to: [rect[0] + rect[2], rect[1] + rect[3]], weight: lineWidth, stroke: { width: lineWidth, color: hex(p.outline ?? p.color, '#ffffff') } });
+    else Object.assign(params, { rect }, p.shape === 'triangle' ? { sides: 3 } : kind === 'polygon' ? { sides: Math.min(12, Math.max(3, Math.round(Number(p.sides) || 6))) } : {});
+    run('shape.create', params);
+  }
+  return run('layer.flattenImage', {});
+}
+
+const runStep = (ed, step) => (isArea(step) ? runArea(ed, step, runStep) : isText(step) ? runText(ed)(step) : isDraw(step) ? runDraw(ed, step) : ed.run(JSON.stringify([step])));
 
 /** Applies one plan to `editor`, replacing the document when a cutout step makes a new one. */
 async function runPlan(plan, engineStep = runStep) {
-  if (engineStep === runStep && !plan.some(isCutout) && !plan.some(isArea) && !plan.some(isText)) {
+  if (engineStep === runStep && !plan.some(isCutout) && !plan.some(isArea) && !plan.some(isText) && !plan.some(isDraw)) {
     editor.run(JSON.stringify(plan));
     return;
   }
@@ -383,6 +433,7 @@ const handlers = {
 function runClamped(ed, step) {
   if (isArea(step)) return runArea(ed, step, runClamped);
   if (isText(step)) return runText(ed)(step);
+  if (isDraw(step)) return runDraw(ed, step);
   try {
     ed.run(JSON.stringify([step]));
   } catch (e) {
