@@ -77,7 +77,7 @@ try {
 
   offerOver = true;
   r = await chat();
-  check('when the free offer ends, the chat says so', r.status >= 400 && /free offer may have ended/.test(r.body.error), `${r.status} ${r.body.error}`);
+  check('an OpenCode refusal shows OpenCode\'s own reason', r.status >= 400 && /OpenCode refused the request \(HTTP 402\): Free model no longer available/.test(r.body.error), `${r.status} ${r.body.error}`);
   const other = await page.request.post('/api/chat', { headers: { origin: base }, data: { model: 'nvidia/nemotron-3-ultra-550b-a55b', messages: [{ role: 'user', content: 'Say hello.' }] } });
   check('other models are unaffected (they still go to NVIDIA)', other.status() !== 503 || !/OpenCode/.test(await other.text()), String(other.status()));
   const eng = (await (await page.request.get('/api/status')).json()).models;
