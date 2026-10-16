@@ -139,3 +139,19 @@ form .stop-button{width:72px;display:flex;gap:6px;align-items:center;justify-con
 @media(prefers-reduced-motion:reduce){.brand>span,.brand>span[data-playing],.brand>span[data-speaking]{animation:none;transform:none;filter:drop-shadow(0 0 3px #71d7ff55)}}
 
 .edit-photo-link{display:inline-flex;align-items:center;gap:6px;margin:8px 0 2px;font:inherit;font-size:14px;color:#dbe6f6;background:#1a2336;border:1px solid #ffffff1f;border-radius:999px;padding:6px 12px;cursor:pointer}.edit-photo-link:disabled{opacity:.45;cursor:default}
+
+/* Home screen: previous chats under a smaller particle sphere */
+.workspace.has-recent:not(.conversation) .visual{flex:0 0 auto;padding:4px 0 8px}
+.workspace.has-recent:not(.conversation) .particles{width:min(62vw,250px)}
+.recent-chats{width:100%;max-width:760px;margin:0 auto;padding:4px 2px 18px;flex:1 1 auto;min-height:150px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.recent-chats h2{font-size:.8125rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8ea2bf;margin:0 4px 12px}
+.recent-chats ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.recent-chats li{position:relative}
+.recent-open{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;color:#e8eef8;background:linear-gradient(145deg,#141f31,#0f1828);border:1px solid #8bcaff1c;border-radius:16px;padding:14px 40px 12px 16px;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+.recent-open:hover,.recent-open:focus-visible{transform:translateY(-2px);border-color:#71d7ff66;background:linear-gradient(145deg,#182740,#112036);outline:none}
+.recent-open strong{font-weight:600;font-size:.95rem;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.recent-preview{font-size:.84rem;line-height:1.4;color:#9faec6;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.recent-meta{font-size:.75rem;color:#6f819c;margin-top:2px}
+.recent-delete{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:0;background:transparent;color:#6f819c;font-size:18px;line-height:1;display:grid;place-items:center}
+.recent-delete:hover,.recent-delete:focus-visible{background:#ffffff14;color:#ffb4b4;outline:none}
+@media(prefers-reduced-motion:reduce){.recent-open{transition:none}.recent-open:hover{transform:none}}

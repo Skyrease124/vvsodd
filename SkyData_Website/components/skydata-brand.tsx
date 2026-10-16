@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef} from 'react';
-export function SkyDataBrand({active=false,level,audio}:{active?:boolean;level?:{current:number};audio?:{current:HTMLAudioElement|null}}){
+export function SkyDataBrand({active=false,level,audio,onHome}:{onHome?:()=>void;active?:boolean;level?:{current:number};audio?:{current:HTMLAudioElement|null}}){
  const star=useRef<HTMLSpanElement>(null);
  useEffect(()=>{
   const node=star.current;if(!node)return;
@@ -15,5 +15,5 @@ export function SkyDataBrand({active=false,level,audio}:{active?:boolean;level?:
   resume();document.addEventListener('visibilitychange',resume);reduced.addEventListener('change',resume);
   return()=>{cancelAnimationFrame(frame);document.removeEventListener('visibilitychange',resume);reduced.removeEventListener('change',resume);reset();};
  },[active,level,audio]);
- return <a className="brand" href="/" aria-label="SkyData home">skydata<span ref={star} aria-hidden="true">✦</span></a>;
+ return <a className="brand" href="/" aria-label="SkyData home" onClick={e=>{if(onHome&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&e.button===0){e.preventDefault();onHome();}}}>skydata<span ref={star} aria-hidden="true">✦</span></a>;
 }

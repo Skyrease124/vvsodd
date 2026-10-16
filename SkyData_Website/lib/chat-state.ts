@@ -34,3 +34,10 @@ export async function handleChatState(request:Request,env:SecretEnv){
   return Response.json({saved:true,state:JSON.parse(clean)},{headers});
  }catch(error){console.error('Chat state storage failed',{method:request.method,name:error instanceof Error?error.name:'Unknown'});return Response.json({error:'Could not load or save your chat. Try again.'},{status:503,headers});}
 }
+
+// Same validation and text-only reduction as the autosave, shared with the saved-chat library.
+export function cleanChatState(state:any):string|null{
+ if(!state||!Array.isArray(state.messages)||state.messages.length>100||state.messages.some((m:any)=>!m||!['user','assistant'].includes(m.role)||typeof m.content!=='string'||m.content.length>32000)||typeof state.draft!=='string'||state.draft.length>8000||!isSupportedModel(state.model)||!isReplyLanguage(state.replyLanguage))return null;
+ const messages=state.messages.map((m:any)=>({role:m.role,content:m.content,...(validProject(m.project)?{project:m.project}:{}),sources:Array.isArray(m.sources)?m.sources.filter((s:any)=>s&&typeof s.title==='string'&&s.title.length<=500&&typeof s.url==='string'&&/^https?:\/\//.test(s.url)&&s.url.length<=2048).slice(0,10):undefined}));
+ return JSON.stringify({messages,draft:state.draft,model:state.model,replyLanguage:state.replyLanguage});
+}
