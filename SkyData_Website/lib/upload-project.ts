@@ -1,4 +1,4 @@
-import { inflateSync } from 'fflate';
+import { inflateSync, zipSync } from 'fflate';
 import { PART_SIZE, PROJECT_LIMIT, type ProjectAttachment } from './project-types';
 type Entry={path:string;size:number;compressed:number;offset:number;method:number;flags:number;chunk?:number};
 export async function zipDirectory(file:Blob):Promise<Entry[]>{
@@ -28,7 +28,16 @@ async function readEntry(file:Blob,entry:Entry){
 async function api(path:string,body:BodyInit,signal:AbortSignal,json=false){
  const r=await fetch(path,{method:'POST',headers:json?{'Content-Type':'application/json'}:undefined,body,signal});const result=await r.json() as {error?:string;id?:string};if(!r.ok)throw Error(result.error||'Project upload failed. Try again.');return result;
 }
-export async function uploadProject(file:File,progress:(text:string)=>void,signal:AbortSignal):Promise<ProjectAttachment>{
+// Files REA can analyse directly (.NET programs, SQLite databases, ZIP-based bundles) are stored inside a ZIP wrapper so they
+// live in the same project storage; the file itself is stored uncompressed and unchanged.
+export const RAW_ANALYSIS_FILE=/\.(?:exe|dll|winmd|db|db3|sqlite|sqlite3|jar|war|nupkg|vsix|apk|ipa)$/i,RAW_FILE_LIMIT=32*1024*1024;
+async function wrapRawFile(file:File):Promise<File>{
+ if(file.size>RAW_FILE_LIMIT)throw Error('Direct file upload accepts up to 32 MB. Put larger files in a ZIP.');
+ const bytes=new Uint8Array(await file.arrayBuffer()),name=file.name.replace(/[\\/:*?"<>|\x00-\x1f]/g,'_');
+ return new File([zipSync({[name]:[bytes,{level:0}]}) as Uint8Array<ArrayBuffer>],file.name+'.zip',{type:'application/zip'});
+}
+export async function uploadProject(original:File,progress:(text:string)=>void,signal:AbortSignal):Promise<ProjectAttachment>{
+ const file=!original.name.toLowerCase().endsWith('.zip')&&RAW_ANALYSIS_FILE.test(original.name)?await wrapRawFile(original):original;
  if(file.size>PROJECT_LIMIT)throw Error('Choose a ZIP file up to 500 MB.');progress('Reading ZIP file list…');const entries=await zipDirectory(file);let id='';
  try{
   const created=await api('/api/projects',JSON.stringify({name:file.name,size:file.size}),signal,true);if(!created.id)throw Error('Project storage did not return an upload ID.');id=created.id;

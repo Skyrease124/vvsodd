@@ -1,7 +1,7 @@
 // HP runner end to end against the Netlify build: the downloadable runner ZIP is extracted, paired with a local
 // copy of the site (SKYDATA_SITE_URL) and run with real Docker. It must refuse an old ChatGPT Sites pairing, then
-// pick up and run a JavaScript test and a REA 6.5.0 analysis that the owner queues on the site.
-// Needs Docker with node:24-alpine and skydata-rea:6.5.0-a1 (Prepare_REA). Usage (from SkyData_Website, after build.mjs):
+// pick up and run a JavaScript test, a REA 6.5.0 analysis and REA file analyses that the owner queues on the site.
+// Needs Docker with node:24-alpine and skydata-rea:6.5.0-a2 (Prepare_REA). Usage (from SkyData_Website, after build.mjs):
 //   node netlify-adapter/test/runner.e2e.mjs <project> <code-file> <runner-zip>
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
@@ -154,6 +154,31 @@ try {
   check('a REA 6.5.0 analysis runs on the runner and the site stores it', /"reaVersion":"6\.5\.0"/.test(text) && ['complete', 'partial'].includes(rea.status), rea.status);
   for (const want of ['/health', '/api/orders', '/:id', 'https://api.example.test/v1/products']) check('REA found endpoint ' + want, text.includes(JSON.stringify(want)));
   check('REA reports no resource-constraint skips at 1 GB', !text.includes('Resource constraint'));
+
+  // 3. REA file analysis (runner 2.6): a .NET assembly, a SQLite database and an archive in one stored project, each downloaded
+  // by the runner in chunks after local approval and analysed by real REA 6.5.0 in Docker.
+  const samples = path.join(runnerDir, 'rea', 'fixture-files');
+  const bundle = path.join(work, 'files.zip');
+  spawnSync('zip', ['-q0', bundle, 'sample-assembly.dll', 'sample.db', 'sample.zip'], { cwd: samples });
+  const fzip = readFileSync(bundle);
+  const fp = await api('/api/projects', { name: 'files.zip', size: fzip.length });
+  const fpart = await page.request.post('/api/projects/' + fp.id + '/part?number=1', { data: fzip, headers: { origin: base, 'content-type': 'application/octet-stream' } });
+  if (!fpart.ok()) throw Error('part upload ' + fpart.status());
+  await api('/api/projects/' + fp.id + '/complete', {});
+  await api('/api/projects/' + fp.id + '/ready', { files: ['sample-assembly.dll', 'sample.db', 'sample.zip'].map((n) => ({ path: n, size: 1 })) });
+  const fstatus = await (await page.request.get('/api/engineering-runner/status')).json();
+  check('the site sees file analysis available on the runner', fstatus.device?.reaFiles?.available === true, JSON.stringify(fstatus.device?.reaFiles));
+  for (const [file, kind, want] of [['sample-assembly.dll', 'dotnet', 'Microsoft.Bcl.AsyncInterfaces'], ['sample.db', 'sqlite', 'idx_msg_user'], ['sample.zip', 'archive', 'package.json']]) {
+    const pv = await api('/api/engineering-runner/rea-file-preview', { projectId: fp.id, path: file });
+    const q = await api('/api/engineering-runner/rea-file-analyze', { projectId: fp.id, path: file, approved: true, fingerprint: pv.fingerprint });
+    const r = await until('REA file result ' + file, async () => {
+      const x = await page.request.get('/api/engineering-runner/rea-run?id=' + q.id);
+      if (!x.ok()) return null;
+      const d = await x.json();
+      return d.status && !PENDING.test(d.status) ? d : null;
+    }, 300_000);
+    check('REA analyses ' + file + ' (' + kind + ') on the runner; the site accepts it as usable', r.kind === 'reafile' && r.status === 'complete' && r.usable === true && JSON.stringify(r.analysis).includes(want), r.status);
+  }
 } finally {
   runner?.kill();
   await browser.close();

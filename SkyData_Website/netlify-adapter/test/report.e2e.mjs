@@ -65,7 +65,7 @@ try {
   const { body: { code } } = await api('/api/engineering-runner/code', {});
   const { body: { token } } = await api('/api/engineering-runner/pair', { code });
   const device = (p, b) => realFetch(base + '/api/engineering-runner/' + p, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token }, body: JSON.stringify(b) }).then((r) => r.json());
-  const poll = { ready: true, protocol: 2, version: '2.5.1', capabilities: { rea: { available: true, reaVersion: '6.5.0', adapterVersion: '1' }, browser: { available: true, selfTestPassed: true, stagehandVersion: '4.2.1', adapterVersion: '2', checkedAt: Date.now(), detail: 'Simulated HP self-test' } } };
+  const poll = { ready: true, protocol: 2, version: '2.6.0', capabilities: { rea: { available: true, reaVersion: '6.5.0', adapterVersion: '1' }, browser: { available: true, selfTestPassed: true, stagehandVersion: '4.2.1', adapterVersion: '2', checkedAt: Date.now(), detail: 'Simulated HP self-test' } } };
   await device('poll', poll);
 
   const investigate = async () => {

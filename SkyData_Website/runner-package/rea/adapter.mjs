@@ -81,11 +81,21 @@ export async function analyze(request,{workRoot='/tmp/skydata-rea'}={}){
  return {adapter:ADAPTER_VERSION,status,rea:{version,operation:OPERATION,exitCode:r.code,error:reaError,stdoutSha256:r.stdout?sha(r.stdout):null,stdoutBytes:Buffer.byteLength(r.stdout||'')},staged,workspaceUnchanged:!changed.length&&!missing.length,findings,phases,totalMs:Date.now()-t0};
 }
 if(process.argv[1]&&import.meta.url==='file://'+process.argv[1]){
- // Exit only after stdout is flushed: process.exit() right after write() cut piped output off at 64 KB, losing larger REA results.
- const reply=(value,code)=>process.stdout.write(JSON.stringify(value),()=>process.exit(code));
- const chunks=[];let size=0,tooLarge=false;for await(const c of process.stdin){size+=c.length;if(size>4*1024*1024){tooLarge=true;break;}chunks.push(c);}
- let request=null;if(!tooLarge){try{request=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{}}
- if(tooLarge)reply({adapter:ADAPTER_VERSION,status:'rejected',error:'Request exceeds 4 MB.'},2);
- else if(!request)reply({adapter:ADAPTER_VERSION,status:'rejected',error:'Request is not JSON.'},2);
+ // File mode (.NET / archive / SQLite): raw bytes behind a framed header. Anything else keeps the JSON path below, unchanged.
+ const {FILE_FRAME,FILE_LIMITS,parseFrame,analyzeFile}=await import('./files.mjs');
+ const first=[];let seen=0,tooBig=false,framed=null;
+ for await(const c of process.stdin){
+  first.push(c);seen+=c.length;
+  if(framed===null&&seen>=FILE_FRAME.length)framed=Buffer.concat(first).subarray(0,FILE_FRAME.length).toString('latin1')===FILE_FRAME;
+  if(seen>(framed?FILE_LIMITS.stdinBytes:4*1024*1024)){tooBig=true;break;}
+ }
+ const all=Buffer.concat(first),out=(value,code)=>process.stdout.write(JSON.stringify(value),()=>process.exit(code));
+ if(framed&&!tooBig){const f=parseFrame(all);const result=f.error?{adapter:ADAPTER_VERSION,mode:'file',status:'rejected',error:f.error,phases:[]}:await analyzeFile(f.header,f.bytes,{adapter:ADAPTER_VERSION});out(result,result.status==='rejected'?2:0);}
+ else if(tooBig)out({adapter:ADAPTER_VERSION,status:'rejected',error:'Request is too large.'},2);
+ else{
+ const reply=out;
+ let request=null;try{request=JSON.parse(all.toString('utf8'));}catch{}
+ if(!request)reply({adapter:ADAPTER_VERSION,status:'rejected',error:'Request is not JSON.'},2);
  else{const result=await analyze(request);reply(result,result.status==='rejected'?2:0);}
+ }
 }

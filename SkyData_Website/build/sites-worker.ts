@@ -40,7 +40,7 @@ export default {
     let request=incoming;
     const incomingPath=new URL(incoming.url).pathname;
     if(incomingPath==='/api/engineering-runner/browser-model')return browserModel(incoming,config);
-    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/progress','/api/engineering-runner/result','/api/engineering-runner/rea-result','/api/engineering-runner/browser-result','/api/engineering-runner/browser-control'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
+    if(['/api/engineering-runner/pair','/api/engineering-runner/poll','/api/engineering-runner/progress','/api/engineering-runner/result','/api/engineering-runner/rea-result','/api/engineering-runner/rea-file','/api/engineering-runner/rea-file-result','/api/engineering-runner/browser-result','/api/engineering-runner/browser-control'].includes(incomingPath))return handleRunnerDevice(incoming,config,incomingPath);
     if(['/api/blender/pair','/api/blender/heartbeat','/api/blender/result'].includes(incomingPath))return handleBlenderDevice(incoming,config,incomingPath);
     // Static assets are public; every working surface and API checks membership.
     if(!incomingPath.startsWith('/assets/') && !incomingPath.startsWith('/_next/static/') && !['/favicon.svg','/favicon.ico','/robots.txt'].includes(incomingPath)){

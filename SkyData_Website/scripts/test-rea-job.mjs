@@ -21,8 +21,11 @@ for(const [flag,value] of [['--network','none'],['--user','1000:1000'],['--cap-d
 assert.ok(args.includes('--read-only')&&args.includes('--rm'));assert.ok(!args.some(a=>/^(-v|--volume|--mount|--privileged|-e|--env|--env-file|--cap-add|--entrypoint)$/.test(a)));
 // Image verification: missing, incompatible versions and a good image.
 const inspect=(labels,{user='1000:1000',entry=['node','/opt/rea/adapter.mjs'],ok=true}={})=>async a=>a[0]==='image'?(ok?{ok:true,ms:3,stdout:JSON.stringify([{Id:'sha256:'+'b'.repeat(64),Config:{User:user,Entrypoint:entry,Labels:labels}}]),stderr:'',code:0}:{ok:false,ms:3,stdout:'',stderr:'Error: No such image: skydata-rea:6.5.0-a1',code:1}):{ok:true,ms:1,stdout:'',stderr:'',code:0};
-const good={'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1'};
-assert.equal((await checkReaImage(inspect(good))).available,true);
+const good={'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1','org.skydata.rea.files':'1'};
+assert.equal((await checkReaImage(inspect(good))).available,true);assert.equal((await checkReaImage(inspect(good))).files,true);
+// Older image (a1 only): JavaScript REA stays available, file analysis does not.
+const a1Only=async a=>a[0]==='image'&&a[2].endsWith('-a2')?{ok:false,ms:1,stdout:'',stderr:'Error: No such image',code:1}:inspect({'org.skydata.rea.version':'6.5.0','org.skydata.adapter.version':'1'})(a);
+const legacy=await checkReaImage(a1Only);assert.equal(legacy.available,true);assert.equal(legacy.files,false);assert.match(legacy.detail,/Prepare_REA/);
 const missing=await checkReaImage(inspect(good,{ok:false}));assert.equal(missing.available,false);assert.match(missing.detail,/not prepared.*Prepare_REA/);
 const old=await checkReaImage(inspect({...good,'org.skydata.rea.version':'6.3.0'}));assert.equal(old.available,false);assert.match(old.detail,/REA 6\.3\.0 \(needs 6\.5\.0\)/);
 assert.equal((await checkReaImage(inspect({...good,'org.skydata.adapter.version':'2'}))).available,false);

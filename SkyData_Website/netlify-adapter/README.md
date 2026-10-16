@@ -50,7 +50,7 @@ node netlify-adapter/test/run.mjs <deploy-folder> <code-file> <out>  # browser e
 node netlify-adapter/test/invites.e2e.mjs <deploy-folder> <code-file> # invite links, resets, expiry, revoke
 node netlify-adapter/test/blobs-token.e2e.mjs <deploy-folder> <code-file>     # uploads/reads/deletes keep working after the Blobs token changes
 node netlify-adapter/test/engineering.e2e.mjs <deploy-folder> <code-file>      # Engineering/Superpowers: every workflow, each model (AI stand-in)
-node netlify-adapter/test/runner.e2e.mjs <deploy-folder> <code-file> public/SkyData_HP_Runner_v2_5_1.zip  # HP runner from the ZIP + real Docker + REA 6.5.0
+node netlify-adapter/test/runner.e2e.mjs <deploy-folder> <code-file> public/SkyData_HP_Runner_v2_6_0.zip  # HP runner from the ZIP + real Docker + REA 6.5.0
 ```
 
 ## Known differences on Netlify

@@ -29,10 +29,12 @@ SETUP (once)
 1. Stop the old runner window with Ctrl+C.
 2. Extract this ZIP into a NEW folder. Do not run it from inside the ZIP.
 3. Make sure Docker Desktop is running.
-4. Double-click Prepare_REA.cmd. It builds the image "skydata-rea:6.5.0-a1"
+4. Double-click Prepare_REA.cmd. It builds the image "skydata-rea:6.5.0-a2"
+   (also tagged a1, which website investigations use)
    from pinned base images and a package-lock with integrity hashes, then runs
    the REA self-test. This can take 10 to 30 minutes on the HP.
-   The self-test writes rea-selftest-report.txt (no tokens or keys).
+   The self-tests write rea-selftest-report.txt and rea-files-selftest-report.txt
+   (no tokens or keys).
 5. Double-click Self_Test.cmd to confirm JavaScript tests still work.
 6. Double-click Start_Runner.cmd. Your existing pairing is kept.
    The window shows "REA static analysis: available" when the image is ready.
@@ -48,12 +50,21 @@ USING IT
    question and press "Explain REA findings" to have your selected AI model
    explain them. That explanation is labelled as AI interpretation.
 
+FILE ANALYSIS (runner 2.6.0)
+On the website, Engineering Mode, choose a saved project and open "REA file analysis".
+Upload a .exe/.dll (.NET), a ZIP-based archive (.zip .jar .nupkg ...) or a SQLite
+database (.db .sqlite). Pick the file, preview, approve, then type yes in the runner
+window. The file is downloaded only after you type yes, checked against its SHA-256
+and analysed in the same isolated container (no network, never run).
+File limit 32 MB. tar.gz archives are not supported by REA 6.5.0.
+
 IF SOMETHING FAILS
 - "REA image is not prepared": run Prepare_REA.cmd.
 - "Incompatible REA image": run Prepare_REA.cmd again (it rebuilds 6.5.0).
 - Build errors about the network: connect the HP to the internet and retry.
-- Anything else: send rea-selftest-report.txt.
-To remove REA completely: docker image rm skydata-rea:6.5.0-a1
+- "file analysis needs Prepare_REA.cmd to be run again": the image is still the old one.
+- Anything else: send rea-selftest-report.txt or rea-files-selftest-report.txt.
+To remove REA completely: docker image rm skydata-rea:6.5.0-a1 skydata-rea:6.5.0-a2
 
 LICENCES
 REA is MIT-licensed (REA-6.5.0-LICENSE in the rea folder). The image keeps

@@ -10,8 +10,9 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 import {readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {REA_PREFIX,REA_OPERATION,REA_VERSION,ADAPTER_VERSION,REA_LIMITS,parseReaJob,checkReaImage,executeRea} from './rea-job.mjs';
+import {REAF_PREFIX,REAF_KINDS,REAF_LIMITS,parseReafJob,downloadReaFile,executeReaFile} from './reaf-job.mjs';
 import {SITE} from './site.mjs';
-export const VERSION='2.5.1';
+export const VERSION='2.6.0';
 const dir=join(homedir(),'.skydata-runner'),configPath=join(dir,'connection.json');
 const OUTPUT_LIMIT=60000;
 // Code execution is capped at 10 seconds measured from when Node starts running the code inside the
@@ -24,7 +25,7 @@ function cleanEnv(){return Object.fromEntries(Object.entries(process.env).filter
 // The --import preload only writes a start marker to stderr before the submitted code is loaded.
 export function containerArgs(name,image,marker='SKYDATA_EXEC_START'){return ['create','--name',name,'--pull','never','--rm','--network','none','--memory','256m','--memory-swap','256m','--cpus','1','--pids-limit','64','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user','1000:1000','--tmpfs','/tmp:rw,noexec,nosuid,size=16m','--log-driver','none','-i',image,'node','--import','data:text/javascript,'+encodeURIComponent('process.stderr.write('+JSON.stringify(marker+'\n')+')'),'-'];}
 // REA analysis payloads are a separate job type and are never accepted as JavaScript test jobs.
-export function validJob(job){if(!job||typeof job.code==='string'&&(job.code.startsWith(REA_PREFIX)||job.code.startsWith(BROWSER_PREFIX))||!/^[a-f0-9-]{36}$/.test(job.id)||typeof job.code!=='string'||!Number.isFinite(job.expires)||job.expires<=Date.now())return false;if(job.code.startsWith(PROJECT_PREFIX)){try{return Buffer.byteLength(job.code)<=900000&&validBundle(JSON.parse(job.code.slice(PROJECT_PREFIX.length)));}catch{return false;}}return Buffer.byteLength(job.code)>0&&Buffer.byteLength(job.code)<=16000;}
+export function validJob(job){if(!job||typeof job.code==='string'&&(job.code.startsWith(REA_PREFIX)||job.code.startsWith(REAF_PREFIX)||job.code.startsWith(BROWSER_PREFIX))||!/^[a-f0-9-]{36}$/.test(job.id)||typeof job.code!=='string'||!Number.isFinite(job.expires)||job.expires<=Date.now())return false;if(job.code.startsWith(PROJECT_PREFIX)){try{return Buffer.byteLength(job.code)<=900000&&validBundle(JSON.parse(job.code.slice(PROJECT_PREFIX.length)));}catch{return false;}}return Buffer.byteLength(job.code)>0&&Buffer.byteLength(job.code)<=16000;}
 // Runs one docker CLI command and always resolves with timing and the exact failure, never throws.
 export function docker(args,timeoutMs,{run=execFile}={}){
  const started=Date.now();
@@ -129,8 +130,9 @@ async function start(){
  if(config.site!==SITE)throw Error('This runner is paired with '+(config.site||'the old ChatGPT Sites SkyData')+', not '+SITE+'. Open Engineering → Runner on '+SITE+', create a pairing code and run Pair_Runner.cmd.');await protectFile();const image=await pinnedImage();let rea=await checkReaImage(docker),browser=await checkBrowserImages(docker);console.log('Browser investigations: '+browser.detail);console.log('REA static analysis: '+(rea.available?'available · ':'unavailable · ')+rea.detail);
  const rl=createInterface({input:process.stdin,output:process.stdout});console.log('SkyData HP runner v'+VERSION+' connected to '+SITE+'. Keep this window open. Ctrl+C stops it.\nThe website shows when Docker was last verified; polling alone does not prove Docker is healthy.');
  try{for(;;){
- const {job}=await api('poll',{ready:true,protocol:2,version:VERSION,docker:dockerHealth,capabilities:{browser,rea:{available:rea.available,reaVersion:rea.reaVersion,adapterVersion:rea.adapterVersion,checkedAt:rea.checkedAt,detail:rea.detail}}},config.token);
+ const {job}=await api('poll',{ready:true,protocol:2,version:VERSION,docker:dockerHealth,capabilities:{browser,rea:{available:rea.available,reaVersion:rea.reaVersion,adapterVersion:rea.adapterVersion,checkedAt:rea.checkedAt,detail:rea.detail},reaFiles:{available:rea.files===true,reaVersion:rea.reaVersion,imageId:rea.imageId,checkedAt:rea.checkedAt,detail:rea.files===true?'File analysis ready: .NET programs, archives, SQLite databases':'Not available: '+rea.detail}}},config.token);
  if(job&&typeof job.code==='string'&&job.code.startsWith(BROWSER_PREFIX)){await hpBrowserJob(job,rl,config.token);browser=await checkBrowserImages(docker);}
+ else if(job&&typeof job.code==='string'&&job.code.startsWith(REAF_PREFIX))rea=await reafJob(job,rl,config.token);
  else if(job&&typeof job.code==='string'&&job.code.startsWith(REA_PREFIX))rea=await reaJob(job,rl,config.token);
  else if(job){if(!validJob(job))throw Error('Invalid or expired test; execution stopped.');const project=job.code.startsWith(PROJECT_PREFIX)?JSON.parse(job.code.slice(PROJECT_PREFIX.length)):null;console.log('\nTEST REQUEST '+job.id+'\n'+(project?'PROJECT: '+display(project.name)+'\nTest entry: '+project.entry+'\n'+project.files.map(f=>'\nFILE: '+f.path+'\n'+display(f.text)).join('\n'):display(job.code))+'\n');console.log('Approve within 10 minutes. Execution still stops after 10 seconds.');
  const answer=await rl.question('Run this exact JavaScript in Docker? Type yes: ');let result;
@@ -191,6 +193,29 @@ export async function reaJob(job,rl,token,{apiCall=api}={}){
  await send(result);if(result.status==='infrastructure_error')throw Error('Runner stopped after an infrastructure error during REA analysis. It will not retry automatically.');
  return rea;
 }
+// One REA file-analysis request: show what will be analysed, ask locally, only then download the file from the website.
+export async function reafJob(job,rl,token,{apiCall=api,checkImage=checkReaImage,download=downloadReaFile,execute=executeReaFile}={}){
+ const rea=await checkImage(docker),send=result=>apiCall('rea-file-result',{id:job.id,result},token),bundle=parseReafJob(job);
+ const fail=(status,why,phases=[])=>({status,adapter:null,stderr:why,diagnostics:{runner:'rea-file/'+ADAPTER_VERSION,executionStatus:'not_started',cleanupConfirmed:true,totalMs:0,phases}});
+ if(!bundle){await send(fail('rejected','Invalid or expired REA file request.')).catch(()=>{});throw Error('Invalid or expired REA file request; runner stopped.');}
+ const kind=REAF_KINDS[bundle.kind];
+ console.log('\nREA FILE ANALYSIS REQUEST '+job.id+'\nFile: '+display(bundle.name)+' (from project '+display(bundle.project)+')\nType: '+kind.label+'\nSize: '+bundle.bytes+' bytes · SHA-256 '+bundle.sha256+'\nREA '+REA_VERSION+' operations: '+kind.operations.join(', ')+'\nThe file is analysed as inert data in an isolated Docker container with no network. It is not run, loaded or installed.');
+ if(!rea.files){console.log('Not run: '+rea.detail);await send(fail('unavailable',rea.files===false&&rea.available?'The prepared REA image cannot analyse files yet. Run Prepare_REA.cmd again.':rea.detail));return rea;}
+ const answer=(await rl.question('Download and analyse this exact file with REA in Docker? Type yes: ')).trim().toLowerCase();
+ if(answer!=='yes'||job.expires<=Date.now()){await send(fail('declined','Declined or expired before local approval.'));return rea;}
+ const report=phaseName=>{void apiCall('progress',{id:job.id,phase:phaseName},token).catch(()=>{});};report('docker_check');
+ const check=await checkDocker();let result;
+ if(!check.ok)result={...fail('infrastructure_error','Docker check failed: '+check.detail,[check]),diagnostics:{runner:'rea-file/'+ADAPTER_VERSION,executionStatus:'not_started',cleanupConfirmed:true,totalMs:check.ms,phases:[check]}};
+ else{
+  let bytes=null,failure='';const t0=Date.now();try{bytes=await download(job,bundle,apiCall,token);}catch(e){failure=e instanceof Error?e.message:'Download failed.';}
+  const dl={phase:'download',command:'download approved file from website',ms:Date.now()-t0,ok:!!bytes,...(bytes?{}:{code:'download_failed',detail:failure.slice(0,600)})};
+  if(!bytes)result=fail('infrastructure_error','The file could not be downloaded or did not match its fingerprint: '+failure,[check,dl]);
+  else{console.log('Downloaded '+bytes.length+' bytes; fingerprint verified. Analysing (this can take a few minutes on slow PCs)...');result=await execute(bundle,bytes,rea.imageId,{dockerCommand:docker,removeContainer:cleanup,report,cleanEnv});result.diagnostics.phases.unshift(check,dl);}
+ }
+ console.log('REA file result: '+result.status+(result.adapter?.results?' · '+Object.keys(result.adapter.results).join(', '):''));printPhases(result);
+ await send(result);if(result.status==='infrastructure_error')throw Error('Runner stopped after an infrastructure error during REA file analysis. It will not retry automatically.');
+ return rea;
+}
 async function filesUnder(root,rel=''){const out=[];for(const e of await readdir(join(root,rel),{withFileTypes:true})){const p=rel?rel+'/'+e.name:e.name;if(e.isDirectory())out.push(...await filesUnder(root,p));else if(e.isFile()){const text=await readFile(join(root,p),'utf8');out.push({path:p,text,sha256:createHash('sha256').update(text).digest('hex')});}}return out.sort((a,b)=>a.path<b.path?-1:1);}
 // Real REA analysis of the bundled fixture. The fixture writes EXECUTED.txt if anything ever runs it.
 async function reaSelftest(){
@@ -209,6 +234,25 @@ async function reaSelftest(){
  }catch(e){failed++;log('STOPPED: '+e.message);}
  log(failed?'\nREA SELF-TEST FAILED ('+failed+'). Send rea-selftest-report.txt (it contains no tokens).':'\nREA self-test passed: real REA '+REA_VERSION+' analysis through the runner path, no execution, cleanup confirmed.');
  await writeFile('rea-selftest-report.txt',lines.join('\n')+'\n').catch(()=>{});if(failed)process.exitCode=1;
+}
+// Real REA analysis of the bundled sample files (a .NET assembly, a ZIP and a SQLite database) through the same runner path.
+async function reaFilesSelftest(){
+ const lines=[],log=s=>{console.log(s);lines.push(s);};let failed=0;const expect=(ok,what)=>{log('  '+(ok?'ok  ':'FAIL')+' '+what);if(!ok)failed++;};
+ log('SkyData REA file-analysis self-test · runner '+VERSION+' · '+new Date().toISOString()+' · Node '+process.version+' · '+process.platform+' '+release());
+ try{await pinnedImage();const rea=await checkReaImage(docker);log('REA image: '+rea.detail);if(!rea.files)throw Error(rea.detail);
+  for(const [kind,file] of [['dotnet','sample-assembly.dll'],['archive','sample.zip'],['sqlite','sample.db']]){
+   const bytes=await readFile(fileURLToPath(new URL('./rea/fixture-files/'+file,import.meta.url))),bundle={kind,name:file,bytes:bytes.length,sha256:createHash('sha256').update(bytes).digest('hex')};
+   log('\n'+file+' ('+REAF_KINDS[kind].label+', '+bytes.length+' bytes):');
+   const r=await executeReaFile(bundle,bytes,rea.imageId,{dockerCommand:docker,removeContainer:cleanup,cleanEnv}),a=r.adapter;
+   for(const p of r.diagnostics.phases)log('  phase '+p.phase.padEnd(16)+String(p.ms).padStart(7)+' ms  '+(p.ok?'ok':'FAILED '+(p.code||'')+' '+(p.detail||'')));
+   expect(r.status==='complete','status complete: '+r.status);expect(r.diagnostics.cleanupConfirmed,'container removal confirmed');expect(a?.workspaceUnchanged===true,'staged file unchanged, nothing created');
+   if(kind==='dotnet')expect(a?.results?.members?.counts?.types>0&&a?.results?.artifact?.assembly?.name==='Microsoft.Bcl.AsyncInterfaces','assembly name and type inventory');
+   if(kind==='archive')expect((a?.results?.archive?.entries?.items||[]).some(e=>e.path==='package.json'),'archive entry package.json listed');
+   if(kind==='sqlite')expect((a?.results?.database?.tables?.items||[]).some(t=>t.name==='users'&&t.columns.length===4),'table users with 4 columns');
+  }
+ }catch(e){failed++;log('STOPPED: '+e.message);}
+ log(failed?'\nREA FILE SELF-TEST FAILED ('+failed+'). Send rea-files-selftest-report.txt (it contains no tokens).':'\nREA file-analysis self-test passed: .NET, archive and SQLite analysed by real REA '+REA_VERSION+' with no execution and cleanup confirmed.');
+ await writeFile('rea-files-selftest-report.txt',lines.join('\n')+'\n').catch(()=>{});if(failed)process.exitCode=1;
 }
 async function selftest(){
  const lines=[],log=s=>{console.log(s);lines.push(s);};
@@ -230,5 +274,5 @@ async function selftest(){
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>{for(const resource of activeBrowserResources)try{execFileSync('docker',[resource.startsWith('skydata-browser-net-')?'network':'container','rm','-f',resource],{stdio:'ignore',timeout:LIMITS.cleanupMs,windowsHide:true});}catch{console.error('Check Docker Desktop for '+resource);}
  if(activeContainer)try{execFileSync('docker',['rm','-f',activeContainer],{stdio:'ignore',timeout:LIMITS.cleanupMs,windowsHide:true});}catch{console.error('Could not confirm cleanup. Check Docker Desktop for '+activeContainer);}process.exit(130);});
- const mode=process.argv[2];try{if(mode==='pair')await pair();else if(mode==='start')await start();else if(mode==='selftest')await selftest();else if(mode==='rea-selftest')await reaSelftest();else if(mode==='browser-selftest')console.log(await browserSelftest({dockerCommand:docker,removeContainer:cleanup,cleanEnv}));else console.log('Use: node runner.mjs pair | start | selftest | rea-selftest | browser-selftest');}catch(e){console.error(e.message);process.exitCode=1;}
+ const mode=process.argv[2];try{if(mode==='pair')await pair();else if(mode==='start')await start();else if(mode==='selftest')await selftest();else if(mode==='rea-selftest')await reaSelftest();else if(mode==='rea-files-selftest')await reaFilesSelftest();else if(mode==='browser-selftest')console.log(await browserSelftest({dockerCommand:docker,removeContainer:cleanup,cleanEnv}));else console.log('Use: node runner.mjs pair | start | selftest | rea-selftest | rea-files-selftest | browser-selftest');}catch(e){console.error(e.message);process.exitCode=1;}
 }

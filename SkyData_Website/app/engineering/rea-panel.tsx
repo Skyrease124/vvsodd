@@ -18,7 +18,7 @@ type History={id:string;created:number;kind:string;projectId:string|null;status:
 const ANALYZABLE=/\.(?:[cm]?jsx?|[cm]?tsx?|json|html?)$/i;
 const where=(l:Loc)=>!l.available?'location unavailable':(l.path||'?')+(l.line?':'+l.line+(l.column!==undefined?':'+(l.column+1):''):'');
 async function api<T>(url:string,body?:unknown){const r=await fetch(url,{cache:'no-store',...(body!==undefined?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{})});const d=await r.json() as T&{error?:string};if(!r.ok)throw Error(d.error||'Request failed.');return d;}
-function Table<T>({title,list,cols,note}:{title:string;list?:List<T>;cols:[string,(x:T)=>string][];note?:string}){
+export function Table<T>({title,list,cols,note}:{title:string;list?:List<T>;cols:[string,(x:T)=>string][];note?:string}){
  if(!list)return null;
  return <section className="rea-findings"><h4>{title} · {list.total}{list.truncatedByAdapter?' (first '+list.items.length+' shown; adapter limit)':''}</h4>{note&&<p className="score-note">{note}</p>}
   {list.items.length?<div className="rea-table-wrap"><table className="runner-history"><thead><tr>{cols.map(([h])=><th key={h}>{h}</th>)}</tr></thead><tbody>{list.items.map((x,i)=><tr key={i}>{cols.map(([h,f])=><td key={h}>{f(x)}</td>)}</tr>)}</tbody></table></div>:<p className="score-note">None reported by REA (not proof of absence).</p>}

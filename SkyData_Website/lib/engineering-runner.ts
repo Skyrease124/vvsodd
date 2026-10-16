@@ -4,6 +4,7 @@ import {PROJECT_PREFIX} from '../runner-package/project.mjs';
 import {isSiteAdmin} from './site-admin';
 import {buildReaSelection,REA_PREFIX,REA_VERSION,REA_ADAPTER,REA_OPERATION,REA_SELECTION_LIMITS} from './rea-selection';
 import {reaResultChecks,reaRunUsable} from './rea-explain';
+import {REAF_PREFIX,REAF_KINDS,REAF_LIMITS,loadReafFile,reafPayload,reafChunk,reafResultChecks,reafUsable,kindForPath} from './rea-files';
 const reaKey=(projectId:string,id:string)=>'projects/'+projectId+'/rea/'+id+'.json';
 import type {SecretEnv} from './secret-store';
 const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
@@ -23,6 +24,7 @@ export async function runnerSchema(db:D1Database){
  'CREATE INDEX IF NOT EXISTS engineering_runner_history_owner ON engineering_runner_history(owner, created)',
  // REA capability as last reported by the HP runner (v2.3+): prepared image, REA and adapter versions.
  'CREATE TABLE IF NOT EXISTS engineering_runner_rea (owner TEXT PRIMARY KEY, available INTEGER NOT NULL, rea_version TEXT, adapter_version TEXT, image_id TEXT, detail TEXT, checked INTEGER, updated INTEGER NOT NULL)',
+ 'CREATE TABLE IF NOT EXISTS engineering_runner_reaf (owner TEXT PRIMARY KEY, available INTEGER NOT NULL, image_id TEXT, detail TEXT, checked INTEGER, updated INTEGER NOT NULL)',
  'CREATE TABLE IF NOT EXISTS engineering_runner_health (owner TEXT PRIMARY KEY, version TEXT, docker_ok INTEGER, docker_checked INTEGER, docker_detail TEXT, updated INTEGER NOT NULL)'
  ])await db.prepare(sql).run();
 }
@@ -61,17 +63,18 @@ export async function handleRunnerOwner(req:Request,env:SecretEnv,path:string){
  const job=await db.prepare('SELECT id,status,created,expires,result FROM engineering_runner_job WHERE owner=?').bind(owner).first<{id:string;status:string;created:number;expires:number;result:string|null}>();
  const health=await db.prepare('SELECT version,docker_ok,docker_checked,docker_detail,updated FROM engineering_runner_health WHERE owner=?').bind(owner).first<{version:string|null;docker_ok:number|null;docker_checked:number|null;docker_detail:string|null;updated:number}>();
  const rea=await db.prepare('SELECT available,rea_version,adapter_version,image_id,detail,checked FROM engineering_runner_rea WHERE owner=?').bind(owner).first<{available:number;rea_version:string|null;adapter_version:string|null;image_id:string|null;detail:string|null;checked:number|null}>();
+ const reaf=await db.prepare('SELECT available,detail,checked FROM engineering_runner_reaf WHERE owner=?').bind(owner).first<{available:number;detail:string|null;checked:number|null}>();
  const rows=(await db.prepare('SELECT id,created,kind,project_id,project_name,proposal_id,entry,files,payload_sha256,status,phase,phase_at,claimed,completed,result FROM engineering_runner_history WHERE owner=? ORDER BY created DESC LIMIT 20').bind(owner).all<Record<string,unknown>>()).results;
  const live=job&&['pending','running'].includes(job.status)&&job.expires>now?job.id:null;
  const history=rows.map(r=>({id:r.id,created:r.created,kind:r.kind,projectId:r.project_id,projectName:r.project_name,proposalId:r.proposal_id,entry:r.entry,files:JSON.parse(String(r.files)),fingerprint:r.payload_sha256,status:FINAL.includes(String(r.status))||r.id===live?r.status:'expired',phase:r.phase,phaseAt:r.phase_at,claimed:r.claimed,completed:r.completed,result:r.result?JSON.parse(String(r.result)):null}));
- return json({device:device?{online:device.expires>now&&device.last_seen>now-30000,lastSeen:device.last_seen,ready:device.ready>=1,projectReady:device.ready===2,expires:device.expires,runnerVersion:health?.version||null,docker:health?.docker_checked?{ok:health.docker_ok===1,checkedAt:health.docker_checked,detail:health.docker_detail}:null,rea:rea?{available:rea.available===1,reaVersion:rea.rea_version,adapterVersion:rea.adapter_version,imageId:rea.image_id,detail:rea.detail,checkedAt:rea.checked}:null}:null,reaExpected:{reaVersion:REA_VERSION,adapterVersion:REA_ADAPTER},job:job?{...job,status:['pending','running'].includes(job.status)&&job.expires<=now?'expired':job.status,result:job.result?JSON.parse(job.result):null,phase:history.find(h=>h.id===job.id)?.phase??null}:null,history});
+ return json({device:device?{online:device.expires>now&&device.last_seen>now-30000,lastSeen:device.last_seen,ready:device.ready>=1,projectReady:device.ready===2,expires:device.expires,runnerVersion:health?.version||null,docker:health?.docker_checked?{ok:health.docker_ok===1,checkedAt:health.docker_checked,detail:health.docker_detail}:null,rea:rea?{available:rea.available===1,reaVersion:rea.rea_version,adapterVersion:rea.adapter_version,imageId:rea.image_id,detail:rea.detail,checkedAt:rea.checked}:null,reaFiles:reaf?{available:reaf.available===1,detail:reaf.detail,checkedAt:reaf.checked}:null}:null,reaExpected:{reaVersion:REA_VERSION,adapterVersion:REA_ADAPTER},job:job?{...job,status:['pending','running'].includes(job.status)&&job.expires<=now?'expired':job.status,result:job.result?JSON.parse(job.result):null,phase:history.find(h=>h.id===job.id)?.phase??null}:null,history});
  }
  if(path==='/api/engineering-runner/rea-run'&&req.method==='GET'){
  const id=new URL(req.url).searchParams.get('id')||'';if(!/^[a-f0-9-]{36}$/.test(id))return json({error:'Choose an REA analysis.'},400);
- const row=await db.prepare("SELECT project_id,status,result FROM engineering_runner_history WHERE id=? AND owner=? AND kind='rea'").bind(id,owner).first<{project_id:string|null;status:string;result:string|null}>();if(!row)return json({error:'Analysis not found.'},404);
+ const row=await db.prepare("SELECT project_id,status,result,kind FROM engineering_runner_history WHERE id=? AND owner=? AND kind IN ('rea','reafile')").bind(id,owner).first<{project_id:string|null;status:string;result:string|null;kind:string}>();if(!row)return json({error:'Analysis not found.'},404);
  const stored=row.project_id&&env.FILES?await env.FILES.get(reaKey(row.project_id,id)):null;
  const analysis=stored?await stored.json<Record<string,unknown>>():null;
- return json({id,status:row.status,summary:row.result?JSON.parse(row.result):null,analysis,usable:reaRunUsable(row.status,analysis)});
+ return json({id,kind:row.kind,status:row.status,summary:row.result?JSON.parse(row.result):null,analysis,usable:row.kind==='reafile'?reafUsable(row.status,analysis):reaRunUsable(row.status,analysis)});
  }
  if(req.method!=='POST')return json({error:'Use POST.'},405);
  if(req.headers.get('origin')!==new URL(req.url).origin)return json({error:'Origin rejected.'},403);
@@ -95,6 +98,18 @@ export async function handleRunnerOwner(req:Request,env:SecretEnv,path:string){
  const cap=await db.prepare('SELECT available FROM engineering_runner_rea WHERE owner=?').bind(owner).first<{available:number}>();
  if(cap?.available!==1)return json({error:'The HP runner has not reported a verified REA '+REA_VERSION+' image (adapter '+REA_ADAPTER+'). Run Prepare_REA on the HP and restart the runner.'},409);
  return queue(db,owner,sel.payload,true,{kind:'rea',projectId:sel.project.id,projectName:sel.project.name,entry:REA_OPERATION,files:sel.files.map(f=>({path:f.path,sha256:f.sha256,bytes:f.bytes,source:'original'}))});
+ }
+ if(path==='/api/engineering-runner/rea-file-preview'||path==='/api/engineering-runner/rea-file-analyze'){
+ const b=await body(req,4000),send=path.endsWith('/rea-file-analyze');
+ if(Object.keys(b).some(k=>!['projectId','path','approved','fingerprint'].includes(k))||send&&(b.approved!==true||typeof b.fingerprint!=='string'))return json({error:'Preview the exact file, then approve that preview.'},400);
+ let file;try{file=await loadReafFile(env,owner,b.projectId,b.path===undefined?null:b.path);}catch(e){return json({error:e instanceof Error?e.message:'File unavailable.'},400);}
+ const payload=reafPayload(file),fingerprint=await hash(payload),k=REAF_KINDS[file.kind];
+ const view={project:file.project,file:{path:file.path,name:file.name,kind:file.kind,label:k.label,bytes:file.bytes,sha256:file.sha256,chunks:Math.ceil(file.bytes/REAF_LIMITS.chunkBytes)},operations:k.operations,reaVersion:REA_VERSION,limits:{bytes:REAF_LIMITS.bytes},fingerprint};
+ if(!send)return json(view);
+ if(b.fingerprint!==fingerprint)return json({error:'The file changed since your preview. Preview again and re-approve.'},409);
+ const cap=await db.prepare('SELECT available FROM engineering_runner_reaf WHERE owner=?').bind(owner).first<{available:number}>();
+ if(cap?.available!==1)return json({error:'The HP runner has not reported file analysis. Update to runner 2.6.0, run Prepare_REA.cmd, and restart the runner.'},409);
+ return queue(db,owner,payload,true,{kind:'reafile',projectId:file.project.id,projectName:file.project.name,entry:k.operations.join(', '),files:[{path:file.name,sha256:file.sha256,bytes:file.bytes,source:'original'}]});
  }
  if(path==='/api/engineering-runner/proposal-preview'||path==='/api/engineering-runner/proposal-test'){
  const b=await body(req),send=path.endsWith('/proposal-test');
@@ -126,7 +141,7 @@ export async function handleRunnerDevice(req:Request,env:SecretEnv,path:string){
  const bearer=req.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/);if(!bearer)return json({error:'Unauthorized.'},401);const tokenHash=await hash(bearer[1]);
  const device=await db.prepare('SELECT owner,id FROM engineering_runner_device WHERE token_hash=? AND expires>?').bind(tokenHash,now).first<{owner:string;id:string}>();if(!device)return json({error:'Runner expired or revoked.'},401);
  if(await limited(db,'runner-device:'+device.id,30))return json({error:'Slow down.'},429);
- const b=await body(req,['/api/engineering-runner/rea-result','/api/engineering-runner/browser-result'].includes(path)?8000000:90000);
+ const b=await body(req,['/api/engineering-runner/rea-result','/api/engineering-runner/rea-file-result','/api/engineering-runner/browser-result'].includes(path)?8000000:90000);
  if(path==='/api/engineering-runner/poll'){
  if(typeof b.ready!=='boolean')return json({error:'Send readiness.'},400);await db.prepare('UPDATE engineering_runner_device SET last_seen=?,ready=? WHERE id=? AND token_hash=?').bind(now,b.ready?(b.protocol===2?2:1):0,device.id,tokenHash).run();
  // v2.2+ reports when it last verified Docker; older runners only checked once at start-up.
@@ -136,11 +151,14 @@ export async function handleRunnerDevice(req:Request,env:SecretEnv,path:string){
  const cap=b.capabilities&&typeof b.capabilities==='object'?b.capabilities.rea:null,reaCapable=!!cap&&cap.available===true&&cap.reaVersion===REA_VERSION&&cap.adapterVersion===REA_ADAPTER;
  if(cap&&typeof cap==='object')await db.prepare('INSERT INTO engineering_runner_rea(owner,available,rea_version,adapter_version,image_id,detail,checked,updated) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(owner) DO UPDATE SET available=excluded.available,rea_version=excluded.rea_version,adapter_version=excluded.adapter_version,image_id=excluded.image_id,detail=excluded.detail,checked=excluded.checked,updated=excluded.updated').bind(device.owner,reaCapable?1:0,typeof cap.reaVersion==='string'?cap.reaVersion.slice(0,20):null,typeof cap.adapterVersion==='string'?cap.adapterVersion.slice(0,10):null,typeof cap.imageId==='string'?cap.imageId.slice(0,80):null,typeof cap.detail==='string'?cap.detail.slice(0,300):null,Number.isFinite(cap.checkedAt)?Math.min(Number(cap.checkedAt),now):null,now).run();
  else await db.prepare('DELETE FROM engineering_runner_rea WHERE owner=?').bind(device.owner).run();
+ const rf=b.capabilities&&typeof b.capabilities==='object'?b.capabilities.reaFiles:null,reafCapable=reaCapable&&!!rf&&typeof rf==='object'&&rf.available===true&&rf.reaVersion===REA_VERSION;
+ if(rf&&typeof rf==='object')await db.prepare('INSERT INTO engineering_runner_reaf(owner,available,image_id,detail,checked,updated) VALUES(?,?,?,?,?,?) ON CONFLICT(owner) DO UPDATE SET available=excluded.available,image_id=excluded.image_id,detail=excluded.detail,checked=excluded.checked,updated=excluded.updated').bind(device.owner,reafCapable?1:0,typeof rf.imageId==='string'?rf.imageId.slice(0,80):null,typeof rf.detail==='string'?rf.detail.slice(0,300):null,Number.isFinite(rf.checkedAt)?Math.min(Number(rf.checkedAt),now):null,now).run();
+ else await db.prepare('DELETE FROM engineering_runner_reaf WHERE owner=?').bind(device.owner).run();
  const browser=b.capabilities?.browser, browserCapable=!!browser&&browser.available===true&&browser.stagehandVersion===BROWSER_VERSION&&browser.adapterVersion===BROWSER_ADAPTER&&browser.selfTestPassed===true;
  if(browser&&typeof browser==='object')await db.prepare('INSERT INTO engineering_runner_browser(owner,available,stagehand_version,adapter_version,rea,detail,checked,updated) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(owner) DO UPDATE SET available=excluded.available,stagehand_version=excluded.stagehand_version,adapter_version=excluded.adapter_version,rea=excluded.rea,detail=excluded.detail,checked=excluded.checked,updated=excluded.updated').bind(device.owner,browserCapable?1:0,BROWSER_VERSION,BROWSER_ADAPTER,reaCapable?1:0,typeof browser.detail==='string'?browser.detail.slice(0,300):null,Number.isFinite(browser.checkedAt)?Math.min(browser.checkedAt,now):null,now).run();
  else await db.prepare('DELETE FROM engineering_runner_browser WHERE owner=?').bind(device.owner).run();
  const cancellation=await db.prepare("SELECT j.id FROM engineering_runner_job j JOIN engineering_runner_history h ON j.id=h.id WHERE j.owner=? AND j.device=? AND j.status='running' AND h.kind='website' AND h.status='cancel_requested'").bind(device.owner,device.id).first<{id:string}>();
- const job=b.ready?await db.prepare("UPDATE engineering_runner_job SET status='running',expires=? WHERE owner=? AND device=? AND status='pending' AND expires>? AND (instr(code,?)!=1 OR ?=2) AND (instr(code,?)!=1 OR ?=1) AND (instr(code,?)!=1 OR ?=1) AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?) RETURNING id,code,expires").bind(now+600000,device.owner,device.id,now,PROJECT_PREFIX,b.protocol===2?2:1,REA_PREFIX,reaCapable?1:0,BROWSER_PREFIX,browserCapable?1:0,device.id,tokenHash,now).first<{id:string}>():null;
+ const job=b.ready?await db.prepare("UPDATE engineering_runner_job SET status='running',expires=? WHERE owner=? AND device=? AND status='pending' AND expires>? AND (instr(code,?)!=1 OR ?=2) AND (instr(code,?)!=1 OR ?=1) AND (instr(code,?)!=1 OR ?=1) AND (instr(code,?)!=1 OR ?=1) AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?) RETURNING id,code,expires").bind(now+600000,device.owner,device.id,now,PROJECT_PREFIX,b.protocol===2?2:1,REA_PREFIX,reaCapable?1:0,REAF_PREFIX,reafCapable?1:0,BROWSER_PREFIX,browserCapable?1:0,device.id,tokenHash,now).first<{id:string}>():null;
  if(job)await db.prepare("UPDATE engineering_runner_history SET status='awaiting_local_approval',claimed=? WHERE id=? AND owner=?").bind(now,job.id,device.owner).run();
  return json({job,cancelId:cancellation?.id||null});
  }
@@ -172,6 +190,28 @@ export async function handleRunnerDevice(req:Request,env:SecretEnv,path:string){
  const updated=await db.prepare("UPDATE engineering_runner_history SET phase=?,phase_at=? WHERE id=? AND owner=? AND EXISTS(SELECT 1 FROM engineering_runner_job WHERE owner=? AND device=? AND id=? AND status='running' AND expires>?)").bind(b.phase,now,b.id,device.owner,device.owner,device.id,b.id,now).run();
  return updated.meta.changes===1?json({accepted:true}):json({error:'No running test with that id.'},409);
  }
+ if(path==='/api/engineering-runner/rea-file'){
+  const row=await db.prepare("SELECT code FROM engineering_runner_job WHERE owner=? AND device=? AND id=? AND status='running' AND expires>?").bind(device.owner,device.id,b.id,now).first<{code:string}>();
+  if(!row?.code.startsWith(REAF_PREFIX))return json({error:'No running REA file analysis with that id.'},409);
+  const approved=await db.prepare("SELECT status FROM engineering_runner_history WHERE id=? AND owner=?").bind(b.id,device.owner).first<{status:string}>();
+  if(approved?.status!=='awaiting_local_approval'&&approved?.status!=='running')return json({error:'The file is released only after local approval.'},409);
+  try{return json(await reafChunk(env,device.owner,row.code,b.index));}catch(e){return json({error:e instanceof Error?e.message:'File unavailable.'},409);}
+ }
+ if(path==='/api/engineering-runner/rea-file-result'){
+  const r=b.result,diag=r&&diagnostics(r.diagnostics);
+  if(typeof b.id!=='string'||!r||typeof r!=='object'||!REA_STATUSES.includes(r.status)||!diag||r.adapter!==null&&(typeof r.adapter!=='object'||r.adapter.adapter!==REA_ADAPTER)||typeof r.stderr!=='string'||r.stderr.length>8000)return json({error:'Invalid REA file result.'},400);
+  const stored=await db.prepare("SELECT code FROM engineering_runner_job WHERE owner=? AND device=? AND id=? AND status='running'").bind(device.owner,device.id,b.id).first<{code:string}>();
+  if(!stored?.code.startsWith(REAF_PREFIX))return json({error:'No running REA file analysis with that id.'},409);
+  const expected=JSON.parse(stored.code.slice(REAF_PREFIX.length)) as {kind:keyof typeof REAF_KINDS;sha256:string;bytes:number;name:string;path:string|null;projectId:string};
+  const failedChecks=['complete','partial'].includes(r.status)?reafResultChecks({expected,adapter:r.adapter,cleanupConfirmed:diag.cleanupConfirmed}):[];
+  const status=failedChecks.length?'invalid_result':r.status,usable=['complete','partial'].includes(status);
+  const summary={status,reportedStatus:r.status,usable,failedChecks,fileKind:expected.kind,file:{name:expected.name,bytes:expected.bytes,sha256:expected.sha256},operations:Array.isArray(r.adapter?.rea?.operations)?r.adapter.rea.operations.slice(0,6).map((o:{operation:string;ok:boolean}) => ({operation:String(o.operation).slice(0,60),ok:o.ok===true})):[],reaVersion:typeof r.adapter?.rea?.version==='string'?r.adapter.rea.version:null,workspaceUnchanged:typeof r.adapter?.workspaceUnchanged==='boolean'?r.adapter.workspaceUnchanged:null,diagnostics:diag,evidence:'Reported by the paired HP runner (REA adapter '+REA_ADAPTER+'); not independently verified by the server.'};
+  const updated=await db.prepare("UPDATE engineering_runner_job SET status=?,result=?,code='' WHERE owner=? AND device=? AND id=? AND status='running' AND expires>? AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?)").bind(status,JSON.stringify(summary),device.owner,device.id,b.id,now,device.id,tokenHash,now).run();
+  if(updated.meta.changes!==1)return json({error:'Analysis expired, completed, or connection revoked.'},409);
+  if(env.FILES)await env.FILES.put(reaKey(expected.projectId,b.id),JSON.stringify({...summary,expected:{kind:expected.kind,sha256:expected.sha256,bytes:expected.bytes},adapter:r.adapter,stderr:r.stderr,receivedAt:now}),{httpMetadata:{contentType:'application/json'}});
+  await db.prepare('UPDATE engineering_runner_history SET status=?,completed=?,result=?,phase=NULL WHERE id=? AND owner=?').bind(status,now,JSON.stringify(summary),b.id,device.owner).run();
+  return json({accepted:true,status,usable,failedChecks});
+ }
  if(path==='/api/engineering-runner/rea-result'){
  const r=b.result,diag=r&&diagnostics(r.diagnostics);
  if(typeof b.id!=='string'||!r||typeof r!=='object'||!REA_STATUSES.includes(r.status)||!diag||r.adapter!==null&&(typeof r.adapter!=='object'||r.adapter.adapter!==REA_ADAPTER)||typeof r.stderr!=='string'||r.stderr.length>8000)return json({error:'Invalid REA result.'},400);
@@ -198,7 +238,7 @@ export async function handleRunnerDevice(req:Request,env:SecretEnv,path:string){
  const diag=diagnostics(r.diagnostics);if(diag===false)return json({error:'Invalid runner diagnostics.'},400);
  const stored=await db.prepare('SELECT code FROM engineering_runner_job WHERE owner=? AND device=? AND id=?').bind(device.owner,device.id,b.id).first<{code:string}>();
  if(stored?.code.startsWith(BROWSER_PREFIX))return json({error:'Browser results require the browser result endpoint.'},409);
- if(stored?.code.startsWith(REA_PREFIX))return json({error:'REA analysis results use the REA result endpoint.'},409);
+ if(stored?.code.startsWith(REA_PREFIX)||stored?.code.startsWith(REAF_PREFIX))return json({error:'REA analysis results use the REA result endpoint.'},409);
  let project=null;if(stored?.code.startsWith(PROJECT_PREFIX)){const bundle=JSON.parse(stored.code.slice(PROJECT_PREFIX.length));project={name:bundle.name,entry:bundle.entry,paths:bundle.files.map((f:{path:string})=>f.path),sha256:await hash(stored.code)};}
  const result=JSON.stringify({project,status:r.status,exitCode:r.exitCode,stdout:r.stdout,stderr:r.stderr,durationMs:r.durationMs,...(diag?{diagnostics:diag}:{}),evidence:'Reported by paired HP runner; not independently verified by the server.'});
  const updated=await db.prepare("UPDATE engineering_runner_job SET status=?,result=?,code='' WHERE owner=? AND device=? AND id=? AND status='running' AND expires>? AND EXISTS(SELECT 1 FROM engineering_runner_device WHERE id=? AND token_hash=? AND expires>?)").bind(r.status,result,device.owner,device.id,b.id,now,device.id,tokenHash,now).run();
