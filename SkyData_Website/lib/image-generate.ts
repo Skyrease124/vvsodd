@@ -1,6 +1,5 @@
 import {readKey,saveKey,type SecretEnv} from './secret-store';
-// AI image generation and editing through OpenRouter (default: a FLUX "klein" model), open to signed-in members (rate-limited per person);
-// only the owner can change the model id.
+// AI image generation and editing through OpenRouter (default: a FLUX "klein" model), owner-only: image models cost money per image.
 // The model id is a setting (saved encrypted) because OpenRouter's catalogue changes and the id cannot be checked from the build.
 export const DEFAULT_IMAGE_MODEL='black-forest-labs/flux.2-klein-4b';
 const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
@@ -19,6 +18,8 @@ export function extractImage(data:any):string|null{
 }
 export async function handleImageGenerate(request:Request,env:SecretEnv,admin:boolean,upstream:typeof fetch=fetch){
  const path=new URL(request.url).pathname;
+ // Image models are paid (about $0.04 per image on OpenRouter), so only the owner can spend the OpenRouter credits.
+ if(!admin)return json({error:'AI images are owner-only because each image costs money.'},403);
  try{
   if(path==='/api/image-model'&&request.method==='GET')return json({model:await imageModel(env),default:DEFAULT_IMAGE_MODEL});
   if(request.method!=='POST')return json({error:'Use POST.'},405);
