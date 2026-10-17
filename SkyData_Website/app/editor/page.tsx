@@ -3,7 +3,7 @@
 // (PhotoCraft's engine as WebAssembly in a Web Worker, public/editor-engine/); photos are never uploaded.
 // The engine starts when this page opens and is shut down when it closes, so it holds no memory elsewhere.
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Camera, Download, FolderOpen, Save, Sparkles, Undo2 } from 'lucide-react';
+import { ArrowLeft, Camera, Download, FolderOpen, Save, Undo2 } from 'lucide-react';
 import { planWithRules, type EditPlan, type EditStep } from '../../lib/editor-planner';
 import { makeThumb, readFile, saveFile, takeHandOff } from '../../lib/creative-files';
 import { closeCutout, cutoutMask, type CutoutRegion } from '../../lib/cutout';
@@ -342,50 +342,6 @@ export default function Editor() {
     }
   }
 
-  // AI images (owner-only while tested): generate a new picture, or edit the open photo from a description.
-  const [ai, setAi] = useState<{ allowed: boolean; model: string } | null>(null);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiBusy, setAiBusy] = useState(false);
-  const [aiNote, setAiNote] = useState('');
-  const [aiModel, setAiModel] = useState('');
-  useEffect(() => {
-    let live = true;
-    fetch('/api/image-model', { cache: 'no-store' }).then(async (r) => { if (!live) return; if (r.ok) { const d = await r.json() as { model: string }; setAi({ allowed: true, model: d.model }); setAiModel(d.model); } }).catch(() => {});
-    return () => { live = false; };
-  }, []);
-  async function aiPost(path: string, body: unknown) {
-    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json().catch(() => ({})) as { error?: string };
-    if (!r.ok) throw new Error(d.error || 'Request failed (' + r.status + ').');
-    return d as Record<string, string>;
-  }
-  async function currentPhotoDataUrl() {
-    const { blob } = await call<{ blob: Blob }>('export', { format: 'jpg', quality: 85 });
-    const bmp = await createImageBitmap(blob);
-    const k = Math.min(1, 1280 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
-    c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
-    return c.toDataURL('image/jpeg', 0.85);
-  }
-  async function aiRun(useCurrent: boolean) {
-    const prompt = aiPrompt.trim();
-    if (!prompt || aiBusy || busy) return;
-    setAiBusy(true); setAiNote(useCurrent ? 'Sending your photo and instruction…' : 'Generating…');
-    try {
-      const image = useCurrent && photo ? await currentPhotoDataUrl() : undefined;
-      const d = await aiPost('/api/image-generate', { prompt, ...(image ? { image } : {}) });
-      const blob = await (await fetch(d.image)).blob();
-      const ext = blob.type.includes('png') ? 'png' : blob.type.includes('webp') ? 'webp' : 'jpg';
-      setAiNote('Opening the result…');
-      const opened = await openFile(new File([blob], `ai-${useCurrent ? 'edit' : 'image'}.${ext}`, { type: blob.type || 'image/png' }));
-      if (opened) { add({ who: 'sky', text: `AI ${useCurrent ? 'edit' : 'image'} ready (${d.model}). It is open in the editor: you can keep editing, undo or download it.` }); setAiNote(''); }
-      else setAiNote('The model returned a picture the editor could not open.');
-    } catch (e) {
-      setAiNote((e as Error).message);
-    } finally {
-      setAiBusy(false);
-    }
-  }
   const canEdit = ready && !busy && Boolean(photo);
   return (
     <main className="editor-page">
@@ -423,22 +379,6 @@ export default function Editor() {
           ))}
           <div ref={logEnd} />
         </div>
-      {ai?.allowed && (
-        <section className="editor-ai" aria-label="AI image">
-          <h2><Sparkles size={16} /> AI image <span>owner preview</span></h2>
-          <textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="Describe a new image, or how to change the open photo…" rows={2} maxLength={1500} disabled={aiBusy} aria-label="AI image description" />
-          <div className="editor-actions">
-            <button type="button" disabled={!ready || busy || aiBusy || !aiPrompt.trim()} onClick={() => void aiRun(false)}>Generate new image</button>
-            <button type="button" disabled={!canEdit || aiBusy || !aiPrompt.trim()} onClick={() => void aiRun(true)}>AI edit this photo</button>
-          </div>
-          {aiNote && <p className={aiBusy ? 'editor-ai-note' : 'editor-ai-note error'} role="status">{aiNote}</p>}
-          <details>
-            <summary>Model: {ai.model}</summary>
-            <p>Uses your OpenRouter key (plus menu → Connect OpenRouter). Paste the model id exactly as OpenRouter shows it.</p>
-            <div className="editor-ai-model"><input value={aiModel} onChange={(e) => setAiModel(e.target.value)} aria-label="OpenRouter image model id" spellCheck={false} autoCapitalize="none" /><button type="button" disabled={aiBusy || !aiModel.trim() || aiModel.trim() === ai.model} onClick={async () => { try { const d = await aiPost('/api/image-model', { model: aiModel }); setAi({ allowed: true, model: d.model }); setAiNote('Model saved.'); } catch (e) { setAiNote((e as Error).message); } }}>Save</button></div>
-          </details>
-        </section>
-      )}
       </section>
       <form
         className="editor-bar"

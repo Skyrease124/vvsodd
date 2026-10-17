@@ -27,9 +27,3 @@
 .editor-status{margin-top:6px;font-size:12px;color:#93a0b5}
 .editor-actions a{text-decoration:none}
 .editor-files-link{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
-
-.editor-ai{max-width:760px;width:100%;margin:18px auto 0;padding:14px 16px;border:1px solid #8bcaff22;border-radius:16px;background:linear-gradient(145deg,#121c2d,#0e1726);display:grid;gap:10px}
-.editor-ai h2{margin:0;font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:8px;color:#e8eef8}.editor-ai h2 span{font-size:.7rem;font-weight:500;color:#8ea2bf;border:1px solid #8bcaff33;border-radius:99px;padding:2px 8px}
-.editor-ai textarea,.editor-ai-model input{width:100%;font:inherit;font-size:16px;color:#f1f5fa;background:#0b1424;border:1px solid #405674;border-radius:12px;padding:10px 12px;resize:vertical}
-.editor-ai .editor-actions{display:flex;gap:8px;flex-wrap:wrap}.editor-ai-note{margin:0;font-size:.85rem;color:#9bdfff}.editor-ai-note.error{color:#ffb4b4}
-.editor-ai details{font-size:.82rem;color:#9faec6}.editor-ai summary{cursor:pointer}.editor-ai-model{display:flex;gap:8px;margin-top:8px}.editor-ai-model input{flex:1;font-size:14px}

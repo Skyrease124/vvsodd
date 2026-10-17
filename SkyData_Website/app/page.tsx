@@ -173,23 +173,12 @@ function nextAudioPart(){const controller=audioRequest.current;if(!controller||c
 
 function stop(){const controller=activeRequest.current;if(!controller)return;activeRequest.current=null;controller.abort();setBusy(false);setStopped(true);setError('');}
 useEffect(()=>()=>{activeRequest.current?.abort();},[]);
-// "draw / generate / create a picture of …" or "/image …" asks for an AI picture instead of a text answer.
-const IMAGE_ASK=/^(?:\/image\s+([\s\S]+)|(?:please\s+)?(?:can you\s+|could you\s+)?(?:draw|generate|create|make|paint|design|render)\s+(?:me\s+)?(?:an?\s+|the\s+)?(?:image|picture|illustration|drawing|logo|poster|wallpaper|painting|artwork|photo)\s+(?:of|showing|with|for)\b[\s\S]+)$/i;
-async function drawImage(next:Message[],text:string){
- const prompt=(text.match(IMAGE_ASK)?.[1]||text).trim();setMessages(next);setBusy(true);setError('');setInput('');
- try{
-  const r=await fetch('/api/image-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});const d=await r.json().catch(()=>({})) as {image?:string;model?:string;error?:string};
-  if(!r.ok||!d.image)throw new Error(d.error||'The image could not be made.');
-  setMessages([...next,{role:'assistant',content:'Here is your image. Open the Editor to keep working on it.',image:d.image}]);
- }catch(e){setError(e instanceof Error?e.message:'The image could not be made.');setMessages(next.slice(0,-1));setInput(text);}finally{setBusy(false);}
-}
 async function send(e:React.FormEvent|null,spoken?:string){
  e?.preventDefault();if(liveActive.current&&voiceProvider==='polly'&&!spoken)voiceConversation.interrupt();if(voiceProvider==='gemini'&&liveActive.current&&!photo&&!media&&!documentFile&&!projectFile){try{if(gemini.sendText(spoken??input))setInput('');else setLiveStatus('Wait for voice to connect before sending.');}catch{endLiveVoice('The connection stopped. Start voice again.');}return;}if(!busy&&!photoLoading&&!photo&&!media&&!documentFile&&!projectFile&&isRevealCommand(spoken??input)){startReveal();return;}if(!chatReady||restoring)return;if((!(spoken??input).trim()&&!photo&&!media&&!documentFile&&!projectFile)||busy||photoLoading||(!spoken&&dictation.listening)||activeRequest.current)return;
  const attachedProject=projectFile;const attachedDocument=documentFile;const text=(spoken??input).trim()||(attachedProject?'Review the structure of this game project.':attachedDocument?'Summarize this file.':photo?'Describe this picture.':media?.kind==='audio'?'Summarize this recording.':'Describe this video.');let attached=photo;const attachedMedia=media;let cameraFrame=false;let cameraFrames:CameraFrame[]|undefined;if(spoken&&asksToSeeCamera(text)&&!liveCamera.isActive()&&!photo&&!media&&!documentFile&&!projectFile){
  if(!visionConfigured){voiceConversation.recover('Connect camera first so I can see what you are showing.');return;}
  try{setLiveStatus('Opening your live camera…');const opened=await liveCamera.start(false);if(!opened||!liveActive.current){liveCamera.stop();return;}}catch(error){voiceConversation.recover(error instanceof Error?error.message:'Camera could not open.');return;}
  }if(liveCamera.isActive()&&!photo&&!media&&!documentFile&&!projectFile){try{cameraFrames=liveCamera.captureSequence();cameraFrame=true;}catch(error){const message=error instanceof Error?error.message:'Camera capture failed.';if(spoken)voiceConversation.recover(message);else setError(message);return;}}const next:Message[]=[...messages,{role:'user',content:text,...(attachedProject?{project:attachedProject}:{}),...(attachedDocument?{document:attachedDocument}:{}),...(attached?{image:attached,...(cameraFrame?{cameraFrame:true}:{})}:{}),...(attachedMedia?{media:attachedMedia}:{})}];const useVision=Boolean(cameraFrames)||next.some(m=>m.image||m.media);
- if(!spoken&&!attached&&!attachedMedia&&!attachedDocument&&!attachedProject&&!cameraFrames&&IMAGE_ASK.test(text)){void drawImage(next,text);return;}
  let partialReply='';const controller=new AbortController();activeRequest.current=controller;
  const reveal=createReplyReveal(content=>{if(controller.signal.aborted||activeRequest.current!==controller)return;partialReply=content;setMessages([...next,{role:'assistant',content}]);},controller.signal,Boolean(spoken)||matchMedia('(prefers-reduced-motion: reduce)').matches);
  dictation.cancel();stopAudio();setInput('');setPhoto('');setMedia(null);setDocumentFile(null);setProjectFile(null);setMessages(next);setBusy(true);setStopped(false);setError('');setRoutedModel('');if(spoken)setLiveStatus('Thinking…');
