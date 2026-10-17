@@ -35,7 +35,7 @@ try{
  check('before connecting OpenRouter, it says how to connect',r.status===503&&/Connect OpenRouter/.test(r.body.error),JSON.stringify(r.body));
  await page.goto('/connect-openrouter');await page.fill('input[name=key]',KEY);await page.click('form button');
  r=await post('/api/image-generate',{prompt:'a red fox'});
- check('a prompt returns an image and uses the saved model id',r.status===200&&r.body.image.startsWith('data:image/png')&&calls.at(-1).body.model==='black-forest-labs/flux.2-klein-4b'&&calls.at(-1).auth==='Bearer '+KEY&&calls.at(-1).body.modalities[0]==='image',JSON.stringify(r.body).slice(0,120));
+ check('a prompt returns an image and uses the saved model id',r.status===200&&r.body.image.startsWith('data:image/png')&&calls.at(-1).body.model==='black-forest-labs/flux-3-image-klein'&&calls.at(-1).auth==='Bearer '+KEY&&calls.at(-1).body.modalities[0]==='image',JSON.stringify(r.body).slice(0,120));
  check('a bad model id is refused',(await post('/api/image-model',{model:'not a model'})).status===400);
  check('the model id can be changed',(await post('/api/image-model',{model:'black-forest-labs/flux-test-1'})).body.model==='black-forest-labs/flux-test-1');
  await post('/api/image-generate',{prompt:'edit',image:PNG});

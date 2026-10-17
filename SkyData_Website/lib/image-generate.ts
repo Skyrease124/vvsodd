@@ -1,7 +1,7 @@
 import {readKey,saveKey,type SecretEnv} from './secret-store';
 // AI image generation and editing through OpenRouter (default: a FLUX "klein" model), owner-only: image models cost money per image.
 // The model id is a setting (saved encrypted) because OpenRouter's catalogue changes and the id cannot be checked from the build.
-export const DEFAULT_IMAGE_MODEL='black-forest-labs/flux.2-klein-4b';
+export const DEFAULT_IMAGE_MODEL='black-forest-labs/flux-3-image-klein';
 const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
 const json=(v:unknown,status=200)=>Response.json(v,{status,headers});
 const MODEL=/^[a-z0-9][a-z0-9._-]{0,40}\/[A-Za-z0-9][A-Za-z0-9._:-]{0,80}$/;
