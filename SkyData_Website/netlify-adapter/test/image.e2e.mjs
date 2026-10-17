@@ -3,6 +3,7 @@
 //   node netlify-adapter/test/image.e2e.mjs <project> <code-file>
 import {createRequire} from 'node:module';
 import {readFileSync} from 'node:fs';
+import pg from 'pg';
 import path from 'node:path';
 import {startEmulator} from './emulator.mjs';
 const require=createRequire(path.join(process.cwd(),'package.json'));
@@ -12,10 +13,17 @@ const results=[];const check=(n,ok,d='')=>{results.push(Boolean(ok));console.log
 const PASSWORD='Image test owner password 1',KEY='sk-or-v1-'+'a'.repeat(40);
 // A real 64x64 PNG so the editor can open the result.
 const PNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAeUlEQVR4nO3PQQkAMAzAwMqpfxWTNRF7HINABFzm7H7dcEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFDWhBA1rQgBY0oAUNaEEDWtCAFjSgBQ1oQQNa0IAWNKAFj13vDoEA84tnsQAAAABJRU5ErkJggg==';
-const calls=[];let mode='ok';
+const calls=[];let mode='ok',nvMode='ok';
+const PNGB64=PNG.split(',')[1];
 const realFetch=globalThis.fetch;
 globalThis.fetch=async(input,init)=>{
  const url=typeof input==='string'?input:input instanceof URL?input.href:input.url;
+ if(url.startsWith('https://ai.api.nvidia.com/v1/genai/')||url.startsWith('https://api.nvcf.nvidia.com/')){
+  const h=new Headers(init?.headers);calls.push({url,auth:h.get('authorization'),body:init?.body?JSON.parse(String(init.body)):null});
+  if(nvMode==='forbidden')return Response.json({detail:'Function not found for account'},{status:403});
+  if(nvMode==='async'&&url.includes('/genai/'))return new Response('',{status:202,headers:{'NVCF-REQID':'req-1'}});
+  return Response.json({artifacts:[{base64:PNGB64,finishReason:'SUCCESS',seed:0}]});
+ }
  if(!url.startsWith('https://openrouter.ai/'))return realFetch(input,init);
  const headers=new Headers(init?.headers);const body=init?.body?JSON.parse(String(init.body)):null;calls.push({url,auth:headers.get('authorization'),body});
  if(url.endsWith('/api/v1/key'))return Response.json({data:{}});
@@ -31,11 +39,12 @@ try{
  await page.goto('/owner-setup');await page.fill('input[name=code]',readFileSync(codeFile,'utf8').trim());await page.fill('input[name=password]',PASSWORD);await page.fill('input[name=confirm]',PASSWORD);await page.click('button');
  await page.goto('/login');await page.fill('input[name=email]',process.env.OWNER_EMAIL??'skyariasa@gmail.com');await page.fill('input[name=password]',PASSWORD);await Promise.all([page.waitForURL('**/owner'),page.click('form[action="/login"] button')]);
  const post=async(p,data)=>{const r=await page.request.post(p,{data,headers:{origin:base}});const t=await r.text();return {status:r.status(),body:t?JSON.parse(t):null};};
+ await post('/api/image-model',{model:'black-forest-labs/flux-or-test'});
  let r=await post('/api/image-generate',{prompt:'a red fox'});
  check('before connecting OpenRouter, it says how to connect',r.status===503&&/Connect OpenRouter/.test(r.body.error),JSON.stringify(r.body));
  await page.goto('/connect-openrouter');await page.fill('input[name=key]',KEY);await page.click('form button');
  r=await post('/api/image-generate',{prompt:'a red fox'});
- check('a prompt returns an image and uses the saved model id',r.status===200&&r.body.image.startsWith('data:image/png')&&calls.at(-1).body.model==='black-forest-labs/flux-3-image-klein'&&calls.at(-1).auth==='Bearer '+KEY&&calls.at(-1).body.modalities[0]==='image',JSON.stringify(r.body).slice(0,120));
+ check('a prompt returns an image and uses the saved model id',r.status===200&&r.body.image.startsWith('data:image/png')&&calls.at(-1).body.model==='black-forest-labs/flux-or-test'&&calls.at(-1).auth==='Bearer '+KEY&&calls.at(-1).body.modalities[0]==='image',JSON.stringify(r.body).slice(0,120));
  check('a bad model id is refused',(await post('/api/image-model',{model:'not a model'})).status===400);
  check('the model id can be changed',(await post('/api/image-model',{model:'black-forest-labs/flux-test-1'})).body.model==='black-forest-labs/flux-test-1');
  await post('/api/image-generate',{prompt:'edit',image:PNG});
@@ -70,6 +79,14 @@ try{
  await page.waitForSelector('.messages img.message-photo',{timeout:30000}).catch(()=>{});
  const chatCall=calls.filter(c=>c.url.includes('chat/completions')).slice(n0)[0];
  check('asking the chat to draw returns an image in the conversation',(await page.locator('.messages img.message-photo').count())===1&&chatCall?.body.messages[0].content==='draw a picture of a red fox in snow',String(await page.locator('.messages').innerText().catch(()=>'')).slice(0,160));
+ { const db=new pg.Client({connectionString:emu.connectionString});await db.connect();await db.query('DELETE FROM request_limits');await db.end(); } // the per-minute limit stays in force; this test just exceeds a human's pace
+ // NVIDIA route: the default model runs on NVIDIA's hosted API with the NVIDIA key.
+ await post('/api/image-model',{model:'nvidia:black-forest-labs/flux.3-image-klein'});
+ const nv0=calls.length;r=await post('/api/image-generate',{prompt:'a red fox'});const nc=calls.slice(nv0).find(c=>c.url.includes('ai.api.nvidia.com'));
+ check('the NVIDIA model returns an image through NVIDIA\'s API',r.status===200&&r.body.image.startsWith('data:image/')&&nc?.url==='https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.3-image-klein'&&nc.auth==='Bearer nvapi-stand-in'&&nc.body.prompt==='a red fox'&&!calls.slice(nv0).some(c=>c.url.includes('openrouter')),JSON.stringify(r.body).slice(0,100));
+ nvMode='async';r=await post('/api/image-generate',{prompt:'slow fox'});check('a long NVIDIA job is polled until the image is ready',r.status===200&&calls.some(c=>c.url.includes('/pexec/status/req-1')),String(r.status));
+ nvMode='forbidden';r=await post('/api/image-generate',{prompt:'x'});check('an NVIDIA refusal is shown word for word',r.status===502&&/HTTP 403\): Function not found for account/.test(r.body.error),r.body.error);nvMode='ok';
+ await post('/api/image-model',{model:'black-forest-labs/flux-test-1'});
  // A signed-out visitor cannot use it.
  const anon=await browser.newPage({baseURL:base});const ar=await anon.request.post('/api/image-generate',{data:{prompt:'x'},headers:{origin:base}});
  check('signed-out visitors cannot use it',ar.status()>=400&&ar.status()<500,String(ar.status()));
