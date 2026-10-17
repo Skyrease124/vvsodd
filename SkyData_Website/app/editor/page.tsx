@@ -62,7 +62,7 @@ function jpegOrientation(bytes: Uint8Array) {
 }
 
 export default function Editor() {
-  const [messages, setMessages] = useState<Msg[]>([{ id: 0, who: 'sky', text: 'Upload a photo, then tell me how to edit it: "brighter and more contrast", "make it look like an old 70s photo", "moody cinematic look". On photos of people: "blur the background", "remove the background", "put me on a white background", "make the background black and white", "smooth my skin". The editing happens on your device and your photo is never uploaded; for requests beyond the quick phrases, only your words are sent to SkyData AI.' }]);
+  const [messages, setMessages] = useState<Msg[]>([]);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
