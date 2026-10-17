@@ -1,6 +1,9 @@
 export type ChatResult={error?:string;retryable?:boolean;content:string;model?:string;sources?:{title:string;url:string}[]};
 export async function readChatResponse(response:Response,onPartial:(content:string)=>void):Promise<ChatResult>{
- if(!response.ok||!response.headers.get('content-type')?.includes('application/x-ndjson'))return response.json();
+ if(!response.ok||!response.headers.get('content-type')?.includes('application/x-ndjson')){
+  // A host timeout or gateway error answers with a plain page, not JSON; say so instead of a parser message.
+  try{return await response.json();}catch{throw new Error(response.status===504||response.status===502||response.status===500?'The model took too long to answer (the server stopped waiting). Try again or pick a faster model.':'The server sent an unreadable reply (HTTP '+response.status+'). Try again.');}
+ }
  const reader=response.body?.getReader();if(!reader)throw Error('The reply could not be read.');
  const decoder=new TextDecoder();let buffer='',result:ChatResult|undefined;
  const consume=(line:string)=>{if(!line.trim())return;const event=JSON.parse(line);if(event.error)throw Object.assign(new Error(event.error),{retryable:event.retryable===true});if(typeof event.content==='string')onPartial(event.content);if(event.done)result=event;};

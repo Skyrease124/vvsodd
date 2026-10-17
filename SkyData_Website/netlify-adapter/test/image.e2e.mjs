@@ -18,8 +18,10 @@ const PNGB64=PNG.split(',')[1];
 const realFetch=globalThis.fetch;
 globalThis.fetch=async(input,init)=>{
  const url=typeof input==='string'?input:input instanceof URL?input.href:input.url;
+ if(url==='https://integrate.api.nvidia.com/v1/images/generations'){const h=new Headers(init?.headers);calls.push({url,auth:h.get('authorization'),body:JSON.parse(String(init.body))});return Response.json({data:[{b64_json:PNGB64}]});}
  if(url.startsWith('https://ai.api.nvidia.com/v1/genai/')||url.startsWith('https://api.nvcf.nvidia.com/')){
   const h=new Headers(init?.headers);calls.push({url,auth:h.get('authorization'),body:init?.body?JSON.parse(String(init.body)):null});
+  if(nvMode==='notfound'&&url.includes('/genai/'))return new Response('404 page not found',{status:404});
   if(nvMode==='forbidden')return Response.json({detail:'Function not found for account'},{status:403});
   if(nvMode==='async'&&url.includes('/genai/'))return new Response('',{status:202,headers:{'NVCF-REQID':'req-1'}});
   return Response.json({artifacts:[{base64:PNGB64,finishReason:'SUCCESS',seed:0}]});
@@ -85,6 +87,7 @@ try{
  const nv0=calls.length;r=await post('/api/image-generate',{prompt:'a red fox'});const nc=calls.slice(nv0).find(c=>c.url.includes('ai.api.nvidia.com'));
  check('the NVIDIA model returns an image through NVIDIA\'s API',r.status===200&&r.body.image.startsWith('data:image/')&&nc?.url==='https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.3-image-klein'&&nc.auth==='Bearer nvapi-stand-in'&&nc.body.prompt==='a red fox'&&!calls.slice(nv0).some(c=>c.url.includes('openrouter')),JSON.stringify(r.body).slice(0,100));
  nvMode='async';r=await post('/api/image-generate',{prompt:'slow fox'});check('a long NVIDIA job is polled until the image is ready',r.status===200&&calls.some(c=>c.url.includes('/pexec/status/req-1')),String(r.status));
+ nvMode='notfound';const nf0=calls.length;r=await post('/api/image-generate',{prompt:'fox'});const nf=calls.slice(nf0).find(c=>c.url.includes('/v1/images/generations'));check('when NVIDIA has no /genai path for the model, the OpenAI-style images endpoint is used',r.status===200&&nf?.body.model==='black-forest-labs/flux.3-image-klein'&&nf.body.prompt==='fox'&&nf.auth==='Bearer nvapi-stand-in',JSON.stringify(r.body).slice(0,80));
  nvMode='forbidden';r=await post('/api/image-generate',{prompt:'x'});check('an NVIDIA refusal is shown word for word',r.status===502&&/HTTP 403\): Function not found for account/.test(r.body.error),r.body.error);nvMode='ok';
  await post('/api/image-model',{model:'black-forest-labs/flux-test-1'});
  // A signed-out visitor cannot use it.

@@ -67,12 +67,18 @@ async function nvidiaImage(env:SecretEnv,model:string,prompt:string,image:string
  let r=await upstream('https://ai.api.nvidia.com/v1/genai/'+model,{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(26000)});
  const reqId=r.headers.get('NVCF-REQID');
  while(r.status===202&&reqId&&Date.now()<deadline){await new Promise(x=>setTimeout(x,1500));r=await upstream('https://api.nvcf.nvidia.com/v2/nvcf/pexec/status/'+reqId,{headers:auth,signal:AbortSignal.timeout(Math.max(2000,deadline-Date.now()))});}
+ let tried404='';
+ if(r.status===404){
+  // Newer NVIDIA models are served through the OpenAI-style images endpoint instead of /v1/genai/<model>.
+  tried404=' (also tried /v1/genai/'+model+': 404)';
+  r=await upstream('https://integrate.api.nvidia.com/v1/images/generations',{method:'POST',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify({model,prompt,n:1,size:'1024x1024',response_format:'b64_json',...(image?{image}:{})}),signal:AbortSignal.timeout(Math.max(3000,deadline-Date.now()))});
+ }
  if(r.status===202)return json({error:'NVIDIA is still working on the image after 25 seconds. Try again; busy free endpoints can be slow. Model: '+model},504);
  if(!r.ok){
   let detail=(await r.text().catch(()=>'')).slice(0,1500);try{const j=JSON.parse(detail);detail=typeof j==='string'?j:j.detail||j.error?.message||j.error||j.message||detail;if(typeof detail!=='string')detail=JSON.stringify(detail);}catch{}
   detail=detail.replace(/[\u0000-\u001f]/g,' ').trim().slice(0,500);
   console.warn('SkyData NVIDIA image request rejected',{status:r.status,model,detail:detail.slice(0,200)});
-  return json({error:'NVIDIA refused the image request (HTTP '+r.status+')'+(detail?': '+detail:'.')+' Model: '+model},r.status===429?429:502);
+  return json({error:'NVIDIA refused the image request (HTTP '+r.status+')'+(detail?': '+detail:'.')+tried404+' Model: '+model},r.status===429?429:502);
  }
  const out=extractImage(await r.json().catch(()=>null));
  if(!out)return json({error:'NVIDIA answered but returned no image. Model: '+model},502);

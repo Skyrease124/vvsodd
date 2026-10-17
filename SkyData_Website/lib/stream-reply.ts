@@ -11,7 +11,7 @@ export function streamReply(response:Response,model:string,sources:{title:string
     if(!line.startsWith('data:'))return;
     const data=line.slice(5).trim();if(!data)return;
     if(data==='[DONE]'){complete=true;return;}
-    const event=JSON.parse(data);if(event.error)throw Error('The model could not finish the reply. Please try again.');
+    const event=JSON.parse(data);if(event.error){const why=typeof event.error==='string'?event.error:event.error?.message;console.warn('SkyData provider stream error',{detail:String(why||'').slice(0,200)});throw Error('The model could not finish the reply'+(why?' ('+String(why).replace(/[\u0000-\u001f]/g,' ').slice(0,160)+')':'')+'. Please try again.');}
     const choice=event.choices?.[0];if(choice?.finish_reason)complete=true;
     // Provider reasoning_content is intentionally excluded from the conversation.
     if(typeof choice?.delta?.content==='string'){answer+=choice.delta.content;const text=cleanResponse(answer).replace(/<[^>]*$/,'');if(text&&!finalize)emit({content:text});}
