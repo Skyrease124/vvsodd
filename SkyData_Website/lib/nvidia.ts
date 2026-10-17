@@ -69,7 +69,8 @@ export async function handleChat(request: Request, key?: string, model: string =
       signal:AbortSignal.any([request.signal,AbortSignal.timeout(debate?.timeoutMs??90000)])
     },upstream);
     if (!response.ok) {
-      console.warn("SkyData provider request rejected",{provider,model:selectedModel,status:response.status});
+      const providerDetail=(await response.clone().text().catch(()=>'')).replace(/[\u0000-\u001f]/g,' ').slice(0,300);
+      console.warn("SkyData provider request rejected",{provider,model:selectedModel,status:response.status,detail:providerDetail});
       if(payload.aiRouting===true){const problem=await response.json().catch(()=>({error:'Routing failed.'})) as {error?:string};return Response.json({error:problem.error||'Routing failed.'},{status:response.status});}
       const error = gemini?(response.status===429?'SkyData quota reached. No paid fallback.':'SkyData could not complete the request. Check the owner connection.'):response.status === 401 || response.status === 403 ? directDeepseek?'DeepSeek rejected the key. Open Connect DeepSeek and check your key.':ling?'OpenRouter rejected the key. Open Connect OpenRouter and check your key.':selectedModel===GPT_OSS_MODEL?'GPT-OSS access was rejected. Open Connect GPT-OSS in the plus menu and add your NVIDIA key.':(selectedModel as string)===DEEPSEEK_MODEL?'DeepSeek access was rejected. Open Connect DeepSeek in the plus menu and add your NVIDIA key.':'NVIDIA rejected the API key. Check the server configuration.' : response.status === 429 ? `${provider} is busy or the account limit was reached. Try again shortly.` : directDeepseek?'DeepSeek could not complete the request. Check your DeepSeek balance and try again.':ling?'Ling is unavailable at the free price or the request failed. Try again.':'NVIDIA could not complete the request. Try again.';
       return Response.json({error,retryable:retryableStatus(response.status)},{status:response.status === 429 ? 429 : 502});
