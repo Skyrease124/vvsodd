@@ -62,6 +62,14 @@ try{
  const edit=calls.slice(before).find(c=>c.url.includes('chat/completions'));
  check('AI edit sends the open photo and the instruction',edit&&Array.isArray(edit.body.messages[0].content)&&/^data:image\/jpeg/.test(edit.body.messages[0].content[1].image_url.url)&&edit.body.messages[0].content[0].text==='make it blue');
  if(process.env.SHOT)await page.screenshot({path:process.env.SHOT,fullPage:true});
+ // Chat: "draw a picture of …" answers with an image, an ordinary question does not call the image model.
+ await page.goto('/');await page.waitForSelector('textarea');
+ const n0=calls.filter(c=>c.url.includes('chat/completions')).length;
+ await page.fill('textarea','draw a picture of a red fox in snow');
+ await page.locator('textarea').press('Enter');
+ await page.waitForSelector('.messages img.message-photo',{timeout:30000}).catch(()=>{});
+ const chatCall=calls.filter(c=>c.url.includes('chat/completions')).slice(n0)[0];
+ check('asking the chat to draw returns an image in the conversation',(await page.locator('.messages img.message-photo').count())===1&&chatCall?.body.messages[0].content==='draw a picture of a red fox in snow',String(await page.locator('.messages').innerText().catch(()=>'')).slice(0,160));
  // A signed-out visitor cannot use it.
  const anon=await browser.newPage({baseURL:base});const ar=await anon.request.post('/api/image-generate',{data:{prompt:'x'},headers:{origin:base}});
  check('signed-out visitors cannot use it',ar.status()>=400&&ar.status()<500,String(ar.status()));

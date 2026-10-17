@@ -1,5 +1,6 @@
 import {readKey,saveKey,type SecretEnv} from './secret-store';
-// AI image generation and editing through OpenRouter (default: a FLUX "klein" model). Owner-only while it is tested.
+// AI image generation and editing through OpenRouter (default: a FLUX "klein" model), open to signed-in members (rate-limited per person);
+// only the owner can change the model id.
 // The model id is a setting (saved encrypted) because OpenRouter's catalogue changes and the id cannot be checked from the build.
 export const DEFAULT_IMAGE_MODEL='black-forest-labs/flux.2-klein-4b';
 const headers={'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
@@ -18,7 +19,6 @@ export function extractImage(data:any):string|null{
 }
 export async function handleImageGenerate(request:Request,env:SecretEnv,admin:boolean,upstream:typeof fetch=fetch){
  const path=new URL(request.url).pathname;
- if(!admin)return json({error:'AI images are owner-only while they are being tested.'},403);
  try{
   if(path==='/api/image-model'&&request.method==='GET')return json({model:await imageModel(env),default:DEFAULT_IMAGE_MODEL});
   if(request.method!=='POST')return json({error:'Use POST.'},405);
@@ -27,6 +27,7 @@ export async function handleImageGenerate(request:Request,env:SecretEnv,admin:bo
   const raw=await request.text();if(raw.length>7_000_000)return json({error:'That photo is too large. Try a smaller one.'},413);
   const b=JSON.parse(raw);
   if(path==='/api/image-model'){
+   if(!admin)return json({error:'Only the owner can change the image model.'},403);
    if(typeof b.model!=='string'||!MODEL.test(b.model.trim()))return json({error:'Paste the model id exactly as OpenRouter shows it, like black-forest-labs/some-model.'},400);
    await saveKey(env,b.model.trim(),'OPENROUTER_IMAGE_MODEL');return json({model:b.model.trim()});
   }
