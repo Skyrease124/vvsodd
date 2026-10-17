@@ -4,7 +4,7 @@ const dir=fs.readdirSync('node_modules/.pnpm').find(n=>n.startsWith('miniflare@'
 const {Miniflare}=await import('../node_modules/.pnpm/'+dir+'/node_modules/miniflare/dist/src/index.js');
 const root=process.cwd()+'/dist/server/';
 const calls=[];let expectedNatural=false;
-const models=['nvidia/nemotron-3-ultra-550b-a55b','nvidia/nemotron-3.5-lightning-30b-a3b','openai/gpt-oss-20b','nvidia/nemotron-3.5-super-vl-120b-a12b','stepfun-ai/step-5-preview'];
+const models=['nvidia/nemotron-3-ultra-550b-a55b','nvidia/nemotron-3.5-lightning-30b-a3b','openai/gpt-oss-20b','nvidia/nemotron-3.5-super-vl-120b-a12b','stepfun-ai/step-5-preview','deepseek-ai/deepseek-v4.1-flash'];
 const mf=new Miniflare({modules:[{type:'ESModule',path:root+'index.js'},...fs.readdirSync(root,{recursive:true}).filter(p=>p.endsWith('.js')&&p!=='index.js').map(p=>({type:'ESModule',path:root+p}))],compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['FILES'],bindings:{NVIDIA_API_KEY:'synthetic-nvidia',GEMINI_API_KEY:'synthetic-google',GEMINI_FREE_TIER_CONFIRMED:'true'},outboundService:async req=>{
  const body=await req.json();const google=req.url.includes('generativelanguage.googleapis.com');
  const system=google?body.systemInstruction.parts[0].text:body.messages[0].content;assert.equal(system.includes('Natural writing is enabled'),expectedNatural,'optional style reaches the actual provider');
