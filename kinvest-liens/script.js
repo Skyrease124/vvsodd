@@ -14,12 +14,14 @@ function calc() {
   $('r-net').textContent = usd(net);
   $('r-apr').textContent = apr.toFixed(1) + '%';
 }
-$('calc').addEventListener('input', calc);
-$('calc').addEventListener('submit', e => e.preventDefault());
-calc();
+if ($('calc')) {
+  $('calc').addEventListener('input', calc);
+  $('calc').addEventListener('submit', e => e.preventDefault());
+  calc();
+}
 
 // Lead form: submitted to Netlify Forms.
-$('lead').addEventListener('submit', async e => {
+if ($('lead')) $('lead').addEventListener('submit', async e => {
   e.preventDefault();
   const form = e.target, msg = $('lead-msg');
   msg.textContent = 'Sending...';
