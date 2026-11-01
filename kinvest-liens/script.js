@@ -18,10 +18,22 @@ $('calc').addEventListener('input', calc);
 $('calc').addEventListener('submit', e => e.preventDefault());
 calc();
 
-// Lead form: no backend yet. Replace the stub below with a real endpoint.
-$('lead').addEventListener('submit', e => {
+// Lead form: submitted to Netlify Forms.
+$('lead').addEventListener('submit', async e => {
   e.preventDefault();
-  $('lead-msg').textContent = 'Thanks! You\'re on the list (demo mode: connect a backend to store signups).';
-  e.target.reset();
+  const form = e.target, msg = $('lead-msg');
+  msg.textContent = 'Sending...';
+  try {
+    const res = await fetch('/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams(new FormData(form)).toString()
+    });
+    if (!res.ok) throw new Error(res.status);
+    msg.textContent = "Thanks! You're on the list.";
+    form.reset();
+  } catch (err) {
+    msg.textContent = 'Sorry, something went wrong. Please try again.';
+  }
 });
 $('yr').textContent = new Date().getFullYear();
