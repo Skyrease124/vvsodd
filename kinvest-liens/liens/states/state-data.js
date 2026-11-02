@@ -201,5 +201,81 @@ const STATE_DATA = {
     }
    ]
   }
+ },
+ "IL": {
+  "sale": {
+   "title": "Tax sale (Illinois)",
+   "when": "Counties run their own annual sale (usually in the fall; Cook County has been delayed to December 2026). Many counties are now buying the liens themselves instead of selling them to investors.",
+   "steps": [
+    "After a court judgment against unpaid parcels, the county collector holds the annual tax sale and offers each parcel’s unpaid tax separately.",
+    "Bidders bid the penalty down. No bid can be above 9% of the tax (35 ILCS 200/21-215, P.A. 102-363, effective January 1, 2022). Older summaries that say 18% are out of date.",
+    "The penalty is charged for each six-month period the lien is outstanding, so how long it stays unredeemed matters. Check the exact formula in 35 ILCS 200/21-355 before you bid.",
+    "Certificates issued from 2024 give the owner 2½ years to redeem (1 year for vacant land, buildings with 7+ units, and commercial or industrial property). Certificates issued on or after July 10, 2026 give 3 years (TaxLien.io’s reading of 35 ILCS 200/21-350; confirm it).",
+    "A 2026 law (P.A. 104-553) lets a county buy all its delinquent real estate taxes itself, so private buyers can be left with only mobile-home taxes. Check with the county before you register."
+   ],
+   "links": [
+    [
+     "35 ILCS 200/21-215 (penalty bid cap)",
+     "https://lrb.ilga.gov/legislation/ilcs/documents/003502000K21-215.htm"
+    ],
+    [
+     "35 ILCS 200/21-350 (redemption)",
+     "https://lrb.ilga.gov/legislation/ilcs/documents/003502000K21-350.htm"
+    ],
+    [
+     "35 ILCS 200/21-355 (redemption amount)",
+     "https://lrb.ilga.gov/legislation/ilcs/documents/003502000K21-355.htm"
+    ],
+    [
+     "Cook County Treasurer: tax sale information",
+     "https://www.cookcountytreasurer.com/taxsalegeneralinformation.aspx"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Announced 2026 county tax sales",
+   "note": "From each county treasurer’s own page (checked November 2, 2026). Tax buyers must register ahead of time. Delinquent lists are usually in local newspapers or on request, not online. Confirm the date with the county.",
+   "source": "https://www.cookcountytreasurer.com/taxsalegeneralinformation.aspx",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Cook County",
+     "county": "",
+     "date": "2026-12-01",
+     "dateText": "Expected December 2026",
+     "time": "",
+     "how": "Annual sale; Treasurer says the date was delayed by P.A. 104-0460",
+     "link": "https://www.cookcountytreasurer.com/taxsalegeneralinformation.aspx",
+     "linkText": "Cook County Treasurer"
+    },
+    {
+     "town": "St. Clair County",
+     "county": "",
+     "date": "2026-11-02",
+     "time": "9:00 AM",
+     "how": "County holds all real estate taxes; only mobile-home taxes offered to buyers",
+     "link": "https://www.co.st-clair.il.us/departments/treasurer/tax-sale",
+     "linkText": "St. Clair County Treasurer"
+    },
+    {
+     "town": "McLean County",
+     "county": "",
+     "date": "2026-11-06",
+     "time": "10:00 AM",
+     "how": "County holds all real estate taxes; only mobile-home taxes offered to buyers",
+     "link": "https://www.mcleancountyil.gov/401/Annual-Tax-Sale",
+     "linkText": "McLean County Treasurer"
+    },
+    {
+     "town": "Henry County",
+     "county": "",
+     "date": "2026-11-06",
+     "time": "10:00 AM",
+     "how": "County holds all real estate taxes; only mobile-home taxes offered to buyers",
+     "link": "https://www.henrycty.com/278/Annual-Tax-Sale---2026-Tax-Sale-is-Novem",
+     "linkText": "Henry County Treasurer"
+    }
+   ]
+  }
  }
 };
