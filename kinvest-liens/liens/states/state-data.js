@@ -1447,5 +1447,530 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "KY": {
+  "sale": {
+   "title": "Sale of certificates of delinquency (Kentucky)",
+   "when": "Each county clerk holds one sale a year, in the summer and fall. The state list shows the 2026 sales running from July 14 to October 22, 2026 in all 120 counties. Certificates cannot be sold until 90 days after the sheriff turns them over (April 15), and dates must be advertised at least 30 days ahead, so 2027 sales start in mid-July.",
+   "steps": [
+    "Unpaid property tax bills become delinquent on January 1. By April 15 the sheriff hands them to the county clerk, where they become certificates of delinquency, a lien on the property.",
+    "Kentucky does not run an auction. Nobody bids a price or a rate. Registered buyers pay the face amount of the certificate. If you bought a property’s certificate last year, you get first claim on this year’s. The rest are handed out in rounds in an order set by a random drawing, in lots of 5 to 50 depending on the county’s size.",
+    "You earn interest of 1% a month (12% a year, simple) on what you paid, starting on the purchase date. You can also add capped fees: up to $115 for the assignment paperwork, and pre-litigation attorney fees on a sliding scale (up to 100% of a small certificate, 70% of a larger one, capped at $350, $560 or $700), added $175 at a time as notices are sent (KRS 134.452).",
+    "There is no fixed redemption deadline. The owner can pay you any time before a foreclosure sale. You cannot take enforcement action (other than sending notices) until one year after the bill became delinquent, and you then have 10 years to start a foreclosure.",
+    "Foreclosure is through the Circuit Court. The Master Commissioner has the property appraised and sold at public auction, and you are repaid from the proceeds. The property does not simply pass to you."
+   ],
+   "links": [
+    [
+     "KY Dept. of Revenue: buying and collecting on certificates (manual, Oct. 2025)",
+     "https://revenue.ky.gov/Property/Documents/Basic%20Information%20About%20Becoming%20a%20Potential%20Third%20Party%20Purchaser%20UPDATED%2012-9-2025.pdf"
+    ],
+    [
+     "KY Dept. of Revenue: third party purchaser registration",
+     "https://revenue.ky.gov/Property/Pages/Third-Party-Purchaser.aspx"
+    ],
+    [
+     "2026 county clerk tax sale dates (state list)",
+     "https://revenue.ky.gov/ClerkNetwork/Documents/Tax%20Sale%20Dates%202026.pdf"
+    ],
+    [
+     "KRS 134.452 (what a buyer can collect)",
+     "https://apps.legislature.ky.gov/law/statutes/statute.aspx?id=47033"
+    ]
+   ]
+  },
+  "tables": [
+   {
+    "title": "2026 county clerk sale dates, all 120 counties",
+    "note": "From the Kentucky Department of Revenue’s “County Clerk Delinquent Property Tax Sale Dates 2026,” updated September 14, 2026 (checked November 2, 2026). All of these dates have passed. A county can change or cancel a sale, so confirm with the county clerk.",
+    "source": "https://revenue.ky.gov/ClerkNetwork/Documents/Tax%20Sale%20Dates%202026.pdf",
+    "checked": "2026-11-02",
+    "head": [
+     "County",
+     "2026 sale date"
+    ],
+    "rows": [
+     [
+      "Pendleton",
+      "Jul 14, 2026"
+     ],
+     [
+      "Clark",
+      "Jul 15, 2026"
+     ],
+     [
+      "Kenton",
+      "Jul 15, 2026"
+     ],
+     [
+      "Letcher",
+      "Jul 15, 2026"
+     ],
+     [
+      "Nicholas",
+      "Jul 15, 2026"
+     ],
+     [
+      "Jefferson",
+      "Jul 17, 2026"
+     ],
+     [
+      "Lewis",
+      "Jul 17, 2026"
+     ],
+     [
+      "Trigg",
+      "Jul 17, 2026"
+     ],
+     [
+      "Breckinridge",
+      "Jul 20, 2026"
+     ],
+     [
+      "Allen",
+      "Jul 21, 2026"
+     ],
+     [
+      "Trimble",
+      "Jul 21, 2026"
+     ],
+     [
+      "Crittenden",
+      "Jul 22, 2026"
+     ],
+     [
+      "Spencer",
+      "Jul 22, 2026"
+     ],
+     [
+      "Marshall",
+      "Jul 23, 2026"
+     ],
+     [
+      "Mason",
+      "Jul 23, 2026"
+     ],
+     [
+      "Nelson",
+      "Jul 23, 2026"
+     ],
+     [
+      "Carroll",
+      "Jul 24, 2026"
+     ],
+     [
+      "Fayette",
+      "Jul 24, 2026"
+     ],
+     [
+      "Christian",
+      "Jul 28, 2026"
+     ],
+     [
+      "Greenup",
+      "Jul 28, 2026"
+     ],
+     [
+      "Henry",
+      "Jul 29, 2026"
+     ],
+     [
+      "Logan",
+      "Jul 29, 2026"
+     ],
+     [
+      "Owen",
+      "Jul 29, 2026"
+     ],
+     [
+      "Grant",
+      "Aug 3, 2026"
+     ],
+     [
+      "Boone",
+      "Aug 4, 2026"
+     ],
+     [
+      "Grayson",
+      "Aug 4, 2026"
+     ],
+     [
+      "Montgomery",
+      "Aug 4, 2026"
+     ],
+     [
+      "Washington",
+      "Aug 4, 2026"
+     ],
+     [
+      "Caldwell",
+      "Aug 5, 2026"
+     ],
+     [
+      "Garrard",
+      "Aug 5, 2026"
+     ],
+     [
+      "Jackson",
+      "Aug 5, 2026"
+     ],
+     [
+      "Webster",
+      "Aug 5, 2026"
+     ],
+     [
+      "Oldham",
+      "Aug 6, 2026"
+     ],
+     [
+      "Pulaski",
+      "Aug 6, 2026"
+     ],
+     [
+      "Rockcastle",
+      "Aug 10, 2026"
+     ],
+     [
+      "Ballard",
+      "Aug 11, 2026"
+     ],
+     [
+      "Calloway",
+      "Aug 11, 2026"
+     ],
+     [
+      "Graves",
+      "Aug 11, 2026"
+     ],
+     [
+      "Hickman",
+      "Aug 11, 2026"
+     ],
+     [
+      "Bourbon",
+      "Aug 12, 2026"
+     ],
+     [
+      "Boyd",
+      "Aug 12, 2026"
+     ],
+     [
+      "Campbell",
+      "Aug 12, 2026"
+     ],
+     [
+      "Franklin",
+      "Aug 12, 2026"
+     ],
+     [
+      "Bell",
+      "Aug 13, 2026"
+     ],
+     [
+      "Carlisle",
+      "Aug 13, 2026"
+     ],
+     [
+      "Gallatin",
+      "Aug 13, 2026"
+     ],
+     [
+      "Todd",
+      "Aug 13, 2026"
+     ],
+     [
+      "Bracken",
+      "Aug 14, 2026"
+     ],
+     [
+      "Casey",
+      "Aug 14, 2026"
+     ],
+     [
+      "Fleming",
+      "Aug 14, 2026"
+     ],
+     [
+      "Hardin",
+      "Aug 17, 2026"
+     ],
+     [
+      "Fulton",
+      "Aug 18, 2026"
+     ],
+     [
+      "Larue",
+      "Aug 18, 2026"
+     ],
+     [
+      "Meade",
+      "Aug 18, 2026"
+     ],
+     [
+      "Wolfe",
+      "Aug 18, 2026"
+     ],
+     [
+      "Elliott",
+      "Aug 19, 2026"
+     ],
+     [
+      "Hart",
+      "Aug 19, 2026"
+     ],
+     [
+      "Lyon",
+      "Aug 19, 2026"
+     ],
+     [
+      "Muhlenberg",
+      "Aug 19, 2026"
+     ],
+     [
+      "Anderson",
+      "Aug 20, 2026"
+     ],
+     [
+      "Bullitt",
+      "Aug 20, 2026"
+     ],
+     [
+      "Daviess",
+      "Aug 20, 2026"
+     ],
+     [
+      "Russell",
+      "Aug 20, 2026"
+     ],
+     [
+      "Butler",
+      "Aug 21, 2026"
+     ],
+     [
+      "Harrison",
+      "Aug 21, 2026"
+     ],
+     [
+      "Jessamine",
+      "Aug 21, 2026"
+     ],
+     [
+      "McCracken",
+      "Aug 21, 2026"
+     ],
+     [
+      "Magoffin",
+      "Aug 24, 2026"
+     ],
+     [
+      "McLean",
+      "Aug 24, 2026"
+     ],
+     [
+      "Scott",
+      "Aug 24, 2026"
+     ],
+     [
+      "Woodford",
+      "Aug 24, 2026"
+     ],
+     [
+      "Estill",
+      "Aug 25, 2026"
+     ],
+     [
+      "Menifee",
+      "Aug 25, 2026"
+     ],
+     [
+      "Robertson",
+      "Aug 25, 2026"
+     ],
+     [
+      "Boyle",
+      "Aug 26, 2026"
+     ],
+     [
+      "Lincoln",
+      "Aug 26, 2026"
+     ],
+     [
+      "Mercer",
+      "Aug 26, 2026"
+     ],
+     [
+      "Warren",
+      "Aug 26, 2026"
+     ],
+     [
+      "Harlan",
+      "Aug 27, 2026"
+     ],
+     [
+      "Henderson",
+      "Aug 27, 2026"
+     ],
+     [
+      "Madison",
+      "Aug 27, 2026"
+     ],
+     [
+      "Taylor",
+      "Aug 27, 2026"
+     ],
+     [
+      "Carter",
+      "Aug 28, 2026"
+     ],
+     [
+      "Livingston",
+      "Aug 28, 2026"
+     ],
+     [
+      "Shelby",
+      "Sep 2, 2026"
+     ],
+     [
+      "Clinton",
+      "Sep 8, 2026"
+     ],
+     [
+      "Perry",
+      "Sep 8, 2026"
+     ],
+     [
+      "Simpson",
+      "Sep 8, 2026"
+     ],
+     [
+      "Breathitt",
+      "Sep 9, 2026"
+     ],
+     [
+      "Laurel",
+      "Sep 9, 2026"
+     ],
+     [
+      "Bath",
+      "Sep 14, 2026"
+     ],
+     [
+      "Hopkins",
+      "Sep 14, 2026"
+     ],
+     [
+      "Cumberland",
+      "Sep 15, 2026"
+     ],
+     [
+      "Edmonson",
+      "Sep 15, 2026"
+     ],
+     [
+      "Metcalfe",
+      "Sep 15, 2026"
+     ],
+     [
+      "Union",
+      "Sep 15, 2026"
+     ],
+     [
+      "Hancock",
+      "Sep 16, 2026"
+     ],
+     [
+      "Morgan",
+      "Sep 16, 2026"
+     ],
+     [
+      "Clay",
+      "Sep 17, 2026"
+     ],
+     [
+      "Floyd",
+      "Sep 17, 2026"
+     ],
+     [
+      "Whitley",
+      "Sep 17, 2026"
+     ],
+     [
+      "Lawrence",
+      "Sep 22, 2026"
+     ],
+     [
+      "Wayne",
+      "Sep 22, 2026"
+     ],
+     [
+      "Barren",
+      "Sep 23, 2026"
+     ],
+     [
+      "Knott",
+      "Sep 23, 2026"
+     ],
+     [
+      "Lee",
+      "Sep 23, 2026"
+     ],
+     [
+      "Monroe",
+      "Sep 23, 2026"
+     ],
+     [
+      "Johnson",
+      "Sep 24, 2026"
+     ],
+     [
+      "Knox",
+      "Sep 24, 2026"
+     ],
+     [
+      "Martin",
+      "Sep 25, 2026"
+     ],
+     [
+      "Leslie",
+      "Sep 28, 2026"
+     ],
+     [
+      "Adair",
+      "Sep 30, 2026"
+     ],
+     [
+      "McCreary",
+      "Sep 30, 2026"
+     ],
+     [
+      "Rowan",
+      "Sep 30, 2026"
+     ],
+     [
+      "Pike",
+      "Oct 7, 2026"
+     ],
+     [
+      "Marion",
+      "Oct 14, 2026"
+     ],
+     [
+      "Owsley",
+      "Oct 15, 2026"
+     ],
+     [
+      "Powell",
+      "Oct 21, 2026"
+     ],
+     [
+      "Green",
+      "Oct 22, 2026"
+     ],
+     [
+      "Ohio",
+      "Oct 22, 2026"
+     ]
+    ]
+   }
+  ]
  }
 };
