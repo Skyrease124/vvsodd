@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PricePocketAsset | Smarter Asset Tools</title>
+<meta name="theme-color" content="#0b6e4f">
+<meta property="og:title" content="PricePocketAsset">
+<meta name="description" content="PricePocketAsset: plain-language tools and education for building assets, starting with tax liens.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="./"><span class="mark">P</span>ricePocketAsset</a>
+    <nav>
+      <a href="#products">Products</a>
+      <a href="#about">About</a>
+      <a class="btn small" href="#contact">Get updates</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">PricePocketAsset</p>
+    <h1>Understand the numbers.<br>Build assets with confidence.</h1>
+    <p class="lead">Clear, plain-language tools and education for people who want to put their money to work. We're starting with tax liens.</p>
+    <div class="cta">
+      <a class="btn" href="liens/">Explore Tax Liens</a>
+      <a class="btn ghost" href="#contact">Get updates</a>
+    </div>
+  </div>
+</section>
+
+<section id="products" class="wrap section">
+  <h2>Products</h2>
+  <div class="grid4">
+    <article class="card">
+      <span class="n">1</span>
+      <h3>Tax Liens</h3>
+      <p>Learn how tax lien investing works, model returns with a calculator, and compare states.</p>
+      <p><a href="liens/">Open Liens &rarr;</a></p>
+    </article>
+    <article class="card">
+      <span class="n">+</span>
+      <h3>More on the way</h3>
+      <p>Additional asset tools and guides are planned. Join the list to hear first.</p>
+    </article>
+  </div>
+</section>
+
+<section id="about" class="band">
+  <div class="wrap section narrow">
+    <h2>About</h2>
+    <p>PricePocketAsset is an education-first project. We explain how different assets work, show the math, and call out the risks, so you can decide for yourself.</p>
+  </div>
+</section>
+
+<section id="contact" class="wrap section narrow">
+  <h2>Get early access</h2>
+  <p class="muted">Join the list for guides, tools and launch updates.</p>
+  <form id="lead" class="lead-form" name="lead" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="lead">
+    <p hidden><label>Leave blank <input name="bot-field"></label></p>
+    <label>Name<input name="name" required autocomplete="name"></label>
+    <label>Email<input name="email" type="email" required autocomplete="email"></label>
+    <label>Interested in (optional)<input name="states" placeholder="e.g. tax liens, FL, AZ"></label>
+    <button class="btn" type="submit">Join the list</button>
+    <p id="lead-msg" class="muted" role="status"></p>
+  </form>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>PricePocketAsset</b> &copy; <span id="yr"></span></p>
+    <p class="small">For educational purposes only; not legal, tax or investment advice. Investing involves risk, including loss of principal. Rates and rules vary by jurisdiction.</p>
+  </div>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>
