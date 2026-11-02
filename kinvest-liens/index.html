@@ -10,72 +10,58 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="logo" href="./"><span class="mark">P</span>ricePocketAsset</a>
-    <nav>
-      <a href="#map">Map</a>
-      <a href="#products">Products</a>
+<header class="dnav">
+  <div class="dwrap dnav-in">
+    <a class="dlogo" href="./" aria-label="PricePocketAsset home">
+      <svg viewBox="0 0 64 48" width="52" height="40" aria-hidden="true"><path d="M4 24 32 4l28 20" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><rect x="12" y="30" width="9" height="14" rx="2" fill="#22c55e"/><rect x="27" y="22" width="9" height="22" rx="2" fill="#22c55e"/><rect x="42" y="14" width="9" height="30" rx="2" fill="#22c55e"/></svg>
+      <span><b>PricePocket<em>Asset</em></b><small>Invest &middot; Grow &middot; Build Wealth</small></span>
+    </a>
+    <nav class="dlinks" aria-label="Main">
+      <a class="on" href="./">Home</a>
+      <a href="#map">Explore</a>
+      <a href="liens/#calculator">Tools</a>
+      <a href="liens/">Education</a>
       <a href="#about">About</a>
-      <a class="btn small" href="#contact">Get updates</a>
     </nav>
+    <a class="dbtn" href="#contact">Sign Up</a>
   </div>
 </header>
 
 <main id="top">
-<section class="hero hero-x">
-  <div class="orb o1" aria-hidden="true"></div>
-  <div class="orb o2" aria-hidden="true"></div>
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      <p class="pill"><span class="dot"></span> Now live: Tax Liens</p>
-      <h1>Understand the numbers.<br><span class="grad">Build assets</span> with confidence.</h1>
-      <p class="lead">Clear, plain-language tools and education for people who want to put their money to work. We're starting with tax liens.</p>
-      <div class="cta">
-        <a class="btn btn-light" href="#map">Explore the Map</a>
-        <a class="btn ghost ghost-light" href="liens/">Tax Lien Guide</a>
-        <a class="btn ghost ghost-light" href="#contact">Get updates</a>
-      </div>
-      <ul class="chips">
-        <li>Education first</li>
-        <li>Show-the-math tools</li>
-        <li>Risks spelled out</li>
+<section id="map" class="dhero">
+  <div class="dwrap dhero-grid">
+    <div class="dcopy">
+      <h1>Understand the Numbers. <span class="gold">Build Assets</span> with Confidence.</h1>
+      <p class="dlead">Explore tax lien opportunities across the United States. Find counties, analyze data, and invest smarter.</p>
+      <ul class="dticks">
+        <li>Interactive 50-State Map</li>
+        <li>County-Level Links</li>
+        <li>Investment Calculators</li>
+        <li>Education &amp; Resources</li>
       </ul>
+      <a class="dgold" href="#usmap">Explore the Map &rarr;</a>
     </div>
-
-    <aside class="mock" aria-label="Example lien calculation">
-      <div class="mock-head"><span>Example lien</span><span class="tag">Illustrative</span></div>
-      <div class="mock-amt">$5,000</div>
-      <div class="mock-sub">lien amount &middot; 12% &middot; 12 months</div>
-      <div class="bar" aria-hidden="true"><i></i></div>
-      <dl class="mock-rows">
-        <div><dt>Interest earned</dt><dd>$600</dd></div>
-        <div><dt>Fees &amp; costs</dt><dd>&minus;$100</dd></div>
-        <div class="net"><dt>Net profit</dt><dd>$500</dd></div>
-      </dl>
-      <a class="mock-link" href="liens/#calculator">Try your own numbers &rarr;</a>
-    </aside>
-  </div>
-</section>
-
-<section id="map" class="mapsec">
-  <div class="wrap">
-    <h2>Explore tax liens across the US</h2>
-    <p class="maplead">Tap any state to see how its tax sales work, then open its county pages. Colors show each state&rsquo;s system type.</p>
-    <div class="mapgrid">
-      <div class="mapbox">
-        <div id="usmap" class="usmap"></div>
-        <p class="small maphint">Small states and DC:</p>
-        <div id="mapchips" class="mapchips"></div>
-        <ul id="maplegend" class="maplegend"></ul>
-      </div>
+    <div class="dmap">
+      <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
+      <a id="flcallout" class="flcall" href="liens/states/state/?s=FL"><b>Florida</b><span>Explore Counties &rarr;</span></a>
+      <div id="mapchips" class="mapchips"></div>
       <aside id="maptip" class="maptip" aria-live="polite">
-        <b>Click a state</b>
-        <span>Select any state to view its tax sale rules and county pages.</span>
-        <a class="btn" href="liens/states/state/?s=FL">Try Florida &rarr;</a>
-      </aside>
+      <b>Click a State</b>
+      <span>Start by selecting any state to view its tax sale rules and county pages.</span>
+    </aside>
     </div>
-    <p class="small maphint">Educational only. Rules differ by county and change: verify with the county before you bid.</p>
+  </div>
+  <div class="dwrap">
+    <div class="flpanel">
+      <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
+      <div class="flintro"><h2>Florida</h2><p>Select a county to open its tax collector page and see how its tax sales work.</p></div>
+      <div class="flcounties"><h3>Available Counties (Example)</h3><div id="flchips" class="flchips"></div>
+        <a class="dghost" href="liens/states/state/?s=FL">View All Florida Counties &rarr;</a></div>
+      <div class="flwhy"><h3>Good to know</h3>
+        <ul><li>Rates and rules differ by state and county</li><li>Redemption periods can tie up money for years</li><li>Always verify with the county before you bid</li></ul>
+        <a class="dbtn" href="liens/">Learn More &rarr;</a></div>
+    </div>
+    <p class="dnote">Educational only; not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal. Verify all figures with the county.</p>
   </div>
 </section>
 
