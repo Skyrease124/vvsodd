@@ -4,10 +4,12 @@
 //   NVIDIA_MODEL     (optional)  default meta/llama-3.3-70b-instruct
 //   ASK_DAILY_LIMIT  (optional)  max questions per day per server instance, default 300
 //   NVIDIA_API_URL   (optional)  override, used by tests
-const fs = require('fs');
-const path = require('path');
-const keystore = require('../lib/keystore');
-const vm = require('vm');
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+import * as keystore from '../lib/keystore.mjs';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
 const MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
@@ -85,8 +87,8 @@ ${ctx}`;
 
 const json = (code, body) => ({statusCode: code, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}, body: JSON.stringify(body)});
 
-exports.handler = async (event) => {
-  const cfg = await keystore.getConfig(event);
+async function handle(event) {
+  const cfg = await keystore.getConfig();
   if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Use POST.'});
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
@@ -125,6 +127,15 @@ exports.handler = async (event) => {
   } catch (e) {
     return json(502, {error: 'The answer service did not respond. Please try again.'});
   }
+}
+
+async function toEvent(req, context) {
+  return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
+    headers: { 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+}
+export default async (req, context) => {
+  const r = await handle(await toEvent(req, context));
+  return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
 
-exports._buildContext = buildContext; exports._loadData = loadData;
+export { buildContext as _buildContext, loadData as _loadData, handle as _handle };
