@@ -109,3 +109,4 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .src{padding-left:18px}.src a{color:var(--brand)}
 
 .vflag{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:6px;background:#fff3cd;color:#7a5200;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.links{margin-top:8px;font-size:14px}.links summary{cursor:pointer;font-weight:700;color:var(--brand)}.links ul{margin:6px 0 0;padding-left:18px}.links li{margin:4px 0;overflow-wrap:anywhere}
