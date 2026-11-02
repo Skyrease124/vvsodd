@@ -56,6 +56,7 @@ const LienMap = {
     }
   }
 };
+const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const LienUI = {
   saleBox(host, county) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
@@ -84,7 +85,7 @@ const LienUI = {
       host.appendChild(mk('p', 'muted', 'No liens are listed for this county yet. We only list liens copied from an official county list, with the source and date checked. New sale lists are expected in April and May 2027.'));
       return;
     }
-    host.appendChild(mk('p', 'muted small', all.length + ' older liens (county-held certificates: not bought at the tax sale, so the county holds them). Copied from the county tax collector\u2019s official list. Face amount is the original tax debt; payoff is the total on the date of the file and keeps growing with interest. Confirm everything with the county before buying.'));
+    host.appendChild(mk('p', 'muted small', all.length + ' older liens (county-held certificates: not bought at the tax sale, so the county holds them). Copied from the county tax collector\u2019s official list. Face amount is the original tax debt (\u201cbelow face\u201d means the county values the lot at less than that debt, a warning sign); payoff is the total on the date of the file and keeps growing with interest. Confirm everything with the county before buying.'));
     const tools = mk('div', 'lientools');
     const q = mk('input'); q.type = 'search'; q.placeholder = 'Search parcel or description'; q.setAttribute('aria-label', 'Search liens');
     const yr = mk('select'); yr.setAttribute('aria-label', 'Tax year');
@@ -92,7 +93,12 @@ const LienUI = {
     yr.appendChild(new Option('All tax years', '')); ys.forEach(y => yr.appendChild(new Option(String(y), String(y))));
     const sort = mk('select'); sort.setAttribute('aria-label', 'Sort');
     [['new', 'Newest sale first'], ['low', 'Smallest face amount'], ['high', 'Largest face amount']].forEach(o => sort.appendChild(new Option(o[1], o[0])));
-    tools.append(q, yr, sort); host.appendChild(tools);
+    const useSel = mk('select'); useSel.setAttribute('aria-label', 'Property use');
+    const uses = Array.from(new Set(all.map(l => l.use).filter(Boolean))).sort();
+    useSel.appendChild(new Option('All property uses', '')); uses.forEach(x => useSel.appendChild(new Option(x, x)));
+    const hideBox = mk('label', 'chk'); const hide = mk('input'); hide.type = 'checkbox'; hideBox.append(hide, ' Hide road, utility and water strips');
+    const hasFacts = all.some(l => l.use);
+    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); tools.append(sort); host.appendChild(tools);
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); host.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); host.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); host.appendChild(more);
@@ -101,13 +107,16 @@ const LienUI = {
     function draw() {
       wrap.innerHTML = '';
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Description', 'Source / checked', 'Map'].forEach(x => hr.appendChild(mk('th', '', x)));
+      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
       list.slice(0, shown).forEach(l => {
         const r = tb.insertRow();
-        [l.county, l.parcel, l.taxYear || '', money(l.amount), l.rate || '', l.payoff ? money(l.payoff) : '', l.saleDate, l.status, l.desc || ''].forEach((x, k) => { const c = r.insertCell(); c.textContent = x; if (k === 8) c.className = 'desc'; });
+        [l.county, l.parcel, l.taxYear || '', money(l.amount), l.rate || '', l.payoff ? money(l.payoff) : '', l.saleDate, l.status, l.use || '', l.market != null ? money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.use ? (l.homestead ? 'Yes' : 'No') : '', l.desc || ''].forEach((x, k) => { const c = r.insertCell(); c.textContent = x; if (k === 11) c.className = 'desc'; });
         const c = r.insertCell(), a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; c.append(a, ' ' + l.checked);
         const mc = r.insertCell();
+        const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
+        cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator';
+        cc.appendChild(cb);
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);
@@ -116,11 +125,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? a.amount - b.amount : sort.value === 'high' ? b.amount - a.amount : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }
