@@ -9,7 +9,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import * as keystore from '../lib/keystore.mjs';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 const API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
 const MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
@@ -21,7 +21,7 @@ let day = new Date().toISOString().slice(0, 10), dayCount = 0;
 
 function loadData() {
   const root = process.env.LAMBDA_TASK_ROOT || process.cwd();
-  const candidates = [path.join(root, 'kinvest-liens/liens/states'), path.join(__dirname, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
+  const candidates = [path.join(root, 'kinvest-liens/liens/states'), path.join(HERE, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
   const dir = candidates.find(d => fs.existsSync(path.join(d, 'states.js')));
   if (!dir) throw new Error('data files not found');
   const read = f => { try { return fs.readFileSync(path.join(dir, f), 'utf8'); } catch (e) { return ''; } };
