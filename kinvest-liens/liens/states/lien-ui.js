@@ -23,12 +23,23 @@ const LienMap = {
     const msg = dlg.querySelector('.lotmsg'), foot = dlg.querySelector('.lotfoot'), box = dlg.querySelector('.lotmap');
     dlg.querySelector('b').textContent = 'Parcel ' + l.parcel;
     msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = '';
-    const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = cfg.pageName + ' page for this parcel';
+    let fx = dlg.querySelector('.lotfacts'); if (!fx) { fx = document.createElement('p'); fx.className = 'lotfacts small'; msg.after(fx); } fx.textContent = '';
+    const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = 'Look up the owner and tax history on the ' + cfg.pageName + ' site';
     foot.append(pa, ' \u00b7 Map data: county GIS, OpenStreetMap, Esri. Educational only; the outline is approximate and not a survey. Verify with the county.');
     if (!dlg.open) dlg.showModal();
     try {
       const url = cfg.query + '?where=' + encodeURIComponent(cfg.idField + "='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=ACRES&outSR=4326&f=geojson';
-      const [L, r] = await Promise.all([this.load(), fetch(url).then(x => { if (!x.ok) throw new Error('lookup'); return x.json(); })]);
+      const furl = cfg.facts + '?where=' + encodeURIComponent("PARCEL_NUMBER='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=PROPERTY_USE,MUNICIPALITY,TOTAL_MARKET,HMSTD_FLG,CONFID_FLG&f=json';
+      const [L, r, fr] = await Promise.all([this.load(), fetch(url).then(x => { if (!x.ok) throw new Error('lookup'); return x.json(); }), fetch(furl).then(x => x.json()).catch(() => null)]);
+      const fa = fr && fr.features && fr.features[0] && fr.features[0].attributes;
+      if (fa && fa.CONFID_FLG !== 'Y') {
+        const bits = [];
+        if (fa.PROPERTY_USE) bits.push('Use: ' + fa.PROPERTY_USE);
+        if (fa.MUNICIPALITY) bits.push('Area: ' + fa.MUNICIPALITY);
+        if (fa.TOTAL_MARKET != null) bits.push('County market value: $' + Number(fa.TOTAL_MARKET).toLocaleString());
+        bits.push('Homestead: ' + (fa.HMSTD_FLG === 'Y' ? 'Yes' : 'No'));
+        fx.textContent = bits.join(' \u00b7 ');
+      }
       if (!r.features || !r.features.length) { msg.textContent = 'The county map has no outline for this parcel number. Use the property appraiser link below.'; return; }
       if (box._map) { box._map.remove(); box._map = null; }
       const m = L.map(box); box._map = m;
