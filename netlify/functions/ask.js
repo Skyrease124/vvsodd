@@ -1,11 +1,12 @@
 // "Ask about this state": answers only from the site's own verified state data.
 // Secrets live in Netlify environment variables, never in the browser:
-//   NVIDIA_API_KEY   (required)  key from build.nvidia.com
+//   NVIDIA_API_KEY   (optional)  key from build.nvidia.com; if not set, the key saved from /admin/ is used
 //   NVIDIA_MODEL     (optional)  default meta/llama-3.3-70b-instruct
 //   ASK_DAILY_LIMIT  (optional)  max questions per day per server instance, default 300
 //   NVIDIA_API_URL   (optional)  override, used by tests
 const fs = require('fs');
 const path = require('path');
+const keystore = require('../lib/keystore');
 const vm = require('vm');
 
 const API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
@@ -85,7 +86,8 @@ ${ctx}`;
 const json = (code, body) => ({statusCode: code, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}, body: JSON.stringify(body)});
 
 exports.handler = async (event) => {
-  if (event.httpMethod === 'GET') return json(200, {enabled: !!process.env.NVIDIA_API_KEY});
+  const cfg = await keystore.getConfig(event);
+  if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Use POST.'});
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
   const a = String(body.state || '').toUpperCase();
@@ -93,7 +95,7 @@ exports.handler = async (event) => {
   if (!/^[A-Z]{2}$/.test(a)) return json(400, {error: 'Pick a state first.'});
   if (q.length < 3) return json(400, {error: 'Type a question.'});
   if (q.length > 300) return json(400, {error: 'Keep the question under 300 characters.'});
-  if (!process.env.NVIDIA_API_KEY) return json(503, {error: 'The question box is not switched on yet.'});
+  if (!cfg) return json(503, {error: 'The question box is not switched on yet.'});
 
   const today = new Date().toISOString().slice(0, 10);
   if (today !== day) { day = today; dayCount = 0; hits.clear(); }
@@ -111,8 +113,8 @@ exports.handler = async (event) => {
     const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 20000);
     const r = await fetch(API_URL, {
       method: 'POST', signal: ctl.signal,
-      headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.NVIDIA_API_KEY},
-      body: JSON.stringify({model: MODEL, temperature: 0.1, max_tokens: 400, messages: [{role: 'system', content: SYSTEM(c.name, c.ctx)}, {role: 'user', content: q}]})
+      headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.key},
+      body: JSON.stringify({model: cfg.model || MODEL, temperature: 0.1, max_tokens: 400, messages: [{role: 'system', content: SYSTEM(c.name, c.ctx)}, {role: 'user', content: q}]})
     });
     clearTimeout(timer);
     if (!r.ok) return json(502, {error: 'The answer service had a problem. Please try again.'});

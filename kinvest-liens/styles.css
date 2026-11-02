@@ -236,3 +236,5 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(max-width:520px){.askrow{flex-direction:column}.askrow .btn{width:100%}}
 
 #askform label{display:block;margin-bottom:6px}
+.setupform{display:grid;gap:14px;margin:18px 0}.setupform input{padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--fg)}
+.setupbtns{display:flex;flex-wrap:wrap;gap:10px}
