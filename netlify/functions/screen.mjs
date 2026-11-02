@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import * as keystore from '../lib/keystore.mjs';
 import { complete } from '../lib/llm.mjs';
+import * as auth from '../lib/auth.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DAILY_LIMIT = parseInt(process.env.ASK_DAILY_LIMIT || '300', 10);
 const PER_IP_HOURLY = 10;
@@ -119,8 +120,10 @@ const json = (code, body) => ({statusCode: code, headers: {'Content-Type': 'appl
 
 async function handle(event) {
   const cfg = await keystore.getConfig();
-  if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg});
+  const me = await auth.userFromCookie((event.headers || {}).cookie);
+  if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg, signedIn: !!me});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Use POST.'});
+  if (!me) return json(401, {error: 'Please sign in to use the screener.', needLogin: true});
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
   const county = String(body.county || '');
   const wish = String(body.wish || '').replace(/\s+/g, ' ').trim();
@@ -166,7 +169,7 @@ async function handle(event) {
 
 async function toEvent(req, context) {
   return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
-    headers: { 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
 }
 export default async (req, context) => {
   const r = await handle(await toEvent(req, context));
