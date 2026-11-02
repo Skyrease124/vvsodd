@@ -209,3 +209,7 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .dside .flcall,.dmap .dside .flcall{position:static;display:flex;top:auto;left:auto}
 .chiphint{color:#8fa0b8;margin:0}
 @media(max-width:1020px){.dside{position:static;width:auto;margin:12px 0}.dmap{display:flex;flex-direction:column}}
+
+.salebox{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:14px 16px;margin:12px 0}
+.salebox h3{margin:0 0 8px}.salesteps{margin:8px 0;padding-left:20px}.salesteps li{margin:4px 0}
+.tablewrap{overflow-x:auto}.liens{border-collapse:collapse;width:100%;font-size:14px}.liens th,.liens td{border-bottom:1px solid var(--line);padding:8px;text-align:left;white-space:nowrap}
