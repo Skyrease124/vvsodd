@@ -27,6 +27,7 @@ if (!s) {
     if (m) li.className = 'cty';
     if (!m) { x.target = '_blank'; x.rel = 'noopener noreferrer'; } li.appendChild(x); $('clist').appendChild(li);
   });
+  if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
   if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box); }
   const q = encodeURIComponent(s.n + ' county treasurer tax sale');
   $('smore').innerHTML = '<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=' + q + '">Search for your county’s tax sale page</a>';
