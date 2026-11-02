@@ -17,24 +17,35 @@
     tip.children[2].textContent = 'Interest: ' + s.rate;
     tip.children[3].href = base + '?s=' + s.a;
   }
-  const paths = {};
+  const paths = {}; let cur = 'FL';
+  const lab = mk('text', {class: 'stlabel'});
+  const touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+  function select(a) {
+    if (paths[cur]) paths[cur].classList.remove('sel');
+    cur = a; if (paths[a]) paths[a].classList.add('sel');
+    const pos = typeof MAP_LABELS !== 'undefined' && MAP_LABELS[a];
+    if (pos) { lab.setAttribute('x', pos[0]); lab.setAttribute('y', pos[1] + 6); lab.textContent = by[a].n; lab.style.display = ''; }
+    else lab.style.display = 'none';
+    show(by[a]);
+  }
   Object.keys(MAP_PATHS).forEach(a => {
     const s = by[a]; if (!s) return;
     const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
-    p.addEventListener('click', () => go(a));
+    let was = false;
+    p.addEventListener('pointerdown', () => { was = cur === a; });
+    p.addEventListener('click', () => { if (touch && !was) select(a); else go(a); });
     p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
-    ['mouseenter', 'focus'].forEach(ev => p.addEventListener(ev, () => show(s)));
+    ['mouseenter', 'focus'].forEach(ev => p.addEventListener(ev, () => select(a)));
     svg.appendChild(p); paths[a] = p;
   });
-  if (typeof MAP_LABELS !== 'undefined') Object.keys(MAP_LABELS).forEach(a => {
-    const t = mk('text', {x: MAP_LABELS[a][0], y: MAP_LABELS[a][1] + 5}); t.textContent = a; svg.appendChild(t);
-  });
+  svg.appendChild(lab);
   host.appendChild(svg);
   const chips = document.getElementById('mapchips');
   if (chips) ['VT','NH','MA','RI','CT','NJ','DE','MD','DC'].forEach(a => {
     const el = document.createElement('a'); el.href = base + '?s=' + a; el.textContent = a; el.title = by[a].n;
-    el.addEventListener('mouseenter', () => show(by[a])); chips.appendChild(el);
+    el.addEventListener('mouseenter', () => select(a)); chips.appendChild(el);
   });
+  lab.style.display = 'none';
   // Florida example panel
   const fl = by.FL, fs = document.getElementById('flsvg');
   if (fs) { const p = mk('path', {d: MAP_PATHS.FL, fill: '#22c55e'}); fs.appendChild(p);
