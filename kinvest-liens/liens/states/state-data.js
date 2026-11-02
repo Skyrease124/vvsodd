@@ -1338,5 +1338,114 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "SC": {
+  "sale": {
+   "title": "Delinquent tax sale (South Carolina)",
+   "when": "Counties sell once a year, mostly in the fall. The four 2026 sales we confirmed run from November 2 to December 8 (see the table below).",
+   "steps": [
+    "The code describes a sale of the delinquent property itself, not a lien certificate. The county tax collector advertises and sells it at a public auction (S.C. Code 12-51-40).",
+    "You bid on the property. The sale is made for the taxes, penalties, assessments and costs, and bidders offer more. You usually must be present and register first, and some counties charge a bidder fee (Lancaster’s is $25).",
+    "The owner, a grantee, or a mortgage or judgment creditor has 12 months from the sale to redeem (S.C. Code 12-51-90(A)).",
+    "If they redeem, you are repaid your bid plus a one-time lump sum of interest, not a yearly rate. It is 3% of the bid in the first three months, 6% in months 4 to 6, 9% in months 7 to 9, and 12% in the last three months (12-51-90(B)).",
+    "The interest can never be more than the opening bid on the property, so it is capped when you bid far above the taxes owed (12-51-90(B)). If nobody redeems in 12 months, the buyer gets a tax deed."
+   ],
+   "links": [
+    [
+     "S.C. Code Title 12, Chapter 51 (delinquent tax sales)",
+     "https://www.scstatehouse.gov/code/t12c051.php"
+    ],
+    [
+     "Charleston County: delinquent tax sale",
+     "https://www.charlestoncounty.gov/departments/delinquent-tax/tax-sale.php"
+    ],
+    [
+     "Richland County: tax sale",
+     "https://www.richlandcountysc.gov/Property-Business/Taxes/Delinquent-Taxes/Tax-Sale"
+    ],
+    [
+     "Lancaster County: tax sale procedures",
+     "https://www.lancastercountysc.gov/198/Tax-Sale-Procedures"
+    ],
+    [
+     "Saluda County: delinquent tax sale",
+     "https://saludacounty.sc.gov/departments/tax-collector/delinquent-tax-sale"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 county tax sales",
+   "note": "From each county’s own page (checked November 2, 2026). South Carolina has 46 counties, and these are only some of them. Spartanburg’s page blocked our tools, so it is not listed. Property lists name owners, so we do not copy them.",
+   "source": "https://www.richlandcountysc.gov/Property-Business/Taxes/Delinquent-Taxes/Tax-Sale",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Richland County",
+     "county": "",
+     "date": "2026-11-02",
+     "time": "10 a.m. to 6 p.m. (Mon), 9 a.m. on (Tue)",
+     "how": "In person, Township Auditorium, 1703 Taylor St., Columbia; two days, Nov 2–3",
+     "link": "https://www.richlandcountysc.gov/Property-Business/Taxes/Delinquent-Taxes/Tax-Sale",
+     "linkText": "Richland County Tax Collector"
+    },
+    {
+     "town": "Charleston County",
+     "county": "",
+     "date": "2026-11-09",
+     "time": "9:00 AM",
+     "how": "In person, North Charleston; resumes the following days if needed; no cash accepted for bids",
+     "link": "https://www.charlestoncounty.gov/departments/delinquent-tax/tax-sale.php",
+     "linkText": "Charleston County Delinquent Tax"
+    },
+    {
+     "town": "Lancaster County",
+     "county": "",
+     "date": "2026-11-09",
+     "time": "9:00 AM",
+     "how": "In person, Springdale Recreation Center; online registration opened September 8; $25 fee",
+     "link": "https://www.lancastercountysc.gov/198/Tax-Sale-Procedures",
+     "linkText": "Lancaster County Delinquent Tax"
+    },
+    {
+     "town": "Saluda County",
+     "county": "",
+     "date": "2026-12-08",
+     "time": "10:00 AM",
+     "how": "Tuesday sale; property list published for three weeks before",
+     "link": "https://saludacounty.sc.gov/departments/tax-collector/delinquent-tax-sale",
+     "linkText": "Saluda County Tax Collector"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "What the owner pays you if they redeem",
+    "note": "From S.C. Code 12-51-90(B), read directly. The percentage is a one-time lump sum on the whole bid, based on when in the 12 months the owner redeems. It is capped at the opening bid on the property.",
+    "source": "https://www.scstatehouse.gov/code/t12c051.php",
+    "checked": "2026-11-02",
+    "head": [
+     "When the owner redeems",
+     "Interest on top of your bid"
+    ],
+    "rows": [
+     [
+      "Months 1 to 3",
+      "3% of the bid"
+     ],
+     [
+      "Months 4 to 6",
+      "6% of the bid"
+     ],
+     [
+      "Months 7 to 9",
+      "9% of the bid"
+     ],
+     [
+      "Months 10 to 12",
+      "12% of the bid"
+     ]
+    ]
+   }
+  ]
  }
 };
