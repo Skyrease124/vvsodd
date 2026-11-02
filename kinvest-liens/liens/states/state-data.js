@@ -1972,5 +1972,97 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "LA": {
+  "sale": {
+   "title": "Tax lien auctions (Louisiana)",
+   "when": "Each parish tax collector (usually the sheriff) advertises the lien auction on or before May 1 of the year after the tax year, or as soon after as possible (La. R.S. 47:2154). The 2026 sales we found were in June (see the table below).",
+   "steps": [
+    "Louisiana changed its system on January 1, 2026. A constitutional amendment and a rewritten tax sale law (Acts 409 of 2024, 774 of 2024 and 411 of 2025) turned unpaid property tax into a lien that parishes sell as a tax lien certificate. The certificate is not title to the property.",
+    "The auction price is the face value of the certificate, which is the delinquent amount. Bidders compete on the monthly interest rate. The most you can bid is 1% a month. Bids go down in steps of 0.1%, and no bid below 0.7% a month is accepted. The lowest rate wins, and ties go to the first bid submitted (R.S. 47:2154).",
+    "That is 12% a year at the top and 8.4% a year at the floor, simple interest, not compounded. The law also lets the owner be charged a penalty of up to 5% (Louisiana Constitution, Article VII, Section 25).",
+    "The owner keeps the property. To end the lien they pay the face value, the penalty, interest at the winning rate, and costs (R.S. 47:2243). The tax collector files the certificate in the parish mortgage records within 30 days of the auction.",
+    "The certificate holder can sue only after the later of 3 years from recording the certificate or 6 months after the required notices (R.S. 47:2266.1). A judgment is carried out by a sheriff’s sale, and the holder is repaid from the proceeds. Money left over goes to the owners.",
+    "Sales made before January 1, 2026 still run under the older rules. Ask the parish whether a given 2026 sale was held as a lien auction under the new law or as a tax sale under the old one."
+   ],
+   "links": [
+    [
+     "La. R.S. 47:2154 (tax lien auctions)",
+     "https://legis.la.gov/Legis/Law.aspx?d=631549"
+    ],
+    [
+     "La. R.S. 47:2266.1 (suit on the certificate)",
+     "https://legis.la.gov/Legis/Law.aspx?d=1388659"
+    ],
+    [
+     "La. R.S. 47:2241.1–2247 (ending a lien; termination price)",
+     "https://legis.la.gov/Legis/Law.aspx?d=631610"
+    ],
+    [
+     "La. Constitution Art. VII, Section 25 (tax administration)",
+     "https://legis.la.gov/Legis/Law.aspx?d=206555"
+    ],
+    [
+     "St. John the Baptist Parish Sheriff: 2026 property tax sale",
+     "https://stjohnsheriff.org/2025-property-tax-sale-thursday-june-25-2026/"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 parish sales we found",
+   "note": "Checked November 2, 2026. Louisiana has 64 parishes and each posts its own notice, so this is a small sample. St. John the Baptist’s page was read directly. Lafayette’s page blocked our tools, so that row comes from TaxLien.io’s summary. Delinquent lists name owners, so we do not copy them.",
+   "source": "https://stjohnsheriff.org/2025-property-tax-sale-thursday-june-25-2026/",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "St. John the Baptist Parish",
+     "county": "",
+     "date": "2026-06-25",
+     "time": "9:00 AM to 3:00 PM",
+     "how": "Online (Zeus Auction); registration May 27 to June 18",
+     "link": "https://stjohnsheriff.org/2025-property-tax-sale-thursday-june-25-2026/",
+     "linkText": "St. John Sheriff"
+    },
+    {
+     "town": "Lafayette Parish",
+     "county": "",
+     "date": "2026-06-10",
+     "time": "",
+     "how": "Online auction, June 10 to 11 (per TaxLien.io; page not opened)",
+     "link": "https://lafayettesheriff.com/services/make-a-payment/taxes/",
+     "linkText": "Lafayette Parish Sheriff"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "What the bid range means per year",
+    "note": "The monthly rate is simple interest. Multiply by 12 to compare with other states. The 5% owner penalty is on top.",
+    "source": "https://legis.la.gov/Legis/Law.aspx?d=631549",
+    "checked": "2026-11-02",
+    "head": [
+     "Winning bid (per month)",
+     "Same as per year"
+    ],
+    "rows": [
+     [
+      "1.0% (the highest allowed)",
+      "12.0%"
+     ],
+     [
+      "0.9%",
+      "10.8%"
+     ],
+     [
+      "0.8%",
+      "9.6%"
+     ],
+     [
+      "0.7% (the lowest allowed)",
+      "8.4%"
+     ]
+    ]
+   }
+  ]
  }
 };
