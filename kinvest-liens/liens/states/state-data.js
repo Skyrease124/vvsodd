@@ -3030,5 +3030,128 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "MS": {
+  "sale": {
+   "title": "Land sale for unpaid taxes (Mississippi)",
+   "when": "By state law each county sells on either the first Monday in April or the last Monday in August, and most use August (Lee County Tax Collector, citing Miss. Code 27-41-49 to 27-41-89). Next: April 5, 2027 or August 30, 2027. The 2026 August sales were on August 31.",
+   "steps": [
+    "The county tax collector sells land on which taxes were not paid. Many counties run the sale online through GovEase, and registration opens August 1. Lists are printed in a local newspaper in early August.",
+    "The opening amount is the taxes plus penalty. Bidders then bid the price up. Large counties see heavy overbidding. Lee County says about 3,000 parcels sell with substantial overbidding and over 100 bidders present.",
+    "What you buy is the land, subject to a 2-year redemption period. The owner stays the legal owner during that time, and you cannot take possession (Lee, Harrison and Lamar County pages).",
+    "If the owner redeems, you are repaid the taxes and penalty you paid plus interest of 1.5% per month on that base amount. Your overbid is not repaid and earns nothing (Lee, Itawamba, Jackson and Lamar County pages).",
+    "If nobody redeems within 2 years, you can apply to the Chancery Clerk for a tax deed. The clerk sends registered letters to the owner and any lien holders during the redemption period (Lee County). Most owners or lenders redeem.",
+    "Some county pages call this a “lien” sale. It is a sale of the land with a right to buy it back, so we call it a redeemable deed."
+   ],
+   "links": [
+    [
+     "Lee County Tax Collector: tax sale",
+     "https://leecotaxcollector.com/tax-sale"
+    ],
+    [
+     "Itawamba County Tax Collector: tax sale",
+     "https://itawamba.gov/tax-collector/"
+    ],
+    [
+     "Jackson County: annual sale of delinquent taxes",
+     "https://www.co.jackson.ms.us/376/Annual-Sale-of-Delinquent-Taxes"
+    ],
+    [
+     "Lauderdale County: 2026 delinquent tax sale dates",
+     "https://www.lauderdalecounty.org/tax-collector-announces-dates-for-2026-delinquent-tax-sale/"
+    ],
+    [
+     "Harrison County Chancery Clerk: land redemption",
+     "https://www.harrisoncountymschanceryclerk.gov/landredemption.asp"
+    ],
+    [
+     "Mississippi Secretary of State: tax-forfeited lands",
+     "https://www.sos.ms.gov/public-lands/tax-forfeited-lands"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 county sales and what is next",
+   "note": "From each county’s own page (checked November 2, 2026). Mississippi has 82 counties, and these are only some. Lists name owners, so we do not copy them.",
+   "source": "https://leecotaxcollector.com/tax-sale",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Most counties",
+     "county": "",
+     "date": "2027-04-05",
+     "dateText": "April 5 or August 30, 2027 (first Monday in April or last Monday in August)",
+     "time": "",
+     "how": "Next sale under the state schedule",
+     "link": "https://leecotaxcollector.com/tax-sale",
+     "linkText": "Lee County explanation"
+    },
+    {
+     "town": "Lauderdale County",
+     "county": "",
+     "date": "2026-08-31",
+     "time": "8:30 AM",
+     "how": "Online (GovEase); register by August 28",
+     "link": "https://www.lauderdalecounty.org/tax-collector-announces-dates-for-2026-delinquent-tax-sale/",
+     "linkText": "Lauderdale County Tax Collector"
+    },
+    {
+     "town": "Lee County",
+     "county": "",
+     "date": "2026-08-31",
+     "time": "8:30 AM",
+     "how": "Last Monday in August; about 3,000 parcels in a typical year; online (GovEase)",
+     "link": "https://leecotaxcollector.com/tax-sale",
+     "linkText": "Lee County Tax Collector"
+    },
+    {
+     "town": "Itawamba County",
+     "county": "",
+     "date": "2026-08-31",
+     "time": "8:30 AM",
+     "how": "Last Monday in August every year; online (GovEase)",
+     "link": "https://itawamba.gov/tax-collector/",
+     "linkText": "Itawamba County Tax Collector"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Example: what you get back if the owner redeems (made-up numbers)",
+    "note": "An illustration of the rule on this page, not a real sale. You bid $5,000 on land whose taxes and penalty total $1,000. The $4,000 above that is the overbid. If the owner redeems after 12 months, interest is 1.5% a month on the $1,000 base only.",
+    "source": "https://www.co.jackson.ms.us/376/Annual-Sale-of-Delinquent-Taxes",
+    "checked": "2026-11-02",
+    "head": [
+     "Item",
+     "Amount"
+    ],
+    "rows": [
+     [
+      "You pay at the sale",
+      "$5,000"
+     ],
+     [
+      "Base (taxes and penalty)",
+      "$1,000"
+     ],
+     [
+      "Overbid (not repaid)",
+      "$4,000"
+     ],
+     [
+      "Interest, 12 months at 1.5% a month on the base",
+      "$180"
+     ],
+     [
+      "You get back",
+      "$1,180"
+     ],
+     [
+      "Result for you",
+      "$3,820 less than you paid"
+     ]
+    ]
+   }
+  ]
  }
 };
