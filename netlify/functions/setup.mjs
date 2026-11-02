@@ -1,7 +1,7 @@
 // Private setup endpoint behind /admin/. Lets the site owner paste the NVIDIA key once.
 // Protected by a one-time setup code (only its SHA-256 hash is stored here).
-const crypto = require('crypto');
-const keystore = require('../lib/keystore');
+import crypto from 'node:crypto';
+import * as keystore from '../lib/keystore.mjs';
 
 const CODE_HASH = process.env.SETUP_CODE_HASH || '7bcea3ec427a6a4ee2a7a7320f380be5ab648b3659bb38ca3420e92b17e7ae7b';
 const MODELS_URL = process.env.NVIDIA_MODELS_URL || 'https://integrate.api.nvidia.com/v1/models';
@@ -19,9 +19,9 @@ function codeOk(code) {
 }
 const hint = k => '…' + String(k).slice(-4);
 
-exports.handler = async (event) => {
+async function handle(event) {
   if (event.httpMethod === 'GET') {
-    const c = await keystore.getConfig(event);
+    const c = await keystore.getConfig();
     return json(200, { enabled: !!c, source: c ? c.source : 'none', hint: c ? hint(c.key) : '', model: c && c.model ? c.model : '' });
   }
   if (event.httpMethod !== 'POST') return json(405, { error: 'Use POST.' });
@@ -35,7 +35,7 @@ exports.handler = async (event) => {
   if (!codeOk(b.code)) { await new Promise(r => setTimeout(r, 800)); return json(403, { error: 'That setup code is not right.' }); }
 
   if (b.action === 'remove') {
-    try { await keystore.erase(event); keystore.clearCache(); } catch (e) { return json(500, { error: 'Could not remove the saved key.' }); }
+    try { await keystore.erase(); keystore.clearCache(); } catch (e) { return json(500, { error: 'Could not remove the saved key.' }); }
     return json(200, { ok: true, message: 'The saved key was removed. The question box is now hidden.' });
   }
   if (b.action !== 'save') return json(400, { error: 'Unknown action.' });
@@ -43,7 +43,7 @@ exports.handler = async (event) => {
   const key = String(b.key || '').trim();
   const model = String(b.model || '').trim().slice(0, 100);
   if (key.length < 20 || /\s/.test(key)) return json(400, { error: 'That does not look like an NVIDIA key. Paste the whole key.' });
-  if (model && !/^[A-Za-z0-9._\/-]+$/.test(model)) return json(400, { error: 'The model name has odd characters.' });
+  if (model && !/^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(model)) return json(400, { error: 'The model box should be left empty unless you know the exact model name, like meta/llama-3.3-70b-instruct.' });
 
   try {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
@@ -53,7 +53,18 @@ exports.handler = async (event) => {
     if (!r.ok) return json(502, { error: 'Could not check the key with NVIDIA right now. Try again in a minute.' });
   } catch (e) { return json(502, { error: 'Could not reach NVIDIA to check the key. Try again in a minute.' }); }
 
-  try { await keystore.write(event, { key, model, savedAt: new Date().toISOString() }); keystore.clearCache(); }
-  catch (e) { return json(500, { error: 'The key checked out but could not be saved on the server. As a backup you can add it in Netlify under Site configuration, Environment variables, named NVIDIA_API_KEY.' }); }
+  try { await keystore.write({ key, model, savedAt: new Date().toISOString() }); keystore.clearCache(); }
+  catch (e) { return json(500, { detail: String((e && (e.name + ': ' + e.message)) || e).slice(0, 160), error: 'The key checked out but could not be saved on the server. As a backup you can add it in Netlify under Site configuration, Environment variables, named NVIDIA_API_KEY.' }); }
   return json(200, { ok: true, message: 'Saved. The question box is now on for every state page.', hint: hint(key) });
+}
+
+async function toEvent(req, context) {
+  return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
+    headers: { 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+}
+export default async (req, context) => {
+  const r = await handle(await toEvent(req, context));
+  return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
+
+export { handle as _handle };

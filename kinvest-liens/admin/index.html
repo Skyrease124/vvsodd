@@ -29,8 +29,8 @@
     <label>NVIDIA API key
       <input id="key" type="password" autocomplete="new-password" spellcheck="false" placeholder="nvapi-&hellip;" required>
     </label>
-    <label>Model (optional)
-      <input id="model" type="text" spellcheck="false" placeholder="meta/llama-3.3-70b-instruct">
+    <label>Model (leave this empty)
+      <input id="model" type="text" spellcheck="false" placeholder="Leave empty (default: meta/llama-3.3-70b-instruct)">
     </label>
     <div class="setupbtns">
       <button class="btn" type="submit" id="save">Save key</button>
@@ -64,7 +64,7 @@
       const r = await fetch(EP, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, code: $('code').value, key: $('key').value, model: $('model').value }) });
       let d = {}; try { d = await r.json(); } catch (e) {}
       if (r.ok && d.ok) { msg.textContent = d.message; msg.style.color = '#0b6e4f'; $('key').value = ''; refresh(); }
-      else { msg.textContent = d.error || 'Something went wrong.'; msg.style.color = '#c2282d'; }
+      else { msg.textContent = (d.error || 'Something went wrong.') + (d.detail ? ' (Technical detail: ' + d.detail + ')' : ''); msg.style.color = '#c2282d'; }
     } catch (e) { msg.textContent = 'Could not reach the server.'; msg.style.color = '#c2282d'; }
   }
   $('setup').addEventListener('submit', e => { e.preventDefault(); send('save'); });
