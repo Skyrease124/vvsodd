@@ -15,6 +15,13 @@ function calc() {
   $('r-apr').textContent = apr.toFixed(1) + '%';
 }
 if ($('calc')) {
+  const qs = new URLSearchParams(location.search);
+  ['amount', 'rate', 'months', 'fees'].forEach(k => { const v = parseFloat(qs.get(k)); if ($(k) && isFinite(v) && v >= 0) $(k).value = v; });
+  if (qs.get('from')) {
+    const n = document.createElement('p'); n.className = 'notice';
+    n.textContent = 'Prefilled from ' + qs.get('from').slice(0, 200) + '. The real purchase price, interest and timing can differ. Confirm with the county tax collector. Estimate only, not advice.';
+    $('calc').before(n);
+  }
   $('calc').addEventListener('input', calc);
   $('calc').addEventListener('submit', e => e.preventDefault());
   calc();
