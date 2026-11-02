@@ -336,5 +336,158 @@ const STATE_DATA = {
     }
    ]
   }
+ },
+ "IA": {
+  "sale": {
+   "title": "Tax sale (Iowa)",
+   "when": "Every county sells on the third Monday in June (June 21, 2027), unless the treasurer picks a different June date for good cause (Iowa Code 446.7).",
+   "steps": [
+    "The county treasurer offers every parcel with delinquent taxes at a public sale, one parcel at a time, for the total amount due (taxes, interest, fees and costs).",
+    "There is no bidding on the interest rate. The person who will accept the smallest percentage of the parcel wins, and the lowest allowed bid is 1%. Ties are settled by random draw (Iowa Code 446.16).",
+    "The winner earns interest of 2% a month (24% a year), counting any part of a month as a full month, from the month of sale (Iowa Code 447.1).",
+    "The percentage you bid is not a discount or a yield. It is the share of the parcel you would get if a treasurer’s deed is ever issued.",
+    "After 1 year and 9 months, the holder can serve a notice. The owner then has 90 days to redeem or a deed can be issued (Iowa Code 447.9). Certificates the county holds can be assigned to others (Iowa Code 446.31)."
+   ],
+   "links": [
+    [
+     "Iowa Code 446.7 (annual sale)",
+     "https://www.legis.iowa.gov/docs/code/446.7.pdf"
+    ],
+    [
+     "Iowa Code 446.16 (bidding)",
+     "https://www.legis.iowa.gov/docs/code/446.16.pdf"
+    ],
+    [
+     "Iowa Code 447.1 (redemption, 2% a month)",
+     "https://www.legis.iowa.gov/docs/code/447.1.pdf"
+    ],
+    [
+     "Iowa Code 447.9 (notice of expiration)",
+     "https://www.legis.iowa.gov/docs/code/447.9.pdf"
+    ],
+    [
+     "Iowa Code 446.31 (assignment)",
+     "https://www.legis.iowa.gov/docs/code/446.31.pdf"
+    ],
+    [
+     "Iowa State Treasurers Association",
+     "https://www.iowatreasurers.org"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 county tax sales we confirmed",
+   "note": "From each county treasurer’s own page (checked November 2, 2026). There are 99 counties and each posts its own notice. Parcel lists name owners and addresses, so we do not copy them.",
+   "source": "https://www.iowatreasurers.org",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Scott County",
+     "county": "",
+     "date": "2026-06-15",
+     "time": "8:30 AM",
+     "how": "In person, Davenport (pre-registration required)",
+     "link": "https://www.scottcountyiowa.gov/treasurer/post/2026/06/15/2026-annual-tax-sale",
+     "linkText": "Scott County Treasurer"
+    },
+    {
+     "town": "Woodbury County",
+     "county": "",
+     "date": "2026-06-15",
+     "time": "9:00 AM",
+     "how": "Online, 9:00 to 10:30 AM",
+     "link": "https://www.woodburycountyiowa.gov/treasurer/tax_sale/",
+     "linkText": "Woodbury County Treasurer"
+    }
+   ]
+  },
+  "counts": {
+   "title": "Woodbury County: open certificates the county holds, by sale year",
+   "note": "Certificates nobody bought at the June sale stay with the county. This is the county’s own “Public Bidder Parcel Listing” as of July 8, 2026, counted by sale year. We count them only; the list also names owners and gives no dollar amounts, so we do not copy individual parcels. Ask the county treasurer about assignment.",
+   "source": "https://www.woodburycountyiowa.gov/treasurer/tax_sale/",
+   "checked": "2026-11-02",
+   "head": [
+    "Sale year",
+    "Open county-held certificates"
+   ],
+   "rows": [
+    [
+     2000,
+     5
+    ],
+    [
+     2001,
+     8
+    ],
+    [
+     2002,
+     5
+    ],
+    [
+     2003,
+     2
+    ],
+    [
+     2005,
+     1
+    ],
+    [
+     2006,
+     8
+    ],
+    [
+     2007,
+     13
+    ],
+    [
+     2008,
+     13
+    ],
+    [
+     2010,
+     5
+    ],
+    [
+     2011,
+     20
+    ],
+    [
+     2012,
+     20
+    ],
+    [
+     2013,
+     23
+    ],
+    [
+     2014,
+     13
+    ],
+    [
+     2015,
+     24
+    ],
+    [
+     2016,
+     21
+    ],
+    [
+     2017,
+     6
+    ],
+    [
+     2018,
+     15
+    ],
+    [
+     2019,
+     13
+    ],
+    [
+     2021,
+     3
+    ]
+   ]
+  }
  }
 };
