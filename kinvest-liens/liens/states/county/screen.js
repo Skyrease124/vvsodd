@@ -5,7 +5,12 @@
   const money = n => '$' + Math.round(n).toLocaleString('en-US');
   const county = new URLSearchParams(location.search).get('c') || '';
   if (county !== 'Palm Beach') return;
-  fetch('/.netlify/functions/screen').then(r => r.ok ? r.json() : null).then(d => { if (d && d.enabled) box.hidden = false; }).catch(() => {});
+  const gate = document.getElementById('screengate'), form = document.getElementById('screenform'), chips = document.getElementById('screenchips');
+  let signedIn = false;
+  fetch('/.netlify/functions/screen').then(r => r.ok ? r.json() : null).then(d => {
+    if (!d || !d.enabled) return;
+    box.hidden = false; signedIn = !!d.signedIn; gate.hidden = signedIn; form.hidden = chips.hidden = !signedIn;
+  }).catch(() => {});
   const input = document.getElementById('screenq'), out = document.getElementById('screenout'), go = document.getElementById('screengo');
   [['Best cushion', ''], ['Cheapest vacant lots', 'cheapest vacant lots'], ['Vacant, 0.25 acres or more', 'vacant land of at least a quarter acre, tax debt under $2,000'], ['Highest land value', 'highest county land value']].forEach(([t, w]) => {
     const b = mk('button', 'chipbtn', t); b.type = 'button'; b.addEventListener('click', () => { input.value = w; run(); }); document.getElementById('screenchips').appendChild(b);
@@ -27,7 +32,16 @@
     const mb = mk('button', 'btn small', 'Show on map'); mb.type = 'button'; mb.addEventListener('click', () => LienMap.open(lienFor(r))); act.appendChild(mb);
     const cb = mk('a', 'btn small ghost', 'Calculate');
     cb.href = '../../?' + new URLSearchParams({amount: r.face, rate: String(r.rate || '').replace('%', ''), months: 24, fees: 0, from: 'Palm Beach parcel ' + r.parcel}).toString() + '#calculator';
-    act.appendChild(cb); c.appendChild(act);
+    act.appendChild(cb);
+    const sv = mk('button', 'btn small ghost', 'Save'); sv.type = 'button';
+    sv.addEventListener('click', async () => {
+      sv.disabled = true;
+      try {
+        const x = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'save', parcel: r.parcel, county: r.county, use: r.use, face: r.face, market: r.market, acres: r.acres})});
+        sv.textContent = x.ok ? 'Saved \u2713' : 'Could not save'; if (!x.ok) sv.disabled = false;
+      } catch (e) { sv.textContent = 'Could not save'; sv.disabled = false; }
+    });
+    act.appendChild(sv); c.appendChild(act);
     return c;
   }
   async function run() {
@@ -36,6 +50,7 @@
     try {
       const r = await fetch('/.netlify/functions/screen', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({county, wish: input.value})});
       const d = await r.json();
+      if (r.status === 401) { signedIn = false; gate.hidden = false; form.hidden = chips.hidden = true; out.hidden = true; return; }
       if (!r.ok) { out.className = 'askout err'; out.textContent = d.error || 'Something went wrong.'; return; }
       out.className = 'askout ok'; out.textContent = '';
       out.appendChild(mk('p', 'small muted', 'Screened ' + d.total + ' parcels with county-held certificates; ' + d.matched + ' fit' + (input.value.trim() && !d.understood ? ' (I could not read your wording, so the standard screen was used)' : '') + '. Showing the top ' + d.results.length + '. Road strips, water, utility strips, government land, homesteads and lots valued below the debt are left out.'));

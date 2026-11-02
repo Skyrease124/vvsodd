@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>My account | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a><a href="./">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>My account</h1>
+  <div id="out" hidden>
+    <div class="setupform">
+      <div class="setupbtns"><button class="btn" id="tabin" type="button">Sign in</button><button class="btn ghost" id="tabup" type="button">Create account</button></div>
+      <form id="form" novalidate>
+        <label>Email <input id="email" type="email" autocomplete="email" required></label>
+        <label>Password <input id="pw" type="password" autocomplete="current-password" required></label>
+        <p class="small muted" id="pwhint" hidden>At least 8 characters. Pick one you do not use anywhere else.</p>
+        <details id="own" class="small" hidden><summary>I am the site owner</summary><label>Owner code <input id="code" type="text" autocomplete="off" spellcheck="false"></label></details>
+        <button class="btn" id="go" type="submit">Sign in</button>
+        <p id="msg" class="small" role="status" aria-live="polite"></p>
+      </form>
+      <p class="small muted">There is no password reset yet, so keep your password somewhere safe.</p>
+    </div>
+  </div>
+  <div id="in" hidden>
+    <p>Signed in as <b id="who"></b> <span id="ownbadge" class="small muted" hidden>(owner)</span></p>
+    <h2>Saved liens</h2>
+    <p class="small muted">Tap Save on a screener result to keep it here. Saved liens are for your own research notes, not advice.</p>
+    <ul id="saved" class="sflags" style="display:block"></ul>
+    <p><button class="btn ghost" id="logout" type="button">Sign out</button></p>
+  </div>
+  <p class="small muted">Educational only. Not legal, tax or investment advice.</p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="account.js"></script>
+</body>
+</html>
