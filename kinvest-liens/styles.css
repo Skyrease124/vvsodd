@@ -222,3 +222,4 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .lothead{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lotmap{height:min(60vh,520px);border-radius:10px;overflow:hidden;background:#222;margin:8px 0}
 .lotfoot{margin:0}
+.lotfacts{margin:0 0 6px;font-weight:600}

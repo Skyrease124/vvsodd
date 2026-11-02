@@ -32,6 +32,17 @@ const PARCEL_MAPS = {
     idField: 'PARID',
     fmt: pin => pin.replace(/-/g, ''),
     page: pin => 'https://www.pbcgov.org/papa/Asps/PropertyDetail/PropertyDetail.aspx?parcel=' + pin.replace(/-/g, ''),
+    facts: 'https://services1.arcgis.com/ZWOoUZbtaYePLlPw/ArcGIS/rest/services/Property_Information_Table/FeatureServer/0/query',
     pageName: 'Palm Beach County Property Appraiser'
   }
 };
+
+// Shown on every county page: what to check before buying a lien.
+const DUE_DILIGENCE = [
+  'Look up the parcel on the county property appraiser site: owner of record, property use, assessed value and tax history.',
+  'Check whether the lot can be built on (zoning, flood zone, access). Many county-held parcels are thin strips, road buffers or canal edges.',
+  'Look for other liens, a mortgage, code-enforcement fines or a bankruptcy. Ask the county or a title company.',
+  'Homestead (owner-occupied) properties are handled differently. Confirm the rules with the tax collector.',
+  'Confirm the payoff, the rate and how to buy with the tax collector before you pay anything.',
+  'Talk to a Florida real estate attorney before relying on a lien. This site is educational only.'
+];

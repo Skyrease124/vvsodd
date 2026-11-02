@@ -13,4 +13,5 @@ if (!link) {
   $('clink').appendChild(a);
   LienUI.saleBox($('sale'), name);
   LienUI.table($('lienbox'), name);
+  DUE_DILIGENCE.forEach(t => { const li = document.createElement('li'); li.textContent = t; $('dd').appendChild(li); });
 }
