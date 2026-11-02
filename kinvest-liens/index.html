@@ -43,18 +43,22 @@
     </div>
     <div class="dmap">
       <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
-      <a id="flcallout" class="flcall" href="liens/states/state/?s=FL"><b>Florida</b><span>Explore Counties &rarr;</span></a>
-      <div id="mapchips" class="mapchips"></div>
-      <aside id="maptip" class="maptip" aria-live="polite">
-      <b>Click a State</b>
-      <span>Start by selecting any state to view its tax sale rules and county pages.</span>
+      <div class="dside">
+        <aside id="maptip" class="maptip" aria-live="polite">
+        <b>Click a State</b>
+        <span>Start by selecting any state to view its tax sale rules and county pages.</span>
     </aside>
+        <p class="small chiphint">Small states and DC:</p>
+        <div id="mapchips" class="mapchips"></div>
+        <a id="flcallout" class="flcall" href="liens/states/state/?s=FL"><b>Florida</b><span>Explore Counties &rarr;</span></a>
+      </div>
+      <ul id="maplegend" class="maplegend" aria-label="Map colors"></ul>
     </div>
   </div>
   <div class="dwrap">
     <div class="flpanel">
       <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
-      <div class="flintro"><h2>Florida</h2><p>Select a county to open its tax collector page and see how its tax sales work.</p></div>
+      <div class="flintro"><h2>Florida</h2><p>Florida sells tax lien certificates (green). Select a county to open its tax collector page.</p></div>
       <div class="flcounties"><h3>Available Counties (Example)</h3><div id="flchips" class="flchips"></div>
         <a class="dghost" href="liens/states/state/?s=FL">View All Florida Counties &rarr;</a></div>
       <div class="flwhy"><h3>Good to know</h3>
@@ -112,6 +116,7 @@
 </footer>
 <script src="script.js"></script>
 <script src="liens/states/states.js"></script>
+<script src="officials.js"></script>
 <script src="map-data.js"></script>
 <script src="map.js"></script>
 </body>
