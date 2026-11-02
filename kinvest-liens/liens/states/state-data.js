@@ -1017,5 +1017,175 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "CO": {
+  "sale": {
+   "title": "Tax lien sale (Colorado)",
+   "when": "Each county treasurer sells liens once a year in the fall for the previous year’s unpaid taxes. The 2026 sales run through mid to late November (see the table below). Each county sets its own date, usually online or in person.",
+   "steps": [
+    "You buy the tax lien, not the property. The buyer receives a certificate of purchase.",
+    "Nobody bids the interest rate. It is set by formula: 9 points above the Federal Reserve discount rate on September 1, rounded to a whole percent. The discount rate was 3.75% on September 1, 2026, so liens sold in 2026 pay 13%. It was 14% in 2025 and 15% in 2024 (Denver and Boulder County pages).",
+    "Instead, buyers bid a premium on top of the taxes. The premium goes to the county, earns no interest, and is not refunded if the owner redeems (Eagle and Logan County pages). Winning premiums averaged 5.6% of the lien in Boulder County’s 2025 sale.",
+    "The buyer pays the full advertised price (taxes, interest, advertising fee and a small certificate fee that varies by county) plus the premium. Interest runs from the sale date, and part of a month counts as a month.",
+    "The owner can redeem any time and the buyer is repaid the lien plus interest. The buyer can apply for a treasurer’s deed 3 years after the sale, for example November 2029 for liens sold in November 2026 (Denver). A deed application goes to a public auction, and Denver asks for a $2,500 deposit."
+   ],
+   "links": [
+    [
+     "Colorado Revised Statutes, Title 39 (property tax)",
+     "https://leg.colorado.gov/colorado-revised-statutes"
+    ],
+    [
+     "Colorado Division of Banking: interest rates set by the Bank Commissioner",
+     "https://banking.colorado.gov/public-notices/interest-rates-set-by-the-bank-commissioner"
+    ],
+    [
+     "Denver tax lien sale",
+     "https://www.denvergov.org/Government/Departments/Department-of-Finance/Our-Divisions/Treasury/Property-Taxes/Real-Estate-Delinquent-Taxes-and-Tax-Lien-Sale"
+    ],
+    [
+     "Boulder County tax lien sale",
+     "https://bouldercounty.gov/property-and-land/treasurer/taxes/tax-lien-sale/"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 county tax lien sales",
+   "note": "From each county treasurer’s own page (checked November 2, 2026). These are only some of Colorado’s 64 counties. Registration and deposit deadlines come before the sale day, so check each page. Properties and lists name owners, so we do not copy them.",
+   "source": "https://www.jeffco.us/2438/Internet-Sale-Information",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Denver County",
+     "county": "",
+     "date": "2026-11-05",
+     "dateText": "Early November 2026 (county says usually the first part of November)",
+     "time": "",
+     "how": "Public auction of 2025 taxes",
+     "link": "https://www.denvergov.org/Government/Departments/Department-of-Finance/Our-Divisions/Treasury/Property-Taxes/Real-Estate-Delinquent-Taxes-and-Tax-Lien-Sale",
+     "linkText": "Denver Treasury"
+    },
+    {
+     "town": "Mesa County",
+     "county": "",
+     "date": "2026-11-06",
+     "time": "",
+     "how": "Online; deposit due October 23, payment due November 9",
+     "link": "https://www.mesacounty.us/departments-and-services/treasurer/tax-sale-information",
+     "linkText": "Mesa County Treasurer"
+    },
+    {
+     "town": "Eagle County",
+     "county": "",
+     "date": "2026-11-10",
+     "time": "",
+     "how": "Online (RealAuction); register by November 3 at 2 p.m.",
+     "link": "https://www.eaglecounty.us/departments___services/office_of_the_treasurer/tax_lien_sale.php",
+     "linkText": "Eagle County Treasurer"
+    },
+    {
+     "town": "Jefferson County",
+     "county": "",
+     "date": "2026-11-12",
+     "time": "",
+     "how": "Online (SRI/Zeus), November 12 and 13; register by November 10",
+     "link": "https://www.jeffco.us/2438/Internet-Sale-Information",
+     "linkText": "Jefferson County Treasurer"
+    },
+    {
+     "town": "Boulder County",
+     "county": "",
+     "date": "2026-11-13",
+     "time": "8:30 AM",
+     "how": "In person; registration opens 7:30 a.m.",
+     "link": "https://bouldercounty.gov/property-and-land/treasurer/taxes/tax-lien-sale/",
+     "linkText": "Boulder County Treasurer"
+    },
+    {
+     "town": "Elbert County",
+     "county": "",
+     "date": "2026-11-17",
+     "time": "",
+     "how": "Backup date November 24 in case of bad weather",
+     "link": "https://www.elbertcounty-co.gov/321/Tax-Lien-Sale",
+     "linkText": "Elbert County Treasurer"
+    },
+    {
+     "town": "Gunnison County",
+     "county": "",
+     "date": "2026-11-17",
+     "time": "8:00 AM to 5:00 PM",
+     "how": "Online (Zeus); registration closes November 16; $12 online fee per account",
+     "link": "https://gunnisoncounty.org/213/Online-Tax-Lien-Sale",
+     "linkText": "Gunnison County Treasurer"
+    },
+    {
+     "town": "Logan County",
+     "county": "",
+     "date": "2026-11-19",
+     "time": "10:00 AM",
+     "how": "In person, Sterling; unsold parcels open to buy through November 24",
+     "link": "https://www.logancountyco.gov/208/Tax-Liens-Sale",
+     "linkText": "Logan County Treasurer"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Boulder County: past tax lien sales",
+    "note": "Totals from Boulder County Treasurer’s own “Prior Year Sale Information” table. The interest rate is the formula rate for that year. The average premium is what bidders paid on top of the taxes, and it is not refunded.",
+    "source": "https://bouldercounty.gov/property-and-land/treasurer/taxes/tax-lien-sale/",
+    "checked": "2026-11-02",
+    "head": [
+     "Sale date",
+     "Interest rate",
+     "Investors at sale",
+     "Properties at auction",
+     "Average premium",
+     "Taxes collected"
+    ],
+    "rows": [
+     [
+      "Nov 14, 2025",
+      "14%",
+      "25",
+      "520",
+      "5.6%",
+      "$5,676,650"
+     ],
+     [
+      "Nov 8, 2024",
+      "15%",
+      "29",
+      "591",
+      "6.0%",
+      "$3,800,832"
+     ],
+     [
+      "Nov 17, 2023",
+      "15%",
+      "32",
+      "488",
+      "7.0%",
+      "$2,329,831"
+     ],
+     [
+      "Nov 16, 2022",
+      "12%",
+      "37",
+      "446",
+      "7.6%",
+      "$2,470,113"
+     ],
+     [
+      "Nov 5, 2021",
+      "9%",
+      "42",
+      "402",
+      "7.5%",
+      "$2,918,713"
+     ]
+    ]
+   }
+  ]
  }
 };
