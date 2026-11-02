@@ -42,8 +42,19 @@
         <option value="">All methods</option>
         <option>Bid-down rate</option>
         <option>Premium bidding</option>
-        <option>Rotational</option>
+        <option>Other</option>
         <option>Not applicable</option>
+      </select>
+    </label>
+    <label>System type
+      <select id="sys">
+        <option value="">All types</option>
+        <option>Tax lien certificate</option>
+        <option>Tax deed</option>
+        <option>Redeemable deed</option>
+        <option>Hybrid</option>
+        <option>Municipal lien</option>
+        <option>Sources differ</option>
       </select>
     </label>
     <label>Sort by
@@ -56,7 +67,7 @@
   </div>
   <p id="count" class="muted" role="status"></p>
   <div id="cards" class="states"></div>
-  <p class="muted small">More states are coming. Missing yours? <a href="../../#contact">Tell us which one to add next</a>.</p>
+  <p class="muted small">All 50 states plus DC. States marked <b>Verify</b> have figures where our sources disagree or only one source was found, so we do not state a firm number. States with no lien sale (tax deed states) pay investors no interest. Spot an error? <a href="../../#contact">Tell us</a>.</p>
 </section>
 
 <section id="terms" class="band">
@@ -65,7 +76,7 @@
     <div class="grid4">
       <article class="card"><h3>Bid-down rate</h3><p>Bidders compete by accepting a lower interest rate, starting at the legal maximum. The lowest rate wins, so a hot auction can mean low returns.</p></article>
       <article class="card"><h3>Premium bidding</h3><p>The rate is fixed. Bidders pay a premium above the tax owed. Premiums are often not repaid in full, so they cut into your return.</p></article>
-      <article class="card"><h3>Rotational</h3><p>No bidding. Liens are assigned in turn at a fixed rate, so the rate is known up front.</p></article>
+      <article class="card"><h3>Other / no rate bidding</h3><p>Some states use a draw, a fixed-rate assignment, or bidding on a share of the parcel instead. Ask the county how winners are picked.</p></article>
       <article class="card"><h3>Redeemable deed</h3><p>You buy the property deed itself, subject to a window in which the owner can buy it back, often with a penalty on top.</p></article>
     </div>
   </div>
@@ -82,7 +93,7 @@
   </ol>
 
   <h2>Where this data comes from</h2>
-  <p class="muted">Compiled from investor-education summaries, which conflict in places. We mark a figure when sources disagree. Not official sources, so check each one.</p>
+  <p class="muted"><b>Sources checked (Nov 2026):</b> TaxLien.io, LienSuite and United Tax Liens, compared state by state. A specific number is shown only where at least two agree; otherwise it is marked Verify. We did not check official statutes or county pages for every state. TaxLienGuru and Ted Thomas were also reviewed but do not publish a full table.</p>
   <ul class="src">
     <li><a href="https://taxlien.io/" rel="noopener">TaxLien.io</a></li>
     <li><a href="https://liensuite.com/guides/states" rel="noopener">LienSuite state guides</a></li>
