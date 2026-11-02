@@ -185,3 +185,5 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(max-width:1020px){.dhero-grid{grid-template-columns:minmax(0,1fr)}}
 .dmap .usmap text{font-size:19px;stroke-width:3px}
 @media(max-width:520px){.dmap .usmap text{font-size:24px}}
+.dmap .usmap text.stlabel{font-size:26px;stroke-width:4px}
+@media(max-width:520px){.dmap .usmap text.stlabel{font-size:30px}}
