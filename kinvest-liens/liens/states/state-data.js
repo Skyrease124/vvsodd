@@ -1187,5 +1187,156 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "GA": {
+  "sale": {
+   "title": "Tax sale (Georgia)",
+   "when": "Sales are held on the first Tuesday of the month, usually 10 a.m. to 4 p.m. at the courthouse. Each county decides which months it holds a sale (Fulton monthly; Gwinnett only a few times a year).",
+   "steps": [
+    "You buy the property itself, not a lien. The winner gets a tax deed right away, but the owner can still take it back.",
+    "The opening bid is the taxes owed. Bidders bid the price up, and winning bids are usually many times the taxes owed (see Gwinnett County’s results below).",
+    "For at least 12 months the owner can redeem by repaying the whole bid plus a premium of 20% for the first year (or part of it) and 10% more for each later year (O.C.G.A. 48-4-42, as summarized by TaxLien.io; the statute site blocked our tools).",
+    "The owner’s right does not end on its own. The buyer can end it by serving a barment notice after the first year, or it ends after about 4 years.",
+    "If you bid more than the taxes owed, the extra goes into excess funds, which the owner may claim unless the bid is redeemed. Georgia also has a separate judicial foreclosure process for some properties."
+   ],
+   "links": [
+    [
+     "O.C.G.A. Title 48, Chapter 4 (tax sales)",
+     "https://law.justia.com/codes/georgia/title-48/chapter-4/"
+    ],
+    [
+     "O.C.G.A. 48-4-42 (redemption premium)",
+     "https://law.justia.com/codes/georgia/title-48/chapter-4/article-3/section-48-4-42/"
+    ],
+    [
+     "Fulton County Sheriff: tax sales",
+     "https://fultoncountyga.gov/inside-fulton-county/fulton-county-departments/sheriff/tax-sales"
+    ],
+    [
+     "Georgia Department of Revenue: interest rate notice (9.75% for 2026)",
+     "https://dor.georgia.gov/admin-2026-01-annual-notice-interest-rate-adjustment"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Upcoming and recent county sales",
+   "note": "From each county’s own page (checked November 2, 2026). Georgia has 159 counties; these are only a few. Sales can be pulled when owners pay, so confirm with the county. Sale lists name owners, so we do not copy them.",
+   "source": "https://tax.chathamcountyga.gov/TaxSaleList",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Fulton County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "10:00 AM to 4:00 PM",
+     "how": "Sheriff, courthouse steps, 136 Pryor St. SW, Atlanta; monthly on the first Tuesday",
+     "link": "https://fultoncountyga.gov/inside-fulton-county/fulton-county-departments/sheriff/tax-sales",
+     "linkText": "Fulton County Sheriff"
+    },
+    {
+     "town": "Chatham County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "10:00 AM to 4:00 PM",
+     "how": "Savannah Civic Center, Bryan Room",
+     "link": "https://tax.chathamcountyga.gov/TaxSaleList",
+     "linkText": "Chatham County Tax Commissioner"
+    },
+    {
+     "town": "Richmond County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "",
+     "how": "Tax levy sale (Augusta)",
+     "link": "https://arctax.com/property/tax-sale-lists/",
+     "linkText": "Richmond County Tax Commissioner"
+    },
+    {
+     "town": "DeKalb County",
+     "county": "",
+     "date": "2026-11-03",
+     "dateText": "First Tuesday of months it schedules",
+     "time": "12:00 PM",
+     "how": "Courthouse steps, Decatur",
+     "link": "https://dekalbtaxga.gov/property-tax/tax-sales/",
+     "linkText": "DeKalb County Tax Commissioner"
+    },
+    {
+     "town": "Gwinnett County",
+     "county": "",
+     "date": "2026-12-01",
+     "time": "",
+     "how": "Listed as upcoming (earlier entries show “tentatively scheduled”)",
+     "link": "https://www.gwinnetttaxcommissioner.com/property-tax/delinquent_tax/tax-liens-tax-sales",
+     "linkText": "Gwinnett Tax Commissioner"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Gwinnett County: past tax sale results, 2021 to 2026",
+    "note": "Totals from Gwinnett County Tax Commissioner’s own “Tax Sale Results” file. The file also names owners, addresses and buyers, so we copy totals only. “Taxes owed” is the starting bid. The multiple is the middle winning bid divided by taxes owed. Gwinnett holds few sales a year, so some years are small (2023 had 11 parcels; 2026 has 4 so far).",
+    "source": "https://www.gwinnetttaxcommissioner.com/property-tax/delinquent_tax/tax-liens-tax-sales",
+    "checked": "2026-11-02",
+    "head": [
+     "Sale year",
+     "Parcels offered",
+     "No bid",
+     "Taxes owed (starting bids)",
+     "Winning bids",
+     "Typical winning bid vs. taxes owed"
+    ],
+    "rows": [
+     [
+      2026,
+      4,
+      0,
+      "$4,092",
+      "$44,400",
+      "10.4×"
+     ],
+     [
+      2025,
+      18,
+      0,
+      "$190,521",
+      "$1,140,771",
+      "5.8×"
+     ],
+     [
+      2024,
+      30,
+      0,
+      "$151,782",
+      "$2,206,001",
+      "13.5×"
+     ],
+     [
+      2023,
+      11,
+      0,
+      "$140,190",
+      "$270,493",
+      "3.9×"
+     ],
+     [
+      2022,
+      66,
+      0,
+      "$360,912",
+      "$3,162,746",
+      "5.9×"
+     ],
+     [
+      2021,
+      106,
+      8,
+      "$320,923",
+      "$4,142,530",
+      "6.0×"
+     ]
+    ]
+   }
+  ]
  }
 };
