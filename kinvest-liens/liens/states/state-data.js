@@ -848,5 +848,109 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "TX": {
+  "sale": {
+   "title": "Tax sale (Texas)",
+   "when": "Sales are held on the first Tuesday of every month (Tax Code 34.01). The first Tuesdays ahead: November 3 and December 1, 2026, then January 5, February 2 and March 2, 2027. Each county decides whether it has a sale that month.",
+   "steps": [
+    "After a court judgment against unpaid taxes, a sheriff or constable sells the property at auction. In-person sales run between 10 a.m. and 4 p.m. at the place the county sets, such as the courthouse. A county may also run the auction online (Tax Code 34.01).",
+    "You buy a deed to the property, not a lien. There is no interest. Instead, the former owner can buy the property back, and you are repaid your price plus a premium.",
+    "Homesteads, farm land and mineral interests: the owner has 2 years from the day your deed is filed. The premium is 25% of the total if they redeem in year one, and 50% in year two (Tax Code 34.21(a)).",
+    "All other property: the owner has only 180 days from the day your deed is filed, and the premium cannot be more than 25% (Tax Code 34.21(e)).",
+    "The amount repaid includes what you bid, the deed recording fee, and any taxes, penalties and costs you paid, plus the premium. Until the redemption period ends you may not have full control of the property, so ask a Texas attorney before you bid."
+   ],
+   "links": [
+    [
+     "Texas Tax Code, Chapter 34 (sales and redemption)",
+     "https://tcss.legis.texas.gov/resources/TX/htm/TX.34.htm"
+    ],
+    [
+     "Harris County Tax Office: tax sales",
+     "https://www.hctax.net/Property/TaxSales"
+    ],
+    [
+     "Denton County: sheriff’s sale",
+     "https://www.dentoncounty.gov/840/Sheriffs-Sale"
+    ],
+    [
+     "Jefferson County: delinquent tax sale",
+     "https://jeffcotax.com/property-tax/delinquent-tax-sale/"
+    ],
+    [
+     "Kaufman County: tax sales",
+     "https://www.kaufmancounty.net/532/Tax-SalesAuctions"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Upcoming and recent county sales",
+   "note": "From each county’s own page (checked November 2, 2026). Texas has 254 counties; these are only a few. Sales can be canceled when owners pay, and dates change, so confirm with the county. Property lists name owners, so we do not copy them.",
+   "source": "https://www.hctax.net/Property/TaxSales",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Jefferson County",
+     "county": "",
+     "date": "2026-12-01",
+     "time": "",
+     "how": "Original sheriff sale (county lists Dec 1, 2026; subject to change)",
+     "link": "https://jeffcotax.com/property-tax/delinquent-tax-sale/",
+     "linkText": "Jefferson County Tax Office"
+    },
+    {
+     "town": "Harris County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "10:00 AM to 4:00 PM",
+     "how": "First Tuesday of each month, Bayou City Event Center, run by the eight constables",
+     "link": "https://www.hctax.net/Property/TaxSales",
+     "linkText": "Harris County Tax Office"
+    },
+    {
+     "town": "Denton County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "10:00 AM",
+     "how": "Online through GovEase; first Tuesday of each month",
+     "link": "https://www.dentoncounty.gov/840/Sheriffs-Sale",
+     "linkText": "Denton County Sheriff"
+    },
+    {
+     "town": "Kaufman County",
+     "county": "",
+     "date": "2026-11-03",
+     "time": "10:00 AM",
+     "how": "Online, first Tuesday of the month if there is property to sell",
+     "link": "https://www.kaufmancounty.net/532/Tax-SalesAuctions",
+     "linkText": "Kaufman County"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Redemption: how long the owner has and what you earn",
+    "note": "Straight from Texas Tax Code 34.21. The premium is a percentage of the total the owner repays (your bid, the deed recording fee, and taxes, penalties, interest and costs you paid). It is a one-time premium, not yearly interest.",
+    "source": "https://tcss.legis.texas.gov/resources/TX/htm/TX.34.htm",
+    "checked": "2026-11-02",
+    "head": [
+     "Property type",
+     "Owner can redeem for",
+     "Premium to the buyer"
+    ],
+    "rows": [
+     [
+      "Homestead, farm land or mineral interest",
+      "2 years from the deed filing",
+      "25% in year 1, 50% in year 2"
+     ],
+     [
+      "All other property",
+      "180 days from the deed filing",
+      "Up to 25%"
+     ]
+    ]
+   }
+  ]
  }
 };
