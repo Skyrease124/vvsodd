@@ -22,8 +22,12 @@ if (!s) {
   if (!(OFFICIALS.mayors[s.a] || []).length) { const li = document.createElement('li'); li.textContent = 'No city in this state is among the 50 largest, so no mayor is listed.'; $('offl').appendChild(li); }
   s.links.forEach(l => {
     const li = document.createElement('li'), x = document.createElement('a');
-    x.href = l[1]; x.textContent = l[0]; x.target = '_blank'; x.rel = 'noopener noreferrer'; li.appendChild(x); $('clist').appendChild(li);
+    const m = s.a === 'FL' && l[0].match(/^(.+) County Tax Collector \(certificate sales\)$/);
+    x.href = m ? '../county/?c=' + encodeURIComponent(m[1]) : l[1]; x.textContent = m ? m[1] + ' County: sale dates & lists' : l[0];
+    if (m) li.className = 'cty';
+    if (!m) { x.target = '_blank'; x.rel = 'noopener noreferrer'; } li.appendChild(x); $('clist').appendChild(li);
   });
+  if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box); }
   const q = encodeURIComponent(s.n + ' county treasurer tax sale');
   $('smore').innerHTML = '<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=' + q + '">Search for your county’s tax sale page</a>';
 }
