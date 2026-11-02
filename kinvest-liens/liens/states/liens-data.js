@@ -24,3 +24,14 @@ const FL_SALE = {
   }
 };
 const LIENS = []; // 2027 sale lists are not posted yet. Older liens load from official files (see liens-*.js).
+
+// Parcel outline lookups (public county GIS). Add a county here only after testing that its parcel numbers match.
+const PARCEL_MAPS = {
+  'Palm Beach': {
+    query: 'https://services1.arcgis.com/ZWOoUZbtaYePLlPw/ArcGIS/rest/services/Parcels/FeatureServer/0/query',
+    idField: 'PARID',
+    fmt: pin => pin.replace(/-/g, ''),
+    page: pin => 'https://www.pbcgov.org/papa/Asps/PropertyDetail/PropertyDetail.aspx?parcel=' + pin.replace(/-/g, ''),
+    pageName: 'Palm Beach County Property Appraiser'
+  }
+};

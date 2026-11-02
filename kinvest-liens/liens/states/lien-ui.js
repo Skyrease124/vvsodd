@@ -1,4 +1,50 @@
 // Shared renderers for the Florida sale box and the lien table.
+const LienMap = {
+  loaded: null,
+  load() {
+    if (this.loaded) return this.loaded;
+    this.loaded = new Promise((res, rej) => {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'; document.head.appendChild(css);
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'; s.onload = () => res(window.L); s.onerror = () => { this.loaded = null; rej(new Error('map library')); };
+      document.head.appendChild(s);
+    });
+    return this.loaded;
+  },
+  async open(l) {
+    const cfg = PARCEL_MAPS[l.county];
+    let dlg = document.getElementById('lotdlg');
+    if (!dlg) {
+      dlg = document.createElement('dialog'); dlg.id = 'lotdlg'; dlg.className = 'lotdlg';
+      dlg.innerHTML = '<div class="lothead"><b></b><button type="button" class="btn small" aria-label="Close map">Close</button></div><p class="lotmsg muted small" role="status"></p><div class="lotmap"></div><p class="lotfoot small"></p>';
+      dlg.querySelector('button').addEventListener('click', () => dlg.close());
+      dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+      document.body.appendChild(dlg);
+    }
+    const msg = dlg.querySelector('.lotmsg'), foot = dlg.querySelector('.lotfoot'), box = dlg.querySelector('.lotmap');
+    dlg.querySelector('b').textContent = 'Parcel ' + l.parcel;
+    msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = '';
+    const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = cfg.pageName + ' page for this parcel';
+    foot.append(pa, ' \u00b7 Map data: county GIS, OpenStreetMap, Esri. Educational only; the outline is approximate and not a survey. Verify with the county.');
+    if (!dlg.open) dlg.showModal();
+    try {
+      const url = cfg.query + '?where=' + encodeURIComponent(cfg.idField + "='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=ACRES&outSR=4326&f=geojson';
+      const [L, r] = await Promise.all([this.load(), fetch(url).then(x => { if (!x.ok) throw new Error('lookup'); return x.json(); })]);
+      if (!r.features || !r.features.length) { msg.textContent = 'The county map has no outline for this parcel number. Use the property appraiser link below.'; return; }
+      if (box._map) { box._map.remove(); box._map = null; }
+      const m = L.map(box); box._map = m;
+      const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
+      const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
+      sat.addTo(m); L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
+      const g = L.geoJSON(r, {style: {color: '#ff3b30', weight: 3, fillColor: '#ff3b30', fillOpacity: 0.25}}).addTo(m);
+      m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
+      setTimeout(() => m.invalidateSize(), 50);
+      const ac = r.features[0].properties && r.features[0].properties.ACRES;
+      msg.textContent = ac ? 'Lot size: about ' + Number(ac).toFixed(3) + ' acres (' + Math.round(ac * 43560).toLocaleString() + ' sq ft).' : '';
+    } catch (e) {
+      msg.textContent = 'Could not load the map right now. Use the property appraiser link below.';
+    }
+  }
+};
 const LienUI = {
   saleBox(host, county) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
@@ -43,12 +89,14 @@ const LienUI = {
     function draw() {
       wrap.innerHTML = '';
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Description', 'Source / checked'].forEach(x => hr.appendChild(mk('th', '', x)));
+      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Description', 'Source / checked', 'Map'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
       list.slice(0, shown).forEach(l => {
         const r = tb.insertRow();
         [l.county, l.parcel, l.taxYear || '', money(l.amount), l.rate || '', l.payoff ? money(l.payoff) : '', l.saleDate, l.status, l.desc || ''].forEach((x, k) => { const c = r.insertCell(); c.textContent = x; if (k === 8) c.className = 'desc'; });
         const c = r.insertCell(), a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; c.append(a, ' ' + l.checked);
+        const mc = r.insertCell();
+        if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);
       cnt.textContent = 'Showing ' + Math.min(shown, list.length) + ' of ' + list.length + ' (* payoff as of the source file date)';

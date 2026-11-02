@@ -216,3 +216,9 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 .lientools{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.lientools input{flex:1 1 220px}.lientools input,.lientools select{padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--fg)}
 .liens td.desc{white-space:normal;min-width:240px;max-width:360px}
+
+.lotdlg{width:min(900px,94vw);max-height:92vh;border:0;border-radius:14px;padding:14px;background:var(--bg);color:var(--fg)}
+.lotdlg::backdrop{background:rgba(0,0,0,.6)}
+.lothead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lotmap{height:min(60vh,520px);border-radius:10px;overflow:hidden;background:#222;margin:8px 0}
+.lotfoot{margin:0}
