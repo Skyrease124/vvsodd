@@ -228,3 +228,11 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .lientools input[type=checkbox]{flex:none;width:20px;height:20px;padding:0;margin:0;border:0;accent-color:var(--brand)}
 .lientools .chk{flex:1 1 100%;min-height:44px}
 .lientools label.chk{flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;font-weight:500;text-align:left}
+
+.askbox{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:14px 16px;margin:16px 0}.askbox h2{margin:0 0 4px}
+.askrow{display:flex;gap:8px}.askrow input{flex:1;min-width:0;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--fg)}
+.askchips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.chipbtn{border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;cursor:pointer}.chipbtn:hover{border-color:var(--brand)}
+.askout{border-radius:10px;padding:12px 14px;margin-top:8px;background:var(--bg);border:1px solid var(--line)}.askout.err{border-color:#c2282d}.askout.ok{border-color:var(--brand)}.askout p{margin:0 0 8px}.askout ul{margin:0 0 8px;padding-left:18px}
+@media(max-width:520px){.askrow{flex-direction:column}.askrow .btn{width:100%}}
+
+#askform label{display:block;margin-bottom:6px}

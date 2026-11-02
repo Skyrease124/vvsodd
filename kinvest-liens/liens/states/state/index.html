@@ -27,6 +27,16 @@
   <div class="notice" role="note"><b>Verify before you bid.</b> Figures come from investor-education summaries that sometimes disagree. Rules vary by county and change. Always confirm with the county treasurer or the statute.</div>
   <dl id="sfacts" class="stfacts"></dl>
   <p id="snote" class="muted"></p>
+  <section id="askbox" class="askbox" aria-labelledby="askh">
+    <h2 id="askh">Ask a question</h2>
+    <p class="muted small">Plain-language answers based only on the information on this page, with sources. Educational only. It cannot give legal, tax or investment advice and it can be wrong, so confirm with the county.</p>
+    <form id="askform" class="askform" novalidate>
+      <label for="askq">Your question about <span id="askstate">this state</span></label>
+      <div class="askrow"><input id="askq" type="text" maxlength="300" autocomplete="off" placeholder="e.g. How long does the owner have to redeem?"><button class="btn" type="submit" id="askgo">Ask</button></div>
+    </form>
+    <div id="askchips" class="askchips" aria-label="Example questions"></div>
+    <div id="askout" class="askout" role="status" aria-live="polite" hidden></div>
+  </section>
   <h2>Officials</h2>
   <ul id="offl" class="offl"></ul>
   <p class="muted small">Officials as listed on Wikipedia (checked Nov 2026). Mayors shown are for the 50 largest US cities only, and many mayoral races are officially nonpartisan. Officials change, so verify. Shown for information, not endorsement.</p>
@@ -52,5 +62,6 @@
 <script src="../state-extra.js"></script>
 <script src="../../../officials.js"></script>
 <script src="state.js"></script>
+<script src="ask.js"></script>
 </body>
 </html>
