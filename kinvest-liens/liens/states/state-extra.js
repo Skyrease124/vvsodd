@@ -22,6 +22,18 @@ const StateExtra = {
       const p = mk('p', 'small'); p.appendChild(link('Source: Maricopa County Treasurer', h.source)); p.append(' · checked ' + h.checked); box.appendChild(p);
       host.appendChild(box);
     }
+    if (d.sales) {
+      const h = d.sales, box = mk('div', 'salebox'); box.appendChild(mk('h3', '', h.title)); box.appendChild(mk('p', 'muted small', h.note));
+      const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
+      ['Town', 'County', 'Date', 'Time', 'How', 'Status', 'Link'].forEach(x => hr.appendChild(mk('th', '', x)));
+      const tb = t.createTBody(), today = new Date().toISOString().slice(0, 10);
+      h.rows.slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(r => { const tr = tb.insertRow();
+        [r.town, r.county || '', r.date, r.time || '', r.how, r.date >= today ? 'Upcoming' : 'Past'].forEach(x => { tr.insertCell().textContent = x; });
+        const c = tr.insertCell(); c.appendChild(link(r.linkText, r.link)); });
+      const w = mk('div', 'tablewrap'); w.appendChild(t); box.appendChild(w);
+      const p = mk('p', 'small'); p.appendChild(link('Source: TCTANJ tax sales page', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
+      host.appendChild(box);
+    }
     return true;
   }
 };
