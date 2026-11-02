@@ -119,13 +119,17 @@ async function handle(event) {
       body: JSON.stringify({model: cfg.model || MODEL, temperature: 0.1, max_tokens: 400, messages: [{role: 'system', content: SYSTEM(c.name, c.ctx)}, {role: 'user', content: q}]})
     });
     clearTimeout(timer);
-    if (!r.ok) return json(502, {error: 'The answer service had a problem. Please try again.'});
+    if (!r.ok) {
+      let detail = ''; try { detail = (await r.text()).replace(/\s+/g, ' ').slice(0, 200); } catch (e) {}
+      console.log('NVIDIA error', r.status, detail);
+      return json(502, {error: 'The answer service had a problem. Please try again.', detail: 'NVIDIA said ' + r.status + (detail ? ': ' + detail : ''), model: cfg.model || MODEL});
+    }
     const out = await r.json();
     const text = out && out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content;
     if (!text) return json(502, {error: 'No answer came back. Please try again.'});
     return json(200, {answer: String(text).trim().slice(0, 1500), sources: c.sources, state: c.name});
   } catch (e) {
-    return json(502, {error: 'The answer service did not respond. Please try again.'});
+    return json(502, {error: 'The answer service did not respond. Please try again.', detail: String((e && e.name) || e).slice(0, 80)});
   }
 }
 
