@@ -3,6 +3,8 @@
   const host = document.getElementById('usmap');
   if (!host || typeof MAP_PATHS === 'undefined' || typeof STATES === 'undefined') return;
   const base = host.getAttribute('data-base') || 'liens/states/state/';
+  const COL = {'Tax lien certificate':'#22c55e','Tax deed':'#3b82f6','Redeemable deed':'#f59e0b','Hybrid':'#a855f7','Municipal lien':'#06b6d4','Sources differ':'#94a3b8'};
+  const DESC = {'Tax lien certificate':'You buy the unpaid tax debt and earn interest when the owner pays.','Tax deed':'The property itself is sold at auction.','Redeemable deed':'You get a deed, but the owner can buy it back.','Hybrid':'Mixes liens and deeds; it varies by county.','Municipal lien':'The town keeps the lien; no investor lien sale.','Sources differ':'Our sources disagree; verify with the county.'};
   const by = {}; STATES.forEach(s => by[s.a] = s);
   const tip = document.getElementById('maptip');
   const NS = 'http://www.w3.org/2000/svg';
@@ -11,11 +13,15 @@
   const go = a => { location.href = base + '?s=' + a; };
   function show(s) {
     if (!tip) return;
-    tip.innerHTML = '<b></b><span></span><span class="tv"></span><a class="dbtn" href="">Open state page &rarr;</a>';
+    tip.innerHTML = '<b></b><span class="ty"><i></i><u></u></span><span class="de"></span><span class="tv"></span><span class="gv"></span><a class="dbtn" href="">Open state page &rarr;</a>';
     tip.children[0].textContent = s.n;
-    tip.children[1].textContent = s.sys + (s.v ? ' (verify)' : '');
-    tip.children[2].textContent = 'Interest: ' + s.rate;
-    tip.children[3].href = base + '?s=' + s.a;
+    tip.querySelector('.ty i').style.background = COL[s.sys] || '#94a3b8';
+    tip.querySelector('.ty u').textContent = s.sys + (s.v ? ' (verify)' : '');
+    tip.querySelector('.de').textContent = DESC[s.sys] || '';
+    tip.querySelector('.tv').textContent = 'Interest: ' + s.rate;
+    const g = typeof OFFICIALS !== 'undefined' && OFFICIALS.gov[s.a];
+    tip.querySelector('.gv').textContent = g ? g.title + ': ' + g.name + ' (' + g.party + ')' : '';
+    tip.lastChild.href = base + '?s=' + s.a;
   }
   const paths = {}; let cur = 'FL';
   const lab = mk('text', {class: 'stlabel'});
@@ -30,7 +36,7 @@
   }
   Object.keys(MAP_PATHS).forEach(a => {
     const s = by[a]; if (!s) return;
-    const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
+    const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), style: 'fill:' + (COL[s.sys] || '#94a3b8'), tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
     let was = false;
     p.addEventListener('pointerdown', () => { was = cur === a; });
     p.addEventListener('click', () => { if (touch && !was) select(a); else go(a); });
@@ -40,15 +46,17 @@
   });
   svg.appendChild(lab);
   host.appendChild(svg);
+  const lg = document.getElementById('maplegend');
+  if (lg) Object.keys(COL).forEach(k => { const li = document.createElement('li'); li.innerHTML = '<i></i><span></span>'; li.firstChild.style.background = COL[k]; li.lastChild.textContent = k + ' \u2013 ' + DESC[k]; lg.appendChild(li); });
   const chips = document.getElementById('mapchips');
   if (chips) ['VT','NH','MA','RI','CT','NJ','DE','MD','DC'].forEach(a => {
-    const el = document.createElement('a'); el.href = base + '?s=' + a; el.textContent = a; el.title = by[a].n;
+    const el = document.createElement('a'); el.href = base + '?s=' + a; el.textContent = a; el.title = by[a].n; el.style.borderColor = COL[by[a].sys];
     el.addEventListener('mouseenter', () => select(a)); chips.appendChild(el);
   });
   lab.style.display = 'none';
   // Florida example panel
   const fl = by.FL, fs = document.getElementById('flsvg');
-  if (fs) { const p = mk('path', {d: MAP_PATHS.FL, fill: '#22c55e'}); fs.appendChild(p);
+  if (fs) { const p = mk('path', {d: MAP_PATHS.FL, fill: COL[fl.sys]}); fs.appendChild(p);
     const bb = (() => { fs.appendChild(p); return p.getBBox(); })(); fs.setAttribute('viewBox', [bb.x - 4, bb.y - 4, bb.width + 8, bb.height + 8].join(' ')); }
   const fc = document.getElementById('flchips');
   if (fc) ['Lee', 'Miami-Dade', 'Broward', 'Palm Beach', 'Orange', 'Hillsborough', 'Pinellas', 'Duval'].forEach(n => {

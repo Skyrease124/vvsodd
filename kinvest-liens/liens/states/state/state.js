@@ -14,6 +14,12 @@ if (!s) {
     t.textContent = k; e.textContent = v; d.append(t, e); $('sfacts').appendChild(d);
   });
   $('snote').textContent = s.note;
+  const cls = p => /^Republican/.test(p) ? 'r' : /^Democratic/.test(p) ? 'd' : 'i';
+  const add = (role, o) => { const li = document.createElement('li'), n = document.createElement('b'), pt = document.createElement('span'), sm = document.createElement('small');
+    n.textContent = o.name; pt.className = 'party ' + cls(o.party); pt.textContent = o.party; sm.textContent = role; li.append(n, pt, sm); $('offl').appendChild(li); };
+  const g = OFFICIALS.gov[s.a]; if (g) add(g.title + ' of ' + s.n, g);
+  (OFFICIALS.mayors[s.a] || []).forEach(m => add('Mayor of ' + m.city + ' (#' + m.rank + ' largest US city)', m));
+  if (!(OFFICIALS.mayors[s.a] || []).length) { const li = document.createElement('li'); li.textContent = 'No city in this state is among the 50 largest, so no mayor is listed.'; $('offl').appendChild(li); }
   s.links.forEach(l => {
     const li = document.createElement('li'), x = document.createElement('a');
     x.href = l[1]; x.textContent = l[0]; x.target = '_blank'; x.rel = 'noopener noreferrer'; li.appendChild(x); $('clist').appendChild(li);
