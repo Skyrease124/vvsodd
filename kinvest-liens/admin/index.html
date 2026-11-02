@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Question box setup | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../">Home</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>Question box setup</h1>
+  <p class="muted">Private page for the site owner. Paste your NVIDIA key once and the &ldquo;Ask a question&rdquo; box turns on for every state page.</p>
+
+  <div id="status" class="notice" role="status">Checking&hellip;</div>
+
+  <form id="setup" class="setupform" novalidate autocomplete="off">
+    <label>Setup code
+      <input id="code" type="text" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" required>
+    </label>
+    <label>NVIDIA API key
+      <input id="key" type="password" autocomplete="new-password" spellcheck="false" placeholder="nvapi-&hellip;" required>
+    </label>
+    <label>Model (optional)
+      <input id="model" type="text" spellcheck="false" placeholder="meta/llama-3.3-70b-instruct">
+    </label>
+    <div class="setupbtns">
+      <button class="btn" type="submit" id="save">Save key</button>
+      <button class="btn ghost" type="button" id="remove">Remove saved key</button>
+    </div>
+    <p id="msg" class="small" role="status" aria-live="polite"></p>
+  </form>
+
+  <h2>How it works</h2>
+  <ul class="small muted">
+    <li>Your key is checked with NVIDIA, then saved on the server. It is never shown on any web page and never put in the website code.</li>
+    <li>You need the setup code I gave you. Without it, nobody can save or remove a key.</li>
+    <li>If a key is also set in Netlify&rsquo;s environment variables, that one is used first.</li>
+    <li>Set a spending limit in your NVIDIA account. The question box also limits each visitor and caps questions per day.</li>
+  </ul>
+</section>
+</main>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), EP = '/.netlify/functions/setup';
+  function status(d) {
+    const s = $('status');
+    if (!d) { s.textContent = 'Could not reach the server. This page only works on the live site.'; return; }
+    if (d.enabled) s.textContent = 'ON. The question box is working (key ending ' + d.hint + (d.source === 'env' ? ', set in Netlify' : ', saved here') + ').';
+    else s.textContent = 'OFF. No key yet. Paste yours below.';
+  }
+  function refresh() { fetch(EP).then(r => r.ok ? r.json() : null).then(status).catch(() => status(null)); }
+  async function send(action) {
+    const msg = $('msg'); msg.textContent = 'Working…'; msg.style.color = '';
+    try {
+      const r = await fetch(EP, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, code: $('code').value, key: $('key').value, model: $('model').value }) });
+      let d = {}; try { d = await r.json(); } catch (e) {}
+      if (r.ok && d.ok) { msg.textContent = d.message; msg.style.color = '#0b6e4f'; $('key').value = ''; refresh(); }
+      else { msg.textContent = d.error || 'Something went wrong.'; msg.style.color = '#c2282d'; }
+    } catch (e) { msg.textContent = 'Could not reach the server.'; msg.style.color = '#c2282d'; }
+  }
+  $('setup').addEventListener('submit', e => { e.preventDefault(); send('save'); });
+  $('remove').addEventListener('click', () => { if (confirm('Remove the saved key and hide the question box?')) send('remove'); });
+  refresh();
+})();
+</script>
+</body>
+</html>
