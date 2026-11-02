@@ -952,5 +952,70 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "OH": {
+  "sale": {
+   "title": "Tax certificate sales (Ohio)",
+   "when": "There is no statewide sale date, and certificate sales are optional. Each county treasurer decides whether to sell tax certificates at all, and when.",
+   "steps": [
+    "Unpaid real property taxes become a lien. After parcels are on the delinquent land list, the county treasurer may select some and sell their liens as tax certificates (R.C. 5721.31).",
+    "At an auction the bidding starts at 18% simple interest a year and goes down in steps of one-quarter of 1% to 0%. The lowest rate wins. Bidders must register and pay a $500 cash registration fee (R.C. 5721.32).",
+    "Instead of an auction, the treasurer may sell many certificates in a negotiated sale to one or a few buyers. The rate can be set up to 18%, and the deal can include a premium or discount and different foreclosure timing, up to 6 years (R.C. 5721.30, 5721.33). Large counties often do this, so individual certificates are not offered.",
+    "A certificate holder can ask to start foreclosure beginning 1 year after the date the certificate was sold (R.C. 5721.37). Before that, the owner can redeem by paying the certificate price plus the certificate interest, and the treasurer can set up a payment plan of up to 1 year (R.C. 5721.38).",
+    "Every county can also foreclose on delinquent land itself and sell the property at a sheriff’s sale, whether or not it sells certificates."
+   ],
+   "links": [
+    [
+     "R.C. 5721.32 (certificate auction)",
+     "https://codes.ohio.gov/ohio-revised-code/section-5721.32"
+    ],
+    [
+     "R.C. 5721.33 (negotiated sale)",
+     "https://codes.ohio.gov/ohio-revised-code/section-5721.33"
+    ],
+    [
+     "R.C. 5721.37 (foreclosure)",
+     "https://codes.ohio.gov/ohio-revised-code/section-5721.37"
+    ],
+    [
+     "R.C. 5721.38 (right to redeem)",
+     "https://codes.ohio.gov/ohio-revised-code/section-5721.38"
+    ],
+    [
+     "R.C. 5721.30 (definitions, rate)",
+     "https://codes.ohio.gov/ohio-revised-code/section-5721.30"
+    ]
+   ]
+  },
+  "tables": [
+   {
+    "title": "How some large Ohio counties sell certificates",
+    "note": "Cuyahoga County’s row is from its own treasurer page, which we read. Montgomery and Franklin pages blocked our tools, so those rows come from TaxLien.io’s summary of the county pages; check them yourself. Many other counties sell none.",
+    "source": "https://cuyahogacounty.gov/treasury/delinquency/tax-lien-certificate-sales",
+    "checked": "2026-11-02",
+    "head": [
+     "County",
+     "How it sells",
+     "Source we used"
+    ],
+    "rows": [
+     [
+      "Cuyahoga",
+      "In bulk by negotiated sale, not one certificate at a time. The county page lists 2026 certificates as sold.",
+      "Cuyahoga County Treasurer page (read)"
+     ],
+     [
+      "Montgomery",
+      "Negotiated sale held December 12, 2025; certificates are not offered individually.",
+      "TaxLien.io summary (county page not opened)"
+     ],
+     [
+      "Franklin",
+      "Annual tax lien sale; the 2025 sale was November 3, 2025.",
+      "TaxLien.io summary (county page not opened)"
+     ]
+    ]
+   }
+  ]
  }
 };
