@@ -7,5 +7,6 @@
   included_files = [
     "kinvest-liens/liens/states/states.js",
     "kinvest-liens/liens/states/state-data.js",
-    "kinvest-liens/liens/states/liens-data.js"
+    "kinvest-liens/liens/states/liens-data.js",
+    "kinvest-liens/liens/states/liens-palmbeach.js"
   ]

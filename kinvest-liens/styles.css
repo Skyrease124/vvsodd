@@ -238,3 +238,8 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 #askform label{display:block;margin-bottom:6px}
 .setupform{display:grid;gap:14px;margin:18px 0}.setupform input{padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:var(--bg);color:var(--fg)}
 .setupbtns{display:flex;flex-wrap:wrap;gap:10px}
+.scard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0;background:var(--card)}
+.scardh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}.sscore{font-weight:700;color:var(--brand)}
+.sflags{list-style:none;padding:0;margin:8px 0;display:flex;flex-wrap:wrap;gap:6px}.sflags li{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line)}
+.sflags li.g{border-color:#1f9d6b;background:rgba(31,157,107,.12)}.sflags li.r{border-color:#c2282d;background:rgba(194,40,45,.1)}
+.sact{display:flex;gap:8px;flex-wrap:wrap}

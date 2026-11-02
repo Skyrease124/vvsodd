@@ -9,10 +9,9 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import * as keystore from '../lib/keystore.mjs';
+import { complete, rankModels } from '../lib/llm.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-const API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
 const DAILY_LIMIT = parseInt(process.env.ASK_DAILY_LIMIT || '300', 10);
 const PER_IP_HOURLY = 12;
 
@@ -88,31 +87,6 @@ ${ctx}`;
 const json = (code, body) => ({statusCode: code, headers: {'Content-Type': 'application/json', 'Cache-Control': 'no-store'}, body: JSON.stringify(body)});
 
 
-// ---- Model selection: NVIDIA retires models, so if ours is gone we find a working one automatically. ----
-const MODELS_URL = process.env.NVIDIA_MODELS_URL || API_URL.replace(/\/chat\/completions$/, '/models');
-const SKIP = /embed|rerank|guard|safety|reward|vision|\bvl\b|vlm|clip|retriev|parse|asr|tts|image|audio|speech|translate|code|math|bge|nv-embed|riva|diffusion|flux|sdxl|video|molmim|bio|dna|protein/i;
-const PREFER = [/nemotron.*(ultra|super)/i, /nemotron/i, /llama-3\.3/i, /llama-4/i, /llama-3\.1-70b/i, /gpt-oss-120b/i, /qwen.*(72b|32b|30b)/i, /gpt-oss/i, /llama-3\.1-8b/i, /mistral/i, /gemma/i, /deepseek/i, /./];
-let autoModel = null;
-
-export function _rankModels(ids) {
-  const ok = ids.filter(id => !SKIP.test(id) && /instruct|chat|nemotron|gpt-oss|qwen|llama|mistral|gemma|deepseek|phi/i.test(id));
-  const out = [];
-  PREFER.forEach(rx => ok.filter(id => rx.test(id) && !out.includes(id)).sort().reverse().forEach(id => out.push(id)));
-  return out;
-}
-async function listModels(key) {
-  const r = await fetch(MODELS_URL, {headers: {Authorization: 'Bearer ' + key, Accept: 'application/json'}});
-  if (!r.ok) return [];
-  const d = await r.json(); return (d.data || []).map(m => m.id).filter(Boolean);
-}
-async function chat(key, model, system, q, signal) {
-  return fetch(API_URL, {
-    method: 'POST', signal,
-    headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + key},
-    body: JSON.stringify({model, temperature: 0.1, max_tokens: 700, messages: [{role: 'system', content: system}, {role: 'user', content: q}]})
-  });
-}
-
 async function handle(event) {
   const cfg = await keystore.getConfig();
   if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg});
@@ -138,33 +112,11 @@ async function handle(event) {
   if (!c) return json(400, {error: 'Unknown state.'});
 
   try {
-    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 25000);
-    const system = SYSTEM(c.name, c.ctx);
-    let model = cfg.model || autoModel || MODEL;
-    let r = await chat(cfg.key, model, system, q, ctl.signal);
-    if (!r.ok && [400, 404, 410].includes(r.status)) {
-      // The model may have been retired. Look for a working one and remember it.
-      const tried = [model];
-      let ids = []; try { ids = await listModels(cfg.key); } catch (e) {}
-      for (const id of _rankModels(ids).filter(x => x !== model).slice(0, 8)) {
-        const r2 = await chat(cfg.key, id, system, q, ctl.signal); tried.push(id);
-        if (r2.ok) { r = r2; model = id; autoModel = id; console.log('Using model', id); break; }
-      }
-      if (!r.ok) { clearTimeout(timer); console.log('No working model. Tried', tried.join(', ')); return json(502, {error: 'The answer service had a problem. Please try again.', detail: 'No working model found. Tried: ' + tried.join(', ').slice(0, 300)}); }
-    }
-    clearTimeout(timer);
-    if (!r.ok) {
-      let detail = ''; try { detail = (await r.text()).replace(/\s+/g, ' ').slice(0, 200); } catch (e) {}
-      console.log('NVIDIA error', r.status, detail);
-      return json(502, {error: 'The answer service had a problem. Please try again.', detail: 'NVIDIA said ' + r.status + (detail ? ': ' + detail : ''), model});
-    }
-    const out = await r.json();
-    const raw = out && out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content;
-    const text = String(raw || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (!text) { console.log('Empty answer from', model); return json(502, {error: 'No answer came back. Please try again.', detail: 'Empty answer from ' + model}); }
+    const {text} = await complete(cfg, SYSTEM(c.name, c.ctx), q, {maxTokens: 700});
     return json(200, {answer: text.slice(0, 1500), sources: c.sources, state: c.name});
   } catch (e) {
-    return json(502, {error: 'The answer service did not respond. Please try again.', detail: String((e && e.name) || e).slice(0, 80)});
+    console.log('ask failed', e && e.detail);
+    return json(502, {error: 'The answer service had a problem. Please try again.', detail: (e && e.detail) || String((e && e.name) || e).slice(0, 80)});
   }
 }
 
@@ -177,4 +129,4 @@ export default async (req, context) => {
   return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
 
-export { buildContext as _buildContext, loadData as _loadData, handle as _handle };
+export { buildContext as _buildContext, loadData as _loadData, handle as _handle, rankModels as _rankModels };
