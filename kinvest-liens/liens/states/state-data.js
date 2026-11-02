@@ -489,5 +489,364 @@ const STATE_DATA = {
     ]
    ]
   }
+ },
+ "MD": {
+  "sale": {
+   "title": "Tax sale (Maryland)",
+   "when": "Each county and Baltimore City runs its own annual sale. Most are in May and June (the state schedule is below). Dates are added to the state list as counties announce them.",
+   "steps": [
+    "The county collector sells a certificate of sale against the property, not the property itself, at a public auction (Tax-Property Article 14-817).",
+    "Bidders bid up the price, not the rate. The bid can never be less than the taxes, interest, penalties and sale costs owed. Many collectors also charge a high-bid premium (20% of the amount by which the bid exceeds a set value, such as 40% of the property’s full cash value). The premium is refunded without interest if the owner redeems (14-817).",
+    "You earn the county’s redemption rate on the amount you paid toward the taxes. The default is 6% a year, but each county may set its own (14-820). For owner-occupied homes the rate cannot be more than 10% a year.",
+    "You can ask a court to foreclose the owner’s right to redeem after 6 months (9 months for an owner-occupied home), after sending the required notices (14-833).",
+    "The certificate is void unless foreclosure is started within 2 years of the certificate date (14-820)."
+   ],
+   "links": [
+    [
+     "MD Dept. of Assessments and Taxation: tax sale schedule",
+     "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx"
+    ],
+    [
+     "Tax-Property 14-817 (the sale)",
+     "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtp&section=14-817&enactments=false"
+    ],
+    [
+     "Tax-Property 14-820 (redemption rate)",
+     "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtp&section=14-820&enactments=false"
+    ],
+    [
+     "Tax-Property 14-833 (foreclosure)",
+     "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtp&section=14-833&enactments=false"
+    ],
+    [
+     "Baltimore City tax sale site",
+     "https://taxsale.baltimorecity.gov"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "2026 tax sale dates by county",
+   "note": "From the Maryland Department of Assessments and Taxation’s tax sale schedule (checked November 2, 2026). Howard County’s own page says its sale was held June 10; the state list shows June 3. All of these have passed. Next year’s dates are added to the state list as counties announce them.",
+   "source": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "St. Mary’s",
+     "county": "",
+     "date": "2026-03-06",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Frederick",
+     "county": "",
+     "date": "2026-05-11",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Prince George’s",
+     "county": "",
+     "date": "2026-05-11",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Charles",
+     "county": "",
+     "date": "2026-05-12",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Baltimore City",
+     "county": "",
+     "date": "2026-05-18",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Garrett",
+     "county": "",
+     "date": "2026-05-18",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Queen Anne’s",
+     "county": "",
+     "date": "2026-05-19",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Dorchester",
+     "county": "",
+     "date": "2026-05-19",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Talbot",
+     "county": "",
+     "date": "2026-05-20",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Kent",
+     "county": "",
+     "date": "2026-05-21",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Calvert",
+     "county": "",
+     "date": "2026-05-22",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Allegany",
+     "county": "",
+     "date": "2026-05-28",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Cecil",
+     "county": "",
+     "date": "2026-06-01",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Washington",
+     "county": "",
+     "date": "2026-06-02",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Anne Arundel",
+     "county": "",
+     "date": "2026-06-03",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Harford",
+     "county": "",
+     "date": "2026-06-03",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Montgomery",
+     "county": "",
+     "date": "2026-06-08",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Worcester",
+     "county": "",
+     "date": "2026-06-09",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Wicomico",
+     "county": "",
+     "date": "2026-06-09",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Howard",
+     "county": "",
+     "date": "2026-06-10",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Somerset",
+     "county": "",
+     "date": "2026-06-11",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Carroll",
+     "county": "",
+     "date": "2026-06-26",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Caroline",
+     "county": "",
+     "date": "2026-08-21",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    },
+    {
+     "town": "Baltimore County",
+     "county": "",
+     "date": "2026-08-27",
+     "time": "",
+     "how": "",
+     "link": "https://dat.maryland.gov/Pages/Tax-Sale-Schedule.aspx",
+     "linkText": "State schedule"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Redemption rate set by state law",
+    "note": "Maryland law sets a default rate for each county (Tax-Property 14-820). A county may fix a different rate by its own law, and most large counties do, so check the county’s notice before bidding. The rate for owner-occupied homes cannot be over 10%.",
+    "source": "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText?article=gtp&section=14-820&enactments=false",
+    "checked": "2026-11-02",
+    "head": [
+     "County",
+     "Default rate in the statute"
+    ],
+    "rows": [
+     [
+      "Carroll",
+      "14% a year"
+     ],
+     [
+      "Calvert, Caroline, Dorchester, Garrett",
+      "10% a year"
+     ],
+     [
+      "All other counties and Baltimore City",
+      "6% a year"
+     ]
+    ]
+   },
+   {
+    "title": "Anne Arundel County: past sale results",
+    "note": "Totals from the county’s own published sale results lists (2025 had no sale; it was postponed). The lists also name owners and bidders, so we copy only the totals. “Taxes owed” is the lien. “Winning bids” is what bidders agreed to pay, which in Maryland is usually far above the taxes owed. The extra comes back without interest if the owner redeems, so the return comes only from the redemption rate on the taxes.",
+    "source": "https://www.aacounty.org/finance/tax-sale",
+    "checked": "2026-11-02",
+    "head": [
+     "Sale year",
+     "Liens sold",
+     "Taxes owed",
+     "Winning bids",
+     "Median bid vs. assessed value",
+     "Liens with a premium"
+    ],
+    "rows": [
+     [
+      2026,
+      "958",
+      "$5,353,640",
+      "$270,748,237",
+      "65%",
+      "93%"
+     ],
+     [
+      2024,
+      "852",
+      "$2,460,786",
+      "$170,227,866",
+      "61%",
+      "95%"
+     ],
+     [
+      2023,
+      "724",
+      "$2,116,043",
+      "$159,904,984",
+      "66%",
+      "92%"
+     ],
+     [
+      2022,
+      "1,194",
+      "$4,050,609",
+      "$283,425,085",
+      "77%",
+      "90%"
+     ],
+     [
+      2021,
+      "455",
+      "$2,323,112",
+      "$93,962,165",
+      "74%",
+      "87%"
+     ]
+    ]
+   },
+   {
+    "title": "Anne Arundel County: liens left after the June 3, 2026 sale",
+    "note": "The county’s “liens remaining from our June 3, 2026 tax sale” list (dated October 23, 2026). We show the totals only. See the county page for the list and its auction site.",
+    "source": "https://www.aacounty.org/finance/tax-sale",
+    "checked": "2026-11-02",
+    "head": [
+     "Liens remaining",
+     "Taxes owed",
+     "Estimated total due"
+    ],
+    "rows": [
+     [
+      "82",
+      "$671,481",
+      "$737,478"
+     ]
+    ]
+   }
+  ]
  }
 };

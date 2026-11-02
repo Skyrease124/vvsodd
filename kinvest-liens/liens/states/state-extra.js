@@ -25,11 +25,11 @@ const StateExtra = {
     if (d.sales) {
       const h = d.sales, box = mk('div', 'salebox'); box.appendChild(mk('h3', '', h.title)); box.appendChild(mk('p', 'muted small', h.note));
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      const hasCo = h.rows.some(r => r.county);
-      ['Place', hasCo ? 'County' : null, 'Date', 'Time', 'How', 'Status', 'Link'].forEach(x => { if (x) hr.appendChild(mk('th', '', x)); });
+      const hasCo = h.rows.some(r => r.county), hasT = h.rows.some(r => r.time), hasH = h.rows.some(r => r.how);
+      ['Place', hasCo ? 'County' : null, 'Date', hasT ? 'Time' : null, hasH ? 'How' : null, 'Status', 'Link'].forEach(x => { if (x) hr.appendChild(mk('th', '', x)); });
       const tb = t.createTBody(), today = new Date().toISOString().slice(0, 10);
       h.rows.slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(r => { const tr = tb.insertRow();
-        [r.town, hasCo ? (r.county || '') : null, r.dateText || r.date, r.time || '', r.how, r.dateText ? 'Expected' : (r.date >= today ? 'Upcoming' : 'Past')].forEach(x => { if (x !== null) tr.insertCell().textContent = x; });
+        [r.town, hasCo ? (r.county || '') : null, r.dateText || r.date, hasT ? (r.time || '') : null, hasH ? r.how : null, r.dateText ? 'Expected' : (r.date >= today ? 'Upcoming' : 'Past')].forEach(x => { if (x !== null) tr.insertCell().textContent = x; });
         const c = tr.insertCell(); c.appendChild(link(r.linkText, r.link)); });
       const w = mk('div', 'tablewrap'); w.appendChild(t); box.appendChild(w);
       const p = mk('p', 'small'); p.appendChild(link('Source: TCTANJ tax sales page', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
@@ -45,6 +45,14 @@ const StateExtra = {
       const p = mk('p', 'small'); p.appendChild(link('Source: Woodbury County Treasurer', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
       host.appendChild(box);
     }
+    (d.tables || []).forEach(h => {
+      const box = mk('div', 'salebox'); box.appendChild(mk('h3', '', h.title)); box.appendChild(mk('p', 'muted small', h.note));
+      const t = mk('table', 'liens'), hr = t.createTHead().insertRow(); h.head.forEach(x => hr.appendChild(mk('th', '', x)));
+      const tb = t.createTBody(); h.rows.forEach(r => { const tr = tb.insertRow(); r.forEach(x => { tr.insertCell().textContent = x; }); });
+      const w = mk('div', 'tablewrap'); w.appendChild(t); box.appendChild(w);
+      const p = mk('p', 'small'); p.appendChild(link('Source', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
+      host.appendChild(box);
+    });
     return true;
   }
 };
