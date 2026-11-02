@@ -35,6 +35,16 @@ const StateExtra = {
       const p = mk('p', 'small'); p.appendChild(link('Source: TCTANJ tax sales page', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
       host.appendChild(box);
     }
+    if (d.counts) {
+      const h = d.counts, box = mk('div', 'salebox'); box.appendChild(mk('h3', '', h.title)); box.appendChild(mk('p', 'muted small', h.note));
+      const t = mk('table', 'liens'), hr = t.createTHead().insertRow(); h.head.forEach(x => hr.appendChild(mk('th', '', x)));
+      const tb = t.createTBody(); let tot = 0;
+      h.rows.forEach(r => { const tr = tb.insertRow(); tot += r[1]; r.forEach(x => { tr.insertCell().textContent = x; }); });
+      const fr = tb.insertRow(); fr.insertCell().textContent = 'Total'; fr.insertCell().textContent = tot; fr.style.fontWeight = '700';
+      const w = mk('div', 'tablewrap'); w.appendChild(t); box.appendChild(w);
+      const p = mk('p', 'small'); p.appendChild(link('Source: Woodbury County Treasurer', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
+      host.appendChild(box);
+    }
     return true;
   }
 };
