@@ -3153,5 +3153,129 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "MO": {
+  "sale": {
+   "title": "Collector’s tax sale (Missouri)",
+   "when": "Every county sells on the fourth Monday in August (RSMo 140.150). The 2026 sale was August 24. The next is August 23, 2027.",
+   "steps": [
+    "Land with delinquent taxes is offered at a public sale run by the county collector. Parcels can come off the list when owners pay, right up to the sale.",
+    "You bid the price up. The bid cannot be less than the taxes, interest, penalty and costs due. You receive a certificate of purchase.",
+    "The interest rate is written in the certificate and cannot be more than 10% a year. It applies only to the taxes and costs you paid. No interest is owed on anything you bid above that amount, and taxes you pay later earn 8% a year (RSMo 140.340).",
+    "The owner, a lienholder or the occupant has an absolute right to redeem for 1 year. After that they keep a defeasible right to redeem until you get the deed (RSMo 140.340).",
+    "At least 90 days before you can get the deed, you must send redemption notices by first-class and certified mail, after a title search (RSMo 140.405). You must have the deed made and recorded within 18 months of the sale, or your lien ends (RSMo 140.410).",
+    "If nobody bids, the parcel is offered again at the next year’s sale. After two years with no bid, a third offering sells it to the highest bidder, with a minimum of what is owed and only 90 days to redeem. After that there is no redemption at all (RSMo 140.250)."
+   ],
+   "links": [
+    [
+     "RSMo 140.150 (sale on the fourth Monday in August)",
+     "https://revisor.mo.gov/main/OneSection.aspx?section=140.150"
+    ],
+    [
+     "RSMo 140.340 (redemption and interest)",
+     "https://revisor.mo.gov/main/OneSection.aspx?section=140.340"
+    ],
+    [
+     "RSMo 140.405 (redemption notice before the deed)",
+     "https://revisor.mo.gov/main/OneSection.aspx?section=140.405"
+    ],
+    [
+     "RSMo 140.410 (deed within 18 months)",
+     "https://revisor.mo.gov/main/OneSection.aspx?section=140.410"
+    ],
+    [
+     "RSMo 140.250 (third offering)",
+     "https://revisor.mo.gov/main/OneSection.aspx?section=140.250"
+    ],
+    [
+     "Jefferson County Collector: land sale FAQs",
+     "https://www.jeffcomo.gov/faq.aspx?TID=53"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Sales we confirmed",
+   "note": "Checked November 2, 2026. Missouri has 114 counties and the City of St. Louis, and each posts its own notice. Lists name owners, so we do not copy them.",
+   "source": "https://www.colecounty.org/179/Delinquent-Tax-Certificate-Sale",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "All counties",
+     "county": "",
+     "date": "2027-08-23",
+     "time": "",
+     "how": "Next statewide sale: fourth Monday in August 2027",
+     "link": "https://revisor.mo.gov/main/OneSection.aspx?section=140.150",
+     "linkText": "RSMo 140.150"
+    },
+    {
+     "town": "Cole County",
+     "county": "",
+     "date": "2026-08-24",
+     "time": "",
+     "how": "Annual sale; county posted its 2026 results",
+     "link": "https://www.colecounty.org/179/Delinquent-Tax-Certificate-Sale",
+     "linkText": "Cole County Collector"
+    }
+   ]
+  },
+  "tables": [
+   {
+    "title": "Cole County 2026: what happens to parcels nobody wants",
+    "note": "Counted from the county’s own 2026 “Delinquent Tax Sale Results.” The list names owners and buyers, so we copy only counts. Of 17 parcels offered, 10 drew no bid. Some had been offered many times: the county’s list shows offerings numbered up to 8th. A parcel that nobody bids on stays on the list and is offered again.",
+    "source": "https://www.colecounty.org/179/Delinquent-Tax-Certificate-Sale",
+    "checked": "2026-11-02",
+    "head": [
+     "Parcels offered",
+     "Drew no bid",
+     "Sold",
+     "Highest offering number"
+    ],
+    "rows": [
+     [
+      "17",
+      "10",
+      "7",
+      "8th"
+     ]
+    ]
+   },
+   {
+    "title": "Example: why an overbid hurts (made-up numbers)",
+    "note": "An illustration of RSMo 140.340, not a real sale. The taxes and costs on a parcel are $2,000 and competition pushes the winning bid to $8,000. If the owner redeems at the end of the year, interest of 10% runs only on the $2,000.",
+    "source": "https://revisor.mo.gov/main/OneSection.aspx?section=140.340",
+    "checked": "2026-11-02",
+    "head": [
+     "Item",
+     "Amount"
+    ],
+    "rows": [
+     [
+      "You pay at the sale",
+      "$8,000"
+     ],
+     [
+      "Taxes and costs (earn 10%)",
+      "$2,000"
+     ],
+     [
+      "Overbid (earns nothing)",
+      "$6,000"
+     ],
+     [
+      "Interest after 1 year",
+      "$200"
+     ],
+     [
+      "You get back",
+      "$8,200"
+     ],
+     [
+      "Your return on the $8,000 you advanced",
+      "2.5%"
+     ]
+    ]
+   }
+  ]
  }
 };
