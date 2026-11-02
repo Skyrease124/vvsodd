@@ -23,4 +23,4 @@ const FL_SALE = {
     'Santa Rosa': 'https://srctc.com/real-estate/delinquent-tax-information/'
   }
 };
-const LIENS = []; // none loaded yet: the 2027 lists are not posted. Load from official files only.
+const LIENS = []; // 2027 sale lists are not posted yet. Older liens load from official files (see liens-*.js).
