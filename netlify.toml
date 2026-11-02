@@ -1,2 +1,11 @@
 [build]
   publish = "kinvest-liens"
+
+[functions]
+  directory = "netlify/functions"
+  # The question box answers only from our own state data files.
+  included_files = [
+    "kinvest-liens/liens/states/states.js",
+    "kinvest-liens/liens/states/state-data.js",
+    "kinvest-liens/liens/states/liens-data.js"
+  ]
