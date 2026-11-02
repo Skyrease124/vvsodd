@@ -12,6 +12,11 @@ const FL_SALE = {
   ],
   statute: ['Fla. Stat. 197.432 (the sale)', 'http://www.leg.state.fl.us/Statutes/index.cfm?App_mode=Display_Statute&URL=0100-0199/0197/Sections/0197.432.html'],
   portal: ['Florida Tax Sale Portal', 'https://www.flataxsales.com/Home.aspx'],
+  // Report download pages linked from the counties' own sites (they sit behind a browser check, so open them in a browser)
+  reports: {
+    'Pasco': 'https://pasco.county-taxes.com/public/reports',
+    'Santa Rosa': 'https://santarosa.county-taxes.com/public/reports/real_estate'
+  },
   portalCounties: ['Baker','Bradford','Calhoun','DeSoto','Franklin','Glades','Gulf','Hamilton','Hardee','Holmes','Jefferson','Jackson','Liberty','Okeechobee','Wakulla','Madison','Washington'],
   // Official delinquent / tax certificate list pages (each opened when checked)
   lists: {
