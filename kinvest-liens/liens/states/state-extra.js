@@ -48,7 +48,7 @@ const StateExtra = {
     (d.tables || []).forEach(h => {
       const box = mk('div', 'salebox'); box.appendChild(mk('h3', '', h.title)); box.appendChild(mk('p', 'muted small', h.note));
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow(); h.head.forEach(x => hr.appendChild(mk('th', '', x)));
-      const tb = t.createTBody(); h.rows.forEach(r => { const tr = tb.insertRow(); r.forEach(x => { tr.insertCell().textContent = x; }); });
+      const tb = t.createTBody(); h.rows.forEach(r => { const tr = tb.insertRow(); r.forEach(x => { const c = tr.insertCell(); if (Array.isArray(x)) c.appendChild(link(x[0], x[1])); else c.textContent = x; }); });
       const w = mk('div', 'tablewrap'); w.appendChild(t); box.appendChild(w);
       const p = mk('p', 'small'); p.appendChild(link('Source', h.source)); p.append(' \u00b7 checked ' + h.checked); box.appendChild(p);
       host.appendChild(box);

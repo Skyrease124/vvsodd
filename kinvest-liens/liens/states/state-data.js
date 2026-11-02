@@ -2064,5 +2064,971 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "NE": {
+  "sale": {
+   "title": "Tax sale (Nebraska)",
+   "when": "Real estate with taxes still unpaid on the first Monday of March after they become delinquent can be sold on or after that date (Neb. Rev. Stat. 77-1801). For the next sale that is March 1, 2027. Each county treasurer sets the exact sale day.",
+   "steps": [
+    "The county treasurer sells the tax lien, not the property. The buyer pays the delinquent taxes, interest and costs and receives a tax sale certificate (77-1807).",
+    "Since 2015 nobody bids a rate or a share of the property. The law’s model is a round robin. Tickets are drawn at random to set each buyer’s order, and each registered bidder buys one parcel per round. The treasurer announces the rules at the start, and a land bank can take a parcel with an automatically accepted bid (77-1807).",
+    "The rate is fixed by law. Delinquent taxes carry interest at 14% a year (45-104.01), and the owner redeeming pays the certificate amount plus interest at that rate from the purchase date, plus any later taxes you paid with interest (77-1824).",
+    "The owner can redeem until you file for a tax deed. You may apply within nine months after the third anniversary of the sale (two years for property found vacant and abandoned), and your treasurer’s deed is allowed only if 110% of the assessed value minus the redemption amount is $25,000 or less. Otherwise you must foreclose in court (77-1837).",
+    "Check the county’s own bidder rules each year. Some counties run the sale a little differently within the statute."
+   ],
+   "links": [
+    [
+     "Neb. Rev. Stat. 77-1801 (when property is subject to sale)",
+     "https://nebraskalegislature.gov/laws/statutes.php?statute=77-1801"
+    ],
+    [
+     "Neb. Rev. Stat. 77-1807 (how the sale is run)",
+     "https://nebraskalegislature.gov/laws/statutes.php?statute=77-1807"
+    ],
+    [
+     "Neb. Rev. Stat. 77-1824 (redemption)",
+     "https://nebraskalegislature.gov/laws/statutes.php?statute=77-1824"
+    ],
+    [
+     "Neb. Rev. Stat. 77-1837 (tax deed)",
+     "https://nebraskalegislature.gov/laws/statutes.php?statute=77-1837"
+    ],
+    [
+     "Neb. Rev. Stat. 45-104.01 (14% interest)",
+     "https://nebraskalegislature.gov/laws/statutes.php?statute=45-104.01"
+    ],
+    [
+     "NE Dept. of Revenue: delinquent real property list",
+     "https://revenue.nebraska.gov/PAD/real-property/nebraska-delinquent-real-property-list"
+    ]
+   ]
+  },
+  "tables": [
+   {
+    "title": "Delinquent real property by county (2026 list)",
+    "note": "Totals from the Nebraska Department of Revenue’s statewide delinquent real property list, built from what each county treasurer submitted in the first week of February 2026 (91 counties had delinquent parcels). The state list also names owners and addresses, so we show only counts and totals. These are unpaid taxes, not certificates already sold. The phone number is the county treasurer’s office, and the link is the county’s own parcel search.",
+    "source": "https://revenue.nebraska.gov/PAD/real-property/nebraska-delinquent-real-property-list",
+    "checked": "2026-11-02",
+    "head": [
+     "County",
+     "Delinquent parcels",
+     "Delinquent tax due",
+     "Treasurer phone",
+     "County parcel search"
+    ],
+    "rows": [
+     [
+      "Douglas",
+      "4,569",
+      "$7,960,160",
+      "(402) 444-7082",
+      [
+       "Parcel search",
+       "http://douglasne.mapping-online.com/DouglasCoNe"
+      ]
+     ],
+     [
+      "Lancaster",
+      "823",
+      "$2,475,832",
+      "(402) 441-7499",
+      [
+       "Parcel search",
+       "http://orion.lancaster.ne.gov/"
+      ]
+     ],
+     [
+      "Sarpy",
+      "792",
+      "$1,667,057",
+      "(402) 593-2137",
+      [
+       "Parcel search",
+       "https://apps.sarpy.gov/CaptureCZ/CAPortal/CAMA/CAPortal/CZ_MainPage.aspx#down"
+      ]
+     ],
+     [
+      "Scotts Bluff",
+      "620",
+      "$617,854",
+      "(308) 436-6617",
+      [
+       "Parcel search",
+       "http://www.nebraskaassessorsonline.us/search.aspx?county=Scotts"
+      ]
+     ],
+     [
+      "Gage",
+      "444",
+      "$386,052",
+      "(402) 223-1316",
+      [
+       "Parcel search",
+       "https://gage.gworks.com/"
+      ]
+     ],
+     [
+      "Jefferson",
+      "408",
+      "$351,397",
+      "(402) 729-6827",
+      [
+       "Parcel search",
+       "https://jefferson.gworks.com/"
+      ]
+     ],
+     [
+      "Dawson",
+      "381",
+      "$507,399",
+      "(308) 324-3241",
+      [
+       "Parcel search",
+       "https://dawson.gworks.com/"
+      ]
+     ],
+     [
+      "Adams",
+      "327",
+      "$556,691",
+      "(402) 461-7120",
+      [
+       "Parcel search",
+       "https://adams.nebraskaassessors.com/"
+      ]
+     ],
+     [
+      "Thurston",
+      "317",
+      "$296,714",
+      "(402) 385-3058",
+      [
+       "Parcel search",
+       "https://thurston.gworks.com/"
+      ]
+     ],
+     [
+      "Cheyenne",
+      "315",
+      "$210,796",
+      "(308) 254-2733",
+      [
+       "Parcel search",
+       "https://cheyenne.gworks.com/"
+      ]
+     ],
+     [
+      "Hall",
+      "312",
+      "$624,645",
+      "(308) 385-5025",
+      [
+       "Parcel search",
+       "http://grandislandne.map.beehere.net/"
+      ]
+     ],
+     [
+      "Custer",
+      "310",
+      "$222,437",
+      "(308) 872-2921",
+      [
+       "Parcel search",
+       "https://custer.gworks.com/"
+      ]
+     ],
+     [
+      "Cass",
+      "306",
+      "$399,032",
+      "(402) 296-9324",
+      [
+       "Parcel search",
+       "https://cass.gworks.com/"
+      ]
+     ],
+     [
+      "Washington",
+      "288",
+      "$482,159",
+      "(402) 426-6888",
+      [
+       "Parcel search",
+       "https://washington.gworks.com/"
+      ]
+     ],
+     [
+      "Morrill",
+      "273",
+      "$193,572",
+      "(308) 262-1177",
+      [
+       "Parcel search",
+       "https://morrill.gworks.com/"
+      ]
+     ],
+     [
+      "Otoe",
+      "271",
+      "$300,437",
+      "(402) 873-9510",
+      [
+       "Parcel search",
+       "https://otoe.gworks.com/"
+      ]
+     ],
+     [
+      "Madison",
+      "260",
+      "$353,798",
+      "(402) 454-3311 (133)",
+      [
+       "Parcel search",
+       "https://madison.gworks.com/"
+      ]
+     ],
+     [
+      "Dodge",
+      "252",
+      "$298,456",
+      "(402) 727-2750",
+      [
+       "Parcel search",
+       "https://dodge.gworks.com/"
+      ]
+     ],
+     [
+      "Red Willow",
+      "241",
+      "$199,374",
+      "(308) 345-6515",
+      [
+       "Parcel search",
+       "https://redwillow.gworks.com/"
+      ]
+     ],
+     [
+      "Platte",
+      "237",
+      "$295,450",
+      "(402) 563-4913",
+      [
+       "Parcel search",
+       "https://platte.gworks.com/"
+      ]
+     ],
+     [
+      "Nemaha",
+      "232",
+      "$242,257",
+      "(402) 274-3319",
+      [
+       "Parcel search",
+       "http://nemaha.nebraskaassessors.com/"
+      ]
+     ],
+     [
+      "Clay",
+      "231",
+      "$204,804",
+      "(402) 762-3505",
+      [
+       "Parcel search",
+       "https://clay.gworks.com/"
+      ]
+     ],
+     [
+      "Furnas",
+      "227",
+      "$135,939",
+      "(308) 268-2195",
+      [
+       "Parcel search",
+       "https://furnas.gworks.com/"
+      ]
+     ],
+     [
+      "Nuckolls",
+      "215",
+      "$118,548",
+      "(402) 225-4351",
+      [
+       "Parcel search",
+       "https://nuckolls.gworks.com/"
+      ]
+     ],
+     [
+      "Lincoln",
+      "211",
+      "$455,495",
+      "(308) 534-4350 (120)",
+      [
+       "Parcel search",
+       "https://lincoln.gworks.com/"
+      ]
+     ],
+     [
+      "Dawes",
+      "201",
+      "$201,429",
+      "(308) 432-0105",
+      [
+       "Parcel search",
+       "https://dawes.gworks.com/"
+      ]
+     ],
+     [
+      "Cherry",
+      "199",
+      "$107,272",
+      "(402) 376-1580",
+      [
+       "Parcel search",
+       "https://cherry.gworks.com/"
+      ]
+     ],
+     [
+      "Buffalo",
+      "197",
+      "$385,889",
+      "(308) 236-1250",
+      [
+       "Parcel search",
+       "https://buffalocounty.ne.gov/BUFFALO-COUNTY-GIS"
+      ]
+     ],
+     [
+      "Keith",
+      "182",
+      "$182,194",
+      "(308) 284-3231",
+      [
+       "Parcel search",
+       "https://keith.gworks.com/"
+      ]
+     ],
+     [
+      "Holt",
+      "179",
+      "$149,807",
+      "(402) 336-1291",
+      [
+       "Parcel search",
+       "http://holt.nebraskaassessors.com/"
+      ]
+     ],
+     [
+      "Franklin",
+      "178",
+      "$85,964",
+      "(308) 425-6265",
+      [
+       "Parcel search",
+       "https://franklin.gworks.com/"
+      ]
+     ],
+     [
+      "Sheridan",
+      "176",
+      "$140,383",
+      "(308) 327-5651",
+      [
+       "Parcel search",
+       "https://sheridan.gworks.com/"
+      ]
+     ],
+     [
+      "Kimball",
+      "171",
+      "$128,492",
+      "(308) 235-2242",
+      [
+       "Parcel search",
+       "https://kimball.gworks.com/"
+      ]
+     ],
+     [
+      "Box Butte",
+      "167",
+      "$143,920",
+      "(308) 762-6975",
+      [
+       "Parcel search",
+       "https://boxbutte.gworks.com/"
+      ]
+     ],
+     [
+      "Burt",
+      "166",
+      "$151,253",
+      "(402) 374-2911",
+      [
+       "Parcel search",
+       "https://burt.gworks.com/"
+      ]
+     ],
+     [
+      "Dundy",
+      "166",
+      "$90,564",
+      "(308) 423-2346",
+      [
+       "Parcel search",
+       "http://dundy.gworks.com/"
+      ]
+     ],
+     [
+      "Richardson",
+      "147",
+      "$64,675",
+      "(402) 245-3511",
+      [
+       "Parcel search",
+       "https://beacon.schneidercorp.com/"
+      ]
+     ],
+     [
+      "Pawnee",
+      "145",
+      "$60,223",
+      "(402) 852-2380",
+      [
+       "Parcel search",
+       "https://pawnee.gworks.com/"
+      ]
+     ],
+     [
+      "Harlan",
+      "142",
+      "$108,247",
+      "(308) 928-2171",
+      [
+       "Parcel search",
+       "https://harlan.gworks.com/"
+      ]
+     ],
+     [
+      "Brown",
+      "140",
+      "$99,414",
+      "(402) 387-2650",
+      [
+       "Parcel search",
+       "https://brown.gworks.com/"
+      ]
+     ],
+     [
+      "Saunders",
+      "140",
+      "$1,123,396",
+      "(402) 443-8128",
+      [
+       "Parcel search",
+       "https://saunders.gworks.com/"
+      ]
+     ],
+     [
+      "Saline",
+      "134",
+      "$202,570",
+      "(402) 821-2375",
+      [
+       "Parcel search",
+       "https://saline.gworks.com/"
+      ]
+     ],
+     [
+      "Webster",
+      "129",
+      "$102,837",
+      "(402) 746-2877",
+      [
+       "Parcel search",
+       "https://webster.gworks.com/"
+      ]
+     ],
+     [
+      "Butler",
+      "125",
+      "$155,512",
+      "(402) 367-7450",
+      [
+       "Parcel search",
+       "https://butler.gworks.com/"
+      ]
+     ],
+     [
+      "Dakota",
+      "123",
+      "$292,004",
+      "(402) 987-2131",
+      [
+       "Parcel search",
+       "https://dakota.gworks.com/"
+      ]
+     ],
+     [
+      "Colfax",
+      "122",
+      "$173,216",
+      "(402) 352-8519",
+      [
+       "Parcel search",
+       "https://beacon.schneidercorp.com/Application.aspx?App=ColfaxCountyNE&PageType=Search"
+      ]
+     ],
+     [
+      "Hitchcock",
+      "121",
+      "$79,582",
+      "(308) 334-5500",
+      [
+       "Parcel search",
+       "https://hitchcock.gworks.com/"
+      ]
+     ],
+     [
+      "Thayer",
+      "110",
+      "$38,010",
+      "(402) 768-6227",
+      [
+       "Parcel search",
+       "https://thayer.gworks.com/"
+      ]
+     ],
+     [
+      "Seward",
+      "92",
+      "$148,075",
+      "(402) 643-4574",
+      [
+       "Parcel search",
+       "https://seward.gworks.com/"
+      ]
+     ],
+     [
+      "Johnson",
+      "89",
+      "$94,531",
+      "(402) 335-6310",
+      [
+       "Parcel search",
+       "https://johnson.gworks.com/"
+      ]
+     ],
+     [
+      "Garden",
+      "87",
+      "$75,979",
+      "(308) 772-3622",
+      [
+       "Parcel search",
+       "https://garden.gworks.com/"
+      ]
+     ],
+     [
+      "Banner",
+      "85",
+      "$4,908",
+      "(308) 436-5260",
+      [
+       "Parcel search",
+       "https://banner.gworks.com/"
+      ]
+     ],
+     [
+      "York",
+      "85",
+      "$110,069",
+      "(402) 362-4929",
+      [
+       "Parcel search",
+       "https://york.gworks.com/"
+      ]
+     ],
+     [
+      "Knox",
+      "83",
+      "$65,278",
+      "(402) 288-5615",
+      [
+       "Parcel search",
+       "https://knox.gworks.com/"
+      ]
+     ],
+     [
+      "Antelope",
+      "76",
+      "$56,485",
+      "(402) 887-4247",
+      [
+       "Parcel search",
+       "https://schneidergis.co/antelopecone"
+      ]
+     ],
+     [
+      "Frontier",
+      "76",
+      "$74,071",
+      "(308) 367-8631",
+      [
+       "Parcel search",
+       "https://frontier.gworks.com/"
+      ]
+     ],
+     [
+      "Dixon",
+      "71",
+      "$55,831",
+      "(402) 755-5603",
+      [
+       "Parcel search",
+       "https://beacon.schneidercorp.com/"
+      ]
+     ],
+     [
+      "Merrick",
+      "71",
+      "$64,554",
+      "(308) 946-2171",
+      [
+       "Parcel search",
+       "https://merrick.gworks.com/"
+      ]
+     ],
+     [
+      "Valley",
+      "67",
+      "$42,103",
+      "(308) 728-5606",
+      [
+       "Parcel search",
+       "https://valley.gworks.com/"
+      ]
+     ],
+     [
+      "Chase",
+      "65",
+      "$73,225",
+      "(308) 882-7510",
+      [
+       "Parcel search",
+       "https://chase.gworks.com/"
+      ]
+     ],
+     [
+      "Sherman",
+      "65",
+      "$70,444",
+      "(308) 745-1513 (101)",
+      [
+       "Parcel search",
+       "https://sherman.gworks.com/"
+      ]
+     ],
+     [
+      "Boyd",
+      "64",
+      "$37,639",
+      "(402) 775-2581",
+      [
+       "Parcel search",
+       "https://boyd.gworks.com/"
+      ]
+     ],
+     [
+      "Nance",
+      "64",
+      "$92,889",
+      "(308) 536-2165",
+      [
+       "Parcel search",
+       "https://beacon.schneidercorp.com/"
+      ]
+     ],
+     [
+      "Phelps",
+      "61",
+      "$121,662",
+      "(308) 995-6115",
+      [
+       "Parcel search",
+       "https://phelps.gworks.com/"
+      ]
+     ],
+     [
+      "Pierce",
+      "61",
+      "$53,108",
+      "(402) 329-6335",
+      [
+       "Parcel search",
+       "https://pierce.gworks.com/"
+      ]
+     ],
+     [
+      "Greeley",
+      "54",
+      "$58,470",
+      "(308) 428-3535",
+      [
+       "Parcel search",
+       "https://greeley.gworks.com/"
+      ]
+     ],
+     [
+      "Polk",
+      "54",
+      "$64,830",
+      "(402) 747-5441",
+      [
+       "Parcel search",
+       "https://polk.gworks.com/"
+      ]
+     ],
+     [
+      "Boone",
+      "49",
+      "$28,818",
+      "(402) 395-2513",
+      [
+       "Parcel search",
+       "https://boone.gworks.com/"
+      ]
+     ],
+     [
+      "Cedar",
+      "48",
+      "$37,211",
+      "(402) 254-7421",
+      [
+       "Parcel search",
+       "https://cedar.gworks.com/"
+      ]
+     ],
+     [
+      "Stanton",
+      "48",
+      "$86,607",
+      "(402) 439-2223",
+      [
+       "Parcel search",
+       "https://beacon.schneidercorp.com/"
+      ]
+     ],
+     [
+      "Howard",
+      "47",
+      "$50,175",
+      "(308) 754-4852",
+      [
+       "Parcel search",
+       "https://howard.gworks.com/"
+      ]
+     ],
+     [
+      "Sioux",
+      "46",
+      "$18,728",
+      "(308) 668-2422",
+      [
+       "Parcel search",
+       "https://sioux.gworks.com/"
+      ]
+     ],
+     [
+      "Kearney",
+      "44",
+      "$97,169",
+      "(308) 832-2730",
+      [
+       "Parcel search",
+       "https://kearney.gworks.com/"
+      ]
+     ],
+     [
+      "Thomas",
+      "42",
+      "$23,460",
+      "(308) 645-2262",
+      [
+       "Parcel search",
+       "https://thomas.gworks.com/"
+      ]
+     ],
+     [
+      "Rock",
+      "33",
+      "$14,856",
+      "(402) 684-3515",
+      [
+       "Parcel search",
+       "https://rock.gworks.com/"
+      ]
+     ],
+     [
+      "Cuming",
+      "32",
+      "$26,713",
+      "(402) 372-6011",
+      [
+       "Parcel search",
+       "https://cuming.gworks.com/"
+      ]
+     ],
+     [
+      "Deuel",
+      "30",
+      "$22,063",
+      "(308) 874-3307",
+      [
+       "Parcel search",
+       "https://deuel.gworks.com/"
+      ]
+     ],
+     [
+      "Fillmore",
+      "30",
+      "$51,662",
+      "(402) 759-3812",
+      [
+       "Parcel search",
+       "https://fillmore.gworks.com/"
+      ]
+     ],
+     [
+      "Wayne",
+      "27",
+      "$24,805",
+      "(402) 375-3885",
+      [
+       "Parcel search",
+       "https://wayne.gworks.com"
+      ]
+     ],
+     [
+      "Hayes",
+      "24",
+      "$12,090",
+      "(308) 286-3214",
+      [
+       "Parcel search",
+       "https://hayes.gworks.com/"
+      ]
+     ],
+     [
+      "Perkins",
+      "24",
+      "$29,149",
+      "(308) 352-7570",
+      [
+       "Parcel search",
+       "https://perkins.gworks.com/"
+      ]
+     ],
+     [
+      "Hamilton",
+      "21",
+      "$13,090",
+      "(402) 694-2291",
+      [
+       "Parcel search",
+       "https://hamilton.gworks.com/"
+      ]
+     ],
+     [
+      "Wheeler",
+      "21",
+      "$6,621",
+      "(308) 654-3236",
+      [
+       "Parcel search",
+       "https://wheeler.gworks.com"
+      ]
+     ],
+     [
+      "Loup",
+      "19",
+      "$10,002",
+      "(308) 942-3115",
+      [
+       "Parcel search",
+       "https://loup.gworks.com/"
+      ]
+     ],
+     [
+      "Gosper",
+      "16",
+      "$13,665",
+      "(308) 785-2450",
+      [
+       "Parcel search",
+       "https://gosper.gworks.com/"
+      ]
+     ],
+     [
+      "Garfield",
+      "8",
+      "$8,610",
+      "(308) 346-4125",
+      [
+       "Parcel search",
+       "https://garfield.gworks.com/"
+      ]
+     ],
+     [
+      "Hooker",
+      "6",
+      "$1,213",
+      "(308) 546-2245",
+      [
+       "Parcel search",
+       "https://hooker.gworks.com/"
+      ]
+     ],
+     [
+      "Blaine",
+      "3",
+      "$2,265",
+      "(308) 547-2222 (202)",
+      [
+       "Parcel search",
+       "https://blaine.gworks.com/"
+      ]
+     ],
+     [
+      "Logan",
+      "3",
+      "$3,068",
+      "(308) 636-2441",
+      [
+       "Parcel search",
+       "https://logan.gworks.com/"
+      ]
+     ],
+     [
+      "Arthur",
+      "2",
+      "$432",
+      "(308) 764-2201",
+      [
+       "Parcel search",
+       "https://arthur.gworks.com/"
+      ]
+     ],
+     [
+      "Grant",
+      "1",
+      "$5",
+      "(308) 458-2422",
+      [
+       "Parcel search",
+       "https://grant.gworks.com/"
+      ]
+     ]
+    ]
+   }
+  ]
  }
 };
