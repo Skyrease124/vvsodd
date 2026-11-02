@@ -121,5 +121,85 @@ const STATE_DATA = {
     }
    ]
   }
+ },
+ "NJ": {
+  "sale": {
+   "title": "Tax sale (New Jersey)",
+   "when": "There is no statewide sale date. Each of New Jersey’s 566 municipalities must hold at least one tax sale a year if it has unpaid taxes (NJ Division of Local Government Services). Ask the town tax collector, or see the list of announced sales below.",
+   "steps": [
+    "Your town, not the county, sells the lien. What is sold is a tax sale certificate, not the property.",
+    "Bidding starts at 18% interest and is bid down. When it reaches the bottom, bidders instead offer a premium. The premium earns no interest and is held by the town for up to 5 years (NJ DCA; N.J.S.A. 54:5-33).",
+    "The winner pays the taxes and interest right away and should record the certificate at the County Clerk within about 90 days of the sale.",
+    "If the owner redeems, the holder gets the interest plus a redemption penalty of 2%, 4% or 6% depending on the certificate amount. After 2 years the holder can start a court action to foreclose.",
+    "A 2024 law (P.L. 2024, c.39) changed the foreclosure process, including sheriff and internet sales. Read it before you rely on the older summaries."
+   ],
+   "links": [
+    [
+     "NJ DCA: Elements of Tax Sales (older summary)",
+     "https://www.nj.gov/dca/divisions/dlgs/programs/tax_collector_docs/elements_of_tax_sales_nj.pdf"
+    ],
+    [
+     "P.L. 2024, c.39 (foreclosure changes)",
+     "https://pub.njleg.gov/Bills/2024/PL24/39_.HTM"
+    ],
+    [
+     "TCTANJ: announced tax sales",
+     "https://tctanj.org/cn/webpage.cfm?tpid=14659"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Announced municipal tax sales",
+   "note": "Copied from the Tax Collectors & Treasurers Association of NJ “Tax Sales” page (page updated October 20, 2026). Only towns that submit notices appear, so this is a small part of all sales. Parcel lists are on each town’s own site, and some are behind a browser check. Confirm the date with the tax collector.",
+   "source": "https://tctanj.org/cn/webpage.cfm?tpid=14659",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Borough of Dunellen",
+     "county": "Middlesex",
+     "date": "2026-11-24",
+     "time": "8:30 AM",
+     "how": "Online auction",
+     "link": "https://dunellen.newjerseytaxsale.com",
+     "linkText": "Parcel list"
+    },
+    {
+     "town": "Township of Hampton",
+     "county": "Sussex",
+     "date": "2026-11-18",
+     "time": "10:00 AM",
+     "how": "In person, 1 Rumsey Way, Newton",
+     "link": "https://www.hamptontownshipnj.info",
+     "linkText": "Township site"
+    },
+    {
+     "town": "Township of Maplewood",
+     "county": "",
+     "date": "2026-10-21",
+     "time": "",
+     "how": "Online auction",
+     "link": "https://maplewood.newjerseytaxsale.com/",
+     "linkText": "Parcel list"
+    },
+    {
+     "town": "Township of Jefferson",
+     "county": "Morris",
+     "date": "2026-10-22",
+     "time": "10:00 AM",
+     "how": "In person, Lake Hopatcong",
+     "link": "http://www.jeffersontownship.net",
+     "linkText": "Township site"
+    },
+    {
+     "town": "Borough of Woodcliff Lake",
+     "county": "",
+     "date": "2026-10-22",
+     "time": "10:00 AM",
+     "how": "In person, 188 Pascack Road",
+     "link": "https://wclnj.com/government/public-notices",
+     "linkText": "Public notices"
+    }
+   ]
+  }
  }
 };
