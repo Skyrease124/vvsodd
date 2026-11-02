@@ -14,6 +14,7 @@
   <div class="wrap nav-in">
     <a class="logo" href="./"><span class="mark">P</span>ricePocketAsset</a>
     <nav>
+      <a href="#map">Map</a>
       <a href="#products">Products</a>
       <a href="#about">About</a>
       <a class="btn small" href="#contact">Get updates</a>
@@ -31,7 +32,8 @@
       <h1>Understand the numbers.<br><span class="grad">Build assets</span> with confidence.</h1>
       <p class="lead">Clear, plain-language tools and education for people who want to put their money to work. We're starting with tax liens.</p>
       <div class="cta">
-        <a class="btn btn-light" href="liens/">Explore Tax Liens</a>
+        <a class="btn btn-light" href="#map">Explore the Map</a>
+        <a class="btn ghost ghost-light" href="liens/">Tax Lien Guide</a>
         <a class="btn ghost ghost-light" href="#contact">Get updates</a>
       </div>
       <ul class="chips">
@@ -53,6 +55,27 @@
       </dl>
       <a class="mock-link" href="liens/#calculator">Try your own numbers &rarr;</a>
     </aside>
+  </div>
+</section>
+
+<section id="map" class="mapsec">
+  <div class="wrap">
+    <h2>Explore tax liens across the US</h2>
+    <p class="maplead">Tap any state to see how its tax sales work, then open its county pages. Colors show each state&rsquo;s system type.</p>
+    <div class="mapgrid">
+      <div class="mapbox">
+        <div id="usmap" class="usmap"></div>
+        <p class="small maphint">Small states and DC:</p>
+        <div id="mapchips" class="mapchips"></div>
+        <ul id="maplegend" class="maplegend"></ul>
+      </div>
+      <aside id="maptip" class="maptip" aria-live="polite">
+        <b>Click a state</b>
+        <span>Select any state to view its tax sale rules and county pages.</span>
+        <a class="btn" href="liens/states/state/?s=FL">Try Florida &rarr;</a>
+      </aside>
+    </div>
+    <p class="small maphint">Educational only. Rules differ by county and change: verify with the county before you bid.</p>
   </div>
 </section>
 
@@ -102,5 +125,8 @@
   </div>
 </footer>
 <script src="script.js"></script>
+<script src="liens/states/states.js"></script>
+<script src="map-data.js"></script>
+<script src="map.js"></script>
 </body>
 </html>
