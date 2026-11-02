@@ -277,5 +277,64 @@ const STATE_DATA = {
     }
    ]
   }
+ },
+ "IN": {
+  "sale": {
+   "title": "Tax sale (Indiana)",
+   "when": "Each county sets its own date. The three 2026 sales we found were in September and October.",
+   "steps": [
+    "The county auditor advertises the unpaid parcels and mails notices to owners. Parcels are sold in an annual county sale, in person or online.",
+    "No parcel sells for less than the minimum bid: the unpaid taxes and assessments, penalties, and costs (IC 6-1.1-24).",
+    "You earn a set premium, not annual interest. If the owner redeems within 6 months, they repay 110% of the minimum bid. After 6 months it is 115%. Anything you bid above the minimum is repaid too, with 5% a year interest on that extra (county tax sale notices, IC 6-1.1-25-2).",
+    "Taxes you pay after the sale are added to the redemption amount, with 5% a year interest.",
+    "The owner has 1 year to redeem. For certificates the county itself holds, it is shorter. After the redemption period you must petition the court for a deed within strict deadlines or the lien can end.",
+    "If you paid more than the minimum bid and the property is not redeemed, the extra sits in a surplus fund. The former owner can claim it."
+   ],
+   "links": [
+    [
+     "Indiana Code, Title 6 (IC 6-1.1-24 and 6-1.1-25)",
+     "https://iga.in.gov/laws/2026/ic/titles/6"
+    ],
+    [
+     "SRI Services (runs many county sales)",
+     "https://sriservices.com/"
+    ]
+   ]
+  },
+  "sales": {
+   "title": "Announced 2026 county tax sales",
+   "note": "From each county’s own page (checked November 2, 2026). All three have already happened. Parcel lists are published by the county, and they usually name owners, so we do not copy them. Next year’s dates will appear on the county auditor or treasurer pages.",
+   "source": "https://www.hamiltoncounty.in.gov/452/Real-Property-Tax-Sale",
+   "checked": "2026-11-02",
+   "rows": [
+    {
+     "town": "Porter County",
+     "county": "",
+     "date": "2026-10-21",
+     "time": "",
+     "how": "Online, October 21–22",
+     "link": "https://www.portercountyin.gov/1036/Tax-SaleCertificate-Sale",
+     "linkText": "Porter County Auditor"
+    },
+    {
+     "town": "Hamilton County",
+     "county": "",
+     "date": "2026-10-08",
+     "time": "10:00 AM",
+     "how": "In person, Noblesville",
+     "link": "https://www.hamiltoncounty.in.gov/452/Real-Property-Tax-Sale",
+     "linkText": "Hamilton County Auditor"
+    },
+    {
+     "town": "Hancock County",
+     "county": "",
+     "date": "2026-09-18",
+     "time": "10:00 AM",
+     "how": "Online (SRI, zeusauction.com)",
+     "link": "https://www.hancockin.gov/606/Tax-Sale",
+     "linkText": "Hancock County Treasurer"
+    }
+   ]
+  }
  }
 };
