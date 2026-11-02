@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tax Lien State Guide | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<meta name="description" content="Compare tax lien rules by state: interest rates, redemption periods and bidding methods, with notes on how to verify each one.">
+<link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav>
+      <a href="../">Liens</a>
+      <a href="#guide">Guide</a>
+      <a href="#verify">Verify</a>
+      <a class="btn small" href="../../#contact">Get updates</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">PricePocketAsset &middot; Liens</p>
+    <h1>Tax lien state guide</h1>
+    <p class="lead">Every state runs tax sales differently: who earns interest, how you win a lien, and how long the owner has to pay it back. Start with these states, then verify locally.</p>
+  </div>
+</section>
+
+<section id="guide" class="wrap section">
+  <div class="notice" role="note">
+    <b>Verify before you bid.</b> Figures come from investor-education summaries, which sometimes disagree with each other and with the law. Rates, penalties and redemption periods change and often vary by county. Always confirm with the county treasurer or the state statute.
+  </div>
+
+  <div class="tools">
+    <label class="grow">Search states<input id="q" type="search" placeholder="e.g. Florida, FL" autocomplete="off"></label>
+    <label>Bidding method
+      <select id="bid">
+        <option value="">All methods</option>
+        <option>Bid-down rate</option>
+        <option>Premium bidding</option>
+        <option>Rotational</option>
+        <option>Not applicable</option>
+      </select>
+    </label>
+    <label>Sort by
+      <select id="sort">
+        <option value="name">State name</option>
+        <option value="rate">Highest max rate</option>
+        <option value="redeem">Longest redemption</option>
+      </select>
+    </label>
+  </div>
+  <p id="count" class="muted" role="status"></p>
+  <div id="cards" class="states"></div>
+  <p class="muted small">More states are coming. Missing yours? <a href="../../#contact">Tell us which one to add next</a>.</p>
+</section>
+
+<section id="terms" class="band">
+  <div class="wrap section">
+    <h2>Key terms</h2>
+    <div class="grid4">
+      <article class="card"><h3>Bid-down rate</h3><p>Bidders compete by accepting a lower interest rate, starting at the legal maximum. The lowest rate wins, so a hot auction can mean low returns.</p></article>
+      <article class="card"><h3>Premium bidding</h3><p>The rate is fixed. Bidders pay a premium above the tax owed. Premiums are often not repaid in full, so they cut into your return.</p></article>
+      <article class="card"><h3>Rotational</h3><p>No bidding. Liens are assigned in turn at a fixed rate, so the rate is known up front.</p></article>
+      <article class="card"><h3>Redeemable deed</h3><p>You buy the property deed itself, subject to a window in which the owner can buy it back, often with a penalty on top.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="verify" class="wrap section narrow">
+  <h2>How to verify any state</h2>
+  <ol class="steps">
+    <li><b>Find the county treasurer's or tax collector's website.</b> They publish the sale date, rules and the list of delinquent parcels.</li>
+    <li><b>Read the official sale rules.</b> Check the maximum rate, how the winner is chosen, deposits and registration deadlines.</li>
+    <li><b>Check the redemption period and what happens after.</b> Learn whether the lien can turn into foreclosure and what that costs.</li>
+    <li><b>Research the property.</b> Look at the parcel, zoning, other liens, bankruptcy risk and whether the land is actually usable.</li>
+    <li><b>Talk to a professional.</b> A real estate attorney or tax advisor can confirm anything unclear.</li>
+  </ol>
+
+  <h2>Where this data comes from</h2>
+  <p class="muted">Compiled from investor-education summaries, which conflict in places. We mark a figure when sources disagree. Not official sources, so check each one.</p>
+  <ul class="src">
+    <li><a href="https://taxlien.io/" rel="noopener">TaxLien.io</a></li>
+    <li><a href="https://liensuite.com/guides/states" rel="noopener">LienSuite state guides</a></li>
+    <li><a href="http://www.taxlienguru.com/tax-lien-states.html" rel="noopener">TaxLienGuru</a></li>
+    <li><a href="https://unitedtaxliens.com/tax-lien-states-the-complete-list/" rel="noopener">United Tax Liens</a></li>
+    <li><a href="https://tedthomas.com/faqs/tax-lien-certificate-states/" rel="noopener">Ted Thomas</a></li>
+  </ul>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>PricePocketAsset</b> &copy; <span id="yr"></span></p>
+    <p class="small">For educational purposes only; not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal. Rates and rules vary by jurisdiction and change over time.</p>
+  </div>
+</footer>
+<script src="states.js"></script>
+</body>
+</html>
