@@ -33,7 +33,8 @@ if (!s) {
   });
   if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
   if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box, undefined, 'FL'); }
-  if (s.a === 'CO') { const box = document.createElement('div'); $('clist').before(box); const sc = document.createElement('script'); sc.src = '../liens-larimer.js'; const sh = document.createElement('div'); box.appendChild(sh); sc.onload = () => { Screener.mount(sh, 'Larimer'); LienUI.table(box, 'Larimer', 'CO'); }; document.head.appendChild(sc); }
+  const LF = {CO: ['liens-larimer.js', 'Larimer'], AZ: ['liens-pinal.js', 'Pinal']}[s.a];
+  if (LF) { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); }
   (function parcelBox() {
     const host = $('parcelbox'); if (!host) return;
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };

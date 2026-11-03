@@ -40,6 +40,13 @@ const PARCEL_MAPS = {
     facts: 'https://services1.arcgis.com/ZWOoUZbtaYePLlPw/ArcGIS/rest/services/Property_Information_Table/FeatureServer/0/query',
     pageName: 'Palm Beach County Property Appraiser'
   },
+  'Pinal': {
+    query: 'https://gis.pinal.gov/mapping/rest/services/TaxParcels/FeatureServer/3/query',
+    idField: 'PARCELID',
+    fmt: pin => pin.slice(0, 9),
+    page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
+    pageName: 'Pinal County Treasurer'
+  },
   'Larimer': {
     query: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3/query',
     idField: 'PARCELNUM',

@@ -14,11 +14,11 @@ const PER_IP_HOURLY = 10;
 const hits = new Map();
 let day = new Date().toISOString().slice(0, 10), dayCount = 0;
 
-const BUILDABLE = new Set(['VACANT', 'VACANT COMMERCIAL LAND', 'VACANT TOWNHOUSE', 'VACANT INDUSTRIAL', 'SINGLE FAMILY', 'TOWNHOUSE', 'CONDOMINIUM', 'MOBILE HOME/MANUFACTURED HOME']);
+const BUILDABLE = new Set(['VACANT', 'VACANT COMMERCIAL LAND', 'VACANT TOWNHOUSE', 'VACANT INDUSTRIAL', 'VACANT LAND', 'COMMERCIAL', 'SINGLE FAMILY', 'TOWNHOUSE', 'CONDOMINIUM', 'MOBILE HOME/MANUFACTURED HOME']);
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const PUBLIC = new Set(['STATE', 'FEDERAL', 'DISTRICTS']);
 
-const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js'};
+const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js', 'Pinal': 'liens-pinal.js'};
 function loadLiens(county) {
   const root = process.env.LAMBDA_TASK_ROOT || process.cwd();
   const cands = [path.join(root, 'kinvest-liens/liens/states'), path.join(HERE, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
@@ -135,7 +135,7 @@ async function handle(event) {
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
   const county = String(body.county || '');
   const wish = String(body.wish || '').replace(/\s+/g, ' ').trim();
-  if (!FILES[county]) return json(400, {error: 'The screener is only available for Palm Beach and Larimer counties so far.'});
+  if (!FILES[county]) return json(400, {error: 'The screener is only available for Palm Beach, Larimer and Pinal counties so far.'});
   if (wish.length > 300) return json(400, {error: 'Keep it under 300 characters.'});
   if (!cfg) return json(503, {error: 'The screener is not switched on yet.'});
 
