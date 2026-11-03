@@ -24,11 +24,30 @@ if (!s) {
     const li = document.createElement('li'), x = document.createElement('a');
     const m = s.a === 'FL' && l[0].match(/^(.+) County Tax Collector \(certificate sales\)$/);
     x.href = m ? '../county/?c=' + encodeURIComponent(m[1]) : l[1]; x.textContent = m ? m[1] + ' County: sale dates & lists' : l[0];
-    if (m) li.className = 'cty';
+    if (m) {
+      li.className = 'cty';
+      const pa = FL_PA[m[1]];
+      if (pa) { const y = document.createElement('a'); y.href = pa; y.target = '_blank'; y.rel = 'noopener noreferrer'; y.className = 'small'; y.textContent = 'Parcel search'; li.append(x, document.createTextNode(' \u00b7 '), y); $('clist').appendChild(li); return; }
+    }
     if (!m) { x.target = '_blank'; x.rel = 'noopener noreferrer'; } li.appendChild(x); $('clist').appendChild(li);
   });
   if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
   if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box); }
+  (function parcelBox() {
+    const host = $('parcelbox'); if (!host) return;
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
+    const box = mk('div', 'askbox'); box.appendChild(mk('h2', '', 'Find a parcel and see where it is'));
+    box.appendChild(mk('p', 'small muted', 'A parcel number (also called a PIN or folio) points to one lot. County property sites usually show the lot on a map, the size, the county\u2019s value and the tax history. We link to the official sites; we do not host their data. Some sites ask you to confirm you are a person first.'));
+    const ul = mk('ul', 'countylist');
+    (typeof PARCEL_LOOKUP !== 'undefined' && PARCEL_LOOKUP[s.a] || []).forEach(l => { const li = mk('li'), a = mk('a', '', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.appendChild(a); ul.appendChild(li); });
+    if (s.a === 'FL') ul.appendChild(mk('li', '', 'Every Florida county has its own parcel search. Use the \u201cParcel search\u201d link next to the county below.'));
+    if (ul.children.length) box.appendChild(ul);
+    const f = mk('form', 'askform'), inp = mk('input'); inp.type = 'text'; inp.maxLength = 60; inp.placeholder = 'Type a county name (e.g. Essex)'; inp.setAttribute('aria-label', 'County name');
+    const b = mk('button', 'btn', 'Find its parcel search'); b.type = 'submit';
+    f.append(inp, b); box.appendChild(f);
+    f.addEventListener('submit', e => { e.preventDefault(); const c = inp.value.trim().replace(/\s+county$/i, '').slice(0, 60); if (!c) return; window.open('https://www.google.com/search?q=' + encodeURIComponent(c + ' County ' + s.n + ' property search parcel map'), '_blank', 'noopener'); });
+    host.appendChild(box);
+  })();
   const q = encodeURIComponent(s.n + ' county treasurer tax sale');
   $('smore').innerHTML = '<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=' + q + '">Search for your county’s tax sale page</a>';
 }
