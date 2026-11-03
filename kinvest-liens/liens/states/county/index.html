@@ -22,15 +22,7 @@
   <div class="notice" role="note"><b>Verify before you bid.</b> Dates and rules come from state law and county pages and can change. Confirm everything with the county tax collector.</div>
   <p id="clink"></p>
   <div id="sale"></div>
-  <div class="askbox" id="screenbox" hidden>
-    <h2>Find liens worth a closer look</h2>
-    <p class="small muted">Tell us what you want (or just press Screen). We rank the county-held liens with fixed, public rules: how much land value sits behind the tax debt, what type of property it is, size, and red flags. The AI only reads your wording and explains the numbers. Research help, not advice.</p>
-    <p id="screengate" class="notice" hidden><b>Free account needed.</b> <a href="../../../account/">Sign in or create an account</a> to use the screener and save liens.</p>
-    <div class="askchips" id="screenchips"></div>
-    <form id="screenform"><input id="screenq" type="text" maxlength="300" placeholder="Example: vacant land under $1,500 debt, at least 0.2 acres" aria-label="What are you looking for?" style="width:100%;box-sizing:border-box;padding:10px;font:inherit;border:1px solid var(--line);border-radius:8px;margin-bottom:8px"><button class="btn" id="screengo" type="submit">Screen</button></form>
-    <div id="screenout" hidden role="status"></div>
-    <details class="small"><summary>How we rank</summary><p>Start at 50. Add points for a county land value many times the tax debt, a buildable property type, a lot of 0.1 to 5 acres and a small debt. Subtract points for lots valued under the debt, road, utility and water strips, tiny slivers, government land, homesteads and many unpaid years. The county value is an assessment, not a sale price, and can be wrong.</p></details>
-  </div>
+  <div id="screenhost"></div>
   <div id="lienbox"></div>
   <h2>Before you buy: a checklist</h2>
   <ol id="dd" class="salesteps"></ol>
@@ -45,7 +37,7 @@
 <script src="../parcel-links.js"></script>
 <script src="../liens-palmbeach.js"></script>
 <script src="../lien-ui.js"></script>
-<script src="county.js"></script>
 <script src="screen.js"></script>
+<script src="county.js"></script>
 </body>
 </html>

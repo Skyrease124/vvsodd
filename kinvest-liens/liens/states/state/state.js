@@ -33,7 +33,7 @@ if (!s) {
   });
   if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
   if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box, undefined, 'FL'); }
-  if (s.a === 'CO') { const box = document.createElement('div'); $('clist').before(box); const sc = document.createElement('script'); sc.src = '../liens-larimer.js'; sc.onload = () => LienUI.table(box, 'Larimer', 'CO'); document.head.appendChild(sc); }
+  if (s.a === 'CO') { const box = document.createElement('div'); $('clist').before(box); const sc = document.createElement('script'); sc.src = '../liens-larimer.js'; const sh = document.createElement('div'); box.appendChild(sh); sc.onload = () => { Screener.mount(sh, 'Larimer'); LienUI.table(box, 'Larimer', 'CO'); }; document.head.appendChild(sc); }
   (function parcelBox() {
     const host = $('parcelbox'); if (!host) return;
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
