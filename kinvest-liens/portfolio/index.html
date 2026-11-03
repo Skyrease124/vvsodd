@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>My portfolio | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a><a href="../account/">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section">
+  <h1>My portfolio</h1>
+  <div class="notice" role="note"><b>A record-keeper, not advice.</b> Dates and interest here are estimates from what you type and from our state guide. Confirm every deadline and payoff with the county.</div>
+  <p id="gate" class="notice" hidden><a href="../account/">Sign in or create a free account</a> to keep a portfolio.</p>
+  <div id="app" hidden>
+    <div id="sum" class="salebox"></div>
+    <p><button class="btn" id="addbtn" type="button">Add a lien I bought</button> <button class="btn ghost" id="csv" type="button">Download CSV</button></p>
+    <form id="form" class="setupform" hidden novalidate>
+      <h2 id="ftitle">Add a lien</h2>
+      <label id="fromwrap" hidden>Fill from a lien I saved <select id="from"></select></label>
+      <label>State <select id="state"></select></label>
+      <label>County <input id="county" maxlength="60"></label>
+      <label>Parcel number (PIN) <input id="parcel" maxlength="40" autocomplete="off"></label>
+      <label>What I paid ($) <input id="paid" inputmode="decimal"></label>
+      <label>Interest rate (% per year) <input id="rate" inputmode="decimal"></label>
+      <label>Date I bought it <input id="bought" type="date"></label>
+      <label>Redemption period (months) <input id="months" inputmode="numeric"></label>
+      <p class="small muted" id="mhint"></p>
+      <label>Status <select id="status"><option value="open">Open (waiting)</option><option value="redeemed">Redeemed (owner paid)</option><option value="foreclosure">Foreclosure started</option><option value="other">Other / closed</option></select></label>
+      <label id="closedwrap" hidden>Date it closed <input id="closed" type="date"></label>
+      <label>Notes <textarea id="notes" maxlength="300" rows="3" style="width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px"></textarea></label>
+      <p class="small muted">Please do not type owner names or home addresses.</p>
+      <div class="setupbtns"><button class="btn" id="save" type="submit">Save</button><button class="btn ghost" id="cancel" type="button">Cancel</button></div>
+      <p id="msg" class="small" role="status" aria-live="polite"></p>
+    </form>
+    <div id="list"></div>
+  </div>
+  <p class="small muted">Educational only. Not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal.</p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="../liens/states/states.js"></script>
+<script src="portfolio.js"></script>
+</body>
+</html>
