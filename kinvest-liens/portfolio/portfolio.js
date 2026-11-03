@@ -76,7 +76,7 @@
     if (sv.length) { $('from').textContent = ''; $('from').appendChild(new Option('Choose…', '')); sv.forEach((x, i) => $('from').appendChild(new Option(x.county + ' ' + x.parcel, String(i)))); }
     $('form').scrollIntoView({behavior: 'smooth'});
   }
-  $('from').addEventListener('change', () => { const x = user.saved[+$('from').value]; if (!x) return; $('state').value = x.county === 'Palm Beach' ? 'FL' : $('state').value; $('county').value = x.county; $('parcel').value = x.parcel; if (x.face != null && !$('paid').value) $('paid').value = x.face; if (x.county === 'Palm Beach') $('rate').value = 18; const s = st($('state').value); if (s && s.m > 0) $('months').value = s.m; hint(); });
+  $('from').addEventListener('change', () => { const x = user.saved[+$('from').value]; if (!x) return; $('state').value = {'Palm Beach': 'FL', 'Larimer': 'CO'}[x.county] || $('state').value; $('county').value = x.county; $('parcel').value = x.parcel; if (x.face != null && !$('paid').value) $('paid').value = x.face; if (x.county === 'Palm Beach') $('rate').value = 18; const s = st($('state').value); if (s && s.m > 0) $('months').value = s.m; hint(); });
   $('state').addEventListener('change', () => { hint(); if (!editing) { const s = st($('state').value); $('months').value = s && s.m > 0 ? s.m : ''; } });
   $('status').addEventListener('change', () => { $('closedwrap').hidden = $('status').value === 'open'; });
   $('addbtn').addEventListener('click', () => openForm(null));
