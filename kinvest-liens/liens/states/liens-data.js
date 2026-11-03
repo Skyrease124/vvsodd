@@ -39,6 +39,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://www.pbcgov.org/papa/Asps/PropertyDetail/PropertyDetail.aspx?parcel=' + pin.replace(/-/g, ''),
     facts: 'https://services1.arcgis.com/ZWOoUZbtaYePLlPw/ArcGIS/rest/services/Property_Information_Table/FeatureServer/0/query',
     pageName: 'Palm Beach County Property Appraiser'
+  },
+  'Larimer': {
+    query: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3/query',
+    idField: 'PARCELNUM',
+    fmt: pin => pin,
+    page: pin => 'https://www.larimer.gov/assessor',
+    pageName: 'Larimer County Assessor'
   }
 };
 
