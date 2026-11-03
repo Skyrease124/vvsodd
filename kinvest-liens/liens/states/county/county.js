@@ -13,6 +13,6 @@ if (!link) {
   $('clink').appendChild(a);
   if (FL_PA[name]) { const b = document.createElement('a'); b.className = 'btn ghost'; b.style.marginLeft = '8px'; b.href = FL_PA[name]; b.target = '_blank'; b.rel = 'noopener noreferrer'; b.textContent = 'Find a parcel (property appraiser)'; $('clink').appendChild(b); }
   LienUI.saleBox($('sale'), name);
-  LienUI.table($('lienbox'), name);
+  LienUI.table($('lienbox'), name, 'FL');
   DUE_DILIGENCE.forEach(t => { const li = document.createElement('li'); li.textContent = t; $('dd').appendChild(li); });
 }
