@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sign in | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a><a href="./">Sign in</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>Sign in</h1>
+  <form id="form" class="setupform" novalidate>
+    <label>Email <input id="email" type="email" autocomplete="email" required></label>
+    <label>Password
+      <span style="position:relative;display:block"><input id="pw" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding-right:56px">
+      <button type="button" id="eye" aria-label="Show password" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;padding:8px;line-height:0;color:inherit">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button></span>
+    </label>
+    <button class="btn" id="go" type="submit">Sign in</button>
+    <p id="msg" class="small" role="status" aria-live="polite"></p>
+  </form>
+  <p>New here? <a href="../account/?mode=up">Create a free account</a></p>
+  <p class="small muted">There is no password reset yet. If you cannot sign in, check that you typed the same email you used to create the account.</p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const API = '/.netlify/functions/account';
+  const next = (() => { const n = new URLSearchParams(location.search).get('next') || ''; return /^\/[A-Za-z0-9\/_\-?=&.%]*$/.test(n) && n.indexOf('//') !== 0 ? n : '/account/'; })();
+  fetch(API).then(r => r.json()).then(d => { if (d.user) location.replace(next); }).catch(() => {});
+  $('eye').addEventListener('click', () => { $('pw').type = $('pw').type === 'password' ? 'text' : 'password'; });
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
+    try {
+      const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'login', email: $('email').value, password: $('pw').value})});
+      const d = await r.json();
+      if (r.ok) { location.href = next; return; }
+      $('msg').textContent = d.error || 'Something went wrong.';
+    } catch (err) { $('msg').textContent = 'Could not reach the server. Try again.'; }
+    $('go').disabled = false;
+  });
+})();
+</script>
+</body>
+</html>
