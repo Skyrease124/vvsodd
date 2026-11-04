@@ -34,5 +34,5 @@
     if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').hidden = false; $('eyeoff').hidden = true; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
   $('logout').addEventListener('click', async () => { await post({action: 'logout'}); show(null); });
-  fetch(API).then(r => r.json()).then(d => { setMode('in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
+  fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
 })();
