@@ -80,11 +80,12 @@ export async function userFromCookie(cookieHeader) {
   if (!p) return null;
   const u = await get(userKey(p.e));
   // a password change signs out every older session
-  return u && (p.iat || 0) >= (u.pwChanged || 0) ? u : null;
+  if (!u || (p.iat || 0) < (u.pwChanged || 0)) return null;
+  return markOwner(u);
 }
 export async function saveUser(u) { await put(userKey(u.email), u); }
 
-export const getUser = async email => get(userKey(email));
+export const getUser = async email => { const u = await get(userKey(email)); return u ? markOwner(u) : u; };
 export async function setPassword(email, password) {
   const u = await get(userKey(email)); if (!u) return null;
   u.salt = crypto.randomBytes(16).toString('hex'); u.hash = await hashPw(password, u.salt); u.pwChanged = Date.now();
@@ -121,3 +122,12 @@ export async function sendMail(to, subject, text) {
     return r.ok;
   } catch (e) { return false; }
 }
+
+// The site owner's own email, for the account that already existed when this rule was added (so nobody can
+// register that address later and become owner). Everyone else becomes owner only with the setup code.
+const OWNER_EMAIL = 'skyariasa@gmail.com', OWNER_CUTOFF = '2026-11-05T18:58:30Z';
+function markOwner(u) {
+  if (!u.owner && u.email === OWNER_EMAIL && u.created && u.created < OWNER_CUTOFF) u.owner = true;
+  return u;
+}
+export { markOwner };
