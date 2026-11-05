@@ -9,6 +9,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import * as keystore from '../lib/keystore.mjs';
+import * as usage from '../lib/usage.mjs';
 import { complete, rankModels } from '../lib/llm.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -100,12 +101,12 @@ async function handle(event) {
   if (!cfg) return json(503, {error: 'The question box is not switched on yet.'});
 
   const today = new Date().toISOString().slice(0, 10);
-  if (today !== day) { day = today; dayCount = 0; hits.clear(); }
-  if (dayCount >= DAILY_LIMIT) return json(429, {error: 'The question box is busy today. Please try again tomorrow.'});
+  if (today !== day) { day = today; hits.clear(); }
+  if ((await usage.today()) >= (await usage.getLimit())) return json(429, {error: 'The question box is busy today. Please try again tomorrow.'});
   const ip = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
   const now = Date.now(), recent = (hits.get(ip) || []).filter(t => now - t < 3600000);
   if (recent.length >= PER_IP_HOURLY) return json(429, {error: 'That is a lot of questions. Please wait a while and try again.'});
-  recent.push(now); hits.set(ip, recent); dayCount++;
+  recent.push(now); hits.set(ip, recent);
 
   let c;
   try { c = buildContext(loadData(), a); } catch (e) { return json(500, {error: 'Could not load the state data.'}); }
@@ -113,9 +114,11 @@ async function handle(event) {
 
   try {
     const {text} = await complete(cfg, SYSTEM(c.name, c.ctx), q, {maxTokens: 700});
+    await usage.record('ask', true);
     return json(200, {answer: text.slice(0, 1500), sources: c.sources, state: c.name});
   } catch (e) {
     console.log('ask failed', e && e.detail);
+    await usage.record('ask', false);
     return json(502, {error: 'The answer service had a problem. Please try again.', detail: (e && e.detail) || String((e && e.name) || e).slice(0, 80)});
   }
 }

@@ -6,6 +6,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import * as keystore from '../lib/keystore.mjs';
+import * as usage from '../lib/usage.mjs';
 import { complete } from '../lib/llm.mjs';
 import * as auth from '../lib/auth.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -140,12 +141,12 @@ async function handle(event) {
   if (!cfg) return json(503, {error: 'The screener is not switched on yet.'});
 
   const today = new Date().toISOString().slice(0, 10);
-  if (today !== day) { day = today; dayCount = 0; hits.clear(); }
-  if (dayCount >= DAILY_LIMIT) return json(429, {error: 'The screener is busy today. Please try again tomorrow.'});
+  if (today !== day) { day = today; hits.clear(); }
+  if ((await usage.today()) >= (await usage.getLimit())) return json(429, {error: 'The screener is busy today. Please try again tomorrow.'});
   const ip = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
   const now = Date.now(), recent = (hits.get(ip) || []).filter(t => now - t < 3600000);
   if (recent.length >= PER_IP_HOURLY) return json(429, {error: 'That is a lot of searches. Please wait a while and try again.'});
-  recent.push(now); hits.set(ip, recent); dayCount++;
+  recent.push(now); hits.set(ip, recent);
 
   let rows;
   try { rows = groupByParcel(loadLiens(county).filter(l => l.county === county)).map(score); } catch (e) { return json(500, {error: 'Could not load the lien data.'}); }
@@ -169,6 +170,7 @@ async function handle(event) {
       const a = parseJson(text, '['); if (Array.isArray(a) && a.length >= top.length) notes = a.map(x => String(x).slice(0, 240));
     } catch (e) { console.log('screen notes failed', e && e.detail); }
   }
+  await usage.record('screen', !(wish.length >= 3 && !understood && !notes));
   return json(200, {
     total: rows.length, matched: matched.length, understood, filters,
     results: top.map((g, i) => ({parcel: g.parcel, county: g.county, area: g.area, use: g.use, acres: g.acres, market: g.market, face: g.face, payoff: g.payoff, rate: g.rate, years: g.years, certs: g.certs, lastSale: g.lastSale || null, lastPrice: g.lastPrice || null, desc: g.desc, coverage: g.coverage, score: g.score, green: g.green, red: g.red, note: notes ? notes[i] : plainNote(g), aiNote: !!notes}))

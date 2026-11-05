@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Usage | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>Usage (owner)</h1>
+  <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/usage/">Sign in</a> with the owner account.</p>
+  <div id="app" hidden>
+    <p class="muted">How many times visitors used the AI on your site. Each question and each screen counts as 1. This is our own count; the real balance with NVIDIA is only on their site.</p>
+    <div class="salebox"><h3>Today</h3>
+      <dl class="stfacts" id="today"></dl>
+      <div class="meter" style="height:12px;background:#d6e2db;border-radius:99px;overflow:hidden;margin:8px 0"><div id="bar" style="height:100%;width:0;background:#0b6e4f"></div></div>
+      <p class="small muted" id="barnote"></p>
+    </div>
+    <form id="lim" class="setupform" novalidate>
+      <label>Daily limit (all visitors together)
+        <input id="daily" inputmode="numeric" style="max-width:160px"></label>
+      <p class="small muted">When the limit is reached, the question box and screener say they are busy until tomorrow (UTC midnight). 0 turns both off for visitors.</p>
+      <button class="btn" type="submit">Save limit</button>
+      <p id="msg" class="small" role="status" aria-live="polite"></p>
+    </form>
+    <h2>Last 14 days</h2>
+    <div class="tablewrap"><table class="liens" id="days"></table></div>
+  </div>
+</section>
+</main>
+<script src="usage.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>

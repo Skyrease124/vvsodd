@@ -1,5 +1,6 @@
 // Member accounts: sign up, sign in, sign out, saved liens.
 import * as auth from '../lib/auth.mjs';
+import * as usage from '../lib/usage.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
@@ -26,11 +27,24 @@ function cleanHolding(h) {
 
 async function handle(event) {
   const me = await auth.userFromCookie(event.headers.cookie);
-  if (event.httpMethod === 'GET') return json(200, { user: me ? pub(me) : null });
+  if (event.httpMethod === 'GET') {
+    if (event.query && event.query.usage) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      return json(200, { limit: await usage.getLimit(), today: await usage.today(), days: await usage.history(14) });
+    }
+    return json(200, { user: me ? pub(me) : null });
+  }
   if (event.httpMethod !== 'POST') return json(405, { error: 'Use POST.' });
   let b; try { b = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request.' }); }
   const act = String(b.action || '');
 
+  if (act === 'setLimit') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const n = Math.round(Number(b.daily));
+    if (!isFinite(n) || n < 0 || n > 5000) return json(400, { error: 'Pick a number from 0 to 5000.' });
+    await usage.setLimit(n);
+    return json(200, { limit: n });
+  }
   if (act === 'logout') return json(200, { ok: true }, auth.clearCookie());
 
   if (act === 'pfSave' || act === 'pfDelete') {
@@ -84,7 +98,7 @@ async function handle(event) {
 }
 
 async function toEvent(req, context) {
-  return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
+  return { httpMethod: req.method, query: Object.fromEntries(new URL(req.url).searchParams), body: req.method === 'POST' ? await req.text() : null,
     headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
 }
 export default async (req, context) => {

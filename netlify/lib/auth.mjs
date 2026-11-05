@@ -18,6 +18,8 @@ async function put(k, v) {
   await store().setJSON(k, v);
 }
 
+export const kvGet = get;
+export const kvPut = put;
 export const normEmail = e => String(e || '').trim().toLowerCase();
 export const validEmail = e => e.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
 const userKey = e => 'u_' + crypto.createHash('sha256').update(e).digest('hex');
