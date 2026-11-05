@@ -69,7 +69,7 @@ export async function checkLogin(email, password) {
   return u && crypto.timingSafeEqual(h, want) ? u : null;
 }
 export async function sessionCookie(email) {
-  const tok = await sign({ e: email, exp: Date.now() + DAYS * 864e5 });
+  const tok = await sign({ e: email, iat: Date.now(), exp: Date.now() + DAYS * 864e5 });
   return `${COOKIE}=${tok}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 export const clearCookie = () => `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
@@ -77,6 +77,47 @@ export const clearCookie = () => `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secur
 export async function userFromCookie(cookieHeader) {
   const m = String(cookieHeader || '').match(new RegExp('(?:^|;\\s*)' + COOKIE + '=([^;]+)'));
   const p = m && await verify(m[1]);
-  return p ? await get(userKey(p.e)) : null;
+  if (!p) return null;
+  const u = await get(userKey(p.e));
+  // a password change signs out every older session
+  return u && (p.iat || 0) >= (u.pwChanged || 0) ? u : null;
 }
 export async function saveUser(u) { await put(userKey(u.email), u); }
+
+export const getUser = async email => get(userKey(email));
+export async function setPassword(email, password) {
+  const u = await get(userKey(email)); if (!u) return null;
+  u.salt = crypto.randomBytes(16).toString('hex'); u.hash = await hashPw(password, u.salt); u.pwChanged = Date.now();
+  delete u.reset; await put(userKey(email), u); return u;
+}
+// One-hour, single-use reset link token. Only a hash of it is stored.
+export async function makeResetToken(email) {
+  const u = await get(userKey(email)); if (!u) return null;
+  const tok = crypto.randomBytes(32).toString('base64url');
+  u.reset = { h: crypto.createHash('sha256').update(tok).digest('hex'), exp: Date.now() + 3600e3 };
+  await put(userKey(email), u); return tok;
+}
+export async function useResetToken(email, tok, password) {
+  const u = await get(userKey(email)); if (!u || !u.reset || u.reset.exp < Date.now()) return false;
+  const a = Buffer.from(crypto.createHash('sha256').update(String(tok)).digest('hex')), b = Buffer.from(u.reset.h);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return false;
+  return !!(await setPassword(email, password));
+}
+export async function addResetRequest(email) {
+  const l = (await get('resetreqs')) || { list: [] };
+  l.list = l.list.filter(x => x.email !== email); l.list.unshift({ email, at: new Date().toISOString() }); l.list = l.list.slice(0, 50);
+  await put('resetreqs', l);
+}
+export const getResetRequests = async () => ((await get('resetreqs')) || { list: [] }).list;
+export async function clearResetRequest(email) {
+  const l = (await get('resetreqs')) || { list: [] }; l.list = l.list.filter(x => x.email !== email); await put('resetreqs', l);
+}
+// Email through Resend (https://resend.com). Needs RESEND_API_KEY. Returns true if the provider accepted it.
+export async function sendMail(to, subject, text) {
+  const key = process.env.RESEND_API_KEY; if (!key) return false;
+  try {
+    const r = await fetch(process.env.MAIL_API_URL || 'https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: process.env.MAIL_FROM || 'PricePocketAsset <noreply@pricepocketasset.com>', to: [to], subject, text }) });
+    return r.ok;
+  } catch (e) { return false; }
+}

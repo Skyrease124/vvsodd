@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Forgot password | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a><a href="../login/">Sign in</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>Forgot your password?</h1>
+  <p class="muted">Type the email you signed up with.</p>
+  <form id="form" class="setupform" novalidate>
+    <label>Email <input id="email" type="email" autocomplete="email" required></label>
+    <button class="btn" id="go" type="submit">Send reset link</button>
+    <p id="msg" class="small" role="status" aria-live="polite"></p>
+  </form>
+  <p><a href="../login/">Back to sign in</a></p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  $('form').addEventListener('submit', async e => {
+    e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment\u2026';
+    try {
+      const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'forgot', email: $('email').value})});
+      const d = await r.json();
+      if (!r.ok) { $('msg').textContent = d.error || 'Something went wrong.'; $('go').disabled = false; return; }
+      $('msg').textContent = d.mail ? 'If that email has an account, we sent a reset link. It works for 1 hour. Check your spam folder too.' : 'Request received. Emails are not switched on yet, so the site owner will reset your password by hand and contact you at this email.';
+      $('go').disabled = false;
+    } catch (err) { $('msg').textContent = 'Could not reach the server. Try again.'; $('go').disabled = false; }
+  });
+})();
+</script>
+</body>
+</html>

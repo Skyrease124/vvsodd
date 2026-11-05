@@ -27,5 +27,23 @@
     const d = await r.json();
     if (r.ok) { $('msg').textContent = 'Saved.'; load(); } else $('msg').textContent = d.error || 'Could not save.';
   });
-  load();
+  async function loadResets() {
+    const ul = $('resets'); ul.textContent = '';
+    try {
+      const r = await fetch(API + '?resets=1'); if (!r.ok) return; const d = await r.json();
+      if (!d.requests.length) { const li = document.createElement('li'); li.textContent = 'No requests.'; ul.appendChild(li); return; }
+      d.requests.forEach(x => {
+        const li = document.createElement('li'); li.style.cssText = 'display:block;border-radius:10px;margin:6px 0;padding:10px';
+        const b = document.createElement('button'); b.className = 'btn small'; b.type = 'button'; b.textContent = 'Set temporary password';
+        b.addEventListener('click', async () => {
+          const rr = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'ownerSetPassword', email: x.email})});
+          const dd = await rr.json();
+          $('rmsg').textContent = rr.ok ? 'Temporary password for ' + dd.email + ': ' + dd.temp + '  (shown once; send it to them)' : (dd.error || 'Could not set it.');
+          if (rr.ok) loadResets();
+        });
+        li.append(document.createTextNode(x.email + ' \u00b7 ' + x.at.slice(0, 16).replace('T', ' ') + ' UTC '), b); ul.appendChild(li);
+      });
+    } catch (e) {}
+  }
+  load(); loadResets();
 })();
