@@ -29,6 +29,17 @@ function cleanHolding(h) {
 async function handle(event) {
   const me = await auth.userFromCookie(event.headers.cookie);
   if (event.httpMethod === 'GET') {
+    if (event.query && event.query.members) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      const keys = await auth.kvList('u_');
+      const list = [];
+      for (const k of keys.slice(0, 2000)) {
+        const u = await auth.kvGet(k); if (!u || !u.email) continue;
+        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, paidThrough: u.paidThrough || '', note: u.note || '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
+      }
+      list.sort((a, b) => (b.created > a.created ? 1 : -1));
+      return json(200, { members: list });
+    }
     if (event.query && event.query.resets) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       return json(200, { requests: await auth.getResetRequests() });
@@ -49,6 +60,25 @@ async function handle(event) {
     if (!isFinite(n) || n < 0 || n > 5000) return json(400, { error: 'Pick a number from 0 to 5000.' });
     await usage.setLimit(n);
     return json(200, { limit: n });
+  }
+  if (act === 'ownerMember') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const em = auth.normEmail(b.email);
+    const u = await auth.getUser(em);
+    if (!u) return json(404, { error: 'No account with that email.' });
+    if (typeof b.revoked === 'boolean') {
+      if (b.revoked && (u.owner || em === me.email)) return json(400, { error: 'You cannot turn off the owner account.' });
+      u.revoked = b.revoked; u.revokedAt = b.revoked ? new Date().toISOString() : undefined;
+      if (b.revoked) u.pwChanged = Date.now(); // ends any sign-in that is already open
+    }
+    if (b.paidThrough !== undefined) {
+      const pt = String(b.paidThrough || '');
+      if (pt && !/^\d{4}-\d{2}-\d{2}$/.test(pt)) return json(400, { error: 'Date must look like 2026-12-31.' });
+      u.paidThrough = pt;
+    }
+    if (b.note !== undefined) u.note = String(b.note || '').slice(0, 200);
+    await auth.saveUser(u);
+    return json(200, { ok: true });
   }
   if (act === 'claimOwner') {
     if (!me) return json(401, { error: 'Please sign in first.' });
@@ -141,7 +171,9 @@ async function handle(event) {
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
   const u = await auth.checkLogin(email, pw);
+  if (u === 'revoked') return json(403, { error: 'This account has been turned off. Contact the site owner.' });
   if (!u) return json(401, { error: 'Wrong email or password.' });
+  u.lastLogin = new Date().toISOString(); await auth.saveUser(u);
   return json(200, { user: pub(u) }, await auth.sessionCookie(email));
 }
 

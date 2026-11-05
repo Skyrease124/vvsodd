@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Members | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section">
+  <h1>Members (owner)</h1>
+  <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/members/">Sign in</a> with the owner account.</p>
+  <div id="app" hidden>
+    <div id="sum" class="salebox"></div>
+    <div class="lientools">
+      <input id="q" type="search" placeholder="Search email or note" aria-label="Search members">
+      <select id="f" aria-label="Filter"><option value="all">Everyone</option><option value="active">Active</option><option value="revoked">Turned off</option><option value="paid">Paid up</option><option value="unpaid">Not paid up</option></select>
+      <button class="btn ghost" id="csv" type="button">Download CSV</button>
+    </div>
+    <p class="small muted">&ldquo;Paid through&rdquo; is a date you type in by hand for now. Payments are not connected yet, so nothing here charges anyone. Turning someone off signs them out right away and blocks sign-in until you turn them back on.</p>
+    <p id="msg" class="small" role="status" aria-live="polite"></p>
+    <div id="list"></div>
+  </div>
+</section>
+</main>
+<script src="members.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
