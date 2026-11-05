@@ -1,4 +1,5 @@
 // Member accounts: sign up, sign in, sign out, saved liens.
+import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import * as usage from '../lib/usage.mjs';
 
@@ -28,6 +29,10 @@ function cleanHolding(h) {
 async function handle(event) {
   const me = await auth.userFromCookie(event.headers.cookie);
   if (event.httpMethod === 'GET') {
+    if (event.query && event.query.resets) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      return json(200, { requests: await auth.getResetRequests() });
+    }
     if (event.query && event.query.usage) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       return json(200, { limit: await usage.getLimit(), today: await usage.today(), days: await usage.history(14) });
@@ -44,6 +49,16 @@ async function handle(event) {
     if (!isFinite(n) || n < 0 || n > 5000) return json(400, { error: 'Pick a number from 0 to 5000.' });
     await usage.setLimit(n);
     return json(200, { limit: n });
+  }
+  if (act === 'ownerSetPassword') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const em = auth.normEmail(b.email);
+    const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    const temp = Array.from(crypto.randomBytes(12), x => chars[x % chars.length]).join('');
+    const u = await auth.setPassword(em, temp);
+    if (!u) return json(404, { error: 'No account with that email.' });
+    await auth.clearResetRequest(em);
+    return json(200, { email: em, temp });
   }
   if (act === 'logout') return json(200, { ok: true }, auth.clearCookie());
 
@@ -75,6 +90,29 @@ async function handle(event) {
     return json(200, { saved: me.saved });
   }
 
+  if (act === 'forgot' || act === 'reset') {
+    const ip0 = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+    const now0 = Date.now(), rec0 = (tries.get('r' + ip0) || []).filter(t => now0 - t < 600000);
+    if (rec0.length >= 6) return json(429, { error: 'Too many tries. Please wait 10 minutes.' });
+    rec0.push(now0); tries.set('r' + ip0, rec0);
+    const em = auth.normEmail(b.email);
+    if (!auth.validEmail(em)) return json(400, { error: 'Enter a valid email.' });
+    if (act === 'forgot') {
+      const exists = await auth.getUser(em);
+      if (exists) {
+        const tok = await auth.makeResetToken(em);
+        const base = process.env.SITE_URL || 'https://pricepocketasset.com';
+        const sent = await auth.sendMail(em, 'Reset your PricePocketAsset password', 'Someone asked to reset the password for this email on PricePocketAsset.\n\nOpen this link within 1 hour to choose a new password:\n' + base + '/reset/?email=' + encodeURIComponent(em) + '&token=' + tok + '\n\nIf you did not ask for this, you can ignore this email. Your password has not changed.');
+        if (!sent) await auth.addResetRequest(em);
+        return json(200, { ok: true, mail: !!process.env.RESEND_API_KEY });
+      }
+      return json(200, { ok: true, mail: !!process.env.RESEND_API_KEY });
+    }
+    const pw2 = String(b.password || '');
+    if (pw2.length < 8 || pw2.length > 200) return json(400, { error: 'Password must be 8 to 200 characters.' });
+    if (!(await auth.useResetToken(em, b.token, pw2))) return json(400, { error: 'This reset link is wrong or has expired. Ask for a new one.' });
+    return json(200, { user: pub(await auth.getUser(em)) }, await auth.sessionCookie(em));
+  }
   if (act !== 'login' && act !== 'signup') return json(400, { error: 'Bad request.' });
   const ip = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
   const now = Date.now(), recent = (tries.get(ip) || []).filter(t => now - t < 600000);
