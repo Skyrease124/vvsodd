@@ -28,7 +28,7 @@
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';
       const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      p.append(who, l1, l2); if (user.owner) p.append(l3); p.append(out); wrap.append(b, p);
+      p.append(who, l1, l2); if (user.owner) p.append(l3); else { l3.textContent = 'I am the owner'; p.append(l3); } p.append(out); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
       if (cta) cta.replaceWith(wrap);
