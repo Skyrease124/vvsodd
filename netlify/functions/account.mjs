@@ -50,6 +50,16 @@ async function handle(event) {
     await usage.setLimit(n);
     return json(200, { limit: n });
   }
+  if (act === 'claimOwner') {
+    if (!me) return json(401, { error: 'Please sign in first.' });
+    const ipc = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+    const nowc = Date.now(), recc = (tries.get('c' + ipc) || []).filter(t => nowc - t < 600000);
+    if (recc.length >= 6) return json(429, { error: 'Too many tries. Please wait 10 minutes.' });
+    recc.push(nowc); tries.set('c' + ipc, recc);
+    if (!auth.codeOk(b.code)) return json(400, { error: 'That setup code is not right.' });
+    me.owner = true; await auth.saveUser(me);
+    return json(200, { ok: true });
+  }
   if (act === 'ownerSetPassword') {
     if (!me || !me.owner) return json(403, { error: 'Owner only.' });
     const em = auth.normEmail(b.email);
