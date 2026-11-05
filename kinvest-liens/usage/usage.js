@@ -17,7 +17,11 @@
   async function load() {
     try {
       const r = await fetch(API + '?usage=1');
-      if (!r.ok) { $('gate').hidden = false; return; }
+      if (!r.ok) {
+        const me = await (await fetch(API)).json().catch(() => ({}));
+        if (me && me.user) { $('claim').hidden = false; } else $('gate').hidden = false;
+        return;
+      }
       $('app').hidden = false; draw(await r.json());
     } catch (e) { $('gate').hidden = false; }
   }
@@ -45,5 +49,11 @@
       });
     } catch (e) {}
   }
+  $('claim').addEventListener('submit', async e => {
+    e.preventDefault(); $('cmsg').textContent = 'One moment\u2026';
+    const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'claimOwner', code: $('ccode').value})});
+    const d = await r.json();
+    if (r.ok) location.reload(); else $('cmsg').textContent = d.error || 'Could not do that.';
+  });
   load(); loadResets();
 })();

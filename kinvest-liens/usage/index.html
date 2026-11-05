@@ -19,6 +19,12 @@
 <section class="wrap section narrow">
   <h1>Usage (owner)</h1>
   <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/usage/">Sign in</a> with the owner account.</p>
+  <form id="claim" class="setupform" hidden novalidate>
+    <p>You are signed in, but this account is not marked as the owner yet. Enter your setup code (the same one you use on the /admin/ page).</p>
+    <label>Setup code <input id="ccode" type="text" autocomplete="off" spellcheck="false"></label>
+    <button class="btn" type="submit">Make this account the owner</button>
+    <p id="cmsg" class="small" role="status" aria-live="polite"></p>
+  </form>
   <div id="app" hidden>
     <p class="muted">How many times visitors used the AI on your site. Each question and each screen counts as 1. This is our own count; the real balance with NVIDIA is only on their site.</p>
     <div class="salebox"><h3>Today</h3>

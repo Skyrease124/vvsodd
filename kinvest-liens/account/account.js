@@ -4,12 +4,12 @@
   let mode = 'in';
   function setMode(m) {
     mode = m; $('tabin').className = 'btn' + (m === 'in' ? '' : ' ghost'); $('tabup').className = 'btn' + (m === 'up' ? '' : ' ghost');
-    $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = $('own').hidden = m === 'in';
+    $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in';
     $('pw').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('msg').textContent = '';
   }
   function show(user) {
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
-    $('who').textContent = user.email; $('ownbadge').hidden = !user.owner;
+    $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownlink').hidden = !!user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'Nothing saved yet.'; ul.appendChild(li); }
     user.saved.forEach(s => {
@@ -24,14 +24,14 @@
   async function post(o) { try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return {ok: r.ok, d: await r.json()}; } catch (e) { return {ok: false, d: {error: 'Could not reach the server. Try again.'}}; } }
   $('eye').addEventListener('click', () => {
     const show = $('pw').type === 'password'; $('pw').type = show ? 'text' : 'password';
-    $('eyeon').hidden = show; $('eyeoff').hidden = !show; $('eye').setAttribute('aria-pressed', String(show)); $('eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    $('eyeon').style.display = show ? 'none' : ''; $('eyeoff').style.display = show ? '' : 'none'; $('eye').setAttribute('aria-pressed', String(show)); $('eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
   });
   $('tabin').addEventListener('click', () => setMode('in')); $('tabup').addEventListener('click', () => setMode('up'));
   $('form').addEventListener('submit', async e => {
     e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
-    const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: mode === 'up' ? $('code').value : ''});
+    const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: ''});
     $('go').disabled = false;
-    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').hidden = false; $('eyeoff').hidden = true; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
+    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
   $('logout').addEventListener('click', async () => { await post({action: 'logout'}); show(null); });
   fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
