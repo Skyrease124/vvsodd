@@ -18,6 +18,16 @@ async function put(k, v) {
   await store().setJSON(k, v);
 }
 
+export async function kvList(prefix) {
+  if (process.env.USERS_DIR) {
+    try { return fs.readdirSync(process.env.USERS_DIR).filter(f => f.startsWith(prefix)).map(f => f.replace(/\.json$/, '')); } catch (e) { return []; }
+  }
+  try {
+    const out = []; let r = await store().list({ prefix });
+    out.push(...r.blobs.map(b => b.key));
+    return out;
+  } catch (e) { return []; }
+}
 export const kvGet = get;
 export const kvPut = put;
 export const normEmail = e => String(e || '').trim().toLowerCase();
@@ -58,7 +68,7 @@ export async function createUser(email, password, isOwner) {
   const k = userKey(email);
   if (await get(k)) return null;
   const salt = crypto.randomBytes(16).toString('hex');
-  const u = { email, salt, hash: await hashPw(password, salt), owner: !!isOwner, created: new Date().toISOString(), saved: [] };
+  const u = { email, salt, hash: await hashPw(password, salt), owner: !!isOwner, created: new Date().toISOString(), lastLogin: new Date().toISOString(), saved: [] };
   await put(k, u);
   return u;
 }
@@ -66,6 +76,7 @@ export async function checkLogin(email, password) {
   const u = await get(userKey(email));
   const salt = u ? u.salt : 'x'.repeat(32);
   const h = Buffer.from(await hashPw(password, salt), 'hex'), want = Buffer.from(u ? u.hash : '0'.repeat(128), 'hex');
+  if (u && u.revoked) return 'revoked';
   return u && crypto.timingSafeEqual(h, want) ? u : null;
 }
 export async function sessionCookie(email) {
@@ -81,6 +92,7 @@ export async function userFromCookie(cookieHeader) {
   const u = await get(userKey(p.e));
   // a password change signs out every older session
   if (!u || (p.iat || 0) < (u.pwChanged || 0)) return null;
+  if (u.revoked) return null;
   return markOwner(u);
 }
 export async function saveUser(u) { await put(userKey(u.email), u); }
