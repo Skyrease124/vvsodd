@@ -143,3 +143,10 @@ function markOwner(u) {
   return u;
 }
 export { markOwner };
+
+// Paid members (and the owner) can use the AI tools. paidThrough is a date the owner sets (later: set by payments).
+export function isPaid(u) {
+  if (!u) return false;
+  if (u.owner) return true;
+  return !!u.paidThrough && u.paidThrough >= new Date().toISOString().slice(0, 10);
+}

@@ -6,7 +6,7 @@ window.Screener = {mount(host, county) {
   const larimer = county === 'Larimer';
   host.innerHTML = '<div class="askbox" id="screenbox" hidden><h2>Find liens worth a closer look</h2>' +
     '<p class="small muted">Tell us what you want (or just press Screen). We rank ' + (larimer ? 'the advertised parcels' : county === 'Pinal' ? 'the liens on the Treasurer\u2019s list' : 'the county-held liens') + ' with fixed, public rules: how much county value sits behind the tax debt, ' + (larimer ? 'size of the debt, and red flags' : 'what type of property it is, size, and red flags') + '. The AI only reads your wording and explains the numbers. Research help, not advice.</p>' +
-    '<p id="screengate" class="notice" hidden><b>Free account needed.</b> <a href="' + base + 'account/">Sign in or create an account</a> to use the screener and save liens.</p>' +
+    '<p id="screengate" class="notice" hidden><b>\uD83D\uDD12 Paid members only.</b> <a href="' + base + 'login/">Sign in</a> or <a href="' + base + 'account/?mode=up">create a free account</a>. The AI screener is for paid members ($5.50 a week).</p>' +
     '<div class="askchips" id="screenchips"></div>' +
     '<form id="screenform"><input id="screenq" type="text" maxlength="300" placeholder="' + (larimer ? 'Example: tax owed under $2,000, county value over $100,000' : 'Example: vacant land under $1,500 debt, at least 0.2 acres') + '" aria-label="What are you looking for?" style="width:100%;box-sizing:border-box;padding:10px;font:inherit;border:1px solid var(--line);border-radius:8px;margin-bottom:8px"><button class="btn" id="screengo" type="submit">Screen</button></form>' +
     '<div id="screenout" hidden role="status"></div>' +
@@ -15,7 +15,8 @@ window.Screener = {mount(host, county) {
   const box = $('screenbox'), gate = $('screengate'), form = $('screenform'), chips = $('screenchips');
   fetch('/.netlify/functions/screen').then(r => r.ok ? r.json() : null).then(d => {
     if (!d || !d.enabled) return;
-    box.hidden = false; gate.hidden = !!d.signedIn; form.hidden = chips.hidden = !d.signedIn;
+    box.hidden = false; const ok = !!d.signedIn && !!d.paid; gate.hidden = ok; form.hidden = chips.hidden = !ok;
+    if (d.signedIn && !d.paid) { gate.innerHTML = '<b>\uD83D\uDD12 Paid members only.</b> Your account is free, so the AI screener is locked. Paid members ($5.50 a week) can use it. <a href="' + base + 'account/">See my plan</a>'; }
   }).catch(() => {});
   const input = $('screenq'), out = $('screenout'), go = $('screengo');
   (larimer ? [['Best cushion', ''], ['Smallest tax owed', 'smallest tax owed'], ['Highest county value', 'highest county value'], ['Under $2,000 owed, worth over $100,000', 'tax owed under $2,000 and county value over $100,000']] : [['Best cushion', ''], ['Cheapest vacant lots', 'cheapest vacant lots'], ['Vacant, 0.25 acres or more', 'vacant land of at least a quarter acre, tax debt under $2,000'], ['Highest land value', 'highest county land value']]).forEach(([t, w]) => {
@@ -56,6 +57,7 @@ window.Screener = {mount(host, county) {
     try {
       const r = await fetch('/.netlify/functions/screen', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({county, wish: input.value})});
       const d = await r.json();
+      if (r.status === 402) { gate.hidden = false; gate.innerHTML = '<b>\uD83D\uDD12 Paid members only.</b> The AI screener is locked for free accounts. <a href="' + base + 'account/">See my plan</a>'; form.hidden = chips.hidden = true; out.hidden = true; return; }
       if (r.status === 401) { gate.hidden = false; form.hidden = chips.hidden = true; out.hidden = true; return; }
       if (!r.ok) { out.className = 'askout err'; out.textContent = d.error || 'Something went wrong.'; return; }
       out.className = 'askout ok'; out.textContent = '';
