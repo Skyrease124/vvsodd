@@ -130,9 +130,10 @@ const json = (code, body) => ({statusCode: code, headers: {'Content-Type': 'appl
 async function handle(event) {
   const cfg = await keystore.getConfig();
   const me = await auth.userFromCookie((event.headers || {}).cookie);
-  if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg, signedIn: !!me});
+  if (event.httpMethod === 'GET') return json(200, {enabled: !!cfg, signedIn: !!me, paid: auth.isPaid(me)});
   if (event.httpMethod !== 'POST') return json(405, {error: 'Use POST.'});
   if (!me) return json(401, {error: 'Please sign in to use the screener.', needLogin: true});
+  if (!auth.isPaid(me)) return json(402, {error: 'The AI screener is for paid members.', needPaid: true});
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
   const county = String(body.county || '');
   const wish = String(body.wish || '').replace(/\s+/g, ' ').trim();

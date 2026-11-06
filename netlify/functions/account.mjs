@@ -5,7 +5,7 @@ import * as usage from '../lib/usage.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
-const pub = u => ({ email: u.email, owner: !!u.owner, saved: u.saved || [], portfolio: u.portfolio || [] });
+const pub = u => ({ email: u.email, owner: !!u.owner, paidThrough: u.paidThrough || '', saved: u.saved || [], portfolio: u.portfolio || [] });
 
 const STATUS = ['open', 'redeemed', 'foreclosure', 'other'];
 const numOrNull = (v, lo, hi) => { if (v === '' || v == null) return null; const n = Number(v); return isFinite(n) && n >= lo && n <= hi ? n : undefined; };
