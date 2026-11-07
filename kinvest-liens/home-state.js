@@ -74,7 +74,7 @@
         else note.textContent = 'That location is not in a US state we cover. Choose your state from the list.';
       } catch (e) { note.textContent = 'Could not look that up. Choose your state from the list.'; }
       loc.disabled = false;
-    }, err => { note.textContent = err && err.code === 1 ? 'Location is off for this site. You can choose your state from the list instead.' : 'Could not get your location. Choose your state from the list.'; loc.disabled = false; }, { timeout: 12000, maximumAge: 600000 });
+    }, err => { note.textContent = err && err.code === 1 ? 'Your phone blocked location for this page. If you opened the site inside another app, open it in Safari or Chrome. On iPhone: Settings, Privacy & Security, Location Services, Safari Websites, While Using. Or just choose your state from the list above.' : 'Could not get your location. Choose your state from the list.'; loc.disabled = false; }, { timeout: 12000, maximumAge: 600000 });
   });
 
   (async () => {
