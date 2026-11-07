@@ -58,6 +58,7 @@
   }
 
   function add(q) {
+    $('chat').textContent = ''; // one answer at a time
     const turn = mk('section', 'aiturn');
     turn.appendChild(mk('p', 'aiq', 'You: ' + q));
     const out = mk('div', 'aiout'); out.textContent = 'Searching…'; turn.appendChild(out);
