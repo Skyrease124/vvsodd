@@ -20,8 +20,9 @@
     const h = mk('div', 'scardh'); h.append(mk('b', '', m.email + (m.owner ? ' (owner)' : '')), mk('span', 'sscore', m.revoked ? 'Turned off' : isPaid(m) ? 'Paid up' : 'Active'));
     c.appendChild(h);
     const dl = mk('dl', 'stfacts');
-    [['Joined', fmt(m.created)], ['Last sign-in', fmt(m.lastLogin)], ['Saved liens', m.saved], ['Portfolio liens', m.portfolio], ['Paid through', m.paidThrough || 'not set']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', String(v))); dl.appendChild(d); });
+    [['Joined', fmt(m.created)], ['Last sign-in', fmt(m.lastLogin)], ['Saved liens', m.saved], ['Portfolio liens', m.portfolio], ['Paid through', m.paidThrough || 'not set'], ['Stripe subscription', m.sub || 'none']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', String(v))); dl.appendChild(d); });
     c.appendChild(dl);
+    if (m.alert) c.appendChild(mk('p', 'small', '\u26A0 Billing alert: ' + ({payment_failed: 'last payment failed', refunded: 'a payment was refunded', dispute: 'a customer opened a dispute', fraud_warning: 'Stripe raised an early fraud warning'}[m.alert] || m.alert)));
     if (m.note) c.appendChild(mk('p', 'small', 'Note: ' + m.note));
     const act = mk('div', 'sact');
     if (!m.owner) {

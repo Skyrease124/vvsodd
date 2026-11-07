@@ -2,10 +2,11 @@
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import * as usage from '../lib/usage.mjs';
+import * as S from '../lib/stripe.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
-const pub = u => ({ email: u.email, owner: !!u.owner, paidThrough: u.paidThrough || '', saved: u.saved || [], portfolio: u.portfolio || [] });
+const pub = u => ({ email: u.email, owner: !!u.owner, paidThrough: u.paidThrough || '', sub: u.sub ? { status: u.sub.status, periodEnd: u.sub.periodEnd, cancelAtPeriodEnd: !!u.sub.cancelAtPeriodEnd } : null, hasCustomer: !!u.stripeCustomerId, saved: u.saved || [], portfolio: u.portfolio || [] });
 
 const STATUS = ['open', 'redeemed', 'foreclosure', 'other'];
 const numOrNull = (v, lo, hi) => { if (v === '' || v == null) return null; const n = Number(v); return isFinite(n) && n >= lo && n <= hi ? n : undefined; };
@@ -29,13 +30,19 @@ function cleanHolding(h) {
 async function handle(event) {
   const me = await auth.userFromCookie(event.headers.cookie);
   if (event.httpMethod === 'GET') {
+    if (event.query && event.query.stripe) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      const c = await S.getConfig();
+      return json(200, { configured: !!c, mode: c ? c.mode : null, source: c ? c.source : null, hint: c ? '\u2026' + c.secretKey.slice(-4) : '', webhook: !!(c && c.webhookSecret), webhookUrl: S.siteUrl() + '/.netlify/functions/stripe-webhook',
+        events: ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted', 'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created', 'radar.early_fraud_warning.created'] });
+    }
     if (event.query && event.query.members) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       const keys = await auth.kvList('u_');
       const list = [];
       for (const k of keys.slice(0, 2000)) {
         const u = await auth.kvGet(k); if (!u || !u.email) continue;
-        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, paidThrough: u.paidThrough || '', note: u.note || '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
+        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, paidThrough: u.paidThrough || '', note: u.note || '', sub: u.sub ? u.sub.status + (u.sub.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : '', alert: u.billingAlert ? u.billingAlert.type : '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
       }
       list.sort((a, b) => (b.created > a.created ? 1 : -1));
       return json(200, { members: list });
@@ -79,6 +86,27 @@ async function handle(event) {
     if (b.note !== undefined) u.note = String(b.note || '').slice(0, 200);
     await auth.saveUser(u);
     return json(200, { ok: true });
+  }
+  if (act === 'saveStripe' || act === 'removeStripe' || act === 'ensurePlan') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    if (act === 'removeStripe') { await S.eraseConfig(); return json(200, { ok: true, message: 'Stripe keys removed. Online payment is off.' }); }
+    if (act === 'ensurePlan') {
+      const c = await S.getConfig(); if (!c) return json(400, { error: 'Save your Stripe key first.' });
+      try { const r = await S.ensurePlan(S.client(c)); return json(200, { ok: true, message: 'The $5.50/week plan is ready (' + c.mode + ' mode). Customer portal: ' + r.portal + '.' }); }
+      catch (e) { return json(502, { error: 'Stripe refused: ' + String((e && e.message) || e).slice(0, 200) }); }
+    }
+    const secretKey = String(b.secretKey || '').trim(), webhookSecret = String(b.webhookSecret || '').trim();
+    const old = (await S.getConfig()) || {};
+    if (secretKey && !/^(sk|rk)_(test|live)_[A-Za-z0-9]{16,}$/.test(secretKey)) return json(400, { error: 'That does not look like a Stripe key. It starts with rk_test_, rk_live_, sk_test_ or sk_live_.' });
+    if (webhookSecret && !/^whsec_[A-Za-z0-9]{16,}$/.test(webhookSecret)) return json(400, { error: 'The webhook signing secret starts with whsec_.' });
+    const next = { secretKey: secretKey || old.secretKey || '', webhookSecret: webhookSecret || old.webhookSecret || '' };
+    if (!next.secretKey) return json(400, { error: 'Paste your Stripe key.' });
+    if (secretKey) {
+      try { await S.client({ secretKey }).prices.list({ limit: 1 }); }
+      catch (e) { return json(400, { error: 'Stripe did not accept that key (' + String((e && e.message) || e).slice(0, 120) + '). A restricted key needs read access to Prices.' }); }
+    }
+    await S.saveConfig(next);
+    return json(200, { ok: true, message: 'Saved.' });
   }
   if (act === 'claimOwner') {
     if (!me) return json(401, { error: 'Please sign in first.' });
