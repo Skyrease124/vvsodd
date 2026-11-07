@@ -229,7 +229,7 @@ async function handle(event) {
   } catch (e) { failed = true; console.log('ai answer failed', e && e.detail); }
   await usage.record('ai', !failed && (parsed || !!answer));
   if (failed && !res) return json(502, { error: 'The AI had a problem. Please try again.', detail: 'answer' });
-  return json(200, { answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task, total: res ? res.total : null, results: res ? res.rows : [], noData: !!(res && res.noData), aiNote: !failed, understood: parsed });
+  return json(200, { answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task, sortBy: it.sortBy || null, scope: it.scope, total: res ? res.total : null, results: res ? res.rows : [], noData: !!(res && res.noData), aiNote: !failed, understood: parsed });
 }
 
 async function toEvent(req, context) {

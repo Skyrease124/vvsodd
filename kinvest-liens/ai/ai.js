@@ -7,26 +7,61 @@
   const by = {}; STATES.forEach(s => by[s.a] = s);
   const selected = new Set();
 
+  let svgEl = null, badgeLayer = null;
+  const NS = 'http://www.w3.org/2000/svg';
+  const sn = (t, at) => { const e = document.createElementNS(NS, t); for (const k in at) e.setAttribute(k, at[k]); return e; };
+  const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); const c = k => Math.max(0, Math.min(255, Math.round(((n >> k) & 255) * f))); return 'rgb(' + c(16) + ',' + c(8) + ',' + c(0) + ')'; };
   function drawMap() {
-    const NS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 975 610'); svg.setAttribute('role', 'group'); svg.setAttribute('aria-label', 'Map of US states. Tap states to focus the AI.');
+    const svg = sn('svg', {viewBox: '30 55 915 520', role: 'group', 'aria-label': 'Map of US states. Tap states to focus the AI.'}); svgEl = svg;
+    const defs = sn('defs', {});
+    Object.keys(COL).forEach((k, i) => { const g = sn('linearGradient', {id: 'ag' + i, x1: '0', y1: '0', x2: '0', y2: '1'}); g.appendChild(sn('stop', {offset: '0', 'stop-color': shade(COL[k], 1.22)})); g.appendChild(sn('stop', {offset: '1', 'stop-color': shade(COL[k], 0.78)})); defs.appendChild(g); });
+    svg.appendChild(defs);
+    const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = 'url(#ag' + i + ')');
+    let idx = 0;
     Object.keys(MAP_PATHS).forEach(a => {
       const s = by[a]; if (!s) return;
-      const p = document.createElementNS(NS, 'path'); p.setAttribute('d', MAP_PATHS[a]); p.setAttribute('class', 'aist'); p.style.fill = COL[s.sys] || '#94a3b8';
-      p.setAttribute('tabindex', '0'); p.setAttribute('role', 'button'); p.setAttribute('aria-pressed', 'false'); p.setAttribute('aria-label', s.n);
+      const p = sn('path', {d: MAP_PATHS[a], class: 'aist', style: 'fill:' + (GRAD[s.sys] || COL[s.sys] || '#94a3b8') + ';--i:' + (idx++), tabindex: '0', role: 'button', 'aria-pressed': 'false', 'aria-label': s.n, 'data-a': a});
       const toggle = () => { if (selected.has(a)) selected.delete(a); else selected.add(a); p.classList.toggle('on', selected.has(a)); p.setAttribute('aria-pressed', String(selected.has(a))); label(); };
       p.addEventListener('click', toggle); p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
-      const t = document.createElementNS(NS, 'title'); t.textContent = s.n + ': ' + s.sys; p.appendChild(t);
+      const t = sn('title', {}); t.textContent = s.n + ': ' + s.sys; p.appendChild(t);
       svg.appendChild(p);
     });
+    // pulsing dots where real lien lists exist
+    (typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY : []).forEach(x => {
+      const pos = typeof MAP_LABELS !== 'undefined' && MAP_LABELS[x.state]; if (!pos) return;
+      const g = sn('g', {class: 'live', transform: 'translate(' + pos[0] + ',' + (pos[1] - 16) + ')', 'pointer-events': 'none'});
+      g.appendChild(sn('circle', {class: 'ring', r: 7})); g.appendChild(sn('circle', {class: 'ring r2', r: 7})); g.appendChild(sn('circle', {class: 'core', r: 6}));
+      svg.appendChild(g);
+    });
+    badgeLayer = sn('g', {class: 'badges', 'pointer-events': 'none'}); svg.appendChild(badgeLayer);
     $('aimap').appendChild(svg);
   }
   function label() {
     const l = [...selected].map(a => by[a].n);
-    $('aisel').textContent = l.length ? 'Focused on: ' + l.join(', ') : 'All states';
-    $('aiclear').hidden = !l.length;
+    $('aisel').textContent = l.length ? 'Focused: ' + l.join(', ') : 'Tap states to focus, or just ask';
+    $('aiclear').hidden = !l.length && !document.querySelector('.aist.hit');
   }
-  $('aiclear').addEventListener('click', () => { selected.clear(); document.querySelectorAll('.aist.on').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); }); label(); });
+  // The map reacts to answers: states in the answer glow, the rest dim, and gold badges show rank or count.
+  function react(d) {
+    clearReact();
+    const codes = []; const counts = {};
+    if (d.kind === 'states' || d.kind === 'liens') (d.results || []).forEach(r => { if (r.state) { if (!codes.includes(r.state)) codes.push(r.state); counts[r.state] = (counts[r.state] || 0) + 1; } });
+    else (d.scope || []).forEach(c => codes.push(c));
+    if (!codes.length) return;
+    document.querySelectorAll('.aist').forEach(p => { const code = p.getAttribute('data-a'); p.classList.toggle('hit', codes.includes(code)); p.classList.toggle('dim', !codes.includes(code)); });
+    const ranked = d.kind === 'states' && ['rate', 'months'].includes(d.sortBy);
+    codes.forEach((c, i) => {
+      let pos = typeof MAP_LABELS !== 'undefined' && MAP_LABELS[c];
+      if (!pos) { const el = document.querySelector('.aist[data-a="' + c + '"]'); if (el) { const bb = el.getBBox(); pos = [bb.x + bb.width / 2, bb.y + bb.height / 2]; } }
+      if (!pos) return;
+      const g = sn('g', {class: 'badge', transform: 'translate(' + pos[0] + ',' + pos[1] + ')', style: '--d:' + (i * 90) + 'ms'});
+      g.appendChild(sn('circle', {r: 15})); const t = sn('text', {y: 6}); t.textContent = ranked ? String(i + 1) : (d.kind === 'liens' && counts[c] > 1 ? '\u00d7' + counts[c] : '\u2713'); g.appendChild(t);
+      badgeLayer.appendChild(g);
+    });
+    $('aiclear').hidden = false;
+  }
+  function clearReact() { document.querySelectorAll('.aist.hit,.aist.dim').forEach(p => p.classList.remove('hit', 'dim')); if (badgeLayer) badgeLayer.textContent = ''; }
+  $('aiclear').addEventListener('click', () => { selected.clear(); document.querySelectorAll('.aist.on').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); }); clearReact(); $('chat').textContent = ''; label(); });
 
   function statesTable(rows) {
     const wrap = mk('div', 'tablewrap'), t = mk('table', 'liens'), hr = t.createTHead().insertRow();
@@ -58,7 +93,7 @@
   }
 
   function add(q) {
-    $('chat').textContent = ''; // one answer at a time
+    $('chat').textContent = ''; clearReact(); // one answer at a time
     const turn = mk('section', 'aiturn');
     turn.appendChild(mk('p', 'aiq', 'You: ' + q));
     const out = mk('div', 'aiout'); out.textContent = 'Searching…'; turn.appendChild(out);
@@ -76,17 +111,17 @@
       if (!r.ok) { out.className = 'aiout err'; out.textContent = d.error || 'Something went wrong. Please try again.'; }
       else {
         out.appendChild(mk('p', '', d.answer));
-        out.appendChild(mk('p', 'small muted', 'What I searched: ' + d.searched + (d.understood ? '' : ' (I could not fully read your wording, so I used a broad search)')));
+        out.appendChild(mk('p', 'small muted', d.searched + (d.understood ? '' : ' (I could not fully read your wording, so I used a broad search)')));
         if (d.kind === 'states' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' states:')); out.appendChild(statesTable(d.results)); }
         else if (d.kind === 'liens' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' liens:')); out.appendChild(lienCards(d.results)); }
-        out.appendChild(mk('p', 'small muted', 'Automated answer from our own data. Educational only, not advice. Verify with the county.'));
+        react(d);
       }
     } catch (e) { out.className = 'aiout err'; out.textContent = 'Could not reach PricePocket AI. Please try again.'; }
     $('aigo').disabled = false;
   }
   $('aiform').addEventListener('submit', e => { e.preventDefault(); ask($('aiq').value); });
-  [['Highest interest', 'Which states pay the highest interest?'], ['Shortest redemption', 'Which states have the shortest redemption period?'], ['Cheapest liens', 'List the cheapest liens with the most land value behind them'], ['Most valuable lots', 'Most valuable lots with under $2,000 tax owed'], ['Lien states, bid-down', 'Tax lien certificate states that use bid-down bidding']].forEach(([t, q]) => {
-    const b = mk('button', 'chipbtn', t); b.type = 'button'; b.addEventListener('click', () => ask(q)); $('aichips').appendChild(b);
+  [['Highest interest', 'Which states pay the highest interest?'], ['Shortest redemption', 'Which states have the shortest redemption period?'], ['Cheapest liens', 'List the cheapest liens with the most land value behind them'], ['Most valuable lots', 'Most valuable lots with under $2,000 tax owed']].forEach(([t, q]) => {
+    const b = mk('button', 'aichip', t); b.type = 'button'; b.addEventListener('click', () => ask(q)); $('aichips').appendChild(b);
   });
 
   (async () => {
@@ -94,7 +129,7 @@
     const g = $('gate');
     if (!d || !d.enabled) { g.hidden = false; g.textContent = 'PricePocket AI is not switched on yet.'; return; }
     if (!d.signedIn) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> <a href="/login/?next=/ai/">Sign in</a> or <a href="/account/?mode=up">create an account</a>. PricePocket AI is for Pro members ($5.50 a week).'; return; }
-    if (!d.paid) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> Your account is free, so PricePocket AI is locked. Pro members ($5.50 a week) can use it. <a href="/account/">See my plan</a>'; return; }
+    if (!d.paid) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> PricePocket AI is for Pro members ($5.50 a week). <a href="/account/">See my plan</a>'; return; }
     $('app').hidden = false; drawMap();
   })();
 })();
