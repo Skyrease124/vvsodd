@@ -36,6 +36,8 @@
       const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members (owner)';
       const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup (owner)';
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';
+      const isPro = user.owner || (user.paidThrough && user.paidThrough >= today);
+      let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/ai/'; aiLink.textContent = 'PricePocket AI'; }
       let ms = null;
       if (user.hasCustomer) {
         ms = document.createElement('button'); ms.type = 'button'; ms.textContent = 'Manage subscription';
@@ -47,7 +49,7 @@
       }
       const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      p.append(who, l1, l2); if (ms) p.append(ms); if (user.owner) p.append(l4, l3, l5); p.append(out); wrap.append(b, p);
+      p.append(who); if (aiLink) p.append(aiLink); p.append(l1, l2); if (ms) p.append(ms); if (user.owner) p.append(l4, l3, l5); p.append(out); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
       if (cta) cta.replaceWith(wrap);

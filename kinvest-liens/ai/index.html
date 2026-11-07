@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>PricePocket AI | PricePocketPro</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a><a href="../account/">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section">
+  <h1>PricePocket AI</h1>
+  <p class="muted">Ask across all states at once. Compare rules, rank states, or list liens, like the cheapest or the most valuable. It searches our own data and shows the rows it found next to its answer.</p>
+  <p id="gate" class="notice" hidden></p>
+  <div id="app" hidden>
+    <div class="salebox aimapbox">
+      <h3>Pick states to focus on <span class="small muted">(optional)</span></h3>
+      <p class="small muted">Tap states on the map to focus the AI on them. Leave it empty to search every state. Colors show the system type.</p>
+      <div id="aimap" class="aimap"></div>
+      <p class="small"><span id="aisel">All states</span> <button class="btn small ghost" id="aiclear" type="button" hidden>Clear</button></p>
+    </div>
+    <div id="chat" class="aichat" aria-live="polite"></div>
+    <div class="askbox aibox">
+      <h2>Ask PricePocket AI</h2>
+      <div id="aichips" class="askchips"></div>
+      <form id="aiform" class="askform" novalidate>
+        <label for="aiq">Your question</label>
+        <div class="askrow"><input id="aiq" type="text" maxlength="300" autocomplete="off" placeholder="e.g. Which states pay the highest interest?"><button class="btn" id="aigo" type="submit">Ask</button></div>
+      </form>
+      <p class="small muted">Educational only. Not legal, tax or investment advice. It can be wrong. Verify everything with the county before you bid. Liens are listed only for Palm Beach (FL), Larimer (CO) and Pinal (AZ) so far.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="../liens/states/states.js"></script>
+<script src="../map-data.js"></script>
+<script src="../liens/states/liens-data.js"></script>
+<script src="../liens/states/lien-ui.js"></script>
+<script src="ai.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
