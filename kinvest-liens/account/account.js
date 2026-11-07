@@ -24,8 +24,9 @@
     $('planbtns').hidden = false;
     $('upgrade').hidden = !!(subOn && !user.sub.cancelAtPeriodEnd);
     $('manage').hidden = !user.hasCustomer;
-    if (user.sub && user.sub.cancelAtPeriodEnd && user.sub.periodEnd) $('planmsg').textContent = 'Your membership is set to end on ' + user.sub.periodEnd + '. You keep access until then.';
-    else if (user.sub && user.sub.status === 'past_due') $('planmsg').textContent = 'Your last payment did not go through. Use Manage billing to update your card.';
+    if (user.sub && user.sub.status === 'active' && !user.sub.cancelAtPeriodEnd && user.sub.periodEnd) $('planmsg').textContent = 'Your membership renews on ' + user.sub.periodEnd + ' for $5.50 a week. Tap Manage subscription to update your card, see invoices, or cancel anytime.';
+    if (user.sub && user.sub.cancelAtPeriodEnd && user.sub.periodEnd) $('planmsg').textContent = 'Your membership is set to end on ' + user.sub.periodEnd + '. You keep access until then. Tap Manage subscription if you change your mind.';
+    else if (user.sub && user.sub.status === 'past_due') $('planmsg').textContent = 'Your last payment did not go through. Tap Manage subscription to update your card.';
     if (billing.mode === 'test') $('planmsg').textContent += ' (Test mode: no real money moves. Use card 4242 4242 4242 4242.)';
   }
   fetch('/.netlify/functions/billing').then(r => r.json()).then(b => { billing = b; if (window.__ppUser) planButtons(window.__ppUser); }).catch(() => {});
