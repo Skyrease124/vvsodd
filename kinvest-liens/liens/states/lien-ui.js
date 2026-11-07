@@ -56,6 +56,32 @@ const LienMap = {
     }
   }
 };
+// Favorites: a star next to the other lien buttons. Signed-in members keep favorites on their account.
+const LienSave = {
+  user: undefined, set: new Set(), ready: null,
+  key: l => (l.county || '') + '|' + l.parcel,
+  load() {
+    if (!this.ready) this.ready = fetch('/.netlify/functions/account').then(r => r.json()).then(d => { this.user = d.user || null; ((d.user && d.user.saved) || []).forEach(x => this.set.add(this.key(x))); }).catch(() => { this.user = null; });
+    return this.ready;
+  },
+  button(l, cls) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = cls || 'btn small ghost';
+    const paint = () => { const on = this.set.has(this.key(l)); b.textContent = on ? '\u2605 Favorite' : '\u2606 Favorite'; b.setAttribute('aria-pressed', String(on)); b.classList.toggle('faved', on); };
+    paint(); this.load().then(paint);
+    b.addEventListener('click', async () => {
+      await this.load();
+      if (!this.user) { location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); return; }
+      const on = this.set.has(this.key(l)); b.disabled = true;
+      try {
+        const body = on ? {action: 'unsave', parcel: l.parcel, county: l.county} : {action: 'save', parcel: l.parcel, county: l.county, use: l.use, face: l.amount != null ? l.amount : l.face, market: l.market, acres: l.acres, certList: l.certList || (l.cert ? [l.cert] : []), saleDate: l.saleDate};
+        const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+        if (r.ok) { if (on) this.set.delete(this.key(l)); else this.set.add(this.key(l)); } else { const d = await r.json().catch(() => ({})); alert(d.error || 'Could not save. Please try again.'); }
+      } catch (e) { alert('Could not save. Please try again.'); }
+      b.disabled = false; paint();
+    });
+    return b;
+  }
+};
 const LienBuy = {
   button(l, cls) {
     const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.county]; if (!g) return null;
@@ -84,6 +110,7 @@ const LienBuy = {
     if (g.record) { const a = mk('a', 'btn', g.record.label); a.href = g.record.url(l.parcel); a.target = '_blank'; a.rel = 'noopener noreferrer'; acts.appendChild(a); }
     g.links.forEach((k, i) => { const a = mk('a', 'btn ghost', k[0]); a.href = k[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; acts.appendChild(a); });
     if (g.phone) { const a = mk('a', 'btn ghost', 'Call ' + g.office + ' ' + g.phone); a.href = 'tel:' + g.phone.replace(/[^0-9]/g, ''); acts.appendChild(a); }
+    acts.appendChild(LienSave.button(l, 'btn ghost'));
     dlg.appendChild(acts);
     dlg.appendChild(mk('p', 'small muted', 'We can\u2019t buy for you and can\u2019t see whether a lien is still available. The county is the only place to check and to buy. Educational only; not legal, tax or investment advice. Verify everything with the county first.'));
     if (!dlg.open) dlg.showModal();
@@ -149,7 +176,7 @@ const LienUI = {
         const mc = r.insertCell();
         const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
         cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator';
-        cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); }
+        cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); } const fv = LienSave.button(l, 'btn small ghost'); fv.style.marginLeft = '6px'; cc.appendChild(fv);
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);

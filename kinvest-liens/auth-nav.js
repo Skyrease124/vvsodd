@@ -1,4 +1,4 @@
-// One account menu on every page. Signed out: "Sign in" button. Signed in: "My account" menu (Portfolio, Saved liens, Sign out),
+// One account menu on every page. Signed out: "Sign in" button. Signed in: "My account" menu (Portfolio, My favorites, Sign out),
 // and the newsletter / sign-up prompts are hidden.
 (function () {
   const API = '/.netlify/functions/account';
@@ -32,7 +32,7 @@
       const p = document.createElement('div'); p.className = 'pp-panel'; p.hidden = true;
       const who = document.createElement('div'); who.className = 'pp-who'; who.textContent = user.email + (user.owner ? ' (owner)' : '');
       const l1 = document.createElement('a'); l1.href = '/portfolio/'; l1.textContent = 'My portfolio';
-      const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'Saved liens';
+      const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
       const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members (owner)';
       const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup (owner)';
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';

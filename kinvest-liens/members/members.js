@@ -20,7 +20,7 @@
     const h = mk('div', 'scardh'); h.append(mk('b', '', m.email + (m.owner ? ' (owner)' : '')), mk('span', 'sscore', m.revoked ? 'Turned off' : isPaid(m) ? 'Paid up' : 'Active'));
     c.appendChild(h);
     const dl = mk('dl', 'stfacts');
-    [['Joined', fmt(m.created)], ['Last sign-in', fmt(m.lastLogin)], ['Saved liens', m.saved], ['Portfolio liens', m.portfolio], ['Paid through', m.paidThrough || 'not set'], ['Stripe subscription', m.sub || 'none']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', String(v))); dl.appendChild(d); });
+    [['Joined', fmt(m.created)], ['Last sign-in', fmt(m.lastLogin)], ['Favorites', m.saved], ['Portfolio liens', m.portfolio], ['Paid through', m.paidThrough || 'not set'], ['Stripe subscription', m.sub || 'none']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', String(v))); dl.appendChild(d); });
     c.appendChild(dl);
     if (m.alert) c.appendChild(mk('p', 'small', '\u26A0 Billing alert: ' + ({payment_failed: 'last payment failed', refunded: 'a payment was refunded', dispute: 'a customer opened a dispute', fraud_warning: 'Stripe raised an early fraud warning'}[m.alert] || m.alert)));
     if (m.note) c.appendChild(mk('p', 'small', 'Note: ' + m.note));
@@ -67,7 +67,7 @@
   $('q').addEventListener('input', render); $('f').addEventListener('change', render);
   $('csv').addEventListener('click', () => {
     const q = v => { let s = String(v == null ? '' : v); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
-    const rows = [['Email', 'Joined', 'Last sign-in', 'Status', 'Paid through', 'Saved liens', 'Portfolio liens', 'Note']].concat(all.map(m => [m.email, fmt(m.created), m.lastLogin ? fmt(m.lastLogin) : '', m.revoked ? 'turned off' : 'active', m.paidThrough, m.saved, m.portfolio, m.note]));
+    const rows = [['Email', 'Joined', 'Last sign-in', 'Status', 'Paid through', 'Favorites', 'Portfolio liens', 'Note']].concat(all.map(m => [m.email, fmt(m.created), m.lastLogin ? fmt(m.lastLogin) : '', m.revoked ? 'turned off' : 'active', m.paidThrough, m.saved, m.portfolio, m.note]));
     const a = mk('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], {type: 'text/csv'})); a.download = 'members.csv'; a.click();
   });
   load();
