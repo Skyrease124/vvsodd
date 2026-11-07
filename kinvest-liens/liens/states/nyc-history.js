@@ -1,11 +1,30 @@
 // New York City tax lien sale lists, summarized from the Department of Finance open data file (Tax_Lien_Sale_Lists, downloaded 2026-11-07).
 // Only counts are kept: no owner names, no addresses, no amounts (the file has none). Properties are counted once per list by borough/block/lot.
 const NYC_HISTORY = {
- "source": "NYC Department of Finance, Tax Lien Sale Lists (open data CSV downloaded 2026-11-07)",
+ "source": "NYC Department of Finance: Tax Lien Sale Lists open data file (downloaded 2026-11-07) and the official Final Sale list PDFs for 2019, 2021 and 2025",
  "rows": 264142,
  "properties": 56396,
- "reachedSale": 9763,
- "note": "Counts of properties (borough/block/lot) on each monthly notice list. The file has no dollar amounts or owner names. It covers four yearly cycles: 2019, 2020, 2021 and 2025. 2020 has no Final Sale list in the file, and the 2021 lists do not fill in the water-debt flag.",
+ "reachedSale": 9766,
+ "note": "Counts of properties (borough/block/lot) on each monthly notice list. The file has no dollar amounts or owner names. It covers four yearly cycles: 2019, 2020, 2021 and 2025. The Final Sale lists are the combined regular and subsequent sales, labeled NYCTL (the NYC Tax Lien Trust). 2020 has no Final Sale list in the file, and the 2021 lists do not fill in the water-debt flag.",
+ "sale2025": "The 2025 lien sale was held on June 3, 2025 (NYC Department of Finance).",
+ "links": [
+  [
+   "NYC Department of Finance: lien sales",
+   "https://www.nyc.gov/site/finance/property/property-lien-sales.page"
+  ],
+  [
+   "2025 Final Sale list (PDF)",
+   "https://www.nyc.gov/assets/finance/downloads/pdf/lien_sale/2025/2025-final-sale.pdf"
+  ],
+  [
+   "2021 Final Sale list (PDF)",
+   "https://www.nyc.gov/assets/finance/downloads/pdf/lien_sale/2021/2021-final-sale.pdf"
+  ],
+  [
+   "2019 Final Sale list (PDF)",
+   "https://www.nyc.gov/assets/finance/downloads/pdf/lien_sale/2019/2019-final-sale.pdf"
+  ]
+ ],
  "boroughNames": [
   "Manhattan",
   "Bronx",
@@ -21,9 +40,9 @@ const NYC_HISTORY = {
     "60": 17386,
     "30": 14389,
     "10": 11967,
-    "sale": 3721
+    "sale": 3724
    },
-   "sameCycleSale": 3721,
+   "sameCycleSale": 3724,
    "boroughs": {
     "90": {
      "Manhattan": 1697,
@@ -33,10 +52,10 @@ const NYC_HISTORY = {
      "Staten Island": 1749
     },
     "sale": {
-     "Manhattan": 316,
-     "Bronx": 514,
+     "Manhattan": 317,
+     "Bronx": 515,
      "Brooklyn": 1488,
-     "Queens": 1050,
+     "Queens": 1051,
      "Staten Island": 353
     }
    },
@@ -52,8 +71,8 @@ const NYC_HISTORY = {
     },
     "sale": {
      "1": 1950,
-     "2": 734,
-     "4": 1037
+     "2": 735,
+     "4": 1039
     }
    }
   },

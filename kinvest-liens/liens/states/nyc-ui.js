@@ -33,6 +33,11 @@ const NycUI = {
     box.append(tabs, body);
     show(H.cycles[H.cycles.length - 1]);
     box.appendChild(mk('p', 'small muted', 'Source: ' + H.source + '. ' + H.note + ' Counts only: no owner names, addresses or dollar amounts are shown. Educational only; confirm anything with the NYC Department of Finance.'));
+    if (H.links && H.links.length) {
+      const p = mk('p', 'small'); p.appendChild(document.createTextNode('Official sources: '));
+      H.links.forEach((l, i) => { if (i) p.appendChild(document.createTextNode(' \u00b7 ')); const a = mk('a', '', l[0]); a.href = l[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.appendChild(a); });
+      box.appendChild(p);
+    }
     host.appendChild(box);
   }
 };
