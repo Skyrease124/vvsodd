@@ -35,8 +35,8 @@ function groupByParcel(liens) {
   const m = new Map();
   liens.forEach(l => {
     let g = m.get(l.parcel);
-    if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: l.market, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate}; m.set(l.parcel, g); }
-    g.face += l.amount; g.payoff += l.payoff || l.amount; g.certs++; if (l.taxYear) g.years.push(l.taxYear);
+    if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: l.market, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate, certList: [], saleDate: l.saleDate || null}; m.set(l.parcel, g); }
+    g.face += l.amount; g.payoff += l.payoff || l.amount; g.certs++; if (l.cert && !g.certList.includes(l.cert)) g.certList.push(l.cert); if (l.taxYear) g.years.push(l.taxYear);
   });
   return [...m.values()].map(g => { g.face = Math.round(g.face * 100) / 100; g.payoff = Math.round(g.payoff * 100) / 100; g.years.sort(); return g; });
 }
@@ -175,7 +175,7 @@ async function handle(event) {
   await usage.record('screen', !(wish.length >= 3 && !understood && !notes));
   return json(200, {
     total: rows.length, matched: matched.length, understood, filters,
-    results: top.map((g, i) => ({parcel: g.parcel, county: g.county, area: g.area, use: g.use, acres: g.acres, market: g.market, face: g.face, payoff: g.payoff, rate: g.rate, years: g.years, certs: g.certs, lastSale: g.lastSale || null, lastPrice: g.lastPrice || null, desc: g.desc, coverage: g.coverage, score: g.score, green: g.green, red: g.red, note: notes ? notes[i] : plainNote(g), aiNote: !!notes}))
+    results: top.map((g, i) => ({parcel: g.parcel, county: g.county, area: g.area, use: g.use, acres: g.acres, market: g.market, face: g.face, payoff: g.payoff, rate: g.rate, years: g.years, certs: g.certs, certList: g.certList, saleDate: g.saleDate, lastSale: g.lastSale || null, lastPrice: g.lastPrice || null, desc: g.desc, coverage: g.coverage, score: g.score, green: g.green, red: g.red, note: notes ? notes[i] : plainNote(g), aiNote: !!notes}))
   });
 }
 

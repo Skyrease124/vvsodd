@@ -40,6 +40,7 @@ window.Screener = {mount(host, county) {
     const cb = mk('a', 'btn small ghost', 'Calculate');
     cb.href = '../../?' + new URLSearchParams({amount: r.face, rate: String(r.rate || '').replace('%', ''), months: 24, fees: 0, from: r.county + ' parcel ' + r.parcel}).toString() + '#calculator';
     act.appendChild(cb);
+    const bb = typeof LienBuy !== 'undefined' ? LienBuy.button({county: r.county, parcel: r.parcel, amount: r.face, certList: r.certList, saleDate: r.saleDate}, 'btn small') : null; if (bb) act.appendChild(bb);
     const sv = mk('button', 'btn small ghost', 'Save'); sv.type = 'button';
     sv.addEventListener('click', async () => {
       sv.disabled = true;

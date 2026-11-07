@@ -183,7 +183,7 @@ function runLiens(it) {
   const key = { face: r => r.face, value: r => r.market || 0, coverage: r => r.coverage || 0, acres: r => r.acres || 0, score: r => r.score }[by];
   const dir = it.order === 'asc' ? 1 : -1;
   all.sort((a, b) => (key(a) - key(b)) * dir || b.score - a.score);
-  return { total: all.length, by, rows: all.slice(0, it.limit).map(r => ({ state: r._state, county: r.county, parcel: r.parcel, area: r.area, use: r.use || null, acres: r.acres != null ? r.acres : null, market: r.market != null ? r.market : null, face: r.face, coverage: r.coverage, score: r.score, green: r.green, red: r.red })) };
+  return { total: all.length, by, rows: all.slice(0, it.limit).map(r => ({ state: r._state, county: r.county, parcel: r.parcel, certList: r.certList || [], saleDate: r.saleDate || null, area: r.area, use: r.use || null, acres: r.acres != null ? r.acres : null, market: r.market != null ? r.market : null, face: r.face, coverage: r.coverage, score: r.score, green: r.green, red: r.red })) };
 }
 
 function runHistory(it) {
