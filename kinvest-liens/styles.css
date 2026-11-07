@@ -246,3 +246,18 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 
 /* the hidden attribute must always win over component display rules */
 [hidden]{display:none!important}
+/* Home: your state card */
+#yourstate{padding-top:8px;padding-bottom:8px}
+.ys-card{background:#0f1a33;border:1px solid #1f2f55;border-radius:16px;padding:18px 18px 20px;color:#e6ecf7}
+.ys-title{margin:0 0 4px;font-size:24px;color:#fff}.ys-sub{margin:0 0 12px;color:#a9b7d6}
+.ys-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ys-pick{padding:10px 12px;border-radius:10px;border:1px solid #2a3c66;background:#0b1428;color:#e6ecf7;font:inherit;max-width:100%}
+.ys-ghost{padding:10px 14px;border-radius:10px;border:1px solid #2a3c66;background:transparent;color:#e6ecf7;font:inherit;cursor:pointer}
+.ys-note{margin:10px 0 0;color:#a9b7d6}
+.ys-ai{margin-top:14px;border-top:1px solid #1f2f55;padding-top:12px}
+.ys-h3{margin:0 0 8px;font-size:18px;color:#fff}
+.ys-form{display:flex;gap:8px;flex-wrap:wrap}.ys-form input{flex:1 1 220px;padding:11px 12px;border-radius:10px;border:1px solid #2a3c66;background:#0b1428;color:#fff;font:inherit}
+.ys-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.ys-chip{border:1px solid #2a3c66;background:transparent;color:#e6ecf7;border-radius:999px;padding:8px 12px;font:inherit;font-size:14px;cursor:pointer}
+.ys-out{background:#0b1428;border:1px solid #1f2f55;border-radius:10px;padding:12px;margin-top:6px}.ys-out p{margin:0 0 8px}.ys-out a,.ys-lock a{color:#7be3b9}
+.ys-lock{margin:0;background:#2c2410;color:#f3dfa0;border:1px solid #5a4a1c;border-radius:10px;padding:10px 12px}.ys-lock a{color:#ffd77a}
+@media(max-width:520px){.ys-row>*{flex:1 1 100%}.ys-title{font-size:21px}}
