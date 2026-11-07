@@ -324,3 +324,5 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .nyc .nycval{text-align:right;font-variant-numeric:tabular-nums}.nyc h4{margin:14px 0 4px}
 .nyc .chipbtn.on{border-color:var(--brand);font-weight:700}
 @media(max-width:520px){.nyc .nycrow{grid-template-columns:70px 1fr;}.nyc .nycval{grid-column:1/-1;text-align:left;margin-top:-4px}}
+
+@media(max-width:520px){.mapstats .ms{flex:1 1 calc(50% - 10px)}}
