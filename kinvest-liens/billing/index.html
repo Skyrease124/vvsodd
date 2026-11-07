@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Billing setup | PricePocketAsset</title>
+<title>Billing and email setup | PricePocketAsset</title>
 <meta name="theme-color" content="#0b6e4f">
 <link rel="stylesheet" href="../styles.css">
 </head>
@@ -17,7 +17,7 @@
 </header>
 <main>
 <section class="wrap section narrow">
-  <h1>Billing setup (owner)</h1>
+  <h1>Billing &amp; email setup (owner)</h1>
   <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/billing/">Sign in</a> with the owner account.</p>
   <div id="app" hidden>
     <div id="status" class="notice" role="status">Checking&hellip;</div>
@@ -26,8 +26,18 @@
         <input id="sk" type="password" autocomplete="new-password" spellcheck="false" placeholder="rk_test_&hellip;"></label>
       <label>Webhook signing secret (starts with whsec_)
         <input id="wh" type="password" autocomplete="new-password" spellcheck="false" placeholder="whsec_&hellip;"></label>
-      <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="plan">Create the $5.50/week plan</button><button class="btn ghost" type="button" id="remove">Remove keys</button></div>
+      <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="plan">Create the $5.50/week plan</button><button class="btn ghost" type="button" id="hook">Create the webhook for me</button><button class="btn ghost" type="button" id="remove">Remove keys</button></div>
       <p id="msg" class="small" role="status" aria-live="polite"></p>
+    </form>
+    <h2>Email (password reset emails)</h2>
+    <div id="mailstatus" class="notice" role="status">Checking&hellip;</div>
+    <form id="mailform" class="setupform" novalidate autocomplete="off">
+      <label>Resend key (starts with re_)
+        <input id="rk" type="password" autocomplete="new-password" spellcheck="false" placeholder="re_&hellip;"></label>
+      <label>From address
+        <input id="from" type="text" autocomplete="off" spellcheck="false" placeholder="PricePocketAsset &lt;noreply@pricepocketasset.com&gt;"></label>
+      <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="testmail">Send me a test email</button><button class="btn ghost" type="button" id="rmmail">Remove</button></div>
+      <p id="mmsg" class="small" role="status" aria-live="polite"></p>
     </form>
     <h2>Webhook (so payments switch members on and off)</h2>
     <p class="small muted">In Stripe: Developers &rarr; Webhooks &rarr; Add endpoint. Use this address and these events, then copy the signing secret (whsec_) into the box above.</p>
@@ -60,7 +70,15 @@
   $('form').addEventListener('submit', async e => { e.preventDefault(); say('Working\u2026', true); const r = await post({action: 'saveStripe', secretKey: $('sk').value, webhookSecret: $('wh').value}); if (r.ok) { $('sk').value = ''; $('wh').value = ''; say(r.d.message, true); load(); } else say(r.d.error || 'Something went wrong.'); });
   $('plan').addEventListener('click', async () => { say('Working\u2026', true); const r = await post({action: 'ensurePlan'}); r.ok ? say(r.d.message, true) : say(r.d.error || 'Something went wrong.'); });
   $('remove').addEventListener('click', async () => { if (!confirm('Remove the Stripe keys? Online payment will turn off.')) return; const r = await post({action: 'removeStripe'}); r.ok ? say(r.d.message, true) : say(r.d.error); load(); });
-  load();
+  $('hook').addEventListener('click', async () => { say('Working\u2026', true); const r = await post({action: 'createWebhook'}); r.ok ? say(r.d.message, true) : say(r.d.error || 'Something went wrong.'); load(); });
+  const msay = (t, ok) => { $('mmsg').textContent = t; $('mmsg').style.color = ok ? '#0b6e4f' : '#c2282d'; };
+  async function loadMail() {
+    try { const d = await (await fetch(API + '?mail=1')).json(); $('mailstatus').textContent = d.configured ? 'ON (key ending ' + d.hint + (d.source === 'env' ? ', set in Netlify' : ', saved here') + '). Emails come from: ' + d.from : 'OFF. Password resets go to your owner list on the Usage page until you add a key.'; } catch (e) {}
+  }
+  $('mailform').addEventListener('submit', async e => { e.preventDefault(); msay('Working\u2026', true); const r = await post({action: 'saveMail', apiKey: $('rk').value, from: $('from').value}); if (r.ok) { $('rk').value = ''; msay(r.d.message, true); loadMail(); } else msay(r.d.error || 'Something went wrong.'); });
+  $('testmail').addEventListener('click', async () => { msay('Sending\u2026', true); const r = await post({action: 'testMail'}); r.ok ? msay(r.d.message, true) : msay(r.d.error || 'Something went wrong.'); });
+  $('rmmail').addEventListener('click', async () => { if (!confirm('Remove the email key?')) return; const r = await post({action: 'removeMail'}); r.ok ? msay(r.d.message, true) : msay(r.d.error); loadMail(); });
+  load(); loadMail();
 })();
 </script>
 <script src="/auth-nav.js"></script>
