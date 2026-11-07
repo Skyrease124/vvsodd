@@ -32,7 +32,8 @@
     tip.querySelector('.tv').textContent = 'Interest: ' + s.rate;
     const g = typeof OFFICIALS !== 'undefined' && OFFICIALS.gov[s.a];
     tip.querySelector('.gv').textContent = g ? g.title + ': ' + g.name + ' (' + g.party + ')' : '';
-    const lv = LIVE[s.a]; tip.querySelector('.lv').textContent = lv ? '\u25CF Real liens listed: ' + lv.map(x => x.county + ' County (' + x.count.toLocaleString() + ')').join(', ') : '';
+    const lv = LIVE[s.a], hv = (typeof HISTORY_SUMMARY !== 'undefined' ? HISTORY_SUMMARY : []).filter(x => x.state === s.a);
+    tip.querySelector('.lv').textContent = lv ? '\u25CF Real liens listed: ' + lv.map(x => x.county + ' County (' + x.count.toLocaleString() + ')').join(', ') : hv.length ? 'Past sale records: ' + hv.reduce((t, x) => t + x.count, 0).toLocaleString() + ' (history, not open to buy)' : '';
     tip.lastChild.href = base + '?s=' + s.a;
   }
   const paths = {}; let cur = 'FL';
@@ -73,9 +74,11 @@
   host.appendChild(svg);
   // Counters that count up when the map scrolls into view.
   const total = Object.values(LIVE).reduce((t, l) => t + l.reduce((u, x) => u + x.count, 0), 0), counties = Object.values(LIVE).reduce((t, l) => t + l.length, 0);
+  const HIST = typeof HISTORY_SUMMARY !== 'undefined' ? HISTORY_SUMMARY : [];
+  const histTotal = HIST.reduce((t, x) => t + x.count, 0);
   const stats = document.getElementById('mapstats');
   if (stats) {
-    [[STATES.length, 'states and DC'], [total, 'real liens listed'], [counties, 'counties with real lists']].forEach(([v, label]) => {
+    [[STATES.length, 'states and DC'], [total, 'real liens listed'], [counties, 'counties with real lists'], [histTotal, 'past sale records']].forEach(([v, label]) => {
       const d = document.createElement('div'); d.className = 'ms'; const b = document.createElement('b'); b.textContent = '0'; b.dataset.to = String(v); const sp = document.createElement('span'); sp.textContent = label; d.append(b, sp); stats.appendChild(d);
     });
     const run = () => stats.querySelectorAll('b').forEach(b => {

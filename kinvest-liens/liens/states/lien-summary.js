@@ -5,3 +5,10 @@ const LIEN_SUMMARY = [
   {state: 'CO', county: 'Larimer', count: 1920},
   {state: 'AZ', county: 'Pinal', count: 88}
 ];
+
+// Past sale records: history we show for learning (not open to buy). NYC = properties on its 2019-2025 lien sale lists (counts only);
+// Middletown = liens in its September 2025 sale notice. Keep in step with nyc-history.js and middletown-ny.js.
+const HISTORY_SUMMARY = [
+  {state: 'NY', label: 'New York City lien sale lists, 2019 to 2025', count: 56396},
+  {state: 'NY', label: 'Middletown, Sept 2025 sale', count: 197}
+];
