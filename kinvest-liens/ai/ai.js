@@ -114,6 +114,7 @@
         out.appendChild(mk('p', 'small muted', d.searched + (d.understood ? '' : ' (I could not fully read your wording, so I used a broad search)')));
         if (d.kind === 'states' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' states:')); out.appendChild(statesTable(d.results)); }
         else if (d.kind === 'liens' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' liens:')); out.appendChild(lienCards(d.results)); }
+        if (d.table && d.table.rows.length) { const wrap = mk('div', 'tablewrap'), t = mk('table', 'liens'), hr = t.createTHead().insertRow(); d.table.columns.forEach(c => hr.appendChild(mk('th', '', c))); const tb = t.createTBody(); d.table.rows.forEach(r => { const tr = tb.insertRow(); r.forEach(v => tr.insertCell().textContent = v == null ? '\u2013' : (typeof v === 'number' ? v.toLocaleString('en-US') : String(v))); }); wrap.appendChild(t); out.appendChild(wrap); const a = mk('a', 'small', 'Open the New York page \u2192'); a.href = '../liens/states/state/?s=NY'; out.appendChild(a); }
         react(d);
       }
     } catch (e) { out.className = 'aiout err'; out.textContent = 'Could not reach PricePocket AI. Please try again.'; }

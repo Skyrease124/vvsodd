@@ -8,9 +8,21 @@ import * as auth from '../lib/auth.mjs';
 import { complete } from '../lib/llm.mjs';
 import { loadLiens, FILES, cleanFilters, _group, _score, _apply } from './screen.mjs';
 import { _loadData } from './ask.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 const PER_USER_HOURLY = 30;
 const hits = new Map();
+function loadNyc() {
+  const root = process.env.LAMBDA_TASK_ROOT || process.cwd();
+  const cands = [path.join(root, 'kinvest-liens/liens/states'), path.join(HERE, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
+  const dir = cands.find(d => fs.existsSync(path.join(d, 'nyc-history.js')));
+  if (!dir) throw new Error('nyc data not found');
+  return vm.runInNewContext(fs.readFileSync(path.join(dir, 'nyc-history.js'), 'utf8') + '\n;NYC_HISTORY', {}, { timeout: 2000 });
+}
 const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ' };
 const SYS = ['Tax lien certificate', 'Tax deed', 'Redeemable deed', 'Hybrid', 'Municipal lien', 'Sources differ'];
 const BID = ['Bid-down rate', 'Premium bidding', 'Other', 'Not applicable'];
@@ -64,6 +76,13 @@ export function ruleIntent(q, data) {
   const stateWords = /\bstates?\b/.test(t) && /(interest|rate|redemption|redeem|bid|bidding|system|type|premium|deed|certificate|rules|penalty|compare|best|hybrid|municipal)/.test(t);
   const rankish = /(cheap|lowest|smallest|least|expensive|valuable|biggest|largest|highest|most|best|worth|under|below|over|above|less than|more than|at least|at most|list|show|find|top)/.test(t);
   const compare = /\bcompare\b|\bversus\b|\bvs\.?\b|\bdifference between\b/.test(t) && scope.length >= 2;
+  const nyc = /\b(nyc|new york city|brooklyn|queens|bronx|manhattan|staten island|five boroughs|boroughs?)\b/.test(t) || (/\bnew york\b/.test(t) && /(history|notice|final sale|water|cycle|borough|how many|dropped|reach)/.test(t));
+  if (nyc && /(history|how many|water|sale|notice|borough|year|cycle|reach|dropped|percent|share|trend|most|least|which|list)/.test(t) && !/\b(liens? in|cheapest|most valuable|tax owed)\b/.test(t)) {
+    const it = { task: 'history', scope: ['NY'], view: /water/.test(t) ? 'water' : /(by year|each year|per year|over time|trend|cycle|every year|history)/.test(t) ? 'year' : 'borough' };
+    const ym = t.match(/\b(2019|2020|2021|2025)\b/); if (ym) it.year = +ym[1];
+    const bm = t.match(/\b(manhattan|bronx|brooklyn|queens|staten island)\b/); if (bm) it.borough = bm[1].replace(/\b\w/g, c => c.toUpperCase());
+    return it;
+  }
   let task = null;
   if (compare) task = 'states';
   else if (stateWords && !parcelWords) task = 'states';
@@ -118,7 +137,7 @@ function cleanIntent(raw, codes, uiScope) {
   const r = raw && typeof raw === 'object' ? raw : {};
   const scope = (Array.isArray(r.scope) ? r.scope.map(x => String(x).toUpperCase()) : []).filter(c => codes.includes(c));
   return {
-    task: ['states', 'liens', 'general'].includes(r.task) ? r.task : 'general',
+    task: ['states', 'liens', 'general', 'history'].includes(r.task) ? r.task : 'general',
     scope: scope.length ? scope : uiScope,
     sys: (Array.isArray(r.sys) ? r.sys : []).filter(x => SYS.includes(x)),
     bid: (Array.isArray(r.bid) ? r.bid : []).filter(x => BID.includes(x)),
@@ -126,7 +145,9 @@ function cleanIntent(raw, codes, uiScope) {
     lien: r.lien && typeof r.lien === 'object' ? r.lien : {},
     sortBy: ['rate', 'months', 'name', 'face', 'value', 'coverage', 'acres', 'score'].includes(r.sortBy) ? r.sortBy : null,
     order: r.order === 'asc' ? 'asc' : 'desc',
-    limit: Math.round(num(r.limit, 1, 15) || 8)
+    limit: Math.round(num(r.limit, 1, 15) || 8),
+    view: ['borough', 'year', 'water'].includes(r.view) ? r.view : 'borough', year: [2019, 2020, 2021, 2025].includes(Number(r.year)) ? Number(r.year) : null,
+    borough: ['Manhattan', 'Bronx', 'Brooklyn', 'Queens', 'Staten Island'].includes(r.borough) ? r.borough : null
   };
 }
 
@@ -165,13 +186,23 @@ function runLiens(it) {
   return { total: all.length, by, rows: all.slice(0, it.limit).map(r => ({ state: r._state, county: r.county, parcel: r.parcel, area: r.area, use: r.use || null, acres: r.acres != null ? r.acres : null, market: r.market != null ? r.market : null, face: r.face, coverage: r.coverage, score: r.score, green: r.green, red: r.red })) };
 }
 
+function runHistory(it) {
+  const H = loadNyc(), pct = (a, b) => (a == null || !b ? null : Math.round(1000 * a / b) / 10);
+  if (it.view === 'year') return { columns: ['Cycle', '90-day notice', '60-day', '30-day', '10-day', 'Final Sale', '% reaching Final Sale'], rows: H.cycles.map(c => [String(c.year), c.stages['90'], c.stages['60'], c.stages['30'], c.stages['10'], c.stages.sale == null ? 'no sale list in file' : c.stages.sale, pct(c.stages.sale, c.stages['90']) == null ? null : pct(c.stages.sale, c.stages['90']) + '%']), note: H.note };
+  if (it.view === 'water') return { columns: ['Cycle', 'Water-debt-only share of 90-day list', 'Water-debt-only share of Final Sale list'], rows: H.cycles.map(c => [String(c.year), c.waterOnly['90'] == null ? 'not reported' : c.waterOnly['90'] + '%', c.waterOnly.sale == null ? 'n/a' : c.waterOnly.sale + '%']), note: H.note };
+  const c = (it.year && H.cycles.find(x => x.year === it.year)) || H.cycles[H.cycles.length - 1];
+  let names = H.boroughNames; if (it.borough) names = names.filter(b => b === it.borough);
+  const rows = names.map(b => [b, c.boroughs['90'][b], c.boroughs.sale ? c.boroughs.sale[b] : null, c.boroughs.sale ? (pct(c.boroughs.sale[b], c.boroughs['90'][b]) + '%') : null]).sort((a, b) => (b[1] || 0) - (a[1] || 0));
+  return { columns: [c.year + ' cycle: borough', '90-day notice', 'Final Sale', '% reaching Final Sale'], rows, note: H.note };
+}
+
 function compactStates(data, scope) {
   return data.STATES.filter(s => !scope.length || scope.includes(s.a)).slice(0, 60).map(s => `${s.n} (${s.a}): ${s.sys}; interest/penalty ${s.rate}; redemption ${s.red}; bidding ${s.bid}${s.v ? '; VERIFY (sources disagree or single source)' : ''}. ${s.note}`).join('\n').slice(0, 24000);
 }
 
 function describe(it) {
   const bits = [];
-  bits.push(it.task === 'liens' ? 'Individual liens in counties we have lists for' : it.task === 'states' ? 'State rules compared' : 'State rules read in words');
+  bits.push(it.task === 'history' ? 'New York City lien sale lists (counts only), ' + (it.view === 'year' ? 'by cycle' : it.view === 'water' ? 'water-debt share' : 'by borough') : it.task === 'liens' ? 'Individual liens in counties we have lists for' : it.task === 'states' ? 'State rules compared' : 'State rules read in words');
   bits.push(it.scope.length ? 'states: ' + it.scope.join(', ') : 'all states');
   if (it.sys.length) bits.push('type: ' + it.sys.join(' or '));
   if (it.bid.length) bits.push('bidding: ' + it.bid.join(' or '));
@@ -216,8 +247,11 @@ async function handle(event) {
   // A lien-style question that the AI labelled "general" still gets a real lien search.
   if (it.task === 'general' && /\b(liens?|parcels?|lots?|propert(?:y|ies)|acres?)\b/i.test(q) && /(cheap|cheapest|expensive|valuable|biggest|largest|list|show|find|under|over|worth)/i.test(q)) { it.task = 'liens'; it.sortBy = it.sortBy || 'score'; }
   let res = null, context = '';
+  let table = null;
+  if (it.task === 'history') { try { table = runHistory(it); } catch (e) { console.log('ai history failed', e && e.message); } }
   if (it.task === 'states') res = runStates(data, it);
   else if (it.task === 'liens') res = runLiens(it);
+  else if (it.task === 'history' && table) res = { total: table.rows.length, rows: [{ columns: table.columns, rows: table.rows, note: table.note, source: 'NYC Department of Finance tax lien sale lists' }] };
   else context = compactStates(data, it.scope);
 
   const resultText = res ? (res.noData ? 'No lien lists are loaded for the selected states. We have lien lists only for: ' + Object.keys(FILES).map(c => c + ' County (' + COUNTY_STATE[c] + ')').join(', ') + '.' : res.rows.length ? JSON.stringify(res.rows) : 'No matches.') : '';
@@ -229,7 +263,7 @@ async function handle(event) {
   } catch (e) { failed = true; console.log('ai answer failed', e && e.detail); }
   await usage.record('ai', !failed && (parsed || !!answer));
   if (failed && !res) return json(502, { error: 'The AI had a problem. Please try again.', detail: 'answer' });
-  return json(200, { answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task, sortBy: it.sortBy || null, scope: it.scope, total: res ? res.total : null, results: res ? res.rows : [], noData: !!(res && res.noData), aiNote: !failed, understood: parsed });
+  return json(200, { answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task === 'history' && !table ? 'general' : it.task, sortBy: it.sortBy || null, scope: it.scope, total: res ? res.total : null, results: res && it.task !== 'history' ? res.rows : [], noData: !!(res && res.noData), table: table ? { columns: table.columns, rows: table.rows } : null, aiNote: !failed, understood: parsed });
 }
 
 async function toEvent(req, context) {
@@ -240,4 +274,4 @@ export default async (req, context) => {
   const r = await handle(await toEvent(req, context));
   return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
-export { handle as _handle, runStates, runLiens, cleanIntent };
+export { handle as _handle, runStates, runLiens, cleanIntent, runHistory };
