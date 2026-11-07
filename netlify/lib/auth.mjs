@@ -125,14 +125,23 @@ export const getResetRequests = async () => ((await get('resetreqs')) || { list:
 export async function clearResetRequest(email) {
   const l = (await get('resetreqs')) || { list: [] }; l.list = l.list.filter(x => x.email !== email); await put('resetreqs', l);
 }
-// Email through Resend (https://resend.com). Needs RESEND_API_KEY. Returns true if the provider accepted it.
+// Email through Resend (https://resend.com). Key + From come from env first, else what the owner saved on /billing/.
+export async function mailConfig() {
+  const saved = (await get('mail-config')) || {};
+  const apiKey = process.env.RESEND_API_KEY || saved.apiKey || '';
+  if (!apiKey) return null;
+  return { apiKey, from: process.env.MAIL_FROM || saved.from || 'PricePocketAsset <noreply@pricepocketasset.com>', source: process.env.RESEND_API_KEY ? 'env' : 'saved' };
+}
+export async function saveMailConfig(c) { await put('mail-config', c); }
 export async function sendMail(to, subject, text) {
-  const key = process.env.RESEND_API_KEY; if (!key) return false;
+  const cfg = await mailConfig(); if (!cfg) return { ok: false, error: 'not configured' };
   try {
-    const r = await fetch(process.env.MAIL_API_URL || 'https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: process.env.MAIL_FROM || 'PricePocketAsset <noreply@pricepocketasset.com>', to: [to], subject, text }) });
-    return r.ok;
-  } catch (e) { return false; }
+    const r = await fetch(process.env.MAIL_API_URL || 'https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + cfg.apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: cfg.from, to: [to], subject, text }) });
+    if (r.ok) return { ok: true };
+    let msg = ''; try { msg = (await r.json()).message || ''; } catch (e) {}
+    return { ok: false, error: msg || ('HTTP ' + r.status) };
+  } catch (e) { return { ok: false, error: 'network' }; }
 }
 
 // The site owner's own email, for the account that already existed when this rule was added (so nobody can

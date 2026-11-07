@@ -36,6 +36,11 @@ async function handle(event) {
       return json(200, { configured: !!c, mode: c ? c.mode : null, source: c ? c.source : null, hint: c ? '\u2026' + c.secretKey.slice(-4) : '', webhook: !!(c && c.webhookSecret), webhookUrl: S.siteUrl() + '/.netlify/functions/stripe-webhook',
         events: ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted', 'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created', 'radar.early_fraud_warning.created'] });
     }
+    if (event.query && event.query.mail) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      const c = await auth.mailConfig();
+      return json(200, { configured: !!c, from: c ? c.from : '', source: c ? c.source : null, hint: c ? '\u2026' + c.apiKey.slice(-4) : '' });
+    }
     if (event.query && event.query.members) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       const keys = await auth.kvList('u_');
@@ -86,6 +91,34 @@ async function handle(event) {
     if (b.note !== undefined) u.note = String(b.note || '').slice(0, 200);
     await auth.saveUser(u);
     return json(200, { ok: true });
+  }
+  if (act === 'saveMail' || act === 'testMail' || act === 'removeMail') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    if (act === 'removeMail') { await auth.saveMailConfig({}); return json(200, { ok: true, message: 'Email key removed. Password resets go back to the owner list.' }); }
+    if (act === 'testMail') {
+      const r = await auth.sendMail(me.email, 'PricePocketAsset test email', 'This is a test email from your site. If you can read this, password reset emails will work.');
+      return r.ok ? json(200, { ok: true, message: 'Test email sent to ' + me.email + '. Check your inbox and spam.' }) : json(502, { error: 'Resend refused: ' + r.error });
+    }
+    const apiKey = String(b.apiKey || '').trim(), from = String(b.from || '').trim().slice(0, 120);
+    const old = (await auth.mailConfig()) || {};
+    if (apiKey && !/^re_[A-Za-z0-9_]{16,}$/.test(apiKey)) return json(400, { error: 'A Resend key starts with re_.' });
+    if (from && !/^([^<>@]+<)?[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+>?$/.test(from)) return json(400, { error: 'The From address should look like PricePocketAsset <noreply@pricepocketasset.com>.' });
+    const next = { apiKey: apiKey || (old.source === 'saved' ? old.apiKey : ''), from: from || old.from || 'PricePocketAsset <noreply@pricepocketasset.com>' };
+    if (!next.apiKey && !old.apiKey) return json(400, { error: 'Paste your Resend key.' });
+    await auth.saveMailConfig(next);
+    return json(200, { ok: true, message: 'Saved. Tap "Send me a test email".' });
+  }
+  if (act === 'createWebhook') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const c = await S.getConfig(); if (!c) return json(400, { error: 'Save your Stripe key first.' });
+    try {
+      const stripe = S.client(c), url = S.siteUrl() + '/.netlify/functions/stripe-webhook';
+      const list = await stripe.webhookEndpoints.list({ limit: 100 });
+      for (const w of list.data) if (w.url === url) await stripe.webhookEndpoints.del(w.id);
+      const w = await stripe.webhookEndpoints.create({ url, enabled_events: ['checkout.session.completed', 'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted', 'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created', 'radar.early_fraud_warning.created'], description: 'PricePocketAsset membership' });
+      await S.saveConfig({ secretKey: c.source === 'saved' ? c.secretKey : '', webhookSecret: w.secret });
+      return json(200, { ok: true, message: 'Webhook created in Stripe (' + c.mode + ' mode) and saved. Nothing to copy.' });
+    } catch (e) { return json(502, { error: 'Stripe refused: ' + String((e && e.message) || e).slice(0, 220) + ' (the key needs write access to Webhook Endpoints)' }); }
   }
   if (act === 'saveStripe' || act === 'removeStripe' || act === 'ensurePlan') {
     if (!me || !me.owner) return json(403, { error: 'Owner only.' });
@@ -170,11 +203,11 @@ async function handle(event) {
       if (exists) {
         const tok = await auth.makeResetToken(em);
         const base = process.env.SITE_URL || 'https://pricepocketasset.com';
-        const sent = await auth.sendMail(em, 'Reset your PricePocketAsset password', 'Someone asked to reset the password for this email on PricePocketAsset.\n\nOpen this link within 1 hour to choose a new password:\n' + base + '/reset/?email=' + encodeURIComponent(em) + '&token=' + tok + '\n\nIf you did not ask for this, you can ignore this email. Your password has not changed.');
-        if (!sent) await auth.addResetRequest(em);
-        return json(200, { ok: true, mail: !!process.env.RESEND_API_KEY });
+        const sentR = await auth.sendMail(em, 'Reset your PricePocketAsset password', 'Someone asked to reset the password for this email on PricePocketAsset.\n\nOpen this link within 1 hour to choose a new password:\n' + base + '/reset/?email=' + encodeURIComponent(em) + '&token=' + tok + '\n\nIf you did not ask for this, you can ignore this email. Your password has not changed.');
+        if (!sentR.ok) await auth.addResetRequest(em);
+        return json(200, { ok: true, mail: !!(await auth.mailConfig()) });
       }
-      return json(200, { ok: true, mail: !!process.env.RESEND_API_KEY });
+      return json(200, { ok: true, mail: !!(await auth.mailConfig()) });
     }
     const pw2 = String(b.password || '');
     if (pw2.length < 8 || pw2.length > 200) return json(400, { error: 'Password must be 8 to 200 characters.' });
