@@ -19,7 +19,7 @@
       const r = await fetch(API + '?usage=1');
       if (!r.ok) {
         const me = await (await fetch(API)).json().catch(() => ({}));
-        if (me && me.user) { $('claim').hidden = false; } else $('gate').hidden = false;
+        if (me && me.user && /[?&]claim=1/.test(location.search)) { $('claim').hidden = false; } else $('gate').hidden = false;
         return;
       }
       $('app').hidden = false; draw(await r.json());

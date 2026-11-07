@@ -37,7 +37,7 @@
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || (user.paidThrough && user.paidThrough >= today);
     $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
-    $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownlink').hidden = !!user.owner; $('ownerbtns').hidden = !user.owner;
+    $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'Nothing saved yet.'; ul.appendChild(li); }
     user.saved.forEach(s => {
