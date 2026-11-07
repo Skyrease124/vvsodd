@@ -181,11 +181,14 @@ async function handle(event) {
     if (!me) return json(401, { error: 'Please sign in first.' });
     const parcel = String(b.parcel || '').slice(0, 40);
     if (!/^[0-9A-Za-z-]{6,40}$/.test(parcel)) return json(400, { error: 'Bad parcel.' });
-    me.saved = (me.saved || []).filter(x => x.parcel !== parcel);
+    const county = String(b.county || '').slice(0, 40);
+    me.saved = (me.saved || []).filter(x => !(x.parcel === parcel && (x.county || '') === county));
     if (act === 'save') {
-      if (me.saved.length >= 100) return json(400, { error: 'You can save up to 100 liens.' });
+      if (me.saved.length >= 100) return json(400, { error: 'You can keep up to 100 favorites.' });
       const n = (v, max) => (typeof v === 'number' && isFinite(v) ? v : null);
-      me.saved.unshift({ parcel, county: String(b.county || '').slice(0, 40), use: String(b.use || '').slice(0, 60), face: n(b.face), market: n(b.market), acres: n(b.acres), savedAt: new Date().toISOString() });
+      const certList = (Array.isArray(b.certList) ? b.certList : []).map(x => String(x).slice(0, 20)).filter(Boolean).slice(0, 10);
+      const saleDate = /^\d{4}-\d{2}-\d{2}$/.test(String(b.saleDate || '')) ? String(b.saleDate) : '';
+      me.saved.unshift({ parcel, county, use: String(b.use || '').slice(0, 60), face: n(b.face), market: n(b.market), acres: n(b.acres), certList, saleDate, savedAt: new Date().toISOString() });
     }
     await auth.saveUser(me);
     return json(200, { saved: me.saved });

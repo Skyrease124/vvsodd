@@ -41,14 +41,22 @@
     $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
     $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
-    if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'Nothing saved yet.'; ul.appendChild(li); }
+    if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'No favorites yet. Tap \u2606 Favorite on a lien to keep it here.'; ul.appendChild(li); }
+    const STATE_OF = {'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ'};
     user.saved.forEach(s => {
-      const li = document.createElement('li'); li.style.cssText = 'display:block;border-radius:10px;margin:6px 0;padding:10px';
-      const a = document.createElement('a'); a.href = '../liens/states/county/?c=' + encodeURIComponent(s.county); a.textContent = s.county + ' parcel ' + s.parcel;
-      const t = document.createElement('span'); t.className = 'small muted'; t.textContent = ' · ' + [s.use && s.use.toLowerCase(), s.acres != null && s.acres + ' acres', s.market != null && 'county value $' + Math.round(s.market).toLocaleString('en-US'), s.face != null && 'debt $' + s.face.toFixed(2)].filter(Boolean).join(', ') + ' ';
+      const li = document.createElement('li'); li.style.cssText = 'display:block;border-radius:12px;margin:8px 0;padding:12px';
+      const h = document.createElement('b'); h.textContent = (s.county ? s.county + ' County ' : '') + 'parcel ' + s.parcel; li.appendChild(h);
+      const t = document.createElement('p'); t.className = 'small muted'; t.style.margin = '4px 0 8px';
+      t.textContent = [s.use && s.use.toLowerCase(), s.acres != null && s.acres + ' acres', s.market != null && 'county value $' + Math.round(s.market).toLocaleString('en-US'), s.face != null && 'tax owed $' + Number(s.face).toFixed(2), s.savedAt && 'saved ' + s.savedAt.slice(0, 10)].filter(Boolean).join(' \u00b7 ');
+      li.appendChild(t);
+      const row = document.createElement('div'); row.className = 'sact';
+      const lien = {county: s.county, parcel: s.parcel, amount: s.face, market: s.market, use: s.use, acres: s.acres, certList: s.certList, saleDate: s.saleDate};
+      const bb = typeof LienBuy !== 'undefined' ? LienBuy.button(lien, 'btn small') : null; if (bb) row.appendChild(bb);
+      if (typeof PARCEL_MAPS !== 'undefined' && PARCEL_MAPS[s.county]) { const m = document.createElement('button'); m.type = 'button'; m.className = 'btn small ghost'; m.textContent = 'Show on map'; m.addEventListener('click', () => LienMap.open(lien)); row.appendChild(m); }
+      if (STATE_OF[s.county]) { const o = document.createElement('a'); o.className = 'btn small ghost'; o.href = '../liens/states/state/?s=' + STATE_OF[s.county]; o.textContent = 'Open ' + STATE_OF[s.county] + ' page'; row.appendChild(o); }
       const b = document.createElement('button'); b.className = 'btn small ghost'; b.type = 'button'; b.textContent = 'Remove';
-      b.addEventListener('click', async () => { const r = await post({action: 'unsave', parcel: s.parcel}); if (r.ok) { user.saved = r.d.saved; show(user); } });
-      li.append(a, t, b); ul.appendChild(li);
+      b.addEventListener('click', async () => { const r = await post({action: 'unsave', parcel: s.parcel, county: s.county}); if (r.ok) { user.saved = r.d.saved; show(user); } });
+      row.appendChild(b); li.appendChild(row); ul.appendChild(li);
     });
   }
   async function post(o) { try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return {ok: r.ok, d: await r.json()}; } catch (e) { return {ok: false, d: {error: 'Could not reach the server. Try again.'}}; } }
