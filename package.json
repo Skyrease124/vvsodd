@@ -3,6 +3,7 @@
   "private": true,
   "description": "Server functions for the PricePocketAsset site (question box and its setup page).",
   "dependencies": {
-    "@netlify/blobs": "8.2.0"
+    "@netlify/blobs": "8.2.0",
+    "stripe": "^23.1.0"
   }
 }

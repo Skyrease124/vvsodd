@@ -7,10 +7,36 @@
     $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in';
     $('pw').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('msg').textContent = '';
   }
+  let billing = null;
+  async function billingPost(action) { const r = await fetch('/.netlify/functions/billing', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action})}); return {ok: r.ok, d: await r.json()}; }
+  async function go(action, btn) {
+    btn.disabled = true; $('planmsg').textContent = 'One moment\u2026';
+    const r = await billingPost(action);
+    if (r.ok && r.d.url) { location.href = r.d.url; return; }
+    $('planmsg').textContent = r.d.error || 'Something went wrong.'; btn.disabled = false;
+  }
+  $('upgrade').addEventListener('click', () => go('checkout', $('upgrade')));
+  $('manage').addEventListener('click', () => go('portal', $('manage')));
+  function planButtons(user) {
+    const subOn = user.sub && ['active', 'trialing', 'past_due'].includes(user.sub.status);
+    $('planbtns').hidden = true;
+    if (user.owner || !billing || !billing.configured) return;
+    $('planbtns').hidden = false;
+    $('upgrade').hidden = !!(subOn && !user.sub.cancelAtPeriodEnd);
+    $('manage').hidden = !user.hasCustomer;
+    if (user.sub && user.sub.cancelAtPeriodEnd && user.sub.periodEnd) $('planmsg').textContent = 'Your membership is set to end on ' + user.sub.periodEnd + '. You keep access until then.';
+    else if (user.sub && user.sub.status === 'past_due') $('planmsg').textContent = 'Your last payment did not go through. Use Manage billing to update your card.';
+    if (billing.mode === 'test') $('planmsg').textContent += ' (Test mode: no real money moves. Use card 4242 4242 4242 4242.)';
+  }
+  fetch('/.netlify/functions/billing').then(r => r.json()).then(b => { billing = b; if (window.__ppUser) planButtons(window.__ppUser); }).catch(() => {});
+  if (new URLSearchParams(location.search).get('paid') === '1') {
+    (async () => { $('planmsg').textContent = 'Payment received. Switching you on\u2026'; for (let i = 0; i < 4; i++) { const r = await billingPost('sync'); if (r.ok && r.d.paid) { location.replace('./'); return; } await new Promise(x => setTimeout(x, 2500)); } $('planmsg').textContent = 'Payment received. It can take a minute to show. Refresh this page in a moment.'; })();
+  }
   function show(user) {
+    window.__ppUser = user; if (user && billing) planButtons(user);
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || (user.paidThrough && user.paidThrough >= today);
-    $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. Online payment is coming soon.';
+    $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
     $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownlink').hidden = !!user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'Nothing saved yet.'; ul.appendChild(li); }

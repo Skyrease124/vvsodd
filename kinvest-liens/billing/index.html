@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Billing setup | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../"><span class="mark">P</span>ricePocketAsset</a>
+    <nav><a href="../#map">Map</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow">
+  <h1>Billing setup (owner)</h1>
+  <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/billing/">Sign in</a> with the owner account.</p>
+  <div id="app" hidden>
+    <div id="status" class="notice" role="status">Checking&hellip;</div>
+    <form id="form" class="setupform" novalidate autocomplete="off">
+      <label>Stripe key (restricted key, starts with rk_test_ or rk_live_)
+        <input id="sk" type="password" autocomplete="new-password" spellcheck="false" placeholder="rk_test_&hellip;"></label>
+      <label>Webhook signing secret (starts with whsec_)
+        <input id="wh" type="password" autocomplete="new-password" spellcheck="false" placeholder="whsec_&hellip;"></label>
+      <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="plan">Create the $5.50/week plan</button><button class="btn ghost" type="button" id="remove">Remove keys</button></div>
+      <p id="msg" class="small" role="status" aria-live="polite"></p>
+    </form>
+    <h2>Webhook (so payments switch members on and off)</h2>
+    <p class="small muted">In Stripe: Developers &rarr; Webhooks &rarr; Add endpoint. Use this address and these events, then copy the signing secret (whsec_) into the box above.</p>
+    <p class="small"><b>Address:</b> <code id="url"></code></p>
+    <ul class="small" id="events"></ul>
+    <h2>How it works</h2>
+    <ul class="small muted">
+      <li>Keys are checked with Stripe, then saved on the server. They are never shown on a page or put in the website code.</li>
+      <li>Use a <b>test</b> key first. No real money moves in test mode. When you go live, save your live key here and tap &ldquo;Create the $5.50/week plan&rdquo; again, and add a live webhook the same way.</li>
+      <li>A key set in Netlify&rsquo;s environment variables (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) is used first.</li>
+      <li>Stripe emails receipts and invoices; turn that on in Stripe under Settings &rarr; Customer emails.</li>
+    </ul>
+  </div>
+</section>
+</main>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), API = '/.netlify/functions/account';
+  const post = async o => { try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return {ok: r.ok, d: await r.json()}; } catch (e) { return {ok: false, d: {error: 'Could not reach the server.'}}; } };
+  const say = (t, ok) => { $('msg').textContent = t; $('msg').style.color = ok ? '#0b6e4f' : '#c2282d'; };
+  async function load() {
+    try {
+      const r = await fetch(API + '?stripe=1'); if (!r.ok) { $('gate').hidden = false; return; }
+      const d = await r.json(); $('app').hidden = false;
+      $('status').textContent = d.configured ? 'ON (' + d.mode.toUpperCase() + ' mode, key ending ' + d.hint + (d.source === 'env' ? ', set in Netlify' : ', saved here') + '). Webhook secret: ' + (d.webhook ? 'saved' : 'MISSING, add it below or payments will not switch members on.') : 'OFF. No Stripe key yet.';
+      $('url').textContent = d.webhookUrl;
+      $('events').textContent = ''; d.events.forEach(e => { const li = document.createElement('li'); li.textContent = e; $('events').appendChild(li); });
+    } catch (e) { $('gate').hidden = false; }
+  }
+  $('form').addEventListener('submit', async e => { e.preventDefault(); say('Working\u2026', true); const r = await post({action: 'saveStripe', secretKey: $('sk').value, webhookSecret: $('wh').value}); if (r.ok) { $('sk').value = ''; $('wh').value = ''; say(r.d.message, true); load(); } else say(r.d.error || 'Something went wrong.'); });
+  $('plan').addEventListener('click', async () => { say('Working\u2026', true); const r = await post({action: 'ensurePlan'}); r.ok ? say(r.d.message, true) : say(r.d.error || 'Something went wrong.'); });
+  $('remove').addEventListener('click', async () => { if (!confirm('Remove the Stripe keys? Online payment will turn off.')) return; const r = await post({action: 'removeStripe'}); r.ok ? say(r.d.message, true) : say(r.d.error); load(); });
+  load();
+})();
+</script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
