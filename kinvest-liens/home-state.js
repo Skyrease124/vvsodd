@@ -59,7 +59,8 @@
       go.disabled = false;
     }
     form.addEventListener('submit', e => { e.preventDefault(); ask(); });
-    aiHost.append(form, chips, out);
+    const all = mk('p', 'small'); const al = mk('a', '', 'Open PricePocket AI to search across all states \u2192'); al.href = '/ai/'; all.appendChild(al);
+    aiHost.append(form, chips, out, all);
   }
 
   pick.addEventListener('change', () => { if (pick.value) setState(pick.value, 'pick'); });

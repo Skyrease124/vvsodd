@@ -34,7 +34,8 @@
     (async () => { $('planmsg').textContent = 'Payment received. Switching you on\u2026'; for (let i = 0; i < 4; i++) { const r = await billingPost('sync'); if (r.ok && r.d.paid) { location.replace('./'); return; } await new Promise(x => setTimeout(x, 2500)); } $('planmsg').textContent = 'Payment received. It can take a minute to show. Refresh this page in a moment.'; })();
   }
   function show(user) {
-    window.__ppUser = user; if (user && billing) planButtons(user);
+    window.__ppUser = user;
+    if (user) { const pro = user.owner || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) planButtons(user);
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || (user.paidThrough && user.paidThrough >= today);
     $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';

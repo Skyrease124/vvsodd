@@ -12,9 +12,9 @@ export async function getLimit() {
 export async function setLimit(n) { await kvPut('limits', { daily: n }); }
 export async function today() {
   const u = await kvGet('usage-' + day());
-  return u ? (u.ask || 0) + (u.screen || 0) : 0;
+  return u ? (u.ask || 0) + (u.screen || 0) + (u.ai || 0) : 0;
 }
-// kind: 'ask' | 'screen'; ok: false when the AI service failed
+// kind: 'ask' | 'screen' | 'ai'; ok: false when the AI service failed
 export async function record(kind, ok) {
   try {
     const k = 'usage-' + day();
@@ -29,7 +29,7 @@ export async function history(days = 14) {
   for (let i = 0; i < days; i++) {
     const d = day(new Date(Date.now() - i * 864e5));
     const u = (await kvGet('usage-' + d)) || {};
-    out.push({ date: d, ask: u.ask || 0, screen: u.screen || 0, fail: u.fail || 0 });
+    out.push({ date: d, ask: u.ask || 0, screen: u.screen || 0, ai: u.ai || 0, fail: u.fail || 0 });
   }
   return out;
 }

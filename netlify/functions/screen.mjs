@@ -92,6 +92,7 @@ function cleanFilters(f, allUses) {
 }
 function applyFilters(rows, f) {
   return rows.filter(g => {
+    if (!(g.face > 0)) return false; // credits or zero balances are not liens
     if (STRIPS.has(g.use) || PUBLIC.has(g.use)) return false;
     if (f.excludeHomestead && g.homestead) return false;
     if (g.market != null && g.market < g.face) return false;
@@ -186,4 +187,4 @@ export default async (req, context) => {
   const r = await handle(await toEvent(req, context));
   return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
-export { handle as _handle, groupByParcel as _group, score as _score, applyFilters as _apply };
+export { handle as _handle, groupByParcel as _group, score as _score, applyFilters as _apply, loadLiens, cleanFilters, FILES };

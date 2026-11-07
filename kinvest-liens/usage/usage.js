@@ -10,9 +10,9 @@
     $('barnote').textContent = pct + '% of today’s limit used';
     $('daily').value = d.limit;
     const tb = $('days'); tb.textContent = '';
-    const hr = tb.createTHead().insertRow(); ['Day (UTC)', 'Questions', 'Screens', 'AI problems', 'Total'].forEach(h => hr.appendChild(mk('th', h)));
+    const hr = tb.createTHead().insertRow(); ['Day (UTC)', 'Questions', 'Screens', 'PricePocket AI', 'AI problems', 'Total'].forEach(h => hr.appendChild(mk('th', h)));
     const body = tb.createTBody();
-    d.days.forEach(x => { const r = body.insertRow(); [x.date, x.ask, x.screen, x.fail, x.ask + x.screen].forEach(v => r.insertCell().textContent = String(v)); });
+    d.days.forEach(x => { const r = body.insertRow(); [x.date, x.ask, x.screen, x.ai, x.fail, x.ask + x.screen + x.ai].forEach(v => r.insertCell().textContent = String(v)); });
   }
   async function load() {
     try {
