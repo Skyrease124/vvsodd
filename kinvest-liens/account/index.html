@@ -29,6 +29,7 @@
             <svg id="eyeon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg id="eyeoff" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
           </button></span></label>
+        <label id="acodewrap" hidden>Access code <span class="muted">(optional, only if you were given one)</span> <input id="acode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX"></label>
         <p class="small muted" id="pwhint" hidden>At least 8 characters. Pick one you do not use anywhere else.</p>
         <button class="btn" id="go" type="submit">Sign in</button>
         <p id="msg" class="small" role="status" aria-live="polite"></p>
@@ -40,6 +41,7 @@
     <p>Signed in as <b id="who"></b> <span id="ownbadge" class="small muted" hidden>(owner)</span></p>
     <div class="salebox" id="plan"><h3>My plan</h3><p id="plantext"></p><p id="planbtns" class="sact" hidden><button class="btn" id="upgrade" type="button">Become a member: $5.50 a week</button><button class="btn ghost" id="manage" type="button" hidden>Manage subscription</button></p><p id="planmsg" class="small" role="status" aria-live="polite"></p></div>
     <p id="aibtn"><a class="btn" id="ailink" href="../ai/">PricePocket AI</a> <span id="ainote" class="small muted"></span></p>
+    <div class="salebox" id="codebox" hidden><h3>Have an access code?</h3><p class="small">If the site owner gave you a code, type it here to unlock everything.</p><p><input id="rcode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX" aria-label="Access code"> <button class="btn" id="redeem" type="button">Unlock</button></p><p id="codemsg" class="small" role="status" aria-live="polite"></p></div>
     <p id="ownerbtns" hidden><a class="btn" href="../members/">Members</a> <a class="btn ghost" href="../usage/">Usage &amp; daily limit (AI)</a> <a class="btn ghost" href="../billing/">Billing setup</a></p>
     <p><a class="btn" href="../portfolio/">My portfolio (liens I bought)</a></p>
     <h2>My favorites</h2>

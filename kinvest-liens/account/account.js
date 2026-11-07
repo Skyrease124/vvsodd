@@ -4,7 +4,7 @@
   let mode = 'in';
   function setMode(m) {
     mode = m; $('tabin').className = 'btn' + (m === 'in' ? '' : ' ghost'); $('tabup').className = 'btn' + (m === 'up' ? '' : ' ghost');
-    $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in';
+    $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in'; $('acodewrap').hidden = m === 'in';
     $('pw').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('msg').textContent = '';
   }
   let billing = null;
@@ -35,10 +35,11 @@
   }
   function show(user) {
     window.__ppUser = user;
-    if (user) { const pro = user.owner || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) planButtons(user);
+    if (user) { const pro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) planButtons(user);
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
-    const today = new Date().toISOString().slice(0, 10), paid = user.owner || (user.paidThrough && user.paidThrough >= today);
-    $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
+    const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
+    $('codebox').hidden = !!(paid || user.owner);
+    $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : user.family ? 'Family access: everything is on and free for you. The AI question box and screener are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
     $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'No favorites yet. Tap \u2606 Favorite on a lien to keep it here.'; ul.appendChild(li); }
@@ -64,10 +65,11 @@
     const show = $('pw').type === 'password'; $('pw').type = show ? 'text' : 'password';
     $('eyeon').style.display = show ? 'none' : ''; $('eyeoff').style.display = show ? '' : 'none'; $('eye').setAttribute('aria-pressed', String(show)); $('eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
   });
+  $('redeem').addEventListener('click', async () => { $('codemsg').textContent = 'One moment\u2026'; const r = await post({action: 'redeem', code: $('rcode').value}); if (r.ok) { location.reload(); } else $('codemsg').textContent = r.d.error || 'Something went wrong.'; });
   $('tabin').addEventListener('click', () => setMode('in')); $('tabup').addEventListener('click', () => setMode('up'));
   $('form').addEventListener('submit', async e => {
     e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
-    const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: ''});
+    const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: '', accessCode: mode === 'up' ? $('acode').value : ''});
     $('go').disabled = false;
     if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });

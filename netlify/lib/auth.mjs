@@ -157,5 +157,20 @@ export { markOwner };
 export function isPaid(u) {
   if (!u) return false;
   if (u.owner) return true;
+  if (u.family) return true; // free family access, given with an access code
   return !!u.paidThrough && u.paidThrough >= new Date().toISOString().slice(0, 10);
+}
+
+// Family access codes: the owner makes them, each works once, and gives free full access.
+export const genCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const r = crypto.randomBytes(8); let o = ''; for (const x of r) o += A[x % A.length]; return 'FAM-' + o.slice(0, 4) + '-' + o.slice(4); };
+export const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+export async function getCodes() { return ((await get('access-codes')) || { list: [] }).list; }
+export async function putCodes(list) { await put('access-codes', { list }); }
+// Returns 'ok', or an error string. Marks the code used by this email.
+export async function redeemCode(code, email) {
+  const n = normCode(code); if (!n) return 'Enter your access code.';
+  const list = await getCodes(); const c = list.find(x => normCode(x.code) === n);
+  if (!c) return 'That access code is not right.';
+  if (c.usedBy && c.usedBy !== email) return 'That access code was already used.';
+  c.usedBy = email; c.usedAt = new Date().toISOString(); await putCodes(list); return 'ok';
 }

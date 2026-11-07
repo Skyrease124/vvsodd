@@ -86,7 +86,7 @@
       ]);
       const u = acct && acct.user; signedIn = !!u;
       const today = new Date().toISOString().slice(0, 10);
-      paid = !!(u && (u.owner || (u.paidThrough && u.paidThrough >= today)));
+      paid = !!(u && (u.owner || u.paid || (u.paidThrough && u.paidThrough >= today)));
       host.hidden = false;
       const saved = store.get();
       if (saved && byA(saved)) setState(saved, 'pick');

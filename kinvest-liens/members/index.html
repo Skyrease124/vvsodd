@@ -21,6 +21,9 @@
   <p id="gate" class="notice" hidden>This page is for the site owner. <a href="../login/?next=/members/">Sign in</a> with the owner account.</p>
   <div id="app" hidden>
     <div id="sum" class="salebox"></div>
+    <div class="salebox" id="codes"><h3>Family access codes</h3><p class="small muted">Make a code and give it to one family member or a friend. When they type it (when they sign up, or on My account), everything is free for them: the AI, the screener, all of it. Each code works one time. You can make as many as you like.</p>
+      <p><input id="cnote" type="text" maxlength="80" placeholder="Who is it for? (e.g. Brother)" aria-label="Who is the code for"> <button class="btn" id="mkcode" type="button">Make a new code</button></p>
+      <p id="newcode" class="small" role="status" aria-live="polite"></p><div id="codelist"></div></div>
     <div class="lientools">
       <input id="q" type="search" placeholder="Search email or note" aria-label="Search members">
       <select id="f" aria-label="Filter"><option value="all">Everyone</option><option value="active">Active</option><option value="revoked">Turned off</option><option value="paid">Paid up</option><option value="unpaid">Not paid up</option></select>

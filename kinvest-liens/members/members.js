@@ -4,7 +4,7 @@
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const today = () => new Date().toISOString().slice(0, 10);
   let all = [];
-  const isPaid = m => !!m.paidThrough && m.paidThrough >= today();
+  const isPaid = m => !!m.family || (!!m.paidThrough && m.paidThrough >= today());
   const post = async o => { try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return {ok: r.ok, d: await r.json()}; } catch (e) { return {ok: false, d: {error: 'Could not reach the server.'}}; } };
 
   function summary() {
@@ -17,7 +17,7 @@
   const fmt = d => d ? d.slice(0, 10) : 'never';
   function card(m) {
     const c = mk('article', 'scard');
-    const h = mk('div', 'scardh'); h.append(mk('b', '', m.email + (m.owner ? ' (owner)' : '')), mk('span', 'sscore', m.revoked ? 'Turned off' : isPaid(m) ? 'Paid up' : 'Active'));
+    const h = mk('div', 'scardh'); h.append(mk('b', '', m.email + (m.owner ? ' (owner)' : '')), mk('span', 'sscore', m.revoked ? 'Turned off' : m.family ? 'Family (free)' : isPaid(m) ? 'Paid up' : 'Active'));
     c.appendChild(h);
     const dl = mk('dl', 'stfacts');
     [['Joined', fmt(m.created)], ['Last sign-in', fmt(m.lastLogin)], ['Favorites', m.saved], ['Portfolio liens', m.portfolio], ['Paid through', m.paidThrough || 'not set'], ['Stripe subscription', m.sub || 'none']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', String(v))); dl.appendChild(d); });
@@ -47,7 +47,13 @@
       const x = await post({action: 'ownerMember', email: m.email, note: v});
       $('msg').textContent = x.ok ? '' : (x.d.error || 'Could not save.'); if (x.ok) load();
     });
-    act.append(p, n); c.appendChild(act); return c;
+    const fam = mk('button', 'btn small ghost', m.family ? 'Remove free access' : 'Give free access'); fam.type = 'button';
+    fam.addEventListener('click', async () => {
+      if (m.family && !confirm('Take away free access for ' + m.email + '?')) return;
+      const x = await post({action: 'ownerMember', email: m.email, family: !m.family});
+      $('msg').textContent = x.ok ? '' : (x.d.error || 'Could not save.'); if (x.ok) load();
+    });
+    act.append(p, fam, n); c.appendChild(act); return c;
   }
   function render() {
     summary();
@@ -71,4 +77,25 @@
     const a = mk('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], {type: 'text/csv'})); a.download = 'members.csv'; a.click();
   });
   load();
+})();
+
+(function () {
+  const $ = id => document.getElementById(id);
+  async function loadCodes() {
+    const box = $('codelist'); if (!box) return;
+    let d; try { d = await (await fetch('/.netlify/functions/account?codes=1')).json(); } catch (e) { return; }
+    box.textContent = '';
+    (d.codes || []).forEach(c => {
+      const row = document.createElement('p'); row.className = 'small';
+      const b = document.createElement('b'); b.textContent = c.code; row.appendChild(b);
+      row.appendChild(document.createTextNode(' \u2014 ' + (c.note ? c.note + ' \u2014 ' : '') + (c.usedBy ? 'used by ' + c.usedBy : 'not used yet') + ' '));
+      const del = document.createElement('button'); del.type = 'button'; del.className = 'btn small ghost'; del.textContent = c.usedBy ? 'Hide' : 'Cancel code';
+      del.addEventListener('click', async () => { await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'deleteCode', code: c.code})}); loadCodes(); });
+      row.appendChild(del); box.appendChild(row);
+    });
+  }
+  if ($('mkcode')) { $('mkcode').addEventListener('click', async () => {
+    const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'makeCode', note: $('cnote').value})});
+    const d = await r.json(); $('newcode').textContent = r.ok ? 'New code: ' + d.code + ' (tap and hold to copy it)' : (d.error || 'Could not make a code.'); $('cnote').value = ''; loadCodes();
+  }); loadCodes(); }
 })();

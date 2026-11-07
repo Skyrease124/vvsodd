@@ -6,7 +6,7 @@ import * as S from '../lib/stripe.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
-const pub = u => ({ email: u.email, owner: !!u.owner, paidThrough: u.paidThrough || '', sub: u.sub ? { status: u.sub.status, periodEnd: u.sub.periodEnd, cancelAtPeriodEnd: !!u.sub.cancelAtPeriodEnd } : null, hasCustomer: !!u.stripeCustomerId, saved: u.saved || [], portfolio: u.portfolio || [] });
+const pub = u => ({ email: u.email, owner: !!u.owner, family: !!u.family, paid: auth.isPaid(u), paidThrough: u.paidThrough || '', sub: u.sub ? { status: u.sub.status, periodEnd: u.sub.periodEnd, cancelAtPeriodEnd: !!u.sub.cancelAtPeriodEnd } : null, hasCustomer: !!u.stripeCustomerId, saved: u.saved || [], portfolio: u.portfolio || [] });
 
 const STATUS = ['open', 'redeemed', 'foreclosure', 'other'];
 const numOrNull = (v, lo, hi) => { if (v === '' || v == null) return null; const n = Number(v); return isFinite(n) && n >= lo && n <= hi ? n : undefined; };
@@ -47,10 +47,14 @@ async function handle(event) {
       const list = [];
       for (const k of keys.slice(0, 2000)) {
         const u = await auth.kvGet(k); if (!u || !u.email) continue;
-        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, paidThrough: u.paidThrough || '', note: u.note || '', sub: u.sub ? u.sub.status + (u.sub.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : '', alert: u.billingAlert ? u.billingAlert.type : '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
+        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, family: !!u.family, paidThrough: u.paidThrough || '', note: u.note || '', sub: u.sub ? u.sub.status + (u.sub.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : '', alert: u.billingAlert ? u.billingAlert.type : '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
       }
       list.sort((a, b) => (b.created > a.created ? 1 : -1));
       return json(200, { members: list });
+    }
+    if (event.query && event.query.codes) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      return json(200, { codes: (await auth.getCodes()).slice().reverse() });
     }
     if (event.query && event.query.resets) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
@@ -88,9 +92,29 @@ async function handle(event) {
       if (pt && !/^\d{4}-\d{2}-\d{2}$/.test(pt)) return json(400, { error: 'Date must look like 2026-12-31.' });
       u.paidThrough = pt;
     }
+    if (typeof b.family === 'boolean') u.family = b.family;
     if (b.note !== undefined) u.note = String(b.note || '').slice(0, 200);
     await auth.saveUser(u);
     return json(200, { ok: true });
+  }
+  if (act === 'makeCode' || act === 'deleteCode') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const list = await auth.getCodes();
+    if (act === 'deleteCode') { await auth.putCodes(list.filter(c => auth.normCode(c.code) !== auth.normCode(b.code))); return json(200, { ok: true }); }
+    const c = { code: auth.genCode(), note: String(b.note || '').slice(0, 80), created: new Date().toISOString() };
+    list.push(c); await auth.putCodes(list.slice(-200));
+    return json(200, { ok: true, code: c.code });
+  }
+  if (act === 'redeem') {
+    if (!me) return json(401, { error: 'Sign in first.' });
+    const ipr = ((event.headers || {})['x-nf-client-connection-ip'] || 'unknown').split(',')[0].trim();
+    const nr = Date.now(), rr = (tries.get('x' + ipr) || []).filter(t => nr - t < 600000);
+    if (rr.length >= 6) return json(429, { error: 'Too many tries. Please wait 10 minutes.' });
+    rr.push(nr); tries.set('x' + ipr, rr);
+    const r = await auth.redeemCode(b.code, me.email);
+    if (r !== 'ok') return json(400, { error: r });
+    me.family = true; await auth.saveUser(me);
+    return json(200, { user: pub(me) });
   }
   if (act === 'saveMail' || act === 'testMail' || act === 'removeMail') {
     if (!me || !me.owner) return json(403, { error: 'Owner only.' });
@@ -230,8 +254,11 @@ async function handle(event) {
     if (pw.length > 200) return json(400, { error: 'Password is too long.' });
     const owner = !!String(b.ownerCode || '').trim() && auth.codeOk(b.ownerCode);
     if (String(b.ownerCode || '').trim() && !owner) return json(400, { error: 'That owner code is not right. Leave it empty if you are not the owner.' });
+    const hasCode = !!String(b.accessCode || '').trim();
+    if (hasCode) { const c = (await auth.getCodes()).find(x => auth.normCode(x.code) === auth.normCode(b.accessCode)); if (!c) return json(400, { error: 'That access code is not right. Leave it empty if you do not have one.' }); if (c.usedBy) return json(400, { error: 'That access code was already used.' }); }
     const u = await auth.createUser(email, pw, owner);
     if (!u) return json(409, { error: 'That email already has an account. Please sign in.' });
+    if (hasCode && (await auth.redeemCode(b.accessCode, email)) === 'ok') { u.family = true; await auth.saveUser(u); }
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
   const u = await auth.checkLogin(email, pw);

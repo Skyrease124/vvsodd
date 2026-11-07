@@ -19,7 +19,7 @@
     const user = d && d.user;
     // Paid members (and the owner) see "PricePocketPro" instead of "PricePocketAsset".
     const today = new Date().toISOString().slice(0, 10);
-    if (user && (user.owner || (user.paidThrough && user.paidThrough >= today))) {
+    if (user && (user.owner || user.paid || (user.paidThrough && user.paidThrough >= today))) {
       const em = document.querySelector('.dlogo em');
       if (em && em.textContent === 'Asset') em.textContent = 'Pro';
       document.querySelectorAll('a.logo').forEach(a => { const t = a.lastChild; if (t && t.nodeType === 3) t.nodeValue = t.nodeValue.replace('Asset', 'Pro'); });
@@ -36,7 +36,7 @@
       const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members (owner)';
       const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup (owner)';
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';
-      const isPro = user.owner || (user.paidThrough && user.paidThrough >= today);
+      const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/ai/'; aiLink.textContent = 'PricePocket AI'; }
       let ms = null;
       if (user.hasCustomer) {
