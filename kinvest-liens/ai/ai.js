@@ -86,6 +86,7 @@
       const fl = mk('ul', 'sflags'); (r.green || []).forEach(t => fl.appendChild(mk('li', 'g', t))); (r.red || []).forEach(t => fl.appendChild(mk('li', 'r', t))); c.appendChild(fl);
       const act = mk('div', 'sact');
       const mb = mk('button', 'btn small', 'Show on map'); mb.type = 'button'; mb.addEventListener('click', () => LienMap.open({county: r.county, parcel: r.parcel, amount: r.face, market: r.market, use: r.use, acres: r.acres})); act.appendChild(mb);
+      const bb = LienBuy.button({county: r.county, parcel: r.parcel, amount: r.face, certList: r.certList, saleDate: r.saleDate}, 'btn small'); if (bb) act.appendChild(bb);
       const st = mk('a', 'btn small ghost', 'Open ' + r.state + ' page'); st.href = '../liens/states/state/?s=' + r.state; act.appendChild(st);
       c.appendChild(act); box.appendChild(c);
     });

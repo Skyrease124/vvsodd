@@ -65,3 +65,45 @@ const DUE_DILIGENCE = [
   'Confirm the payoff, the rate and how to buy with the tax collector before you pay anything.',
   'Talk to a Florida real estate attorney before relying on a lien. This site is educational only.'
 ];
+
+// "How to buy this lien": per-county guidance shown from every lien. Only facts from the county's own pages or the statute;
+// where a county has no link that opens one parcel's purchase page, we say so and link the official page instead.
+const COUNTY_BUY = {
+  'Palm Beach': {
+    office: 'Palm Beach County Tax Collector',
+    status: l => 'County-held certificate: it was not bought at the tax sale, so the county holds it. Under Florida law, anyone may buy a county-held certificate before a tax deed application is made. Whether this one is still available changes, so confirm with the Tax Collector.',
+    record: {label: 'Open the property record (Property Appraiser)', url: pin => PARCEL_MAPS['Palm Beach'].page(pin)},
+    links: [['Tax Collector: tax certificates (county-held list and contact)', 'https://www.pbctax.gov/services/property-tax/tax-certificates'], ['Florida statute 197.432', FL_SALE.statute[1]]],
+    steps: [
+      'Open the property record and check the lot, the county value and what is on it.',
+      'Contact the Palm Beach County Tax Collector\u2019s tax certificate office (use the page below). Give them the parcel number and the certificate number shown here.',
+      'Ask: is this certificate still available, what is the exact payoff today (interest keeps adding up), how do I pay, and what fee applies per certificate.',
+      'Before you pay, look up the owner and tax history on the county records, and read the statute so you know the redemption and tax deed rules.'
+    ]
+  },
+  'Larimer': {
+    office: 'Larimer County Treasurer',
+    status: l => 'Advertised for the county\u2019s tax lien sale on ' + (l.saleDate || 'the sale date') + '. It is not sold yet, and the owner can pay before the sale, which takes it off the list.',
+    record: null,
+    links: [['Larimer County Treasurer: tax lien sale (rules, registration, location)', 'https://www.larimer.gov/treasurer/thirdparty/liens/sale']],
+    steps: [
+      'Read the county\u2019s sale page for the location, whether bidding is in person or online, and the registration rules.',
+      'The county\u2019s notice says bidders must be at least 18 and give a W-9, and that payment is by check for the exact amount (a bad check can mean forfeiture and a ban). Confirm the current rules.',
+      'In Colorado the interest rate is set by bidding at the sale, so it is not known in advance. Use Calculate with the rate you expect.',
+      'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
+    ],
+    phone: '(970) 498-7020'
+  },
+  'Pinal': {
+    office: 'Pinal County Treasurer',
+    status: l => 'On the Treasurer\u2019s Tax Lien Sale List (PDF dated 11/3/2026). Whether this lien is still available to buy, and the interest rate, must be confirmed with the Treasurer.',
+    record: null,
+    links: [['Pinal County Treasurer: Tax Lien Sale List and parcel inquiry', 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale'], ['Pinal County Treasurer home', 'https://treasurer.pinal.gov/']],
+    steps: [
+      'Open the Treasurer\u2019s lien list page and look for this parcel number. The county\u2019s site may ask you to confirm you are a person first.',
+      'Contact the Treasurer\u2019s office to ask whether this lien is still for sale, the interest rate, and how to register and pay. Arizona\u2019s cap is 16%.',
+      'An Arizona lien holder cannot start a foreclosure until 3 years after the sale, and the owner can pay it off any time before that.',
+      'Look up the property on the county Assessor\u2019s site before you decide.'
+    ]
+  }
+};

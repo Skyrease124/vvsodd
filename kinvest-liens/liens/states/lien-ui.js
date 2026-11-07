@@ -56,6 +56,39 @@ const LienMap = {
     }
   }
 };
+const LienBuy = {
+  button(l, cls) {
+    const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.county]; if (!g) return null;
+    const b = document.createElement('button'); b.type = 'button'; b.className = cls || 'btn small'; b.textContent = 'How to buy'; b.addEventListener('click', () => this.open(l)); return b;
+  },
+  open(l) {
+    const g = COUNTY_BUY[l.county]; if (!g) return;
+    let dlg = document.getElementById('buydlg');
+    if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'buydlg'; dlg.className = 'lotdlg'; dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); document.body.appendChild(dlg); }
+    dlg.textContent = '';
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const head = mk('div', 'lothead'); head.appendChild(mk('b', '', 'How to buy: ' + l.county + ' County parcel ' + l.parcel));
+    const close = mk('button', 'btn small', 'Close'); close.type = 'button'; close.addEventListener('click', () => dlg.close()); head.appendChild(close); dlg.appendChild(head);
+    dlg.appendChild(mk('p', 'notice small', g.status(l)));
+    // things to have ready, each with a copy button
+    const ready = mk('div', 'buyready'); dlg.appendChild(mk('h4', '', 'Have this ready when you contact the county'));
+    const items = [['Parcel number', l.parcel]];
+    const certs = l.certList && l.certList.length ? l.certList : (l.cert ? [l.cert] : []);
+    if (certs.length) items.push([certs.length > 1 ? 'Certificate numbers' : 'Certificate number', certs.join(', ')]);
+    if (l.amount != null || l.face != null) items.push(['Tax owed (face)', '$' + Number(l.amount != null ? l.amount : l.face).toFixed(2)]);
+    items.forEach(([k, v]) => { const r = mk('div', 'buyrow'); r.append(mk('span', 'k', k), mk('b', '', v)); const c = mk('button', 'btn small ghost', 'Copy'); c.type = 'button'; c.addEventListener('click', async () => { try { await navigator.clipboard.writeText(v); c.textContent = 'Copied'; } catch (e) { c.textContent = 'Press and hold to copy'; } }); r.appendChild(c); ready.appendChild(r); });
+    dlg.appendChild(ready);
+    dlg.appendChild(mk('h4', '', 'Steps'));
+    const ol = mk('ol', 'salesteps'); g.steps.forEach(t => ol.appendChild(mk('li', '', t))); dlg.appendChild(ol);
+    const acts = mk('div', 'sact');
+    if (g.record) { const a = mk('a', 'btn', g.record.label); a.href = g.record.url(l.parcel); a.target = '_blank'; a.rel = 'noopener noreferrer'; acts.appendChild(a); }
+    g.links.forEach((k, i) => { const a = mk('a', 'btn ghost', k[0]); a.href = k[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; acts.appendChild(a); });
+    if (g.phone) { const a = mk('a', 'btn ghost', 'Call ' + g.office + ' ' + g.phone); a.href = 'tel:' + g.phone.replace(/[^0-9]/g, ''); acts.appendChild(a); }
+    dlg.appendChild(acts);
+    dlg.appendChild(mk('p', 'small muted', 'We can\u2019t buy for you and can\u2019t see whether a lien is still available. The county is the only place to check and to buy. Educational only; not legal, tax or investment advice. Verify everything with the county first.'));
+    if (!dlg.open) dlg.showModal();
+  }
+};
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const LienUI = {
   saleBox(host, county) {
@@ -116,7 +149,7 @@ const LienUI = {
         const mc = r.insertCell();
         const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
         cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator';
-        cc.appendChild(cb);
+        cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); }
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);
