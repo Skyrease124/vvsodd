@@ -17,6 +17,14 @@
 
   fetch(API).then(r => r.ok ? r.json() : null).then(d => {
     const user = d && d.user;
+    // Paid members (and the owner) see "PricePocketPro" instead of "PricePocketAsset".
+    const today = new Date().toISOString().slice(0, 10);
+    if (user && (user.owner || (user.paidThrough && user.paidThrough >= today))) {
+      const em = document.querySelector('.dlogo em');
+      if (em && em.textContent === 'Asset') em.textContent = 'Pro';
+      document.querySelectorAll('a.logo').forEach(a => { const t = a.lastChild; if (t && t.nodeType === 3) t.nodeValue = t.nodeValue.replace('Asset', 'Pro'); });
+      const dl = document.querySelector('.dlogo'); if (dl) dl.setAttribute('aria-label', 'PricePocketPro home');
+    }
     if (user) {
       navLinks.forEach(a => { a.textContent = 'My account'; });
       const wrap = document.createElement('div'); wrap.className = 'pp-menu';
