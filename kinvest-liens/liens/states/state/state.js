@@ -33,6 +33,7 @@ if (!s) {
   });
   if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
   if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box, undefined, 'FL'); }
+  if (s.a === 'NY') { const box = document.createElement('div'); $('clist').before(box); const s1 = document.createElement('script'); s1.src = '../nyc-history.js'; s1.onload = () => { const s2 = document.createElement('script'); s2.src = '../nyc-ui.js'; s2.onload = () => NycUI.render(box); document.head.appendChild(s2); }; document.head.appendChild(s1); }
   const LF = {CO: ['liens-larimer.js', 'Larimer'], AZ: ['liens-pinal.js', 'Pinal']}[s.a];
   if (LF) { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); }
   (function parcelBox() {
