@@ -32,6 +32,14 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Leon': {
+    state: 'FL',
+    parcels: 'https://intervector.leoncountyfl.gov/intervector/rest/services/MapServices/TLC_OverlayParcel_D_WM/MapServer/0/query',
+    idField: 'TAXID', fmt: p => p,
+    record: () => 'https://www.leonpa.gov/', recordName: 'Leon County Property Appraiser',
+    zoning: { url: 'https://intervector.leoncountyfl.gov/intervector/rest/services/MapServices/TLC_OverlayZoning_D_WM/MapServer/0/query', field: 'ZONING', name: 'Tallahassee-Leon County zoning map' },
+    zoningPage: 'https://www.leoncountyfl.gov/'
+  },
   'Coconino': {
     state: 'AZ',
     parcels: 'https://services1.arcgis.com/Rlvx5g8pKeK13apH/arcgis/rest/services/Coconino_County_Parcels_Open_Data/FeatureServer/0/query',
