@@ -73,10 +73,11 @@ const COUNTY_BUY = {
     office: 'Palm Beach County Tax Collector',
     status: l => 'County-held certificate: it was not bought at the tax sale, so the county holds it. Under Florida law, anyone may buy a county-held certificate before a tax deed application is made. Whether this one is still available changes, so confirm with the Tax Collector.',
     record: {label: 'Open the property record (Property Appraiser)', url: pin => PARCEL_MAPS['Palm Beach'].page(pin)},
-    links: [['Tax Collector: tax certificates (county-held list and contact)', 'https://www.pbctax.gov/services/property-tax/tax-certificates'], ['Florida statute 197.432', FL_SALE.statute[1]]],
+    links: [['Register to buy online (RealAuction, the county\u2019s official sale site)', 'https://palmbeachfl.realtaxlien.com/'], ['Tax Collector: tax certificates (county-held list and contact)', 'https://www.pbctax.gov/services/property-tax/tax-certificates'], ['Florida statute 197.432', FL_SALE.statute[1]]],
     steps: [
       'Open the property record and check the lot, the county value and what is on it.',
       'Contact the Palm Beach County Tax Collector\u2019s tax certificate office (use the page below). Give them the parcel number and the certificate number shown here.',
+      'Palm Beach sells on RealAuction, not LienHub. The Tax Collector says buyers must register there first (link below). You then buy in person, by mail or wire, or in a RealAuction supplemental sale when notified.',
       'Ask: is this certificate still available, what is the exact payoff today (interest keeps adding up), how do I pay, and what fee applies per certificate.',
       'Before you pay, look up the owner and tax history on the county records, and read the statute so you know the redemption and tax deed rules.'
     ]
