@@ -23,6 +23,7 @@ const FL_SALE = {
     'Palm Beach': 'https://www.pbctax.gov/services/property-tax/tax-certificates',
     'Leon': 'https://leontaxcollector.net/Services/property-taxes/Certificate-Lists',
     'Manatee': 'https://www.taxcollector.com/services/property-tax/tax-certs.cfm',
+    'Alachua': 'https://lienhub.com/county/alachua/certsale/',
     'Pasco': 'https://pascotaxes.com/taxes/tax-information/delinquent-real-estate-taxes/tax-sale-information/',
     'Marion': 'https://mariontax.com/delinquent-taxes',
     'Walton': 'https://waltontaxcollector.com/services/property-taxes/delinquent-taxes',
@@ -48,6 +49,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Alachua': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=11 AND PARCEL_ID',
+    fmt: pin => pin,
+    page: pin => 'https://www.acpafl.org/',
+    pageName: 'Alachua County Property Appraiser'
   },
   'Manatee': {
     query: 'https://www.mymanatee.org/gisits/rest/services/opendata/General/FeatureServer/0/query',
@@ -117,6 +125,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Alachua': {
+    office: 'Alachua County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Alachua County holds it. Anyone can buy it on LienHub. Purchase amount on the list: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding, so taxes have gone unpaid for years: research it carefully.' : ''),
+    record: {label: 'Open the Alachua County Property Appraiser', url: pin => 'https://www.acpafl.org/'},
+    links: [['Buy on LienHub (Alachua County)', 'https://lienhub.com/county/alachua/certsale/'], ['Alachua County Tax Collector', 'https://www.alachuacollector.com/']],
+    steps: [
+      'Alachua sells its certificates on LienHub (the Tax Collector\u2019s site links there).',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Go to View/Purchase Certificates for Alachua and search this certificate or parcel number. If it is listed, it is still for sale.',
+      'Before you pay, check the parcel on the Property Appraiser site and read Land Information here. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Manatee': {
     office: 'Manatee County Tax Collector',
