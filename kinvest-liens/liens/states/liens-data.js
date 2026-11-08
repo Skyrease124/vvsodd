@@ -21,6 +21,7 @@ const FL_SALE = {
   // Official delinquent / tax certificate list pages (each opened when checked)
   lists: {
     'Palm Beach': 'https://www.pbctax.gov/services/property-tax/tax-certificates',
+    'Leon': 'https://leontaxcollector.net/Services/property-taxes/Certificate-Lists',
     'Pasco': 'https://pascotaxes.com/taxes/tax-information/delinquent-real-estate-taxes/tax-sale-information/',
     'Marion': 'https://mariontax.com/delinquent-taxes',
     'Walton': 'https://waltontaxcollector.com/services/property-taxes/delinquent-taxes',
@@ -46,6 +47,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Leon': {
+    query: 'https://intervector.leoncountyfl.gov/intervector/rest/services/MapServices/TLC_OverlayParcel_D_WM/MapServer/0/query',
+    idField: 'TAXID',
+    fmt: pin => pin,
+    page: pin => 'https://www.leonpa.gov/',
+    pageName: 'Leon County Property Appraiser'
   },
   'Coconino': {
     query: 'https://services1.arcgis.com/Rlvx5g8pKeK13apH/arcgis/rest/services/Coconino_County_Parcels_Open_Data/FeatureServer/0/query',
@@ -101,6 +109,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Leon': {
+    office: 'Leon County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' (tax year ' + l.taxYear + '): nobody bought it at the ' + l.certYear + ' sale, so Leon County holds it. Florida lets anyone buy a county-held certificate. It earns up to 18%. Confirm it is still available with the Tax Collector.',
+    record: {label: 'Open the Leon County Property Appraiser', url: pin => 'https://www.leonpa.gov/'},
+    links: [['Register as a bidder (Leon County Tax Collector)', 'https://wwwtax2.leoncountyfl.gov/itm/CTYRegistration.aspx'], ['Purchase county-held certificates (sign in)', 'https://wwwtax2.leoncountyfl.gov/itm/CTYLogin.aspx'], ['Leon certificate lists', 'https://leontaxcollector.net/Services/property-taxes/Certificate-Lists'], ['How to be a tax certificate investor (Leon)', 'https://www.leontaxcollector.net/Investors/Interested-in-Being-a-Tax-Certificate-Investor']],
+    steps: [
+      'Leon sells county-held certificates on its own Tax Collector website, not LienHub or RealAuction.',
+      'Register as a bidder first (link below). The Tax Collector asks for a tax form (W-9, or W-8 for non-US buyers) after you register.',
+      'Sign in to the county certificate purchase page and search for this parcel number. If it is listed, it is still for sale.',
+      'Check the property on the Property Appraiser site and the Land Information here before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Coconino': {
     office: 'Coconino County Treasurer',
