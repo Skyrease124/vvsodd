@@ -22,6 +22,7 @@ const FL_SALE = {
   lists: {
     'Palm Beach': 'https://www.pbctax.gov/services/property-tax/tax-certificates',
     'Leon': 'https://leontaxcollector.net/Services/property-taxes/Certificate-Lists',
+    'Manatee': 'https://www.taxcollector.com/services/property-tax/tax-certs.cfm',
     'Pasco': 'https://pascotaxes.com/taxes/tax-information/delinquent-real-estate-taxes/tax-sale-information/',
     'Marion': 'https://mariontax.com/delinquent-taxes',
     'Walton': 'https://waltontaxcollector.com/services/property-taxes/delinquent-taxes',
@@ -47,6 +48,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Manatee': {
+    query: 'https://www.mymanatee.org/gisits/rest/services/opendata/General/FeatureServer/0/query',
+    idField: 'PARCEL_ID',
+    fmt: pin => pin,
+    page: pin => 'https://www.manateepao.gov/',
+    pageName: 'Manatee County Property Appraiser'
   },
   'Leon': {
     query: 'https://intervector.leoncountyfl.gov/intervector/rest/services/MapServices/TLC_OverlayParcel_D_WM/MapServer/0/query',
@@ -109,6 +117,17 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Manatee': {
+    office: 'Manatee County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Manatee County holds it. Florida lets anyone buy a county-held certificate. Total due on the county list: $' + Number(l.payoff).toFixed(2) + ' through 11/30/2026. Confirm it is still available.',
+    record: {label: 'Open the Manatee County Property Appraiser', url: pin => 'https://www.manateepao.gov/'},
+    links: [['Manatee Tax Collector: tax certificates (county-held list, W-9)', 'https://www.taxcollector.com/services/property-tax/tax-certs.cfm']],
+    steps: [
+      'Manatee sells county-held certificates by email, not LienHub. Email legal@taxcollector.com with the certificate number(s) you want to buy.',
+      'The Tax Collector\u2019s Field Services and Collections Department replies with payment instructions. They ask for a W-9 (on their tax certificate page).',
+      'Before you pay, look up the parcel on the Property Appraiser site and read Land Information here. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Leon': {
     office: 'Leon County Tax Collector',

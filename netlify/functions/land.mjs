@@ -32,6 +32,14 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Manatee': {
+    state: 'FL',
+    parcels: 'https://www.mymanatee.org/gisits/rest/services/opendata/General/FeatureServer/0/query',
+    idField: 'PARCEL_ID', fmt: p => p,
+    record: () => 'https://www.manateepao.gov/', recordName: 'Manatee County Property Appraiser',
+    zoning: { url: 'https://www.mymanatee.org/gisits/rest/services/opendata/General/FeatureServer/0/query', field: 'ZONING', name: 'Manatee County parcel map (zoning field)' },
+    zoningPage: 'https://www.mymanatee.org/'
+  },
   'Leon': {
     state: 'FL',
     parcels: 'https://intervector.leoncountyfl.gov/intervector/rest/services/MapServices/TLC_OverlayParcel_D_WM/MapServer/0/query',
