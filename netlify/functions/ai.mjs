@@ -23,7 +23,7 @@ function loadNyc() {
   if (!dir) throw new Error('nyc data not found');
   return vm.runInNewContext(fs.readFileSync(path.join(dir, 'nyc-history.js'), 'utf8') + '\n;NYC_HISTORY', {}, { timeout: 2000 });
 }
-const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL' };
+const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL', 'Miami-Dade': 'FL' };
 const SYS = ['Tax lien certificate', 'Tax deed', 'Redeemable deed', 'Hybrid', 'Municipal lien', 'Sources differ'];
 const BID = ['Bid-down rate', 'Premium bidding', 'Other', 'Not applicable'];
 const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
