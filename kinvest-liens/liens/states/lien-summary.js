@@ -3,7 +3,8 @@
 const LIEN_SUMMARY = [
   {state: 'FL', county: 'Palm Beach', count: 841},
   {state: 'CO', county: 'Larimer', count: 1920},
-  {state: 'AZ', county: 'Pinal', count: 88}
+  {state: 'AZ', county: 'Pinal', count: 88},
+  {state: 'AZ', county: 'Coconino', count: 1421}
 ];
 
 // Past sale records: history we show for learning (not open to buy). NYC = properties on its 2019-2025 lien sale lists (counts only);

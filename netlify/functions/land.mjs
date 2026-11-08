@@ -32,6 +32,14 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Coconino': {
+    state: 'AZ',
+    parcels: 'https://services1.arcgis.com/Rlvx5g8pKeK13apH/arcgis/rest/services/Coconino_County_Parcels_Open_Data/FeatureServer/0/query',
+    idField: 'APN', fmt: p => p,
+    record: () => 'https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE', recordName: 'Coconino County Treasurer',
+    zoning: { url: 'https://services1.arcgis.com/Rlvx5g8pKeK13apH/arcgis/rest/services/County_Zoning/FeatureServer/0/query', field: 'ZONINGCODE', name: 'Coconino County zoning map (unincorporated county only)' },
+    zoningPage: 'https://www.coconino.az.gov/'
+  },
   'Pinal': {
     state: 'AZ',
     parcels: 'https://gis.pinal.gov/mapping/rest/services/TaxParcels/FeatureServer/3/query',
