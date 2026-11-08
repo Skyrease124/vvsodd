@@ -32,6 +32,13 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Alachua': {
+    state: 'FL',
+    parcels: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=11 AND PARCEL_ID', fmt: p => p,
+    record: () => 'https://www.acpafl.org/', recordName: 'Alachua County Property Appraiser',
+    zoningPage: 'https://growth-management.alachuacounty.us/'
+  },
   'Manatee': {
     state: 'FL',
     parcels: 'https://www.mymanatee.org/gisits/rest/services/opendata/General/FeatureServer/0/query',
@@ -106,7 +113,7 @@ async function research(countyName, parcel) {
   // 1. The parcel shape from the county's own parcel map (only the ID is requested: no owner fields).
   let rings = null;
   try {
-    const d = await q(c.parcels, { where: c.idField + "='" + c.fmt(parcel).replace(/'/g, '') + "'", outFields: c.idField, returnGeometry: 'true', outSR: '4326' });
+    const d = await q(c.parcels, { where: c.idField + "='" + c.fmt(parcel).replace(/'/g, '') + "'", outFields: c.idField.split(' ').pop(), returnGeometry: 'true', outSR: '4326' });
     const g = d.features && d.features[0] && d.features[0].geometry; if (g && g.rings && g.rings.length) rings = thin(g.rings);
   } catch (e) { }
   if (!rings) {
