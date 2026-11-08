@@ -82,6 +82,34 @@ const LienSave = {
     return b;
   }
 };
+// Land Information: flood zone, wetlands, zoning, road access, size, utilities, easements.
+// Read from official map services by /.netlify/functions/land. Anything not confirmed shows "Not Verified".
+const LienLand = {
+  LABELS: [['flood', 'FEMA flood zone and flood risk'], ['wetlands', 'Wetlands and environmental limits'], ['zoning', 'Zoning'], ['buildable', 'Buildability'], ['road', 'Road access (landlocked?)'], ['size', 'Acreage and dimensions'], ['water', 'Water'], ['sewer', 'Sewer'], ['power', 'Electricity'], ['easements', 'Easements and restrictions']],
+  section(l) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'landinfo'); box.appendChild(mk('h4', '', 'Land Information'));
+    const st = mk('p', 'small muted', 'Checking official maps (FEMA, wetlands, county GIS)\u2026'); box.appendChild(st);
+    const list = mk('dl', 'landlist'); box.appendChild(list);
+    fetch('/.netlify/functions/land?county=' + encodeURIComponent(l.county || '') + '&parcel=' + encodeURIComponent(l.parcel)).then(r => r.json()).then(d => {
+      if (d.error) { st.textContent = d.error; return; }
+      st.textContent = d.matched === false ? 'This parcel was not found on the county map, so nothing could be checked automatically.' : 'See these before you fall in love with a cheap lot. Map data is a starting point, not a survey.';
+      this.LABELS.forEach(([k, label]) => {
+        const f = d.fields && d.fields[k]; if (!f) return;
+        const row = mk('div', 'landrow' + (f.verified ? '' : ' nv'));
+        row.appendChild(mk('dt', '', label));
+        const dd = mk('dd'); dd.appendChild(mk('b', '', f.value));
+        if (f.note) dd.appendChild(mk('span', 'small muted', ' ' + f.note));
+        const src = mk('span', 'landsrc small muted');
+        src.append('Source: ');
+        if (f.url) { const a = mk('a', '', f.source || 'official record'); a.href = f.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); } else src.append(f.source || 'none found');
+        src.append(' \u00b7 Last checked ' + (f.checked || d.checked));
+        dd.appendChild(src); row.appendChild(dd); list.appendChild(row);
+      });
+    }).catch(() => { st.textContent = 'Could not reach the official map services right now. Every item is Not Verified. Try again later.'; });
+    return box;
+  }
+};
 const LienBuy = {
   button(l, cls) {
     const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.county]; if (!g) return null;
@@ -104,6 +132,7 @@ const LienBuy = {
     if (l.amount != null || l.face != null) items.push(['Tax owed (face)', '$' + Number(l.amount != null ? l.amount : l.face).toFixed(2)]);
     items.forEach(([k, v]) => { const r = mk('div', 'buyrow'); r.append(mk('span', 'k', k), mk('b', '', v)); const c = mk('button', 'btn small ghost', 'Copy'); c.type = 'button'; c.addEventListener('click', async () => { try { await navigator.clipboard.writeText(v); c.textContent = 'Copied'; } catch (e) { c.textContent = 'Press and hold to copy'; } }); r.appendChild(c); ready.appendChild(r); });
     dlg.appendChild(ready);
+    dlg.appendChild(LienLand.section(l));
     dlg.appendChild(mk('h4', '', 'Steps'));
     const ol = mk('ol', 'salesteps'); g.steps.forEach(t => ol.appendChild(mk('li', '', t))); dlg.appendChild(ol);
     const acts = mk('div', 'sact');
