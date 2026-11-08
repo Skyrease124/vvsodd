@@ -47,6 +47,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Coconino': {
+    query: 'https://services1.arcgis.com/Rlvx5g8pKeK13apH/arcgis/rest/services/Coconino_County_Parcels_Open_Data/FeatureServer/0/query',
+    idField: 'APN',
+    fmt: pin => pin,
+    page: pin => 'https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE',
+    pageName: 'Coconino County Treasurer'
+  },
   'Larimer': {
     query: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3/query',
     idField: 'PARCELNUM',
@@ -94,6 +101,19 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Coconino': {
+    office: 'Coconino County Treasurer',
+    phone: '(928) 679-8188',
+    status: l => 'On the Coconino County Treasurer\u2019s 2026 delinquent account list (taxes owed: $' + Number(l.amount).toFixed(2) + ').' + (l.prior ? ' Marked as more than one year delinquent: research it carefully.' : '') + ' This list shows unpaid taxes; whether a lien is for sale now, and at what rate, must be confirmed with the Treasurer.',
+    record: null,
+    links: [['Coconino County Treasurer: 2026 delinquent account list (PDF)', 'https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE']],
+    steps: [
+      'Call the Treasurer\u2019s office and give the parcel number. Ask whether a tax lien on it is for sale now (at the yearly sale or over the counter), the exact amount, and how to pay.',
+      'The county also posts an \u201cover the counter\u201d list of liens that did not sell at auction. Those can be bought directly from the Treasurer, and some carry extra fees.',
+      'Arizona\u2019s rate cap is 16%. A lien holder cannot start a foreclosure until 3 years after the sale, and the owner can pay it off any time before that.',
+      'Look at Land Information here and the county Assessor\u2019s records before you decide.'
+    ]
   },
   'Pinal': {
     office: 'Pinal County Treasurer',
