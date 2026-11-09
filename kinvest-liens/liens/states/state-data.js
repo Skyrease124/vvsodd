@@ -1,3 +1,4 @@
+// MI, NY, NC, CA sale steps added 2026-11-09 from the statute and county pages linked in each entry (CA from LA County TTC pages; state code pages were not reachable).
 // Extra state-level data: sale rules and official past-sale totals. Every figure carries a source and the date checked.
 const STATE_DATA = {
  "AZ": {
@@ -3277,5 +3278,127 @@ const STATE_DATA = {
     ]
    }
   ]
+ },
+ "MI": {
+ "sale": {
+  "title": "Tax foreclosure auctions (Michigan)",
+  "when": "Taxes go delinquent March 1, the property is forfeited the next March 1, owners can redeem until March 31 after the foreclosure judgment, and counties auction from the third Tuesday in July through the first Tuesday in November (MCL 211.78k, 211.78m).",
+  "steps": [
+   "On March 1, property with taxes delinquent 12 months or more is forfeited to the county treasurer, which adds a $175 fee (MCL 211.78g).",
+   "The circuit court enters a foreclosure judgment by March 30. The owner's right to redeem ends March 31 (21 days after judgment in a contested case) (MCL 211.78k).",
+   "The state, then local governments and land banks, get first chance to buy. Then the county treasurer (or its agent) auctions the rest, often online, between the third Tuesday in July and the first Tuesday in November (MCL 211.78m).",
+   "The minimum bid covers all delinquent taxes, interest, penalties and fees, and may include auction costs. Payment is due quickly (same day or within 21 days), and the buyer must sign an affidavit about other tax-delinquent property (MCL 211.78m).",
+   "The buyer gets a deed within about 14 days of full payment, sold as is. Wayne County, for example, gives a quit claim deed with no warranties.",
+   "If the sale brings more than the minimum bid and costs, the former owner can claim the remaining proceeds by filing a notice of intent by July 1 after the foreclosure (MCL 211.78t)."
+  ],
+  "links": [
+   [
+    "MCL 211.78g (forfeiture, redemption)",
+    "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-211-78g"
+   ],
+   [
+    "MCL 211.78k (foreclosure judgment)",
+    "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-211-78k"
+   ],
+   [
+    "MCL 211.78m (auctions, minimum bid)",
+    "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-211-78m"
+   ],
+   [
+    "MCL 211.78t (remaining proceeds)",
+    "https://www.legislature.mi.gov/Laws/MCL?objectName=mcl-211-78t"
+   ],
+   [
+    "Wayne County: auctions and claims",
+    "https://www.waynecountymi.gov/Services/Property-Taxes/Auctions-Claims"
+   ],
+   [
+    "Wayne County: forfeiture and foreclosure timeline",
+    "https://www.waynecountymi.gov/Government/Elected-Officials/Treasurer/Property-Tax-Information/ForfeitureForeclosure-Timeline"
+   ]
+  ]
  }
+},
+ "NY": {
+ "sale": {
+  "title": "Tax foreclosure (New York, outside New York City)",
+  "when": "Counties and other tax districts foreclose under Real Property Tax Law Article 11. The owner's redemption period generally ends two years after the lien date (RPTL 1110). New York City runs its own lien sales, which are not covered here.",
+  "steps": [
+   "The owner can redeem by paying the tax lien plus charges to the enforcing officer before the redemption period ends, generally two years after the lien date. Districts can lengthen it for homes and farms or shorten it to one year for vacant, abandoned homes (RPTL 1110).",
+   "If nobody answers the foreclosure petition, the court enters a final judgment giving the tax district the property and directing a deed (RPTL 1136).",
+   "Before conveying to anyone else, the district may choose to give the property back to the former owner if they pay all taxes, penalties, interest and charges (RPTL 1136).",
+   "When a court-directed sale is needed, it is a public auction by the enforcing officer, advertised once a week for at least three weeks in a local newspaper (RPTL 1136).",
+   "Anyone claiming surplus money from the sale files a written claim with the court clerk before the sale report is confirmed (RPTL 1135)."
+  ],
+  "links": [
+   [
+    "RPTL 1110 (redemption)",
+    "https://www.nysenate.gov/legislation/laws/RPT/1110"
+   ],
+   [
+    "RPTL 1135 (surplus)",
+    "https://www.nysenate.gov/legislation/laws/RPT/1135"
+   ],
+   [
+    "RPTL 1136 (judgment and sale)",
+    "https://www.nysenate.gov/legislation/laws/RPT/1136"
+   ]
+  ]
+ }
+},
+ "NC": {
+ "sale": {
+  "title": "Tax foreclosure sales (North Carolina)",
+  "when": "Counties foreclose either by a court action (G.S. 105-374) or in rem through the clerk (G.S. 105-375). Sales are public auctions, followed by 10-day upset bid periods (G.S. 1-339.25).",
+  "steps": [
+   "Court route: the county sues in superior court, like a mortgage foreclosure. A commissioner sells at public auction to the highest bidder, free and clear except listed liens (G.S. 105-374).",
+   "In rem route: the tax collector files a certificate with the clerk at least 30 days after the liens were advertised. After notice, it is docketed as a judgment, and the sheriff can sell under execution between three months and two years later (G.S. 105-375).",
+   "After the sale, anyone can raise the bid by at least 5% (minimum $750) with a deposit, within 10 days. Each new upset bid opens another 10 days (G.S. 1-339.25).",
+   "Your winning bid is not final until the upset period ends with no higher bid and the sale is confirmed.",
+   "Money left after costs, taxes and other liens is paid as the court directs, or held by the clerk for anyone entitled to it (G.S. 105-374)."
+  ],
+  "links": [
+   [
+    "G.S. 105-374 (foreclosure action)",
+    "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-374.html"
+   ],
+   [
+    "G.S. 105-375 (in rem)",
+    "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_105/GS_105-375.html"
+   ],
+   [
+    "G.S. 1-339.25 (upset bids)",
+    "https://www.ncleg.gov/EnactedLegislation/Statutes/HTML/BySection/Chapter_1/GS_1-339.25.html"
+   ]
+  ]
+ }
+},
+ "CA": {
+ "sale": {
+  "title": "Tax-defaulted property auctions (California, as Los Angeles County describes it)",
+  "when": "After 5 years in default for homes (3 for non-residential commercial property), the county Treasurer and Tax Collector has the power to sell at public auction. These steps come from Los Angeles County's official pages; other counties follow the same state law, but confirm locally.",
+  "steps": [
+   "Unpaid taxes start a 5-year waiting period for residential property and 3 years for non-residential commercial property. After that the Treasurer and Tax Collector can sell (LA County TTC).",
+   "The auction is advertised for three weeks and on the county website. Owners and parties of interest get notice, and the sale is at least 45 days after notice by registered mail.",
+   "The minimum bid is the amount needed to pay the taxes, fees and costs. It can be lowered if the property was offered before.",
+   "The owner can stop the sale by paying all defaulted taxes in full by 5:00 p.m. on the last business day before the auction.",
+   "The winner gets a tax deed, recorded about 60 to 70 days later. Property is sold as is, and the county does not clear other liens (it lists known IRS and other liens for information). Sales can be challenged for one year, and most title companies won't insure before then.",
+   "Money left over (excess proceeds) can be claimed by parties of interest. The county mails notice within 90 days after the sale if it is over $150."
+  ],
+  "links": [
+   [
+    "LA County TTC: auction general information",
+    "https://ttc.lacounty.gov/auction-general-information/"
+   ],
+   [
+    "LA County TTC: auction FAQ",
+    "https://ttc.lacounty.gov/auction-frequently-asked-questions/"
+   ],
+   [
+    "LA County TTC: excess proceeds",
+    "https://ttc.lacounty.gov/notice-of-excess-proceeds/"
+   ]
+  ]
+ }
+}
 };
