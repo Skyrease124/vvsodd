@@ -1,3 +1,4 @@
+// OK (Oklahoma County), WV, KS, ID, NM, WY added 2026-11-09 from the linked statute/agency/county pages.
 // WA, OR, MN, VA, AL added 2026-11-09 from the linked statute/agency pages.
 // MI, NY, NC, CA sale steps added 2026-11-09 from the statute and county pages linked in each entry (CA from LA County TTC pages; state code pages were not reachable).
 // Extra state-level data: sale rules and official past-sale totals. Every figure carries a source and the date checked.
@@ -3521,6 +3522,152 @@ const STATE_DATA = {
    [
     "Alabama Dept. of Revenue: property tax",
     "https://revenue.alabama.gov/division/property-tax/"
+   ]
+  ]
+ }
+},
+ "OK": {
+ "sale": {
+  "title": "Tax resale auction (Oklahoma, as Oklahoma County describes it)",
+  "when": "Oklahoma County holds a yearly resale auction in June for property sold earlier for unpaid taxes (the 2026 sale started June 8, 2026). These steps come from the Oklahoma County Treasurer's page; confirm with your county.",
+  "steps": [
+   "Taxes on real property are a lien for seven years from when they became due (68 O.S. 3101).",
+   "Unpaid property taxes add 18% a year interest, charged at 1.5% a month (Oklahoma County Treasurer).",
+   "The owner or a lienholder can redeem any time before the resale auction starts (68 O.S. 3113, as quoted by Oklahoma County).",
+   "At the resale, bidders pay cash. The lowest acceptable bid is two-thirds of the assessed value or the total taxes, penalties, interest and costs, whichever is less.",
+   "If nobody bids, the property is deeded to the county, which can sell it later. Buyers get a tax deed after recording, not a warranty deed, so buyer beware."
+  ],
+  "links": [
+   [
+    "68 O.S. 3101 (tax lien for 7 years)",
+    "https://www.oscn.net/applications/oscn/DeliverDocument.asp?citeid=93152"
+   ],
+   [
+    "Oklahoma County Treasurer (resale information)",
+    "https://www.oklahomacounty.org/Elected-Offices/Treasurer"
+   ]
+  ]
+ }
+},
+ "WV": {
+ "sale": {
+  "title": "State Auditor tax sales (West Virginia)",
+  "when": "Each year the State Auditor certifies delinquent land between March 1 and August 1, then auctions it at the county courthouse within 90 days (W. Va. Code 11A-3-44, 11A-3-45). The old sheriff's sale law (11A-3-5) is repealed.",
+  "steps": [
+   "Between March 1 and August 1, the State Auditor certifies the list of delinquent and nonentered land in each county, adding a $25 charge per tract (11A-3-44).",
+   "Bidders register in advance with the Auditor's office, or sign a notarized affidavit on sale day. The Auditor can refuse people with their own tax delinquencies or code violations (11A-3-45).",
+   "Each tract is sold at public auction at the county courthouse to the highest eligible bidder, within 90 days after certification. Pay the Auditor by check, cash or money order by close of business that day (11A-3-45).",
+   "The owner or any lienholder can redeem before the auction by paying the taxes, interest and charges (11A-3-47).",
+   "After the Auditor approves your purchase, you have 120 days to prepare the list of people to notify and deposit the costs, or you lose the purchase. A 60-day extension costs $100 or 10% of the price, whichever is more (11A-3-52). How long owners can redeem after the sale is set in 11A-3-54 to 59, which we have not yet checked."
+  ],
+  "links": [
+   [
+    "W. Va. Code 11A-3-44 (certification)",
+    "https://code.wvlegislature.gov/11A-3-44/"
+   ],
+   [
+    "W. Va. Code 11A-3-45 (auction)",
+    "https://code.wvlegislature.gov/11A-3-45/"
+   ],
+   [
+    "W. Va. Code 11A-3-47 (redemption before sale)",
+    "https://code.wvlegislature.gov/11A-3-47/"
+   ],
+   [
+    "W. Va. Code 11A-3-52 (purchaser deadlines)",
+    "https://code.wvlegislature.gov/11A-3-52/"
+   ]
+  ]
+ }
+},
+ "KS": {
+ "sale": {
+  "title": "Tax foreclosure auctions (Kansas)",
+  "when": "When land the county bid in at a tax sale is still unpaid on September 1 of the second year after that sale, the county sues in district court and the property is later auctioned (K.S.A. 79-2801). Sedgwick County, for example, holds a yearly auction.",
+  "steps": [
+   "Land with unpaid taxes is bid in by the county at the delinquent tax sale. Investors don't buy liens.",
+   "If it is still unredeemed on September 1 of the second year after that sale, the county commissioners order a foreclosure suit in district court. For lower-value property the county can choose whether to sue (K.S.A. 79-2801).",
+   "In Sedgwick County, properties two and a half or three and a half years delinquent are selected, and a $400 foreclosure fee is added. Owners can pay through the close of business the day before the sale.",
+   "The sale is an open auction. The buyer pays a $21 deed-registration fee, and the sheriff's deed usually comes about 120 days later.",
+   "Owners or lienholders can still challenge the sale in district court afterward (Sedgwick County)."
+  ],
+  "links": [
+   [
+    "K.S.A. 79-2801 (foreclosure action)",
+    "https://www.ksrevisor.gov/statutes/chapters/ch79/079_028_0001.html"
+   ],
+   [
+    "Sedgwick County: tax foreclosure auctions",
+    "https://www.sedgwick.gov/treasurer/tax-foreclosure-auctions/"
+   ]
+  ]
+ }
+},
+ "ID": {
+ "sale": {
+  "title": "County tax deeds and auctions (Idaho)",
+  "when": "If taxes aren't paid within three years of becoming delinquent, the county takes a tax deed, then auctions the property within 14 months (Idaho Code 63-1005, 31-808).",
+  "steps": [
+   "If property isn't redeemed within three years of the delinquency date, the county tax collector issues a tax deed to the county, after mailing notice 2 to 5 months ahead and recording an affidavit (63-1005).",
+   "The tax deed gives the county the owner's interest, free of recorded mortgages, liens and leases when proper notice was given (63-1009).",
+   "The owner or a party in interest can still redeem until the county signs a sale contract or deeds it away, but no later than 14 months after the tax deed (63-1007).",
+   "The county commissioners advertise the auction at least 10 days ahead, set a minimum bid covering all taxes, interest and costs, and sell to the highest bidder within 14 months of the tax deed (31-808).",
+   "Money left after taxes and costs goes first to parties in interest, then to the former owner. The county sends notice within 30 days, and claims are due within 60 days (31-808)."
+  ],
+  "links": [
+   [
+    "Idaho Code 63-1005 (tax deed)",
+    "https://legislature.idaho.gov/statutesrules/idstat/Title63/T63CH10/SECT63-1005/"
+   ],
+   [
+    "Idaho Code 63-1007 (redemption)",
+    "https://legislature.idaho.gov/statutesrules/idstat/Title63/T63CH10/SECT63-1007/"
+   ],
+   [
+    "Idaho Code 63-1009 (effect of deed)",
+    "https://legislature.idaho.gov/statutesrules/idstat/Title63/T63CH10/SECT63-1009/"
+   ],
+   [
+    "Idaho Code 31-808 (county auction, excess)",
+    "https://legislature.idaho.gov/statutesrules/idstat/Title31/T31CH8/SECT31-808/"
+   ]
+  ]
+ }
+},
+ "NM": {
+ "sale": {
+  "title": "State auctions of tax-delinquent property (New Mexico)",
+  "when": "The state Taxation and Revenue Department's Property Tax Division auctions delinquent property when title research and collection are done. There is no fixed schedule, and not every county has a sale every year.",
+  "steps": [
+   "Sales are scheduled as title research and other collection efforts finish. Notices, terms and property lists are posted on the Department's auction page.",
+   "The minimum bid is the total taxes, penalty, interest and costs due.",
+   "Register on sale day from 8 a.m. until the auction starts at 10 a.m. Bidding is oral and in person (or by a notarized agent). Pay by cashier's check, money order, or a check with a bank letter of guarantee.",
+   "The buyer gets a state tax deed, which works like a quitclaim deed. The sale clears only the tax lien, not other liens, and property is sold as is.",
+   "Former owners have no right to redeem, but they have two years to challenge the sale in court (7-38-70). A federal IRS lien can carry a 120-day redemption period."
+  ],
+  "links": [
+   [
+    "NM Taxation and Revenue: delinquent property tax auctions",
+    "https://www.tax.newmexico.gov/businesses/property-tax-overview/delinquent-property-tax-auctions/"
+   ]
+  ]
+ }
+},
+ "WY": {
+ "sale": {
+  "title": "County tax sales (Wyoming)",
+  "when": "County treasurers advertise the sale three weeks in a row, starting at least four weeks before the sale and before the first week of September, then sell at the courthouse (W.S. 39-13-108(e)).",
+  "steps": [
+   "Unpaid taxes bear 18% a year interest until paid (W.S. 39-13-108(b)).",
+   "The treasurer publishes the sale list once a week for three weeks; the first notice runs at least four weeks before the sale (W.S. 39-13-108(e)(ii)).",
+   "At the courthouse sale (9 a.m. to 5 p.m.), anyone who pays the taxes, interest, penalties and costs on a parcel buys a certificate of purchase and must pay right away. Unsold parcels are bid in for the county, and the county can later sell those certificates (W.S. 39-13-108(e)(iii)).",
+   "The owner can redeem until a valid tax deed application is accepted, by paying the sale amount plus 3% plus 15% a year interest, plus any later taxes you paid (also at 15%) (W.S. 39-13-109(e)).",
+   "You can apply for a tax deed no sooner than four and no later than six years after the sale, after giving the required notice to occupants and the owner at least three months before applying (W.S. 39-13-108(e)(v))."
+  ],
+  "links": [
+   [
+    "Wyoming Statutes Title 39 (PDF; see 39-13-108 and 39-13-109)",
+    "https://wyoleg.gov/statutes/compress/title39.pdf"
    ]
   ]
  }
