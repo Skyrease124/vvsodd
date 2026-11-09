@@ -28,7 +28,7 @@ const FL_SALE = {
     'Miami-Dade': 'https://lienhub.com/county/miamidade/certsale/',
     'Pasco': 'https://pascotaxes.com/taxes/tax-information/delinquent-real-estate-taxes/tax-sale-information/',
     'Marion': 'https://mariontax.com/delinquent-taxes',
-    'Walton': 'https://waltontaxcollector.com/services/property-taxes/delinquent-taxes',
+    'Walton': 'https://lienhub.com/county/walton/certsale/main',
     'Nassau': 'https://www.nassautaxes.com/Content/Delinquent',
     'Santa Rosa': 'https://srctc.com/real-estate/delinquent-tax-information/'
   }
@@ -51,6 +51,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Walton': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=76 AND PARCEL_ID',
+    fmt: pin => pin.replace(/-/g, ''),
+    page: pin => 'https://waltonpa.com/',
+    pageName: 'Walton County Property Appraiser'
   },
   'Miami-Dade': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
@@ -160,6 +167,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Walton': {
+    office: 'Walton County Tax Collector',
+    status: l => (l.mineral ? 'MINERAL RIGHTS ONLY: this certificate is on an underground mineral interest, not on land you could use or build on. ' : '') + 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Walton County holds it. Anyone can buy it on LienHub. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Walton County Property Appraiser', url: pin => 'https://waltonpa.com/'},
+    links: [['Buy on LienHub (Walton County)', 'https://lienhub.com/county/walton/certsale/main'], ['Walton Tax Collector: tax certificates', 'https://waltontaxcollector.com/pay-online/tax-certificate']],
+    steps: [
+      'Walton sells its certificates on LienHub (the Tax Collector\u2019s site links there).',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Before you pay, check the parcel on the Property Appraiser site and read Land Information here. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Miami-Dade': {
     office: 'Miami-Dade Tax Collector',
