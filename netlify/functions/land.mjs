@@ -24,6 +24,13 @@ const COUNTIES = {
     water: { url: 'https://gis.pbcgov.org/arcgis/rest/services/WUD/WUD_Water_Main/MapServer/0/query', name: 'Palm Beach County Water Utilities (water main map)' },
     zoningPage: 'https://discover.pbcgov.org/pzb/zoning/Pages/default.aspx'
   },
+  'Saguache': {
+    state: 'CO',
+    parcels: 'https://services1.arcgis.com/zH7gQ37AKcpvTX6d/arcgis/rest/services/Saguache_County_Parcels_View/FeatureServer/0/query',
+    idField: 'Account', fmt: p => p,
+    record: () => 'https://saguachecounty.colorado.gov/departments/treasurer/public-trustee', recordName: 'Saguache County Treasurer',
+    zoningPage: 'https://saguachecounty.colorado.gov/'
+  },
   'Larimer': {
     state: 'CO',
     parcels: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3/query',

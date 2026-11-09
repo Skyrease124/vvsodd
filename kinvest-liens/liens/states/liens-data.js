@@ -94,6 +94,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE',
     pageName: 'Coconino County Treasurer'
   },
+  'Saguache': {
+    query: 'https://services1.arcgis.com/zH7gQ37AKcpvTX6d/arcgis/rest/services/Saguache_County_Parcels_View/FeatureServer/0/query',
+    idField: 'Account',
+    fmt: pin => pin,
+    page: pin => 'https://saguachecounty.colorado.gov/departments/treasurer/public-trustee',
+    pageName: 'Saguache County Treasurer'
+  },
   'Larimer': {
     query: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3/query',
     idField: 'PARCELNUM',
@@ -129,6 +136,18 @@ const COUNTY_BUY = {
       'Before you pay, look up the owner and tax history on the county records, and read the statute so you know the redemption and tax deed rules.'
     ]
   },
+  'Saguache': {
+    office: 'Saguache County Treasurer',
+    status: l => 'On Saguache County\u2019s 2026 tax lien sale list (face amount $' + Number(l.amount).toFixed(2) + ').' + (/no bids/.test(l.status) ? ' It had no bids yet when the list was exported.' : '') + ' Bidding happens on the county\u2019s online auction; bids go above face, and that extra premium earns no interest. The owner can still pay, which takes it off the sale.',
+    record: null,
+    links: [['Saguache County Treasurer (sale notice and rules)', 'https://saguachecounty.colorado.gov/departments/treasurer/public-trustee'], ['Zeus Auction (where the county took bidder registration in 2025)', 'https://www.zeusauction.com/']],
+    steps: [
+      'Check the Treasurer\u2019s page for the 2026 sale dates and rules. In 2025 the sale was online and bidders registered at Zeus Auction.',
+      'Register as a bidder before the sale (W-9 and payment details are usually required).',
+      'In Colorado the interest rate is set by state law each year: 9 points above the federal discount rate (13% for 2026 sales, per our Colorado guide). Bids above the face amount are a premium that earns no interest, so do not overbid.',
+      'Look at Land Information here first. Many cheap lots in this area have no road, water or power.'
+    ]
+  },
   'Larimer': {
     office: 'Larimer County Treasurer',
     status: l => 'Advertised for the county\u2019s tax lien sale on ' + (l.saleDate || 'the sale date') + '. It is not sold yet, and the owner can pay before the sale, which takes it off the list.',
@@ -137,7 +156,7 @@ const COUNTY_BUY = {
     steps: [
       'Read the county\u2019s sale page for the location, whether bidding is in person or online, and the registration rules.',
       'The county\u2019s notice says bidders must be at least 18 and give a W-9, and that payment is by check for the exact amount (a bad check can mean forfeiture and a ban). Confirm the current rules.',
-      'In Colorado the interest rate is set by bidding at the sale, so it is not known in advance. Use Calculate with the rate you expect.',
+      'In Colorado the interest rate is set by state law each year (9 points above the federal discount rate). Bidders compete by paying a premium above the face amount, and that premium earns no interest. Use Calculate with this year\u2019s rate.',
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
