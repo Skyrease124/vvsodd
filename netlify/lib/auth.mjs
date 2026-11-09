@@ -133,11 +133,11 @@ export async function mailConfig() {
   return { apiKey, from: process.env.MAIL_FROM || saved.from || 'PricePocketAsset <noreply@pricepocketasset.com>', source: process.env.RESEND_API_KEY ? 'env' : 'saved' };
 }
 export async function saveMailConfig(c) { await put('mail-config', c); }
-export async function sendMail(to, subject, text) {
+export async function sendMail(to, subject, text, replyTo) {
   const cfg = await mailConfig(); if (!cfg) return { ok: false, error: 'not configured' };
   try {
     const r = await fetch(process.env.MAIL_API_URL || 'https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + cfg.apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: cfg.from, to: [to], subject, text }) });
+      body: JSON.stringify(Object.assign({ from: cfg.from, to: [to], subject, text }, replyTo ? { reply_to: replyTo } : {})) });
     if (r.ok) return { ok: true };
     let msg = ''; try { msg = (await r.json()).message || ''; } catch (e) {}
     return { ok: false, error: msg || ('HTTP ' + r.status) };

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land for sale by owner | PricePocketAsset</title>
+<meta name="description" content="Land listed by its owners, with flood, wetlands and road access checks on every lot.">
+<meta name="theme-color" content="#0b6e4f">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav><a href="/#map">Map</a><a href="/land/">Land for sale</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section">
+  <h1>Land for sale by owner</h1>
+  <div class="notice" role="note"><b>We only show listings.</b> PricePocketAsset is not a real estate agent or broker and is not part of any deal. Sellers passed an ID check, but always confirm ownership with the county records before you pay anyone.</div>
+  <p class="sact"><a class="btn" href="/land/sell/">Sell my land</a> <button class="btn ghost" id="near" type="button">Show land near me</button></p>
+  <div class="lientools"><select id="st" aria-label="State"><option value="">All states</option></select> <select id="sort" aria-label="Sort"><option value="new">Newest</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option><option value="near">Closest to me</option></select></div>
+  <p id="msg" class="small muted" role="status" aria-live="polite"></p>
+  <div id="lmap" class="landmap"></div>
+  <div id="list" class="landgrid"></div>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="/legal/privacy/">Privacy</a> &middot; <a href="/legal/terms/">Terms</a> &middot; <a href="/legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="/liens/states/states.js"></script>
+<script src="/liens/states/liens-data.js"></script>
+<script src="/liens/states/lien-ui.js"></script>
+<script src="land.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>

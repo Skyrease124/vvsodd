@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sell my land | PricePocketAsset</title>
+<meta name="description" content="List land you own. Members with a verified ID can post photos, links and a price.">
+<meta name="theme-color" content="#0b6e4f">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav><a href="/#map">Map</a><a href="/land/">Land for sale</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section">
+  <h1>Sell my land</h1>
+  <div class="notice" role="note"><b>How it works:</b> you post your land, buyers who are members send you a message, and you take it from there. We are not a broker and take no part in the sale.</div>
+  <div id="steps"></div>
+  <div id="mine"></div>
+  <form id="form" class="setupform" hidden novalidate>
+    <h2 id="ftitle">New listing</h2>
+    <label>Title <input id="title" maxlength="90" placeholder="e.g. 1.2 acre wooded lot near Ocala"></label>
+    <label>State <select id="state"></select></label>
+    <label>County <input id="county" maxlength="40"></label>
+    <label>City or area (optional) <input id="city" maxlength="50"></label>
+    <label>Parcel number (optional, lets buyers see Land Information) <input id="parcel" maxlength="40" autocomplete="off"></label>
+    <label>Asking price ($) <input id="price" inputmode="numeric"></label>
+    <label>Acres (optional) <input id="acres" inputmode="decimal"></label>
+    <label>Description <textarea id="desc" maxlength="2000" rows="5" placeholder="Road access, utilities, what it is good for, anything a buyer should know."></textarea></label>
+    <label>Links (optional, one per line, up to 3: your own photos, video, county record) <textarea id="links" rows="3" maxlength="950"></textarea></label>
+    <p><b>Where is it?</b> Tap the map to drop a pin on your land. <button class="btn small ghost" id="here" type="button">Use my location</button></p>
+    <div id="pmap" class="landmap small"></div>
+    <p id="pin" class="small muted"></p>
+    <p><b>Photos</b> (up to 6) <input id="files" type="file" accept="image/*" multiple></p>
+    <div id="thumbs" class="lthumbs"></div>
+    <p><button class="btn" id="save" type="submit">Post listing</button> <button class="btn ghost" id="cancel" type="button">Cancel</button></p>
+    <p id="fmsg" class="small" role="status" aria-live="polite"></p>
+  </form>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="/legal/privacy/">Privacy</a> &middot; <a href="/legal/terms/">Terms</a> &middot; <a href="/legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="/liens/states/states.js"></script>
+<script src="/liens/states/liens-data.js"></script>
+<script src="/liens/states/lien-ui.js"></script>
+<script src="sell.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
