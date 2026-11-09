@@ -348,3 +348,19 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .landrow dd b{display:block}
 .landrow.nv dd b{color:#b45309}
 .landsrc{display:block;margin-top:2px}
+/* Land for sale by owner */
+.landmap{height:340px;border-radius:12px;border:1px solid #e3e8ef;margin:12px 0;z-index:0}
+.landmap.small{height:280px}
+.landgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:12px}
+.lcard{display:block;text-align:left;border:1px solid #e3e8ef;border-radius:12px;background:#fff;padding:0;overflow:hidden;cursor:pointer;font:inherit;color:inherit}
+.lcard img,.lnophoto{width:100%;height:150px;object-fit:cover;display:block;background:#eef2f6}
+.lnophoto{display:flex;align-items:center;justify-content:center;color:#7a8699;font-size:14px}
+.lcardt{padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.lcardt b{font-size:18px}
+.lgallery{display:flex;gap:8px;overflow-x:auto;margin:8px 0}
+.lgallery img{height:170px;width:auto;border-radius:8px;display:block}
+.ldesc{white-space:pre-wrap}
+.lthumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.lthumb{display:flex;flex-direction:column;gap:4px;align-items:center}
+.lthumb img{width:96px;height:72px;object-fit:cover;border-radius:6px}
+#landdlg textarea,#form textarea{width:100%;box-sizing:border-box}
