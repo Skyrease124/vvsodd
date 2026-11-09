@@ -1,3 +1,4 @@
+// WA, OR, MN, VA, AL added 2026-11-09 from the linked statute/agency pages.
 // MI, NY, NC, CA sale steps added 2026-11-09 from the statute and county pages linked in each entry (CA from LA County TTC pages; state code pages were not reachable).
 // Extra state-level data: sale rules and official past-sale totals. Every figure carries a source and the date checked.
 const STATE_DATA = {
@@ -3397,6 +3398,129 @@ const STATE_DATA = {
    [
     "LA County TTC: excess proceeds",
     "https://ttc.lacounty.gov/notice-of-excess-proceeds/"
+   ]
+  ]
+ }
+},
+ "WA": {
+ "sale": {
+  "title": "County tax foreclosure (Washington)",
+  "when": "After taxes are three years delinquent, the county treasurer forecloses in court and sells at a public (often online) auction. Owners can pay until the close of business the day before the sale (RCW 84.64).",
+  "steps": [
+   "When taxes are three years delinquent, the treasurer files certificates of delinquency in court and forecloses in the county's name. Owners get notice and time to pay (RCW 84.64.050).",
+   "The owner or anyone with a recorded interest can redeem by paying the taxes, interest and costs until the close of business the day before the sale (RCW 84.64.060, 84.64.070).",
+   "The treasurer holds a public auction, in person or online (RCW 84.64.080, 84.64.225). Property is sold as is, with no warranty of title, zoning or size.",
+   "The minimum bid is the total taxes, interest and costs (RCW 84.64.080).",
+   "If the winning bid is higher than the minimum, the extra goes to the record owner if they apply within three years of the sale. After that it goes to the county (RCW 84.64.080)."
+  ],
+  "links": [
+   [
+    "RCW chapter 84.64 (full text)",
+    "https://app.leg.wa.gov/RCW/default.aspx?cite=84.64&full=true"
+   ],
+   [
+    "RCW 84.64.080 (sale, minimum bid, surplus)",
+    "https://app.leg.wa.gov/RCW/default.aspx?cite=84.64.080"
+   ]
+  ]
+ }
+},
+ "OR": {
+ "sale": {
+  "title": "County tax foreclosure (Oregon)",
+  "when": "Property can be foreclosed once three years have passed since the earliest delinquency. The court sells it to the county, the owner has two more years to redeem, and then the county deeds it to itself and may sell it (ORS 312, ORS 275).",
+  "steps": [
+   "Foreclosure is allowed once three years have passed from the earliest delinquency. The tax collector publishes a foreclosure list and mails notice to owners, who have 30 days to answer (ORS 312.010, 312.040, 312.070).",
+   "The court enters judgment and orders the property sold directly to the county. Investors do not buy at this stage (ORS 312.100).",
+   "The owner, heirs or lienholders can still redeem for two years after the judgment by paying the amount owed plus interest, a 5% penalty and a fee. The county sends notice at least a year before the deadline (ORS 312.120, 312.125).",
+   "If not redeemed, the tax collector deeds the property to the county, and redemption rights end (ORS 312.200).",
+   "The county can then order the sheriff to sell it at public auction, after four weekly notices, at or above a minimum price it sets. Payment can be cash, or 10% down with installments. Unsold property can be sold privately (ORS 275.110 to 275.200)."
+  ],
+  "links": [
+   [
+    "ORS chapter 312 (foreclosure)",
+    "https://www.oregonlegislature.gov/bills_laws/ors/ors312.html"
+   ],
+   [
+    "ORS chapter 275 (county land sales)",
+    "https://www.oregonlegislature.gov/bills_laws/ors/ors275.html"
+   ]
+  ]
+ }
+},
+ "MN": {
+ "sale": {
+  "title": "Tax forfeiture and county land auctions (Minnesota)",
+  "when": "Land with long-unpaid taxes forfeits to the state. Since 2024, counties must first offer forfeited parcels at a public auction within about six months (Minn. Stat. 282.005).",
+  "steps": [
+   "Owners behind on taxes can confess judgment and pay over time (usually 10% down and nine yearly payments). Missing payments for 60 days makes the land subject to forfeiture (Minn. Stat. 279.37).",
+   "When the redemption period runs out, the land forfeits to the state. The redemption period is set by Minn. Stat. 281.17, which we have not yet checked in full.",
+   "The former owner can ask to buy it back for the taxes and costs within six months of forfeiture (longer for homesteads), if the county board approves (Minn. Stat. 282.241).",
+   "The county must then offer the parcel at a public auction, which can be online, within six months, with at least 30 days' notice. The minimum bid is the taxes, assessments, penalties, interest and costs (Minn. Stat. 282.005).",
+   "Money above the minimum bid goes to the former owner and other interested parties who claim it within six months of the county's notice (Minn. Stat. 282.005)."
+  ],
+  "links": [
+   [
+    "Minn. Stat. 279.37 (confession of judgment)",
+    "https://www.revisor.mn.gov/statutes/cite/279.37"
+   ],
+   [
+    "Minn. Stat. 282.005 (auction and surplus)",
+    "https://www.revisor.mn.gov/statutes/cite/282.005"
+   ],
+   [
+    "Minn. Stat. 282.241 (repurchase)",
+    "https://www.revisor.mn.gov/statutes/cite/282.241"
+   ]
+  ]
+ }
+},
+ "VA": {
+ "sale": {
+  "title": "Judicial sale of tax-delinquent land (Virginia)",
+  "when": "Once taxes are delinquent on December 31 after the second anniversary of the due date (sooner for blighted property or land assessed at $100,000 or less), the locality can sue and the court sells the land (Va. Code 58.1-3965).",
+  "steps": [
+   "The locality sends the owner notice at least 30 days before suing, offering a payment plan of up to 72 months, and publishes the list (Va. Code 58.1-3965).",
+   "The locality files suit in circuit court, naming everyone with an interest, and the land is sold like any court-ordered judicial sale (Va. Code 58.1-3967).",
+   "The owner can stop the sale at any time before the sale date by paying all taxes, penalties, interest, costs and attorney fees. Partial payment doesn't count (Va. Code 58.1-3965, 58.1-3974).",
+   "The treasurer can pause the sale for an installment plan of up to 72 months. If the owner defaults, the sale can go ahead without new notice (Va. Code 58.1-3965).",
+   "Money left after the taxes and costs goes to the former owner or heirs. If nobody claims it within two years after the sale is confirmed, it goes to the locality (Va. Code 58.1-3967)."
+  ],
+  "links": [
+   [
+    "Va. Code 58.1-3965 (when land can be sold)",
+    "https://law.lis.virginia.gov/vacode/title58.1/chapter39/section58.1-3965/"
+   ],
+   [
+    "Va. Code 58.1-3967 (court sale, surplus)",
+    "https://law.lis.virginia.gov/vacode/title58.1/chapter39/section58.1-3967/"
+   ],
+   [
+    "Va. Code 58.1-3974 (redemption)",
+    "https://law.lis.virginia.gov/vacode/title58.1/chapter39/section58.1-3974/"
+   ]
+  ]
+ }
+},
+ "AL": {
+ "sale": {
+  "title": "Buying state-held tax-delinquent land (Alabama Department of Revenue)",
+  "when": "Alabama counties hold yearly tax sales, but we have only confirmed the state's own process: the Department of Revenue sells land it holds from past sales, by price quote, all year.",
+  "steps": [
+   "Property taxes in Alabama are based on an October 1 lien date and are due the following October 1 (Alabama Department of Revenue).",
+   "The Department of Revenue posts county lists (transcripts) of state-held tax-delinquent land, updated weekly, without street addresses.",
+   "To buy, apply online for a price quote. The quote is emailed, and payment must be sent within 10 calendar days.",
+   "If the state has held it under three years you get an assignment of the tax sale certificate; over three years you get a tax deed.",
+   "The Department says neither gives clear title, and suggests talking to an attorney. County tax sale rules (rates, bidding, redemption) are in the Code of Alabama Title 40, Chapter 10, which we have not yet checked."
+  ],
+  "links": [
+   [
+    "Alabama Dept. of Revenue: tax-delinquent property and land sales",
+    "https://revenue.alabama.gov/property-tax/tax-delinquent-property-and-land-sales/"
+   ],
+   [
+    "Alabama Dept. of Revenue: property tax",
+    "https://revenue.alabama.gov/division/property-tax/"
    ]
   ]
  }
