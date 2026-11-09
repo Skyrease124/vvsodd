@@ -1,3 +1,4 @@
+// DE, AR, ND, NH, RI, DC, ME, MT, UT, TN (Knox County) added 2026-11-09 from the linked statute/agency/county pages.
 // OK (Oklahoma County), WV, KS, ID, NM, WY added 2026-11-09 from the linked statute/agency/county pages.
 // WA, OR, MN, VA, AL added 2026-11-09 from the linked statute/agency pages.
 // MI, NY, NC, CA sale steps added 2026-11-09 from the statute and county pages linked in each entry (CA from LA County TTC pages; state code pages were not reachable).
@@ -3668,6 +3669,258 @@ const STATE_DATA = {
    [
     "Wyoming Statutes Title 39 (PDF; see 39-13-108 and 39-13-109)",
     "https://wyoleg.gov/statutes/compress/title39.pdf"
+   ]
+  ]
+ }
+},
+ "DE": {
+ "sale": {
+  "title": "Sheriff's tax sales (Delaware)",
+  "when": "Counties can collect unpaid taxes by a court monition and sheriff's sale. After the court approves the sale, the owner has 60 days to redeem by paying the price plus 15% (9 Del. C. 8722-8729). Kent and Sussex also have an older method with a one-year redemption at 20% (9 Del. C. 8776).",
+  "steps": [
+   "The county files a praecipe in Superior Court, and a monition issues to the sheriff (9 Del. C. 8722).",
+   "The sheriff posts the monition on the property and returns it to the court within 10 days (8724).",
+   "If the taxes aren't paid, a writ can issue 20 days after the sheriff's return, ordering the sheriff to sell the property (8725). The county finance office can approve or reject the final bid, and some counties require a bidder certificate (8726).",
+   "The owner can redeem within 60 days after the court approves the sale by paying the purchase price plus 15% and costs (8729).",
+   "If not redeemed, the buyer petitions the court for a deed (8727, 8728). In Kent and Sussex's other method, no deed issues until a year after the sale, and redemption costs 20% interest (8776)."
+  ],
+  "links": [
+   [
+    "9 Del. C. Chapter 87, Subchapter II (monition sales)",
+    "https://delcode.delaware.gov/title9/c087/sc02/index.html"
+   ],
+   [
+    "9 Del. C. Chapter 87, Subchapter IV (Kent and Sussex)",
+    "https://delcode.delaware.gov/title9/c087/sc04/index.html"
+   ]
+  ]
+ }
+},
+ "AR": {
+ "sale": {
+  "title": "Commissioner of State Lands auctions (Arkansas)",
+  "when": "County collectors certify tax-delinquent parcels to the Arkansas Commissioner of State Lands, which offers them at public auctions by county; unsold parcels can be bought afterward online.",
+  "steps": [
+   "Delinquent parcels are certified by the county collector to the Commissioner of State Lands and listed in its public auction catalog by county, date and time.",
+   "The minimum bid is the tax due, calculated through the date of sale.",
+   "Thirty days after an auction, parcels that didn't sell can be bought from the Commissioner's office through its online post-auction sales.",
+   "Buyers receive a limited warranty deed. The Commissioner does not insure or promise clear or marketable title.",
+   "Money above the taxes, penalties, interest and costs can be claimed by the former owner one year after the sale. How long owners have to redeem is not stated on these pages, so check the Commissioner's rules."
+  ],
+  "links": [
+   [
+    "Arkansas Commissioner of State Lands: buyers guide",
+    "https://cosl.org/Home/Buyers"
+   ],
+   [
+    "Arkansas Commissioner of State Lands",
+    "https://cosl.org"
+   ]
+  ]
+ }
+},
+ "ND": {
+ "sale": {
+  "title": "County tax foreclosure and annual land sales (North Dakota)",
+  "when": "Counties foreclose their own tax liens. Notice goes out by June 1 for taxes two or more years past due, foreclosure happens October 1, and the county sells tax-deeded land at its annual sale starting the third Tuesday of November (N.D.C.C. 57-28). The old tax-sale and redemption chapters (57-24, 57-26) were repealed in 1999.",
+  "steps": [
+   "Investors don't buy tax liens in North Dakota. The chapters on selling land for delinquent taxes (57-24) and redemption from tax sales (57-26) were repealed in 1999.",
+   "By June 1 each year, the county auditor sends a notice of foreclosure for property with taxes two or more years past due. The foreclosure date is October 1 after the notice (57-28-01, 57-28-02).",
+   "After foreclosure, the auditor issues a tax deed to the county, free of most encumbrances (57-28-09).",
+   "The county holds its annual sale starting the third Tuesday of November, after posting notice 15 days ahead and publishing it at least 10 days ahead. Each parcel sells at auction for at least a set minimum price, for cash or 25% down with up to 10 years of payments. People who owe delinquent taxes in any county can't win (57-28-13 to 57-28-15).",
+   "The former owner or close family can repurchase while the county still holds the title (57-28-19)."
+  ],
+  "links": [
+   [
+    "N.D.C.C. chapter 57-28 (PDF)",
+    "https://ndlegis.gov/cencode/t57c28.pdf"
+   ],
+   [
+    "N.D.C.C. chapter 57-24 (repealed, PDF)",
+    "https://ndlegis.gov/cencode/t57c24.pdf"
+   ]
+  ]
+ }
+},
+ "NH": {
+ "sale": {
+  "title": "Real estate tax liens and tax deeds (New Hampshire)",
+  "when": "In towns that adopted the tax lien procedure, the tax collector executes a lien when taxes aren't paid by December 1. The owner can redeem at 14% a year until the collector gives a deed, which can happen 2 years after the lien (RSA 80:59, 80:69, 80:76).",
+  "steps": [
+   "If a town has adopted the tax lien procedure, the tax collector can put a real estate tax lien on property whose taxes aren't paid in full by December 1 after assessment. That lien comes before all other liens (RSA 80:59).",
+   "Anyone with a legal interest can redeem before the deed is given by paying the lien plus 14% a year interest on the whole recorded lien (RSA 80:69).",
+   "Two years after the lien is executed, the collector deeds unredeemed land to the lienholder (usually the town). The town can refuse the deed, and the lien then stays in place (RSA 80:76).",
+   "If the town later sells the property, it can keep only the back taxes, interest, costs and penalty. It must file in superior court within 60 days so any excess goes to the people entitled to it (RSA 80:88)."
+  ],
+  "links": [
+   [
+    "RSA 80:59 (lien procedure)",
+    "https://gc.nh.gov/rsa/html/V/80/80-59.htm"
+   ],
+   [
+    "RSA 80:69 (redemption, 14%)",
+    "https://gc.nh.gov/rsa/html/V/80/80-69.htm"
+   ],
+   [
+    "RSA 80:76 (tax deed)",
+    "https://gc.nh.gov/rsa/html/V/80/80-76.htm"
+   ],
+   [
+    "RSA 80:88 (excess proceeds)",
+    "https://gc.nh.gov/rsa/html/V/80/80-88.htm"
+   ]
+  ]
+ }
+},
+ "RI": {
+ "sale": {
+  "title": "Municipal tax sales (Rhode Island)",
+  "when": "The city or town tax collector sells land for unpaid taxes. Owners can redeem by paying the purchase price plus a penalty and interest, and after one year the buyer can petition the court to end redemption rights (R.I. Gen. Laws 44-9).",
+  "steps": [
+   "The tax collector advertises and sells land for unpaid taxes (R.I. Gen. Laws 44-9-7). We have not yet read the sale and notice sections in full.",
+   "Owners entitled to notice can redeem. The penalty is 10% of the purchase price within six months, plus 1% of the price for each month after, plus 1% a month interest (44-9-19).",
+   "After one year from the sale, the buyer can petition the superior court to foreclose all rights of redemption (44-9-25).",
+   "Until that court case ends, the owner can still redeem, so plan on your money being tied up."
+  ],
+  "links": [
+   [
+    "R.I. Gen. Laws chapter 44-9 index",
+    "https://webserver.rilegislature.gov/Statutes/TITLE44/44-9/INDEX.htm"
+   ],
+   [
+    "44-9-19 (redemption)",
+    "https://webserver.rilegislature.gov/Statutes/TITLE44/44-9/44-9-19.htm"
+   ],
+   [
+    "44-9-25 (petition to foreclose)",
+    "https://webserver.rilegislature.gov/Statutes/TITLE44/44-9/44-9-25.htm"
+   ]
+  ]
+ }
+},
+ "DC": {
+ "sale": {
+  "title": "Real property tax sales (District of Columbia)",
+  "when": "The Mayor (Office of Tax and Revenue) sends delinquency notices by May 1 and sells at public auction. Owners can redeem until a court foreclosure of the right of redemption is final; buyers can file to foreclose 6 months after the sale (D.C. Code 47-1341 to 47-1370).",
+  "steps": [
+   "By May 1 the District mails tax delinquency notices, and a final notice at least 2 weeks before a property is offered at the tax sale (47-1341).",
+   "Sales are public auctions to the highest bidder. Bidders must have 20% of the purchase price on deposit, and property can't sell for less than the taxes owed (47-1346).",
+   "The owner or anyone with an interest can redeem until a court judgment foreclosing redemption is final, by paying what the buyer paid (minus surplus) with interest, plus other listed amounts (47-1360, 47-1361). The interest rate is not stated on that page.",
+   "Six months after the sale, the buyer can file a court complaint to foreclose the right of redemption (47-1370).",
+   "A 2025 DC law (D.C. Law 26-41) changes parts of this process, but the code notes some of it has not been put in place yet. Check the current rules before bidding."
+  ],
+  "links": [
+   [
+    "D.C. Code 47-1341 (notices)",
+    "https://code.dccouncil.gov/us/dc/council/code/sections/47-1341"
+   ],
+   [
+    "D.C. Code 47-1346 (auction, deposit)",
+    "https://code.dccouncil.gov/us/dc/council/code/sections/47-1346"
+   ],
+   [
+    "D.C. Code 47-1360 (redemption)",
+    "https://code.dccouncil.gov/us/dc/council/code/sections/47-1360"
+   ],
+   [
+    "D.C. Code 47-1370 (foreclosure)",
+    "https://code.dccouncil.gov/us/dc/council/code/sections/47-1370"
+   ]
+  ]
+ }
+},
+ "ME": {
+ "sale": {
+  "title": "Municipal tax lien foreclosure (Maine)",
+  "when": "Towns record a tax lien certificate, and if the taxes aren't paid within 18 months, the lien forecloses automatically and the town owns the property (36 M.R.S. 942, 943). Towns that later sell must use a broker and return excess money to the former owner (36 M.R.S. 943-C).",
+  "steps": [
+   "Between 8 months and one year after taxes are committed, the tax collector sends a 30-day demand. If unpaid, a tax lien certificate is recorded at the registry of deeds (36 M.R.S. 942).",
+   "The certificate creates a tax lien mortgage. If it isn't paid within 18 months after recording, it is deemed foreclosed and redemption ends. Notice goes out 30 to 45 days before that date (36 M.R.S. 943).",
+   "After that, the town holds title. Investors don't buy liens here.",
+   "If the town sells to someone other than the former owner, it must give notice at least 90 days before listing, list with a licensed broker, and sell by quitclaim deed within 12 months (36 M.R.S. 943-C).",
+   "Sale money above the taxes, interest, fees and foreclosure costs goes to the former owner (36 M.R.S. 943-C)."
+  ],
+  "links": [
+   [
+    "36 M.R.S. 942 (lien certificate)",
+    "https://www.legislature.maine.gov/statutes/36/title36sec942.html"
+   ],
+   [
+    "36 M.R.S. 943 (18-month foreclosure)",
+    "https://legislature.maine.gov/statutes/36/title36sec943.html"
+   ],
+   [
+    "36 M.R.S. 943-C (sale, excess to former owner)",
+    "https://legislature.maine.gov/statutes/36/title36sec943-C.html"
+   ]
+  ]
+ }
+},
+ "MT": {
+ "sale": {
+  "title": "Tax liens and assignments (Montana)",
+  "when": "The county treasurer attaches a tax lien to delinquent property by the first working day in August. Investors can take an assignment of a county-held lien, and if it isn't redeemed within about 3 years, the assignee can get a tax deed (MCA 15-17-125, 15-17-323, 15-18-111, 15-18-211).",
+  "steps": [
+   "By the first working day in August, the county treasurer attaches a tax lien to properties with delinquent taxes. The county holds it unless it is assigned (MCA 15-17-125).",
+   "Anyone can have a county-held lien assigned to them by sending the required mail notice and paying the delinquent taxes, penalties, interest and costs (MCA 15-17-323).",
+   "The owner, an occupant or any interested party can redeem by the first working day in August, 3 years after the lien was attached (2 years for certain vacant lots with special assessments) (MCA 15-18-111).",
+   "Between May 1 and May 30 of the year redemption expires, the required notices must be given (MCA 15-18-212).",
+   "If it isn't redeemed in time, the treasurer issues the assignee a tax deed for a $25 fee plus costs (MCA 15-18-211). The interest rate is not stated in these sections, so check with the county."
+  ],
+  "links": [
+   [
+    "MCA 15-17-125 (lien attachment)",
+    "https://mca.legmt.gov/bills/mca/title_0150/chapter_0170/part_0010/section_0250/0150-0170-0010-0250.html"
+   ],
+   [
+    "MCA 15-17-323 (assignment)",
+    "https://mca.legmt.gov/bills/mca/title_0150/chapter_0170/part_0030/section_0230/0150-0170-0030-0230.html"
+   ],
+   [
+    "MCA 15-18-111 (redemption)",
+    "https://mca.legmt.gov/bills/mca/title_0150/chapter_0180/part_0010/section_0110/0150-0180-0010-0110.html"
+   ],
+   [
+    "MCA 15-18-211 (tax deed)",
+    "https://mca.legmt.gov/bills/mca/title_0150/chapter_0180/part_0020/section_0110/0150-0180-0020-0110.html"
+   ]
+  ]
+ }
+},
+ "UT": {
+ "sale": {
+  "title": "County May/June tax sales (Utah)",
+  "when": "After taxes are four years delinquent, the county auditor sells the property at a tax sale in May or June; owners can redeem any time before that sale (Utah Code 59-2-1346, 59-2-1351).",
+  "steps": [
+   "Anyone can redeem on the owner's behalf any time before the May or June tax sale held after four years of delinquency, by paying all taxes, charges, interest, penalties and costs (59-2-1346).",
+   "The county auditor schedules the sale in May or June, at the courthouse door or online in the same format, after giving at least four weeks of notice (59-2-1351).",
+   "Bids must cover all taxes, charges, penalties, interest and costs. A bid for less than the whole parcel can win if it pays the full amount for the smallest portion, but strips that block access are rejected (59-2-1351.1).",
+   "Winning bidders can't back out. The county legislative body can reject all bids (59-2-1351.1).",
+   "The auditor issues a tax deed in fee simple. Money above what was owed is handled as unclaimed property for the former owner to claim (59-2-1351.1). Property with no buyer is struck off to the county (59-2-1351.3)."
+  ],
+  "links": [
+   [
+    "Utah Code Title 59, Chapter 2, Part 13 (PDF; see 59-2-1346, 1351, 1351.1)",
+    "https://le.utah.gov/xcode/Title59/Chapter2/C59-2-P13_1800010118000101.pdf"
+   ]
+  ]
+ }
+},
+ "TN": {
+ "sale": {
+  "title": "Delinquent tax sales (Tennessee, as Knox County describes it)",
+  "when": "In Tennessee the courts handle delinquent tax sales; in Knox County, sale dates are set by court proceedings and run by the Clerk and Master. These steps come from the Knox County Trustee's page; confirm with your county.",
+  "steps": [
+   "Tax sale dates are set by court proceedings and posted by the county (Knox County Trustee).",
+   "The Clerk and Master runs the sale and accepts cash, certified funds, cashier's check, money order or ACH only.",
+   "Bidders must be fully current on their own property taxes.",
+   "Winning bidders put down a deposit (the minimum bid plus 30% of the winning bid, per Knox County) and pay the rest within 10 days.",
+   "Properties that don't sell on sale day can be offered again in a rebid. Redemption rules come from state law (Tenn. Code 67-5-2701), which we have not yet read."
+  ],
+  "links": [
+   [
+    "Knox County Trustee: tax sale",
+    "https://trustee.knoxcounty.org/services/tax-sale"
    ]
   ]
  }
