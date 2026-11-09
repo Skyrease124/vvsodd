@@ -12,12 +12,13 @@
 
   function home() {
     $('home').hidden = false; $('lesson').hidden = true;
-    const done = state.lessons.filter(l => isDone(l.id)).length, n = state.lessons.length;
+    const done = state.lessons.filter(l => isDone(l.id)).length, n = state.lessons.length, sdone = Object.keys(prog()).filter(k => /^st_/.test(k) && prog()[k].score >= PASS).length;
     const pb = $('prog'); pb.textContent = '';
     pb.appendChild(mk('b', '', done === n ? '🎓 Master Class complete!' : 'Your progress: ' + done + ' of ' + n + ' lessons'));
     const bar = mk('div', 'progbar'); const i = mk('i'); i.style.width = Math.round(100 * done / (n || 1)) + '%'; bar.appendChild(i); pb.appendChild(bar);
     if (done === n) pb.appendChild(mk('p', '', 'You finished all 10 lessons. Nice work. Now put it to use: pick one county, screen its list, and check Land Information before you bid.'));
     if (!state.signedIn) { const p = mk('p', 'small muted'); const a = mk('a', '', 'Sign in'); a.href = '/login/?next=/learn/'; p.append(a, ' to save your progress to your account.'); pb.appendChild(p); }
+    grid();
     const ol = $('outline'); ol.textContent = '';
     state.lessons.forEach((l, k) => {
       const li = mk('li', isDone(l.id) ? 'done' : ''); const b = mk('button'); b.type = 'button';
@@ -25,6 +26,10 @@
       b.append(mk('span', 'num', isDone(l.id) ? '✓' : String(k + 1)), t, mk('span', 'tag' + (l.free ? ' free' : ''), l.free ? 'Free' : (state.paid ? 'Pro' : '🔒 Pro')));
       b.addEventListener('click', () => go(l.id)); li.appendChild(b); ol.appendChild(li);
     });
+  }
+  function grid() {
+    const g = $('stgrid'); if (!g || typeof STATES === 'undefined') return; g.textContent = '';
+    STATES.forEach(s => { const a = mk('a', 'stcell' + (prog()['st_' + s.a] && prog()['st_' + s.a].score >= PASS ? ' done' : '')); a.href = '/learn/state/?s=' + s.a; a.append(mk('b', '', s.n), mk('span', 'small muted', s.sys)); g.appendChild(a); });
   }
   function go(id) { history.pushState(null, '', id ? '?l=' + id : location.pathname); route(); window.scrollTo(0, 0); }
   async function route() {
