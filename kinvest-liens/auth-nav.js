@@ -33,6 +33,7 @@
       const who = document.createElement('div'); who.className = 'pp-who'; who.textContent = user.email + (user.owner ? ' (owner)' : '');
       const l1 = document.createElement('a'); l1.href = '/portfolio/'; l1.textContent = 'My portfolio';
       const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
+      const l8 = document.createElement('a'); l8.href = '/learn/'; l8.textContent = 'Master Class';
       const l6 = document.createElement('a'); l6.href = '/land/'; l6.textContent = 'Land for sale';
       const l7 = document.createElement('a'); l7.href = '/land/sell/'; l7.textContent = 'Sell my land';
       const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members (owner)';
@@ -51,7 +52,7 @@
       }
       const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      p.append(who); if (aiLink) p.append(aiLink); p.append(l1, l2, l6, l7); if (ms) p.append(ms); if (user.owner) p.append(l4, l3, l5); p.append(out); wrap.append(b, p);
+      p.append(who); if (aiLink) p.append(aiLink); p.append(l8, l1, l2, l6, l7); if (ms) p.append(ms); if (user.owner) p.append(l4, l3, l5); p.append(out); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
       if (cta) cta.replaceWith(wrap);
