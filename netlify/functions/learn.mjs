@@ -19,7 +19,8 @@ export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Use GET or POST.' });
   if (!me) return json(401, { error: 'Sign in to save progress.' });
   let b; try { b = JSON.parse(await req.text() || '{}'); } catch (e) { return json(400, { error: 'Bad request.' }); }
-  const l = LESSONS.find(x => x.id === b.id); if (!l) return json(400, { error: 'Bad lesson.' });
+  const isState = /^st_[A-Z]{2}$/.test(String(b.id || ''));
+  const l = isState ? { id: b.id, free: false, quiz: [0, 0, 0] } : LESSONS.find(x => x.id === b.id); if (!l) return json(400, { error: 'Bad lesson.' });
   if (!l.free && !paid) return json(403, { error: 'This lesson is for members.' });
   const score = Math.max(0, Math.min(l.quiz.length, Math.round(Number(b.score) || 0)));
   const p = me.learn || {}; const old = p[l.id];
