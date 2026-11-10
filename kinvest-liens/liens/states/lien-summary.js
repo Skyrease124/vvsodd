@@ -17,6 +17,8 @@ const LIEN_SUMMARY = [
   {state: 'FL', county: 'Escambia', count: 27},
   {state: 'FL', county: 'Hillsborough', count: 47},
   {state: 'FL', county: 'Hernando', count: 27},
+  {state: 'MS', county: 'State-held land', count: 6980},
+  {state: 'FL', county: 'Nassau', count: 8},
   {state: 'CO', county: 'Larimer', count: 1920},
   {state: 'CO', county: 'Saguache', count: 840},
   {state: 'AZ', county: 'Pinal', count: 88},

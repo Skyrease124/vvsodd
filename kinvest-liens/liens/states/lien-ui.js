@@ -112,11 +112,11 @@ const LienLand = {
 };
 const LienBuy = {
   button(l, cls) {
-    const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.county]; if (!g) return null;
+    const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.buyKey || l.county]; if (!g) return null;
     const b = document.createElement('button'); b.type = 'button'; b.className = cls || 'btn small'; b.textContent = 'How to buy'; b.addEventListener('click', () => this.open(l)); return b;
   },
   open(l) {
-    const g = COUNTY_BUY[l.county]; if (!g) return;
+    const g = COUNTY_BUY[l.buyKey || l.county]; if (!g) return;
     let dlg = document.getElementById('buydlg');
     if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'buydlg'; dlg.className = 'lotdlg'; dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); document.body.appendChild(dlg); }
     dlg.textContent = '';

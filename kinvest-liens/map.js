@@ -78,7 +78,7 @@
   const histTotal = HIST.reduce((t, x) => t + x.count, 0);
   const stats = document.getElementById('mapstats');
   if (stats) {
-    [[STATES.length, 'states and DC'], [total, 'real liens listed'], [counties, 'counties with real lists'], [histTotal, 'past sale records']].forEach(([v, label]) => {
+    [[STATES.length, 'states and DC'], [total, 'real listings (liens and land)'], [counties, 'counties with real lists'], [histTotal, 'past sale records']].forEach(([v, label]) => {
       const d = document.createElement('div'); d.className = 'ms'; const b = document.createElement('b'); b.textContent = '0'; b.dataset.to = String(v); const sp = document.createElement('span'); sp.textContent = label; d.append(b, sp); stats.appendChild(d);
     });
     const run = () => stats.querySelectorAll('b').forEach(b => {
