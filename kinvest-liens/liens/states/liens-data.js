@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Duval': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=26 AND PARCEL_ID',
+    fmt: pin => pin.replace(/-/g, '') + 'R',
+    page: pin => 'https://paopropertysearch.coj.net/',
+    pageName: 'Duval County Property Appraiser'
+  },
   'Sarasota': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
     idField: 'CO_NO=68 AND PARCEL_ID',
@@ -203,6 +210,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Duval': {
+    office: 'Duval County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Duval County holds it. It is on LienHub\u2019s Duval purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Duval County Property Appraiser search', url: pin => 'https://paopropertysearch.coj.net/'},
+    links: [['Buy on LienHub (Duval County)', 'https://lienhub.com/county/duval/certsale/main']],
+    steps: [
+      'This list comes from LienHub\u2019s Duval County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or RE (parcel) number. If it is still listed, it is still for sale.',
+      'Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Sarasota': {
     office: 'Sarasota County Tax Collector',
