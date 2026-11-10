@@ -236,11 +236,16 @@ async function research(countyName, parcel) {
     if (!fs.length) return OK('No mapped wetlands on this lot.', 'U.S. Fish & Wildlife Service, National Wetlands Inventory', NWI_PAGE, 'This map is for planning only. A site survey can still find wetlands.');
     return OK('Mapped wetlands touch this lot: ' + [...new Set(fs.map(a => a.WETLAND_TYPE))].join(', ') + '. Wetlands can limit or stop building and may need state or federal permits.', 'U.S. Fish & Wildlife Service, National Wetlands Inventory', NWI_PAGE);
   });
-  tasks.road = q(ROADS, { ...polyParams(rings), distance: '20', units: 'esriSRUnit_Meter', outFields: 'NAME' }).then(d => {
-    const fs = (d.features || []).map(f => f.attributes);
-    if (fs.length) return OK('Appears to touch a mapped road: ' + [...new Set(fs.map(a => a.NAME).filter(Boolean))].slice(0, 3).join(', ') + '. Legal access is not confirmed.', 'U.S. Census Bureau TIGER road map', 'https://tigerweb.geo.census.gov/', 'A road on the map does not prove legal access. Check the plat or survey.');
-    return OK('No mapped road within about 65 ft. It may be landlocked.', 'U.S. Census Bureau TIGER road map', 'https://tigerweb.geo.census.gov/', 'Private roads and easements may not be on this map. Check the plat or survey before you buy.');
-  });
+  // Local streets first, then secondary and primary roads (TIGER layers 8, 6, 2), within about 200 ft of the lot edge.
+  tasks.road = (async () => {
+    const base = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Transportation/MapServer/';
+    for (const L of [8, 6, 2]) {
+      const d = await q(base + L + '/query', { ...polyParams(rings), distance: '60', units: 'esriSRUnit_Meter', outFields: 'NAME' });
+      const fs = (d.features || []).map(f => f.attributes);
+      if (fs.length) return OK('A mapped road is within about 200 ft: ' + [...new Set(fs.map(a => a.NAME).filter(Boolean))].slice(0, 3).join(', ') + '. Legal access is not confirmed.', 'U.S. Census Bureau TIGER road map', 'https://tigerweb.geo.census.gov/', 'A road on the map does not prove legal access. Check the plat or survey.');
+    }
+    return OK('No road on the Census map within about 200 ft. It may be landlocked.', 'U.S. Census Bureau TIGER road map', 'https://tigerweb.geo.census.gov/', 'New subdivision streets, private roads and easements are often missing from this map. Check the plat or survey before you buy.');
+  })();
   if (c.zoning) tasks.zoning = q(c.zoning.url, { ...ptParams(m.center), outFields: c.zoning.field }).then(d => {
     const v = d.features && d.features[0] && d.features[0].attributes[c.zoning.field];
     return v ? OK('County zoning district: ' + v, c.zoning.name, c.zoningPage) : NV(c.zoning.name, c.zoningPage, 'Not in the county zoning map. It may be inside a city, which keeps its own zoning.');
@@ -272,7 +277,7 @@ export default async (req, context) => {
   const u = new URL(req.url), county = String(u.searchParams.get('county') || '').slice(0, 40), parcel = String(u.searchParams.get('parcel') || '').trim().slice(0, 40);
   const send = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
   if (!county || !/^[A-Za-z0-9 .\-]+$/.test(parcel)) return send(400, { error: 'Missing county or parcel.' });
-  const key = 'land_' + county.replace(/\W/g, '') + '_' + parcel.replace(/\W/g, '');
+  const key = 'land2_' + county.replace(/\W/g, '') + '_' + parcel.replace(/\W/g, '');
   const cached = await auth.kvGet(key);
   if (cached && cached.checked && (Date.now() - Date.parse(cached.checked)) < CACHE_DAYS * 864e5) return send(200, { ...cached, cached: true });
   const ip = (req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x');
