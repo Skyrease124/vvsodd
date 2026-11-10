@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Hillsborough': {
+    query: 'https://gis.hcpafl.org/arcgis/rest/services/Webmaps/HillsboroughFL_WebParcels/MapServer/0/query',
+    idField: 'folio',
+    fmt: pin => pin.slice(1),
+    page: pin => 'https://www.hcpafl.org/',
+    pageName: 'Hillsborough County Property Appraiser'
+  },
   'Escambia': {
     query: 'https://gismaps.myescambia.com/arcgis/rest/services/Escambia_County/MapServer/0/query',
     idField: 'CONTROLNO',
@@ -217,6 +224,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Hillsborough': {
+    office: 'Hillsborough County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Hillsborough County holds it. The Tax Collector says county-held certificates are bought on LienHub after you register there. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Hillsborough County Property Appraiser', url: pin => 'https://www.hcpafl.org/'},
+    links: [['Buy on LienHub (Hillsborough County)', 'https://lienhub.com/county/hillsborough/certsale/main'], ['Hillsborough Tax Collector: county-held certificates', 'https://www.hillstaxfl.gov/?p=691']],
+    steps: [
+      'Register as a buyer on LienHub; once registered you can buy Hillsborough county-held certificates there.',
+      'Add a W-9 and payment method as LienHub asks.',
+      'Search this certificate or account number. If it is still listed, it is still for sale.',
+      'Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Escambia': {
     office: 'Escambia County Tax Collector',

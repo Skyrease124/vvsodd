@@ -39,6 +39,13 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Hillsborough': {
+    state: 'FL',
+    parcels: 'https://gis.hcpafl.org/arcgis/rest/services/Webmaps/HillsboroughFL_WebParcels/MapServer/0/query',
+    idField: 'folio', fmt: p => p.slice(1),
+    record: () => 'https://www.hcpafl.org/', recordName: 'Hillsborough County Property Appraiser',
+    zoningPage: 'https://www.hillsboroughcounty.org/'
+  },
   'Escambia': {
     state: 'FL',
     parcels: 'https://gismaps.myescambia.com/arcgis/rest/services/Escambia_County/MapServer/0/query',
