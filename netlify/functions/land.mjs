@@ -39,6 +39,13 @@ const COUNTIES = {
     zoning: { url: 'https://maps1.larimer.org/arcgis/rest/services/MapServices/LC_Zoning/MapServer/0/query', field: 'ZONING_DISTRICT', name: 'Larimer County zoning map (unincorporated county only)' },
     zoningPage: 'https://www.larimer.gov/planning'
   },
+  'Osceola': {
+    state: 'FL',
+    parcels: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=59 AND PARCEL_ID', fmt: p => p.replace(/^R/, '').replace(/-/g, ''),
+    record: () => 'https://www.property-appraiser.org/', recordName: 'Osceola County Property Appraiser',
+    zoningPage: 'https://www.osceolataxcollector.org/'
+  },
   'Pasco': {
     state: 'FL',
     parcels: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
