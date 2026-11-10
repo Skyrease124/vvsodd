@@ -145,6 +145,9 @@ const LienBuy = {
     if (!dlg.open) dlg.showModal();
   }
 };
+// Same leftover rule as the screener: mineral/subsurface rights, easements, strips and slivers.
+const JUNK_RE = /\bSTRIP\b|EASEMENT|R\/W\b|RIGHT[- ]OF[- ]WAY|\b[NSEW]\s?\d+(\.\d+)?\s?(FT|FEET)\b(?! OF LOTS?)|\b\d+(\.\d+)?\s?FT\s+(STRIP|WIDE)\b/i;
+const isJunk = l => !!(l.mineral || /EASEMENT/i.test(l.desc || '') || (JUNK_RE.test(l.desc || '') && !(l.acres >= 0.25)) || (l.acres != null && l.acres > 0 && l.acres < 0.05));
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const LienUI = {
   saleBox(host, county) {
@@ -187,7 +190,9 @@ const LienUI = {
     useSel.appendChild(new Option('All property uses', '')); uses.forEach(x => useSel.appendChild(new Option(x, x)));
     const hideBox = mk('label', 'chk'); const hide = mk('input'); hide.type = 'checkbox'; hideBox.append(hide, ' Hide road, utility and water strips');
     const hasFacts = all.some(l => l.use);
-    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); tools.append(sort); host.appendChild(tools);
+    const junkN = all.filter(isJunk).length;
+    const junkBox = mk('label', 'chk'); const junkC = mk('input'); junkC.type = 'checkbox'; junkC.checked = true; junkBox.append(junkC, ' Hide mineral rights, strips, easements and tiny slivers (' + junkN + ')');
+    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); tools.append(sort); host.appendChild(tools);
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); host.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); host.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); host.appendChild(more);
@@ -214,11 +219,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? a.amount - b.amount : sort.value === 'high' ? b.amount - a.amount : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort, useSel, hide].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide, junkC].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }
