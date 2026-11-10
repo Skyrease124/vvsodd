@@ -13,7 +13,7 @@ if (!link) {
   $('clink').appendChild(a);
   if (FL_PA[name]) { const b = document.createElement('a'); b.className = 'btn ghost'; b.style.marginLeft = '8px'; b.href = FL_PA[name]; b.target = '_blank'; b.rel = 'noopener noreferrer'; b.textContent = 'Find a parcel (property appraiser)'; $('clink').appendChild(b); }
   LienUI.saleBox($('sale'), name);
-  if (name === 'Palm Beach' || name === 'Leon' || name === 'Manatee' || name === 'Alachua' || name === 'Bay' || name === 'Miami-Dade' || name === 'Walton' || name === 'Santa Rosa' || name === 'Volusia' || name === 'Pasco' || name === 'Osceola') Screener.mount($('screenhost'), name);
+  if (name === 'Palm Beach' || name === 'Leon' || name === 'Manatee' || name === 'Alachua' || name === 'Bay' || name === 'Miami-Dade' || name === 'Walton' || name === 'Santa Rosa' || name === 'Volusia' || name === 'Pasco' || name === 'Osceola' || name === 'Sarasota') Screener.mount($('screenhost'), name);
   LienUI.table($('lienbox'), name, 'FL');
   DUE_DILIGENCE.forEach(t => { const li = document.createElement('li'); li.textContent = t; $('dd').appendChild(li); });
 }
