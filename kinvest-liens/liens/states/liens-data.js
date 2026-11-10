@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Osceola': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=59 AND PARCEL_ID',
+    fmt: pin => pin.replace(/^R/, '').replace(/-/g, ''),
+    page: pin => 'https://www.property-appraiser.org/',
+    pageName: 'Osceola County Property Appraiser'
+  },
   'Pasco': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
     idField: 'CO_NO=61 AND PARCEL_ID',
@@ -189,6 +196,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Osceola': {
+    office: 'Osceola County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Osceola County holds it. It is on LienHub\u2019s Osceola purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding, so taxes have gone unpaid for years. It is a thin strip of land: research it carefully.' : ''),
+    record: {label: 'Open the Osceola County Property Appraiser', url: pin => 'https://www.property-appraiser.org/'},
+    links: [['Buy on LienHub (Osceola County)', 'https://lienhub.com/county/osceola/certsale/main'], ['Osceola County Tax Collector', 'https://www.osceolataxcollector.org/']],
+    steps: [
+      'This list comes from LienHub\u2019s Osceola County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Both Osceola listings are thin strips (10 to 12.5 feet wide). Check Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Pasco': {
     office: 'Pasco County Tax Collector',
