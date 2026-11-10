@@ -30,7 +30,7 @@ const FL_SALE = {
     'Marion': 'https://mariontax.com/delinquent-taxes',
     'Walton': 'https://lienhub.com/county/walton/certsale/main',
     'Nassau': 'https://www.nassautaxes.com/Content/Delinquent',
-    'Santa Rosa': 'https://srctc.com/real-estate/delinquent-tax-information/'
+    'Santa Rosa': 'https://lienhub.com/county/santarosa/certsale/main'
   }
 };
 const LIENS = []; // 2027 sale lists are not posted yet. Older liens load from official files (see liens-*.js).
@@ -51,6 +51,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Santa Rosa': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=67 AND PARCEL_ID',
+    fmt: pin => pin,
+    page: pin => 'https://srcpa.gov/',
+    pageName: 'Santa Rosa County Property Appraiser'
   },
   'Walton': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
@@ -167,6 +174,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Santa Rosa': {
+    office: 'Santa Rosa County Tax Collector',
+    status: l => (l.mineral ? 'MINERAL RIGHTS ONLY: this certificate is on an underground mineral interest, not on land you could use or build on. ' : '') + 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Santa Rosa County holds it. Anyone can buy it on LienHub. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Santa Rosa County Property Appraiser', url: pin => 'https://srcpa.gov/'},
+    links: [['Buy on LienHub (Santa Rosa County)', 'https://lienhub.com/county/santarosa/certsale/main'], ['Santa Rosa Tax Collector: delinquent tax information', 'https://srctc.com/real-estate/delinquent-tax-information/']],
+    steps: [
+      'Santa Rosa sells its certificates on LienHub.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Most Santa Rosa county-held certificates are on mineral rights, not land. Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Walton': {
     office: 'Walton County Tax Collector',
