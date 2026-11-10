@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Hernando': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=37 AND PARCEL_ID',
+    fmt: pin => pin.replace(/-/g, ' '),
+    page: pin => 'https://hernandocountypa-florida.us/',
+    pageName: 'Hernando County Property Appraiser'
+  },
   'Hillsborough': {
     query: 'https://gis.hcpafl.org/arcgis/rest/services/Webmaps/HillsboroughFL_WebParcels/MapServer/0/query',
     idField: 'folio',
@@ -224,6 +231,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Hernando': {
+    office: 'Hernando County Tax Collector',
+    status: l => (/EASEMENT/i.test(l.desc || '') ? 'POWER-LINE EASEMENT STRIP: the description says this is a strip under a Florida Power easement, which usually cannot be built on. ' : '') + 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Hernando County holds it. It is on LienHub\u2019s Hernando purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Hernando County Property Appraiser', url: pin => 'https://hernandocountypa-florida.us/'},
+    links: [['Buy on LienHub (Hernando County)', 'https://lienhub.com/county/hernando/certsale/main']],
+    steps: [
+      'This list comes from LienHub\u2019s Hernando County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Several of these are 100-foot strips under power-line easements. Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Hillsborough': {
     office: 'Hillsborough County Tax Collector',
