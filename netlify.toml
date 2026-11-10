@@ -9,6 +9,7 @@
     "kinvest-liens/liens/states/state-data.js",
     "kinvest-liens/liens/states/liens-data.js",
     "kinvest-liens/liens/states/liens-palmbeach.js",
+    "kinvest-liens/liens/states/land-flags.js",
     "kinvest-liens/liens/states/liens-larimer.js",
     "kinvest-liens/liens/states/liens-pinal.js",
     "kinvest-liens/liens/states/liens-coconino.js",

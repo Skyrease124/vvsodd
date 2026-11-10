@@ -147,6 +147,9 @@ const LienBuy = {
 };
 // Same leftover rule as the screener: mineral/subsurface rights, easements, strips and slivers.
 const JUNK_RE = /\bSTRIP\b|EASEMENT|R\/W\b|RIGHT[- ]OF[- ]WAY|\b[NSEW]\s?\d+(\.\d+)?\s?(FT|FEET)\b(?! OF LOTS?)|\b\d+(\.\d+)?\s?FT\s+(STRIP|WIDE)\b/i;
+// Pre-checked land facts (LAND_FLAGS from land-flags.js): [road, high flood, wetlands], 1 = yes, 0 = no, null = not checked.
+const landFlags = l => (typeof LAND_FLAGS !== 'undefined' && LAND_FLAGS[l.county + '|' + l.parcel]) || null;
+const landBadge = l => { const f = landFlags(l); if (!f) return 'Not checked'; const b = []; if (f[0] === 0) b.push('\uD83D\uDEAB No mapped road'); else if (f[0] === 1) b.push('\u2714 Road'); if (f[1] === 1) b.push('\uD83C\uDF0A Flood zone'); if (f[2] === 1) b.push('\uD83C\uDF3F Wetlands'); return b.join(' \u00b7 ') || 'Not checked'; };
 const isJunk = l => !!(l.mineral || /EASEMENT/i.test(l.desc || '') || (JUNK_RE.test(l.desc || '') && !(l.acres >= 0.25)) || (l.acres != null && l.acres > 0 && l.acres < 0.05));
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const LienUI = {
@@ -192,7 +195,13 @@ const LienUI = {
     const hasFacts = all.some(l => l.use);
     const junkN = all.filter(isJunk).length;
     const junkBox = mk('label', 'chk'); const junkC = mk('input'); junkC.type = 'checkbox'; junkC.checked = true; junkBox.append(junkC, ' Hide mineral rights, strips, easements and tiny slivers (' + junkN + ')');
-    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); tools.append(sort); host.appendChild(tools);
+    const noRoadN = all.filter(l => { const f = landFlags(l); return f && f[0] === 0; }).length;
+    const mkChk = (txt, on) => { const lb = mk('label', 'chk'), c = mk('input'); c.type = 'checkbox'; c.checked = on; lb.append(c, ' ' + txt); return [lb, c]; };
+    const [roadBox, roadC] = mkChk('Hide lots with no mapped road (' + noRoadN + ')', true);
+    const [floodBox, floodC] = mkChk('Hide FEMA high-risk flood zones', false);
+    const [wetBox, wetC] = mkChk('Hide mapped wetlands', false);
+    const hasFlags = all.some(l => landFlags(l));
+    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort); host.appendChild(tools);
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); host.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); host.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); host.appendChild(more);
@@ -201,11 +210,11 @@ const LienUI = {
     function draw() {
       wrap.innerHTML = '';
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc'].forEach(x => hr.appendChild(mk('th', '', x)));
+      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Land check', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
       list.slice(0, shown).forEach(l => {
         const r = tb.insertRow();
-        [l.county, l.parcel, l.taxYear || '', money(l.amount), l.rate || '', l.payoff ? money(l.payoff) : '', l.saleDate, l.status, l.use || '', l.market != null ? money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.use ? (l.homestead ? 'Yes' : 'No') : '', l.desc || ''].forEach((x, k) => { const c = r.insertCell(); c.textContent = x; if (k === 11) c.className = 'desc'; });
+        [l.county, l.parcel, l.taxYear || '', money(l.amount), l.rate || '', l.payoff ? money(l.payoff) : '', l.saleDate, l.status, landBadge(l), l.use || '', l.market != null ? money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.use ? (l.homestead ? 'Yes' : 'No') : '', l.desc || ''].forEach((x, k) => { const c = r.insertCell(); c.textContent = x; if (k === 11) c.className = 'desc'; });
         const c = r.insertCell(), a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; c.append(a, ' ' + l.checked);
         const mc = r.insertCell();
         const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
@@ -219,11 +228,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? a.amount - b.amount : sort.value === 'high' ? b.amount - a.amount : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort, useSel, hide, junkC].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }
