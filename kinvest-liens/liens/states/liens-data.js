@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Pasco': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=61 AND PARCEL_ID',
+    fmt: pin => pin,
+    page: pin => 'https://www.pascopa.com/',
+    pageName: 'Pasco County Property Appraiser'
+  },
   'Volusia': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
     idField: 'CO_NO=74 AND PARCEL_ID',
@@ -182,6 +189,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Pasco': {
+    office: 'Pasco County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Pasco County holds it. It is on LienHub\u2019s Pasco purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Pasco County Property Appraiser', url: pin => 'https://www.pascopa.com/'},
+    links: [['Buy on LienHub (Pasco County)', 'https://lienhub.com/county/pasco/certsale/main'], ['Pasco Tax Collector: tax sale information', 'https://pascotaxes.com/taxes/tax-information/delinquent-real-estate-taxes/tax-sale-information/']],
+    steps: [
+      'This list comes from LienHub\u2019s Pasco County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Many of these are partial lots and strips (\u201cwest half of lot\u201d, \u201ceast 25 ft\u201d). Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Volusia': {
     office: 'Volusia County Tax Collector',
