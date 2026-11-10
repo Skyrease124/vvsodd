@@ -177,7 +177,7 @@ function runLiens(it) {
     const f = cleanFilters(it.lien, uses);
     // Skip dust by default (balances under $10, lots the county values under $500) unless the member set their own limits.
     const dust = r => (it.lien.minFace == null && r.face < 10) || (it.lien.minValue == null && it.lien.maxValue == null && !(r.market >= 500));
-    all = all.concat(_apply(rows, f).filter(r => !dust(r)).map(r => ({ ...r, _state: COUNTY_STATE[c] })));
+    all = all.concat(_apply(rows, f).filter(r => !dust(r) && !r.junk).map(r => ({ ...r, _state: COUNTY_STATE[c] })));
   }
   const by = it.sortBy && ['face', 'value', 'coverage', 'acres', 'score'].includes(it.sortBy) ? it.sortBy : 'score';
   const key = { face: r => r.face, value: r => r.market || 0, coverage: r => r.coverage || 0, acres: r => r.acres || 0, score: r => r.score }[by];
