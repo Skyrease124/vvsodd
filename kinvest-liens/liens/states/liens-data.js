@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Escambia': {
+    query: 'https://gismaps.myescambia.com/arcgis/rest/services/Escambia_County/MapServer/0/query',
+    idField: 'CONTROLNO',
+    fmt: pin => pin.replace(/-/g, ''),
+    page: pin => 'https://www.escpa.org/',
+    pageName: 'Escambia County Property Appraiser'
+  },
   'Duval': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
     idField: 'CO_NO=26 AND PARCEL_ID',
@@ -210,6 +217,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Escambia': {
+    office: 'Escambia County Tax Collector',
+    status: l => (l.mineral ? 'MINERAL RIGHTS ONLY: not land you could use or build on. ' : '') + 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Escambia County holds it. It is on LienHub\u2019s Escambia purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Escambia County Property Appraiser', url: pin => 'https://www.escpa.org/'},
+    links: [['Buy on LienHub (Escambia County)', 'https://lienhub.com/county/escambia/certsale/main'], ['Escambia County Tax Collector', 'https://escambiataxcollector.com/']],
+    steps: [
+      'This list comes from LienHub\u2019s Escambia County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or account number. If it is still listed, it is still for sale.',
+      'Many are small pieces described by metes and bounds. Check Land Information and the Property Appraiser before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Duval': {
     office: 'Duval County Tax Collector',
