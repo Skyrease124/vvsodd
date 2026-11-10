@@ -30,7 +30,8 @@ const FL_SALE = {
     'Marion': 'https://mariontax.com/delinquent-taxes',
     'Walton': 'https://lienhub.com/county/walton/certsale/main',
     'Nassau': 'https://www.nassautaxes.com/Content/Delinquent',
-    'Santa Rosa': 'https://lienhub.com/county/santarosa/certsale/main'
+    'Santa Rosa': 'https://lienhub.com/county/santarosa/certsale/main',
+    'Volusia': 'https://lienhub.com/county/volusia/certsale/main'
   }
 };
 const LIENS = []; // 2027 sale lists are not posted yet. Older liens load from official files (see liens-*.js).
@@ -51,6 +52,13 @@ const PARCEL_MAPS = {
     fmt: pin => pin.slice(0, 9),
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
+  },
+  'Volusia': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=74 AND PARCEL_ID',
+    fmt: pin => pin,
+    page: pin => 'https://vcpa.vcgov.org/',
+    pageName: 'Volusia County Property Appraiser'
   },
   'Santa Rosa': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
@@ -174,6 +182,18 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'Volusia': {
+    office: 'Volusia County Tax Collector',
+    status: l => (l.mineral ? 'SUBSURFACE RIGHTS ONLY: this certificate is on underground (subsurface or mineral) rights, not on land you could use or build on. ' : '') + 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Volusia County holds it. The Tax Collector says county-held certificates can be bought on LienHub or at its DeLand office. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Volusia County Property Appraiser', url: pin => 'https://vcpa.vcgov.org/'},
+    links: [['Buy on LienHub (Volusia County)', 'https://lienhub.com/county/volusia/certsale/main'], ['Volusia Tax Collector: tax certificate information', 'https://www.vctaxcollector.org/taxes/tax-certificate-info.html']],
+    steps: [
+      'Volusia runs its certificate sales on LienHub, and county-held certificates can be bought there or at the DeLand office.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Most Volusia county-held certificates are on subsurface rights, not land. Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Santa Rosa': {
     office: 'Santa Rosa County Tax Collector',

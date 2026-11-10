@@ -9,6 +9,7 @@ const LIEN_SUMMARY = [
   {state: 'FL', county: 'Miami-Dade', count: 263},
   {state: 'FL', county: 'Walton', count: 76},
   {state: 'FL', county: 'Santa Rosa', count: 1950},
+  {state: 'FL', county: 'Volusia', count: 950},
   {state: 'CO', county: 'Larimer', count: 1920},
   {state: 'CO', county: 'Saguache', count: 840},
   {state: 'AZ', county: 'Pinal', count: 88},
