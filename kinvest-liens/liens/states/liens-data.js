@@ -53,6 +53,13 @@ const PARCEL_MAPS = {
     page: pin => 'https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale',
     pageName: 'Pinal County Treasurer'
   },
+  'Nassau': {
+    query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
+    idField: 'CO_NO=55 AND PARCEL_ID',
+    fmt: pin => pin.replace(/-/g, ''),
+    page: pin => 'https://ncpafl.com/',
+    pageName: 'Nassau County Property Appraiser'
+  },
   'Hernando': {
     query: 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query',
     idField: 'CO_NO=37 AND PARCEL_ID',
@@ -231,6 +238,30 @@ const COUNTY_BUY = {
       'Call the Treasurer\u2019s office at (970) 498-7020 to ask whether this parcel is still on the list and how to register.'
     ],
     phone: '(970) 498-7020'
+  },
+  'MS-TFL': {
+    office: 'Mississippi Secretary of State, Public Lands Division',
+    status: l => 'This parcel is on the Mississippi Secretary of State\u2019s tax-forfeited lands list (downloaded ' + (typeof MS_TFL_CHECKED !== 'undefined' ? MS_TFL_CHECKED : 'recently') + '): land that forfeited to the State for unpaid taxes. The State sells it directly. Whether it is still available, the price and the kind of deed must be confirmed with the Secretary of State.',
+    record: null,
+    links: [['Mississippi Secretary of State: tax-forfeited lands', 'https://www.sos.ms.gov/public-lands/tax-forfeited-lands']],
+    steps: [
+      'Open the Secretary of State\u2019s Tax-Forfeited Lands page (link below) and look up this parcel number in its search.',
+      'Follow the State\u2019s application steps there. We could not read the State\u2019s purchase rules automatically, so confirm the price, fees, and what kind of deed or title you get before paying.',
+      'Check the county property record and Land Information. Many forfeited parcels are small lots, have no county value, or have title problems.',
+      'Talk to a Mississippi real estate attorney or title company about the title before you build or resell.'
+    ]
+  },
+  'Nassau': {
+    office: 'Nassau County Tax Collector',
+    status: l => 'County-held certificate ' + l.cert + ' from the ' + l.certYear + ' sale (tax year ' + l.taxYear + '): nobody bought it, so Nassau County holds it. It is on LienHub\u2019s Nassau purchase list. Purchase amount: $' + Number(l.amount).toFixed(2) + '.' + (l.outstanding > 1 ? ' This parcel has ' + l.outstanding + ' certificates outstanding: research it carefully.' : ''),
+    record: {label: 'Open the Nassau County Property Appraiser', url: pin => 'https://ncpafl.com/'},
+    links: [['Buy on LienHub (Nassau County)', 'https://lienhub.com/county/nassau/certsale/main'], ['Nassau Tax Collector: delinquent taxes', 'https://www.nassautaxes.com/Content/Delinquent']],
+    steps: [
+      'This list comes from LienHub\u2019s Nassau County \u201cView/Purchase Certificates\u201d page.',
+      'Open LienHub, make a free account, and add a W-9 and payment method as it asks.',
+      'Search this certificate or parcel number. If it is still listed, it is still for sale.',
+      'Check the description and Land Information before you pay. Owning a certificate does not make you the owner of the property.'
+    ]
   },
   'Hernando': {
     office: 'Hernando County Tax Collector',
