@@ -368,7 +368,13 @@ const LienUI = {
     const bar = mk('div', 'lienbar'), fb = mk('button', 'btn small', 'Filters'); fb.type = 'button'; fb.setAttribute('aria-expanded', 'false');
     const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button';
     const cnt = mk('p', 'lcount small'); cnt.setAttribute('role', 'status');
-    const top = mk('div', 'lienbar-row'); top.append(fb, vb, cnt); bar.append(top, tools); host.appendChild(bar);
+    // County picker: right beside Filters, so you can jump to one county without scrolling (shown when the list spans several counties).
+    const cty = mk('select', 'ctysel'); cty.setAttribute('aria-label', 'County');
+    const ccount = {}; all.forEach(l => { ccount[l.county] = (ccount[l.county] || 0) + 1; });
+    const cnames = Object.keys(ccount).sort();
+    cty.appendChild(new Option('All counties (' + cnames.length + ')', '')); cnames.forEach(c => cty.appendChild(new Option(c + ' (' + ccount[c].toLocaleString('en-US') + ')', c)));
+    const top = mk('div', 'lienbar-row'); top.append(fb, vb); if (cnames.length > 1) top.append(cty); else top.append(cnt);
+    bar.append(top); if (cnames.length > 1) { cnt.classList.add('lcount-row'); bar.append(cnt); } bar.append(tools); host.appendChild(bar);
     fb.addEventListener('click', () => { const o = bar.classList.toggle('open'); fb.setAttribute('aria-expanded', String(o)); });
     let view = 'cards';
     vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
@@ -431,11 +437,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!cty.value || l.county === cty.value) && (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? (a.amount || 0) - (b.amount || 0) : sort.value === 'high' ? (b.amount || 0) - (a.amount || 0) : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel, cty].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }

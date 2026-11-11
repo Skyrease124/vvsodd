@@ -720,6 +720,8 @@ html{scroll-behavior:smooth}
 /* parcel cards + sticky bar */
 .lienbar{position:sticky;top:0;z-index:20;background:rgba(7,13,28,.94);backdrop-filter:blur(8px);border-bottom:1px solid #24376a;margin:0 -16px;padding:8px 16px}
 .lienbar-row{display:flex;gap:8px;align-items:center}
+.lienbar .ctysel{flex:1;min-width:0;max-width:100%}
+.lienbar .lcount-row{margin:6px 0 0;text-align:left}
 .lienbar .lcount{margin:0;margin-left:auto;text-align:right;font-size:12px;line-height:1.25}
 .lienbar .lientools{display:none;margin:10px 0 4px;gap:8px;flex-wrap:wrap}
 .lienbar.open .lientools{display:flex;max-height:60vh;overflow:auto}
