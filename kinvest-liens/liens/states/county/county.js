@@ -12,6 +12,12 @@ if (!link) {
   const a = document.createElement('a'); a.className = 'btn'; a.href = link[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Open the county tax collector site';
   $('clink').appendChild(a);
   if (FL_PA[name]) { const b = document.createElement('a'); b.className = 'btn ghost'; b.style.marginLeft = '8px'; b.href = FL_PA[name]; b.target = '_blank'; b.rel = 'noopener noreferrer'; b.textContent = 'Find a parcel (property appraiser)'; $('clink').appendChild(b); }
+  // Free practice case button (shown for counties that have a case, even when there are no current listings).
+  if (name === 'Lee') {
+    const pb = document.createElement('a'); pb.className = 'btn prbtn'; pb.href = '/practice/?case=lee-demo'; pb.textContent = 'Practice a Lee County case'; $('clink').after(pb);
+    fetch('/.netlify/functions/practice').then(r => r.json()).then(d => { const c = (d.cases || []).find(x => x.county === 'Lee'); if (!c) { pb.remove(); return; } pb.href = '/practice/?case=' + encodeURIComponent(c.id); pb.textContent = c.demo ? 'Practice With a Sample Certificate (demo)' : 'Practice With a Real Certificate'; }).catch(() => {});
+    const np = document.createElement('p'); np.className = 'small muted'; np.textContent = 'Free, no sign-in. Check zoning, flood, wetlands and road access, make your call, then see what happened.'; pb.after(np);
+  }
   LienUI.saleBox($('sale'), name);
   if (name === 'Palm Beach' || name === 'Leon' || name === 'Manatee' || name === 'Alachua' || name === 'Bay' || name === 'Miami-Dade' || name === 'Walton' || name === 'Santa Rosa' || name === 'Volusia' || name === 'Pasco' || name === 'Osceola' || name === 'Sarasota' || name === 'Duval' || name === 'Escambia' || name === 'Hillsborough' || name === 'Hernando' || name === 'Nassau') Screener.mount($('screenhost'), name);
   LienUI.table($('lienbox'), name, 'FL');

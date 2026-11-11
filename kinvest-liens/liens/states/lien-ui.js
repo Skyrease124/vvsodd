@@ -235,6 +235,7 @@ const LienUI = {
         const act = mk('div', 'lact');
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
         const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb);
+        const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
         const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost'));
         c.appendChild(act);
         const src = mk('p', 'small lsrc'); const a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a, ' ' + (l.checked || '')); c.appendChild(src);
@@ -271,5 +272,46 @@ const LienUI = {
     [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
+  }
+};
+
+// Research checklist on live listings. Same checklist as the practice case; members' marks and notes are saved privately to their account.
+const LienResearch = {
+  LAND_CHECKED: '2026-11-10', // keep in step with the date at the top of land-flags.js
+  user: undefined,
+  async me() { if (this.user !== undefined) return this.user; try { const r = await fetch('/.netlify/functions/account'); const d = await r.json(); this.user = d.user || null; } catch (e) { this.user = null; } return this.user; },
+  key(l) { return [l.state || 'FL', l.county, l.parcel].join('|').replace(/[^A-Za-z0-9 |._\/-]/g, '_').slice(0, 120); },
+  items(l) {
+    const f = landFlags(l), LES = {href: '/learn/?l=diligence', label: 'Master Class lesson 7: Due diligence (members)'};
+    const src = (name, url) => ({name, url});
+    const yes = (v, a, b) => v === 1 ? a : v === 0 ? b : '';
+    return [
+      {key: 'zoning', title: 'Zoning', why: 'Zoning decides what can be built, and a minimum lot size can make a small lot unbuildable.', finding: '', source: src('County zoning map', ''), checked: '', lookup: {text: 'Look up zoning with Land Information', href: '/land/'}, lesson: LES},
+      {key: 'flood', title: 'Flood zone', why: 'A high-risk flood zone can mean required insurance and building limits.', finding: f ? yes(f[1], 'The lot touches a FEMA Special Flood Hazard Area (high risk).', 'The lot is not in a mapped FEMA high-risk flood zone.') : '', source: src('FEMA National Flood Hazard Layer', 'https://msc.fema.gov/portal'), checked: f ? this.LAND_CHECKED : '', lesson: LES},
+      {key: 'wetlands', title: 'Wetlands', why: 'Mapped wetlands can block or limit building.', finding: f ? yes(f[2], 'Mapped wetlands touch the lot.', 'No mapped wetlands touch the lot.') : '', source: src('US Fish and Wildlife National Wetlands Inventory', 'https://www.fws.gov/program/national-wetlands-inventory'), checked: f ? this.LAND_CHECKED : '', lesson: LES},
+      {key: 'road', title: 'Road access', why: 'A lot with no road may be landlocked. A mapped road is not proof of legal access.', finding: f ? yes(f[0], 'A mapped road was found within about 200 ft of the lot.', 'No mapped road within about 200 ft. The lot may be landlocked, or its road may be private or new.') : '', source: src('US Census TIGER road map', 'https://tigerweb.geo.census.gov/'), checked: f ? this.LAND_CHECKED : '', lesson: LES}
+    ];
+  },
+  async open(l) {
+    if (typeof Research === 'undefined') return;
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    let dlg = document.getElementById('resdlg');
+    if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'resdlg'; dlg.className = 'lotdlg resdlg'; dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); document.body.appendChild(dlg); }
+    dlg.textContent = ''; const body = mk('div', 'resbody'); dlg.appendChild(body);
+    body.append(mk('h3', '', 'Research: ' + l.parcel), mk('p', 'small muted', (l.county || '') + ' County · face $' + Number(l.amount).toLocaleString()));
+    const me = await this.me(), key = this.key(l); let saved = null;
+    if (me) { try { const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'resGet'})}); const d = await r.json(); saved = d.research && d.research[key] || null; } catch (e) {} }
+    const marks = Object.assign({}, saved && saved.marks);
+    body.appendChild(Research.build(this.items(l), marks, null, {showAll: true}));
+    const notes = mk('textarea'); notes.rows = 4; notes.maxLength = 1500; notes.placeholder = 'Your private notes on this certificate'; notes.setAttribute('aria-label', 'Private notes'); notes.value = saved ? saved.notes : '';
+    const msg = mk('p', 'small'); msg.setAttribute('role', 'status');
+    if (me) {
+      const sv = mk('button', 'btn', 'Save my research'); sv.type = 'button';
+      sv.addEventListener('click', async () => { sv.disabled = true; msg.textContent = 'Saving…'; try { const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'resSave', key, label: l.county + ' ' + l.parcel, marks, notes: notes.value})}); const d = await r.json(); msg.textContent = r.ok ? 'Saved to your account. Only you can see it.' : (d.error || 'Could not save.'); } catch (e) { msg.textContent = 'Could not reach the server.'; } sv.disabled = false; });
+      body.append(notes, sv, msg); if (saved) msg.textContent = 'Last saved ' + String(saved.updated).slice(0, 10) + '.';
+    } else { const p = mk('p', 'small'); const a = mk('a', '', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); p.append(a, ' to save your research and notes to your account. Without signing in, your marks are not kept.'); body.appendChild(p); }
+    const x = mk('button', 'btn ghost small', 'Close'); x.type = 'button'; x.addEventListener('click', () => dlg.close()); body.appendChild(x);
+    body.appendChild(mk('p', 'small muted', 'Pre-checked items come from public map services and can be wrong or out of date. Confirm with the county. Educational only, not advice.'));
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
   }
 };
