@@ -505,3 +505,29 @@ html{scroll-behavior:smooth}
 .aitrycard .ic{font-size:22px}.aitrycard b{font-size:15px}.aitrycard .ex{font-size:13px;color:#9fb1d6;line-height:1.35}
 @media(min-width:800px){.aitry{grid-template-columns:repeat(3,1fr)}.aistage{padding-top:44px}}
 @media(prefers-reduced-motion:reduce){.aiaurora,.aibar::before,.aidot,.aist.haslive,.aitrycard,.aihello,.aidots::before,.aichat .aiturn,.aistage.scan .aibeam{animation:none!important}.airipple{display:none}}
+/* ===== Home page: same look as the PricePocket AI page ===== */
+.hgreet{margin:0 0 8px;font-size:14px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#ffd166;animation:ppFadeUp .5s ease both}
+.hgreet::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:8px;vertical-align:1px;animation:aiPulseDot 1.8s ease-out infinite}
+.dcopy h1{background:linear-gradient(92deg,#fff 0%,#fff 38%,#ffe29a 62%,#ffd166 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dcopy h1 .gold{color:transparent;background:linear-gradient(92deg,#ffe08a,#f5b301,#ffe08a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;animation:hShimmer 6s ease-in-out infinite}
+@keyframes hShimmer{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+.dhero{position:relative;overflow:hidden;background:radial-gradient(90% 55% at 50% 0%,#12285a 0%,#0a1226 55%,#070d1c 100%)}
+.dhero>*{position:relative;z-index:1}
+.dhero::before{content:"";position:absolute;inset:-25%;background:radial-gradient(34% 30% at 22% 30%,rgba(34,197,94,.16),transparent 70%),radial-gradient(32% 28% at 78% 62%,rgba(255,209,102,.13),transparent 70%),radial-gradient(36% 32% at 55% 18%,rgba(59,130,246,.2),transparent 70%);filter:blur(20px);animation:aiAurora 18s ease-in-out infinite;pointer-events:none;z-index:0}
+.dmap .usmap{border-color:#2b3f73;box-shadow:inset 0 0 60px rgba(34,100,255,.14),0 18px 40px rgba(0,0,0,.45)}
+.dmap .usmap .st.haslive{animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards,aiBreathe 4.5s ease-in-out 1.2s infinite}
+.mapstats .ms{background:linear-gradient(180deg,#101d3d,#0b1428);border:1px solid #24376a;text-align:center;align-items:center}
+.mapstats .ms b{color:#ffd166;font-variant-numeric:tabular-nums}
+.mapstats .ms:hover{transform:translateY(-3px);border-color:#ffd166;box-shadow:0 12px 26px rgba(0,0,0,.45)}
+.dhero .maptip{background:linear-gradient(160deg,#111f42,#0a1226);border:1px solid #24376a;box-shadow:0 12px 28px rgba(0,0,0,.4)}
+.dhero .maptip b{background:linear-gradient(92deg,#fff,#ffd166);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mapchips a{transition:transform .15s ease,border-color .15s ease,background .15s ease}
+.mapchips a:hover{transform:translateY(-2px);border-color:#ffd166!important}
+.dgold{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400}
+.dticks li{background:linear-gradient(160deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:12px;padding:10px 14px 10px 46px;list-style:none;margin:0 0 8px;transition:transform .2s ease,border-color .2s ease}
+.dticks li:hover{transform:translateX(4px);border-color:#ffd166}
+.dticks{padding:0;margin:0 0 18px}
+.dticks li:before{left:12px;top:50%;transform:translateY(-50%)}
+.flpanel{background:linear-gradient(160deg,#101d3d,#0a1226);border:1px solid #24376a;box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.flpanel .dbtn,.dhero .dbtn{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400!important}
+@media(prefers-reduced-motion:reduce){.hgreet,.hgreet::before,.dcopy h1 .gold,.dhero::before,.dmap .usmap .st.haslive{animation:none!important}}

@@ -97,3 +97,11 @@
     } catch (e) { host.hidden = true; }
   })();
 })();
+
+// Greeting above the headline (same voice as the PricePocket AI page).
+(function () {
+  var el = document.getElementById('hgreet'); if (!el) return;
+  var h = new Date().getHours();
+  el.textContent = (h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ' \u00b7 what are we hunting today?';
+  el.removeAttribute('aria-hidden');
+})();

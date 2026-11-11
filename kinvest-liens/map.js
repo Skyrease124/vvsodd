@@ -50,7 +50,7 @@
   let idx = 0;
   Object.keys(MAP_PATHS).forEach(a => {
     const s = by[a]; if (!s) return;
-    const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), style: 'fill:' + (GRAD[s.sys] || COL[s.sys] || '#94a3b8') + ';--i:' + (idx++), tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
+    const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), style: 'fill:' + (GRAD[s.sys] || COL[s.sys] || '#94a3b8') + ';--i:' + (idx++), 'data-a': a, tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
     let was = false;
     p.addEventListener('pointerdown', () => { was = cur === a; });
     p.addEventListener('click', () => { if (touch && !was) select(a); else go(a); });
@@ -63,8 +63,10 @@
   Object.keys(LIVE).forEach(a => {
     const pos = typeof MAP_LABELS !== 'undefined' && MAP_LABELS[a]; if (!pos || !by[a]) return;
     const n = LIVE[a].reduce((t, x) => t + x.count, 0);
+    const stEl = svg.querySelector('path.st[data-a="' + a + '"]'); if (stEl) stEl.classList.add('haslive');
+    const rr = Math.max(5, Math.min(13, 4 + Math.log10(n + 1) * 2.4));
     const g = mk('g', {class: 'live', transform: 'translate(' + pos[0] + ',' + (pos[1] - 16) + ')', tabindex: 0, role: 'link', 'aria-label': by[a].n + ': real liens listed (' + n.toLocaleString() + ')'});
-    g.appendChild(mk('circle', {class: 'ring', r: 7})); g.appendChild(mk('circle', {class: 'ring r2', r: 7})); g.appendChild(mk('circle', {class: 'core', r: 6}));
+    g.appendChild(mk('circle', {class: 'ring', r: rr + 1})); g.appendChild(mk('circle', {class: 'ring r2', r: rr + 1})); g.appendChild(mk('circle', {class: 'core', r: rr}));
     g.addEventListener('click', () => go(a)); g.addEventListener('mouseenter', () => select(a));
     g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
     liveLayer.appendChild(g);
