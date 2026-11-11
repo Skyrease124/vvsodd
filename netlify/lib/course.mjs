@@ -12,6 +12,9 @@ export const LESSONS = [
       { h: 'Redeemable deeds: a mix of both', p: ['A few states (for example Georgia and Texas) sell a deed, but the owner can still buy it back for a period by paying your price plus a set premium. If they don’t, you keep the property.'] },
       { h: 'Who actually makes money', p: ['Lien investors mostly earn interest when owners redeem. Deed investors earn by buying property below its value. Both can lose money if they skip research, which is what the rest of this course is about.'] }
     ],
+    example: "Made-up numbers: an owner owes $1,000 in back tax. In a lien state you pay the county $1,000 and hold a certificate at 12% a year. If the owner pays you back after 6 months, you get $1,000 plus about $60 interest (1,000 × 12% × 0.5), so $1,060. You never owned the house.",
+    mistakes: ["Expecting to get the house. Most liens are paid off.", "Thinking a lien is risk-free. The owner can pay late, never pay, or the property can be worth less than the debt.", "Assuming every state works the same way."],
+    checklist: ["Is my state a lien, deed or redeemable-deed state?", "Who runs the sale: the county or the city?", "How long does the owner have to pay back (redemption)?"],
     takeaways: ['A lien = you buy the tax debt and earn interest when the owner pays.', 'A deed = you buy the property itself at auction.', 'Redeemable deed = you buy the property, but the owner can still buy it back for a while.', 'Most liens get paid off; getting the property is the exception.'],
     tryIt: { text: 'Tap a state on the map to see whether it sells liens, deeds or redeemable deeds.', href: '/#map' },
     quiz: [
@@ -30,6 +33,10 @@ export const LESSONS = [
       { h: 'Other auction methods', p: ['Some counties pick winners by rotation or random draw, or bid down the percentage of ownership. Always read the county’s sale rules before you register.'] },
       { h: 'Fees eat small liens', p: ['Registration fees, per-certificate fees, wire fees and your own time matter. A $50 lien at 18% earns about $9 a year. A $15 fee wipes out most of it.'] }
     ],
+    example: "Made-up numbers: a $2,000 lien. If you win at the 18% maximum and the owner pays after 9 months, interest is about $270 (2,000 × 18% × 0.75). If competition bids it down to 6%, the same lien earns about $90. Premium states: if you pay $1,300 for a $1,000 lien and the $300 premium is not refunded, a 10% year gives you $1,100 back on $1,300 paid, a loss.",
+    mistakes: ["Planning on the maximum rate in a bid-down state.", "Overbidding premiums.", "Ignoring fees on small liens.", "Forgetting the money is tied up until the owner pays."],
+    checklist: ["Does this state pay interest or a flat penalty?", "Is bidding by lowest rate or by premium?", "What are the registration and per-certificate fees?", "What is my real return after fees?"],
+    tool: "calc",
     takeaways: ['Know whether your state pays interest or a flat penalty.', 'In bid-down states, the rate you win at is what you earn, not the maximum.', 'In premium states, the premium usually earns nothing.', 'Fees matter most on small liens.'],
     tryIt: { text: 'Use the calculator with the face amount, rate and months to see real dollars, not percentages.', href: '/liens/#calculator' },
     quiz: [
@@ -47,6 +54,9 @@ export const LESSONS = [
       { h: 'Counties run the sales', p: ['The state sets the rules, but each county (or city) runs its own sale, posts its own list and sets its own registration steps, deposits and dates. Two counties in the same state can feel very different.'] },
       { h: 'Rules change', p: ['States change rates and timelines. Always check the county’s current sale notice and the statute linked on each state page before you bid.'] }
     ],
+    example: "Compare two states on the same four things. State A: lien, bid-down to a maximum, 3 years before foreclosure, one online sale a year. State B: deed, no interest, auction after a set delinquency time. Same word, tax sale, very different plans.",
+    mistakes: ["Using one state's rules in another.", "Trusting an old article or forum post.", "Skipping the county's own sale notice."],
+    checklist: ["System, rate or penalty, redemption period, sale timing: written down for my state.", "Statute link opened and checked.", "County's current sale notice read."],
     takeaways: ['Learn the system, rate, redemption period and sale timing first.', 'The county runs the sale, so read its own rules.', 'Rules change. Confirm before every sale.'],
     tryIt: { text: 'Open a state page and find its system, rate, redemption period and statute link.', href: '/liens/states/' },
     quiz: [
@@ -66,6 +76,9 @@ export const LESSONS = [
       { h: '5. Pay and receive', p: ['Winners pay within the deadline. You receive the certificate (often electronic). Keep the records: certificate number, parcel, amount, rate and date.'] },
       { h: 'After the sale: county-held liens', p: ['Liens nobody buys often go to the county. Some counties sell these county-held or over-the-counter liens later at the full rate, first come first served. These are often leftovers, like slivers, strips and mineral rights, so check them extra carefully.'] }
     ],
+    example: "A typical timeline (it varies): the list is published about a month ahead, registration closes days before, the sale runs online over a day or two, and payment is due within a short deadline. Miss one date and you miss the sale.",
+    mistakes: ["Registering at the last minute.", "Not reading the county's terms.", "Bidding on parcels you did not research.", "Not having funds ready by the payment deadline."],
+    checklist: ["Registered and W-9 filed.", "Deposit sent and confirmed.", "Parcels researched and shortlisted.", "Funds ready for the payment deadline.", "Records saved: certificate number, parcel, amount, rate, date."],
     takeaways: ['Lists shrink as owners pay before the sale.', 'Registration, W-9 and deposits have hard deadlines.', 'Research before bidding, not after.', 'County-held liens can be bought later, but are often leftovers.'],
     tryIt: { text: 'Open a county list and look at the How to buy steps for a lien.', href: '/liens/states/state/?s=FL' },
     quiz: [
@@ -83,6 +96,10 @@ export const LESSONS = [
       { h: 'Your clock and your costs', p: ['Your return depends on how long it takes. In interest states, longer is more money; in flat-penalty states, faster is better.', 'Some states require the investor to pay later years’ taxes too (subsequent taxes) to protect their position. Those also earn interest.'] },
       { h: 'Don’t contact or pressure owners', p: ['Many states forbid lien holders from contacting owners about payment or entering the property. Let the county handle redemption.'] }
     ],
+    example: "Made-up dates: you buy a lien on March 1 in a state with a 2-year redemption period. The window is estimated to end March 1 two years later. Interest is usually owed up to the day the owner pays, so the exact payoff comes from the county, not from your own math.",
+    mistakes: ["Not tracking the redemption end date.", "Assuming foreclosure starts automatically.", "Not saving notices and mail from the county.", "Forgetting that interest income may be taxable."],
+    checklist: ["End of redemption date saved in My portfolio.", "County contact saved.", "Know what the next step is if nobody pays.", "Ask a tax professional about reporting the interest."],
+    tool: "calc",
     takeaways: ['Most liens end with redemption: plan for it.', 'Mortgage lenders often redeem quickly.', 'Know whether your state pays more for time or a flat amount.', 'Don’t pressure owners or go onto the property.'],
     tryIt: { text: 'Add a lien to My portfolio to track its redemption deadline and estimated interest.', href: '/portfolio/' },
     quiz: [
@@ -100,6 +117,9 @@ export const LESSONS = [
       { h: 'Title is often not clean', p: ['A deed from a tax process may not be insurable at first. Many buyers need a quiet title action (a court case) before a title company will insure it or a buyer will buy it.'] },
       { h: 'People and buildings', p: ['If someone lives there, removing them takes a legal eviction. Buildings may be damaged or carry code fines.'] }
     ],
+    example: "If the owner never pays, a lien holder usually has to take legal steps, such as notices and a foreclosure or deed application, before getting the property. This takes time and money, and the result can still leave other claims on the property. Ask a local attorney.",
+    mistakes: ["Assuming the certificate alone gives you the property.", "Skipping the notice and deadline steps.", "Assuming title is clean afterward. Many buyers need a quiet title action.", "Not budgeting legal costs."],
+    checklist: ["State steps from foreclosure to deed read.", "Local real estate attorney identified.", "Budget for notices, legal fees and title work.", "Plan for occupants and back taxes."],
     takeaways: ['Getting the property is a legal process with real costs.', 'In deed-application states, others can outbid you at the deed auction.', 'Expect to need a quiet title before you can resell easily.'],
     tryIt: { text: 'Read your state’s redemption and deed rules on its state page before buying.', href: '/liens/states/' },
     quiz: [
@@ -118,6 +138,10 @@ export const LESSONS = [
       { h: 'Other claims', p: ['Look for other liens, code-enforcement fines, environmental problems and bankruptcy. A bankruptcy filing can pause redemption and your rights.'] },
       { h: 'Look at it', p: ['Use satellite and street view, and drive by if you can. Never go onto the property or disturb occupants.'] }
     ],
+    example: "A parcel looks cheap. Checks: is it a real lot or a strip or sliver? Is there a road? Is it in a high-risk flood zone? Are there wetlands? Is it only mineral rights or an easement? Any one of these can make a cheap parcel worthless. Use Land Information on the county list before you bid.",
+    mistakes: ["Falling in love with a low price.", "Bidding on slivers, easements or mineral-only parcels.", "Skipping the flood and wetlands check.", "Assuming there is road access.", "Not looking for other liens, such as IRS or other taxes."],
+    checklist: ["Parcel is a real, buildable or usable lot.", "Road access confirmed.", "Flood zone checked.", "Wetlands checked.", "Not mineral rights only or an easement.", "Other liens and bankruptcy checked.", "County and the official records confirm the details."],
+    drill: [{"q": "Made-up scenario: a parcel is listed at $200 and the map shows a long, 5-foot-wide strip. What is the likely issue?", "a": ["It is a bargain lot", "It is probably a strip or sliver nobody can use", "The strip has road access"], "c": 1, "why": "Very narrow strips are often leftovers between properties and have little or no use."}, {"q": "Made-up scenario: the Land Information check shows a mapped high-risk flood zone. What should you do?", "a": ["Ignore it", "Treat it as a warning: price in insurance and building limits, or skip it", "Bid higher"], "c": 1, "why": "High-risk flood zones can mean required insurance and building limits. Pre-check, then confirm with the county."}],
     takeaways: ['Skip slivers, strips, mineral-only and landlocked lots unless you understand them.', 'Check flood, wetlands and road access on every lot.', 'Many unpaid years and a low value are warning signs.', 'If you can’t verify it, don’t buy it.'],
     tryIt: { text: 'Open How to buy on any lien and read its Land Information section.', href: '/liens/states/county/?c=Manatee' },
     quiz: [
@@ -136,6 +160,10 @@ export const LESSONS = [
       { h: 'Losing your lien', p: ['Missing a deadline (for example, when a certificate expires in Florida after 7 years without a deed application) can mean losing it. Errors in the sale can lead to a refund with little or no interest.'] },
       { h: 'Scams', p: ['Be wary of sellers of tax lien lists, courses promising easy property, and anyone asking you to wire money for a lien. Buy only from the county or its official auction site.'] }
     ],
+    example: "A lien can fail to pay off as planned: the owner files bankruptcy, the property is worth less than the debt, the county made an error, or a senior claim comes first. Spreading small amounts across several liens limits the damage of one surprise, though it does not remove the risk.",
+    mistakes: ["Putting too much money in one lien.", "Assuming the county guarantees payment.", "Forgetting tied-up cash.", "Ignoring bankruptcy and government liens."],
+    checklist: ["Money I can afford to tie up for years.", "Limit per parcel decided.", "Know the bankruptcy and senior-lien risks.", "Not borrowing to bid."],
+    drill: [{"q": "Made-up scenario: a lien looks great but the owner files for bankruptcy. What usually happens to your timing?", "a": ["Nothing changes", "Payment can be delayed or limited", "You are paid early"], "c": 1, "why": "Bankruptcy can pause collection and change how you are paid. Ask an attorney."}],
     takeaways: ['Bad land = bad lien.', 'IRS liens and bankruptcies can change the outcome.', 'Expect money to be tied up for years.', 'Track every deadline.', 'Buy only through the county or its official site.'],
     tryIt: { text: 'Set reminders in My portfolio for each certificate’s key dates.', href: '/portfolio/' },
     quiz: [
@@ -153,6 +181,9 @@ export const LESSONS = [
       { h: 'Surplus goes to the old owner', p: ['If the property sells for more than the taxes and costs, the extra (surplus) usually belongs to the former owner or lienholders, not the county.'] },
       { h: 'After you win', p: ['You may need a quiet title action, an eviction if it is occupied, and repairs. Insurance and taxes are now yours from day one.'] }
     ],
+    example: "At a deed auction you bid for the property. There is usually no inspection inside and no refund if it turns out to be a problem. A low opening bid may be far from the final price, and you may still owe back taxes, liens or fees depending on the state.",
+    mistakes: ["Bidding without seeing the site or checking the land.", "Not budgeting for title work and clearing occupants.", "Assuming the price is only the opening bid.", "Missing the payment deadline."],
+    checklist: ["Property viewed from the street and on a map.", "Land Information checked.", "Maximum bid decided in advance and kept.", "Funds ready by the deadline.", "Know what happens to other liens in my state."],
     takeaways: ['You usually can’t inspect inside; price in the unknowns.', 'Have full payment ready before bidding.', 'Find out what liens and claims survive.', 'Budget for quiet title, eviction and repairs.'],
     tryIt: { text: 'Check a deed state like California or Michigan on the map.', href: '/#map' },
     quiz: [
@@ -171,6 +202,9 @@ export const LESSONS = [
       { h: '4. Bid with a limit', p: ['Decide your lowest acceptable rate or highest premium before the sale and stick to it.'] },
       { h: '5. Track and report', p: ['Record every certificate in your portfolio. Interest you earn is usually taxable income. Keep records for your tax preparer.'] }
     ],
+    example: "A simple first plan: pick one state and one county, read its sale rules, shortlist a few parcels, check each one, set a small budget you can afford to tie up, and write down your maximum bid before the sale. Then track everything in My portfolio.",
+    mistakes: ["Going big on the first sale.", "Not writing a budget and maximum bid before bidding.", "Skipping record keeping.", "Not asking a professional about tax or legal questions."],
+    checklist: ["One county chosen.", "Rules and dates written down.", "Small budget set.", "Shortlist checked on Land Information.", "Maximum bid per parcel written.", "Records ready in My portfolio."],
     takeaways: ['Start with one county you understand.', 'Spread a budget you can leave alone for years.', 'Set your bid limits before the sale.', 'Track everything; interest is usually taxable.'],
     tryIt: { text: 'Shortlist liens with the screener, then save them as favorites.', href: '/liens/states/county/?c=Palm%20Beach' },
     quiz: [
@@ -181,3 +215,12 @@ export const LESSONS = [
   }
 ];
 export const outline = () => LESSONS.map(l => ({ id: l.id, title: l.title, mins: l.mins, free: !!l.free }));
+
+// Final exam: 20 questions drawn from every lesson quiz and drill. Members only (see learn.mjs).
+export const EXAM_PASS = 16;
+export function examQuestions() {
+  const all = [];
+  LESSONS.forEach(l => { (l.quiz || []).forEach(q => all.push(q)); (l.drill || []).forEach(q => all.push(q)); });
+  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  return all.slice(0, 20);
+}
