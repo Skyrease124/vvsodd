@@ -259,6 +259,17 @@ const COUNTY_BUY = {
       'Look the parcel up on the county records first. Check what it is, and that it is not just a sliver or a road strip.'
     ]
   },
+  'Davidson': {
+    office: 'Davidson County Clerk & Master (Nashville)',
+    status: l => 'Listed on Metro Nashville\u2019s June 17, 2026 delinquent property tax sale notice (amount owed $' + Number(l.amount).toFixed(2) + '). That sale date has passed. Properties not sold can go to a later sale, so confirm it is still available. The owner keeps a right of redemption after a sale.',
+    record: null,
+    links: [['Nashville Chancery Court tax sales (Clerk & Master)', 'https://www.nashville.gov/chancery'], ['Davidson County Property Assessor', 'https://www.padctn.org/']],
+    steps: [
+      'Call the Clerk & Master\u2019s office (615-862-5712) or the Metro Legal Department (615-862-6343) and ask if this property is still for sale, and when the next sale is.',
+      'Tennessee sells the property itself to the highest bidder, cash, subject to the owner\u2019s right to redeem. Read our Tennessee page for the redemption rules.',
+      'Research before you bid: the notice says buyers are strongly urged to research each parcel. Many are tiny lots, vacant lots with no street number, or condo units.'
+    ]
+  },
   'Larimer': {
     office: 'Larimer County Treasurer',
     status: l => 'Advertised for the county\u2019s tax lien sale on ' + (l.saleDate || 'the sale date') + '. It is not sold yet, and the owner can pay before the sale, which takes it off the list.',
