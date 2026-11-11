@@ -20,13 +20,21 @@
   }
   function deadline(h) { return h.months ? addMonths(parse(h.bought), h.months) : null; }
 
+  function countUp(el, to, f) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = f(to); return; }
+    const t0 = performance.now();
+    const step = t => { const k = Math.min(1, (t - t0) / 1100), e = 1 - Math.pow(1 - k, 3); el.textContent = f(to * e); if (k < 1) requestAnimationFrame(step); else el.textContent = f(to); };
+    requestAnimationFrame(step);
+  }
   function summary() {
     const box = $('sum'); box.textContent = '';
     const open = items.filter(h => h.status === 'open');
     const inv = items.reduce((a, h) => a + h.paid, 0), est = items.reduce((a, h) => a + interest(h), 0);
-    box.appendChild(mk('h3', '', 'Summary'));
-    const dl = mk('dl', 'stfacts');
-    [['Liens tracked', items.length + ' (' + open.length + ' open)'], ['Money in', money(inv)], ['Estimated interest so far', money(est)]].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
+    const dl = mk('div', 'pftiles');
+    [['Liens tracked', items.length, v => String(v), items.length ? open.length + ' open' : 'none yet'], ['Money in', inv, money, 'what you paid'], ['Estimated interest', est, money, 'so far, simple interest']].forEach(([k, v, f, sub], i) => {
+      const d = mk('div', 'pftile'); d.style.setProperty('--d', (i * 0.1) + 's'); const bn = mk('b', '', f(0)); const run = () => countUp(bn, v, f);
+      d.append(mk('span', 'pfk', k), bn, mk('span', 'pfsub', sub)); dl.appendChild(d); setTimeout(run, 150 + i * 120);
+    });
     box.appendChild(dl);
     const up = open.map(h => ({h, d: deadline(h)})).filter(x => x.d).sort((a, b) => a.d - b.d).slice(0, 5);
     if (up.length) {
@@ -35,13 +43,18 @@
     }
   }
   function card(h) {
-    const s = st(h.state) || {n: h.state}, c = mk('article', 'scard');
+    const s = st(h.state) || {n: h.state}, c = mk('article', 'scard pfcard pf-' + h.status);
     const head = mk('div', 'scardh'); head.append(mk('b', '', s.n + (h.county ? ' · ' + h.county : '') + (h.parcel ? ' · ' + h.parcel : '')), mk('span', 'sscore', {open: 'Open', redeemed: 'Redeemed', foreclosure: 'Foreclosure started', other: 'Closed'}[h.status]));
     c.appendChild(head);
     const dl = mk('dl', 'stfacts'), dd = deadline(h), left = dd ? Math.ceil((dd - new Date()) / DAY) : null;
     [['Paid', money(h.paid)], ['Rate', h.rate != null ? h.rate + '%' : 'not entered'], ['Bought', h.bought], ['Estimated interest', money(interest(h)) + (h.status === 'open' ? ' to date' : '')],
      ['End of redemption (estimate)', dd ? iso(dd) + (h.status === 'open' ? (left >= 0 ? ' (' + left + ' days left)' : ' (passed ' + (-left) + ' days ago)') : '') : 'not entered']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
     c.appendChild(dl);
+    if (dd && h.status === 'open') {
+      const tot = dd - parse(h.bought), pct = tot > 0 ? Math.max(0, Math.min(100, (new Date() - parse(h.bought)) / tot * 100)) : 100;
+      const tl = mk('div', 'pftl' + (left < 0 ? ' past' : left <= 60 ? ' soon' : '')); const bar = mk('div', 'pfbar'); const i = mk('i'); i.style.setProperty('--w', pct.toFixed(1) + '%'); bar.appendChild(i);
+      tl.append(bar, mk('span', 'small', left >= 0 ? Math.round(pct) + '% of the redemption window used · ' + left + ' days left (estimate)' : 'Estimated window ended ' + (-left) + ' days ago. Confirm with the county.')); c.appendChild(tl);
+    }
     if (s.sys) {
       const t = mk('div', 'askout'); t.appendChild(mk('p', '', s.n + ' terms from our state guide'));
       const ul = mk('ul'); [['System', s.sys], ['Bidding', s.bid], ['Interest or penalty', s.rate], ['Redemption', s.red]].forEach(([k, v]) => ul.appendChild(mk('li', '', k + ': ' + v))); t.appendChild(ul);
@@ -92,5 +105,6 @@
     const rows = [['State', 'County', 'Parcel', 'Paid', 'Rate %', 'Bought', 'Redemption months', 'Est. end of redemption', 'Status', 'Closed', 'Est. interest', 'Notes']].concat(items.map(h => { const d = deadline(h); return [h.state, h.county, h.parcel, h.paid, h.rate, h.bought, h.months, d ? iso(d) : '', h.status, h.closed, interest(h).toFixed(2), h.notes]; }));
     const a = mk('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], {type: 'text/csv'})); a.download = 'my-portfolio.csv'; a.click();
   });
+  (function () { const g = $('pfgreet'), h = new Date().getHours(); g.textContent = (h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ' \u00b7 here is where your liens stand'; })();
   fetch(API).then(r => r.json()).then(d => { user = d.user; if (!user) { $('gate').hidden = false; return; } items = user.portfolio || []; $('app').hidden = false; render(); }).catch(() => { $('gate').hidden = false; });
 })();
