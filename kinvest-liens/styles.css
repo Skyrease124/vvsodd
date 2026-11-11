@@ -672,3 +672,74 @@ html{scroll-behavior:smooth}
 @media print{body.mcbody{background:#fff!important;color:#000}.mcbody .nav,.mcbody footer,.mcbody .btn,.pp-top,#lesson>.btn{display:none!important}.mcbody h1,.mcbody p,.mcbody label,.mcbody li{color:#000!important;-webkit-text-fill-color:#000;background:none}.mccert{background:#fff;box-shadow:none;border-color:#000}.mccert h2,.mcname{color:#000;background:#fff}}
 @media(prefers-reduced-motion:reduce){.mccard,.mcstage{animation:none!important}}
 .mcbody .btn.ghost,.mcbody .btn.small.ghost{color:#ffd166!important;background:transparent!important;border:1.5px solid #ffd166!important}
+
+/* State and county pages */
+.stbody .section{position:relative}
+.stbody h1{color:#fff}.stbody h2{color:#fff}.stbody h3{color:#ffd166}
+.stbody p,.stbody li{color:#cdd7f2}.stbody .muted,.stbody .small{color:#a9b6d9}
+.stbody a:not(.btn){color:#ffd166}
+.stbody .notice{background:#101d3d;border:1px solid #24376a;color:#cdd7f2;border-radius:14px}
+.stbody main .btn{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400!important;border:0;font-weight:800}
+.stbody main .btn.ghost,.stbody main .btn.small.ghost{background:transparent!important;color:#ffd166!important;border:1.5px solid #ffd166!important}
+.stbody .salebox,.stbody .askbox,.stbody .setupform{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:18px;color:#e6ecf7}
+.stbody input,.stbody select,.stbody textarea{background:#070d1c;color:#fff;border:1px solid #2d437f;border-radius:10px}
+.stbody .askchips button,.stbody .askchips a{background:#101d3d;color:#ffd166;border:1px solid #2d437f}
+.stbody .askout{background:#0c1530;border:1px solid #1f3060;color:#e6ecf7}
+.stbody footer,.stbody footer p{background:#070d1c;color:#a9b6d9}
+/* hero */
+.shero{display:grid;grid-template-columns:minmax(120px,40%) 1fr;gap:16px;align-items:center;background:radial-gradient(120% 100% at 0% 0%,#14295c,#0a1226 70%);border:1px solid #24376a;border-radius:22px;padding:18px;margin:6px 0 14px;position:relative;overflow:hidden}
+.shero::before{content:"";position:absolute;inset:-40%;background:radial-gradient(40% 30% at 30% 30%,rgba(255,209,102,.12),transparent 70%);animation:aiAurora 14s ease-in-out infinite;pointer-events:none}
+.sfig{position:relative}.sfig svg{width:100%;height:auto;max-height:190px;animation:ppPop .7s ease both}
+.stx{position:relative}.stx h1{font-size:clamp(30px,8vw,46px);margin:2px 0 4px;background:linear-gradient(92deg,#fff,#ffe29a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stx .sys{color:#ffd166;margin:0 0 10px}
+.vbadge{display:inline-block;background:#3a1f10;border:1px solid #f59e0b;color:#ffd166;border-radius:999px;padding:3px 10px;font-size:12px;margin:0 8px 8px 0}
+.stbody #sfacts{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.stbody #sfacts::-webkit-scrollbar{display:none}
+.stbody #sfacts>div{flex:0 0 62%;scroll-snap-align:start;background:linear-gradient(180deg,#101d3d,#0b1428);border:1px solid #24376a;border-radius:16px;padding:12px 14px;box-shadow:none}
+.stbody #sfacts>div.wide{flex-basis:80%}
+.stbody #sfacts dt{color:#93a3cc;font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.stbody #sfacts dd{color:#ffd166;font-weight:800;font-size:17px;margin:4px 0 0}
+.stbody #sfacts>div.wide dd{font-size:14px;font-weight:600;color:#e6ecf7}
+@media(min-width:720px){.stbody #sfacts>div{flex-basis:220px}}
+/* the sale trail */
+.stbody .salesteps{list-style:none;counter-reset:st;padding:0 0 0 0;margin:12px 0;position:relative}
+.stbody .salesteps::before{content:"";position:absolute;left:17px;top:10px;bottom:10px;width:3px;background:linear-gradient(#ffd166,#24376a);border-radius:3px}
+.stbody .salesteps li{counter-increment:st;position:relative;padding:0 0 14px 52px;margin:0;color:#e6ecf7}
+.stbody .salesteps li::before{content:counter(st);position:absolute;left:0;top:0;width:36px;height:36px;border-radius:50%;background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(255,209,102,.35)}
+/* county cards */
+.stbody .countylist{list-style:none;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+.stbody .countylist li{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;transition:transform .2s,border-color .2s}
+.stbody .countylist li:hover{transform:translateY(-3px);border-color:#ffd166}
+.stbody .countylist li.cty{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center}
+.stbody .countylist li.cty>a:first-of-type{font-weight:800;font-size:17px;flex:1 1 100%}
+.ccount{order:5;flex:1 1 100%;font-size:12px;color:#93a3cc;margin-top:4px}
+.ccount.live{color:#1b1400;background:linear-gradient(180deg,#ffe08a,#f5b301);border-radius:999px;padding:3px 10px;font-weight:800;flex:0 0 auto;box-shadow:0 0 14px rgba(255,209,102,.35)}
+.stbody .offl{list-style:none;padding:0;display:grid;gap:10px}
+.stbody .offl li{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:14px;padding:12px 14px;color:#e6ecf7}
+.stbody .offl b{color:#fff}
+/* parcel cards + sticky bar */
+.lienbar{position:sticky;top:0;z-index:20;background:rgba(7,13,28,.94);backdrop-filter:blur(8px);border-bottom:1px solid #24376a;margin:0 -16px;padding:8px 16px}
+.lienbar-row{display:flex;gap:8px;align-items:center}
+.lienbar .lcount{margin:0;margin-left:auto;text-align:right;font-size:12px;line-height:1.25}
+.lienbar .lientools{display:none;margin:10px 0 4px;gap:8px;flex-wrap:wrap}
+.lienbar.open .lientools{display:flex;max-height:60vh;overflow:auto}
+@media(min-width:900px){.lienbar .lientools{display:flex}.lienbar [aria-expanded]{display:none}}
+.stbody .lientools .chk{color:#e6ecf7}
+.lcards{display:grid;gap:12px;margin:12px 0;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.lcardx{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:18px;padding:14px;display:grid;gap:10px;animation:ppFadeUp .4s ease both}
+.lch{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.lch b{color:#fff;font-size:16px;word-break:break-all}
+.lamt{display:grid}.lamt b{color:#ffd166;font-size:28px;font-variant-numeric:tabular-nums}
+.lmeta{display:flex;flex-wrap:wrap;gap:6px}.lmeta span{background:#0c1530;border:1px solid #1f3060;border-radius:999px;padding:3px 10px;font-size:12px;color:#cdd7f2}
+.lchips{display:flex;flex-wrap:wrap;gap:6px}
+.lchip{border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.lchip.ok{background:#0f2a1c;color:#7bf0b0;border:1px solid #1f5a3a}.lchip.warn{background:#3a2a0c;color:#ffd166;border:1px solid #8a6a1c}.lchip.bad{background:#3a1216;color:#ff9a9a;border:1px solid #7a2a30}.lchip.na{background:#16264d;color:#a9b6d9;border:1px solid #24376a}
+.lfacts{margin:0}.lact{display:flex;flex-wrap:wrap;gap:6px}.lsrc{margin:0}
+.stbody table.liens{color:#e6ecf7}.stbody table.liens th{background:#0c1530;color:#ffd166}.stbody table.liens td{border-color:#1f3060}
+@media(prefers-reduced-motion:reduce){.lcardx,.shero::before,.sfig svg{animation:none!important}}
+.stbody .nav a:not(.btn){color:#e6ecf7}
+.stbody .stfacts>div{background:#0c1530;border:1px solid #1f3060;border-radius:12px;box-shadow:none}
+.stbody .stfacts dt{color:#93a3cc}.stbody .stfacts dd{color:#fff;font-weight:700}
+.stbody .salebox .stfacts{display:grid;gap:8px}
+.stbody .countylist a,.stbody .countylist li a{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;display:inline}
+.stbody .countylist li.cty>a:first-of-type{display:block;color:#fff!important;font-size:17px}
+.stbody .countylist li.cty>a.small{color:#ffd166!important;font-size:13px;text-decoration:underline}
