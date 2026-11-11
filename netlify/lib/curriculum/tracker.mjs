@@ -1,4 +1,4 @@
-// 50-state curriculum tracker (plus DC). Generated from the site's state research; update when a batch moves forward.
+// 50-state curriculum tracker (plus DC). Update when a batch moves forward.
 export const TRACKER = [
  {
   "state": "AL",
@@ -9,7 +9,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "AK",
@@ -26,12 +26,12 @@ export const TRACKER = [
   "state": "AZ",
   "name": "Arizona",
   "system": "Tax lien certificate",
-  "research": "Partial: sourced sale steps on the state page",
-  "writing": "Short state class only (one page and a 3-question quiz)",
-  "review": "Not started",
-  "publication": "Not published",
+  "research": "Verified: Title 42 Ch. 18 sections read in full (checked 2026-11-11); Pima and Maricopa treasurer pages read",
+  "writing": "Complete: 12 modules, 33 lessons, 36 quiz questions, exercise (real Pinal parcel), final project",
+  "review": "Self-checked against sources; outside legal review not done",
+  "publication": "Published (batch 1)",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Outside legal review; Maricopa bid increments and fees (not on the page we read); county deposit and tie rules; Arizona eviction steps; ARS 42-18120 duplicate certificates"
  },
  {
   "state": "AR",
@@ -42,7 +42,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "CA",
@@ -53,7 +53,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "CO",
@@ -64,7 +64,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "CT",
@@ -86,7 +86,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "DC",
@@ -97,7 +97,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "FL",
@@ -119,7 +119,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "HI",
@@ -141,7 +141,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "IL",
@@ -152,7 +152,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "IN",
@@ -163,7 +163,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "IA",
@@ -174,7 +174,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "KS",
@@ -185,7 +185,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "KY",
@@ -196,7 +196,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "LA",
@@ -207,7 +207,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "ME",
@@ -218,7 +218,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MD",
@@ -229,7 +229,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MA",
@@ -251,7 +251,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MN",
@@ -262,7 +262,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MS",
@@ -273,7 +273,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MO",
@@ -284,7 +284,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "MT",
@@ -295,7 +295,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NE",
@@ -306,7 +306,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NV",
@@ -328,7 +328,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NJ",
@@ -339,7 +339,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NM",
@@ -350,7 +350,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NY",
@@ -361,7 +361,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "NC",
@@ -372,7 +372,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "ND",
@@ -383,7 +383,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "OH",
@@ -394,7 +394,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "OK",
@@ -405,7 +405,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "OR",
@@ -416,7 +416,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "PA",
@@ -438,7 +438,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "SC",
@@ -449,7 +449,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "SD",
@@ -471,7 +471,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "TX",
@@ -493,7 +493,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "VT",
@@ -515,7 +515,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "WA",
@@ -526,7 +526,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 3",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "WV",
@@ -537,7 +537,7 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  },
  {
   "state": "WI",
@@ -559,6 +559,6 @@ export const TRACKER = [
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 2",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10–12 modules and 25–40 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
  }
 ];

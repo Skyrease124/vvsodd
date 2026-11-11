@@ -2,9 +2,10 @@
 // A course is released (status 'published') only when its lessons, citations, exercises and quizzes are complete.
 import fl from './fl.mjs';
 import tx from './tx.mjs';
+import az from './az.mjs';
 import { TRACKER } from './tracker.mjs';
 
-export const COURSES = { fl, tx };
+export const COURSES = { fl, tx, az };
 export { TRACKER };
 
 const words = s => String(s || '').split(/\s+/).filter(Boolean).length;
