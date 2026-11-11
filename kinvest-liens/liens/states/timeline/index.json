@@ -1,10 +1,469 @@
-{"counties":[
- {"county":"Larimer","state":"CO","slug":"larimer","kind":"lien","enabled":true,
-  "supports":["Amount and payoff changes","Parcel no longer listed (outcome unconfirmed)","Parcel added or listed again"],
-  "recurring":"The county re-posts its delinquent list nightly through the sale. We re-import it and compare it with the last verified import.",
-  "notYet":["Sale results and redemptions are not on the list. They are shown only when an official record is added."]},
- {"county":"Wayne","state":"MI","slug":"wayne","kind":"deed","enabled":true,"geo":true,"results":true,
-  "supports":["Foreclosed on the 2026 list","Published auction result with the actual sale price (September 2026 auction)"],
-  "recurring":"Foreclosure lists and auction results are published by the Treasurer around each auction. We import each file as it is posted.",
-  "notYet":["Unsold parcels have no price or status in the county's list, so we show none."]}
-]}
+{
+ "counties": [
+  {
+   "county": "Larimer",
+   "state": "CO",
+   "slug": "larimer",
+   "kind": "lien",
+   "enabled": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Parcel added or listed again"
+   ],
+   "recurring": "The county re-posts its delinquent list nightly through the sale. We re-import it and compare it with the last verified import.",
+   "notYet": [
+    "Sale results and redemptions are not on the list. They are shown only when an official record is added."
+   ]
+  },
+  {
+   "county": "Wayne",
+   "state": "MI",
+   "slug": "wayne",
+   "kind": "deed",
+   "enabled": true,
+   "geo": true,
+   "results": true,
+   "supports": [
+    "Foreclosed on the 2026 list",
+    "Published auction result with the actual sale price (September 2026 auction)"
+   ],
+   "recurring": "Foreclosure lists and auction results are published by the Treasurer around each auction. We import each file as it is posted.",
+   "notYet": [
+    "Unsold parcels have no price or status in the county's list, so we show none."
+   ]
+  },
+  {
+   "county": "Alachua",
+   "state": "FL",
+   "slug": "alachua",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Bay",
+   "state": "FL",
+   "slug": "bay",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Boulder",
+   "state": "CO",
+   "slug": "boulder",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-09). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Coconino",
+   "state": "AZ",
+   "slug": "coconino",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Davidson",
+   "state": "TN",
+   "slug": "davidson",
+   "kind": "deed",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-09). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Duval",
+   "state": "FL",
+   "slug": "duval",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "El Paso",
+   "state": "CO",
+   "slug": "elpaso",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-09). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Escambia",
+   "state": "FL",
+   "slug": "escambia",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Hernando",
+   "state": "FL",
+   "slug": "hernando",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Hillsborough",
+   "state": "FL",
+   "slug": "hillsborough",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Leon",
+   "state": "FL",
+   "slug": "leon",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-02). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Manatee",
+   "state": "FL",
+   "slug": "manatee",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Miami-Dade",
+   "state": "FL",
+   "slug": "miamidade",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Nassau",
+   "state": "FL",
+   "slug": "nassau",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Osceola",
+   "state": "FL",
+   "slug": "osceola",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Palm Beach",
+   "state": "FL",
+   "slug": "palmbeach",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-02). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Pasco",
+   "state": "FL",
+   "slug": "pasco",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Pinal",
+   "state": "AZ",
+   "slug": "pinal",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-03). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Saguache",
+   "state": "CO",
+   "slug": "saguache",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-09). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Santa Rosa",
+   "state": "FL",
+   "slug": "santarosa",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Sarasota",
+   "state": "FL",
+   "slug": "sarasota",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Scott",
+   "state": "IA",
+   "slug": "scott",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-09). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Volusia",
+   "state": "FL",
+   "slug": "volusia",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-10). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  },
+  {
+   "county": "Walton",
+   "state": "FL",
+   "slug": "walton",
+   "kind": "lien",
+   "enabled": true,
+   "baselineOnly": true,
+   "supports": [
+    "Amount and payoff changes",
+    "Sale date or status changes",
+    "Parcel no longer listed (outcome unconfirmed)",
+    "Added to the list or listed again"
+   ],
+   "recurring": "Tracking starts from the list we hold (checked 2026-11-08). Each new official list we import is compared with it, and changes appear on the watchlist.",
+   "notYet": [
+    "Sales and redemptions appear only when an official record or results file is imported."
+   ]
+  }
+ ]
+}
