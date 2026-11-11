@@ -66,6 +66,74 @@ export const LESSONS = [
     ]
   },
   {
+    "id": "terms",
+    "title": "Auction terms you will hear on sale day",
+    "mins": 6,
+    "free": false,
+    "intro": "Every tax sale has its own words. Learn them once and any county’s rules become readable.",
+    "sections": [
+      {
+        "h": "Before the sale",
+        "p": [
+          "Delinquent list or sale list: the parcels being offered. Advertisement or notice: the legally required publication. Registration: signing up to bid, often with a tax form such as a W-9. Deposit: money the county holds to make sure winners pay."
+        ]
+      },
+      {
+        "h": "During the sale",
+        "p": [
+          "Opening bid or minimum bid: the lowest acceptable bid. Bid-down: bidders compete on a lower interest rate (lien states such as Florida). Premium bidding: bidders pay more than the amount owed. Proxy bid: your maximum, entered ahead and bid for you automatically by the platform. Struck off or bid off: no sufficient bid, so the county or taxing unit takes it."
+        ]
+      },
+      {
+        "h": "After the sale",
+        "p": [
+          "Certificate or deed: what the winner receives. Redemption: the owner (or another allowed person) paying off the debt. Redemption period: how long they have. Surplus or excess proceeds: sale money above what was owed, held for claimants."
+        ]
+      }
+    ],
+    "takeaways": [
+      "Know whether your state auctions a rate (lien) or a price (deed).",
+      "“Struck off” means nobody bid enough and the government holds it.",
+      "Redemption period and surplus rules differ by state; the state courses cite each one."
+    ],
+    "tryIt": {
+      "text": "Open the Florida or Texas full course and find three of these terms in the first module.",
+      "href": "/learn/tracker/"
+    },
+    "quiz": [
+      {
+        "q": "In a bid-down auction, bidders compete on…",
+        "a": [
+          "A lower interest rate",
+          "A higher price",
+          "Who registered first"
+        ],
+        "c": 0,
+        "why": "Lien states such as Florida auction the rate down."
+      },
+      {
+        "q": "“Struck off” means…",
+        "a": [
+          "The winner paid early",
+          "No sufficient bid, so the government took it",
+          "The parcel was removed by the owner"
+        ],
+        "c": 1,
+        "why": "Unsold parcels go to the county or taxing unit."
+      },
+      {
+        "q": "A proxy bid is…",
+        "a": [
+          "Your maximum, entered ahead for the platform to bid for you",
+          "A bid by a lawyer",
+          "An illegal bid"
+        ],
+        "c": 0,
+        "why": "Online platforms bid up or down to your limit."
+      }
+    ]
+  },
+  {
     id: 'sale', title: 'How a tax sale works, step by step', mins: 8, free: false,
     intro: 'From the delinquent list to holding a certificate: what actually happens, and where beginners trip up.',
     sections: [
@@ -129,6 +197,167 @@ export const LESSONS = [
     ]
   },
   {
+    "id": "parcels",
+    "title": "Parcel IDs: matching the right land",
+    "mins": 6,
+    "free": false,
+    "intro": "A parcel ID is how every county record finds one piece of land. Getting it slightly wrong means researching the wrong property.",
+    "sections": [
+      {
+        "h": "What a parcel ID is",
+        "p": [
+          "Counties assign each parcel a number (called a PIN, folio, strap, account or parcel number). Formats differ by county and can differ between the tax collector, the appraiser and statewide maps."
+        ]
+      },
+      {
+        "h": "Formatting traps",
+        "p": [
+          "Dashes and spaces may be dropped or kept; leading zeros matter; some counties use a separate account number. In our Florida data, Palm Beach lists drop dashes on the statewide map, Leon keeps double spaces, and Hillsborough and Escambia use account numbers that must be cross-walked to the map’s ID."
+        ]
+      },
+      {
+        "h": "How to verify a match",
+        "p": [
+          "Copy the ID exactly, look it up on the county appraiser site, and compare the legal description, acreage and owner. If two parcels could match, stop and ask the county."
+        ]
+      }
+    ],
+    "example": "Real example: Palm Beach list ID 74-43-43-16-00-001-0340 is stored as 74434316000010340 on the Florida statewide parcel map; the digits match, only the dashes differ.",
+    "mistakes": [
+      "Retyping an ID and dropping a zero.",
+      "Assuming the map’s ID and the list’s ID use the same format.",
+      "Bidding when two parcels could match."
+    ],
+    "checklist": [
+      "ID copied exactly",
+      "Matched on the county site",
+      "Legal description and acres agree",
+      "Any format difference written down"
+    ],
+    "takeaways": [
+      "Copy, never retype.",
+      "Match on more than the number: legal description and size too.",
+      "Ambiguous match means stop."
+    ],
+    "tryIt": {
+      "text": "Tap Show on map on any Florida listing and compare the list ID with the “Official parcel ID”.",
+      "href": "/liens/states/county/?c=Palm%20Beach"
+    },
+    "quiz": [
+      {
+        "q": "Why keep leading zeros?",
+        "a": [
+          "They look neat",
+          "They are part of the official ID and lookups fail without them",
+          "They mean the parcel is vacant"
+        ],
+        "c": 1,
+        "why": "IDs must match character for character."
+      },
+      {
+        "q": "Two parcels could match your ID. What do you do?",
+        "a": [
+          "Pick the cheaper one",
+          "Stop and confirm with the county",
+          "Bid on both"
+        ],
+        "c": 1,
+        "why": "An ambiguous match can mean buying the wrong land."
+      },
+      {
+        "q": "Besides the number, what should agree?",
+        "a": [
+          "Legal description and acreage",
+          "The owner’s phone",
+          "Nothing"
+        ],
+        "c": 0,
+        "why": "Several facts together confirm the match."
+      }
+    ]
+  },
+  {
+    "id": "gis",
+    "title": "GIS and parcel maps: what they show and what they don’t",
+    "mins": 7,
+    "free": false,
+    "intro": "Parcel maps (GIS) let you see a lot’s shape, neighbors, roads, flood zones and wetlands in minutes. They are powerful and approximate.",
+    "sections": [
+      {
+        "h": "Layers that matter",
+        "p": [
+          "Parcel boundaries (county or statewide), aerial imagery (on our site: USGS NAIP with its capture date), FEMA flood hazard zones, U.S. Fish and Wildlife wetlands, Census roads, and local zoning where published."
+        ]
+      },
+      {
+        "h": "Reading overlap",
+        "p": [
+          "Check the whole lot, not one point. A lot can be 10% in a high-risk flood zone and 90% outside it. Our parcel records show the share of the lot in each zone."
+        ]
+      },
+      {
+        "h": "Limits",
+        "p": [
+          "Outlines are not surveys. A road on a map is not proof of legal access. “Data unavailable” is not the same as “no problem found”. Imagery can be years old."
+        ]
+      }
+    ],
+    "example": "Leon County parcel 1308202020000: 40% FEMA Zone A, 24.6% mapped wetland, no mapped road within about 65 ft. All visible in one click on our map.",
+    "mistakes": [
+      "Treating a map outline as a survey.",
+      "Reading “unavailable” as “clear”.",
+      "Assuming a mapped road means legal access."
+    ],
+    "checklist": [
+      "Outline, size and shape checked",
+      "Flood share with source and date",
+      "Wetlands with source and date",
+      "Road frontage noted; access unverified",
+      "Zoning from the local office"
+    ],
+    "takeaways": [
+      "Use the whole boundary.",
+      "Separate “no overlap” from “not checked”.",
+      "Maps start research; records finish it."
+    ],
+    "tryIt": {
+      "text": "Open a Florida listing, tap Show on map, and read every line of the Land checks.",
+      "href": "/liens/states/county/?c=Leon"
+    },
+    "quiz": [
+      {
+        "q": "A layer says “data unavailable”. That means…",
+        "a": [
+          "No risk",
+          "It was not checked",
+          "High risk"
+        ],
+        "c": 1,
+        "why": "Unavailable is not the same as clear."
+      },
+      {
+        "q": "Is a parcel outline a survey?",
+        "a": [
+          "Yes",
+          "No, it is approximate",
+          "Only in Florida"
+        ],
+        "c": 1,
+        "why": "GIS outlines can be off by several feet."
+      },
+      {
+        "q": "Does a mapped road prove legal access?",
+        "a": [
+          "Yes",
+          "No",
+          "Only if paved"
+        ],
+        "c": 1,
+        "why": "Legal access needs a recorded right or public road status."
+      }
+    ]
+  },
+  {
     id: 'diligence', title: 'Due diligence: red flags before you buy', mins: 9, free: false,
     intro: 'Cheap liens are often cheap for a reason. This checklist is what separates investors from people who get stuck.',
     sections: [
@@ -170,6 +399,166 @@ export const LESSONS = [
       { q: 'After a tax deed sale on a property with an IRS lien, the US government generally has…', a: ['No rights', 'A 120-day right to redeem', 'Ownership'], c: 1, why: 'Federal law gives the US a right to redeem for 120 days in many cases.' },
       { q: 'Where should you buy a tax lien?', a: ['From the county or its official auction site', 'From a stranger by wire transfer', 'From a social media ad'], c: 0, why: 'Only the county (or its official site) sells real tax liens.' },
       { q: 'What happens if you miss a key deadline on a certificate?', a: ['Nothing', 'You can lose it', 'The rate doubles'], c: 1, why: 'Some certificates expire if you don’t act in time.' }
+    ]
+  },
+  {
+    "id": "bidlimit",
+    "title": "Bid limits: setting your maximum before the sale",
+    "mins": 7,
+    "free": false,
+    "intro": "The most important number in any auction is the one you decide before it starts.",
+    "sections": [
+      {
+        "h": "For deed sales",
+        "p": [
+          "Start from a conservative as-is resale value. Subtract title work, surviving liens, possession costs, holding costs through any redemption period, repairs, selling costs, transfer taxes and your required profit. What is left is your maximum."
+        ]
+      },
+      {
+        "h": "For lien sales",
+        "p": [
+          "Decide your lowest acceptable rate by thinking about how long redemption may take and what the deed path would cost if nobody redeems."
+        ]
+      },
+      {
+        "h": "Discipline",
+        "p": [
+          "Write the maximum down. Enter it as a proxy bid where possible. Do not chase a parcel past it."
+        ]
+      }
+    ],
+    "example": "Made-up example: resale $40,000 − title $3,000 − code lien $1,200 − holding $1,800 − selling $3,200 − profit $8,000 = $22,800 before transfer taxes.",
+    "mistakes": [
+      "Bidding from the county value instead of an as-is resale value.",
+      "Leaving out holding costs during redemption.",
+      "Raising the limit in the heat of the auction."
+    ],
+    "checklist": [
+      "As-is value from comparable sales",
+      "Every cost line filled in",
+      "Profit target set",
+      "Maximum written before the sale"
+    ],
+    "takeaways": [
+      "Build the bid for the bad case.",
+      "Every cost line counts.",
+      "Write it down; do not move it."
+    ],
+    "tryIt": {
+      "text": "Build a maximum-bid table using the Florida or Texas course’s worked example.",
+      "href": "/learn/tracker/"
+    },
+    "quiz": [
+      {
+        "q": "Where should a deed-sale maximum bid start?",
+        "a": [
+          "The county assessed value",
+          "A conservative as-is resale value",
+          "The opening bid"
+        ],
+        "c": 1,
+        "why": "Assessed values can be far from what a buyer will pay."
+      },
+      {
+        "q": "Which cost is often forgotten?",
+        "a": [
+          "Holding costs during the redemption period",
+          "The auction’s address",
+          "The weather"
+        ],
+        "c": 0,
+        "why": "Redemption periods can tie up cash for months or years."
+      },
+      {
+        "q": "During the auction you should…",
+        "a": [
+          "Raise your limit if it feels right",
+          "Stick to the written maximum",
+          "Bid on everything"
+        ],
+        "c": 1,
+        "why": "Discipline protects you from overpaying."
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Return math: total vs annualized, and when costs win",
+    "mins": 7,
+    "free": false,
+    "intro": "A 25% return in two years and 25% in two months are very different. So are percentages before and after costs.",
+    "sections": [
+      {
+        "h": "Total return",
+        "p": [
+          "Total return = what you got back minus what you put in, divided by what you put in."
+        ]
+      },
+      {
+        "h": "Annualized return",
+        "p": [
+          "Annualized ≈ total return × 12 ÷ months held (simple). It lets you compare short and long holds, but fast redemptions inflate it and you cannot plan on them."
+        ]
+      },
+      {
+        "h": "Costs",
+        "p": [
+          "Include fees, wires, transfer taxes, recording, your time and the cost of cash sitting idle. Small deals can be wiped out by fixed costs."
+        ]
+      }
+    ],
+    "example": "Made-up example: $2,400 in, $2,580 back after 10 months → total 7.5%, annualized 9%. The same $180 profit after 30 months annualizes to 3%.",
+    "mistakes": [
+      "Comparing a lien rate to a deed premium without adjusting for time.",
+      "Ignoring fixed costs on small certificates.",
+      "Planning on the best-case redemption timing."
+    ],
+    "checklist": [
+      "Total return computed",
+      "Annualized at slow and fast timings",
+      "All costs included",
+      "Worst-case timing considered"
+    ],
+    "takeaways": [
+      "Always compute both total and annualized.",
+      "Fixed costs hurt small deals most.",
+      "Plan on slow outcomes."
+    ],
+    "tryIt": {
+      "text": "Use the calculator to compare the same profit over 6 months and 24 months.",
+      "href": "/#calculator"
+    },
+    "quiz": [
+      {
+        "q": "$1,000 in, $1,100 back after 6 months. Annualized (simple)?",
+        "a": [
+          "10%",
+          "20%",
+          "5%"
+        ],
+        "c": 1,
+        "why": "10% × 12 ÷ 6 = 20%."
+      },
+      {
+        "q": "Why can fast redemptions mislead?",
+        "a": [
+          "They inflate annualized returns you cannot count on",
+          "They are illegal",
+          "They lower total returns"
+        ],
+        "c": 0,
+        "why": "You do not control redemption timing."
+      },
+      {
+        "q": "Fixed costs matter most on…",
+        "a": [
+          "Large deals",
+          "Small deals",
+          "No deals"
+        ],
+        "c": 1,
+        "why": "A $50 cost is 10% of a $500 deal."
+      }
     ]
   },
   {

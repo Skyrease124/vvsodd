@@ -19,12 +19,12 @@
     ring.appendChild(mk('b', '', done + '/' + n)); pb.appendChild(ring);
     const tx = mk('div', 'mctx'); tx.appendChild(mk('b', '', done === n ? '🎓 Master Class complete!' : done ? 'Nice. Keep going.' : 'Start with lesson 1')); tx.appendChild(mk('span', 'small', done + ' of ' + n + ' lessons done · ' + pct + '%'));
     const bar = mk('div', 'progbar'); const i = mk('i'); i.style.width = pct + '%'; bar.appendChild(i); tx.appendChild(bar); pb.appendChild(tx);
-    if (done === n) pb.appendChild(mk('p', 'mcwide', 'You finished all 10 lessons. Nice work. Now put it to use: pick one county, screen its list, and check Land Information before you bid.'));
+    if (done === n) pb.appendChild(mk('p', 'mcwide', 'You finished all ' + n + ' lessons. Nice work. Now put it to use: pick one county, screen its list, and check Land Information before you bid.'));
     if (!state.signedIn) { const p = mk('p', 'small muted mcwide'); const a = mk('a', '', 'Sign in'); a.href = '/login/?next=/learn/'; p.append(a, ' to save your progress to your account.'); pb.appendChild(p); }
     extras(); grid();
     const ol = $('outline'); ol.textContent = '';
     const nextI = state.lessons.findIndex(l => !isDone(l.id));
-    const MODS = {0: 'Module 1 · Foundations', 3: 'Module 2 · How a sale works', 6: 'Module 3 · Protect yourself', 8: 'Module 4 · Deeds and your plan'};
+    const MODS = {0: 'Module 1 · Core ideas', 3: 'Module 2 · How sales work', 7: 'Module 3 · Research the parcel', 11: 'Module 4 · Deal math and your plan'};
     state.lessons.forEach((l, k) => {
       if (MODS[k]) ol.appendChild(mk('li', 'modlabel', MODS[k]));
       const li = mk('li', (isDone(l.id) ? 'done' : '') + (k === nextI ? ' next' : '')); const b = mk('button'); b.type = 'button';
@@ -186,7 +186,7 @@
     const back = mk('button', 'btn small ghost', '← All lessons'); back.type = 'button'; back.addEventListener('click', () => go('')); box.appendChild(back);
     if (d.locked) {
       box.appendChild(mk('h1', '', d.title));
-      const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 For members'), mk('p', '', 'Lessons 4 to 10 are part of membership ($5.50 a week), along with the AI, the screener and Land for sale.'));
+      const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 For members'), mk('p', '', 'Lessons 4 to 15 are part of membership ($5.50 a week), along with the AI, the screener and Land for sale.'));
       const a = mk('a', 'btn', d.signedIn ? 'Become a member' : 'Sign in or create an account'); a.href = d.signedIn ? '/account/' : '/login/?next=' + encodeURIComponent('/learn/?l=' + id); n.appendChild(a); box.appendChild(n); return;
     }
     if (!d.lesson) { box.appendChild(mk('p', '', d.error || 'Lesson not found.')); return; }

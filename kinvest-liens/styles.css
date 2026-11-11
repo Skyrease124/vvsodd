@@ -811,3 +811,43 @@ html{scroll-behavior:smooth}
 @media(prefers-reduced-motion:reduce){.lthumb.loading::before{animation:none}}
 .stbody .lotdlg{background:#0a1226;color:#e6ecf7;border:1px solid #24376a}
 .stbody .lotdlg .lotmsg,.stbody .lotdlg .lotfoot{color:#a9b6d9}.stbody .lotdlg a{color:#ffd166}
+
+/* Full state courses */
+.crhero{background:radial-gradient(120% 100% at 0% 0%,#14295c,#0a1226 70%);border:1px solid #24376a;border-radius:22px;padding:18px;margin:0 0 14px;display:grid;gap:8px}
+.crhero h1{margin:0}.crhero .lead{margin:0}
+.crmeta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.crmeta span{background:#0c1530;border:1px solid #1f3060;border-radius:999px;padding:4px 10px;font-size:12px;color:#cdd7f2}
+.vnote{background:#3a2a0c;border:1px solid #8a6a1c;color:#ffe9b0!important;border-radius:12px;padding:8px 10px}
+.crtabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 12px;scrollbar-width:none}.crtabs::-webkit-scrollbar{display:none}
+.crtabs button{flex:0 0 auto;border:1px solid #24376a;background:#0e1a38;color:#cfd8f3;border-radius:999px;padding:8px 14px;font:700 13px/1 inherit;cursor:pointer}
+.crtabs button.on{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;border-color:#ffd166}
+.crpane{display:grid;gap:12px}
+.crmod{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:12px}
+.crmodh{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center}.crmodh b{display:block;color:#fff}
+.crmodh .mcn{width:34px;height:34px;border-radius:50%;background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;font-weight:900;display:flex;align-items:center;justify-content:center}
+.crls{list-style:none;padding:0;margin:10px 0 0;display:grid;gap:6px}
+.crls button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#0c1530;border:1px solid #1f3060;border-radius:12px;padding:10px 12px;color:#e6ecf7;font:inherit;cursor:pointer}
+.crls .done button{border-color:#1f5a3a}.crls .done .lt::before{content:"✓ ";color:#7bf0b0}
+.crls .quizli button{border-style:dashed;border-color:#8a6a1c}
+.crls .lt{font-weight:600}
+.crlinks{padding-left:18px;display:grid;gap:6px}
+.crlesson{max-width:720px;line-height:1.7;font-size:17px}
+.crlesson h1{font-size:clamp(26px,7vw,38px);line-height:1.2;background:linear-gradient(92deg,#fff,#ffe29a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.crlesson h2{border-left:4px solid #ffd166;padding-left:12px;margin-top:26px;font-size:20px}
+.crlesson p,.crlesson li{color:#dbe3f7}
+a.cite{display:inline-block;font-size:11px;font-weight:800;line-height:1;padding:3px 6px;margin:0 1px;border-radius:999px;background:#16264d;border:1px solid #2d437f;color:#ffd166!important;text-decoration:none;vertical-align:2px;white-space:nowrap}
+.vfy{display:inline;background:#3a2a0c;border:1px dashed #b8891f;color:#ffe9b0;border-radius:6px;padding:1px 6px;font-size:14px}
+a.flink,a.tlink{color:#7bd3ff!important}
+.math{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;background:#070d1c;border:1px solid #24376a;border-radius:12px;padding:10px 12px;margin:12px 0;overflow-x:auto}
+.math .mrow{white-space:pre-wrap;color:#e6ecf7;padding:2px 0;border-bottom:1px dashed #16264d}.math .mrow:last-child{border-bottom:0;color:#ffd166;font-weight:700}
+.practice{background:#0f2a1c;border:1px solid #1f5a3a;border-left:4px solid #22c55e;border-radius:12px;padding:10px 14px;margin:14px 0}.practice b{color:#7bf0b0}.practice p{margin:4px 0 0}
+.warnbox{background:#3a1417;border:1px solid #6b2a30;border-left:4px solid #ef4444;border-radius:12px;padding:10px 14px;margin:14px 0;color:#ffd9d9}
+.keybox{background:#2a2410;border:1px solid #6b5a1e;border-left:4px solid #ffd166;border-radius:12px;padding:10px 14px;margin:14px 0;color:#f1e6c0}
+.srcbox{background:#0c1530;border:1px solid #1f3060;border-radius:12px;padding:10px 14px;margin:20px 0 0;font-size:14px}.srcbox ul{padding-left:18px;margin:6px 0 0}
+.crnav{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.crex{display:grid;gap:10px;background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:18px;padding:14px;margin:10px 0}
+.crex .lthumb{margin:-14px -14px 0}
+.crwalk{margin-top:14px}
+.trlist{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.trcard{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;display:grid;gap:8px}.trcard.pub{border-color:#ffd166;box-shadow:0 0 22px rgba(255,209,102,.15)}
+.trdl{display:grid;gap:6px;margin:0}.trdl dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#93a3cc}.trdl dd{margin:0;color:#e6ecf7;font-size:14px}
+@media print{.crbody .nav,.crbody footer,.crbody .crhero,.crbody .crtabs,.crbody .crpane>*:not(.mccheck),.crbody .btn{display:none!important}body.printing-research .mccheck[data-k=bid],body.printing-bid .mccheck[data-k=research]{display:none!important}.crbody .crpane{display:block!important}.crbody .crpane[hidden]{display:block!important}.crbody .mccheck{background:#fff;color:#000;border:1px solid #000}.crbody .mccheck *{color:#000!important}}
