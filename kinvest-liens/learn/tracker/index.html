@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curriculum tracker | PricePocketAsset</title>
+<meta name="description" content="Which state tax sale courses are ready, and what remains for each state.">
+<meta name="theme-color" content="#070d1c">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="aibody mcbody stbody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a><nav><a href="/learn/">Master Class</a></nav></div></header>
+<main><section class="wrap section">
+  <p class="hgreet">Curriculum</p>
+  <h1 class="pfh">50-state <span class="gold">course tracker</span></h1>
+  <p class="lead">Each state course is released only when its lessons, citations, exercises and quizzes are complete. Here is where every state stands.</p>
+  <div id="tsum" class="crmeta"></div>
+  <div class="lientools"><input id="tq" type="search" placeholder="Find a state" aria-label="Find a state"><select id="tf" aria-label="Filter"><option value="">All states</option><option value="Published">Published</option><option value="Batch 1">Batch 1 (next)</option><option value="Batch 2">Batch 2</option><option value="Batch 3">Batch 3</option></select></div>
+  <div id="tlist" class="trlist"><p class="muted">Loading…</p></div>
+  <p class="small muted">Research = official statutes and agency guidance read and cited. Writing = the full course drafted. Review = checked against the sources; outside legal review is listed separately. Educational only.</p>
+</section></main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p></div></footer>
+<script>
+(function () {
+  const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  let rows = [];
+  function draw() {
+    const q = document.getElementById('tq').value.trim().toLowerCase(), f = document.getElementById('tf').value, L = document.getElementById('tlist'); L.textContent = '';
+    rows.filter(r => (!q || (r.name + ' ' + r.state).toLowerCase().includes(q)) && (!f || (f === 'Published' ? r.publication.startsWith('Published') : r.batch === f))).forEach(r => {
+      const c = mk('article', 'trcard' + (r.publication.startsWith('Published') ? ' pub' : ''));
+      const h = mk('div', 'rsh'); h.append(mk('b', '', r.name), mk('span', 'rschip ' + (r.publication.startsWith('Published') ? 'verified' : r.research.startsWith('Partial') ? 'followup' : 'unknown'), r.publication.startsWith('Published') ? 'Published' : r.batch));
+      c.appendChild(h); c.appendChild(mk('p', 'small muted', r.system));
+      const dl = mk('dl', 'trdl'); [['Research', r.research], ['Writing', r.writing], ['Review', r.review], ['Publication', r.publication], ['What remains', r.remaining]].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }); c.appendChild(dl);
+      const a = mk('a', 'btn small' + (r.publication.startsWith('Published') ? '' : ' ghost'), r.publication.startsWith('Published') ? 'Open the full course' : 'Open the short class'); a.href = r.publication.startsWith('Published') ? '/learn/course/?c=' + r.state.toLowerCase() : '/learn/state/?s=' + r.state; c.appendChild(a);
+      L.appendChild(c);
+    });
+  }
+  fetch('/.netlify/functions/course?tracker=1').then(r => r.json()).then(d => {
+    rows = d.tracker || [];
+    const n = k => rows.filter(k).length, s = document.getElementById('tsum');
+    [n(r => r.publication.startsWith('Published')) + ' published', n(r => r.research.startsWith('Partial')) + ' with partial research', n(r => r.research.startsWith('Not')) + ' not started', rows.length + ' total (50 states and DC)'].forEach(t => s.appendChild(mk('span', '', t)));
+    draw();
+  }).catch(() => { document.getElementById('tlist').textContent = 'Could not load the tracker.'; });
+  ['tq', 'tf'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+})();
+</script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>

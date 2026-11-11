@@ -160,7 +160,7 @@ def facts(attrs, g, P):
     a = attrs; sq = a.get('LND_SQFOOT') or 0
     est = not (sq and sq > 0)
     if est: sq = transform(P, g).area * 10.7639
-    uc = a.get('DOR_UC'); ucn = int(str(uc)[:-1]) if uc and str(uc).isdigit() and len(str(uc)) == 3 else (int(uc) if uc and str(uc).isdigit() else None)
+    uc = a.get('DOR_UC'); ucn = int(uc) if uc is not None and str(uc).isdigit() else None  # FDOR codes are 000-099
     addr = ' '.join(x for x in [(a.get('PHY_ADDR1') or '').strip(), (a.get('PHY_ADDR2') or '').strip()] if x)
     city = ' '.join(x for x in [(a.get('PHY_CITY') or '').strip(), str(a.get('PHY_ZIPCD') or '').strip()] if x and x != '0')
     own = (a.get('OWN_NAME') or '').strip()
@@ -365,6 +365,7 @@ NO_ADDR = re.compile(r'^(UNASSIGNED|NO SITUS|NONE|UNKNOWN|NOT ASSIGNED|0+\b)', r
 def clean(rec):
     # County placeholders such as "UNASSIGNED LOCATION" mean no street address has been assigned.
     if rec.get('addr') and NO_ADDR.search(rec['addr'].strip()): rec['addr'] = ''
+    if str(rec.get('uc', '')).isdigit(): rec['use'] = DOR_UC.get(int(rec['uc']), '')
     return rec
 
 def save(path, county, recs, roll_date):
