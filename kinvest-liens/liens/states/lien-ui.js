@@ -201,14 +201,50 @@ const LienUI = {
     const [floodBox, floodC] = mkChk('Hide FEMA high-risk flood zones', false);
     const [wetBox, wetC] = mkChk('Hide mapped wetlands', false);
     const hasFlags = all.some(l => landFlags(l));
-    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort); host.appendChild(tools);
-    const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); host.appendChild(cnt);
+    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort);
+    // Sticky bar: Filters button, view switch and the live count stay pinned while you scroll.
+    const bar = mk('div', 'lienbar'), fb = mk('button', 'btn small', 'Filters'); fb.type = 'button'; fb.setAttribute('aria-expanded', 'false');
+    const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button';
+    const cnt = mk('p', 'lcount small'); cnt.setAttribute('role', 'status');
+    const top = mk('div', 'lienbar-row'); top.append(fb, vb, cnt); bar.append(top, tools); host.appendChild(bar);
+    fb.addEventListener('click', () => { const o = bar.classList.toggle('open'); fb.setAttribute('aria-expanded', String(o)); });
+    let view = 'cards';
+    vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
     const wrap = mk('div', 'tablewrap'); host.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); host.appendChild(more);
     const money = n => '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     let shown = 50, list = [];
+    const chip = (cls, txt) => mk('span', 'lchip ' + cls, txt);
+    function drawCards() {
+      const g = mk('div', 'lcards');
+      list.slice(0, shown).forEach(l => {
+        const c = mk('article', 'lcardx'), f = landFlags(l);
+        const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
+        const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
+        const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
+        const ch = mk('div', 'lchips');
+        if (!f) ch.appendChild(chip('na', 'Land: not checked'));
+        else {
+          ch.appendChild(f[0] === 1 ? chip('ok', '✔ Road') : f[0] === 0 ? chip('bad', 'No mapped road') : chip('na', 'Road: ?'));
+          ch.appendChild(f[1] === 1 ? chip('warn', 'High-risk flood') : f[1] === 0 ? chip('ok', 'Not high-risk flood') : chip('na', 'Flood: ?'));
+          ch.appendChild(f[2] === 1 ? chip('warn', 'Wetlands') : f[2] === 0 ? chip('ok', 'No wetlands') : chip('na', 'Wetlands: ?'));
+        }
+        c.appendChild(ch);
+        const facts = [l.use, l.market != null ? 'County value ' + money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.desc].filter(Boolean);
+        if (facts.length) c.appendChild(mk('p', 'small lfacts', facts.join(' · ')));
+        const act = mk('div', 'lact');
+        if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
+        const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb);
+        const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost'));
+        c.appendChild(act);
+        const src = mk('p', 'small lsrc'); const a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a, ' ' + (l.checked || '')); c.appendChild(src);
+        g.appendChild(c);
+      });
+      wrap.appendChild(g);
+    }
     function draw() {
       wrap.innerHTML = '';
+      if (view === 'cards') { drawCards(); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString() + ' of ' + list.length.toLocaleString() + ' (* payoff as of the source file date)'; more.hidden = shown >= list.length; return; }
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
       ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Land check', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();

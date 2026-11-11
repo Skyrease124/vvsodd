@@ -14,6 +14,28 @@ if (!s) {
     t.textContent = k; e.textContent = v; d.append(t, e); $('sfacts').appendChild(d);
   });
   $('snote').textContent = s.note;
+  // Hero: the state's own shape in its system color and texture, with the key numbers beside it.
+  (function hero() {
+    const NS = 'http://www.w3.org/2000/svg', COL = {'Tax lien certificate': '#22c55e', 'Tax deed': '#3b82f6', 'Redeemable deed': '#f59e0b', 'Hybrid': '#a855f7', 'Municipal lien': '#06b6d4', 'Sources differ': '#94a3b8'};
+    const col = COL[s.sys] || '#94a3b8', h = document.createElement('div'); h.className = 'shero';
+    const fig = document.createElement('div'); fig.className = 'sfig';
+    if (typeof MAP_PATHS !== 'undefined' && MAP_PATHS[s.a]) {
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('aria-hidden', 'true');
+      const defs = document.createElementNS(NS, 'defs'); defs.innerHTML = '<pattern id="hp" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="' + col + '"/>' + ({'Tax lien certificate': '<path d="M-1 9L9-1M-1 1L1-1M7 9L9 7" stroke="rgba(0,0,0,.3)" stroke-width="1.7"/>', 'Redeemable deed': '<circle cx="2" cy="2" r="1.3" fill="rgba(255,255,255,.45)"/><circle cx="6" cy="6" r="1.3" fill="rgba(255,255,255,.45)"/>', 'Hybrid': '<path d="M-1 9L9-1M-1 -1L9 9" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>', 'Municipal lien': '<path d="M0 2.5H8M0 6.5H8" stroke="rgba(0,0,0,.28)" stroke-width="1.3"/>'}[s.sys] || '') + '</pattern>';
+      svg.appendChild(defs);
+      const p = document.createElementNS(NS, 'path'); p.setAttribute('d', MAP_PATHS[s.a]); p.setAttribute('fill', 'url(#hp)'); p.setAttribute('class', 'sshape'); p.style.filter = 'drop-shadow(0 0 14px ' + col + '99)'; svg.appendChild(p);
+      fig.appendChild(svg); document.body.appendChild(svg); const bb = p.getBBox(); svg.setAttribute('viewBox', [bb.x - 6, bb.y - 6, bb.width + 12, bb.height + 12].join(' ')); fig.appendChild(svg);
+    }
+    const tx = document.createElement('div'); tx.className = 'stx';
+    const k = document.createElement('p'); k.className = 'hgreet'; k.textContent = s.sys; tx.appendChild(k);
+    tx.appendChild($('sname')); tx.appendChild($('ssys'));
+    const cta = document.createElement('a'); cta.className = 'btn small'; cta.href = '/learn/state/?s=' + s.a; cta.textContent = 'Take the ' + s.n + ' class'; tx.appendChild(cta);
+    h.append(fig, tx); $('sfacts').before(h);
+    // timing tile from the researched sale notes (first sentence only)
+    const sd = typeof STATE_DATA !== 'undefined' && STATE_DATA[s.a] && STATE_DATA[s.a].sale, w = sd && sd.when ? String(sd.when).split(/(?<=\.)\s/)[0] : (s.a === 'FL' && typeof FL_SALE !== 'undefined' ? FL_SALE.nextSale : '');
+    if (w) { const d = document.createElement('div'), t = document.createElement('dt'), e = document.createElement('dd'); t.textContent = 'Sale timing'; e.textContent = w; d.append(t, e); d.className = 'wide'; $('sfacts').appendChild(d); }
+    if (s.v) { const b = document.createElement('span'); b.className = 'vbadge'; b.textContent = 'Verify: sources differ'; tx.insertBefore(b, cta); }
+  })();
   const cls = p => /^Republican/.test(p) ? 'r' : /^Democratic/.test(p) ? 'd' : 'i';
   const add = (role, o) => { const li = document.createElement('li'), n = document.createElement('b'), pt = document.createElement('span'), sm = document.createElement('small');
     n.textContent = o.name; pt.className = 'party ' + cls(o.party); pt.textContent = o.party; sm.textContent = role; li.append(n, pt, sm); $('offl').appendChild(li); };
@@ -26,6 +48,8 @@ if (!s) {
     x.href = m ? '../county/?c=' + encodeURIComponent(m[1]) : l[1]; x.textContent = m ? m[1] + ' County: sale dates & lists' : l[0];
     if (m) {
       li.className = 'cty';
+      const nn = typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY.filter(z => z.state === 'FL' && z.county === m[1]).reduce((t, z) => t + z.count, 0) : 0;
+      const cc = document.createElement('span'); cc.className = 'ccount' + (nn ? ' live' : ''); cc.textContent = nn ? '\u25CF ' + nn.toLocaleString() + ' real listings' : 'Sale info and links'; li.appendChild(cc);
       const pa = FL_PA[m[1]];
       if (pa) { const y = document.createElement('a'); y.href = pa; y.target = '_blank'; y.rel = 'noopener noreferrer'; y.className = 'small'; y.textContent = 'Parcel search'; li.append(x, document.createTextNode(' \u00b7 '), y); $('clist').appendChild(li); return; }
     }
