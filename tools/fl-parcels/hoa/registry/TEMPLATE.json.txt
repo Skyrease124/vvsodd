@@ -1,0 +1,17 @@
+{
+  "id": "county-subdivision-slug",
+  "name": "Association legal name",
+  "county": "Leon",
+  "state": "FL",
+  "subdivisions": ["SUBDIVISION NAME AS IN THE LEGAL DESCRIPTION"],
+  "coverage": {"phases": ["1", "2"], "blocks": "all", "lots": "all"},
+  "documents": [
+    {"type": "declaration", "recording": "OR 1234/567", "recorded": "YYYY-MM-DD", "url": "https://...clerk record or association copy"},
+    {"type": "amendment", "effect": "adds", "scope": {"phases": ["3"]}, "recording": "OR 2345/678", "recorded": "YYYY-MM-DD", "url": "https://..."}
+  ],
+  "membership": "mandatory",
+  "dues": {"amount": 0, "frequency": "annual", "asOf": "YYYY-MM-DD", "source": {"name": "Association budget", "url": "https://..."}},
+  "assessments": [],
+  "restrictions": [{"topic": "Building", "text": "Plain-language summary of the rule", "section": "Art. 7 Sec. 3"}],
+  "verified": {"by": "reviewer name", "date": "YYYY-MM-DD"}
+}

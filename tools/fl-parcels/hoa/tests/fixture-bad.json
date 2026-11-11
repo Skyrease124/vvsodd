@@ -1,0 +1,1 @@
+{"id": "test-bad", "name": "Bad (TEST)", "county": "Leon", "subdivisions": ["BAD PARK"], "coverage": {"phases": "all", "blocks": "all", "lots": "all"}, "documents": [{"type": "declaration"}], "verified": {"by": "test", "date": "2026-11-11"}}

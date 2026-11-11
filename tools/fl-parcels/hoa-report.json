@@ -1,0 +1,185 @@
+{
+ "generated": "2026-11-11",
+ "counties": [
+  {
+   "county": "Alachua",
+   "parcels": 98,
+   "confirmed": 0,
+   "possible": 2,
+   "unknown": 96,
+   "no_subdivision": 12,
+   "mineral": 19,
+   "leads": 2
+  },
+  {
+   "county": "Bay",
+   "parcels": 3,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 3,
+   "no_subdivision": 1,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Duval",
+   "parcels": 116,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 116,
+   "no_subdivision": 115,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Escambia",
+   "parcels": 27,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 27,
+   "no_subdivision": 23,
+   "mineral": 1,
+   "leads": 0
+  },
+  {
+   "county": "Hernando",
+   "parcels": 19,
+   "confirmed": 0,
+   "possible": 1,
+   "unknown": 18,
+   "no_subdivision": 2,
+   "mineral": 0,
+   "leads": 1
+  },
+  {
+   "county": "Hillsborough",
+   "parcels": 47,
+   "confirmed": 0,
+   "possible": 2,
+   "unknown": 45,
+   "no_subdivision": 18,
+   "mineral": 0,
+   "leads": 2
+  },
+  {
+   "county": "Leon",
+   "parcels": 60,
+   "confirmed": 0,
+   "possible": 3,
+   "unknown": 57,
+   "no_subdivision": 22,
+   "mineral": 0,
+   "leads": 3
+  },
+  {
+   "county": "Manatee",
+   "parcels": 95,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 95,
+   "no_subdivision": 56,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Miami-Dade",
+   "parcels": 162,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 162,
+   "no_subdivision": 9,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Nassau",
+   "parcels": 8,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 8,
+   "no_subdivision": 5,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Osceola",
+   "parcels": 2,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 2,
+   "no_subdivision": 2,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Palm Beach",
+   "parcels": 261,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 261,
+   "no_subdivision": 67,
+   "mineral": 0,
+   "leads": 0
+  },
+  {
+   "county": "Pasco",
+   "parcels": 85,
+   "confirmed": 0,
+   "possible": 1,
+   "unknown": 84,
+   "no_subdivision": 31,
+   "mineral": 0,
+   "leads": 1
+  },
+  {
+   "county": "Santa Rosa",
+   "parcels": 716,
+   "confirmed": 0,
+   "possible": 3,
+   "unknown": 713,
+   "no_subdivision": 577,
+   "mineral": 63,
+   "leads": 3
+  },
+  {
+   "county": "Sarasota",
+   "parcels": 85,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 85,
+   "no_subdivision": 30,
+   "mineral": 1,
+   "leads": 0
+  },
+  {
+   "county": "Volusia",
+   "parcels": 340,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 340,
+   "no_subdivision": 16,
+   "mineral": 323,
+   "leads": 0
+  },
+  {
+   "county": "Walton",
+   "parcels": 42,
+   "confirmed": 0,
+   "possible": 0,
+   "unknown": 42,
+   "no_subdivision": 32,
+   "mineral": 8,
+   "leads": 0
+  }
+ ],
+ "total": {
+  "parcels": 2166,
+  "confirmed": 0,
+  "possible": 12,
+  "unknown": 2154,
+  "no_subdivision": 1018,
+  "mineral": 415,
+  "leads": 12
+ },
+ "rejected_registry_entries": []
+}

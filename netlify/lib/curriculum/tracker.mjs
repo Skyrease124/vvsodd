@@ -104,7 +104,7 @@ export const TRACKER = [
   "name": "Florida",
   "system": "Tax lien certificate",
   "research": "Verified: statute read in full for the course (checked 2026-11-11)",
-  "writing": "Complete: 12 modules, 34 lessons, 36 quiz questions, exercise, final project",
+  "writing": "Complete: 12 modules, 35 lessons (adds an HOA lesson and an HOA step in the Bid or Pass exercise), 37 quiz questions, exercise, final project",
   "review": "Self-checked against sources; outside legal review not done",
   "publication": "Published (pilot)",
   "batch": "Pilot",

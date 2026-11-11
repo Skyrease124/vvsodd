@@ -851,3 +851,10 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .trcard{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;display:grid;gap:8px}.trcard.pub{border-color:#ffd166;box-shadow:0 0 22px rgba(255,209,102,.15)}
 .trdl{display:grid;gap:6px;margin:0}.trdl dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#93a3cc}.trdl dd{margin:0;color:#e6ecf7;font-size:14px}
 @media print{.crbody .nav,.crbody footer,.crbody .crhero,.crbody .crtabs,.crbody .crpane>*:not(.mccheck),.crbody .btn{display:none!important}body.printing-research .mccheck[data-k=bid],body.printing-bid .mccheck[data-k=research]{display:none!important}.crbody .crpane{display:block!important}.crbody .crpane[hidden]{display:block!important}.crbody .mccheck{background:#fff;color:#000;border:1px solid #000}.crbody .mccheck *{color:#000!important}}
+
+/* HOA status */
+.lchip.hoa.confirmed{background:#0f2a1c;color:#7bf0b0;border:1px solid #1f5a3a}
+.lchip.hoa.possible{background:#3a2a0c;color:#ffd166;border:1px solid #8a6a1c}
+.lchip.hoa.unknown,.lchip.hoa.na{background:#16264d;color:#a9b6d9;border:1px solid #24376a}
+.hoatop{margin:4px 0 8px}.hoabox h4{margin:10px 0 6px;color:#ffd166}
+.hoalink{color:#ffd166;font-weight:700}
