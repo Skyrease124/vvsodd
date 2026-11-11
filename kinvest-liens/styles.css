@@ -531,3 +531,17 @@ html{scroll-behavior:smooth}
 .flpanel{background:linear-gradient(160deg,#101d3d,#0a1226);border:1px solid #24376a;box-shadow:0 18px 40px rgba(0,0,0,.4)}
 .flpanel .dbtn,.dhero .dbtn{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400!important}
 @media(prefers-reduced-motion:reduce){.hgreet,.hgreet::before,.dcopy h1 .gold,.dhero::before,.dmap .usmap .st.haslive{animation:none!important}}
+
+/* Home map: sale-month switch, glow/dim, gavel dots */
+.monbar{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
+.monbar::-webkit-scrollbar{display:none}
+.monbar button{flex:0 0 auto;border:1px solid #24376a;background:#0e1a38;color:#cfd8f3;border-radius:999px;padding:7px 12px;font:600 13px/1 inherit;cursor:pointer;transition:all .2s}
+.monbar button.on{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;border-color:#ffd166}
+.moncap{margin:0 0 8px;color:#b9c4e4;min-height:1.3em}
+.dmap .usmap .st{transition:opacity .35s,filter .35s}
+.dmap .usmap .st.dim{opacity:.18;filter:saturate(.2)}
+.dmap .usmap .st.glow{stroke:#ffd166;stroke-width:1.8;filter:drop-shadow(0 0 6px rgba(255,209,102,.8));animation:aiBreathe 2.6s ease-in-out infinite}
+.livelayer{transition:opacity .35s}.livelayer.dimlive{opacity:.35}
+.live .core{fill:#ffd166}
+.live .gavel rect{fill:#1b1400;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.dmap .usmap .st.glow{animation:none}}
