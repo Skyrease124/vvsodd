@@ -584,3 +584,55 @@ html{scroll-behavior:smooth}
 .pfbody #csv,.pfbody .btn.ghost,.pfbody .sact .btn.ghost{background:transparent!important;color:#ffd166!important;border:1.5px solid #ffd166!important}
 .pfbody footer,.pfbody footer p{background:#070d1c;color:#a9b6d9}.pfbody footer a{color:#ffd166}
 .pfbody .setupform label{color:#cdd7f2}
+
+/* Master Class */
+.mcbody .section{position:relative}
+.mcbody h1:not(.pfh){color:#fff}.mcbody h2{color:#fff}.mcbody h3{color:#ffd166}
+.mcbody .lead,.mcbody p{color:#cdd7f2}.mcbody .muted,.mcbody .small{color:#a9b6d9}
+.mcbody a{color:#ffd166}
+.mcbody .notice{background:#101d3d;border:1px solid #24376a;color:#cdd7f2;border-radius:14px}
+.mcbody #prog{background:linear-gradient(160deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:18px;padding:16px;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;box-shadow:0 0 40px rgba(255,209,102,.06)}
+.mcbody #prog .mcwide{grid-column:1/-1;margin:0}
+.mcring{position:relative;width:84px;height:84px}
+.mcring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.mcring circle{fill:none;stroke-width:7}.mcring .t{stroke:#16264d}
+.mcring .p{stroke:#ffd166;stroke-linecap:round;stroke-dasharray:var(--c);stroke-dashoffset:var(--o);animation:mcRing 1.4s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 0 5px rgba(255,209,102,.6))}
+@keyframes mcRing{from{stroke-dashoffset:var(--c)}}
+.mcring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+.mctx b{display:block;color:#fff;font-size:18px;margin-bottom:2px}
+.mcbody .progbar{background:#16264d;margin-top:8px}.mcbody .progbar i{background:linear-gradient(90deg,#f5b301,#ffe08a)}
+/* the learning trail */
+.mcbody .lessons{position:relative;gap:14px;padding-left:0}
+.mcbody .lessons::before{content:"";position:absolute;left:30px;top:20px;bottom:20px;width:3px;background:linear-gradient(#ffd166,#24376a 60%,#16264d);border-radius:3px;opacity:.7}
+.mcbody .lessons li{position:relative;animation:ppFadeUp .5s ease both}
+.mcbody .lessons li:nth-child(2){animation-delay:.05s}.mcbody .lessons li:nth-child(3){animation-delay:.1s}.mcbody .lessons li:nth-child(4){animation-delay:.15s}.mcbody .lessons li:nth-child(5){animation-delay:.2s}
+.mcbody .lessons li button{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;color:#e6ecf7;border-radius:16px;padding:14px;position:relative}
+.mcbody .lessons li button:hover{border-color:#ffd166;box-shadow:0 10px 28px rgba(255,209,102,.12)}
+.mcbody .lessons .num{background:#0c1530;border:2px solid #2d437f;color:#93a3cc;flex:0 0 38px;height:38px;position:relative;z-index:1}
+.mcbody .lessons .done .num{background:linear-gradient(180deg,#ffe08a,#f5b301);border-color:#ffd166;color:#1b1400}
+.mcbody .lessons .next button{border-color:#ffd166;box-shadow:0 0 0 1px rgba(255,209,102,.4),0 0 28px rgba(255,209,102,.18)}
+.mcbody .lessons .next .num{border-color:#ffd166;color:#ffd166;animation:aiBreathe 2.4s ease-in-out infinite}
+.mcbody .lessons .tag{background:#2a2410;color:#ffd166}.mcbody .lessons .tag.free{background:#0f2a1c;color:#7bf0b0}
+.mcbody .lessons .lt b{color:#fff}
+/* passport stamps */
+.mcbody .stgrid{grid-template-columns:repeat(2,1fr)}
+.mcbody .stcell{background:linear-gradient(165deg,#111f42,#0a1226);border:1px dashed #2d437f;border-radius:14px;color:#e6ecf7;position:relative;overflow:hidden}
+.mcbody .stcell b{color:#fff}.mcbody .stcell:hover{border-color:#ffd166;transform:translateY(-3px) rotate(-.6deg)}
+.mcbody .stcell.done{border:2px solid #ffd166;background:linear-gradient(165deg,#2a2410,#0a1226)}
+.mcbody .stcell.done b::after{color:#ffd166}
+/* lesson reading view */
+.mcbody #lesson{max-width:720px;line-height:1.7}
+.mcbody #lesson h1{font-size:clamp(28px,7vw,40px);background:linear-gradient(92deg,#fff,#ffe29a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mcbody #lesson h2{border-left:4px solid #ffd166;padding-left:12px;margin-top:28px}
+.mcbody .takeaways{background:linear-gradient(160deg,#2a2410,#0f1630);border:1px solid #6b5a1e;border-radius:16px}
+.mcbody .takeaways li{color:#f1e6c0}
+.mcbody .salebox{background:#101d3d;border:1px solid #24376a;border-radius:16px;color:#e6ecf7}
+.mcbody .quiz fieldset{background:#0c1530;border:1px solid #24376a;border-radius:16px;color:#e6ecf7}
+.mcbody .quiz legend{color:#fff}
+.mcbody .quiz label{border:1px solid #1f3060;border-radius:12px;padding:10px 12px;margin:6px 0;background:#0a1226;transition:border-color .2s,background .2s}
+.mcbody .quiz label:hover,.mcbody .quiz label:has(input:checked){border-color:#ffd166;background:#16200f1a}
+.mcbody .quiz .ok{color:#7bf0b0}.mcbody .quiz .bad{color:#ff8a8a}
+.mcbody .btn{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;border:0;font-weight:800}
+.mcbody .btn.ghost{background:transparent;color:#ffd166;border:1.5px solid #ffd166}
+.mcbody footer,.mcbody footer p{background:#070d1c;color:#a9b6d9}
+@media(prefers-reduced-motion:reduce){.mcring .p,.mcbody .lessons li,.mcbody .lessons .next .num{animation:none!important}}
