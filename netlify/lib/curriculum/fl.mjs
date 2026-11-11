@@ -376,6 +376,37 @@ A bankruptcy of record stops the 7-year expiration clock [[197.482]]. It can als
 Certificates can be canceled or corrected for errors [[197.443]]. Refunds on void certificates earn **8% simple interest or your bid rate, whichever is less**, figured monthly [[197.432]]. You get your money back, slowly, at a low return.
 
 ?? Look up whether a parcel on our list is a homestead (the property appraiser shows exemptions). How would that change the minimum bid at a deed sale?` },
+{ id: 'fl-hoa', title: 'HOAs: finding the declaration and confirming it covers your lot', body: `
+A tax deed does not wipe out a homeowners' association's rules. Recorded restrictions and covenants running with the land **survive**, and so can a lien for association assessments that come due **after** the deed [[197.573]]. Before you bid on any lot inside a subdivision, find out whether an HOA covers **that exact lot**.
+
+## What our badge means
+Every Florida parcel card shows one of three HOA statuses:
+- **HOA confirmed**: a recorded declaration or amendment covers this specific parcel. We only use this after a person reviews the recorded documents.
+- **Possible HOA**: an association is linked to the subdivision (for example, the county roll lists an association as owner of a common-area parcel), but coverage for this lot or phase is unverified.
+- **HOA status unknown**: the records checked did not establish whether an HOA applies.
+
+Open Show on map and read the HOA section. It shows the association, whether membership is mandatory, dues with a date and source (or **"Dues unverified"**), verified special assessments, restrictions that matter for vacant land, and the recording numbers.
+
+## How to confirm coverage yourself
+1. **Get the subdivision, phase, lot and block** from the legal description on the county record (our HOA section shows what we parsed). A name alone is only a lead.
+2. **Find the recorded declaration** in the county clerk's official records, using the plat book and page or the association's name. Our "Check official records" link starts you at the property appraiser, then the clerk.
+3. **Read the exhibits.** The legal description attached to the declaration lists the phases, blocks and lots it covers.
+4. **Search for amendments** that add or remove parcels. A later phase is often added by a separate recorded document, and a lot can be removed.
+5. **Match your exact lot** against that coverage. Same subdivision does not mean same declaration: phases can have different documents.
+6. **Get current dues and assessments from a dated association source** (a budget, a statement, or a manager's letter). If you cannot, write "Dues unverified".
+
+!! Never treat a subdivision name or a map boundary as proof. Confirm against the recorded documents.
+
+## What to read for vacant land
+Building approval and plans review, minimum house size, setbacks, fences, whether RVs, trailers or boats may be stored, rules about leaving a lot unbuilt, mowing and clean-up requirements, and enforcement fines.
+
+## Factor it into your math
+= Annual dues (verified) · multiplied by years you will hold
+= Plus any verified special assessment
+= Plus costs to meet building rules before you can use or sell the lot
+= Subtract all of it from your maximum bid [[197.573]]
+
+?? Pick a Florida card marked Possible HOA. List the three documents you would pull and the one fact each would settle.` },
 { id: 'fl-pass', title: 'Cheap Florida parcels you should usually pass on', body: `
 Cheap lists are full of land nobody can use. Here are real patterns from our Florida data [[roll]].
 
@@ -392,7 +423,8 @@ A certificate on any of these can still be redeemed. You earn interest on a lien
 ], quiz: [
   { q: 'Which of these can survive a Florida tax deed?', a: ['A private second mortgage', 'A county code-enforcement lien of record', 'A right of reverter'], c: 1, why: 'Government liens of record survive [[197.552]]. Reverter rights are destroyed [[197.573]].' },
   { q: 'At a tax deed sale on a homestead, the opening bid also includes:', a: ['Nothing extra', 'Half the assessed value', 'Double the taxes'], c: 1, why: 'See [[197.542]].' },
-  { q: 'A void certificate is refunded with interest at:', a: ['18%', 'The lesser of 8% simple or your bid rate', 'Nothing'], c: 1, why: 'See [[197.432]].' }
+  { q: 'A void certificate is refunded with interest at:', a: ['18%', 'The lesser of 8% simple or your bid rate', 'Nothing'], c: 1, why: 'See [[197.432]].' },
+  { q: 'A parcel is badged Possible HOA. What does that mean?', a: ['An association is linked to the subdivision, but coverage for this lot is unverified', 'The lot is definitely in an HOA', 'There is no HOA'], c: 0, why: 'Only a recorded declaration or amendment that covers the exact lot makes it confirmed [[197.573]].' }
 ]},
 // ───────────────────────── 7
 { id: 'm7', title: 'Deal math', lessons: [
@@ -759,12 +791,15 @@ const exercise = {
     ['Flood', '40% in FEMA Zone A (high risk), 60% Zone X [[fema]]'],
     ['Wetlands', '24.6% of the lot, freshwater forested or shrub wetland [[nwi]]'],
     ['Road', 'No mapped road within about 65 ft. Legal access unverified.'],
-    ['Zoning', 'R (Tallahassee-Leon County zoning map)']
+    ['Zoning', 'R (Tallahassee-Leon County zoning map)'],
+    ['HOA', 'HOA status unknown on our card: the legal description (“8 1N 3E”) names no subdivision. Check it yourself in the steps below.']
   ],
   brief: `
 Your task: decide whether you would buy the county-held certificates on this parcel over the counter [[197.4725]]. Enter the **most cash you would put in**, counting the purchase price now and what a tax deed application would cost if nobody redeems. Then choose Bid or Pass and explain.
 
-Use the map to check access, the calculator to price the purchase, and the rules on county-held purchases [[197.4725]], deed applications [[197.502]] and expiration [[197.482]].`,
+Use the map to check access, the calculator to price the purchase, and the rules on county-held purchases [[197.4725]], deed applications [[197.502]] and expiration [[197.482]].
+
+**HOA check (do this before you enter a number):** (1) Open Show on map and read the HOA section and the legal description. (2) Decide whether a subdivision exists: if the description names none, search the clerk’s official records for the parcel’s deeds and any recorded declaration that mentions this tract. (3) If you find a declaration, read its exhibits and every amendment, and write the document and recording number that covers your exact lot. (4) Get dues and assessments from a dated source, or write “Dues unverified”. (5) List the restrictions that affect an unbuilt lot. (6) Subtract verified dues and building costs from your maximum.`,
   walkthrough: `
 ## 1. Price the purchase
 County-held certificates are bought at face plus 1.5% a month to the purchase date, plus $6.25 each [[197.4725]].
@@ -781,7 +816,10 @@ If nobody redeems and you apply for a deed, you must pay every other certificate
 ## 4. A reasonable answer
 **Pass**, or at most a small amount after confirming that no deed application is pending. The certificates have sat unredeemed since 2020, which suggests the owner may not redeem. The deed path leads to land that is hard to reach, hard to build on and hard to resell. An 18% headline rate does not fix that.
 
-Strong answers mention: the 1.5%-a-month purchase price, the 7-year expiration, the county's duty to apply, and the access, flood and wetland findings with their sources.`
+## 5. The HOA step
+Our card says **HOA status unknown**, because the roll’s legal description for this tract names no subdivision. That is not a clearance. A careful student searches the clerk’s records for a recorded declaration, and if none is found writes “No declaration found in the records checked, on (date)”. Had a declaration existed, the student would confirm its exhibits and amendments cover this exact lot, then subtract verified dues and building rules from the maximum. **Simulated example (made-up numbers):** dues of $600 a year held for 3 years is $1,800, plus a $2,500 building-plan and landscaping requirement, so $4,300 comes off the maximum before bidding. If dues cannot be verified, say so and treat the parcel as higher risk.
+
+Strong answers mention: the 1.5%-a-month purchase price, the 7-year expiration, the county's duty to apply, the access, flood and wetland findings with their sources, and the HOA steps.`
 };
 
 export default {
@@ -804,6 +842,7 @@ export default {
     ['Escheat', 'After 3 years on the lands-available list, the land passes to the county free and clear.'],
     ['Documentary stamp tax', '70 cents per $100 of consideration on a deed.'],
     ['Prima facie evidence', 'Treated as true unless someone proves otherwise. A tax deed is prima facie evidence of regular proceedings.'],
+    ['HOA declaration', 'The recorded document that creates an association and its rules. Its exhibits and amendments list which lots it covers.'],
     ['Quiet title', 'A court action to clear title so it can be sold or insured.'],
     ['Just value', 'The property appraiser’s market-value estimate as of January 1.'],
     ['DOR land-use code', 'Florida’s 00 to 99 code describing how a parcel is used.'],
@@ -819,7 +858,7 @@ export default {
     ['National Wetlands Inventory mapper', 'https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper', 'federal']
   ],
   checklists: {
-    research: ['Copy the parcel ID exactly, keeping zeros and spaces', 'Confirm the parcel on the map, and note any ID format difference', 'Read the land-use code and just value', 'Look at the aerial: shape, access, structures', 'Flood share (FEMA) with source and date', 'Wetlands (NWI) with source and date', 'Mapped road frontage, and remember legal access is unverified', 'Zoning from the county or city', 'Pull the last deed (OR book/page) and any plat', 'Search government liens (code, utility)', 'Check homestead status', 'Check other certificates and pending deed applications', 'Check for bankruptcy', 'Confirm the current status with the tax collector'],
-    bid: ['Registered, tax form filed, deposit funded', 'Payment can be wired within 48 hours', 'Interest worked out at 6, 12 and 24 months, plus the 5% minimum', 'Deed-path cash estimated (other certificates, taxes, costs)', 'Maximum rate or price written down before the sale', 'Tie rule for this county known', 'Deposit and 24-hour rule known for deed sales (5% or $200)', 'Documentary stamps (70 cents per $100) and recording in the budget', 'Plan if nobody redeems', 'Everything logged in My portfolio']
+    research: ['Copy the parcel ID exactly, keeping zeros and spaces', 'Confirm the parcel on the map, and note any ID format difference', 'Read the land-use code and just value', 'Look at the aerial: shape, access, structures', 'Flood share (FEMA) with source and date', 'Wetlands (NWI) with source and date', 'Mapped road frontage, and remember legal access is unverified', 'Zoning from the county or city', 'Pull the last deed (OR book/page) and any plat', 'Search government liens (code, utility)', 'Check homestead status', 'HOA: find the recorded declaration and any amendments, and confirm they cover this exact lot', 'HOA: dues and special assessments from a dated source (or write “Dues unverified”)', 'HOA: restrictions on building, RVs and unbuilt vacant lots', 'Check other certificates and pending deed applications', 'Check for bankruptcy', 'Confirm the current status with the tax collector'],
+    bid: ['Registered, tax form filed, deposit funded', 'Payment can be wired within 48 hours', 'Interest worked out at 6, 12 and 24 months, plus the 5% minimum', 'Deed-path cash estimated (other certificates, taxes, costs)', 'Maximum rate or price written down before the sale', 'Tie rule for this county known', 'Deposit and 24-hour rule known for deed sales (5% or $200)', 'Documentary stamps (70 cents per $100) and recording in the budget', 'Verified HOA dues, assessments and building rules subtracted from my maximum bid', 'Plan if nobody redeems', 'Everything logged in My portfolio']
   }
 };

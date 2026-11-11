@@ -1,4 +1,70 @@
 // Shared renderers for the Florida sale box and the lien table.
+// HOA status (tools/fl-parcels/hoa_backfill.py): confirmed only from a reviewed recorded declaration; one JSON file per county.
+const HoaData = {
+  base: '/liens/states/hoa/', cache: {}, decls: null,
+  slug: c => String(c).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+  LABEL: {confirmed: 'HOA confirmed', possible: 'Possible HOA', unknown: 'HOA status unknown'},
+  WHY: {
+    confirmed: 'A recorded declaration or amendment covers this specific parcel.',
+    possible: 'An association is linked to the subdivision, but coverage for this lot or phase is unverified.',
+    unknown: 'The records checked did not establish whether an HOA applies.'
+  },
+  load(county) { if (!this.cache[county]) this.cache[county] = fetch(this.base + this.slug(county) + '.json').then(r => r.ok ? r.json() : null).catch(() => null); return this.cache[county]; },
+  loadDecls() { if (!this.decls) this.decls = fetch(this.base + 'declarations.json').then(r => r.ok ? r.json() : null).catch(() => null); return this.decls; },
+  isFl: l => (l.state || 'FL') === 'FL',
+  async rec(l) { if (!this.isFl(l)) return null; const f = await this.load(l.county); return f && f.p && f.p[l.parcel] || null; },
+  // synchronous status once the county file has been loaded (used by the filter)
+  statusNow(l) { const f = this.loaded && this.loaded[l.county]; const r = f && f.p && f.p[l.parcel]; return r ? r.st : 'unknown'; },
+  async preload(list) { this.loaded = this.loaded || {}; const cs = Array.from(new Set(list.filter(this.isFl).map(l => l.county))); await Promise.all(cs.map(async c => { this.loaded[c] = await this.load(c); })); },
+  badge(l) {
+    if (!this.isFl(l)) return null;
+    const b = document.createElement('span'); b.className = 'lchip hoa na'; b.textContent = 'HOA …';
+    this.rec(l).then(r => { const st = r ? r.st : 'unknown'; b.className = 'lchip hoa ' + st; b.textContent = this.LABEL[st]; b.title = this.WHY[st]; b.dataset.hoa = st; });
+    return b;
+  },
+  recordsLink(l) {
+    const a = document.createElement('a'); a.target = '_blank'; a.rel = 'noopener noreferrer'; a.className = 'hoalink';
+    const pa = typeof FL_PA !== 'undefined' && FL_PA[l.county];
+    a.href = pa || 'https://www.flclerks.com/'; a.textContent = 'Check official records' + (pa ? ' (property appraiser, then the clerk’s official records)' : ' (find your county clerk)'); return a;
+  },
+  async panel(l) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord hoabox'); box.appendChild(mk('h4', '', 'HOA'));
+    const r = await this.rec(l), st = r ? r.st : 'unknown';
+    const top = mk('p', 'hoatop'); top.append(mk('span', 'lchip hoa ' + st, this.LABEL[st]), ' ', this.WHY[st]); box.appendChild(top);
+    if (r && r.note) box.appendChild(mk('p', 'small', r.note));
+    if (r && r.why && st !== 'confirmed') box.appendChild(mk('p', 'small', r.why));
+    const legal = [r && r.sub ? 'Subdivision: ' + r.sub : '', r && r.phase ? 'Phase: ' + r.phase : '', r && r.block ? 'Block: ' + r.block : '', r && r.lot ? 'Lot: ' + r.lot : ''].filter(Boolean);
+    if (legal.length) box.appendChild(mk('p', 'small', 'From the official legal description: ' + legal.join(' · ') + '.'));
+    const link = (o, text) => { const a = mk('a', '', text || o.name || o.url); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    if (st === 'confirmed' || (r && r.decl)) {
+      const D = await this.loadDecls(), e = D && D.decls && D.decls[r.decl];
+      if (e) {
+        const dl = mk('dl', 'pfacts'), row = (k, v) => { if (v) { const d = mk('div'); d.append(mk('dt', '', k)); const dd = mk('dd'); if (v instanceof Node) dd.appendChild(v); else dd.textContent = v; d.appendChild(dd); dl.appendChild(d); } };
+        row('Association', e.name);
+        row('Membership', e.membership === 'mandatory' ? 'Mandatory' : e.membership === 'voluntary' ? 'Voluntary' : 'Not verified');
+        const du = e.dues;
+        row('Regular dues', du && du.amount ? '$' + Number(du.amount).toLocaleString('en-US') + ' ' + du.frequency + ' (as of ' + du.asOf + ')' : 'Dues unverified');
+        if (du && du.source && du.source.url) { const p = mk('div'); p.append(link(du.source, 'Dues source: ' + (du.source.name || 'association'))); row('Dues source', p); }
+        box.appendChild(dl);
+        const as = (e.assessments || []);
+        box.appendChild(mk('p', 'small', as.length ? 'Verified special assessments:' : 'No special assessments have been verified.'));
+        if (as.length) { const ul = mk('ul', 'small'); as.forEach(a => { const li = mk('li', '', '$' + Number(a.amount).toLocaleString('en-US') + (a.description ? ' for ' + a.description : '') + ' (as of ' + a.asOf + ') '); li.appendChild(link(a.source, 'source')); ul.appendChild(li); }); box.appendChild(ul); }
+        const rs = e.restrictions || [];
+        box.appendChild(mk('h4', '', 'Restrictions that matter for vacant land'));
+        if (rs.length) { const ul = mk('ul', 'small'); rs.forEach(x => ul.appendChild(mk('li', '', (x.topic ? x.topic + ': ' : '') + x.text + (x.section ? ' (' + x.section + ')' : '')))); box.appendChild(ul); } else box.appendChild(mk('p', 'small', 'No restrictions have been reviewed yet. Read the declaration before you bid.'));
+        box.appendChild(mk('h4', '', 'Recorded documents'));
+        const ul = mk('ul', 'small'); (e.documents || []).forEach(d => { const li = mk('li', '', (d.type === 'amendment' ? 'Amendment' + (d.effect ? ' (' + d.effect + ')' : '') : 'Declaration') + (d.recording ? ' · recording ' + d.recording : '') + (d.recorded ? ' · recorded ' + d.recorded : '') + ' '); if (d.url) li.appendChild(link({url: d.url}, 'source')); ul.appendChild(li); }); box.appendChild(ul);
+        box.appendChild(mk('p', 'small psrc', 'Verified ' + (e.verified && e.verified.date) + ' against the recorded documents. Confirm dues and rules with the association before bidding.'));
+      }
+    }
+    if (st === 'possible' && r && r.ev && r.ev.length) {
+      box.appendChild(mk('p', 'small', 'Lead from the county roll: ' + r.ev.map(x => x.assoc + (x.common ? ' (owns a common-area parcel)' : '') + (x.roll ? ' · roll ' + x.roll : '')).join('; ') + '. A name on the roll is a lead, not proof that this lot is covered.'));
+    }
+    if (st !== 'confirmed') { box.appendChild(mk('p', 'small', 'Dues unverified. Restrictions unverified.')); const p = mk('p', 'small'); p.appendChild(this.recordsLink(l)); box.appendChild(p); }
+    return box;
+  }
+};
 // Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
 const ParcelData = {
   base: '/liens/states/parcels/',
@@ -100,7 +166,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -293,7 +359,11 @@ const LienUI = {
     const [floodBox, floodC] = mkChk('Hide FEMA high-risk flood zones', false);
     const [wetBox, wetC] = mkChk('Hide mapped wetlands', false);
     const hasFlags = all.some(l => landFlags(l));
-    tools.append(q, yr); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort);
+    const hoaSel = mk('select'); hoaSel.setAttribute('aria-label', 'HOA status');
+    [['', 'All HOA statuses'], ['confirmed', 'HOA confirmed'], ['possible', 'Possible HOA'], ['unknown', 'HOA status unknown']].forEach(o => hoaSel.appendChild(new Option(o[1], o[0])));
+    const hasFl = all.some(HoaData.isFl);
+    HoaData.preload(all).then(() => { if (hoaSel.value) apply(); });
+    tools.append(q, yr); if (hasFl) tools.append(hoaSel); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort);
     // Sticky bar: Filters button, view switch and the live count stay pinned while you scroll.
     const bar = mk('div', 'lienbar'), fb = mk('button', 'btn small', 'Filters'); fb.type = 'button'; fb.setAttribute('aria-expanded', 'false');
     const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button';
@@ -316,6 +386,7 @@ const LienUI = {
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
         const ch = mk('div', 'lchips');
+        { const hb = HoaData.badge(l); if (hb) ch.appendChild(hb); }
         if (!f) ch.appendChild(chip('na', 'Land: not checked'));
         else {
           ch.appendChild(f[0] === 1 ? chip('ok', '✔ Road within ~200 ft') : f[0] === 0 ? chip('bad', 'No mapped road') : chip('na', 'Road: ?'));
@@ -340,7 +411,7 @@ const LienUI = {
       wrap.innerHTML = '';
       if (view === 'cards') { drawCards(); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString() + ' of ' + list.length.toLocaleString() + ' (* payoff as of the source file date)'; more.hidden = shown >= list.length; return; }
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Land check', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc'].forEach(x => hr.appendChild(mk('th', '', x)));
+      ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Land check', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc', 'HOA'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
       list.slice(0, shown).forEach(l => {
         const r = tb.insertRow();
@@ -349,6 +420,7 @@ const LienUI = {
         const mc = r.insertCell();
         const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
         cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator';
+        const hc = r.insertCell(); { const hb = HoaData.badge(l); if (hb) hc.appendChild(hb); }
         cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); } const fv = LienSave.button(l, 'btn small ghost'); fv.style.marginLeft = '6px'; cc.appendChild(fv);
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
@@ -358,11 +430,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? a.amount - b.amount : sort.value === 'high' ? b.amount - a.amount : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }

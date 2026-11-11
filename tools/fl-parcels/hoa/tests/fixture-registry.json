@@ -1,0 +1,16 @@
+{
+  "_comment": "TEST FIXTURE ONLY. Fictional subdivision and recordings. Never copied into hoa/registry/ or published.",
+  "id": "test-sample-park", "name": "Sample Park Homeowners Association, Inc. (TEST)", "county": "Leon", "state": "FL",
+  "subdivisions": ["SAMPLE PARK"],
+  "coverage": {"phases": ["1", "2"], "blocks": "all", "lots": "all"},
+  "documents": [
+    {"type": "declaration", "recording": "TEST OR 0001/0001", "recorded": "2001-01-01", "url": "https://example.invalid/test-declaration.pdf"},
+    {"type": "amendment", "effect": "adds", "scope": {"phases": ["3"]}, "recording": "TEST OR 0002/0002", "recorded": "2005-06-01", "url": "https://example.invalid/test-amendment.pdf"},
+    {"type": "amendment", "effect": "removes", "scope": {"phases": ["2"], "blocks": ["Z"]}, "recording": "TEST OR 0003/0003", "recorded": "2008-02-01"}
+  ],
+  "membership": "mandatory",
+  "dues": {"amount": 350, "frequency": "annual", "asOf": "2026-01-01", "source": {"name": "TEST association budget", "url": "https://example.invalid/test-budget.pdf"}},
+  "assessments": [],
+  "restrictions": [{"topic": "Building", "text": "Plans must be approved by the architectural committee before construction (TEST).", "section": "Art. 7"}, {"topic": "RVs", "text": "RVs may not be stored on a vacant lot (TEST).", "section": "Art. 9"}],
+  "verified": {"by": "test", "date": "2026-11-11"}
+}
