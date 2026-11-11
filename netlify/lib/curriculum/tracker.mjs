@@ -48,12 +48,12 @@ export const TRACKER = [
   "state": "CA",
   "name": "California",
   "system": "Tax deed",
-  "research": "Partial: sourced sale steps on the state page",
+  "research": "Blocked: leginfo.legislature.ca.gov and Los Angeles County pages return 403 to our environment, so the Revenue and Taxation Code (Div. 1, Pt. 6) could not be read",
   "writing": "Short state class only (one page and a 3-question quiz)",
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Needs access to the official Revenue and Taxation Code (sections 3691 onward) and a county auction notice; then write the course (5-year default, Chapter 7 agreement sales, 90-day redemption after sale rules)"
  },
  {
   "state": "CO",
@@ -114,12 +114,12 @@ export const TRACKER = [
   "state": "GA",
   "name": "Georgia",
   "system": "Redeemable deed",
-  "research": "Partial: sourced sale steps on the state page",
+  "research": "Blocked: Georgia statutes (O.C.G.A. title 48, ch. 4) are only reachable through sites that block our environment (403). The Department of Revenue notice is readable.",
   "writing": "Short state class only (one page and a 3-question quiz)",
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Needs the official O.C.G.A. 48-4 text (or a readable official source) to cite sections; then write the course (sheriff sales, 12-month redemption, 20% premium)"
  },
  {
   "state": "HI",
@@ -147,12 +147,12 @@ export const TRACKER = [
   "state": "IL",
   "name": "Illinois",
   "system": "Tax lien certificate",
-  "research": "Partial: sourced sale steps on the state page",
+  "research": "Blocked: ilga.gov fails TLS verification from our build environment, so the Property Tax Code (35 ILCS 200, Art. 21) could not be read from the official source. Cook County treasurer page is readable.",
   "writing": "Short state class only (one page and a 3-question quiz)",
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Needs access to ilga.gov (or the statute text supplied) to read 35 ILCS 200/21-190 to 21-350 and the county sale rules; then write the course (bid-down penalty, 2-3 year redemption, tax deed petition)"
  },
  {
   "state": "IN",
@@ -334,12 +334,12 @@ export const TRACKER = [
   "state": "NJ",
   "name": "New Jersey",
   "system": "Tax lien certificate",
-  "research": "Partial: sourced sale steps on the state page",
+  "research": "Partial: NJ Division of Local Government Services guidance (Elements of a Tax Sale) and P.L.2024 c.39 are readable; the codified N.J.S.A. 54:5 text on the legislature site was not reachable (404s)",
   "writing": "Short state class only (one page and a 3-question quiz)",
   "review": "Not started",
   "publication": "Not published",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Needs the official N.J.S.A. 54:5 and 54:5-19 to 54:5-86 text to cite exact sections; then write the course (municipal sales, premium bidding, 2-year redemption, foreclosure)"
  },
  {
   "state": "NM",
