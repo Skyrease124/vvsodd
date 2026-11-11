@@ -891,3 +891,13 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .pfprefs{display:flex;flex-direction:column;gap:10px}.pfhead{display:inline-flex;gap:6px;margin-left:auto;margin-right:8px}
 .lothead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 @media (max-width:520px){.pfnear-top{font-size:18px}}
+/* worksheet table + checklist legibility on dark pages */
+.pfws-tbl,.pfws-tbl thead,.pfws-tbl tbody,.pfws-tbl tr{background:transparent!important}
+.pfws-tbl th,.pfws-tbl td{background:transparent!important;color:#e8edf7!important;font-weight:600}
+.pfws-tbl thead th{color:#ffd166!important}
+.pfws-tbl tbody th{font-weight:500;color:#c5cfe0!important}
+.pfws-cb{justify-content:flex-start;text-align:left}
+.pfws-cb input[type=checkbox]{width:22px;height:22px;flex:none;margin:0}
+.pfws-item{text-align:left}
+.pfws-item .pfws-cb{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;margin:0}
+.pfws-calc{overflow-x:auto}.pfws-tbl{min-width:340px}.pfws-tbl th,.pfws-tbl td{padding:6px 6px;font-size:13px}
