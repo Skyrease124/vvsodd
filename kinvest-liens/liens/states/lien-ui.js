@@ -159,6 +159,7 @@ const LienMap = {
     const msg = dlg.querySelector('.lotmsg'), foot = dlg.querySelector('.lotfoot'), box = dlg.querySelector('.lotmap');
     dlg.querySelector('b').textContent = 'Parcel ' + l.parcel;
     msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = '';
+    { const hd = dlg.querySelector('.lothead'); let pl = hd.querySelector('.pfhead'); if (pl) pl.remove(); if (typeof PF !== 'undefined' && l.parcel) { pl = document.createElement('span'); pl.className = 'pfhead'; hd.insertBefore(pl, hd.lastElementChild); PF.cardButtons(l, pl, 'btn small ghost'); } }
     let fx = dlg.querySelector('.lotfacts'); if (!fx) { fx = document.createElement('p'); fx.className = 'lotfacts small'; msg.after(fx); } fx.textContent = '';
     if (cfg) { const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = 'Look up the owner and tax history on the ' + cfg.pageName + ' site';
     foot.append(pa, ' \u00b7 '); }
@@ -183,6 +184,7 @@ const LienMap = {
         return;
       } catch (e) { /* fall through to the live county lookup */ }
     }
+    if (!cfg && l.lat != null && typeof PF !== 'undefined') { try { await PF.pointMap(box, msg, l); return; } catch (e) { /* fall through */ } }
     if (!cfg) { msg.textContent = 'No map is available for this county yet.'; return; }
     try {
       const url = cfg.query + '?where=' + encodeURIComponent(cfg.idField + "='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=' + (cfg.facts ? 'ACRES' : cfg.idField.split(' ').pop()) + '&outSR=4326&f=geojson';
@@ -407,7 +409,7 @@ const LienUI = {
         if (PARCEL_MAPS[l.county] || (l.state || 'FL') === 'FL') { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
         if (l.amount != null && !l.priceLabel) { const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb); }
         const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
-        const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost'));
+        const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost')); if (typeof PF !== 'undefined') PF.cardButtons(l, act, 'btn small ghost');
         c.appendChild(act);
         const src = mk('p', 'small lsrc'); const a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a, ' ' + (l.checked || '')); c.appendChild(src);
         g.appendChild(c);

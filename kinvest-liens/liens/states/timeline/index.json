@@ -1,0 +1,10 @@
+{"counties":[
+ {"county":"Larimer","state":"CO","slug":"larimer","kind":"lien","enabled":true,
+  "supports":["Amount and payoff changes","Parcel no longer listed (outcome unconfirmed)","Parcel added or listed again"],
+  "recurring":"The county re-posts its delinquent list nightly through the sale. We re-import it and compare it with the last verified import.",
+  "notYet":["Sale results and redemptions are not on the list. They are shown only when an official record is added."]},
+ {"county":"Wayne","state":"MI","slug":"wayne","kind":"deed","enabled":true,"geo":true,"results":true,
+  "supports":["Foreclosed on the 2026 list","Published auction result with the actual sale price (September 2026 auction)"],
+  "recurring":"Foreclosure lists and auction results are published by the Treasurer around each auction. We import each file as it is posted.",
+  "notYet":["Unsold parcels have no price or status in the county's list, so we show none."]}
+]}
