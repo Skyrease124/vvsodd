@@ -270,6 +270,17 @@ const COUNTY_BUY = {
       'Research before you bid: the notice says buyers are strongly urged to research each parcel. Many are tiny lots, vacant lots with no street number, or condo units.'
     ]
   },
+  'Wayne': {
+    office: 'Wayne County Treasurer (Michigan)',
+    status: l => /Sold/.test(l.status) ? 'Sold at Wayne County\u2019s September 2026 tax foreclosure auction for $' + Number(l.amount).toFixed(2) + '. It is no longer for sale; this is a past result you can learn from.' : 'The county foreclosed on this parcel in 2026 (list dated 4/24/2026). The list gives no price, owner or sale status. It was not on the September 2026 sold list, so check with the Treasurer whether it is still offered.',
+    record: null,
+    links: [['Wayne County Treasurer: tax foreclosure auction', 'https://www.waynecountytreasurermi.com/']],
+    steps: [
+      'Michigan sells the foreclosed property itself (a deed), not a lien. There is no interest earned and no redemption after the foreclosure is final.',
+      'Ask the Treasurer which parcels are still available, the minimum bid, and when and how the next auction runs.',
+      'Research before you bid: many Detroit parcels are vacant lots or have back taxes, liens or demolition orders. Check the property and its condition first.'
+    ]
+  },
   'Larimer': {
     office: 'Larimer County Treasurer',
     status: l => 'Advertised for the county\u2019s tax lien sale on ' + (l.saleDate || 'the sale date') + '. It is not sold yet, and the owner can pay before the sale, which takes it off the list.',
