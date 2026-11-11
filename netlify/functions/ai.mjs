@@ -23,7 +23,7 @@ function loadNyc() {
   if (!dir) throw new Error('nyc data not found');
   return vm.runInNewContext(fs.readFileSync(path.join(dir, 'nyc-history.js'), 'utf8') + '\n;NYC_HISTORY', {}, { timeout: 2000 });
 }
-const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL', 'Miami-Dade': 'FL', 'Saguache': 'CO', 'El Paso': 'CO', 'Boulder': 'CO', 'Scott': 'IA', 'Davidson': 'TN', 'Walton': 'FL', 'Santa Rosa': 'FL', 'Volusia': 'FL', 'Pasco': 'FL', 'Osceola': 'FL', 'Sarasota': 'FL', 'Duval': 'FL', 'Escambia': 'FL', 'Hillsborough': 'FL', 'Hernando': 'FL', 'Nassau': 'FL' };
+const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL', 'Miami-Dade': 'FL', 'Saguache': 'CO', 'El Paso': 'CO', 'Boulder': 'CO', 'Scott': 'IA', 'Davidson': 'TN', 'Wayne': 'MI', 'Walton': 'FL', 'Santa Rosa': 'FL', 'Volusia': 'FL', 'Pasco': 'FL', 'Osceola': 'FL', 'Sarasota': 'FL', 'Duval': 'FL', 'Escambia': 'FL', 'Hillsborough': 'FL', 'Hernando': 'FL', 'Nassau': 'FL' };
 const SYS = ['Tax lien certificate', 'Tax deed', 'Redeemable deed', 'Hybrid', 'Municipal lien', 'Sources differ'];
 const BID = ['Bid-down rate', 'Premium bidding', 'Other', 'Not applicable'];
 const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });

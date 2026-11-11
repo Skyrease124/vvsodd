@@ -19,7 +19,7 @@ const BUILDABLE = new Set(['VACANT', 'VACANT COMMERCIAL LAND', 'VACANT TOWNHOUSE
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const PUBLIC = new Set(['STATE', 'FEDERAL', 'DISTRICTS']);
 
-const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js', 'Pinal': 'liens-pinal.js', 'Coconino': 'liens-coconino.js', 'Leon': 'liens-leon.js', 'Manatee': 'liens-manatee.js', 'Alachua': 'liens-alachua.js', 'Bay': 'liens-bay.js', 'Miami-Dade': 'liens-miamidade.js', 'Saguache': 'liens-saguache.js', 'El Paso': 'liens-elpaso.js', 'Boulder': 'liens-boulder.js', 'Scott': 'liens-scott.js', 'Davidson': 'liens-davidson.js', 'Walton': 'liens-walton.js', 'Santa Rosa': 'liens-santarosa.js', 'Volusia': 'liens-volusia.js', 'Pasco': 'liens-pasco.js', 'Osceola': 'liens-osceola.js', 'Sarasota': 'liens-sarasota.js', 'Duval': 'liens-duval.js', 'Escambia': 'liens-escambia.js', 'Hillsborough': 'liens-hillsborough.js', 'Hernando': 'liens-hernando.js', 'Nassau': 'liens-nassau.js'};
+const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js', 'Pinal': 'liens-pinal.js', 'Coconino': 'liens-coconino.js', 'Leon': 'liens-leon.js', 'Manatee': 'liens-manatee.js', 'Alachua': 'liens-alachua.js', 'Bay': 'liens-bay.js', 'Miami-Dade': 'liens-miamidade.js', 'Saguache': 'liens-saguache.js', 'El Paso': 'liens-elpaso.js', 'Boulder': 'liens-boulder.js', 'Scott': 'liens-scott.js', 'Davidson': 'liens-davidson.js', 'Wayne': 'liens-wayne.js', 'Walton': 'liens-walton.js', 'Santa Rosa': 'liens-santarosa.js', 'Volusia': 'liens-volusia.js', 'Pasco': 'liens-pasco.js', 'Osceola': 'liens-osceola.js', 'Sarasota': 'liens-sarasota.js', 'Duval': 'liens-duval.js', 'Escambia': 'liens-escambia.js', 'Hillsborough': 'liens-hillsborough.js', 'Hernando': 'liens-hernando.js', 'Nassau': 'liens-nassau.js'};
 function loadLiens(county) {
   const root = process.env.LAMBDA_TASK_ROOT || process.cwd();
   const cands = [path.join(root, 'kinvest-liens/liens/states'), path.join(HERE, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
@@ -57,7 +57,7 @@ function groupByParcel(liens) {
     if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: l.market, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate, certList: [], saleDate: l.saleDate || null, mineral: false}; m.set(l.parcel, g); }
     if (l.mineral) g.mineral = true;
     if (l.road != null) { g.road = l.road; g.flood = l.flood; g.wet = l.wet; }
-    g.face += l.amount; g.payoff += l.payoff || l.amount; g.certs++; if (l.cert && !g.certList.includes(l.cert)) g.certList.push(l.cert); if (l.taxYear) g.years.push(l.taxYear);
+    g.face += l.amount || 0; g.payoff += l.payoff || l.amount || 0; g.certs++; if (l.cert && !g.certList.includes(l.cert)) g.certList.push(l.cert); if (l.taxYear) g.years.push(l.taxYear);
   });
   return [...m.values()].map(g => { g.face = Math.round(g.face * 100) / 100; g.payoff = Math.round(g.payoff * 100) / 100; g.years.sort(); return g; });
 }
@@ -169,7 +169,7 @@ async function handle(event) {
   let body; try { body = JSON.parse(event.body || '{}'); } catch (e) { return json(400, {error: 'Bad request.'}); }
   const county = String(body.county || '');
   const wish = String(body.wish || '').replace(/\s+/g, ' ').trim();
-  if (!FILES[county]) return json(400, {error: 'The screener is only available for Palm Beach, Larimer, Pinal, Coconino, Leon, Manatee, Alachua, Bay, Miami-Dade, Saguache, El Paso, Boulder, Scott, Davidson, Walton, Santa Rosa, Volusia, Pasco, Osceola, Sarasota, Duval, Escambia, Hillsborough, Hernando and Nassau counties so far.'});
+  if (!FILES[county]) return json(400, {error: 'The screener is only available for Palm Beach, Larimer, Pinal, Coconino, Leon, Manatee, Alachua, Bay, Miami-Dade, Saguache, El Paso, Boulder, Scott, Davidson, Wayne, Walton, Santa Rosa, Volusia, Pasco, Osceola, Sarasota, Duval, Escambia, Hillsborough, Hernando and Nassau counties so far.'});
   if (wish.length > 300) return json(400, {error: 'Keep it under 300 characters.'});
   if (!cfg) return json(503, {error: 'The screener is not switched on yet.'});
 

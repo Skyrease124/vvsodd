@@ -374,7 +374,7 @@ const LienUI = {
     vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
     const wrap = mk('div', 'tablewrap'); host.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); host.appendChild(more);
-    const money = n => '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const money = n => n == null ? 'Not listed' : '$' + Number(n).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     let shown = 50, list = [];
     const chip = (cls, txt) => mk('span', 'lchip ' + cls, txt);
     function drawCards() {
@@ -383,7 +383,7 @@ const LienUI = {
         const c = mk('article', 'lcardx'), f = landFlags(l);
         if ((l.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(l, th); }
         const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
-        const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
+        const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', l.priceLabel || 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
         const ch = mk('div', 'lchips');
         { const hb = HoaData.badge(l); if (hb) ch.appendChild(hb); }
@@ -399,7 +399,7 @@ const LienUI = {
         if (l.owner || l.address) c.appendChild(mk('p', 'small lfacts', [l.owner ? 'Owner: ' + l.owner : '', l.address ? 'Property: ' + l.address : '', l.mailing ? 'Mailing: ' + l.mailing : ''].filter(Boolean).join(' · ')));
         const act = mk('div', 'lact');
         if (PARCEL_MAPS[l.county] || (l.state || 'FL') === 'FL') { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
-        const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb);
+        if (l.amount != null && !l.priceLabel) { const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb); }
         const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
         const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost'));
         c.appendChild(act);
@@ -422,7 +422,7 @@ const LienUI = {
         const cc = r.insertCell(), cb = mk('a', 'btn small ghost', 'Calculate');
         cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator';
         const hc = r.insertCell(); { const hb = HoaData.badge(l); if (hb) hc.appendChild(hb); }
-        cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); } const fv = LienSave.button(l, 'btn small ghost'); fv.style.marginLeft = '6px'; cc.appendChild(fv);
+        if (l.amount != null && !l.priceLabel) cc.appendChild(cb); const bb = LienBuy.button(l, 'btn small'); if (bb) { bb.style.marginLeft = '6px'; cc.appendChild(bb); } const fv = LienSave.button(l, 'btn small ghost'); fv.style.marginLeft = '6px'; cc.appendChild(fv);
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);
@@ -432,7 +432,7 @@ const LienUI = {
     function apply() {
       const s = q.value.trim().toLowerCase();
       list = all.filter(l => (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
-      list.sort((a, b) => sort.value === 'low' ? a.amount - b.amount : sort.value === 'high' ? b.amount - a.amount : (b.saleDate > a.saleDate ? 1 : -1));
+      list.sort((a, b) => sort.value === 'low' ? (a.amount || 0) - (b.amount || 0) : sort.value === 'high' ? (b.amount || 0) - (a.amount || 0) : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
     [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel].forEach(e => e.addEventListener('input', apply));
@@ -464,7 +464,7 @@ const LienResearch = {
     let dlg = document.getElementById('resdlg');
     if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'resdlg'; dlg.className = 'lotdlg resdlg'; dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); document.body.appendChild(dlg); }
     dlg.textContent = ''; const body = mk('div', 'resbody'); dlg.appendChild(body);
-    body.append(mk('h3', '', 'Research: ' + l.parcel), mk('p', 'small muted', (l.county || '') + ' County · face $' + Number(l.amount).toLocaleString()));
+    body.append(mk('h3', '', 'Research: ' + l.parcel), mk('p', 'small muted', (l.county || '') + ' County' + (l.amount != null ? ' · ' + (l.priceLabel ? 'sold for' : 'face') + ' $' + Number(l.amount).toLocaleString() : '')));
     const me = await this.me(), key = this.key(l); let saved = null;
     if (me) { try { const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'resGet'})}); const d = await r.json(); saved = d.research && d.research[key] || null; } catch (e) {} }
     const marks = Object.assign({}, saved && saved.marks);
