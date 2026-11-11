@@ -25,13 +25,13 @@ const ParcelData = {
       host.classList.remove('loading'); const cap = document.createElement('p'); cap.className = 'lcap small';
       if (r && r.st === 'matched' && r.img && r.img.s === 'aerial') {
         const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.width = 480; im.height = 320; im.alt = 'Aerial photo of parcel ' + l.parcel + ' with its boundary outlined';
-        im.src = this.base + 'img/' + r.img.f; im.onerror = () => { im.remove(); host.prepend(this.mapBox(r)); };
+        im.src = this.base + 'img/' + r.img.f; im.onerror = () => { im.remove(); host.prepend(this.mapBox(r)); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'Aerial could not load'; };
         host.appendChild(im); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'Aerial: USGS NAIP, ' + r.img.d.slice(0, 7);
       } else if (r && r.st === 'matched' && r.g) {
         host.appendChild(this.mapBox(r)); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'No usable aerial for this lot';
       } else {
         const u = document.createElement('div'); u.className = 'lnoimg'; u.textContent = 'Image unavailable'; host.appendChild(u);
-        cap.textContent = r ? (r.st === 'ambiguous' ? 'Parcel ID needs review, so the location is not verified.' : r.st === 'unmatched' ? 'Parcel ID not found in the statewide roll.' : 'Not checked yet.') : (file ? 'Not checked yet.' : 'Property records not loaded for this county yet.');
+        cap.textContent = r ? (r.kind === 'mineral' ? 'Mineral or subsurface rights only: there is no surface lot to picture.' : r.kind === 'condo' ? 'Condo unit: units are not mapped separately, so the location is not verified.' : r.st === 'ambiguous' ? 'Parcel ID needs review, so the location is not verified.' : r.st === 'unmatched' ? 'Parcel ID not found in the statewide roll. Flagged for review.' : 'Not checked yet.') : (file ? 'Not checked yet.' : 'Property records not loaded for this county yet.');
       }
       host.appendChild(cap);
     });

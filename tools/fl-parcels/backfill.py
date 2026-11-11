@@ -284,8 +284,8 @@ def main():
         it = fetch('https://www.arcgis.com/sharing/rest/content/items/' + STATEWIDE_ITEM, {'f': 'json'}, post=False)
         roll_date = datetime.datetime.utcfromtimestamp(it['modified'] / 1000).date().isoformat()
     except Exception: roll_date = ''
-    by = {}
-    for x in listings: by.setdefault(x['county'], []).append(x['parcel'])
+    by = {}; info = {}
+    for x in listings: by.setdefault(x['county'], []).append(x['parcel']); info[(x['county'], x['parcel'])] = x
     lock = threading.Lock()
     for county in sorted(by):
         if a.county and county != a.county: continue
@@ -346,10 +346,20 @@ def main():
                     done[0] += 1
                     if done[0] % 25 == 0: save(path, county, recs, roll_date); print('  ', done[0], '/', len(jobs), flush=True)
             with cf.ThreadPoolExecutor(a.workers) as ex: list(ex.map(work, list(jobs)))
+        # explain why a parcel has no picture when the listing itself shows it is not a piece of land
+        for p in by[county]:
+            r = recs.get(p)
+            if r and r.get('st') in ('unmatched', 'ambiguous'): r['kind'] = kind_of(info.get((county, p), {}))
         # drop records for parcels no longer listed (keeps files tidy; nothing is duplicated)
         recs = {p: recs[p] for p in by[county] if p in recs}
         save(path, county, recs, roll_date)
     report(by)
+
+def kind_of(x):
+    t = ((x.get('use') or '') + ' ' + (x.get('desc') or '')).upper()
+    if re.search(r'MINERAL|SUBSURF|SUB SRFC|S/S RTS|SUB-SURFACE', t): return 'mineral'
+    if re.search(r'CONDO|UNIT\b|MERCHANDISE MAR', t): return 'condo'
+    return ''
 
 NO_ADDR = re.compile(r'^(UNASSIGNED|NO SITUS|NONE|UNKNOWN|NOT ASSIGNED|0+\b)', re.I)
 def clean(rec):
@@ -378,26 +388,28 @@ def report(by):
     for county in sorted(by):
         if county not in CO_NO: continue
         d = load_json(os.path.join(OUT, slug(county) + '.json'), {'p': {}}); P = d.get('p', {})
-        r = {'county': county, 'parcels': len(by[county]), 'matched': 0, 'ambiguous': 0, 'unmatched': 0, 'error': 0, 'pending': 0, 'aerial': 0, 'map_preview': 0, 'no_owner': 0, 'no_address': 0, 'area_estimated': 0, 'flood_unavailable': 0, 'wetlands_unavailable': 0, 'roads_unavailable': 0, 'zoning_unavailable': 0}
+        r = {'county': county, 'parcels': len(by[county]), 'matched': 0, 'ambiguous': 0, 'unmatched': 0, 'error': 0, 'pending': 0, 'aerial': 0, 'map_preview': 0, 'no_owner': 0, 'no_address': 0, 'area_estimated': 0, 'flood_unavailable': 0, 'wetlands_unavailable': 0, 'roads_unavailable': 0, 'zoning_unavailable': 0, 'mineral_only': 0, 'condo_unit': 0, 'other_unmatched': 0}
         for p in by[county]:
             x = P.get(p)
             if not x: r['pending'] += 1; continue
             r[x['st']] = r.get(x['st'], 0) + 1
-            if x['st'] != 'matched': review.append((county, p, x['st'], x.get('note', ''))); continue
+            if x['st'] != 'matched':
+                k = x.get('kind', ''); r['mineral_only' if k == 'mineral' else 'condo_unit' if k == 'condo' else 'other_unmatched'] += x['st'] in ('unmatched', 'ambiguous')
+                review.append((county, p, x['st'], k or 'needs review', x.get('note', ''))); continue
             r['aerial' if x['img']['s'] == 'aerial' else 'map_preview'] += 1
             r['no_owner'] += not x.get('own'); r['no_address'] += not x.get('addr'); r['area_estimated'] += bool(x.get('aEst'))
             for k, n in [('fl', 'flood'), ('wt', 'wetlands'), ('rd', 'roads'), ('zn', 'zoning')]: r[n + '_unavailable'] += x[k]['s'] == 'na'
         rows.append(r)
     tot = {k: sum(r[k] for r in rows) for k in rows[0] if k != 'county'} if rows else {}
     json.dump({'generated': TODAY, 'counties': rows, 'total': tot}, open(os.path.join(HERE, 'report.json'), 'w'), indent=1)
-    cols = ['parcels', 'matched', 'ambiguous', 'unmatched', 'aerial', 'map_preview', 'no_owner', 'no_address', 'area_estimated', 'flood_unavailable', 'wetlands_unavailable', 'roads_unavailable', 'zoning_unavailable']
+    cols = ['parcels', 'matched', 'ambiguous', 'unmatched', 'mineral_only', 'condo_unit', 'other_unmatched', 'aerial', 'map_preview', 'no_owner', 'no_address', 'area_estimated', 'flood_unavailable', 'wetlands_unavailable', 'roads_unavailable', 'zoning_unavailable']
     md = ['# Florida parcel coverage report', '', 'Generated ' + TODAY + ' by tools/fl-parcels/backfill.py. One row per county; counts are unique parcels.', '',
           '| County | ' + ' | '.join(c.replace('_', ' ') for c in cols) + ' |', '|' + '---|' * (len(cols) + 1)]
     for r in rows + ([dict(tot, county='**Total**')] if tot else []): md.append('| ' + r['county'] + ' | ' + ' | '.join(str(r.get(c, 0)) for c in cols) + ' |')
-    md += ['', '“Unavailable” means the source did not return data for that lot, not that the lot is clear. Zoning is only filled in where we have a checked zoning layer (Leon, Manatee).', '', 'Parcels needing review are listed in review.csv.']
+    md += ['', 'Unmatched parcels split into mineral-only interests (no surface lot exists to picture), condo units (not mapped separately) and other IDs that need a person to check. “Unavailable” means the source did not return data for that lot, not that the lot is clear. Zoning is only filled in where we have a checked zoning layer (Leon, Manatee).', '', 'Parcels needing review are listed in review.csv.']
     open(os.path.join(HERE, 'report.md'), 'w').write('\n'.join(md) + '\n')
     with open(os.path.join(HERE, 'review.csv'), 'w') as f:
-        f.write('county,parcel,status,note\n')
+        f.write('county,parcel,status,kind,note\n')
         for row in review: f.write(','.join('"' + str(v).replace('"', '""') + '"' for v in row) + '\n')
     print(open(os.path.join(HERE, 'report.md')).read())
 
