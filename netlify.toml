@@ -22,6 +22,7 @@
     "kinvest-liens/liens/states/liens-elpaso.js",
     "kinvest-liens/liens/states/liens-boulder.js",
     "kinvest-liens/liens/states/liens-scott.js",
+    "kinvest-liens/liens/states/timeline/*.json",
     "kinvest-liens/liens/states/liens-davidson.js",
     "kinvest-liens/liens/states/liens-wayne.js",
     "kinvest-liens/liens/states/liens-walton.js",

@@ -1,0 +1,10 @@
+{
+  "Larimer": {"state": "CO", "slug": "larimer", "file": "liens-larimer.js", "kind": "lien", "adapter": "larimer_xls",
+    "amountLabel": "Delinquent tax balance", "payoffLabel": "Total due (tax, interest and fees)",
+    "sourceName": "Larimer County Treasurer: delinquent real property list (Real_Property_Tax_Sale.xls, updated nightly)",
+    "sourceUrl": "https://www.larimer.gov/treasurer/thirdparty/liens/sale", "fileUrl": "https://apps.larimer.org/treasuryfiles/Advertising_Files/Real_Property_Tax_Sale.xls", "minRatio": 0.8},
+  "Wayne": {"state": "MI", "slug": "wayne", "file": "liens-wayne.js", "kind": "deed", "adapter": "wayne",
+    "amountLabel": "Sale price", "payoffLabel": "",
+    "sourceName": "Wayne County Treasurer: tax foreclosure lists and auction results",
+    "sourceUrl": "https://www.waynecountytreasurermi.com/", "minRatio": 0.8}
+}

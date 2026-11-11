@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>My watchlist | PricePocketAsset</title>
+<meta name="theme-color" content="#070d1c">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="aibody stbody">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav><a href="/#map">Map</a><a href="/account/watchlist/">Watchlist</a><a href="/account/">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section pfpage">
+  <h1>My watchlist</h1>
+  <p class="muted">Parcels you watch, the latest verified updates from official county records, and your alert settings. Each update shows the old value, the new value, when we detected it and the source.</p>
+  <div id="wl-out" hidden><p class="notice">Sign in to see your watchlist.</p><p><a class="btn" href="/login/?next=/account/watchlist/">Sign in</a></p></div>
+  <div id="wl" hidden>
+    <h2>Updates <span id="wl-unread" class="pfbadge" hidden></span></h2>
+    <div id="wl-feed"></div>
+    <h2>Watched parcels</h2>
+    <div id="wl-list"></div>
+    <h2>Worksheets</h2>
+    <div id="wl-ws"></div>
+    <h2>Alert preferences</h2>
+    <form id="wl-prefs" class="pfprefs"></form>
+    <p id="wl-counties" class="small muted"></p>
+  </div>
+  <p class="small muted">Educational only. Updates reflect official county files we have imported; they are not advice, and a parcel that disappears from a list is never labeled sold, redeemed or withdrawn without an official record.</p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="/legal/privacy/">Privacy</a> &middot; <a href="/legal/terms/">Terms</a> &middot; <a href="/legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="/liens/states/parcel-features.js"></script>
+<script src="watchlist.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
