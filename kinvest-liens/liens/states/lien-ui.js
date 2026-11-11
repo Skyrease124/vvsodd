@@ -1,4 +1,74 @@
 // Shared renderers for the Florida sale box and the lien table.
+// Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
+const ParcelData = {
+  base: '/liens/states/parcels/',
+  cache: {},
+  slug: c => String(c).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+  load(county) {
+    if (!this.cache[county]) this.cache[county] = fetch(this.base + this.slug(county) + '.json').then(r => r.ok ? r.json() : null).catch(() => null);
+    return this.cache[county];
+  },
+  async rec(l) { if ((l.state || 'FL') !== 'FL') return {file: null, r: null}; const f = await this.load(l.county); return {file: f, r: f && f.p && f.p[l.parcel] || null}; },
+  sizeText(r) { if (!r || !r.sqft) return ''; return (r.ac >= 0.1 ? r.ac.toFixed(2) : r.ac.toFixed(3)) + ' acres (' + r.sqft.toLocaleString('en-US') + ' sq ft)' + (r.aEst ? ', estimated from the mapped boundary' : ''); },
+  geojson(r) { return {type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: r.g}}; },
+  // SVG outline of the stored boundary, used when no aerial is available.
+  svg(r) {
+    const NS = 'http://www.w3.org/2000/svg', [x0, y0, x1, y1] = r.bb, k = Math.cos((y0 + y1) / 2 * Math.PI / 180);
+    const w = (x1 - x0) * k, h = (y1 - y0), s = Math.max(w * 1.5, h) * 1.25 || 1, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    const P = ([x, y]) => (((x - cx) * k / s) * 300 + 150).toFixed(1) + ',' + ((-(y - cy) / s) * 300 + 100).toFixed(1);
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 300 200'); svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('d', r.g.map(ring => 'M' + ring.map(P).join('L') + 'Z').join(' ')); path.setAttribute('class', 'mpoly'); svg.appendChild(path); return svg;
+  },
+  thumb(l, host) {
+    host.textContent = ''; host.className = 'lthumb loading';
+    this.rec(l).then(({file, r}) => {
+      host.classList.remove('loading'); const cap = document.createElement('p'); cap.className = 'lcap small';
+      if (r && r.st === 'matched' && r.img && r.img.s === 'aerial') {
+        const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.width = 480; im.height = 320; im.alt = 'Aerial photo of parcel ' + l.parcel + ' with its boundary outlined';
+        im.src = this.base + 'img/' + r.img.f; im.onerror = () => { im.remove(); host.prepend(this.mapBox(r)); };
+        host.appendChild(im); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'Aerial: USGS NAIP, ' + r.img.d.slice(0, 7);
+      } else if (r && r.st === 'matched' && r.g) {
+        host.appendChild(this.mapBox(r)); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'No usable aerial for this lot';
+      } else {
+        const u = document.createElement('div'); u.className = 'lnoimg'; u.textContent = 'Image unavailable'; host.appendChild(u);
+        cap.textContent = r ? (r.st === 'ambiguous' ? 'Parcel ID needs review, so the location is not verified.' : r.st === 'unmatched' ? 'Parcel ID not found in the statewide roll.' : 'Not checked yet.') : (file ? 'Not checked yet.' : 'Property records not loaded for this county yet.');
+      }
+      host.appendChild(cap);
+    });
+  },
+  mapBox(r) { const d = document.createElement('div'); d.className = 'lmapprev'; d.appendChild(this.svg(r)); const b = document.createElement('span'); b.className = 'lbadge'; b.textContent = 'Map preview'; d.appendChild(b); return d; },
+  // The public-record panel shown with "Show on map".
+  panel(l, file, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord');
+    if (!r || r.st !== 'matched') { box.appendChild(mk('p', 'small muted', r ? (r.note || 'This parcel ID could not be matched to the statewide roll.') + ' Flagged for review.' : 'No property record loaded for this parcel yet.')); return box; }
+    const S = file.sources, money = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US');
+    const link = (o, extra) => { const p = mk('p', 'small psrc'); p.append('Source: '); const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.appendChild(a); if (extra) p.append(' · ' + extra); return p; };
+    box.appendChild(mk('h4', '', 'Public record'));
+    const dl = mk('dl', 'pfacts'), row = (k, v) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); };
+    row('Official parcel ID', r.pid + (r.pid !== l.parcel ? ' (list shows ' + l.parcel + ')' : ''));
+    row('Current owner of record', r.own || 'Not published by the source');
+    row('Property address', r.addr || 'No street address assigned');
+    row('Lot size', this.sizeText(r) + (r.aEst ? '' : ' (reported by the county)'));
+    row('Land use', (r.use || 'Not given') + (r.uc ? ' (DOR code ' + r.uc + ')' : ''));
+    row('Just (market) value', money(r.jv)); row('Assessed value', money(r.av)); row('Tax roll year', r.yr);
+    row('Short legal description (state roll)', r.legal);
+    box.appendChild(dl);
+    box.appendChild(link(S.parcels, 'statewide roll updated ' + (S.parcels.date || 'date not given') + '; checked ' + r.ck + '. Owner shown is the current owner on that roll, not necessarily the owner when the certificate was sold.'));
+    box.appendChild(mk('h4', '', 'Land checks (whole lot boundary)'));
+    const ul = mk('ul', 'pchecks'), li = (t, cls) => { ul.appendChild(mk('li', cls || '', t)); };
+    const z = r.zn || {}; li(z.s === 'ok' ? 'Zoning: ' + z.v : 'Zoning: data unavailable' + (z.why ? ' (' + z.why + ')' : '') + '. Check with the county or city.', z.s === 'ok' ? '' : 'na');
+    const f = r.fl || {}; li(f.s === 'ok' ? 'Flood: ' + f.z.map(q => 'Zone ' + q[0] + ' ' + q[1] + '%').join(', ') + (f.sfha > 0 ? ' · ' + f.sfha + '% of the lot is in a high-risk area' : ' · no high-risk overlap mapped') : 'Flood: data unavailable' + (f.why ? ' (' + f.why + ')' : ''), f.s !== 'ok' ? 'na' : f.sfha > 0 ? 'warn' : 'ok');
+    const w = r.wt || {}; li(w.s === 'ok' ? 'Wetlands: ' + w.pct + '% of the lot (' + w.t.join(', ') + ')' : w.s === 'none' ? 'Wetlands: no mapped overlap' : 'Wetlands: data unavailable', w.s === 'ok' ? 'warn' : w.s === 'none' ? 'ok' : 'na');
+    const d = r.rd || {}; li(d.s === 'ok' ? 'Road frontage (mapped): about ' + d.ft.toLocaleString('en-US') + ' ft' + (d.n && d.n.length ? ' along ' + d.n.join(', ') : '') + '. Legal access: unverified.' : d.s === 'none' ? 'Road frontage: no mapped road within about 65 ft. Legal access: unverified.' : 'Road frontage: data unavailable. Legal access: unverified.', d.s === 'ok' && d.ft > 0 ? '' : 'warn');
+    box.appendChild(ul);
+    const srcs = mk('p', 'small psrc'); srcs.append('Sources, checked ' + r.ck + ': ');
+    ['flood', 'wetlands', 'roads', 'zoning'].forEach((k, i) => { const o = S[k]; if (!o) return; const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; if (i) srcs.append(' · '); srcs.appendChild(a); });
+    box.appendChild(srcs);
+    if (r.img && r.img.s === 'aerial') { const p = mk('p', 'small psrc'); const a = mk('a', '', S.imagery.name); a.href = S.imagery.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.append('Aerial: ', a, ', captured ' + r.img.d + '.'); box.appendChild(p); }
+    return box;
+  }
+};
 const LienMap = {
   loaded: null,
   load() {
@@ -24,9 +94,30 @@ const LienMap = {
     dlg.querySelector('b').textContent = 'Parcel ' + l.parcel;
     msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = '';
     let fx = dlg.querySelector('.lotfacts'); if (!fx) { fx = document.createElement('p'); fx.className = 'lotfacts small'; msg.after(fx); } fx.textContent = '';
-    const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = 'Look up the owner and tax history on the ' + cfg.pageName + ' site';
-    foot.append(pa, ' \u00b7 Map data: county GIS, OpenStreetMap, Esri. Educational only; the outline is approximate and not a survey. Verify with the county.');
+    if (cfg) { const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = 'Look up the owner and tax history on the ' + cfg.pageName + ' site';
+    foot.append(pa, ' \u00b7 '); }
+    foot.append('Map data: county GIS, OpenStreetMap, Esri. Educational only; the outline is approximate and not a survey. Verify with the county.');
     if (!dlg.open) dlg.showModal();
+    const pd = await ParcelData.rec(l);
+    let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); }
+    if (pd.r && pd.r.st === 'matched' && pd.r.g) {
+      try {
+        const L = await this.load();
+        if (box._map) { box._map.remove(); box._map = null; }
+        const m = L.map(box); box._map = m;
+        const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
+        const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
+        sat.addTo(m); L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
+        const g = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
+        m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
+        setTimeout(() => m.invalidateSize(), 50);
+        box.dataset.pid = pd.r.pid;
+        msg.textContent = 'Lot size: ' + ParcelData.sizeText(pd.r) + '. Outline from the Florida statewide parcel map; not a survey.';
+        return;
+      } catch (e) { /* fall through to the live county lookup */ }
+    }
+    if (!cfg) { msg.textContent = 'No map is available for this county yet.'; return; }
     try {
       const url = cfg.query + '?where=' + encodeURIComponent(cfg.idField + "='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=' + (cfg.facts ? 'ACRES' : cfg.idField.split(' ').pop()) + '&outSR=4326&f=geojson';
       const furl = cfg.facts ? cfg.facts + '?where=' + encodeURIComponent("PARCEL_NUMBER='" + cfg.fmt(l.parcel).replace(/'/g, '') + "'") + '&outFields=PROPERTY_USE,MUNICIPALITY,TOTAL_MARKET,HMSTD_FLG,CONFID_FLG&f=json' : null;
@@ -181,6 +272,7 @@ const LienUI = {
       return;
     }
     host.appendChild(mk('p', 'muted small', county === 'Pinal' ? all.length + ' parcels from the Pinal County Treasurer\u2019s official Tax Lien Sale List (PDF dated 11/3/2026). Face is the total amount on the list, which is the price of the lien. County value, lot size and use come from the county\u2019s public GIS and can be low or out of date (a county value of $500 on a lot that once sold for much more is a reason to look closer). Owner names are left out. The interest rate and whether each lien is still available must be confirmed with the Treasurer; Arizona\u2019s cap is 16%. Confirm everything with the county.' : county === 'Larimer' ? all.length + ' parcels advertised for the November 19, 2026 tax lien sale, copied from the Larimer County Treasurer\u2019s official list (dated 11/3/2026). These are NOT sold yet: many owners pay before the sale, and the county updates the list nightly. Face is the delinquent tax balance; payoff adds interest and fees as of the file date; county value is the \u201cvaluation\u201d in that list. Owner names and addresses are left out. Colorado sets the interest rate by law each year (bidders pay a premium above face that earns no interest). Confirm everything with the county.' : county === 'Saguache' ? all.length + ' liens on Saguache County\u2019s 2026 tax lien sale list (from the county\u2019s online auction export). Face is the unpaid tax. Live bids are not shown here because they change by the minute; bids above face are a premium that earns no interest. Owner names and addresses are left out. Confirm everything with the county.' : county === 'Coconino' ? all.length + ' parcels on the Coconino County Treasurer\u2019s 2026 delinquent account list. These owe back taxes; whether a lien on each is for sale now must be confirmed with the Treasurer. Owner names are left out.' : all.length + ' older liens (county-held certificates: not bought at the tax sale, so the county holds them). Copied from the county tax collector\u2019s official list. Face amount is the original tax debt (\u201cbelow face\u201d means the county values the lot at less than that debt, a warning sign); payoff is the total on the date of the file and keeps growing with interest. Confirm everything with the county before buying.'));
+    if (all.some(l => (l.state || 'FL') === 'FL')) host.appendChild(mk('p', 'muted small', 'Florida parcels: the picture, lot size and public record (current owner of record, address, land use, values, flood, wetlands and mapped road frontage) come from the Florida statewide parcel map and federal map layers, matched by county and parcel ID. Tap Show on map for the full record and sources.'));
     const tools = mk('div', 'lientools');
     const q = mk('input'); q.type = 'search'; q.placeholder = 'Search parcel or description'; q.setAttribute('aria-label', 'Search liens');
     const yr = mk('select'); yr.setAttribute('aria-label', 'Tax year');
@@ -219,13 +311,14 @@ const LienUI = {
       const g = mk('div', 'lcards');
       list.slice(0, shown).forEach(l => {
         const c = mk('article', 'lcardx'), f = landFlags(l);
+        if ((l.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(l, th); }
         const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
         const ch = mk('div', 'lchips');
         if (!f) ch.appendChild(chip('na', 'Land: not checked'));
         else {
-          ch.appendChild(f[0] === 1 ? chip('ok', '✔ Road') : f[0] === 0 ? chip('bad', 'No mapped road') : chip('na', 'Road: ?'));
+          ch.appendChild(f[0] === 1 ? chip('ok', '✔ Road within ~200 ft') : f[0] === 0 ? chip('bad', 'No mapped road') : chip('na', 'Road: ?'));
           ch.appendChild(f[1] === 1 ? chip('warn', 'High-risk flood') : f[1] === 0 ? chip('ok', 'Not high-risk flood') : chip('na', 'Flood: ?'));
           ch.appendChild(f[2] === 1 ? chip('warn', 'Wetlands') : f[2] === 0 ? chip('ok', 'No wetlands') : chip('na', 'Wetlands: ?'));
         }
@@ -233,7 +326,7 @@ const LienUI = {
         const facts = [l.use, l.market != null ? 'County value ' + money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.desc].filter(Boolean);
         if (facts.length) c.appendChild(mk('p', 'small lfacts', facts.join(' · ')));
         const act = mk('div', 'lact');
-        if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
+        if (PARCEL_MAPS[l.county] || (l.state || 'FL') === 'FL') { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
         const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb);
         const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
         const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost'));
