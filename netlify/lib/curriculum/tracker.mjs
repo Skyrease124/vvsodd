@@ -169,12 +169,12 @@ export const TRACKER = [
   "state": "IA",
   "name": "Iowa",
   "system": "Tax lien certificate",
-  "research": "Partial: sourced sale steps on the state page",
-  "writing": "Short state class only (one page and a 3-question quiz)",
-  "review": "Not started",
-  "publication": "Not published",
+  "research": "Verified: Iowa Code chs. 446-448 read in full from legis.iowa.gov (2026 code); Scott and Woodbury treasurer pages read (checked 2026-11-11)",
+  "writing": "Complete: 12 modules, 31 lessons, 36 quiz questions, simulated exercise, final project",
+  "review": "Self-checked against sources; outside legal review not done",
+  "publication": "Published (batch 1)",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Outside legal review; a verified Iowa listing for the Bid or Pass exercise (currently simulated); county deposit and fee terms; how the month of sale and redemption are counted in payoffs (marked for review)"
  },
  {
   "state": "KS",
@@ -246,12 +246,12 @@ export const TRACKER = [
   "state": "MI",
   "name": "Michigan",
   "system": "Tax deed",
-  "research": "Partial: sourced sale steps on the state page",
-  "writing": "Short state class only (one page and a 3-question quiz)",
-  "review": "Not started",
-  "publication": "Not published",
+  "research": "Verified: MCL 211.78-211.78t read from legislature.mi.gov (through PA 114 of 2026); Wayne County pages read (checked 2026-11-11)",
+  "writing": "Complete: 12 modules, 32 lessons, 36 quiz questions, simulated exercise, final project",
+  "review": "Self-checked against sources; outside legal review not done",
+  "publication": "Published (batch 1)",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Outside legal review; a second verified county (only Wayne could be read); deposit and platform rules; eviction steps; environmental liability for buyers; a verified Michigan listing for the exercise (currently simulated)"
  },
  {
   "state": "MN",
