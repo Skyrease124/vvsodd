@@ -14,15 +14,19 @@
     $('home').hidden = false; $('lesson').hidden = true;
     const done = state.lessons.filter(l => isDone(l.id)).length, n = state.lessons.length, sdone = Object.keys(prog()).filter(k => /^st_/.test(k) && prog()[k].score >= PASS).length;
     const pb = $('prog'); pb.textContent = '';
-    pb.appendChild(mk('b', '', done === n ? '🎓 Master Class complete!' : 'Your progress: ' + done + ' of ' + n + ' lessons'));
-    const bar = mk('div', 'progbar'); const i = mk('i'); i.style.width = Math.round(100 * done / (n || 1)) + '%'; bar.appendChild(i); pb.appendChild(bar);
-    if (done === n) pb.appendChild(mk('p', '', 'You finished all 10 lessons. Nice work. Now put it to use: pick one county, screen its list, and check Land Information before you bid.'));
-    if (!state.signedIn) { const p = mk('p', 'small muted'); const a = mk('a', '', 'Sign in'); a.href = '/login/?next=/learn/'; p.append(a, ' to save your progress to your account.'); pb.appendChild(p); }
+    const pct = Math.round(100 * done / (n || 1)), R = 34, C = 2 * Math.PI * R;
+    const ring = mk('div', 'mcring'); ring.innerHTML = '<svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="' + R + '" class="t"/><circle cx="40" cy="40" r="' + R + '" class="p" style="--c:' + C.toFixed(1) + ';--o:' + (C * (1 - pct / 100)).toFixed(1) + '"/></svg>';
+    ring.appendChild(mk('b', '', done + '/' + n)); pb.appendChild(ring);
+    const tx = mk('div', 'mctx'); tx.appendChild(mk('b', '', done === n ? '🎓 Master Class complete!' : done ? 'Nice. Keep going.' : 'Start with lesson 1')); tx.appendChild(mk('span', 'small', done + ' of ' + n + ' lessons done · ' + pct + '%'));
+    const bar = mk('div', 'progbar'); const i = mk('i'); i.style.width = pct + '%'; bar.appendChild(i); tx.appendChild(bar); pb.appendChild(tx);
+    if (done === n) pb.appendChild(mk('p', 'mcwide', 'You finished all 10 lessons. Nice work. Now put it to use: pick one county, screen its list, and check Land Information before you bid.'));
+    if (!state.signedIn) { const p = mk('p', 'small muted mcwide'); const a = mk('a', '', 'Sign in'); a.href = '/login/?next=/learn/'; p.append(a, ' to save your progress to your account.'); pb.appendChild(p); }
     grid();
     const ol = $('outline'); ol.textContent = '';
+    const nextI = state.lessons.findIndex(l => !isDone(l.id));
     state.lessons.forEach((l, k) => {
-      const li = mk('li', isDone(l.id) ? 'done' : ''); const b = mk('button'); b.type = 'button';
-      const t = mk('span', 'lt'); t.append(mk('b', '', l.title), mk('span', 'small muted', l.mins + ' min' + (isDone(l.id) ? ' · done ✔' : '')));
+      const li = mk('li', (isDone(l.id) ? 'done' : '') + (k === nextI ? ' next' : '')); const b = mk('button'); b.type = 'button';
+      const t = mk('span', 'lt'); t.append(mk('b', '', l.title), mk('span', 'small muted', l.mins + ' min' + (isDone(l.id) ? ' · done ✔' : k === nextI ? ' · up next' : '')));
       b.append(mk('span', 'num', isDone(l.id) ? '✓' : String(k + 1)), t, mk('span', 'tag' + (l.free ? ' free' : ''), l.free ? 'Free' : (state.paid ? 'Pro' : '🔒 Pro')));
       b.addEventListener('click', () => go(l.id)); li.appendChild(b); ol.appendChild(li);
     });
@@ -80,6 +84,7 @@
     box.appendChild(nav);
     box.appendChild(mk('p', 'small muted', 'Educational only. Not legal, tax or investment advice. Laws change and differ by state and county; confirm with the county and a professional.'));
   }
+  (function () { const g = $('mcgreet'); if (!g) return; const h = new Date().getHours(); g.textContent = (h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ' \u00b7 ready to learn something?'; })();
   window.addEventListener('popstate', route);
   fetch(API).then(r => r.json()).then(d => { state = d; route(); }).catch(() => { $('outline').textContent = 'Could not load the course. Try again.'; });
 })();
