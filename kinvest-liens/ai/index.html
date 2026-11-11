@@ -20,19 +20,27 @@
 <main class="aipage">
   <p id="gate" class="notice" hidden></p>
   <div id="app" hidden>
-    <div class="aistage">
-      <div class="aitag">PricePocket AI</div>
+    <h1 id="aihello" class="aihello"></h1>
+    <div class="aistage" id="aistage">
+      <div class="aiaurora" aria-hidden="true"></div>
+      <div class="aibeam" aria-hidden="true"></div>
+      <div class="aitag"><span class="aidot"></span>PricePocket AI</div>
       <button class="aireset" id="aiclear" type="button" hidden>Reset map</button>
       <div id="aimap" class="aimap"></div>
-      <div id="aisel" class="aihint">Tap states to focus, or just ask</div>
     </div>
+    <div id="aisel" class="aihint" role="status">Tap states to focus, or just ask</div>
     <form id="aiform" class="aibar" novalidate>
       <input id="aiq" type="text" maxlength="300" autocomplete="off" placeholder="Ask PricePocket AI anything about tax liens…" aria-label="Ask PricePocket AI">
       <button id="aigo" type="submit" aria-label="Ask">Ask</button>
     </form>
     <div id="aichips" class="aichips" aria-label="Examples"></div>
     <div id="chat" class="aichat" aria-live="polite"></div>
-    <p class="aifine">Educational only, not advice. Verify with the county. Lien lists: Palm Beach FL, Larimer CO, Pinal AZ.</p>
+    <div id="aiidle" class="aiidle">
+      <div id="aistats" class="aistats"></div>
+      <p class="aitrylabel">Try asking</p>
+      <div id="aitry" class="aitry"></div>
+    </div>
+    <p class="aifine" id="aifine">Educational only, not advice. Verify with the county.</p>
   </div>
 </main>
 <script src="../liens/states/states.js"></script>

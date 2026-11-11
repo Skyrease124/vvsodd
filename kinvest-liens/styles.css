@@ -447,3 +447,61 @@ html{scroll-behavior:smooth}
   .rv{opacity:1!important;transform:none!important;transition:none!important}
   .btn,.dbtn,.dgold,.dghost,.chipbtn,.scard,.lcard,.stcell,.card,.lessons li button,.lcard img,.logoimg,.dmark,.pp-top{transition:none!important;transform:none!important}
 }
+/* ===== PricePocket AI page, v2: living map, thinking beam, typed answers, gold accents ===== */
+@property --aiang{syntax:"<angle>";initial-value:0deg;inherits:false}
+@keyframes aiSpin{to{--aiang:360deg}}
+@keyframes aiAurora{0%{transform:translate(-8%,-6%) rotate(0deg) scale(1)}50%{transform:translate(8%,6%) rotate(25deg) scale(1.15)}100%{transform:translate(-8%,-6%) rotate(0deg) scale(1)}}
+@keyframes aiBeam{from{transform:translateX(-140%) skewX(-12deg)}to{transform:translateX(520%) skewX(-12deg)}}
+@keyframes aiRipple{from{transform:scale(.1);opacity:.9}to{transform:scale(1.6);opacity:0}}
+@keyframes aiBreathe{0%,100%{filter:brightness(1)}50%{filter:brightness(1.22) drop-shadow(0 0 6px rgba(123,240,176,.55))}}
+@keyframes aiBlink{50%{opacity:0}}
+@keyframes aiDots{0%{content:"\25CF\25CB\25CB"}33%{content:"\25CB\25CF\25CB"}66%{content:"\25CB\25CB\25CF"}}
+@keyframes aiPulseDot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}60%{box-shadow:0 0 0 7px rgba(34,197,94,0)}}
+.aibody{background:radial-gradient(90% 50% at 50% 0%,#0f1f44 0%,#070d1c 60%) fixed,#070d1c}
+.aihello{margin:10px 6px 10px;font-size:clamp(20px,5.4vw,30px);line-height:1.15;font-weight:800;letter-spacing:-.3px;background:linear-gradient(92deg,#fff 0%,#ffe29a 45%,#ffd166 70%,#fff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;animation:ppFadeUp .6s ease both}
+.aistage{padding:38px 6px 8px;border-color:#2b3f73;box-shadow:inset 0 0 60px rgba(34,100,255,.14),0 18px 40px rgba(0,0,0,.45)}
+.aiaurora{position:absolute;inset:-30%;background:radial-gradient(38% 34% at 28% 35%,rgba(34,197,94,.22),transparent 70%),radial-gradient(34% 30% at 72% 60%,rgba(255,209,102,.16),transparent 70%),radial-gradient(40% 36% at 55% 25%,rgba(59,130,246,.22),transparent 70%);filter:blur(18px);animation:aiAurora 16s ease-in-out infinite;pointer-events:none}
+.aibeam{position:absolute;top:0;bottom:0;left:0;width:22%;background:linear-gradient(90deg,transparent,rgba(255,209,102,.05) 30%,rgba(255,224,150,.38) 50%,rgba(255,209,102,.05) 70%,transparent);opacity:0;pointer-events:none;z-index:1;mix-blend-mode:screen}
+.aistage.scan .aibeam{opacity:1;animation:aiBeam 1.5s linear infinite}
+.aistage.scan{border-color:#ffd166;box-shadow:inset 0 0 70px rgba(255,209,102,.16),0 0 0 1px rgba(255,209,102,.35),0 18px 40px rgba(0,0,0,.45)}
+.aitag{display:flex;align-items:center;gap:7px;background:rgba(7,13,28,.78);border-color:#ffd16655;backdrop-filter:blur(4px)}
+.aidot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:aiPulseDot 1.8s ease-out infinite}
+.aistage.scan .aidot{background:#ffd166}
+.aimap{z-index:1}
+.aist.haslive{animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards,aiBreathe 4.5s ease-in-out 1.2s infinite;animation-delay:calc(var(--i)*16ms),1.2s}
+.aist.think{filter:brightness(1.6) drop-shadow(0 0 8px rgba(255,224,150,.9));stroke:#ffe29a;stroke-width:2;transition:filter .12s,stroke .12s}
+.airipple{fill:none;stroke:#ffd166;stroke-width:3;transform-box:fill-box;transform-origin:center;animation:aiRipple 1.1s cubic-bezier(.2,.7,.3,1) both}
+.aihint{position:static;margin:8px 6px 0;font-size:13px;color:#b9c7e6;min-height:18px}
+/* ask bar with a turning gold-green edge */
+.aibar{position:relative;border:0;background:#0d1730;padding:9px;margin-top:10px;box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.aibar::before{content:"";position:absolute;inset:-1.5px;border-radius:17.5px;padding:1.5px;background:conic-gradient(from var(--aiang),#ffd166,#22c55e,#3b82f6,#ffd166);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:aiSpin 7s linear infinite;opacity:.75;pointer-events:none}
+.aibar:focus-within::before{opacity:1;animation-duration:3.5s}
+.aibar.busy::before{opacity:1;animation-duration:1.1s;filter:drop-shadow(0 0 6px rgba(255,209,102,.8))}
+.aibar input:focus{box-shadow:none!important;border:0!important}
+.aibar button{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;transition:transform .15s ease,filter .15s ease}
+.aibar button:hover{filter:brightness(1.08);transform:translateY(-1px)}.aibar button:active{transform:scale(.96)}
+.aichip{transition:transform .15s ease,border-color .15s ease,color .15s ease,background .15s ease}
+.aichip:hover{border-color:#ffd166;color:#fff;transform:translateY(-2px)}
+/* answers */
+.aichat .aiturn{animation:ppFadeUp .4s ease both}
+.aichat .aiq{color:#ffd166}
+.aichat .aiout{box-shadow:0 14px 34px rgba(0,0,0,.4);border:1px solid #ffffff22}
+.aichat .aiout.thinking{background:#0d1730;color:#cbd6ea;border:1px solid #2a3c66}
+.aidots::before{content:"\25CF\25CB\25CB";color:#ffd166;letter-spacing:3px;animation:aiDots 1s steps(1) infinite}
+.aians{font-size:17px;line-height:1.5}
+.aians.typing::after{content:"";display:inline-block;width:2px;height:1.05em;background:#0b6e4f;margin-left:2px;vertical-align:text-bottom;animation:aiBlink .8s steps(1) infinite}
+.aichat .aiout .scard,.aichat .aiout .tablewrap{animation:ppFadeUp .45s ease both}
+/* the space under the bar: live numbers and things to try */
+.aiidle{margin:16px 4px 0}
+.aistats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.aistat{background:linear-gradient(180deg,#101d3d,#0b1428);border:1px solid #24376a;border-radius:14px;padding:12px 8px;text-align:center}
+.aistat b{display:block;font-size:clamp(20px,6vw,30px);font-weight:800;color:#ffd166;font-variant-numeric:tabular-nums;line-height:1.1}
+.aistat span{font-size:12px;color:#9fb1d6}
+.aitrylabel{margin:16px 2px 8px;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#8ea0c6;font-weight:700}
+.aitry{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.aitrycard{text-align:left;display:flex;flex-direction:column;gap:4px;background:linear-gradient(160deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:14px;padding:12px;color:#e6ecf7;font:inherit;cursor:pointer;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;animation:ppFadeUp .5s ease both;animation-delay:calc(var(--k)*70ms + .2s)}
+.aitrycard:hover{transform:translateY(-3px);border-color:#ffd166;box-shadow:0 12px 26px rgba(0,0,0,.45),0 0 0 1px rgba(255,209,102,.25)}
+.aitrycard:active{transform:scale(.98)}
+.aitrycard .ic{font-size:22px}.aitrycard b{font-size:15px}.aitrycard .ex{font-size:13px;color:#9fb1d6;line-height:1.35}
+@media(min-width:800px){.aitry{grid-template-columns:repeat(3,1fr)}.aistage{padding-top:44px}}
+@media(prefers-reduced-motion:reduce){.aiaurora,.aibar::before,.aidot,.aist.haslive,.aitrycard,.aihello,.aidots::before,.aichat .aiturn,.aistage.scan .aibeam{animation:none!important}.airipple{display:none}}
