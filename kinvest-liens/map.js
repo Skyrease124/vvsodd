@@ -18,8 +18,21 @@
     g.appendChild(mk('stop', {offset: '0', 'stop-color': shade(COL[k], 1.22)})); g.appendChild(mk('stop', {offset: '1', 'stop-color': shade(COL[k], 0.78)}));
     defs.appendChild(g);
   });
+  // Texture by system: lien = diagonal stripes, redeemable = dots, hybrid = crosshatch, municipal = lines, deed = solid.
+  const TEX = {
+    'Tax lien certificate': '<path d="M-1 9L9-1M-1 1L1-1M7 9L9 7" stroke="rgba(0,0,0,.3)" stroke-width="1.7"/>',
+    'Redeemable deed': '<circle cx="2" cy="2" r="1.3" fill="rgba(255,255,255,.45)"/><circle cx="6" cy="6" r="1.3" fill="rgba(255,255,255,.45)"/>',
+    'Hybrid': '<path d="M-1 9L9-1M-1 -1L9 9" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>',
+    'Municipal lien': '<path d="M0 2.5H8M0 6.5H8" stroke="rgba(0,0,0,.28)" stroke-width="1.3"/>'
+  };
+  Object.keys(TEX).forEach((k, i) => {
+    const pt = mk('pattern', {id: 'tx' + i, width: 8, height: 8, patternUnits: 'userSpaceOnUse'});
+    pt.appendChild(mk('rect', {width: 8, height: 8, fill: shade(COL[k], 1.05)}));
+    const tmp = document.createElementNS(NS, 'g'); tmp.innerHTML = TEX[k]; while (tmp.firstChild) pt.appendChild(tmp.firstChild);
+    defs.appendChild(pt);
+  });
   svg.appendChild(defs);
-  const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = 'url(#g' + i + ')');
+  const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = TEX[k] ? 'url(#tx' + Object.keys(TEX).indexOf(k) + ')' : 'url(#g' + i + ')');
   const LIVE = (typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY : []).reduce((m, x) => { (m[x.state] = m[x.state] || []).push(x); return m; }, {});
   const go = a => { location.href = base + '?s=' + a; };
   function show(s) {
@@ -67,6 +80,9 @@
     const rr = Math.max(5, Math.min(13, 4 + Math.log10(n + 1) * 2.4));
     const g = mk('g', {class: 'live', transform: 'translate(' + pos[0] + ',' + (pos[1] - 16) + ')', tabindex: 0, role: 'link', 'aria-label': by[a].n + ': real liens listed (' + n.toLocaleString() + ')'});
     g.appendChild(mk('circle', {class: 'ring', r: rr + 1})); g.appendChild(mk('circle', {class: 'ring r2', r: rr + 1})); g.appendChild(mk('circle', {class: 'core', r: rr}));
+    const gv = mk('g', {class: 'gavel', transform: 'rotate(-35) scale(' + (rr / 9).toFixed(2) + ')'});
+    gv.appendChild(mk('rect', {x: -5, y: -7, width: 10, height: 5, rx: 1.2})); gv.appendChild(mk('rect', {x: -1, y: -3, width: 2, height: 10, rx: 1}));
+    g.appendChild(gv);
     g.addEventListener('click', () => go(a)); g.addEventListener('mouseenter', () => select(a));
     g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
     liveLayer.appendChild(g);
@@ -91,8 +107,36 @@
     });
     if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es[0].isIntersecting) { run(); io.disconnect(); } }, {threshold: 0.3}); io.observe(stats); } else run();
   }
+  // Sale month switch: states whose researched "when" note names the month glow; the rest dim.
+  (function () {
+    const MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const bar = document.createElement('div'); bar.className = 'monbar'; bar.setAttribute('role', 'group'); bar.setAttribute('aria-label', 'Sale month');
+    const cap = document.createElement('p'); cap.className = 'moncap small'; cap.setAttribute('role', 'status');
+    const hint = 'Tap a month to see which states hold sales then.';
+    cap.textContent = hint;
+    let sel = -1, months = null;
+    const apply = () => {
+      Object.keys(paths).forEach(a => { const on = sel >= 0 && months && months[a] && months[a][sel]; paths[a].classList.toggle('glow', !!on); paths[a].classList.toggle('dim', sel >= 0 && !on); });
+      liveLayer.classList.toggle('dimlive', sel >= 0);
+      if (sel < 0) { cap.textContent = hint; return; }
+      const n = Object.keys(paths).filter(a => months && months[a] && months[a][sel]).length;
+      cap.textContent = n ? n + ' state' + (n > 1 ? 's' : '') + ' mention a ' + MN[sel] + ' sale in our notes. Dates change, so confirm with the county.' : 'No state notes mention a ' + MN[sel] + ' sale. Many states do not publish a fixed month.';
+    };
+    const load = cb => {
+      if (months) return cb();
+      if (typeof STATE_DATA === 'undefined') { const sc = document.createElement('script'); sc.src = 'liens/states/state-data.js'; sc.onload = () => { build(); cb(); }; sc.onerror = () => { cap.textContent = 'Could not load sale months. Try again.'; }; document.head.appendChild(sc); }
+      else { build(); cb(); }
+    };
+    const build = () => { months = {}; Object.keys(STATE_DATA).forEach(a => { const w = (STATE_DATA[a].sale && STATE_DATA[a].sale.when) || ''; const m = MN.map(x => w.indexOf(x) >= 0); if (m.some(Boolean)) months[a] = m; }); };
+    ['All'].concat(MN.map(x => x.slice(0, 3))).forEach((t, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false'); if (i === 0) b.className = 'on';
+      b.addEventListener('click', () => { sel = i - 1; bar.querySelectorAll('button').forEach((x, j) => { x.classList.toggle('on', j === i); x.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (sel < 0) apply(); else load(apply); });
+      bar.appendChild(b);
+    });
+    host.parentNode.insertBefore(bar, host); host.parentNode.insertBefore(cap, host);
+  })();
   const lg = document.getElementById('maplegend');
-  if (lg) Object.keys(COL).forEach(k => { const li = document.createElement('li'); li.innerHTML = '<i></i><span></span>'; li.firstChild.style.background = COL[k]; li.lastChild.textContent = k + ' \u2013 ' + DESC[k]; lg.appendChild(li); });
+  if (lg) Object.keys(COL).forEach(k => { const li = document.createElement('li'); li.innerHTML = '<i></i><span></span>'; li.firstChild.style.background = COL[k]; const sw = {'Tax lien certificate':'repeating-linear-gradient(135deg,rgba(0,0,0,.3) 0 2px,transparent 2px 5px),','Redeemable deed':'radial-gradient(rgba(255,255,255,.55) 1.3px,transparent 1.6px) 0 0/6px 6px,','Hybrid':'repeating-linear-gradient(45deg,rgba(0,0,0,.25) 0 1px,transparent 1px 5px),repeating-linear-gradient(135deg,rgba(0,0,0,.25) 0 1px,transparent 1px 5px),','Municipal lien':'repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 1.5px,transparent 1.5px 5px),'}[k]; if (sw) li.firstChild.style.background = sw + COL[k]; li.lastChild.textContent = k + ' \u2013 ' + DESC[k]; lg.appendChild(li); });
   const chips = document.getElementById('mapchips');
   if (chips) ['VT','NH','MA','RI','CT','NJ','DE','MD','DC'].forEach(a => {
     const el = document.createElement('a'); el.href = base + '?s=' + a; el.textContent = a; el.title = by[a].n; el.style.borderColor = COL[by[a].sys];
