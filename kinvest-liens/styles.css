@@ -743,3 +743,45 @@ html{scroll-behavior:smooth}
 .stbody .countylist a,.stbody .countylist li a{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;display:inline}
 .stbody .countylist li.cty>a:first-of-type{display:block;color:#fff!important;font-size:17px}
 .stbody .countylist li.cty>a.small{color:#ffd166!important;font-size:13px;text-decoration:underline}
+
+/* Practice case + research checklist */
+.prbody .section{position:relative}
+.prdemo{background:#3a2a0c;border:1px solid #8a6a1c;color:#ffe9b0;border-radius:14px;padding:12px 14px;margin:0 0 14px}.prdemo b{color:#ffd166}
+.prstep{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;margin:26px 0 10px}.prstep h2{margin:0}
+.prstep .mcn{width:36px;height:36px;border-radius:50%;background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;font-weight:900;display:flex;align-items:center;justify-content:center}
+.prfacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+.prfacts>div{background:linear-gradient(180deg,#101d3d,#0b1428);border:1px solid #24376a;border-radius:14px;padding:10px 12px}
+.prfacts dt{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#93a3cc}.prfacts dd{margin:3px 0 0;color:#fff;font-weight:700;word-break:break-word}
+.rschk{display:grid;gap:12px}
+.rsitem{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;display:grid;gap:8px}
+.rsh{display:flex;justify-content:space-between;gap:8px;align-items:center}.rsh b{color:#fff;font-size:17px}
+.rschip{border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.rschip.verified{background:#0f2a1c;color:#7bf0b0;border:1px solid #1f5a3a}.rschip.followup{background:#3a2a0c;color:#ffd166;border:1px solid #8a6a1c}.rschip.unknown{background:#16264d;color:#a9b6d9;border:1px solid #24376a}
+.rswhy,.rsitem p{margin:0}
+.rsrec{background:#0c1530;border:1px solid #1f3060;border-radius:12px;padding:10px 12px;display:grid;gap:6px}
+.rsfind{color:#fff;font-weight:600;margin:0}.rsmeta{margin:0}
+.rsseg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.rsmark{border:1.5px solid #2d437f;background:#0c1530;color:#cdd7f2;border-radius:10px;padding:9px 4px;font:700 13px/1.2 inherit;cursor:pointer}
+.rsmark[aria-pressed=true].verified{background:#0f2a1c;border-color:#22c55e;color:#7bf0b0}
+.rsmark[aria-pressed=true].followup{background:#3a2a0c;border-color:#f5b301;color:#ffd166}
+.rsmark[aria-pressed=true].unknown{background:#16264d;border-color:#93a3cc;color:#fff}
+.prdecide{display:grid;gap:12px}
+.prchoices{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.prchoice{display:grid;gap:2px;justify-items:center;text-align:center;background:linear-gradient(165deg,#111f42,#0a1226);border:1.5px solid #24376a;border-radius:14px;padding:12px 6px;cursor:pointer;position:relative}
+.prchoice input{position:absolute;opacity:0}.prchoice b{color:#fff;font-size:18px}
+.prchoice:has(input:checked){border-color:#ffd166;box-shadow:0 0 22px rgba(255,209,102,.22)}
+.prchoice:has(input:focus-visible){outline:2px solid #ffd166}
+.prdecide textarea{background:#070d1c;color:#fff;border:1px solid #2d437f;border-radius:12px;padding:10px;font:inherit;width:100%;box-sizing:border-box}
+.prout{margin-top:8px;display:grid;gap:12px}
+.rsitem.fb.risk{border-left:4px solid #ef4444}.rsitem.fb.unclear{border-left:4px solid #f5b301}.rsitem.fb.ok{border-left:4px solid #22c55e}
+.prlesson{background:#101d3d;border:1px solid #24376a;border-left:4px solid #3b82f6;border-radius:14px;padding:12px 14px}
+.prbtn{margin:8px 0 4px}
+.resdlg{max-width:560px;width:calc(100% - 24px);background:#0a1226;color:#e6ecf7;border:1px solid #24376a;border-radius:18px;padding:0}
+.resdlg::backdrop{background:rgba(3,6,14,.7)}
+.resbody{padding:16px;display:grid;gap:12px}.resbody h3{color:#ffd166;margin:0}
+.resbody textarea{background:#070d1c;color:#fff;border:1px solid #2d437f;border-radius:12px;padding:10px;font:inherit;width:100%;box-sizing:border-box}
+.resbody .rsitem{background:#0c1530}
+.resbody a{color:#ffd166}.rsitem a{color:#ffd166}
+.resdlg .btn{background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;border:0;font-weight:800}
+.resdlg .btn.ghost{background:transparent;color:#ffd166;border:1.5px solid #ffd166}
+.prout{scroll-margin-top:70px}

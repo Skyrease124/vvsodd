@@ -6,6 +6,8 @@ import * as S from '../lib/stripe.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
+// Set to true to make saved research a paid-member feature (signed-in free accounts can save today).
+const RESEARCH_PAID_ONLY = false;
 const pub = u => ({ email: u.email, owner: !!u.owner, family: !!u.family, paid: auth.isPaid(u), paidThrough: u.paidThrough || '', sub: u.sub ? { status: u.sub.status, periodEnd: u.sub.periodEnd, cancelAtPeriodEnd: !!u.sub.cancelAtPeriodEnd } : null, hasCustomer: !!u.stripeCustomerId, saved: u.saved || [], portfolio: u.portfolio || [] });
 
 const STATUS = ['open', 'redeemed', 'foreclosure', 'other'];
@@ -199,6 +201,23 @@ async function handle(event) {
     }
     await auth.saveUser(me);
     return json(200, { portfolio: me.portfolio });
+  }
+
+  // Private research notes, one entry per certificate. Only ever read or written for the signed-in user.
+  if (act === 'resGet' || act === 'resSave' || act === 'resDelete') {
+    if (!me) return json(401, { error: 'Please sign in first.' });
+    if (RESEARCH_PAID_ONLY && !auth.isPaid(me)) return json(403, { error: 'Saving research is for members.' });
+    me.research = me.research || {};
+    const key = String(b.key || '').trim();
+    if (act !== 'resGet' && !/^[A-Za-z0-9 |._\/-]{3,120}$/.test(key)) return json(400, { error: 'Bad certificate id.' });
+    if (act === 'resDelete') delete me.research[key];
+    else if (act === 'resSave') {
+      const marks = {}; ['zoning', 'flood', 'wetlands', 'road'].forEach(k => { const v = b.marks && b.marks[k]; marks[k] = ['verified', 'followup', 'unknown'].includes(v) ? v : 'unknown'; });
+      if (!me.research[key] && Object.keys(me.research).length >= 300) return json(400, { error: 'You can save research on up to 300 certificates.' });
+      me.research[key] = { marks, notes: String(b.notes || '').slice(0, 1500), label: String(b.label || '').slice(0, 120), updated: new Date().toISOString() };
+    }
+    if (act !== 'resGet') await auth.saveUser(me);
+    return json(200, { research: me.research });
   }
 
   if (act === 'save' || act === 'unsave') {
