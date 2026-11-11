@@ -636,3 +636,39 @@ html{scroll-behavior:smooth}
 .mcbody .btn.ghost{background:transparent;color:#ffd166;border:1.5px solid #ffd166}
 .mcbody footer,.mcbody footer p{background:#070d1c;color:#a9b6d9}
 @media(prefers-reduced-motion:reduce){.mcring .p,.mcbody .lessons li,.mcbody .lessons .next .num{animation:none!important}}
+
+/* Master Class extras */
+.mcxtra{display:grid;gap:12px;margin:16px 0 8px}
+.mccard{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;display:grid;gap:6px;animation:ppFadeUp .5s ease both}
+.mccard b{color:#fff;font-size:17px}.mccard .btn{justify-self:start;margin-top:4px}
+.mccard.gold{border-color:#ffd166;box-shadow:0 0 30px rgba(255,209,102,.14)}
+.mcbody .lessons .modlabel{position:relative;z-index:1;margin:14px 0 0;padding:0 0 0 50px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#ffd166;font-weight:800;animation:none}
+.mcbody .lessons .modlabel:first-child{margin-top:0}
+.mcexample,.mcmist,.mccheck,.mccalc,.mcdrill{border-radius:16px;padding:14px 16px;margin:16px 0}
+.mcexample{background:#101d3d;border:1px solid #24376a;border-left:4px solid #3b82f6}
+.mcmist{background:#2a1417;border:1px solid #6b2a30;border-left:4px solid #ef4444}.mcmist li{color:#ffd9d9}
+.mccheck{background:#0f2a1c;border:1px solid #1f5a3a;border-left:4px solid #22c55e}
+.mcexample b,.mcmist b,.mccheck b{display:block;color:#fff;margin-bottom:6px}
+.mccheck ul,.mcchk{list-style:none;padding:0;margin:0}
+.mccheck label,.mcchk label{display:flex;gap:10px;align-items:flex-start;padding:7px 0;cursor:pointer;color:#e6ecf7}
+.mcchk li{border-bottom:1px solid #1f3060}
+.mccheck input,.mcchk input{width:20px;height:20px;accent-color:#ffd166;flex:0 0 20px;margin-top:2px}
+.mccalc{background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #ffd166;display:grid;gap:10px}
+.mccalc label{display:grid;gap:4px;color:#cdd7f2;font-size:14px}
+.mccalc input,.mcsel,.mcname{background:#070d1c;color:#fff;border:1px solid #2d437f;border-radius:10px;padding:10px;font:inherit;width:100%;box-sizing:border-box}
+.mcout{color:#ffd166!important;font-weight:700;margin:0}
+.mcdrill{background:#0c1530;border:1px solid #24376a;display:grid;gap:8px}.mcdrill legend{color:#fff;padding:0 4px}
+.mcdrill .btn{text-align:left;white-space:normal}
+.mcgloss{display:grid;gap:8px}.mcgloss>div{background:#0c1530;border:1px solid #1f3060;border-radius:12px;padding:10px 14px}
+.mcgloss dt{color:#ffd166;font-weight:800}.mcgloss dd{margin:2px 0 0;color:#cdd7f2}
+.mcwalk{display:grid;gap:12px;margin-top:14px;position:relative}
+.mcstage{display:grid;grid-template-columns:40px 1fr;gap:12px;background:linear-gradient(165deg,#111f42,#0a1226);border:1px solid #24376a;border-radius:16px;padding:14px;animation:ppFadeUp .5s ease both}
+.mcstage .mcn{width:36px;height:36px;border-radius:50%;background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;font-weight:900;display:flex;align-items:center;justify-content:center}
+.mcstage h3{margin:2px 0 6px}.mcstage p{margin:6px 0}
+.mcstage.steps p{border-left:2px solid #ffd166;padding-left:10px}
+.mccert{text-align:center;background:radial-gradient(120% 90% at 50% 0%,#2a2410,#0a1226);border:2px solid #ffd166;border-radius:20px;padding:22px 16px;margin:16px 0;box-shadow:0 0 40px rgba(255,209,102,.2)}
+.mccert h2{color:#ffd166;margin:6px 0}.mcseal{display:inline-flex;width:54px;height:54px;border-radius:50%;background:linear-gradient(180deg,#ffe08a,#f5b301);color:#1b1400;font-size:28px;align-items:center;justify-content:center}
+.mcname{text-align:center;font-size:22px;margin:10px 0;border-style:dashed}
+@media print{body.mcbody{background:#fff!important;color:#000}.mcbody .nav,.mcbody footer,.mcbody .btn,.pp-top,#lesson>.btn{display:none!important}.mcbody h1,.mcbody p,.mcbody label,.mcbody li{color:#000!important;-webkit-text-fill-color:#000;background:none}.mccert{background:#fff;box-shadow:none;border-color:#000}.mccert h2,.mcname{color:#000;background:#fff}}
+@media(prefers-reduced-motion:reduce){.mccard,.mcstage{animation:none!important}}
+.mcbody .btn.ghost,.mcbody .btn.small.ghost{color:#ffd166!important;background:transparent!important;border:1.5px solid #ffd166!important}
