@@ -226,6 +226,39 @@ const COUNTY_BUY = {
       'Look at Land Information here first. Many cheap lots in this area have no road, water or power.'
     ]
   },
+  'El Paso': {
+    office: 'El Paso County Treasurer',
+    status: l => 'Held by El Paso County itself (certificate ' + (l.cert || 'number not shown') + ', ' + (l.rate || '') + ' interest, face $' + Number(l.amount).toFixed(2) + '). It is already issued, so it is not an auction lot. The owner can still pay it off.',
+    record: null,
+    links: [['El Paso County Treasurer', 'https://treasurer.elpasoco.com/']],
+    steps: [
+      'These are liens the county kept because nobody bought them at the sale. Ask the Treasurer whether a county-held certificate can be bought and how.',
+      'Give them the account number and certificate number shown here, and ask for the exact payoff today.',
+      'Look at Land Information and the county records first. Some are large amounts on built properties, others are small vacant parcels.'
+    ]
+  },
+  'Boulder': {
+    office: 'Boulder County Treasurer',
+    status: l => 'Advertised for Boulder County\u2019s 2026 tax lien sale (balance due $' + Number(l.amount).toFixed(2) + '). It is not sold yet, and the owner can pay before the sale, which takes it off the list.',
+    record: null,
+    links: [['Boulder County Treasurer', 'https://bouldercounty.gov/property-and-land/treasurer/']],
+    steps: [
+      'Read the Treasurer\u2019s tax lien sale page for the sale date, registration and payment rules.',
+      'In Colorado the interest rate is set by state law each year (9 points above the federal discount rate). Bidders compete by paying a premium above the face amount, and that premium earns no interest.',
+      'Many parcels here are homes. Check the property record and what is on it before you bid.'
+    ]
+  },
+  'Scott': {
+    office: 'Scott County Treasurer (Iowa)',
+    status: l => 'On Scott County\u2019s 2026 tax sale list (total due $' + Number(l.amount).toFixed(2) + ', including any special assessments). The owner can still pay before the sale. Iowa lets the owner redeem afterward.',
+    record: null,
+    links: [['Scott County Treasurer', 'https://www.scottcountyiowa.gov/treasurer']],
+    steps: [
+      'Check the Treasurer\u2019s page for the sale date, how to register and what payment they accept.',
+      'Iowa sells the tax sale certificate. Read our Iowa course lesson on interest, redemption and what happens if the owner never pays.',
+      'Look the parcel up on the county records first. Check what it is, and that it is not just a sliver or a road strip.'
+    ]
+  },
   'Larimer': {
     office: 'Larimer County Treasurer',
     status: l => 'Advertised for the county\u2019s tax lien sale on ' + (l.saleDate || 'the sale date') + '. It is not sold yet, and the owner can pay before the sale, which takes it off the list.',

@@ -21,6 +21,9 @@ const LIEN_SUMMARY = [
   {state: 'FL', county: 'Nassau', count: 8},
   {state: 'CO', county: 'Larimer', count: 1920},
   {state: 'CO', county: 'Saguache', count: 840},
+  {state: 'CO', county: 'El Paso', count: 171},
+  {state: 'CO', county: 'Boulder', count: 661},
+  {state: 'IA', county: 'Scott', count: 144},
   {state: 'AZ', county: 'Pinal', count: 88},
   {state: 'AZ', county: 'Coconino', count: 1421}
 ];
