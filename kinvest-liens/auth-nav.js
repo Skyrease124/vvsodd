@@ -74,3 +74,31 @@
     }
   }).catch(() => {});
 })();
+
+// Motion: reveal sections as they scroll into view, and a back-to-top button. Skipped for reduced-motion users.
+(function () {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!('IntersectionObserver' in window)) return;
+  var SEL = 'main h2, main .salebox, main .askbox, main .notice, main .card, main .scard, main .setupform, main .takeaways, main .lessons li, main .stcell, main .countylist li, main .stfacts, main .dnote, main .band p, footer .wrap';
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, {rootMargin: '0px 0px -6% 0px', threshold: 0.05});
+  var vh = window.innerHeight || 800, n = 0;
+  function tag(root) {
+    var list = (root.matches && root.matches(SEL) ? [root] : []).concat([].slice.call(root.querySelectorAll ? root.querySelectorAll(SEL) : []));
+    list.forEach(function (el) {
+      if (el.classList.contains('rv') || el.closest('dialog') || el.closest('details') || el.closest('.rv')) return;
+      var r = el.getBoundingClientRect();
+      if (r.top < vh * 0.9 && r.bottom > 0) return; // already on screen: leave it alone
+      el.style.setProperty('--rvd', (n++ % 4) * 60 + 'ms'); el.classList.add('rv'); io.observe(el);
+    });
+  }
+  function start() {
+    tag(document.body);
+    if ('MutationObserver' in window) new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (x) { if (x.nodeType === 1) tag(x); }); }); }).observe(document.querySelector('main') || document.body, {childList: true, subtree: true});
+    // safety net: never leave anything hidden
+    setTimeout(function () { [].forEach.call(document.querySelectorAll('.rv:not(.in)'), function (el) { var r = el.getBoundingClientRect(); if (r.top < vh && r.bottom > 0) el.classList.add('in'); }); }, 2500);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'pp-top'; b.setAttribute('aria-label', 'Back to top'); b.textContent = '\u2191';
+    b.addEventListener('click', function () { window.scrollTo({top: 0, behavior: 'smooth'}); }); document.body.appendChild(b);
+    var tick = false; window.addEventListener('scroll', function () { if (tick) return; tick = true; requestAnimationFrame(function () { b.classList.toggle('show', window.scrollY > 700); tick = false; }); }, {passive: true});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
