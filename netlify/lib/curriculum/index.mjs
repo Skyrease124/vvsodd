@@ -3,9 +3,11 @@
 import fl from './fl.mjs';
 import tx from './tx.mjs';
 import az from './az.mjs';
+import ia from './ia.mjs';
+import mi from './mi.mjs';
 import { TRACKER } from './tracker.mjs';
 
-export const COURSES = { fl, tx, az };
+export const COURSES = { fl, tx, az, ia, mi };
 export { TRACKER };
 
 const words = s => String(s || '').split(/\s+/).filter(Boolean).length;
