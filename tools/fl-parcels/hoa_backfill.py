@@ -72,10 +72,12 @@ def main():
             rec = {'sub': p['sub'] or '', 'phase': p['phase'] or '', 'block': p['block'] or '', 'lot': p['lot'] or '', 'kind': p['kind']}
             parcel = {'county': county, 'sub': p['sub'], 'phase': p['phase'], 'block': p['block'], 'lot': p['lot']}
             if p['kind'] == 'mineral': d = {'st': 'unknown', 'note': 'Mineral or subsurface rights only: there is no surface lot.'}
-            elif not p['sub']: d = {'st': 'unknown', 'note': 'The legal description does not name a subdivision.'}
+            elif not p['sub'] or core.norm_name(p['sub']) in ('WEST', 'EAST', 'NORTH', 'SOUTH', 'E', 'W', 'N', 'S'): d = {'st': 'unknown', 'note': 'The legal description does not name a subdivision.'}
             else:
                 k = county + '|' + core.norm_name(p['sub'])
-                d = core.decide(parcel, cache.get(k, []), reg)
+                st_ = core.tokens(p['sub'])
+                good = [x for x in cache.get(k, []) if st_ and (st_ & core.tokens(x.get('assoc', ''))) and fladapter.ASSOC.search((x.get('assoc') or '').upper())]
+                d = core.decide(parcel, good, reg)
             rec.update(d); rec['ck'] = TODAY; recs[x['parcel']] = rec
         recs = {k: recs[k] for k in sorted(p['parcel'] for p in by[county]) if k in recs}
         save(outp, {'county': county, 'updated': TODAY, 'registry': reg_ids, 'p': recs})
