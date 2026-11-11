@@ -61,7 +61,13 @@ if (!s) {
   if (s.a === 'NY') { const box2 = document.createElement('div'); $('clist').before(box2); const m1 = document.createElement('script'); m1.src = '../middletown-ny.js'; m1.onload = () => { const m2 = document.createElement('script'); m2.src = '../middletown-ui.js'; m2.onload = () => MiddletownUI.render(box2); document.head.appendChild(m2); }; document.head.appendChild(m1); }
   if (s.a === 'MS') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../ms-forfeited-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../ms-forfeited-ui.js'; a2.onload = () => MsForfeitedUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
   const LFS = {CO: [['liens-larimer.js', 'Larimer'], ['liens-saguache.js', 'Saguache'], ['liens-elpaso.js', 'El Paso'], ['liens-boulder.js', 'Boulder']], IA: [['liens-scott.js', 'Scott']], TN: [['liens-davidson.js', 'Davidson']], MI: [['liens-wayne.js', 'Wayne']], AZ: [['liens-pinal.js', 'Pinal'], ['liens-coconino.js', 'Coconino']]}[s.a] || [];
-  LFS.forEach(LF => { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); });
+  LFS.forEach(LF => { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); box.dataset.county = LF[1]; });
+  if (LFS.length > 1) { // jump straight to a county instead of scrolling past the others
+    const jb = document.createElement('div'); jb.className = 'askbox'; const js = document.createElement('select'); js.setAttribute('aria-label', 'Jump to a county'); js.style.cssText = 'width:100%;max-width:420px';
+    js.appendChild(new Option('Jump to a county (' + LFS.length + ' with lists)', '')); LFS.forEach(LF => js.appendChild(new Option(LF[1], LF[1])));
+    js.addEventListener('change', () => { const t = document.querySelector('[data-county="' + js.value + '"]'); if (t) t.scrollIntoView({block: 'start'}); });
+    jb.appendChild(js); $('clist').before(jb); const first = document.querySelector('[data-county]'); if (first) first.before(jb);
+  }
   (function parcelBox() {
     const host = $('parcelbox'); if (!host) return;
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
