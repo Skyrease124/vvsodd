@@ -59,12 +59,12 @@ export const TRACKER = [
   "state": "CO",
   "name": "Colorado",
   "system": "Tax lien certificate",
-  "research": "Partial: sourced sale steps on the state page",
-  "writing": "Short state class only (one page and a 3-question quiz)",
-  "review": "Not started",
-  "publication": "Not published",
+  "research": "Verified: C.R.S. 39-11, 39-11.5 and 39-12 read from the 2024 edition (later amendments not checked); Denver and Boulder treasurer pages read (checked 2026-11-11)",
+  "writing": "Complete: 12 modules, 32 lessons, 36 quiz questions, simulated exercise, final project",
+  "review": "Self-checked against sources; outside legal review not done",
+  "publication": "Published (batch 1)",
   "batch": "Batch 1",
-  "remaining": "Read the full statute (sale, redemption, deed, surplus, survival of liens); verify two local procedures; write 10\u201312 modules and 25\u201340 lessons with citations; quizzes; Bid or Pass; final project; review"
+  "remaining": "Outside legal review; check for statute amendments after the 2024 edition; deposit and tax-form rules by county; Colorado eviction steps; district assessment liens at deed-option auctions; a verified Colorado listing for the exercise (currently simulated)"
  },
  {
   "state": "CT",
