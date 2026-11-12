@@ -26,6 +26,8 @@ COUNTIES = {
     'Palm Beach': {'file': 'palmbeach', 'links': {
         'Clerk tax deeds page': 'https://www.mypalmbeachclerk.com/departments/courts/tax-deeds',
         'Tax Collector: certificates and deeds': 'https://www.pbctax.gov/taxes/property-tax/tax-certificates-and-deeds/'}},
+    'Lee': {'file': 'lee', 'links': {
+        'Lee County Clerk': 'https://www.leeclerk.org/'}},
     'Miami-Dade': {'file': 'miamidade', 'links': {
         'Clerk property tax deeds page': 'https://www.miamidadeclerk.gov/clerk/property-tax-deeds.page'}},
 }
@@ -76,7 +78,7 @@ def build(prev=None, sources_dir=SRC, today=None):
         for it in src['items']:
             st = it.get('status', 'scheduled')
             assert st in STATUSES, (path, st)
-            k = key(county, typ, it['parcel'], it.get('cert') or sale_id)
+            k = key(county, typ, it['parcel'], it.get('cert') or it.get('deedNo') or sale_id)
             if k in seen:
                 continue
             seen.add(k)
@@ -86,7 +88,7 @@ def build(prev=None, sources_dir=SRC, today=None):
                  'auctionUrl': src.get('auctionUrl', ''), 'officialPage': src.get('officialPage', ''),
                  'source': src['source']['name'], 'sourceUrl': src['source']['url'], 'published': src['source'].get('published', ''),
                  'checked': src['source'].get('checked', today), 'liveCalendar': src['source'].get('liveCalendar', '')}
-            for f in ('statusNote', 'openingBid', 'openingBidNote', 'owner', 'ownerAddress', 'situs', 'legal', 'homestead', 'assessed', 'newDate'):
+            for f in ('statusNote', 'openingBid', 'openingBidNote', 'owner', 'ownerAddress', 'situs', 'legal', 'homestead', 'assessed', 'newDate', 'deedNo', 'offeredDate'):
                 if f in it:
                     l[f] = it[f]
             listings.append(l)

@@ -17,9 +17,10 @@ const UpcomingSales = (() => {
     const top = mk('div', 'ustop'); top.append(mk('span', 'ustype', TYPES[l.type]), mk('span', 'usstat', STATUS[l.status] || l.status)); d.appendChild(top);
     const h = mk('div', 'ushead'); h.append(mk('b', '', 'Parcel ' + l.parcel), mk('span', 'small muted', ' · ' + l.county + ' County' + (l.cert ? ' · certificate ' + l.cert : ''))); d.appendChild(h);
     if (l.type === 'taxdeed') d.appendChild(mk('div', 'small', 'Sale: ' + day(l.saleDate) + ', ' + time(l.saleTime, l.tz) + (l.status === 'rescheduled' && l.newDate ? ' → moved to ' + day(l.newDate) : '')));
+    if (l.type === 'laft') d.appendChild(mk('div', 'small', 'Not an auction: offered at tax deed sale' + (l.offeredDate ? ' on ' + day(l.offeredDate) : '') + ' with no buyer; can be bought from the Clerk for the listed balance' + (l.deedNo ? ' \u00B7 tax deed #' + l.deedNo : '') + '.'));
     if (l.type === 'otc') d.appendChild(mk('div', 'small', 'Not an auction: the county holds this certificate and sells it over the counter.'));
-    d.appendChild(mk('div', 'small', l.openingBid != null ? (l.type === 'otc' ? 'Listed amount: ' : 'Opening bid: ') + money(l.openingBid) : 'Opening bid: not published in the official file we have'));
-    if (l.openingBidNote && l.openingBid != null && l.type !== 'otc') d.appendChild(mk('div', 'small muted', l.openingBidNote));
+    d.appendChild(mk('div', 'small', l.openingBid != null ? (l.type === 'otc' ? 'Listed amount: ' : l.type === 'laft' ? 'Balance to buy: ' : 'Opening bid: ') + money(l.openingBid) : 'Opening bid: not published in the official file we have'));
+    if (l.openingBidNote && l.openingBid != null && l.type === 'taxdeed') d.appendChild(mk('div', 'small muted', l.openingBidNote));
     if (l.statusNote) d.appendChild(mk('div', 'small usnote', l.statusNote));
     if (l.owner || l.ownerAddress || l.situs) d.appendChild(mk('div', 'small', [l.owner ? 'Owner: ' + l.owner : '', l.ownerAddress ? 'Mailing: ' + l.ownerAddress : '', l.situs ? 'Property: ' + l.situs : ''].filter(Boolean).join(' · ')));
     if (l.legal) d.appendChild(mk('div', 'small muted', 'Legal: ' + l.legal));
