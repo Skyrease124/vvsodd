@@ -180,6 +180,78 @@ const TrafficData = {
     return box;
   }
 };
+// Nearby Cleanup Sites: Florida DEP cleanup sites (open, active and on-hold) within 1/2 mile of the lot boundary, via /.netlify/functions/cleanup.
+// "On parcel" only when the site's mapped point is inside the lot outline. Distances are approximate (mapped point to lot boundary).
+const CleanupData = {
+  MILE_FT: 2640, cache: {},
+  STATUS: {ACTIVE: 'Active cleanup', OPEN: 'Open', ONHOLD: 'On hold'},
+  CAT: {PETRO: 'Petroleum', BROWN: 'Brownfield', FED: 'Federal', PFAS: 'PFAS', SUPER: 'Superfund', OTHCU: 'Other cleanup'},
+  PROX: {EXACT: 'exact', APPRX: 'approximate', CENTR: 'center of the site', ENTRA: 'entrance', OFFST: 'offset from the site', PROMF: 'from a property map', VICIN: 'vicinity only', ADMIN: 'administrative'},
+  fmt: n => Number(n).toLocaleString('en-US'),
+  // distance in feet from point to the lot (0 and inside=true when the point is inside any ring, even-odd)
+  measure(r, sites) {
+    const rings = r.g, xs = rings.flat().map(q => q[0]), ys = rings.flat().map(q => q[1]), lng0 = (Math.min(...xs) + Math.max(...xs)) / 2, lat0 = (Math.min(...ys) + Math.max(...ys)) / 2, k = Math.cos(lat0 * Math.PI / 180);
+    const P = (x, y) => [(x - lng0) * k * 111320, (y - lat0) * 110574], R = rings.map(ring => ring.map(q => P(q[0], q[1])));
+    const segd = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)) : 0; return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy); };
+    const inside = p => { let c = false; R.forEach(ring => { for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } }); return c; };
+    return sites.map(st => { const p = P(st.x, st.y), on = inside(p); let d = 1e18; R.forEach(ring => { for (let i = 0; i < ring.length - 1; i++) d = Math.min(d, segd(p, ring[i], ring[i + 1])); }); return Object.assign({}, st, {ft: on ? 0 : d * 3.28084, on}); })
+      .filter(st => st.ft <= this.MILE_FT).sort((a, b) => a.ft - b.ft);
+  },
+  // resolves to {state: 'ok', sites, queried} | {state: 'failed'} | {state: 'nooutline'}
+  get(l, r) {
+    const key = l.county + '|' + l.parcel; if (this.cache[key]) return this.cache[key];
+    return this.cache[key] = (async () => {
+      if (!r || !r.g || !r.bb) return {state: 'nooutline'};
+      const [x0, y0, x1, y1] = r.bb, lat = (y0 + y1) / 2, dlat = 804.67 / 110574, dlng = 804.67 / (111320 * Math.cos(lat * Math.PI / 180));
+      try {
+        const u = '/.netlify/functions/cleanup?xmin=' + (x0 - dlng).toFixed(6) + '&ymin=' + (y0 - dlat).toFixed(6) + '&xmax=' + (x1 + dlng).toFixed(6) + '&ymax=' + (y1 + dlat).toFixed(6);
+        const resp = await fetch(u); if (!resp.ok) throw new Error('http'); const d = await resp.json(); if (!d.ok) throw new Error('dep');
+        return {state: 'ok', sites: this.measure(r, d.sites), queried: d.queried};
+      } catch (e) { delete this.cache[key]; return {state: 'failed'}; }
+    })();
+  },
+  distText: st => st.on ? 'On parcel' : 'about ' + CleanupData.fmt(Math.round(st.ft / 10) * 10 || 10) + ' ft (approximate)',
+  siteEl(st) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const li = mk('li', 'clsite' + (st.on ? ' clon' : '')); const top = mk('div', 'cltop'); top.append(mk('b', '', st.name || 'Unnamed site')); if (st.on) top.appendChild(mk('span', 'rbadge clbadge', 'On parcel')); li.appendChild(top);
+    li.appendChild(mk('p', 'small', 'Distance: ' + this.distText(st) + (st.on ? ' (the mapped location is inside the lot boundary)' : ' from the lot boundary')));
+    li.appendChild(mk('p', 'small', 'Cleanup status: ' + (this.STATUS[st.status] || st.status || 'not given') + (st.cat ? ' · ' + (this.CAT[st.cat] || st.cat) : '')));
+    const idp = mk('p', 'small'); idp.append('DEP facility ID: ', mk('b', '', st.id || 'not given'), st.db ? ' (' + st.db + ')' : ''); if (st.docs) { idp.append(' · '); const a = mk('a', '', 'Look up the official case'); a.href = st.docs; a.target = '_blank'; a.rel = 'noopener noreferrer'; idp.appendChild(a); } li.appendChild(idp);
+    if (st.addr) li.appendChild(mk('p', 'small muted', st.addr + ' · mapped location: ' + (this.PROX[st.prox] || st.prox || 'precision not given')));
+    return li;
+  },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.clbody').forEach(x => x.remove()); const body = mk('div', 'clbody'); box.appendChild(body);
+    if (res.state === 'failed') { body.appendChild(mk('p', 'notice', 'Cleanup data unavailable.')); const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); return; }
+    if (res.state === 'nooutline') { body.appendChild(mk('p', 'notice', 'Cleanup data unavailable.')); body.appendChild(mk('p', 'small muted', 'This lot’s outline is not matched to the state parcel map, so distances cannot be measured.')); return; }
+    if (!res.sites.length) body.appendChild(mk('p', 'small', 'No mapped cleanup sites within ½ mile.'));
+    else { const n = res.sites.filter(x => x.on).length; body.appendChild(mk('p', 'small', res.sites.length + ' mapped site' + (res.sites.length === 1 ? '' : 's') + ' within ½ mile' + (n ? ' (' + n + ' on the parcel)' : '') + ', nearest first.')); const ul = mk('ul', 'cllist'); res.sites.slice(0, 8).forEach(st => ul.appendChild(this.siteEl(st))); body.appendChild(ul); if (res.sites.length > 8) { const m = mk('button', 'rlink', 'Show all ' + res.sites.length); m.type = 'button'; m.addEventListener('click', () => { ul.textContent = ''; res.sites.forEach(st => ul.appendChild(this.siteEl(st))); m.remove(); }); body.appendChild(m); } }
+    body.appendChild(mk('p', 'small muted', 'Source: Florida DEP Cleanup Sites (open, active and on-hold sites; closed sites are not in this layer), queried ' + (res.queried || '') + '. Distances are approximate: they run from each site’s mapped point, whose precision varies, to the lot boundary. A site is marked “On parcel” only when its mapped point falls inside the lot boundary. Use the DEP facility ID to look up the official case.'));
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord clbox'); box.appendChild(mk('h4', '', 'Nearby Cleanup Sites'));
+    const run = () => { box.querySelectorAll('.clbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted clbody', 'Checking Florida DEP…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  },
+  // map toggle: shows the same sites on the map (purple dots; gold ring = on parcel)
+  mapAttach(L, m, box, l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const dlg = box.closest('dialog') || box.parentNode; let old = dlg.querySelector('.clbar'); if (old) old.remove();
+    const bar = mk('p', 'clbar small'), b = mk('button', 'btn small ghost', 'Show cleanup sites'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); const st = mk('span', 'small muted', ''); st.setAttribute('role', 'status'); bar.append(b, ' ', st); box.after(bar);
+    let layer = null;
+    b.addEventListener('click', async () => {
+      if (layer && m.hasLayer(layer)) { m.removeLayer(layer); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Show cleanup sites'; st.textContent = ''; return; }
+      b.disabled = true; st.textContent = 'Checking Florida DEP…'; const res = await this.get(l, r); b.disabled = false;
+      if (res.state !== 'ok') { st.textContent = 'Cleanup data unavailable.'; return; }
+      if (!res.sites.length) { st.textContent = 'No mapped cleanup sites within ½ mile.'; return; }
+      layer = L.layerGroup(res.sites.map(x => { const c = L.circleMarker([x.y, x.x], {radius: x.on ? 10 : 7, color: x.on ? '#ffd166' : '#fff', weight: x.on ? 4 : 2, fillColor: '#a855f7', fillOpacity: 0.95}); c.bindPopup('<b>' + (x.name || 'Cleanup site').replace(/</g, '&lt;') + '</b><br>' + this.distText(x) + '<br>Status: ' + (this.STATUS[x.status] || x.status || 'n/a') + '<br>DEP facility ID: ' + (x.id || 'n/a')); c.bindTooltip(x.on ? 'On parcel' : this.distText(x), {sticky: true}); return c; })).addTo(m);
+      b.setAttribute('aria-pressed', 'true'); b.textContent = 'Hide cleanup sites'; st.textContent = res.sites.length + ' site' + (res.sites.length === 1 ? '' : 's') + ' within ½ mile (purple dots; gold ring = on parcel). Distances are approximate.';
+      const bb = L.latLngBounds(box._outline.getBounds().getSouthWest(), box._outline.getBounds().getNorthEast()); res.sites.forEach(x => bb.extend([x.y, x.x])); m.fitBounds(bb, {maxZoom: 19, padding: [30, 30]});
+    });
+  }
+};
 // Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
 const ParcelData = {
   base: '/liens/states/parcels/',
@@ -288,7 +360,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') hb.after(CleanupData.section(l, pd.r)); }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -308,6 +380,7 @@ const LienMap = {
             const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn small'; b2.textContent = 'Show the traffic road (orange)'; b2.addEventListener('click', both); bar.append(b2, ' ', b1); box.after(bar);
             if (tt.ft <= TrafficData.NEAR_FT) setTimeout(both, 80); } }
         if (CountyAerial.enabled(l.county)) CountyAerial.attach(L, m, box, l, pd.r, {sat, street}, layersCtl);
+        CleanupData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
