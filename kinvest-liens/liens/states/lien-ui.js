@@ -65,6 +65,93 @@ const HoaData = {
     return box;
   }
 };
+// County aerial imagery (ArcGIS ImageServer). Palm Beach is on; Miami-Dade stays OFF until its layer passes the checks noted below.
+// Imagery is always drawn live from the county's own server and never stored by us: the county's published terms do not clearly allow copies.
+const CountyAerial = {
+  CFG: {
+    'Palm Beach': {on: true, name: 'Palm Beach County', credit: 'Palm Beach County GIS', sources: [
+      {year: 2026, url: 'https://gis.pbcgov.org/image/rest/services/Aerialphotgraphy_2026_WebMercator/ImageServer'},
+      {year: 2025, url: 'https://gis.pbcgov.org/image/rest/services/Aerialphotography_2025_Webmercator/ImageServer'}]},
+    // Miami-Dade MDCImagery: images load and line up with parcel outlines, but the service's own text says 2026, 2025 and 2024 in different places,
+    // its image tiles are mostly 2024 (a few 2026), and one request in 36 took 19 s. Satellite stays the default there until the county fixes the year labeling.
+    'Miami-Dade': {on: false, name: 'Miami-Dade County', sources: []}
+  },
+  enabled: c => !!(CountyAerial.CFG[c] && CountyAerial.CFG[c].on),
+  wm: (lng, lat) => [lng * 20037508.34 / 180, Math.log(Math.tan((90 + lat) * Math.PI / 360)) / (Math.PI / 180) * 20037508.34 / 180],
+  timeout(url, ms) { const c = new AbortController(), t = setTimeout(() => c.abort(), ms); return fetch(url, {signal: c.signal}).finally(() => clearTimeout(t)); },
+  // Which source covers this point? Newest first. why: 'ok' | 'nocov' (every source answered "no imagery here") | 'error' (a service could not be reached)
+  async pick(county, lng, lat, hint) {
+    const cfg = this.CFG[county]; if (!cfg || !cfg.on) return {src: null, why: 'off'};
+    const [x, y] = this.wm(lng, lat); let err = false;
+    for (const src of cfg.sources) {
+      if (hint && hint !== src.year && !(hint === 0)) { /* the stored hint is only a starting point: we still verify live */ }
+      try {
+        const r = await this.timeout(src.url + '/identify?geometry=' + x + ',' + y + '&geometryType=esriGeometryPoint&returnGeometry=false&returnCatalogItems=false&f=json', 9000);
+        if (!r.ok) throw new Error('http'); const d = await r.json(); if (d.error) throw new Error('svc');
+        if (d.value && d.value !== 'NoData') return {src, why: 'ok'};
+      } catch (e) { err = true; }
+    }
+    return {src: null, why: err ? 'error' : 'nocov'};
+  },
+  exportUrl(src, b, w, h) { return src.url + '/exportImage?bbox=' + b.map(v => v.toFixed(2)).join(',') + '&bboxSR=3857&imageSR=3857&size=' + w + ',' + h + '&format=jpgpng&f=image'; },
+  label(county, src) { const c = this.CFG[county]; return 'County Aerial: ' + c.name + ' ' + src.year + ' (capture year ' + src.year + ', per the county layer)'; },
+  // Leaflet layer that asks the ImageServer for each 256px tile in web-mercator, so images line up with the parcel outline.
+  layer(L, src, county) {
+    this._county = county;
+    const Cls = L.TileLayer.extend({getTileUrl(co) { const n = Math.pow(2, co.z), size = 40075016.68 / n, x0 = -20037508.34 + co.x * size, y1 = 20037508.34 - co.y * size; return CountyAerial.exportUrl(src, [x0, y1 - size, x0 + size, y1], 256, 256); }});
+    return new Cls('', {maxZoom: 20, maxNativeZoom: 20, tileSize: 256, attribution: 'Imagery &copy; ' + (this.CFG[this._county] ? this.CFG[this._county].credit : 'county GIS')});
+  },
+  // Small label on the map saying which imagery is on screen.
+  labelControl(L, m) {
+    const C = L.Control.extend({options: {position: 'bottomleft'}, onAdd() { const d = L.DomUtil.create('div', 'caer-label'); d.setAttribute('role', 'status'); this.el = d; return d; }});
+    const c = new C(); c.addTo(m); return {set(t) { c.el.textContent = t; }};
+  },
+  // Wire the County Aerial option into an open parcel map. Satellite is already showing; we switch only when the county layer is proven to cover and load.
+  async attach(L, m, box, l, r, layers, ctrl) {
+    const cfg = this.CFG[l.county]; const lab = this.labelControl(L, m); box._aerialLabel = lab;
+    const sat = layers.sat, street = layers.street, esri = 'Satellite: Esri World Imagery (capture dates vary)';
+    lab.set(cfg && cfg.on ? 'Checking county aerial imagery…' : esri);
+    const bounds = () => { const g = box._outline; return g && g.getBounds(); };
+    const keepInView = () => { const b = bounds(); if (b && !m.getBounds().pad(-0.02).contains(b)) m.fitBounds(b, {maxZoom: 19, padding: [30, 30]}); };
+    const toSat = why => { if (box._county && m.hasLayer(box._county)) m.removeLayer(box._county); if (!m.hasLayer(sat) && !m.hasLayer(street)) sat.addTo(m); lab.set((why ? why + ' ' : '') + (m.hasLayer(street) ? 'Street map: OpenStreetMap' : 'Showing Satellite. ' + esri)); keepInView(); };
+    if (!cfg || !cfg.on) return;
+    const bb = r && r.bb; if (!bb) { lab.set(esri); return; }
+    const lng = (bb[0] + bb[2]) / 2, lat = (bb[1] + bb[3]) / 2;
+    let chosen = await this.pick(l.county, lng, lat, r.aer && r.aer.y);
+    if (!box.isConnected && !m._loaded) return;
+    if (!chosen.src) { toSat(chosen.why === 'nocov' ? 'The county aerial does not cover this parcel.' : 'The county aerial service could not be reached.'); return; }
+    const tried = new Set();
+    const make = src => {
+      tried.add(src.year); const lay = this.layer(L, src, l.county); let ok = 0, bad = 0, done = false;
+      lay.on('tileload', () => { ok++; }); lay.on('tileerror', () => { bad++; if (!ok && bad >= 3 && !done) { done = true; next(src); } });
+      setTimeout(() => { if (!ok && !done && m.hasLayer(lay)) { done = true; next(src); } }, 12000);
+      lay._src = src; return lay;
+    };
+    const show = lay => { if (box._county) { try { ctrl.removeLayer(box._county); } catch (e) {} if (m.hasLayer(box._county)) m.removeLayer(box._county); } box._county = lay; ctrl.addBaseLayer(lay, 'County Aerial'); };
+    const next = async failed => {
+      // that source failed to load: try the older county layer if it covers the parcel, else Satellite
+      const older = cfg.sources.filter(s => !tried.has(s.year));
+      for (const src of older) { const p = await this.pick(l.county, lng, lat); if (p.src && !tried.has(p.src.year)) { const lay = make(p.src); show(lay); lay.addTo(m); sat && m.hasLayer(sat) && m.removeLayer(sat); lab.set(this.label(l.county, p.src) + ' (' + failed.year + ' did not load.)'); return; } break; }
+      if (box._county) { try { ctrl.removeLayer(box._county); } catch (e) {} if (m.hasLayer(box._county)) m.removeLayer(box._county); }
+      toSat('County aerial (' + Array.from(tried).sort().reverse().join(' and ') + ') failed to load.');
+    };
+    const lay = make(chosen.src); show(lay); lay.addTo(m); if (m.hasLayer(sat)) m.removeLayer(sat); lab.set(this.label(l.county, chosen.src));
+    m.on('baselayerchange', e => { lab.set(e.layer === box._county ? this.label(l.county, box._county._src) : e.layer === street ? 'Street map: © OpenStreetMap contributors' : esri); setTimeout(keepInView, 60); });
+  },
+  // Card preview drawn from the same county source and the same lot outline as the interactive map.
+  thumbEl(l, r, src) {
+    const W = 480, H = 320, mk = (t, c) => { const e = document.createElement(t); if (c) e.className = c; return e; };
+    const pts = r.g[0].map(([lng, lat]) => this.wm(lng, lat)), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const bw = Math.max((Math.max(...xs) - Math.min(...xs)) * 1.5, (Math.max(...ys) - Math.min(...ys)) * 1.5 * (W / H), 50), bh = bw * H / W;
+    const b = [cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2];
+    const wrap = mk('div', 'caer-prev'), im = mk('img'); im.loading = 'lazy'; im.decoding = 'async'; im.width = W; im.height = H; im.alt = 'Aerial photo of parcel ' + l.parcel + ' with its boundary outlined'; im.src = this.exportUrl(src, b, W, H);
+    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('aria-hidden', 'true');
+    const P = ([x, y]) => ((x - b[0]) / bw * W).toFixed(1) + ',' + ((b[3] - y) / bh * H).toFixed(1);
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('d', r.g.map(ring => 'M' + ring.map(q => P(this.wm(q[0], q[1]))).join('L') + 'Z').join(' ')); path.setAttribute('class', 'caer-poly'); svg.appendChild(path);
+    wrap.append(im, svg); return {wrap, im};
+  }
+};
 // Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
 const ParcelData = {
   base: '/liens/states/parcels/',
@@ -89,7 +176,12 @@ const ParcelData = {
     host.textContent = ''; host.className = 'lthumb loading';
     this.rec(l).then(({file, r}) => {
       host.classList.remove('loading'); const cap = document.createElement('p'); cap.className = 'lcap small';
-      if (r && r.st === 'matched' && r.img && r.img.s === 'aerial') {
+      const ca = r && r.st === 'matched' && r.g && CountyAerial.enabled(l.county) && r.aer && r.aer.y ? CountyAerial.CFG[l.county].sources.find(x => x.year === r.aer.y) : null;
+      if (ca) {
+        const t = CountyAerial.thumbEl(l, r, ca); host.appendChild(t.wrap); const size = this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' \u00b7 ' : '';
+        cap.textContent = size + 'Aerial: ' + CountyAerial.CFG[l.county].name + ' ' + ca.year + ' (county layer) \u00b7 outline: Florida Statewide Parcels 2026';
+        t.im.onerror = () => { t.wrap.remove(); if (r.img && r.img.s === 'aerial') { const im = document.createElement('img'); im.width = 480; im.height = 320; im.alt = 'Aerial photo of parcel ' + l.parcel + ' with its boundary outlined'; im.src = this.base + 'img/' + r.img.f; host.prepend(im); cap.textContent = size + 'County aerial did not load; showing USGS NAIP, ' + r.img.d.slice(0, 7); } else { host.prepend(this.mapBox(r)); cap.textContent = size + 'County aerial did not load'; } };
+      } else if (r && r.st === 'matched' && r.img && r.img.s === 'aerial') {
         const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.width = 480; im.height = 320; im.alt = 'Aerial photo of parcel ' + l.parcel + ' with its boundary outlined';
         im.src = this.base + 'img/' + r.img.f; im.onerror = () => { im.remove(); host.prepend(this.mapBox(r)); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'Aerial could not load'; };
         host.appendChild(im); cap.textContent = (this.sizeText(r) ? 'Lot: ' + this.sizeText(r) + ' · ' : '') + 'Aerial: USGS NAIP, ' + r.img.d.slice(0, 7);
@@ -175,8 +267,10 @@ const LienMap = {
         const m = L.map(box); box._map = m;
         const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
         const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
-        sat.addTo(m); L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
-        const g = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
+        sat.addTo(m); const layersCtl = L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
+        if (!CountyAerial.enabled(l.county)) { const lc = CountyAerial.labelControl(L, m); lc.set('Satellite: Esri World Imagery (capture dates vary)'); m.on('baselayerchange', e => lc.set(e.layer === street ? 'Street map: \u00a9 OpenStreetMap contributors' : 'Satellite: Esri World Imagery (capture dates vary)')); }
+        const g = box._outline = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
+        if (CountyAerial.enabled(l.county)) CountyAerial.attach(L, m, box, l, pd.r, {sat, street}, layersCtl);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
