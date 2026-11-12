@@ -86,3 +86,5 @@ if (!s) {
   const q = encodeURIComponent(s.n + ' county treasurer tax sale');
   $('smore').innerHTML = '<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=' + q + '">Search for your county’s tax sale page</a>';
 }
+// Upcoming Tax Sales (Florida only)
+if (a === 'FL' && typeof UpcomingSales !== 'undefined' && document.getElementById('upsales')) UpcomingSales.mount(document.getElementById('upsales'));
