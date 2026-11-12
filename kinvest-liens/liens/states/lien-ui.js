@@ -433,6 +433,62 @@ const WeatherData = {
     });
   }
 };
+// Soil Type: USDA NRCS SSURGO soil map units intersected with the FULL verified lot outline (server side, /.netlify/functions/soil, USDA Soil Data Access).
+// A map-based screening summary, not a soil test. No verified boundary, no survey coverage or a failed lookup is "Soil data unavailable".
+const SoilData = {
+  WSS: 'https://websoilsurvey.nrcs.usda.gov/app/', SDA: 'https://sdmdataaccess.sc.egov.usda.gov/', mem: {},
+  async get(l, r) {
+    if (!r || r.st !== 'matched' || !r.g || !r.g.length) return {state: 'unavailable', why: 'nooutline'};
+    const key = JSON.stringify(r.g); if (this.mem[key]) return this.mem[key];
+    let out; try {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 25000);
+      const res = await fetch('/.netlify/functions/soil', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rings: r.g}), signal: c.signal}).finally(() => clearTimeout(t));
+      const d = await res.json();
+      if (d && d.ok === true && Array.isArray(d.units) && d.units.length) out = Object.assign({state: 'ok'}, d);
+      else out = {state: 'unavailable', why: d && d.reason === 'coverage' ? 'coverage' : 'lookup'};
+    } catch (e) { out = {state: 'unavailable', why: 'lookup'}; }
+    if (out.why !== 'lookup') this.mem[key] = out; return out;
+  },
+  pctText: p => p > 0 && p < 0.1 ? '<0.1%' : p.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%',
+  acres: a => a < 0.01 ? '<0.01' : a.toLocaleString('en-US', {minimumFractionDigits: a < 10 ? 2 : 1, maximumFractionDigits: a < 10 ? 2 : 1}),
+  facts(u) {
+    const f = [];
+    if (u.drainage) f.push('Drainage: ' + u.drainage);
+    if (u.hydgrp) f.push('Hydrologic group ' + u.hydgrp);
+    if (u.hydricPct != null) f.push('Hydric (wetland-type) soil: about ' + u.hydricPct + '% of the map unit');
+    if (u.flood) f.push('Flooding: ' + u.flood.toLowerCase());
+    if (u.pond != null && u.pond > 0) f.push('Ponding: ' + u.pond + '% of the map unit');
+    if (u.wtFt != null) f.push('Shallowest yearly water table: about ' + u.wtFt + ' ft down');
+    if (u.bedrockFt != null) f.push('Bedrock: about ' + u.bedrockFt + ' ft down');
+    if (u.septic) f.push('Septic tank fields: ' + u.septic.toLowerCase());
+    if (u.dwellings) f.push('Houses without basements: ' + u.dwellings.toLowerCase());
+    return f;
+  },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.sobody').forEach(x => x.remove()); const body = mk('div', 'sobody'); box.appendChild(body);
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    if (res.state !== 'ok') {
+      body.appendChild(mk('p', 'notice', 'Soil data unavailable'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so it cannot be matched to the soil map.' : res.why === 'coverage' ? 'The USDA soil survey has no mapped soil for this lot.' : 'The USDA soil service did not answer.'));
+      if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
+    } else {
+      const top = res.units[0];
+      if (res.units.length > 1) body.appendChild(mk('p', 'soval', 'Mostly ' + top.name + ' (' + this.pctText(top.pct) + ' of the lot)')), body.appendChild(mk('p', 'small', 'This lot touches ' + res.units.length + ' mapped soil units. Shares below are the part of the lot outline inside each one.'));
+      res.units.forEach(u => { const d = mk('div', 'sounit'); d.appendChild(mk('b', '', u.name)); d.appendChild(mk('div', 'small', this.pctText(u.pct) + ' of the lot (' + this.acres(u.acres) + ' acres)' + (u.musym ? ' · map symbol ' + u.musym : '')));
+        const f = this.facts(u); if (f.length) { const ul = mk('ul', 'sofacts small'); f.forEach(x => ul.appendChild(mk('li', '', x))); d.appendChild(ul); } body.appendChild(d); });
+      if (res.coveredPct < 98) body.appendChild(mk('p', 'small muted', 'The soil survey covers about ' + this.pctText(res.coveredPct) + ' of this lot; the rest is not mapped.'));
+    }
+    body.appendChild(mk('p', 'small muted', 'Map-based screening summary only. Soil map units are drawn at county scale and can contain other soils, and “Urban land” units are partly paved or built over. It is not a soil test, a percolation test or an engineering report. For septic, wells or a foundation, ask the county health department or a soil scientist.'));
+    const src = mk('p', 'small muted'); src.append('Source: USDA Natural Resources Conservation Service, SSURGO soil survey via ', link('Soil Data Access', this.SDA), ' (', link('open Web Soil Survey', this.WSS), ').' + (res.queried ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord sobox'); box.appendChild(mk('h4', '', 'Soil Type'));
+    const run = () => { box.querySelectorAll('.sobody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted sobody', 'Checking the USDA soil survey…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  }
+};
 // Estimated Ground Elevation: ONE point inside the verified lot outline (the point farthest from the edges), looked up in feet from the free USGS
 // Elevation Point Query Service (longitude = x, latitude = y). A single-point estimate, cached by sampled coordinates.
 const ElevationData = {
@@ -607,7 +663,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); const ws = WetlandsData.section(l, pd.r); es.after(ws); const fs2 = FloodData.section(l, pd.r); ws.after(fs2); fs2.after(WeatherData.section(l, pd.r)); } }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); const ws = WetlandsData.section(l, pd.r); es.after(ws); const fs2 = FloodData.section(l, pd.r); ws.after(fs2); const ws2 = WeatherData.section(l, pd.r); fs2.after(ws2); ws2.after(SoilData.section(l, pd.r)); } }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
