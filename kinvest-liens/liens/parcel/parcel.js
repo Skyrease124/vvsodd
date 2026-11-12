@@ -28,6 +28,7 @@
   act.appendChild(LienSave.button(l, 'btn small ghost')); const bb = LienBuy.button(l, 'btn small ghost'); if (bb) act.appendChild(bb);
   const w = mk('a', 'btn small ghost', 'Bid or Pass worksheet'); w.href = '#ws'; act.appendChild(w);
   $('map').hidden = true;
+  if (PF.REPORT_COUNTIES.includes(l.county)) { $('rep').hidden = false; PF.reportButtons(act, l, () => PF._rep); PF.report($('rep'), l); }
   await PF.timeline($('tl'), l);
   await PF.nearby($('nb'), l);
   await PF.worksheet($('ws'), l);

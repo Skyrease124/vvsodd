@@ -901,3 +901,5 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .pfws-item{text-align:left}
 .pfws-item .pfws-cb{display:flex!important;flex-direction:row!important;align-items:center;gap:10px;margin:0}
 .pfws-calc{overflow-x:auto}.pfws-tbl{min-width:340px}.pfws-tbl th,.pfws-tbl td{padding:6px 6px;font-size:13px}
+.rep-sec{margin:18px 0;padding:12px 14px;border:1px solid rgba(255,255,255,.12);border-radius:12px}.rep-sec h3{margin-top:0}
+.pfstatus{display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.25)}.pfstatus-estate_linked{border-color:#4ade80;color:#4ade80}.pfstatus-unverified{border-color:#ffd166;color:#ffd166}
