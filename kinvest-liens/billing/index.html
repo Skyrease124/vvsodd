@@ -61,6 +61,16 @@
       <p id="almsg" class="small" role="status" aria-live="polite"></p>
       <ul class="small" id="allog"></ul>
     </form>
+    <h2>Ask the County: Gmail sending</h2>
+    <div id="gstatus" class="notice" role="status">Checking&hellip;</div>
+    <p class="small muted">In Google Cloud Console: create an OAuth client (type: Web application), add the redirect address below, and turn on the Gmail API. Google must approve the app before members outside your test users can connect.</p>
+    <p class="small"><b>Redirect address:</b> <code id="gredir"></code></p>
+    <form id="gform" class="setupform" novalidate autocomplete="off">
+      <label>Google Client ID<input id="gid" type="text" autocomplete="off" spellcheck="false" placeholder="&hellip;apps.googleusercontent.com"></label>
+      <label>Google Client secret<input id="gsec" type="password" autocomplete="new-password" spellcheck="false"></label>
+      <div class="setupbtns"><button class="btn" type="submit">Save</button></div>
+      <p id="gmsg" class="small" role="status" aria-live="polite"></p>
+    </form>
     <h2>Webhook (so payments switch members on and off)</h2>
     <p class="small muted">In Stripe: Developers &rarr; Webhooks &rarr; Add endpoint. Use this address and these events, then copy the signing secret (whsec_) into the box above.</p>
     <p class="small"><b>Address:</b> <code id="url"></code></p>
@@ -111,7 +121,9 @@
   }
   $('alform').addEventListener('submit', async e => { e.preventDefault(); asay('Working\u2026', true); const r = await post({action: 'saveAlerts', emailOn: $('alemailon').checked, email: $('alemail').value, smsOn: $('alsmson').checked, phone: $('alphone').value, sid: $('alsid').value, token: $('altoken').value, from: $('alfrom').value}); if (r.ok) { ['alsid', 'altoken', 'alphone', 'alfrom'].forEach(i => $(i).value = ''); asay(r.d.message, true); loadAlerts(); } else asay(r.d.error || 'Something went wrong.'); });
   $('altest').addEventListener('click', async () => { asay('Sending\u2026', true); const r = await post({action: 'testAlerts'}); r.ok ? asay(r.d.message, true) : asay(r.d.error || 'Something went wrong.'); setTimeout(loadAlerts, 800); });
-  load(); loadMail(); loadAlerts();
+  async function loadG() { try { const d = await (await fetch(API + '?google=1')).json(); $('gredir').textContent = d.redirect || ''; $('gstatus').textContent = d.configured ? 'ON (' + (d.source === 'env' ? 'set in Netlify' : 'saved here') + '). Members can connect Gmail.' : 'OFF. Members can still draft and copy messages.'; } catch (e) {} }
+  $('gform').addEventListener('submit', async e => { e.preventDefault(); const r = await post({action: 'saveGoogle', clientId: $('gid').value, clientSecret: $('gsec').value}); $('gmsg').textContent = r.ok ? r.d.message : (r.d.error || 'Something went wrong.'); if (r.ok) { $('gsec').value = ''; loadG(); } });
+  load(); loadMail(); loadAlerts(); loadG();
 })();
 </script>
 <script src="/auth-nav.js"></script>

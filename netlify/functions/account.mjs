@@ -49,6 +49,11 @@ async function handle(event) {
       const c = await alerts.getSettings(), mail = await auth.mailConfig();
       return json(200, { emailOn: c.emailOn, email: c.email, mailReady: !!mail, smsOn: c.smsOn, phoneHint: c.phone ? '\u2026' + c.phone.slice(-4) : '', twilioReady: !!(c.sid && c.token && c.from), twilioSource: c.twilioSource, fromHint: c.from, log: await alerts.getLog() });
     }
+    if (event.query && event.query.google) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      const c = (await auth.kvGet('google-oauth')) || {};
+      return json(200, { configured: !!((process.env.GOOGLE_CLIENT_ID || c.clientId) && (process.env.GOOGLE_CLIENT_SECRET || c.clientSecret)), source: process.env.GOOGLE_CLIENT_ID ? 'env' : (c.clientId ? 'saved' : ''), redirect: (process.env.SITE_URL || 'https://pricepocketasset.com') + '/.netlify/functions/askcounty?act=callback' });
+    }
     if (event.query && event.query.members) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       const keys = await auth.kvList('u_');
@@ -159,6 +164,14 @@ async function handle(event) {
     if (merged.smsOn && !(merged.phone && (old.sid || merged.sid) && (old.token || merged.token) && (old.from || merged.from))) return json(400, { error: 'To turn on texts, fill in your phone number and the three Twilio boxes.' });
     await alerts.saveSettings(patch);
     return json(200, { ok: true, message: 'Saved. Tap "Send me a test alert".' });
+  }
+  if (act === 'saveGoogle') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    const id = String(b.clientId || '').trim(), secret = String(b.clientSecret || '').trim();
+    if (!/^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$/.test(id)) return json(400, { error: 'A Google Client ID ends with .apps.googleusercontent.com' });
+    if (secret.length < 10) return json(400, { error: 'Paste the Client secret too.' });
+    await auth.kvPut('google-oauth', { clientId: id, clientSecret: secret });
+    return json(200, { ok: true, message: 'Saved. Members can now connect Gmail on the Ask the County page.' });
   }
   if (act === 'createWebhook') {
     if (!me || !me.owner) return json(403, { error: 'Owner only.' });

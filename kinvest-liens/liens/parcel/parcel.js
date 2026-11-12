@@ -19,6 +19,7 @@
   add(l.priceLabel === 'Sold for' ? 'Actual sale price' : PF.amountLabel(l), l.amount != null ? PF.money(l.amount) : (l.priceLabel ? 'Not listed' : '')); add('Payoff (list date)', l.payoff != null ? PF.money(l.payoff) : ''); add('Sale', l.saleDate); add('Rate', l.rate); add('Acres', l.acres); add('Use', l.use); add('County value', l.market != null ? PF.money(l.market).replace('.00', '') : '');
   if (l.mailing) add('Owner mailing address', l.mailing);
   const act = $('pact');
+  { const ac = document.createElement('a'); ac.className = 'btn small ghost'; ac.textContent = 'Ask the County'; ac.href = '/account/ask-county/?' + new URLSearchParams({state: l.state || 'FL', county: l.county, parcel: l.parcel, kind: 'status'}); act.appendChild(ac); }
   act.appendChild(PF.watchButton(l, 'btn small'));
   const hasMap = (typeof PARCEL_MAPS !== 'undefined' && PARCEL_MAPS[l.county]) || (l.state || 'FL') === 'FL';
   const geo = await (async () => { const c = await PF.cfg(l); const g = c && c.geo ? await PF.json(PF.base + 'geo-' + c.slug + '.json') : null; return g && g.geo[l.parcel]; })();
