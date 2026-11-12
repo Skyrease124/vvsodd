@@ -11,10 +11,10 @@ window.TaxRadarOn = true;
   const SS = (() => { try { return window.sessionStorage; } catch (e) { return null; } })();
   const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
   const saved = (() => { try { return JSON.parse((SS && SS.getItem('ppa_radar')) || '{}'); } catch (e) { return {}; } })();
-  const S = {tab: saved.tab || 'opp', vac: !!saved.vac, types: new Set(saved.types || ['county-held', 'lien-sale', 'deed']), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
+  const S = {tab: saved.tab || 'opp', vac: !!saved.vac, types: new Set((saved.types || ['county-held', 'lien-sale', 'deed']).concat(saved.types && saved.types.includes('state-held') === false && saved.typesV2 ? [] : ['state-held'])), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
   const persist = () => { try { SS && SS.setItem('ppa_radar', JSON.stringify({tab: S.tab, vac: S.vac, types: [...S.types], budget: S.budget, sel: S.sel, fOpen: typeof fOpen === 'undefined' ? false : fOpen})); } catch (e) {} };
-  const TYPES = [['county-held', 'County-Held Liens'], ['lien-sale', 'Advertised Lien Sales'], ['deed', 'Tax Deed Auctions']];
-  const GROUP_LABEL = {'county-held': 'County-held', 'lien-sale': 'Advertised sale', 'deed': 'Tax deed'};
+  const TYPES = [['state-held', 'State-Held Land'], ['county-held', 'County-Held Liens'], ['lien-sale', 'Advertised Lien Sales'], ['deed', 'Tax Deed Auctions']];
+  const GROUP_LABEL = {'state-held': 'State-held land', 'county-held': 'County-held', 'lien-sale': 'Advertised sale', 'deed': 'Tax deed'};
   const fmtDate = d => { if (!d) return ''; const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}); };
   const bis = (a, x) => { let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] <= x) lo = m + 1; else hi = m; } return lo; };   // count of values <= x
 
@@ -109,14 +109,14 @@ window.TaxRadarOn = true;
     const stat = {};   // per state summary for the active view
     Object.keys(M.paths).forEach(a => { M.paths[a].classList.remove('glow', 'dim', 'guide', 'nomatch', 'hit'); M.paths[a].classList.toggle('guide', !hasData(a)); });
     if (S.tab === 'opp') {
-      const t = {}; S.data.counties.forEach(c => { const n = matches(c); if (!n) return; (t[c.state] = t[c.state] || {held: 0, auction: 0, counties: 0, n: 0}); const k = c.group === 'county-held' ? 'held' : 'auction'; t[c.state][k]++; t[c.state].counties++; t[c.state].n += n; });
+      const t = {}; S.data.counties.forEach(c => { const n = matches(c); if (!n) return; (t[c.state] = t[c.state] || {held: 0, auction: 0, counties: 0, n: 0}); const k = (c.group === 'county-held' || c.group === 'state-held') ? 'held' : 'auction'; t[c.state][k]++; t[c.state].counties++; t[c.state].n += n; });
       Object.keys(t).forEach(a => { const s = t[a]; M.paths[a].classList.add('hit'); const both = s.held && s.auction; if (s.held) addMarker(a, 'held', both ? -13 : 0, 0, s.held + ' county-held lien ' + (s.held > 1 ? 'counties' : 'county') + ', ' + s.n + ' matching listings', both ? null : String(s.counties)); if (s.auction) addMarker(a, 'auction', both ? 13 : 0, 0, s.auction + ' advertised sale ' + (s.auction > 1 ? 'counties' : 'county'), both ? null : String(s.counties)); });
       if (filtersOn()) Object.keys(M.paths).forEach(a => { if (!t[a]) M.paths[a].classList.add('nomatch'); });
       stat.matches = Object.values(t).reduce((u, s) => u + s.counties, 0); stat.listings = Object.values(t).reduce((u, s) => u + s.n, 0);
     } else if (S.tab === 'cal') {
       const monthOk = d => S.month < 0 || (d && Number(d.slice(5, 7)) - 1 === S.month);
       const seen = {};
-      S.data.counties.filter(c => c.group !== 'county-held').forEach(c => {
+      S.data.counties.filter(c => c.group !== 'county-held' && c.group !== 'state-held').forEach(c => {
         const s = c.sale; const canceled = S.data.changes.some(x => x.county === c.county && x.type === 'canceled');
         if (canceled) { if (!seen[c.state + 'x']) { seen[c.state + 'x'] = 1; addMarker(c.state, 'canceled', -13, 0, c.county + ' sale canceled'); } return; }
         if (s.kind === 'scheduled' && monthOk(s.date)) { if (!seen[c.state + 's']) { seen[c.state + 's'] = 1; addMarker(c.state, 'auction', 0, 0, c.county + ' sale scheduled ' + fmtDate(s.date), fmtDate(s.date).slice(0, 6)); } }
@@ -202,7 +202,7 @@ window.TaxRadarOn = true;
     const sec2 = mk('section', 'rp-sec'); sec2.appendChild(mk('h4', '', 'Next verified sale'));
     const sched = cs.filter(c => c.sale.kind === 'scheduled').sort((q, r) => q.sale.date.localeCompare(r.sale.date))[0];
     if (sched) sec2.appendChild(mk('p', '', sched.county + ' County: ' + fmtDate(sched.sale.date) + ' (date on the county’s list)'));
-    else sec2.appendChild(mk('p', 'muted', cs.length ? 'No dated upcoming sale is verified in our data. ' + (cs.some(c => c.sale.kind === 'inventory') ? 'County-held liens can be bought any time; confirm with the county.' : 'The county lists we hold do not state a sale date.') : 'None: we have this state’s rules and county links only.'));
+    else sec2.appendChild(mk('p', 'muted', cs.length ? 'No dated upcoming sale is verified in our data. ' + (cs.some(c => c.group === 'state-held') ? 'State-held land can be bought any time; confirm the current price with the state.' : cs.some(c => c.sale.kind === 'inventory') ? 'County-held liens can be bought any time; confirm with the county.' : 'The county lists we hold do not state a sale date.') : 'None: we have this state’s rules and county links only.'));
     p.appendChild(sec2);
     // counties
     const sec3 = mk('section', 'rp-sec'); sec3.appendChild(mk('h4', '', cs.length ? 'Counties with listings' : 'Counties'));
@@ -210,14 +210,14 @@ window.TaxRadarOn = true;
       sec3.appendChild(mk('p', 'muted', 'Guide only: no verified listings for ' + st.n + ' yet. Use the state page for rules and official county links.'));
     } else {
       const ul = mk('ul', 'rp-counties'); cs.sort((q, r) => matches(r) - matches(q) || q.county.localeCompare(r.county)).forEach(c => {
-        const li = mk('li'); const m = matches(c); const top = mk('div', 'rpc-top'); top.append(mk('b', '', c.county + ' County'), mk('span', 'rbadge g-' + c.group, GROUP_LABEL[c.group])); li.appendChild(top);
+        const li = mk('li'); const m = matches(c); const top = mk('div', 'rpc-top'); top.append(mk('b', '', /County/.test(c.county) ? c.county : c.county + ' County'), mk('span', 'rbadge g-' + c.group, GROUP_LABEL[c.group])); li.appendChild(top);
         if (S.tab === 'hist') {
           if (c.history) { const h2 = c.history; li.appendChild(mk('p', 'small', 'Completed sales: ' + h2.results.toLocaleString() + ' (' + h2.label + ')')); li.appendChild(mk('p', 'small', 'Final sale prices (actual): ' + money(h2.finalMin) + ' to ' + money(h2.finalMax) + ', median ' + money(h2.finalMedian))); li.appendChild(mk('p', 'small muted', 'Opening bids: not published in the county results · Advertised amounts: not in the results file')); }
           else li.appendChild(mk('p', 'small muted', 'No completed-sale results with verified prices in our data for this county.'));
         } else {
           li.appendChild(mk('p', 'small', c.count.toLocaleString() + ' listed · ' + (filtersOn() ? m.toLocaleString() + ' match your filters' : c.open.toLocaleString() + ' open now')));
           const arr = S.vac ? c.vac : c.amounts; if (arr.length) li.appendChild(mk('p', 'small', c.priceLabel + ': from ' + money(arr[0]) + (S.budget != null ? ' (' + bis(arr, S.budget).toLocaleString() + ' under ' + money(S.budget) + ')' : '')));
-          li.appendChild(mk('p', 'small muted', c.sale.kind === 'scheduled' ? 'Sale scheduled ' + fmtDate(c.sale.date) : c.sale.kind === 'inventory' ? 'County-held inventory (not an auction)' : c.sale.kind === 'completed' || c.sale.kind === 'past' ? 'Sale completed: ' + c.sale.text : 'Tentative: ' + c.sale.text));
+          li.appendChild(mk('p', 'small muted', c.sale.kind === 'scheduled' ? 'Sale scheduled ' + fmtDate(c.sale.date) : c.sale.kind === 'inventory' ? (c.group === 'state-held' ? c.sale.text : 'County-held inventory (not an auction)') : c.sale.kind === 'completed' || c.sale.kind === 'past' ? 'Sale completed: ' + c.sale.text : 'Tentative: ' + c.sale.text));
         }
         li.appendChild(mk('p', 'small muted', 'Source checked ' + fmtDate(c.checked)));
         const act = mk('div', 'ract'); const e = mk('a', 'btn small ghost', 'See listings'); e.href = M.base + '?s=' + a + '#' + encodeURIComponent(c.county); act.appendChild(e); li.appendChild(act); ul.appendChild(li);
