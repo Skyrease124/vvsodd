@@ -41,6 +41,26 @@
       <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="testmail">Send me a test email</button><button class="btn ghost" type="button" id="rmmail">Remove</button></div>
       <p id="mmsg" class="small" role="status" aria-live="polite"></p>
     </form>
+    <h2>Signup alerts (email and text to your phone)</h2>
+    <div id="alstatus" class="notice" role="status">Checking&hellip;</div>
+    <form id="alform" class="setupform" novalidate autocomplete="off">
+      <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="alemailon"> Email me when someone signs up</label>
+      <label>Send alerts to this email
+        <input id="alemail" type="email" autocomplete="off" spellcheck="false" placeholder="you@example.com"></label>
+      <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="alsmson"> Text my phone when someone signs up</label>
+      <label>Your phone number (saved privately, never shown on the site)
+        <input id="alphone" type="tel" autocomplete="off" placeholder="555 123 4567"></label>
+      <p class="small muted">Texts are sent through Twilio (twilio.com). Make a Twilio account, buy a number, then copy these three things from your Twilio dashboard. Leave a box empty to keep what is already saved.</p>
+      <label>Twilio Account SID (starts with AC)
+        <input id="alsid" type="password" autocomplete="new-password" spellcheck="false" placeholder="AC&hellip;"></label>
+      <label>Twilio Auth Token
+        <input id="altoken" type="password" autocomplete="new-password" spellcheck="false"></label>
+      <label>Your Twilio phone number
+        <input id="alfrom" type="tel" autocomplete="off" placeholder="+1 555 123 4567"></label>
+      <div class="setupbtns"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="altest">Send me a test alert</button></div>
+      <p id="almsg" class="small" role="status" aria-live="polite"></p>
+      <ul class="small" id="allog"></ul>
+    </form>
     <h2>Webhook (so payments switch members on and off)</h2>
     <p class="small muted">In Stripe: Developers &rarr; Webhooks &rarr; Add endpoint. Use this address and these events, then copy the signing secret (whsec_) into the box above.</p>
     <p class="small"><b>Address:</b> <code id="url"></code></p>
@@ -80,7 +100,18 @@
   $('mailform').addEventListener('submit', async e => { e.preventDefault(); msay('Working\u2026', true); const r = await post({action: 'saveMail', apiKey: $('rk').value, from: $('from').value}); if (r.ok) { $('rk').value = ''; msay(r.d.message, true); loadMail(); } else msay(r.d.error || 'Something went wrong.'); });
   $('testmail').addEventListener('click', async () => { msay('Sending\u2026', true); const r = await post({action: 'testMail'}); r.ok ? msay(r.d.message, true) : msay(r.d.error || 'Something went wrong.'); });
   $('rmmail').addEventListener('click', async () => { if (!confirm('Remove the email key?')) return; const r = await post({action: 'removeMail'}); r.ok ? msay(r.d.message, true) : msay(r.d.error); loadMail(); });
-  load(); loadMail();
+  const asay = (t, ok) => { $('almsg').textContent = t; $('almsg').style.color = ok ? '#0b6e4f' : '#c2282d'; };
+  async function loadAlerts() {
+    try {
+      const d = await (await fetch(API + '?alerts=1')).json(); if (d.error) return;
+      $('alemailon').checked = !!d.emailOn; $('alsmson').checked = !!d.smsOn; $('alemail').placeholder = d.email || '';
+      $('alstatus').textContent = 'Email: ' + (d.emailOn ? 'ON, to ' + d.email + (d.mailReady ? '' : ' (but email sending is not set up yet: add your Resend key in the Email box above)') : 'off') + '. Text: ' + (d.smsOn ? 'ON' + (d.phoneHint ? ', to the number ending ' + d.phoneHint : '') + (d.twilioReady ? '' : ' (but the Twilio boxes are not filled in yet)') : 'off') + '.';
+      $('allog').textContent = ''; (d.log || []).slice(0, 5).forEach(x => { const li = document.createElement('li'); li.textContent = new Date(x.at).toLocaleString() + ' \u2013 ' + x.subject + (x.email ? ' \u00B7 email ' + x.email : '') + (x.sms ? ' \u00B7 text ' + x.sms : ''); $('allog').appendChild(li); });
+    } catch (e) {}
+  }
+  $('alform').addEventListener('submit', async e => { e.preventDefault(); asay('Working\u2026', true); const r = await post({action: 'saveAlerts', emailOn: $('alemailon').checked, email: $('alemail').value, smsOn: $('alsmson').checked, phone: $('alphone').value, sid: $('alsid').value, token: $('altoken').value, from: $('alfrom').value}); if (r.ok) { ['alsid', 'altoken', 'alphone', 'alfrom'].forEach(i => $(i).value = ''); asay(r.d.message, true); loadAlerts(); } else asay(r.d.error || 'Something went wrong.'); });
+  $('altest').addEventListener('click', async () => { asay('Sending\u2026', true); const r = await post({action: 'testAlerts'}); r.ok ? asay(r.d.message, true) : asay(r.d.error || 'Something went wrong.'); setTimeout(loadAlerts, 800); });
+  load(); loadMail(); loadAlerts();
 })();
 </script>
 <script src="/auth-nav.js"></script>
