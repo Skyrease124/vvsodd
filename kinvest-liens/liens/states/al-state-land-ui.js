@@ -1,3 +1,27 @@
+// Map + satellite preview: lot outline from the county's own GIS (parcels/al-<code>.json, exact parcel-ID matches only), imagery drawn live from Esri.
+const AlMap = {
+  files: {}, L: null,
+  outline(co) { return this.files[co] || (this.files[co] = fetch('/liens/states/parcels/al-' + co + '.json').then(r => r.ok ? r.json() : null).catch(() => null)); },
+  lib() { return this.L || (this.L = new Promise((res, rej) => { if (window.L) return res(window.L); const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'; document.head.appendChild(css); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'; s.onload = () => res(window.L); s.onerror = () => { this.L = null; rej(new Error('map')); }; document.head.appendChild(s); })); },
+  async open(c, r) {
+    const mk = (t, cl, x) => { const e = document.createElement(t); if (cl) e.className = cl; if (x != null) e.textContent = x; return e; };
+    let dlg = document.getElementById('aldlg'); if (dlg) dlg.remove();
+    dlg = mk('dialog', 'lotdlg'); dlg.id = 'aldlg'; document.body.appendChild(dlg);
+    const head = mk('div', 'ustop'); head.append(mk('b', '', 'Parcel ' + r[4])); const x = mk('button', 'btn small', 'Close'); x.type = 'button'; x.onclick = () => dlg.close(); head.append(x); dlg.appendChild(head);
+    dlg.appendChild(mk('p', 'small', r[5]));
+    const box = mk('div', 'lotmap'); box.style.height = '340px'; dlg.appendChild(box);
+    const note = mk('p', 'small muted', 'Loading…'); dlg.appendChild(note);
+    dlg.addEventListener('close', () => dlg.remove()); dlg.showModal();
+    const f = await this.outline(c.co), m = f && f.p[r[4]];
+    if (!m) { box.remove(); note.textContent = 'Location not found on the county map: this parcel ID is not in ' + c.county + '’s current parcel layer (it may have been split, merged or renumbered). No preview shown.'; return; }
+    let L; try { L = await this.lib(); } catch (e) { note.textContent = 'The map could not load.'; return; }
+    const map = L.map(box, {zoomControl: true, attributionControl: true});
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 20, maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(map);
+    const g = L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: m.g}}, {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.15}}).addTo(map);
+    map.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
+    note.textContent = 'Outline from ' + c.county + ' GIS (parcel ' + m.cid + '), matched by parcel ID; not a survey. Satellite imagery from Esri World Imagery, capture dates vary. Do not visit or enter the property.';
+  }
+};
 // Alabama state-held tax delinquent land (ADOR transcripts): county filter, search, sort, show more.
 const AlStateLandUI = {
   render(host) {
@@ -20,9 +44,9 @@ const AlStateLandUI = {
     let list = [], shown = 50;
     const draw = () => {
       wrap.textContent = ''; const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel', 'Owner of record', 'Description', 'Tax sale year', 'Cert #', 'Bid at tax sale'].forEach(x => hr.appendChild(mk('th', '', x)));
+      ['County', 'Parcel', 'Owner of record', 'Description', 'Tax sale year', 'Cert #', 'Bid at tax sale', ''].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
-      list.slice(0, shown).forEach(({c, r}) => { const row = tb.insertRow(); [c.county.replace(' County', ''), r[4], r[0], r[5], r[1], r[2], r[6] == null ? 'Not shown' : money(r[6])].forEach(v => row.insertCell().textContent = v); });
+      list.slice(0, shown).forEach(({c, r}) => { const row = tb.insertRow(); [c.county.replace(' County', ''), r[4], r[0], r[5], r[1], r[2], r[6] == null ? 'Not shown' : money(r[6])].forEach(v => row.insertCell().textContent = v); const b = mk('button', 'btn small ghost', 'Map'); b.type = 'button'; b.onclick = () => AlMap.open(c, r); row.insertCell().appendChild(b); });
       wrap.appendChild(t); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
     };
     const apply = () => {
