@@ -252,6 +252,72 @@ const CleanupData = {
     });
   }
 };
+// Estimated Ground Elevation: ONE point inside the verified lot outline (the point farthest from the edges), looked up in feet from the free USGS
+// Elevation Point Query Service (longitude = x, latitude = y). A single-point estimate, cached by sampled coordinates.
+const ElevationData = {
+  URL: 'https://epqs.nationalmap.gov/v1/json', DOCS: 'https://epqs.nationalmap.gov/v1/docs', TTL: 90 * 864e5, mem: {}, pending: {},
+  // pole of inaccessibility (Mapbox "polylabel" method) in local metres; guaranteed inside even for L-shaped lots and lots with holes
+  point(r) {
+    const rings = r.g, xs = rings.flat().map(q => q[0]), ys = rings.flat().map(q => q[1]), lng0 = (Math.min(...xs) + Math.max(...xs)) / 2, lat0 = (Math.min(...ys) + Math.max(...ys)) / 2, k = Math.cos(lat0 * Math.PI / 180);
+    const R = rings.map(ring => ring.map(q => [(q[0] - lng0) * k * 111320, (q[1] - lat0) * 110574]));
+    const sd = (x, y) => { let inside = false, d = Infinity; R.forEach(ring => { for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / L)) : 0; d = Math.min(d, Math.hypot(x - a[0] - t * dx, y - a[1] - t * dy)); } }); return inside ? d : -d; };
+    const px = R.flat().map(q => q[0]), py = R.flat().map(q => q[1]), minX = Math.min(...px), maxX = Math.max(...px), minY = Math.min(...py), maxY = Math.max(...py), w = maxX - minX, h = maxY - minY, size = Math.min(w, h) || Math.max(w, h) || 1;
+    const cell = (x, y, hh) => { const d = sd(x, y); return {x, y, h: hh, d, max: d + hh * Math.SQRT2}; };
+    let q = [], hh = size / 2; for (let x = minX; x < maxX; x += size) for (let y = minY; y < maxY; y += size) q.push(cell(x + hh, y + hh, hh));
+    let best = cell((minX + maxX) / 2, (minY + maxY) / 2, 0); q.forEach(c => { if (c.d > best.d) best = c; });
+    let guard = 0; while (q.length && guard++ < 6000) { q.sort((a, b) => b.max - a.max); const c = q.shift(); if (c.d > best.d) best = c; if (c.max - best.d <= 0.25) continue; const h2 = c.h / 2; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([dx, dy]) => q.push(cell(c.x + dx * h2, c.y + dy * h2, h2))); }
+    if (!(best.d > 0)) return null;   // no point verified to be inside the outline
+    return {lng: Number((lng0 + best.x / (k * 111320)).toFixed(6)), lat: Number((lat0 + best.y / 110574).toFixed(6)), edgeFt: best.d * 3.28084};
+  },
+  keyOf: pt => pt.lng.toFixed(6) + ',' + pt.lat.toFixed(6),
+  apiUrl: pt => ElevationData.URL + '?x=' + pt.lng + '&y=' + pt.lat + '&wkid=4326&units=Feet&includeDate=false',
+  readCache(k) { if (this.mem[k]) return this.mem[k]; try { const v = JSON.parse(localStorage.getItem('ppa_epqs:' + k) || 'null'); if (v && Date.now() - v.t < this.TTL) return (this.mem[k] = v.d); } catch (e) {} return null; },
+  writeCache(k, d) { this.mem[k] = d; try { localStorage.setItem('ppa_epqs:' + k, JSON.stringify({t: Date.now(), d})); } catch (e) {} },
+  async query(pt) {
+    const k = this.keyOf(pt), hit = this.readCache(k); if (hit) return Object.assign({cached: true}, hit);
+    if (this.pending[k]) return this.pending[k];
+    return this.pending[k] = (async () => {
+      try {
+        for (let a = 0; a < 2; a++) {
+          const c = new AbortController(), t = setTimeout(() => c.abort(), 12000);
+          try { const r = await fetch(this.apiUrl(pt), {signal: c.signal}); if (!r.ok) throw new Error('http'); const d = await r.json(), v = Number(d.value);
+            if (!isFinite(v) || v <= -1000 || d.value === '' || d.value == null) return null;   // USGS answers with a no-data code outside its coverage
+            const out = {ft: v, res: d.resolution || null, raster: d.rasterId || null}; this.writeCache(k, out); return out; }
+          catch (e) { if (a) throw e; } finally { clearTimeout(t); }
+        }
+      } catch (e) { return null; } finally { delete this.pending[k]; }
+    })();
+  },
+  // resolves {state:'ok', pt, ft, res, cached} | {state:'failed', pt} | {state:'nooutline'}
+  async get(l, r) {
+    if (!r || r.st !== 'matched' || !r.g || !r.bb) return {state: 'nooutline'};
+    const pt = this.point(r); if (!pt) return {state: 'nooutline'};
+    const d = await this.query(pt); return d ? Object.assign({state: 'ok', pt}, d) : {state: 'failed', pt};
+  },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.elbody').forEach(x => x.remove()); const body = mk('div', 'elbody'); box.appendChild(body);
+    if (res.state !== 'ok') { body.appendChild(mk('p', 'notice', 'Elevation unavailable')); body.appendChild(mk('p', 'small muted', res.state === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so no sample point can be chosen inside it.' : 'The USGS elevation service did not answer.')); if (res.state === 'failed') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); } return; }
+    const big = mk('p', 'elval'); big.append(mk('b', '', (Math.round(res.ft * 10) / 10).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' ft'), mk('span', 'small', ' estimated ground elevation')); body.appendChild(big);
+    body.appendChild(mk('p', 'small', 'Single-point estimate: one sample at the marked point inside the lot (' + res.pt.lat.toFixed(5) + ', ' + res.pt.lng.toFixed(5) + '), about ' + Math.round(res.pt.edgeFt).toLocaleString('en-US') + ' ft from the nearest edge. It is not an average of the lot, a survey or a flood elevation. Ground can rise or fall across a lot, and fill or recent work may not be in the data.'));
+    const src = mk('p', 'small muted'); src.append('Source: '); const a = mk('a', '', 'USGS Elevation Point Query Service'); a.href = this.apiUrl(res.pt); a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a, ' (', (() => { const d = mk('a', '', 'API docs'); d.href = this.DOCS; d.target = '_blank'; d.rel = 'noopener noreferrer'; return d; })(), ')' + (res.res ? '; source grid cell about ' + Math.round(res.res * 111320 * 3.28084) + ' ft' : '') + (res.cached ? '; saved from an earlier lookup of these coordinates' : '') + '.'); body.appendChild(src);
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord elbox'); box.appendChild(mk('h4', '', 'Estimated Ground Elevation'));
+    const run = () => { box.querySelectorAll('.elbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted elbody', 'Checking USGS…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  },
+  // marker for the sampled point on the lot map
+  mapAttach(L, m, box, l, r) {
+    this.get(l, r).then(res => {
+      if (res.state !== 'ok' || !m._container || !m._container.isConnected) return;
+      const mk = L.circleMarker([res.pt.lat, res.pt.lng], {radius: 7, color: '#fff', weight: 3, fillColor: '#06b6d4', fillOpacity: 1}).addTo(m);
+      mk.bindTooltip('Elevation sample: ' + (Math.round(res.ft * 10) / 10) + ' ft (single point)', {permanent: false, sticky: true}); mk.bindPopup('<b>Estimated ground elevation: ' + (Math.round(res.ft * 10) / 10) + ' ft</b><br>Single-point estimate at this spot, from the USGS Elevation Point Query Service.');
+      box._elevMarker = mk;
+    });
+  }
+};
 // Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
 const ParcelData = {
   base: '/liens/states/parcels/',
@@ -360,7 +426,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') hb.after(CleanupData.section(l, pd.r)); }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); cs.after(ElevationData.section(l, pd.r)); } }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -381,6 +447,7 @@ const LienMap = {
             if (tt.ft <= TrafficData.NEAR_FT) setTimeout(both, 80); } }
         if (CountyAerial.enabled(l.county)) CountyAerial.attach(L, m, box, l, pd.r, {sat, street}, layersCtl);
         CleanupData.mapAttach(L, m, box, l, pd.r);
+        ElevationData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
