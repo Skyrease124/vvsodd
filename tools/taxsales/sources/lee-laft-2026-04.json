@@ -1,0 +1,4717 @@
+{
+"county": "Lee",
+"state": "FL",
+"type": "laft",
+"saleId": "lee-laft-2026-04",
+"auctionUrl": "",
+"officialPage": "https://www.leeclerk.org/",
+"source": {
+"name": "Lee County Clerk: Lands Available for Taxes list (file you sent; no title printed, file generated about Apr 6, 2026)",
+"url": "https://www.leeclerk.org/",
+"published": "2026-04-06",
+"checked": "2026-11-12",
+"liveCalendar": "Not checked live: leeclerk.org refuses automated requests, and parcels may have been bought since this list"
+},
+"items": [
+{
+"deedNo": "2020000652",
+"parcel": "17-43-24-C1-05817.0090",
+"offeredDate": "2020-09-22",
+"openingBid": 4669.0,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4317 NE 21ST AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 88 BLK 5817 PB 24 PG 139+140 LOTS 9 + 10",
+"status": "available"
+},
+{
+"deedNo": "2020001396",
+"parcel": "13-44-26-10-00098.0040",
+"offeredDate": "2020-11-17",
+"openingBid": 5174.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2615 40TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.98 PB 15 PG 62 LOTS 4 + 5",
+"status": "available"
+},
+{
+"deedNo": "2020001479",
+"parcel": "16-45-27-11-00032.0270",
+"offeredDate": "2020-12-15",
+"openingBid": 4710.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "656 CHARLES SISE ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 32 PB 27 PG 174 LOT 27",
+"status": "available"
+},
+{
+"deedNo": "2020001721",
+"parcel": "03-44-23-C1-02850.0220",
+"offeredDate": "2020-12-15",
+"openingBid": 11001.13,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1233 CHIQUITA BLVD N CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 41 BLK 2850 PB 17 PG 9 LOTS 22 THRU 25",
+"status": "available"
+},
+{
+"deedNo": "2021002738",
+"parcel": "01-44-21-00-00001.001B",
+"offeredDate": "2022-02-15",
+"openingBid": 5577.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "ACCESS UNDETERMINED BOKEELIA FL",
+"legal": "FR SE COR GL8 TH N1000 TO POB TH N117 TH W TO PI SOU ND TH SE ALG TH E TO POB",
+"status": "available"
+},
+{
+"deedNo": "2021002575",
+"parcel": "06-44-24-C4-02046.0010",
+"offeredDate": "2022-02-22",
+"openingBid": 31790.0,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "818 NE 10TH ST CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 31 BLK.2046 PB 14 PG 154 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2021002107",
+"parcel": "06-44-23-C3-04201.0360",
+"offeredDate": "2022-03-01",
+"openingBid": 3428.3,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3327 TROPICANA PKWY W CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 60 BLK 4201 PB 19 PG 157 LOT 36",
+"status": "available"
+},
+{
+"deedNo": "2022000074",
+"parcel": "18-43-24-C4-05698.0370",
+"offeredDate": "2022-04-26",
+"openingBid": 15922.37,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4017 NE 10TH PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 87 BLK 5698 PB 24 PG 75 LOTS 37 + 38",
+"status": "available"
+},
+{
+"deedNo": "2022000842",
+"parcel": "13-45-26-03-00026.0120",
+"offeredDate": "2022-11-01",
+"openingBid": 7856.7,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2802 52ND ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 3 BLK.26 PB 15 PG 99 LOTS 12 + 13",
+"status": "available"
+},
+{
+"deedNo": "2022001258",
+"parcel": "17-44-25-P1-0240B.0060",
+"offeredDate": "2023-01-10",
+"openingBid": 43528.82,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "309 CLARA ST FORT MYERS FL 33916",
+"legal": "COUNTRY MANOR AMENDED BLK.B PB 10 PG 2 LOTS 6 + 7",
+"status": "available"
+},
+{
+"deedNo": "2022001603",
+"parcel": "01-45-26-08-00080.0070",
+"offeredDate": "2023-01-31",
+"openingBid": 15103.07,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2807 29TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 8 BLK.80 PB 15 PG 93 LOTS 7 + 8",
+"status": "available"
+},
+{
+"deedNo": "2022001840",
+"parcel": "02-45-27-12-00080.0060",
+"offeredDate": "2023-02-21",
+"openingBid": 7647.53,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1026 CARROLL ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 80 PB 15 PG 203 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023000247",
+"parcel": "14-45-27-05-00026.0140",
+"offeredDate": "2023-07-25",
+"openingBid": 12036.75,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "566 WABASSO TER LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 26 PB 15 PG 135 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023000282",
+"parcel": "21-45-27-15-00103.0010",
+"offeredDate": "2023-10-03",
+"openingBid": 11328.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "843 GAYLORD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK.103 PB 18 PG 68 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023000286",
+"parcel": "24-44-27-07-00028.0020",
+"offeredDate": "2023-10-03",
+"openingBid": 8476.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1020 MONROE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 7 BLK 28 DB 254 PG 50 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023000479",
+"parcel": "14-45-27-14-00076.0040",
+"offeredDate": "2023-10-24",
+"openingBid": 9716.67,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "627 LARK AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 76 PB 15 PG 146 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023000485",
+"parcel": "36-45-27-10-00060.0010",
+"offeredDate": "2023-10-24",
+"openingBid": 15184.07,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1138 1140 BELGRAVE ST FORT MYERS FL 33913",
+"legal": "LEHIGH ACRES UNIT 10 BLK 60 PB 28 PG 67 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023000630",
+"parcel": "15-45-27-17-00001.0090",
+"offeredDate": "2024-01-09",
+"openingBid": 21907.34,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "726 MIRROR LAKES DR LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKE ESTATES BLK 1 PB 23 PG 85 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023000647",
+"parcel": "25-44-26-01-00001.0060",
+"offeredDate": "2024-01-09",
+"openingBid": 19980.2,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3009 16TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 1 REPLT. BLK.1 DB 289 PG 206 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023000608",
+"parcel": "05-45-27-01-00014.0170",
+"offeredDate": "2024-01-30",
+"openingBid": 5953.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "808 CORAL AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES 1ST ADD BLK 14 PB 12 PG 139 LOT 17",
+"status": "available"
+},
+{
+"deedNo": "2023000754",
+"parcel": "36-43-27-01-00007.0060",
+"offeredDate": "2024-01-30",
+"openingBid": 5609.63,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4202 E 27TH ST ALVA FL 33920",
+"legal": "LEHIGH ACRES UNIT 00 BLK 7 PB 15 PG 101 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023000884",
+"parcel": "03-44-23-C1-02877.0340",
+"offeredDate": "2024-01-30",
+"openingBid": 36530.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1215 NW 15TH TER CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 41 BLK 2877 PB 17 PG 13 LOTS 34 + 35",
+"status": "available"
+},
+{
+"deedNo": "2023000896",
+"parcel": "31-43-24-C3-02120.0050",
+"offeredDate": "2024-01-30",
+"openingBid": 23901.31,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1328 NE 18TH ST CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 32 BLK 2120 PB 16 PG 7 LOTS 5 + 6",
+"status": "available"
+},
+{
+"deedNo": "2023000897",
+"parcel": "34-43-23-C3-02915.0070",
+"offeredDate": "2024-01-30",
+"openingBid": 35819.02,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1612 NW 9TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 42 BLK 2915 PB 17 PG 35 LOTS 7 + 8",
+"status": "available"
+},
+{
+"deedNo": "2023000922",
+"parcel": "35-43-23-C3-02709.A250",
+"offeredDate": "2024-01-30",
+"openingBid": 3799.8,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "215 DIPLOMAT PKWY W CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 39 BLK 2709A PB 16 PG 145 LOT 25",
+"status": "available"
+},
+{
+"deedNo": "2023001033",
+"parcel": "03-44-26-02-00010.0090",
+"offeredDate": "2024-02-06",
+"openingBid": 19684.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3804 HYDE PARK DR FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 2 BLK 10 PB 26 PG 4 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001048",
+"parcel": "01-44-23-C4-02424.0110",
+"offeredDate": "2024-02-06",
+"openingBid": 28026.21,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "310 NE 9TH TER CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 34 BLK 2424 PB 16 PG 76 LOTS 11 + 12",
+"status": "available"
+},
+{
+"deedNo": "2023001055",
+"parcel": "04-45-26-05-00013.0190",
+"offeredDate": "2024-02-06",
+"openingBid": 49138.07,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4422 4424 25TH ST SW LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 5 BLK 13 PB 15 PG 85 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023001074",
+"parcel": "15-44-23-C1-03629.0440",
+"offeredDate": "2024-02-06",
+"openingBid": 16607.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "216 SW 14TH AVE CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 49 BLK 3629 PB 17 PG 151 LOTS 44 + 45",
+"status": "available"
+},
+{
+"deedNo": "2023001075",
+"parcel": "15-44-23-C4-04565.0220",
+"offeredDate": "2024-02-06",
+"openingBid": 37447.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1418 SW 4TH ST CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 68 BLK 4565 PB 23 PG 101 LOTS 22 + 23",
+"status": "available"
+},
+{
+"deedNo": "2023001101",
+"parcel": "29-44-26-11-00083.0130",
+"offeredDate": "2024-02-06",
+"openingBid": 25341.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "821 ATHERTON AVE LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 46 BLK 83 PB 26 PG 46 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001124",
+"parcel": "36-44-27-03-00010.0080",
+"offeredDate": "2024-02-06",
+"openingBid": 36322.74,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "8 ABBOTT AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 3 BLK 10 DB 254 PG 25 LOTS 8 + 9",
+"status": "available"
+},
+{
+"deedNo": "2023001127",
+"parcel": "02-44-23-C4-02642.0050",
+"offeredDate": "2024-02-13",
+"openingBid": 31890.17,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "418 NW 11TH TER CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 38 BLK 2642 PB 16 PG 92 LOTS 5 + 6",
+"status": "available"
+},
+{
+"deedNo": "2023001136",
+"parcel": "27-44-23-C2-04378.0150",
+"offeredDate": "2024-02-13",
+"openingBid": 17035.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1839 SW 8TH CT CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 63 BLK 4378 PB 21 PG 59 LOTS 15 + 16",
+"status": "available"
+},
+{
+"deedNo": "2023001183",
+"parcel": "07-43-23-C4-06099.0440",
+"offeredDate": "2024-02-13",
+"openingBid": 27239.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3705 NW 46TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 97 BLK 6099 PB 25 PG 94 LOTS 44 + 45",
+"status": "available"
+},
+{
+"deedNo": "2023001209",
+"parcel": "11-44-23-C2-02600.0600",
+"offeredDate": "2024-02-13",
+"openingBid": 32056.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "336 NW 1ST PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2600 PB 17 PG 23 LOTS 60 + 61",
+"status": "available"
+},
+{
+"deedNo": "2023001212",
+"parcel": "14-45-27-04-00025.0010",
+"offeredDate": "2024-02-13",
+"openingBid": 21063.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1037 KELLOGG ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 25 PB 15 PG 134 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2023001215",
+"parcel": "17-44-23-C4-03916.0090",
+"offeredDate": "2024-02-13",
+"openingBid": 18132.16,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2902 CEITUS PKWY CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 54 BLK 3916 PB 19 PG 82 LOTS 9 + 10",
+"status": "available"
+},
+{
+"deedNo": "2023001219",
+"parcel": "20-44-26-07-00041.0110",
+"offeredDate": "2024-02-13",
+"openingBid": 10249.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1020 CHAMPION AVE LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 7 BLK 41 PB 26 PG 34 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001221",
+"parcel": "21-44-26-06-00021.0080",
+"offeredDate": "2024-02-13",
+"openingBid": 22153.67,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "5015 BELROSE ST LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK 21 PG 26 PB 39 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023001225",
+"parcel": "26-43-23-C2-02771.0030",
+"offeredDate": "2024-02-13",
+"openingBid": 35962.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3019 NW 2ND PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 40 BLK 2771 PB 17 PG 93 LOTS 3 + 4",
+"status": "available"
+},
+{
+"deedNo": "2023001029",
+"parcel": "31-44-27-18-00004.0023",
+"offeredDate": "2024-02-20",
+"openingBid": 10392.3,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "32 COSMOPOLITAN DR 23 LEHIGH ACRES FL 33936",
+"legal": "SUNSET LAKE CONDO DESC IN OR 2698 PG 65 PH 1 BLDG 4 UNIT 23",
+"status": "available"
+},
+{
+"deedNo": "2023001255",
+"parcel": "27-43-23-C4-03012.0460",
+"offeredDate": "2024-02-20",
+"openingBid": 3577.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2516 NW 14TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 43 BLK 3012 PB 17 PG 49 LOT 46",
+"status": "available"
+},
+{
+"deedNo": "2023001305",
+"parcel": "32-44-24-C1-01193.0280",
+"offeredDate": "2024-02-20",
+"openingBid": 176430.85,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1713 SE 26TH TER CAPE CORAL FL 33904",
+"legal": "CAPE CORAL UN 20 PT 2 BLK 1193 PB 19 PG 47 LOTS 28 + 29",
+"status": "available"
+},
+{
+"deedNo": "2023001314",
+"parcel": "01-45-27-12-00066.0130",
+"offeredDate": "2024-02-20",
+"openingBid": 8072.12,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1237 RAPHAEL ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 66 PB 15 PG 181 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001322",
+"parcel": "36-45-27-05-00028.0030",
+"offeredDate": "2024-02-20",
+"openingBid": 14474.85,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1133 HATTON AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 28 PB 18 PG 143 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001329",
+"parcel": "06-44-23-C3-04201.0550",
+"offeredDate": "2024-02-27",
+"openingBid": 59.38,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3515 TROPICANA PKWY W CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 60 BLK 4201 PB 19 PG 157 LOT 55",
+"status": "available"
+},
+{
+"deedNo": "2023001344",
+"parcel": "02-45-27-03-00021.0120",
+"offeredDate": "2024-02-27",
+"openingBid": 7858.71,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "133 AUBURN AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 21 PB 15 PG 190 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023001347",
+"parcel": "05-45-27-04-00006.0110",
+"offeredDate": "2024-02-27",
+"openingBid": 19087.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "19490 POPPYTREE CT LEHIGH ACRES FL 33936",
+"legal": "LAURELWOOD BLK 6 PB 33 PG 61 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001321",
+"parcel": "17-43-24-C3-05784.0010",
+"offeredDate": "2024-03-12",
+"openingBid": 25562.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3923 NE 21ST PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 88 BLK.5784 PB 24 PG 131 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2023001392",
+"parcel": "07-43-23-C1-06095.0270",
+"offeredDate": "2024-03-12",
+"openingBid": 30013.35,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3621 NW 47TH LN CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 97 BLK 6095 PB 25 PG 97 LOTS 27 + 28",
+"status": "available"
+},
+{
+"deedNo": "2023001394",
+"parcel": "12-44-26-03-00022.0180",
+"offeredDate": "2024-03-12",
+"openingBid": 13931.23,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3016 52ND ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK.22 PB 15 PG 61 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001395",
+"parcel": "12-44-26-10-00100.0110",
+"offeredDate": "2024-03-12",
+"openingBid": 14568.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2508 55TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.100 PB 15 PG 61 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001399",
+"parcel": "27-44-26-07-00083.0190",
+"offeredDate": "2024-03-12",
+"openingBid": 20267.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4116 14TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 7 BLK 83 PB 15 PG 76 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023001618",
+"parcel": "07-44-27-07-00251.0180",
+"offeredDate": "2024-03-19",
+"openingBid": 7539.53,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1807 MAYBERRY DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 39 PT N BLK 251 PB 27 PG 61 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001638",
+"parcel": "01-45-27-12-00064.0030",
+"offeredDate": "2024-03-19",
+"openingBid": 11443.38,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1234 SUNRISE BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 64 PB 15 PG 181 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001639",
+"parcel": "01-45-27-12-00067.0140",
+"offeredDate": "2024-03-19",
+"openingBid": 12971.51,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "208 NEPTUNE AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 67 PB 15 PG 181 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023001640",
+"parcel": "02-45-27-01-00011.0170",
+"offeredDate": "2024-03-19",
+"openingBid": 13030.71,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "126 MCARTHUR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 11 PB 15 PG 188 LOT 17",
+"status": "available"
+},
+{
+"deedNo": "2023001646",
+"parcel": "03-45-27-02-00003.0150",
+"offeredDate": "2024-03-19",
+"openingBid": 14590.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "829 PORTER ST E LEHIGH ACRES FL 33974",
+"legal": "TWIN LAKE ESTATES UNIT 2 BLK 3 PB 15 PG 208 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023001647",
+"parcel": "03-45-27-03-00010.0060",
+"offeredDate": "2024-03-19",
+"openingBid": 9138.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "870 SENTINELA BLVD LEHIGH ACRES FL 33974",
+"legal": "TWIN LAKE ESTATES UNIT 3 PB 15 PG 209 BLK 10 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001654",
+"parcel": "04-44-27-12-00075.0040",
+"offeredDate": "2024-03-19",
+"openingBid": 18888.4,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1907 TRUDY ST LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 16 BLK 75PB 27 PG 26 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001020",
+"parcel": "03-44-26-02-00008.0060",
+"offeredDate": "2024-03-26",
+"openingBid": 16065.75,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "6146 HUGHES AVE FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 2 BLK 8 PB 26 PG 4 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001098",
+"parcel": "27-44-27-05-00018.0010",
+"offeredDate": "2024-03-26",
+"openingBid": 20906.3,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1700 E 6TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK.18 DB 254 PG 35 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023001113",
+"parcel": "33-43-23-C1-03853.0510",
+"offeredDate": "2024-03-26",
+"openingBid": 32906.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2214 NW 21ST ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 53 BLK 3853 PB 19 PG 73 LOTS 51 + 52",
+"status": "available"
+},
+{
+"deedNo": "2023001123",
+"parcel": "36-43-23-C4-02490.0510",
+"offeredDate": "2024-03-26",
+"openingBid": 12282.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1614 NE JUANITA PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 36 PT 1 BLK 2490 PB 23 PG 88 LOTS 51 + 52",
+"status": "available"
+},
+{
+"deedNo": "2023001148",
+"parcel": "28-45-27-09-00041.0140",
+"offeredDate": "2024-04-02",
+"openingBid": 11552.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2826 MEADOW RD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 41 PB 20 PG 63 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023001231",
+"parcel": "29-43-24-C4-02255.0010",
+"offeredDate": "2024-04-09",
+"openingBid": 31833.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2415 NE 20TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 33 BLK.2255 PB 16 PG 57 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2023001240",
+"parcel": "34-43-23-C3-02915.0090",
+"offeredDate": "2024-04-09",
+"openingBid": 33090.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1616 NW 9TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 42 BLK 2915 PB 17 PG 35 LOTS 9 + 10",
+"status": "available"
+},
+{
+"deedNo": "2023001277",
+"parcel": "24-43-22-C3-05424.0010",
+"offeredDate": "2024-04-09",
+"openingBid": 149991.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3257 NW 41ST AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 90 BLK.5424 PB 24 PG 15 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2023001315",
+"parcel": "23-45-27-11-00048.0120",
+"offeredDate": "2024-04-09",
+"openingBid": 28006.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "812 AIKEN AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 48 PB 20 PG 31 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023001317",
+"parcel": "23-44-27-02-00007.024B",
+"offeredDate": "2024-04-09",
+"openingBid": 12561.71,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2906 E 9TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 2 BLK 7 DB 254 PG 55 LOT 24 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023001346",
+"parcel": "02-45-27-06-00037.0110",
+"offeredDate": "2024-04-09",
+"openingBid": 13537.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1021 BAGGET ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 37 PB 15 PG 195 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001117",
+"parcel": "34-43-23-C3-02915.0130",
+"offeredDate": "2024-04-16",
+"openingBid": 36280.11,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1624 NW 9TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 42 BLK 2915 PB 17 PG 35 LOTS 13 + 14",
+"status": "available"
+},
+{
+"deedNo": "2023001359",
+"parcel": "29-45-27-01-00002.0180",
+"offeredDate": "2024-04-16",
+"openingBid": 12838.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "429 SCOTTSDALE ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 2 PB 20 PG 65 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001360",
+"parcel": "29-45-27-01-00002.0190",
+"offeredDate": "2024-04-16",
+"openingBid": 13034.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "427 SCOTTSDALE ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 2 PB 20 PG 65 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023001366",
+"parcel": "31-43-24-C1-02163.0270",
+"offeredDate": "2024-04-16",
+"openingBid": 14928.11,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2208 NE 9TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 32 BLK 2163 PB 16 PG 11 LOTS 27 + 28",
+"status": "available"
+},
+{
+"deedNo": "2023001419",
+"parcel": "24-45-27-01-00004.0020",
+"offeredDate": "2024-04-16",
+"openingBid": 12358.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "711 GIORGIO AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 4 PB 18 PG 88 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001420",
+"parcel": "24-45-27-02-00017.0440",
+"offeredDate": "2024-04-16",
+"openingBid": 15329.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "762 SANTA LUCIA AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 17 PB 18 PG 91 LOT 44",
+"status": "available"
+},
+{
+"deedNo": "2023001475",
+"parcel": "25-43-23-C1-02300.A570",
+"offeredDate": "2024-04-16",
+"openingBid": 325.05,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "ACCESS UNDETERMINED CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 36 BLK 2300A PB 16 PG 125 LOT 57",
+"status": "available"
+},
+{
+"deedNo": "2023001476",
+"parcel": "25-43-23-C1-02300.A580",
+"offeredDate": "2024-04-16",
+"openingBid": 284.31,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "ACCESS UNDETERMINED CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 36 BLK 2300A PB 16 PG 125 LOT 58",
+"status": "available"
+},
+{
+"deedNo": "2023001387",
+"parcel": "10-45-27-13-00070.0020",
+"offeredDate": "2024-04-23",
+"openingBid": 12141.33,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "718 GRANT BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 13 BLK 70 PB 18 PG 14 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001418",
+"parcel": "04-44-27-06-00063.0040",
+"offeredDate": "2024-04-23",
+"openingBid": 7420.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2152 MERTON ST LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 13 PT N BLK 63 PB 27 PG 20 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001435",
+"parcel": "35-43-23-C3-02690.A260",
+"offeredDate": "2024-04-23",
+"openingBid": 1295.14,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "33 DIPLOMAT PKWY W CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 39 BLK 2690A PB 16 PG 145 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2023001460",
+"parcel": "24-45-27-08-00075.0080",
+"offeredDate": "2024-04-23",
+"openingBid": 13321.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1216 GALILEO ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 8 BLK 75 PB 18 PG 103 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023001461",
+"parcel": "24-45-27-08-00075.0090",
+"offeredDate": "2024-04-23",
+"openingBid": 13814.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1218 GALILEO ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 8 BLK 75 PB 18 PG 103 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001466",
+"parcel": "02-44-23-C1-02647.0230",
+"offeredDate": "2024-04-23",
+"openingBid": 32937.01,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1157 NW 7TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 38 BLK 2647 PB 16 PG 94 LOTS 23 + 24",
+"status": "available"
+},
+{
+"deedNo": "2023001579",
+"parcel": "01-44-23-C2-02430.0090",
+"offeredDate": "2024-04-23",
+"openingBid": 15034.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1317 NE 5TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 34 BLK.2430 PB 16 PG 83 LOTS 9 + 10",
+"status": "available"
+},
+{
+"deedNo": "2023002606",
+"parcel": "24-44-27-04-00015.0210",
+"offeredDate": "2024-04-23",
+"openingBid": 17371.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "917 FITCH AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK 15 DB 254 PG 50 LOT 21",
+"status": "available"
+},
+{
+"deedNo": "2023001479",
+"parcel": "35-45-27-03-00008.0040",
+"offeredDate": "2024-04-30",
+"openingBid": 46249.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1123 1125 EISENHOWER BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 8 PB 20 PG 70 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001523",
+"parcel": "35-43-23-C4-02715.0150",
+"offeredDate": "2024-04-30",
+"openingBid": 33750.32,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1629 NW 7TH PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 39 BLK 2715 PB 16 PG 143 LOTS 15 + 16",
+"status": "available"
+},
+{
+"deedNo": "2023001571",
+"parcel": "07-45-27-04-00017.0120",
+"offeredDate": "2024-04-30",
+"openingBid": 14675.16,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "85 MILWAUKEE BLVD LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 4 BLK 17 PB 26 PG 63 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023001572",
+"parcel": "08-45-27-21-00104.0240",
+"offeredDate": "2024-04-30",
+"openingBid": 56414.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "437 439 PIEDMONT ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 21 BLK 104 PB 26 PG 84 LOT 24",
+"status": "available"
+},
+{
+"deedNo": "2023001574",
+"parcel": "07-44-27-04-00016.0120",
+"offeredDate": "2024-04-30",
+"openingBid": 15332.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1703 CLARK AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK 16 DB 252 PG 441 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023001575",
+"parcel": "08-44-27-03-00011.0090",
+"offeredDate": "2024-04-30",
+"openingBid": 7082.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1662 POINSETTIA AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK.11 DB 252 PG 446 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001576",
+"parcel": "07-44-27-05-00019.0070",
+"offeredDate": "2024-04-30",
+"openingBid": 26892.75,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1706 OAK AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 19 DB 252 PG 441 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023002600",
+"parcel": "22-44-27-06-00020.0020",
+"offeredDate": "2024-04-30",
+"openingBid": 22065.48,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "920 WASHINGTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 BLK 20 DB 254 PG 60 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023002610",
+"parcel": "23-44-27-08-00031.0210",
+"offeredDate": "2024-04-30",
+"openingBid": 17755.79,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1017 HAMILTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 8 BLK.31 DB 254 PG 55 LOT 21",
+"status": "available"
+},
+{
+"deedNo": "2023001436",
+"parcel": "03-44-27-00-00002.0250",
+"offeredDate": "2024-05-07",
+"openingBid": 2552.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "WEST LANSING CIR ALVA FL 33920",
+"legal": "PARL IN S E 1/4 OF N W 1/4 SEC 3 TWP 44 R 27 DESC IN OR 480 PG 844",
+"status": "available"
+},
+{
+"deedNo": "2023001450",
+"parcel": "01-44-23-C3-02392.0210",
+"offeredDate": "2024-05-07",
+"openingBid": 24790.73,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1014 NE 6TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 34 BLK.2392 PB 16 PG 77 LOTS 21 + 22",
+"status": "available"
+},
+{
+"deedNo": "2023001458",
+"parcel": "24-45-27-05-00049.0010",
+"offeredDate": "2024-05-07",
+"openingBid": 14324.85,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "709 APRILE AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 49 PB 18 PG 96 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023001465",
+"parcel": "01-45-26-10-00109.0070",
+"offeredDate": "2024-05-07",
+"openingBid": 21466.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2502 22ND ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLAT TR D UT 10 BLK 109 PB 26 PG 170 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001509",
+"parcel": "23-45-27-05-00016.0300",
+"offeredDate": "2024-05-07",
+"openingBid": 31760.18,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "937 JAGUAR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 16 PB 20 PG 25 LOT 30",
+"status": "available"
+},
+{
+"deedNo": "2023001514",
+"parcel": "24-45-27-05-00047.0180",
+"offeredDate": "2024-05-07",
+"openingBid": 11065.2,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "706 ROMA AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 47 PB 18 PG 96 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001517",
+"parcel": "23-45-27-06-00015.0090",
+"offeredDate": "2024-05-07",
+"openingBid": 26156.4,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "781 783 BEDFORD DR LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 15 PB 20 PG 26 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001545",
+"parcel": "13-45-27-09-00049.0180",
+"offeredDate": "2024-05-07",
+"openingBid": 13253.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "566 SILVER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 49 PB 18 PG 27 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001550",
+"parcel": "01-45-26-05-00056.0100",
+"offeredDate": "2024-05-07",
+"openingBid": 21838.63,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2704 18TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 5 BLK.56 PB 15 PG 93 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023001553",
+"parcel": "03-45-26-05-00035.0090",
+"offeredDate": "2024-05-07",
+"openingBid": 21304.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4002 15TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 5 BLK.35 PB 15 PG 95 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001599",
+"parcel": "29-43-23-C2-06156.0200",
+"offeredDate": "2024-05-07",
+"openingBid": 28989.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2814 NW 28TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 98 BLK 6156 PB 25 PG 121 LOTS 20 + 21",
+"status": "available"
+},
+{
+"deedNo": "2023001601",
+"parcel": "19-44-27-12-00041.0050",
+"offeredDate": "2024-05-07",
+"openingBid": 17128.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1116 DIXIE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 12 REPLT BLK.41 DB 263 PG 360 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023001613",
+"parcel": "28-43-23-C2-05124.0280",
+"offeredDate": "2024-05-07",
+"openingBid": 16844.16,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1603 NW 28TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 80 BLK.5124 PB 22 PG 155 LOTS 28 + 29",
+"status": "available"
+},
+{
+"deedNo": "2023001670",
+"parcel": "04-44-27-15-00094.0060",
+"offeredDate": "2024-05-07",
+"openingBid": 27725.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "300 302 NORWALK AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 18 PT E BLK 94 PB 27 PG 29 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001674",
+"parcel": "07-45-27-07-00030.0040",
+"offeredDate": "2024-05-07",
+"openingBid": 18865.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "342 PARKMAN AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 7 BLK 30 PB 26 PG 66 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001675",
+"parcel": "07-45-27-10-00049.0200",
+"offeredDate": "2024-05-07",
+"openingBid": 22262.17,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "392 PAULINE AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 10 BLK 49 PB 26 PG 70 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023001532",
+"parcel": "11-45-26-06-00064.0130",
+"offeredDate": "2024-05-14",
+"openingBid": 16762.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3404 42ND ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 6 BLK 64 PB 15 PG 97 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001536",
+"parcel": "32-43-24-C4-02210.0450",
+"offeredDate": "2024-05-14",
+"openingBid": 1553.0,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1822 DIPLOMAT PKWY E CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 33 BLK 2210 PB 16 PG 42 LOT 45 + VAC ALLEY",
+"status": "available"
+},
+{
+"deedNo": "2023001539",
+"parcel": "01-45-26-04-00045.0050",
+"offeredDate": "2024-05-14",
+"openingBid": 21091.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3009 IRENE AVE S LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 4 BLK.45 PB 15 PG 93 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023001551",
+"parcel": "03-45-26-01-00001.0060",
+"offeredDate": "2024-05-14",
+"openingBid": 20237.09,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4210 15TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 1 BLK.1 PB 15 PG 95 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001676",
+"parcel": "07-45-27-14-00072.0040",
+"offeredDate": "2024-05-14",
+"openingBid": 4102.16,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "385 PENNFIELD AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 14 BLK 72 PB 26 PG 77 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001680",
+"parcel": "07-45-27-15-00077.0060",
+"offeredDate": "2024-05-14",
+"openingBid": 17260.12,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "396 PACE AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 15 BLK 77 PB 26 PG 78 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001681",
+"parcel": "08-45-27-21-00104.0260",
+"offeredDate": "2024-05-14",
+"openingBid": 53096.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "429 431 PIEDMONT ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 21 BLK 104 PB 26 PG 84 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2023001684",
+"parcel": "08-45-27-27-00140.0140",
+"offeredDate": "2024-05-14",
+"openingBid": 16930.07,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "473 RAJAH ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 27 BLK 140 PB 26 PG 91 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023001688",
+"parcel": "06-44-27-07-00267.0020",
+"offeredDate": "2024-05-14",
+"openingBid": 8350.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1842 MERCHANT CIR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 42 BLK 267 PB 27 PG 65 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001691",
+"parcel": "08-45-27-19-00094.0300",
+"offeredDate": "2024-05-14",
+"openingBid": 20859.92,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "408 PICKFORD AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 19 BLK 94 PB 26 PG 82 LOT 30",
+"status": "available"
+},
+{
+"deedNo": "2023001693",
+"parcel": "08-45-27-30-00164.0110",
+"offeredDate": "2024-05-14",
+"openingBid": 13939.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "343 PATIO ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 30 BLK 164 PB 26 PG 94 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001704",
+"parcel": "12-44-26-08-00068.0030",
+"offeredDate": "2024-05-14",
+"openingBid": 15443.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2817 50TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 8 BLK.68 PB 15 PG 61 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001709",
+"parcel": "11-45-27-01-00001.0180",
+"offeredDate": "2024-05-14",
+"openingBid": 12468.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "310 BUTLER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 1 PB 15 PG 149 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001711",
+"parcel": "22-44-26-02-00018.0090",
+"offeredDate": "2024-05-14",
+"openingBid": 17269.56,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2039 VENICE AVE N LEHIGH ACRES FL 33971",
+"legal": "LEHIGH PARK UNIT 2 BLK 18 PB 15 PG 65 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001715",
+"parcel": "07-44-27-10-00261.0180",
+"offeredDate": "2024-05-14",
+"openingBid": 8857.11,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "662 WENTWORTH DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 41 BLK 261 PB 27 PG 64 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001732",
+"parcel": "12-44-26-10-00096.0100",
+"offeredDate": "2024-05-14",
+"openingBid": 8753.34,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2603 56TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.96 PB 15 PG 61 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023001734",
+"parcel": "09-44-27-04-00014.0110",
+"offeredDate": "2024-05-14",
+"openingBid": 8692.99,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1701 HIGHLAND AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK.14 DB 254 PG 95 LOT 11 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023001737",
+"parcel": "12-45-26-04-00030.0050",
+"offeredDate": "2024-05-14",
+"openingBid": 14280.41,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3011 45TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 4 BLK 30 PB 15 PG 98 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023001738",
+"parcel": "12-45-26-06-00066.0100",
+"offeredDate": "2024-05-14",
+"openingBid": 18020.41,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2704 38TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLAT SEC 12 BLK 66 PB 26 PG 207 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023001805",
+"parcel": "12-45-27-05-00023.0020",
+"offeredDate": "2024-05-14",
+"openingBid": 5934.39,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "329 GENOA AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 23 PB 15 PG 227 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001808",
+"parcel": "12-45-27-12-00056.0030",
+"offeredDate": "2024-05-14",
+"openingBid": 4632.35,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1111 CROCUS ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 56 PB 15 PG 234 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001812",
+"parcel": "09-45-27-04-00016.0100",
+"offeredDate": "2024-05-14",
+"openingBid": 12960.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "653 CENTRAL ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 16 PB 27 PG 183 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023001824",
+"parcel": "11-45-27-07-00026.0130",
+"offeredDate": "2024-05-14",
+"openingBid": 13465.51,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "349 MCARTHUR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK.26 PB 15 PG 157 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001828",
+"parcel": "11-45-27-10-00041.0160",
+"offeredDate": "2024-05-14",
+"openingBid": 11928.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "422 NORWOOD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 41 PB 15 PG 160 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2023001880",
+"parcel": "11-45-26-08-00078.0020",
+"offeredDate": "2024-05-21",
+"openingBid": 18864.01,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3103 NORA AVE S LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLAT SEC 11 BLK 78 PB 26 PG 191 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001552",
+"parcel": "03-45-26-02-00018.0190",
+"offeredDate": "2024-05-21",
+"openingBid": 19523.35,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4108 23RD ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 2 BLK 18 PB 15 PG 95 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023001611",
+"parcel": "12-46-23-02-00000.0410",
+"offeredDate": "2024-05-21",
+"openingBid": 38357.49,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "19681 SUMMERLIN RD 41 FORT MYERS FL 33908",
+"legal": "PALMETTO PALMS R V RESORT CONDO PH 1 OR 1530 PG 1466 RES UNIT 41",
+"status": "available"
+},
+{
+"deedNo": "2023001724",
+"parcel": "13-44-26-01-00008.0040",
+"offeredDate": "2024-05-21",
+"openingBid": 15457.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3013 45TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 1 BLK.8 PB 15 PG 62 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001725",
+"parcel": "13-44-26-08-00081.0150",
+"offeredDate": "2024-05-21",
+"openingBid": 23321.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2708 33RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 8 BLK.81 PB 15 PG 62 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023001726",
+"parcel": "13-44-26-08-00082.0070",
+"offeredDate": "2024-05-21",
+"openingBid": 22336.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2707 33RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 8 BLK 82 PB 15 PG 62 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001727",
+"parcel": "27-44-26-12-00142.0130",
+"offeredDate": "2024-05-21",
+"openingBid": 24044.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3708 9TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 12 BLK 142 PB 15 PG 76 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001728",
+"parcel": "31-44-26-02-00031.0320",
+"offeredDate": "2024-05-21",
+"openingBid": 17003.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "186 MEADOW RD LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 2 BLK 31 PB 15 PG 82 LOT 32",
+"status": "available"
+},
+{
+"deedNo": "2023001752",
+"parcel": "03-45-26-02-00018.0080",
+"offeredDate": "2024-05-21",
+"openingBid": 21619.16,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4105 22ND ST SW LEHIGH ACRES FL 33976",
+"legal": "18 PB 15 PG 95 LOT 8 LESS SUBSURFACE RIGHTS ASSESSED UNDER 03-45-26-99-00018.0080 AS",
+"status": "available"
+},
+{
+"deedNo": "2023001765",
+"parcel": "11-45-26-07-00072.0090",
+"offeredDate": "2024-05-21",
+"openingBid": 13857.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1545 MEADOW RD LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLT TR Q UT 7 BLK 72 PB 26 PG 199 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001767",
+"parcel": "08-44-27-03-00011.0140",
+"offeredDate": "2024-05-21",
+"openingBid": 4149.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1603 HIBISCUS AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK 11 DB 252 PG 446 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023001851",
+"parcel": "05-45-26-03-00028.0440",
+"offeredDate": "2024-05-21",
+"openingBid": 56055.8,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4857 4859 28TH ST SW LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 3 BLK.28 PB 15 PG 83 LOT 44",
+"status": "available"
+},
+{
+"deedNo": "2023001543",
+"parcel": "12-45-27-19-00090.0110",
+"offeredDate": "2024-05-21",
+"openingBid": 12975.41,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "446 NAPLES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 19 BLK 90 PB 15 PG 241 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001484",
+"parcel": "20-45-27-65-00250.0010",
+"offeredDate": "2024-06-04",
+"openingBid": 6565.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "436 JAGUAR BLVD LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 65 BLK 250 PB 27 PG 152 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023001783",
+"parcel": "25-45-27-11-00062.0310",
+"offeredDate": "2024-06-04",
+"openingBid": 11903.58,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1213 ECLAT ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 62 PB 18 PG 117 LOT 31",
+"status": "available"
+},
+{
+"deedNo": "2023001787",
+"parcel": "14-44-26-02-00013.0130",
+"offeredDate": "2024-06-04",
+"openingBid": 14482.69,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3304 41ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT SEC 14 BLK 13 PB 26 PG 116 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023001788",
+"parcel": "09-45-27-02-00011.0070",
+"offeredDate": "2024-06-04",
+"openingBid": 13356.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "386 CHARWOOD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 11 PB 27 PG 181 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001819",
+"parcel": "10-45-27-12-00068.0090",
+"offeredDate": "2024-06-04",
+"openingBid": 13091.23,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "433 LONG AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 68 PB 18 PG 13 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001822",
+"parcel": "11-45-27-02-00008.0330",
+"offeredDate": "2024-06-04",
+"openingBid": 11854.39,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "304 MCARTHUR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 8 PB 15 PG 150 LOT 33",
+"status": "available"
+},
+{
+"deedNo": "2023001825",
+"parcel": "11-45-27-09-00033.0180",
+"offeredDate": "2024-06-04",
+"openingBid": 12084.8,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1049 LILAC ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 33 PB 15 PG 159 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023001840",
+"parcel": "12-45-27-16-00072.0040",
+"offeredDate": "2024-06-04",
+"openingBid": 11777.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "452 GENOA AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 72 PB 15 PG 238 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001846",
+"parcel": "21-45-27-14-00092.0080",
+"offeredDate": "2024-06-04",
+"openingBid": 11635.39,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "850 ANDOVER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 92 PB 18 PG 67 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023001901",
+"parcel": "02-44-23-C4-02635.0140",
+"offeredDate": "2024-06-04",
+"openingBid": 34626.6,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "937 NW 5TH PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 38 BLK 2635 PB 16 PG 91 LOTS 14 + 15",
+"status": "available"
+},
+{
+"deedNo": "2023001924",
+"parcel": "14-44-26-03-00023.0020",
+"offeredDate": "2024-06-04",
+"openingBid": 11091.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3317 37TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT TR L UT 3 BLK 23 PB 26 PG 118 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001943",
+"parcel": "07-45-27-11-00055.0160",
+"offeredDate": "2024-06-04",
+"openingBid": 18257.37,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "371 PAULCREST AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 11 BLK 55 PB 26 PG 72 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2023001944",
+"parcel": "08-44-27-06-00023.020A",
+"offeredDate": "2024-06-04",
+"openingBid": 11688.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "901 W 18TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 BLK 23 PB 15 PG 9 LOT 20 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023001535",
+"parcel": "35-44-26-07-00057.0120",
+"offeredDate": "2024-06-11",
+"openingBid": 25518.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3402 10TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 7 BLK.57 PB 15 PG 91 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023001753",
+"parcel": "09-44-27-12-00130.0200",
+"offeredDate": "2024-06-11",
+"openingBid": 11667.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1833 RICHMOND AVE N LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 22 PT S BLK 130 PB 27 PG 35 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023001761",
+"parcel": "08-45-27-21-00104.0250",
+"offeredDate": "2024-06-11",
+"openingBid": 52052.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "433 435 PIEDMONT ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 21 BLK 104 PB 26 PG 84 LOT 25",
+"status": "available"
+},
+{
+"deedNo": "2023001929",
+"parcel": "04-44-27-12-00078.0210",
+"offeredDate": "2024-06-11",
+"openingBid": 631.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "418 MURIEL ST LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 16 BLK 78 PB 27 PG 26 LOT 21",
+"status": "available"
+},
+{
+"deedNo": "2023001930",
+"parcel": "06-44-27-10-00276.0150",
+"offeredDate": "2024-06-11",
+"openingBid": 9330.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "664 VANOLA CT LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 45 BLK 276 PB 27 PG 68 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023001931",
+"parcel": "06-44-27-11-00279.0070",
+"offeredDate": "2024-06-11",
+"openingBid": 9196.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "674 STANWIN LOOP LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 46 BLK 279 PB 27 PG 69 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001932",
+"parcel": "06-44-27-16-00298.0020",
+"offeredDate": "2024-06-11",
+"openingBid": 9427.05,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1985 LATHAM DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 51 BLK 298 PB 27 PG 74 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023001933",
+"parcel": "06-44-27-16-00298.0030",
+"offeredDate": "2024-06-11",
+"openingBid": 8445.37,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1983 LATHAM DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 51 BLK 298 PB 27 PG 74 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001942",
+"parcel": "07-44-27-14-00342.0080",
+"offeredDate": "2024-06-11",
+"openingBid": 7889.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1818 LEAGUE AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 58 PT W BLK 342 PB 27 PG 82 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023001962",
+"parcel": "05-44-27-08-00174.0100",
+"offeredDate": "2024-06-11",
+"openingBid": 5349.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "495 TWEED CT LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 27 PART E BLK 174 PB 27 PG 44 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023001963",
+"parcel": "05-44-27-09-00177.0110",
+"offeredDate": "2024-06-11",
+"openingBid": 5075.14,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1962 QUINTERO LN LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 27 PART W BLK 177 PB 27 PG 45 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001964",
+"parcel": "06-44-27-09-00273.0030",
+"offeredDate": "2024-06-11",
+"openingBid": 6762.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1874 NORMA CT LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 44 BLK 273 PB 27 PG 67 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001965",
+"parcel": "06-44-27-12-00287.0030",
+"offeredDate": "2024-06-11",
+"openingBid": 8568.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1915 WALCOTT LOOP LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UT 47 BLK 287 PB 27 PG 70 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001967",
+"parcel": "07-44-27-07-00249.0110",
+"offeredDate": "2024-06-11",
+"openingBid": 10953.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "654 WENTWORTH DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 39 PT N BLK 249 PB 27 PG 61 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001968",
+"parcel": "07-44-27-08-00253.A030",
+"offeredDate": "2024-06-11",
+"openingBid": 7226.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1842 MOBILE CT LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 39 PT S BLK 253A PB 27 PG 62 + AMEND OR 1045 PG 236 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001970",
+"parcel": "07-44-27-10-00264.0050",
+"offeredDate": "2024-06-11",
+"openingBid": 6453.32,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "638 WOODCREST DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 41 PART BLK 264 PB 27 PG 64 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023001971",
+"parcel": "07-44-27-12-00332.0210",
+"offeredDate": "2024-06-11",
+"openingBid": 7666.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "730 WOODCREST DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 57 BLK 332 PB 27 PG 80 LOT 21",
+"status": "available"
+},
+{
+"deedNo": "2023001975",
+"parcel": "21-45-27-14-00092.0070",
+"offeredDate": "2024-06-11",
+"openingBid": 9927.53,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "852 ANDOVER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK.92 PB 18 PG 67 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001977",
+"parcel": "33-43-23-C2-03876.0030",
+"offeredDate": "2024-06-11",
+"openingBid": 33703.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2105 NW 16TH PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 53 BLK 3876 PB 19 PG 75 LOTS 3 + 4",
+"status": "available"
+},
+{
+"deedNo": "2023001990",
+"parcel": "33-43-23-C2-03878.0420",
+"offeredDate": "2024-06-11",
+"openingBid": 35055.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1621 NW 23RD TER CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 53 BLK 3878 PB 19 PG 78 LOTS 42 + 43",
+"status": "available"
+},
+{
+"deedNo": "2023001991",
+"parcel": "33-43-23-C3-03859.0320",
+"offeredDate": "2024-06-11",
+"openingBid": 32790.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1616 NW 18TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 53 BLK 3859 PB 19 PG 69 LOTS 32 + 33",
+"status": "available"
+},
+{
+"deedNo": "2023001994",
+"parcel": "36-43-23-C3-02479.0010",
+"offeredDate": "2024-06-11",
+"openingBid": 11597.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1617 NE 7TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 36 PT.1 BLK.2479 PB 23 PG 90 LOTS 1 + 2",
+"status": "available"
+},
+{
+"deedNo": "2023001998",
+"parcel": "28-45-27-02-00001.0330",
+"offeredDate": "2024-06-11",
+"openingBid": 14302.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "515 HUTTON ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 1 PB 20 PG 56 LOT 33",
+"status": "available"
+},
+{
+"deedNo": "2023002006",
+"parcel": "18-45-27-16-00054.0040",
+"offeredDate": "2024-06-11",
+"openingBid": 8520.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "547 PALOMA AVE LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 16 BLK 54 PB 27 PG 103 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023001763",
+"parcel": "10-45-26-05-00065.0070",
+"offeredDate": "2024-06-18",
+"openingBid": 7796.77,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4006 XELDA AVE S LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 5 BLK 65 PB 15 PG 96 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001764",
+"parcel": "10-45-27-14-00078.0090",
+"offeredDate": "2024-06-18",
+"openingBid": 4629.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "752 CHESTNUT ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK.78 PB 18 PG 15 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001833",
+"parcel": "11-45-27-14-00054.0010",
+"offeredDate": "2024-06-18",
+"openingBid": 16226.93,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "910 GRANT BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 54 PB 15 PG 164 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023001849",
+"parcel": "36-44-26-05-00037.0030",
+"offeredDate": "2024-06-18",
+"openingBid": 18156.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2915 15TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLT SEC 36 BLK 37 PB 26 PG 168 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023001854",
+"parcel": "12-44-27-05-00017.0190",
+"offeredDate": "2024-06-18",
+"openingBid": 16157.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1713 IRVING AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK.17 DB 254 PG 90 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023001863",
+"parcel": "08-44-27-03-00009.0200",
+"offeredDate": "2024-06-18",
+"openingBid": 18295.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1615 PLUMOSA AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK.9 DB 252 PG 446 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023001865",
+"parcel": "02-44-27-10-00040.0050",
+"offeredDate": "2024-06-18",
+"openingBid": 15993.63,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2314 COLUMBUS AVE ALVA FL 33920",
+"legal": "LEHIGH ACRES UNIT 10 REPLT BLK 40 DB 263 PG 177 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023001866",
+"parcel": "02-45-26-07-00064.0070",
+"offeredDate": "2024-06-18",
+"openingBid": 22011.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3307 24TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 7 BLK 64 PB 15 PG 94 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023001868",
+"parcel": "08-44-27-01-00001.024B",
+"offeredDate": "2024-06-18",
+"openingBid": 14888.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1001 W 17TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 BLK 1 DB 252 PG 446 LOT 24 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023001870",
+"parcel": "07-44-27-02-00005.0150",
+"offeredDate": "2024-06-18",
+"openingBid": 16009.28,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1605 OAK AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 2 BLK 5 DB 252 PG 441 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023001872",
+"parcel": "03-45-27-13-00055.0150",
+"offeredDate": "2024-06-18",
+"openingBid": 14265.93,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "226 BAIZE AVE S LEHIGH ACRES FL 33974",
+"legal": "TWIN LAKE ESTATES UNIT 13 BLK 55 PB 15 PG 219 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023001947",
+"parcel": "05-44-27-01-00150.0090",
+"offeredDate": "2024-06-18",
+"openingBid": 13672.23,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "451 WOODMAN DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 23 PART E BLK 150 PB 27 PG 37 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023001957",
+"parcel": "09-45-27-04-00016.0080",
+"offeredDate": "2024-06-18",
+"openingBid": 13884.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "649 CENTRAL ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 16 PB 27 PG 183 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023001959",
+"parcel": "06-44-27-14-00294.0110",
+"offeredDate": "2024-06-18",
+"openingBid": 8402.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "645 MORELLA AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 49 BLK 294 PB 27 PG 72 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023002003",
+"parcel": "05-45-26-06-00001.0370",
+"offeredDate": "2024-06-18",
+"openingBid": 23179.41,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4796 15TH ST SW LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 6 BLK 1 PB 15 PG 86 LOT 37",
+"status": "available"
+},
+{
+"deedNo": "2023002011",
+"parcel": "28-45-27-05-00024.0040",
+"offeredDate": "2024-06-18",
+"openingBid": 9301.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "514 LADD ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 24 PB 20 PG 59 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002012",
+"parcel": "28-45-27-07-00033.0010",
+"offeredDate": "2024-06-18",
+"openingBid": 14312.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "626 LADD ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK.33 PB 20 PG 61 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002023",
+"parcel": "24-45-27-08-00072.0260",
+"offeredDate": "2024-06-18",
+"openingBid": 13020.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1201 CELLINI ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 8 BLK.72 PB 18 PG 102 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2023002025",
+"parcel": "07-45-27-11-00058.0240",
+"offeredDate": "2024-06-18",
+"openingBid": 19222.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "165 PEMBROKE ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 11 BLK 58 PB 26 PG 73 LOT 24",
+"status": "available"
+},
+{
+"deedNo": "2023001673",
+"parcel": "07-45-27-06-00027.0060",
+"offeredDate": "2024-06-25",
+"openingBid": 21773.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "114 PEARSON ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 6 BLK 27 PB 26 PG 65 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023001781",
+"parcel": "20-45-27-66-00257.0110",
+"offeredDate": "2024-06-25",
+"openingBid": 14868.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "842 GLEN COY AVE LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 66 BLK 257 PB 27 PG 153 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023001836",
+"parcel": "11-45-27-15-00065.0260",
+"offeredDate": "2024-06-25",
+"openingBid": 12553.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "440 WICKHAM AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK 65 PB 15 PG 166 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2023002032",
+"parcel": "08-45-27-28-00144.0040",
+"offeredDate": "2024-06-25",
+"openingBid": 18284.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "309 RANIER AVE LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 28 BLK 144 PB 26 PG 92 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002071",
+"parcel": "23-45-27-07-00037.0130",
+"offeredDate": "2024-06-25",
+"openingBid": 32856.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "784 786 HOLMES AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK 37 PB 20 PG 27 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023002074",
+"parcel": "28-44-27-08-00031.0070",
+"offeredDate": "2024-06-25",
+"openingBid": 20985.89,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "615 EIGHTH AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 8 BLK.31 DB 252 PG 466 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023002079",
+"parcel": "24-44-27-04-00014.0230",
+"offeredDate": "2024-06-25",
+"openingBid": 13914.14,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "921 HINES AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK.14 DB 254 PG 50 LOT 23",
+"status": "available"
+},
+{
+"deedNo": "2023002080",
+"parcel": "24-44-27-12-00048.0010",
+"offeredDate": "2024-06-25",
+"openingBid": 14467.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1122 WELLINGTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 12 BLK.48 DB 254 PG 50 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002081",
+"parcel": "25-44-27-01-00004.0030",
+"offeredDate": "2024-06-25",
+"openingBid": 15915.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "418 MONROE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 BLK 4 PB 15 PG 36 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002085",
+"parcel": "15-44-23-C2-03637.0110",
+"offeredDate": "2024-06-25",
+"openingBid": 64098.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1020 SW EMBERS TER CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 48 BLK 3637 PB 17 PG 137 LOTS 11 + 12",
+"status": "available"
+},
+{
+"deedNo": "2023002095",
+"parcel": "03-44-26-11-00056.0070",
+"offeredDate": "2024-07-02",
+"openingBid": 9688.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3725 TARECO ST FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 11 BLK 56 PB 0026 PG 0014 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023002104",
+"parcel": "27-44-27-11-00043.0030",
+"offeredDate": "2024-07-02",
+"openingBid": 19617.39,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "718 SHELDON AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 11 BLK 43 PB 15 PG 40 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002114",
+"parcel": "09-44-27-10-00121.0180",
+"offeredDate": "2024-07-02",
+"openingBid": 15559.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1855 MARLBORO LN LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 21 PT N BLK 121 PB 27 PG 33 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023002134",
+"parcel": "35-43-23-C3-02695.0180",
+"offeredDate": "2024-07-02",
+"openingBid": 36348.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1907 NW JUANITA PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 39 BLK 2695 PB 16 PG 148 LOTS 18 + 19",
+"status": "available"
+},
+{
+"deedNo": "2023002143",
+"parcel": "21-44-27-05-00020.0010",
+"offeredDate": "2024-07-02",
+"openingBid": 20572.63,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "922 RICHMOND AVE N LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 20 PB 25 PG 65 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002144",
+"parcel": "23-44-26-08-00006.0120",
+"offeredDate": "2024-07-02",
+"openingBid": 24607.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3422 20TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH PARK UNIT 1 BLK 6 PB 15 PG 64 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023002147",
+"parcel": "14-44-27-04-00016.0120",
+"offeredDate": "2024-07-02",
+"openingBid": 16117.92,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1300 COLUMBUS AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK.16 DB 254 PG 80 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023002152",
+"parcel": "23-44-27-06-00022.0030",
+"offeredDate": "2024-07-02",
+"openingBid": 18566.63,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "918 ROBERT AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 6 BLK 22 DB 254 PG 55 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002173",
+"parcel": "26-44-26-03-00010.0140",
+"offeredDate": "2024-07-02",
+"openingBid": 17274.3,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3326 10TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK.10 PB 15 PG 75 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023002175",
+"parcel": "26-44-26-05-00024.0100",
+"offeredDate": "2024-07-02",
+"openingBid": 24667.12,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3408 5TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 5 BLK 24 PB 15 PG 75 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023002110",
+"parcel": "36-44-27-08-00030.0190",
+"offeredDate": "2024-07-02",
+"openingBid": 18391.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "213 LOUIS AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 8 BLK 30 DB 254 PG 25 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023002190",
+"parcel": "26-44-27-12-00046.0110",
+"offeredDate": "2024-07-09",
+"openingBid": 18673.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "702 ROBERT AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 12 BLK 46 PB 15 PG 38 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023002192",
+"parcel": "31-43-24-C2-02155.0250",
+"offeredDate": "2024-07-09",
+"openingBid": 21228.58,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1400 KISMET PKWY E CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 32 BLK 2155 PB 16 PG 13 LOTS 25 + 26",
+"status": "available"
+},
+{
+"deedNo": "2023002204",
+"parcel": "10-45-27-10-00056.0180",
+"offeredDate": "2024-07-09",
+"openingBid": 15541.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "755 GRANT BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK.56 PB 18 PG 11 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023002205",
+"parcel": "11-45-27-02-00007.0090",
+"offeredDate": "2024-07-09",
+"openingBid": 11707.86,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "321 BRADLEY AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK.7 PB 15 PG 150 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002206",
+"parcel": "11-45-27-04-00018.0230",
+"offeredDate": "2024-07-09",
+"openingBid": 15138.53,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "321 AUSTIN AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 18 PB 15 PG 153 LOT 23",
+"status": "available"
+},
+{
+"deedNo": "2023002456",
+"parcel": "23-45-27-04-00032.0240",
+"offeredDate": "2024-07-09",
+"openingBid": 12141.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "716 PEACOCK AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 32 PB 20 PG 24 LOT 24",
+"status": "available"
+},
+{
+"deedNo": "2023002458",
+"parcel": "33-44-26-08-00028.0140",
+"offeredDate": "2024-07-09",
+"openingBid": 50618.86,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4528 4530 GOLFVIEW BLVD LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 8 BLK 28 PB 15 PG 88 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023002460",
+"parcel": "34-44-26-06-00059.0090",
+"offeredDate": "2024-07-09",
+"openingBid": 20696.23,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3903 6TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 6 BLK.59 PB 15 PG 90 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002475",
+"parcel": "13-44-27-03-00011.0220",
+"offeredDate": "2024-07-09",
+"openingBid": 16160.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1221 HINES AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK 11 DB 254 PG 85 LOT 22",
+"status": "available"
+},
+{
+"deedNo": "2023002476",
+"parcel": "12-44-27-01-00001.001B",
+"offeredDate": "2024-07-09",
+"openingBid": 12324.12,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3502 E 17TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 BLK 1 PB 15 PG 14 E 1/2 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002562",
+"parcel": "15-45-27-13-00087.0030",
+"offeredDate": "2024-07-09",
+"openingBid": 10354.09,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "850 ALEXANDER MCLELLAN ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 13 BLK 87 PB 18 PG 49 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002566",
+"parcel": "36-45-27-07-00040.0310",
+"offeredDate": "2024-07-09",
+"openingBid": 12109.44,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1134 HOLMES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK 40 PB 18 PG 145 LOT 31",
+"status": "available"
+},
+{
+"deedNo": "2023001782",
+"parcel": "36-44-26-07-00068.0110",
+"offeredDate": "2024-07-16",
+"openingBid": 21008.21,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2708 7TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 7 BLK 68 PB 15 PG 92 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023002126",
+"parcel": "11-45-26-11-00095.0030",
+"offeredDate": "2024-07-16",
+"openingBid": 9720.83,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3215 44TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 11 BLK.95 PB 15 PG 97 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002218",
+"parcel": "12-44-26-06-00058.0010",
+"offeredDate": "2024-07-16",
+"openingBid": 14602.71,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2719 58TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK.58 PB 15 PG 61 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002223",
+"parcel": "11-45-27-05-00022.0350",
+"offeredDate": "2024-07-16",
+"openingBid": 11335.96,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "912 MCARTHUR CT LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 22 PB 15 PG 155 LOT 35",
+"status": "available"
+},
+{
+"deedNo": "2023002224",
+"parcel": "11-45-27-07-00026.0140",
+"offeredDate": "2024-07-16",
+"openingBid": 12877.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "351 MCARTHUR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK.26 PB 15 PG 157 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023002225",
+"parcel": "11-45-27-07-00028.0130",
+"offeredDate": "2024-07-16",
+"openingBid": 14590.31,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "357 NATHAN AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK.28 PB 15 PG 157 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023002228",
+"parcel": "11-45-27-09-00036.0150",
+"offeredDate": "2024-07-16",
+"openingBid": 11813.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1063 SUMMA BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 36 PB 15 PG 159 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023002229",
+"parcel": "11-45-27-11-00045.0200",
+"offeredDate": "2024-07-16",
+"openingBid": 11345.7,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1046 BARNETT ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 45 PB 15 PG 161 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023002232",
+"parcel": "11-45-27-15-00066.0080",
+"offeredDate": "2024-07-16",
+"openingBid": 8943.62,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "443 WICKHAM AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK 66 PB 15 PG 166 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002233",
+"parcel": "12-44-26-03-00022.0020",
+"offeredDate": "2024-07-16",
+"openingBid": 12475.24,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3015 53RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK 22 PB 15 PG 61 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023002240",
+"parcel": "12-45-27-05-00025.0120",
+"offeredDate": "2024-07-16",
+"openingBid": 11436.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1117 CATENARY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 25 PB 15 PG 227 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023002243",
+"parcel": "13-45-27-05-00027.0160",
+"offeredDate": "2024-07-16",
+"openingBid": 12191.09,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "537 BARRANGER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 27 PB 18 PG 23 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2023002247",
+"parcel": "12-45-27-15-00067.0150",
+"offeredDate": "2024-07-16",
+"openingBid": 11970.28,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1245 CREARY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK 67 PB 15 PG 237 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023002250",
+"parcel": "12-45-27-18-00088.0090",
+"offeredDate": "2024-07-16",
+"openingBid": 9820.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "465 MAJORS AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 18 BLK 88 PB 15 PG 240 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002253",
+"parcel": "14-44-26-02-00013.0060",
+"offeredDate": "2024-07-16",
+"openingBid": 13546.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3309 42ND ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT SEC 14 BLK 13 PB 26 PG 116 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023002255",
+"parcel": "23-44-26-02-00009.0280",
+"offeredDate": "2024-07-16",
+"openingBid": 18188.78,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2702 RENA LN LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT SEC 23 BLK 9 PB 26 PG 122 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2023002256",
+"parcel": "23-44-26-08-00021.0180",
+"offeredDate": "2024-07-16",
+"openingBid": 14361.62,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1823 UNICE AVE N LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 1 BLK 21 PB 15 PG 64 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023002260",
+"parcel": "13-45-27-03-00015.0100",
+"offeredDate": "2024-07-16",
+"openingBid": 12663.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "520 MONTCLAIR AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 15 PB 18 PG 21 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023002261",
+"parcel": "13-45-27-13-00065.0010",
+"offeredDate": "2024-07-16",
+"openingBid": 2475.74,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1232 HILLIARD ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 13 BLK.65 PB 18 PG 31 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002263",
+"parcel": "19-45-27-70-00275.0060",
+"offeredDate": "2024-07-16",
+"openingBid": 30121.69,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "889 YELLOWBIRD DR FORT MYERS FL 33913",
+"legal": "MIRROR LAKES UNIT 70 BLK 275 PB 27 PG 157 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023002267",
+"parcel": "23-45-27-16-00050.0820",
+"offeredDate": "2024-07-16",
+"openingBid": 10869.79,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1054 COLERIDGE ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 50 PB 20 PG 36 LOT 82",
+"status": "available"
+},
+{
+"deedNo": "2023002581",
+"parcel": "18-44-27-20-000P0.0030",
+"offeredDate": "2024-07-16",
+"openingBid": 8017.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2008 DIXIE WAY LEHIGH ACRES FL 33972",
+"legal": "TWELFTH STREET PARK BLK P PB 15 PG 25 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002582",
+"parcel": "19-44-27-06-00017.0090",
+"offeredDate": "2024-07-16",
+"openingBid": 21905.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1006 LEE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 BLK 17 DB 252 PG 234 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002583",
+"parcel": "20-44-26-07-00041.0090",
+"offeredDate": "2024-07-16",
+"openingBid": 22178.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1016 CHAMPION AVE LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 7 BLK 41 PB 26 PG 34 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002586",
+"parcel": "36-44-27-04-00014.001A",
+"offeredDate": "2024-07-16",
+"openingBid": 12010.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4502 E 2ND ST LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES REPLAT UNIT 4 BLK.14 DB 263 PG 340 LOT 1 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023002286",
+"parcel": "20-43-24-C3-05671.0210",
+"offeredDate": "2024-07-23",
+"openingBid": 23533.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3347 NE 23RD PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 85 BLK 5671 PB 24 PG 52 LOTS 21 + 22",
+"status": "available"
+},
+{
+"deedNo": "2023001669",
+"parcel": "04-44-27-12-00078.0100",
+"offeredDate": "2024-07-23",
+"openingBid": 14919.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "405 YOLANDA ST LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 16 BLK 78 PB 27 PG 26 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023002141",
+"parcel": "18-44-27-06-00023.0230",
+"offeredDate": "2024-07-23",
+"openingBid": 21044.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1321 PINE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 BLK 23 PB 15 PG 22 LOT 23",
+"status": "available"
+},
+{
+"deedNo": "2023002151",
+"parcel": "21-44-27-09-00034.0100",
+"offeredDate": "2024-07-23",
+"openingBid": 28084.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1004 LAKE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 9 BLK 34 DB 254 PG 65 LOTS 10 + 11",
+"status": "available"
+},
+{
+"deedNo": "2023002159",
+"parcel": "21-44-27-01-00002.0070",
+"offeredDate": "2024-07-23",
+"openingBid": 21693.35,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "810 MCKINLEY AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 BLK 2 DB 254 PG 65 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023002174",
+"parcel": "26-44-26-05-00024.0010",
+"offeredDate": "2024-07-23",
+"openingBid": 25583.31,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3409 6TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 5 BLK 24 PB 15 PG 75 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002274",
+"parcel": "18-45-27-16-00050.0120",
+"offeredDate": "2024-07-23",
+"openingBid": 18793.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "565 BOURSE CIR LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 16 BLK 50 PB 27 PG 103 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023002277",
+"parcel": "18-45-27-16-00053.0080",
+"offeredDate": "2024-07-23",
+"openingBid": 11818.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "560 PACHMAN CIR LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 16 BLK 53 PG 27 PG 103 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002288",
+"parcel": "20-44-27-02-00007.0040",
+"offeredDate": "2024-07-23",
+"openingBid": 25042.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "816 PROSPECT AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 2 BLK.7 DB 252 PG 461 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002295",
+"parcel": "17-44-27-05-00019.0180",
+"offeredDate": "2024-07-23",
+"openingBid": 20217.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1311 EDISON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 19 DB 252 PG 451 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023002296",
+"parcel": "13-44-27-11-00042.0210",
+"offeredDate": "2024-07-23",
+"openingBid": 8201.21,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1517 LOUIS AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 11 BLK.42 DB 254 PG 85 LOT 21",
+"status": "available"
+},
+{
+"deedNo": "2023002300",
+"parcel": "23-45-27-04-00027.0280",
+"offeredDate": "2024-07-23",
+"openingBid": 14227.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1039 GLADYS ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 27 PB 20 PG 24 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2023002307",
+"parcel": "11-44-27-03-00012.024A",
+"offeredDate": "2024-07-23",
+"openingBid": 10784.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3404 E 17TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK 12 DB 259 PG 121 LOT 24 W 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023002308",
+"parcel": "14-44-27-02-00005.0010",
+"offeredDate": "2024-07-23",
+"openingBid": 10190.02,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2702 E 13TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 2 BLK 5 DB 254 PG 80 LOT 1 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2023002309",
+"parcel": "25-45-27-12-00069.0070",
+"offeredDate": "2024-07-23",
+"openingBid": 14728.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1013 NAPLES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 69 PB 18 PG 118 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2023002310",
+"parcel": "27-45-27-05-00026.0030",
+"offeredDate": "2024-07-23",
+"openingBid": 15366.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "714 ALMELIA ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 26 PB 18 PG 128 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002556",
+"parcel": "01-44-26-02-00012.0080",
+"offeredDate": "2024-07-23",
+"openingBid": 16076.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3000 71ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 2 BLK.12 PB 15 PG 58 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002615",
+"parcel": "24-44-26-03-00024.0060",
+"offeredDate": "2024-07-23",
+"openingBid": 16781.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2902 20TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK.24 PB 15 PG 68 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023002322",
+"parcel": "26-45-27-05-00007.0570",
+"offeredDate": "2024-08-06",
+"openingBid": 10005.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "911 FOXDALE AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 7 PB 20 PG 46 LOT 57",
+"status": "available"
+},
+{
+"deedNo": "2023002327",
+"parcel": "26-45-27-10-00032.0100",
+"offeredDate": "2024-08-06",
+"openingBid": 13240.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "958 GABLE ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 32 PB 20 PG 47 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2023002339",
+"parcel": "23-45-27-16-00056.0020",
+"offeredDate": "2024-08-06",
+"openingBid": 5466.41,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "851 BURNETT AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 56 PB 20 PG 36 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2023002340",
+"parcel": "24-44-26-03-00021.0200",
+"offeredDate": "2024-08-06",
+"openingBid": 20471.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2918 22ND ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK 21 PB 15 PG 68 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023002342",
+"parcel": "25-45-27-03-00017.0040",
+"offeredDate": "2024-08-06",
+"openingBid": 10030.42,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "915 MAYFIELD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 17 PB 18 PG 109 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002349",
+"parcel": "26-45-27-08-00017.0150",
+"offeredDate": "2024-08-06",
+"openingBid": 9923.8,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "948 KYLE AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 8 BLK 17 PB 20 PG 45 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2023002351",
+"parcel": "26-45-27-16-00056.0280",
+"offeredDate": "2024-08-06",
+"openingBid": 11626.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1050 HOBART ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 56 PB 20 PG 53 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2023002353",
+"parcel": "27-45-27-02-00009.0030",
+"offeredDate": "2024-08-06",
+"openingBid": 11202.14,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "910 NORFOLK AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 9 PB 18 PG 125 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002358",
+"parcel": "24-45-27-03-00030.0010",
+"offeredDate": "2024-08-06",
+"openingBid": 10684.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1104 GARIBALDI ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 30 PB 18 PG 92 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002371",
+"parcel": "27-45-27-12-00058.0080",
+"offeredDate": "2024-08-06",
+"openingBid": 5093.04,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1080 PORTLAND AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 58 PB 18 PG 135 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002372",
+"parcel": "27-45-27-14-00070.0050",
+"offeredDate": "2024-08-06",
+"openingBid": 5044.13,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "862 ARTURO ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 70 PB 18 PG 137 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023002380",
+"parcel": "03-45-26-01-00007.0140",
+"offeredDate": "2024-08-06",
+"openingBid": 20301.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4110 16TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 1 BLK 7 PB 15 PG 95 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023002374",
+"parcel": "29-44-26-09-00074.0040",
+"offeredDate": "2024-08-13",
+"openingBid": 27700.22,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "916 ANGELO AVE LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 9 BLK 74 PB 26 PG 44 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002375",
+"parcel": "27-45-27-12-00058.0280",
+"offeredDate": "2024-08-13",
+"openingBid": 11211.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1039 BELL BLVD S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 58 PB 28 PG 135 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2023002377",
+"parcel": "28-45-27-06-00026.0120",
+"offeredDate": "2024-08-13",
+"openingBid": 11510.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1010 LISBON AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 26 PB 20 PG 60 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2023002381",
+"parcel": "03-45-26-08-00067.0160",
+"offeredDate": "2024-08-13",
+"openingBid": 20991.07,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4010 28TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 8 BLK.67 PB 15 PG 95 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2023002383",
+"parcel": "19-44-27-09-00035.0090",
+"offeredDate": "2024-08-13",
+"openingBid": 21899.82,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1006 EUCLID AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 9 BLK.35 DB 252 PG 234 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002386",
+"parcel": "19-44-27-01-00012.0040",
+"offeredDate": "2024-08-13",
+"openingBid": 23321.33,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "809 LEE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 REPLT BLK 12 DB 263 PG 360 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002413",
+"parcel": "13-44-27-06-00015.0050",
+"offeredDate": "2024-08-13",
+"openingBid": 13913.05,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1314 LEROY AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 BLK.15 DB 254 PG 85 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023002416",
+"parcel": "36-45-27-11-00069.0190",
+"offeredDate": "2024-08-13",
+"openingBid": 12587.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1137 BELGRAVE ST FORT MYERS FL 33913",
+"legal": "LEHIGH ACRES UNIT 11 BLK 69 PB 28 PG 68 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023002417",
+"parcel": "02-45-26-01-00003.0060",
+"offeredDate": "2024-08-13",
+"openingBid": 23794.01,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1504 UNICE AVE S LEHIGH ACRES FL 33976",
+"legal": "BLK 3 PB 26 PG 175 LOT 6 LESS SUBSURFACE RIGHTS ASSESSED UNDER 02-45-26-99-00003.0060",
+"status": "available"
+},
+{
+"deedNo": "2023002419",
+"parcel": "02-45-26-06-00055.0190",
+"offeredDate": "2024-08-13",
+"openingBid": 21770.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3316 20TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 6 BLK 55 PB 15 PG 94 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023002424",
+"parcel": "02-45-26-03-00027.0160",
+"offeredDate": "2024-08-13",
+"openingBid": 16904.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3514 26TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLAT SEC 2 BLK 27 PB 26 PG 177 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2023002433",
+"parcel": "14-44-27-10-00037.0180",
+"offeredDate": "2024-08-13",
+"openingBid": 11902.8,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1511 WELLINGTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 10 BLK.37 DB 254 PG 80 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2023002434",
+"parcel": "15-44-27-11-00044.0190",
+"offeredDate": "2024-08-13",
+"openingBid": 8534.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1513 DAYTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 11 BLK 44 DB 254 PG 75 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2023002435",
+"parcel": "16-44-27-03-00011.0220",
+"offeredDate": "2024-08-13",
+"openingBid": 12997.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1223 HIGHLAND AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 3 BLK 11 DB 254 PG 70 LOT 22",
+"status": "available"
+},
+{
+"deedNo": "2024000077",
+"parcel": "36-44-26-03-00018.0140",
+"offeredDate": "2024-08-13",
+"openingBid": 22562.67,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2924 5TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 3 BLK.18 PB 15 PG 92 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2024000082",
+"parcel": "28-44-26-06-00056.0160",
+"offeredDate": "2024-08-13",
+"openingBid": 25076.28,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4510 4TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK.56 PB 15 PG 78 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024000110",
+"parcel": "11-44-23-C1-02561.0700",
+"offeredDate": "2024-08-13",
+"openingBid": 33153.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "527 NW 7TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2561 PB 17 PG 28 LOTS 70 + 71",
+"status": "available"
+},
+{
+"deedNo": "2024000111",
+"parcel": "11-44-23-C1-02593.0520",
+"offeredDate": "2024-08-13",
+"openingBid": 31007.99,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "503 NW 4TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2593 PB 17 PG 22 LOTS 52 + 53",
+"status": "available"
+},
+{
+"deedNo": "2024000118",
+"parcel": "11-44-23-C2-02612.0200",
+"offeredDate": "2024-08-13",
+"openingBid": 18330.11,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "108 NW 7TH TER CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2612 PB 17 PG 29 LOTS 20 + 21",
+"status": "available"
+},
+{
+"deedNo": "2023002289",
+"parcel": "20-45-27-66-00258.0200",
+"offeredDate": "2024-08-20",
+"openingBid": 18310.48,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "840 GUIENNE LN LEHIGH ACRES FL 33974",
+"legal": "MIRROR LAKES UNIT 66 BLK 258 PB 27 PG 153 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023002378",
+"parcel": "36-45-27-04-00018.0130",
+"offeredDate": "2024-08-20",
+"openingBid": 14997.48,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1253 DELORES ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 4 BLK 18 PB 18 PG 142 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2023002441",
+"parcel": "01-45-26-06-00067.0030",
+"offeredDate": "2024-08-20",
+"openingBid": 19459.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2709 20TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLAT SEC 1 BLK 67 PB 26 PG 171 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2023002442",
+"parcel": "01-45-27-02-00010.0090",
+"offeredDate": "2024-08-20",
+"openingBid": 11902.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "106 NAVY CT LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 10 PB 15 PG 171 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2023002443",
+"parcel": "01-45-27-15-00081.0040",
+"offeredDate": "2024-08-20",
+"openingBid": 14034.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "237 COLUMBUS BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK 81 PB 15 PG 184 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2023002446",
+"parcel": "11-45-26-02-00015.0140",
+"offeredDate": "2024-08-20",
+"openingBid": 24881.0,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3612 38TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES REPLT SEC 11 BLK 15 PB 26 PG 192 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2023002452",
+"parcel": "06-44-27-18-00312.0110",
+"offeredDate": "2024-08-20",
+"openingBid": 13816.32,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1874 JACINTO AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 53 BLK 312 PB 27 PG 76 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023002459",
+"parcel": "34-44-26-06-00054.0170",
+"offeredDate": "2024-08-20",
+"openingBid": 19560.22,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4012 6TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 6 BLK 54 PB 15 PG 90 LOT 17",
+"status": "available"
+},
+{
+"deedNo": "2023002496",
+"parcel": "11-44-26-03-00020.0060",
+"offeredDate": "2024-08-20",
+"openingBid": 12028.42,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3601 54TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK 20 PB 15 PG 60 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023002498",
+"parcel": "02-44-26-06-00053.0080",
+"offeredDate": "2024-08-20",
+"openingBid": 12841.7,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3405 71ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK 53 PB 15 PG 59 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002505",
+"parcel": "03-45-26-03-00020.0200",
+"offeredDate": "2024-08-20",
+"openingBid": 7177.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4218 25TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 3 BLK 20 PB 15 PG 95 LOT 20",
+"status": "available"
+},
+{
+"deedNo": "2023002506",
+"parcel": "03-45-26-03-00021.0010",
+"offeredDate": "2024-08-20",
+"openingBid": 2971.83,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4219 25TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 3 BLK 21 PB 15 PG 95 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2023002513",
+"parcel": "15-44-27-05-00020.0170",
+"offeredDate": "2024-08-20",
+"openingBid": 18736.05,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1309 DAYTON AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 20 DB 254 PG 75 LOT 17",
+"status": "available"
+},
+{
+"deedNo": "2023002514",
+"parcel": "16-44-27-04-00015.0050",
+"offeredDate": "2024-08-20",
+"openingBid": 12995.13,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1314 LAKE AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK 15 DB 254 PG 70 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2023002522",
+"parcel": "33-44-26-01-00007.0110",
+"offeredDate": "2024-08-20",
+"openingBid": 22167.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4304 2ND ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 1 BLK 7 PB 15 PG 100 LOT 11",
+"status": "available"
+},
+{
+"deedNo": "2023002529",
+"parcel": "34-44-26-05-00045.0050",
+"offeredDate": "2024-08-20",
+"openingBid": 23730.24,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "51 ALAN AVE S LEHIGH ACRES FL 33976",
+"legal": "45 PB 15 PG 90 LOT 5 LESS SUBSURFACE RIGHTS ASSESSED UNDER 34-44-26-99-00045.0050 AS",
+"status": "available"
+},
+{
+"deedNo": "2023002531",
+"parcel": "32-43-24-C1-02183.0320",
+"offeredDate": "2024-08-20",
+"openingBid": 31860.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1805 NE 22ND TER CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 33 BLK.2183 PB 16 PG 53 LOTS 32 + 33",
+"status": "available"
+},
+{
+"deedNo": "2024000117",
+"parcel": "11-44-23-C2-02612.0090",
+"offeredDate": "2024-08-20",
+"openingBid": 29595.25,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "130 NW 7TH TER CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2612 PB 17 PG 29 LOTS 9 + 10",
+"status": "available"
+},
+{
+"deedNo": "2023002553",
+"parcel": "22-44-23-C2-04455.0250",
+"offeredDate": "2024-08-27",
+"openingBid": 1831.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1021 SW 9TH AVE CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 63 BLK 4455 PB 21 PG 75 LOTS 25 + 26",
+"status": "available"
+},
+{
+"deedNo": "2023002555",
+"parcel": "30-44-26-03-00018.0060",
+"offeredDate": "2024-08-27",
+"openingBid": 46157.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "910 ALBERT AVE LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 3 BLK 18 PB 26 PG 53 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2023002558",
+"parcel": "08-44-22-04-00004.0080",
+"offeredDate": "2024-08-27",
+"openingBid": 10534.35,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "13730 HAMPTON RD BOKEELIA FL 33922",
+"legal": "PINE ISLAND ESTATES NO.3 BLK 4 PB 10 PG 104 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2023002563",
+"parcel": "18-44-23-C4-05324.0270",
+"offeredDate": "2024-08-27",
+"openingBid": 37122.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3538 SW 4TH LN CAPE CORAL FL 33991",
+"legal": "CAPE CORAL UNIT 58 BLK 5324 PB 23 PG 132 LOTS 27 + 28",
+"status": "available"
+},
+{
+"deedNo": "2023002620",
+"parcel": "32-44-26-03-00013.0030",
+"offeredDate": "2024-08-27",
+"openingBid": 42530.62,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2409 2411 GEORGE AVE S LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 3 BLK 13 PB 15 PG 83 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000006",
+"parcel": "07-45-27-15-00080.0070",
+"offeredDate": "2024-08-27",
+"openingBid": 18769.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "150 PEMBROKE ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 15 BLK 80 PB 26 PG 78 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2024000009",
+"parcel": "13-45-27-17-00089.0180",
+"offeredDate": "2024-08-27",
+"openingBid": 13810.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "646 NAPLES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 17 BLK 89 PB 18 PG 35 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2024000010",
+"parcel": "13-45-27-17-00089.0190",
+"offeredDate": "2024-08-27",
+"openingBid": 11446.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "644 NAPLES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 17 BLK 89 PB 18 PG 35 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2024000011",
+"parcel": "14-45-27-01-00003.0280",
+"offeredDate": "2024-08-27",
+"openingBid": 6993.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "516 MCARTHUR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 3 PB 15 PG 129 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2024000021",
+"parcel": "26-44-27-13-00007.0120",
+"offeredDate": "2024-08-27",
+"openingBid": 15762.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "406 HAMILTON AVE LEHIGH ACRES FL 33972",
+"legal": "LAKEWOOD TERRACE BLK 7 PB 15 PG 122 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000023",
+"parcel": "01-44-26-02-00018.0120",
+"offeredDate": "2024-08-27",
+"openingBid": 12028.1,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2906 69TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 2 BLK.18 PB 15 PG 58 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000024",
+"parcel": "01-44-26-02-00016.0150",
+"offeredDate": "2024-08-27",
+"openingBid": 11235.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2912 71ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 2 BLK 16 PB 15 PG 58 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2024000025",
+"parcel": "01-44-26-02-00018.0100",
+"offeredDate": "2024-08-27",
+"openingBid": 9513.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2902 69TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 2 BLK.18 PB 15 PG 58 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000031",
+"parcel": "01-44-26-12-00119.0160",
+"offeredDate": "2024-08-27",
+"openingBid": 11367.4,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2514 63RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 12 BLK.119 PB 15 PG 58 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024000040",
+"parcel": "02-44-26-05-00051.0020",
+"offeredDate": "2024-08-27",
+"openingBid": 10739.93,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3317 73RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 5 BLK.51 PB 15 PG 59 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000052",
+"parcel": "11-44-26-06-00052.0180",
+"offeredDate": "2024-08-27",
+"openingBid": 10744.62,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3412 56TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK.52 PB 15 PG 60 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2024000060",
+"parcel": "16-44-26-05-00005.0080",
+"offeredDate": "2024-08-27",
+"openingBid": 35841.7,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "6240 ARBOR AVE FORT MYERS FL 33905",
+"legal": "BUCKINGHAM PK RE BLK B U-2 BLK 5 PB 27 PG 189 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000144",
+"parcel": "14-45-27-13-00071.0030",
+"offeredDate": "2024-08-27",
+"openingBid": 11568.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "616 PARKER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 13 BLK 71 PB 15 PG 145 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000041",
+"parcel": "02-44-26-06-00054.0190",
+"offeredDate": "2024-09-10",
+"openingBid": 12373.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3416 69TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK.54 PB 15 PG 59 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2024000045",
+"parcel": "02-44-26-10-00097.0130",
+"offeredDate": "2024-09-10",
+"openingBid": 13466.1,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3122 71ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.97 PB 15 PG 59 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2024000046",
+"parcel": "02-44-26-10-00097.0160",
+"offeredDate": "2024-09-10",
+"openingBid": 10259.73,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3128 71ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK 97 PB 15 PG 59 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024000048",
+"parcel": "03-44-26-03-00015.0100",
+"offeredDate": "2024-09-10",
+"openingBid": 20524.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3744 HYDE PARK DR FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 3 BLK 15 PB 26 PG 5 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000049",
+"parcel": "03-44-26-05-00025.0190",
+"offeredDate": "2024-09-10",
+"openingBid": 8384.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3709 KESSLER ST FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 5 BLK 25 PB 26 PG 7 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2024000053",
+"parcel": "11-44-26-06-00054.0130",
+"offeredDate": "2024-09-10",
+"openingBid": 12156.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3304 58TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 6 BLK.54 PB 15 PG 60 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2024000057",
+"parcel": "13-45-27-07-00037.0040",
+"offeredDate": "2024-09-10",
+"openingBid": 10763.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1214 BEAVER ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK 37 PB 18 PG 25 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000059",
+"parcel": "15-45-27-16-00104.0050",
+"offeredDate": "2024-09-10",
+"openingBid": 12883.34,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "878 SUNFLOWER CT LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 104 PB 18 PG 52 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000062",
+"parcel": "21-45-27-01-00005.0030",
+"offeredDate": "2024-09-10",
+"openingBid": 14810.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "713 DOWNER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 5 PB 18 PG 54 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000064",
+"parcel": "21-45-27-05-00021.0100",
+"offeredDate": "2024-09-10",
+"openingBid": 13528.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "742 ALETHA AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 21 PB 18 PG 58 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000066",
+"parcel": "22-45-27-10-00058.0050",
+"offeredDate": "2024-09-10",
+"openingBid": 13696.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "819 BOYD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 58 PB 18 PG 80 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000067",
+"parcel": "22-45-27-11-00062.0120",
+"offeredDate": "2024-09-10",
+"openingBid": 14963.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "816 JAGUAR BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 62 PB 18 PG 82 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000071",
+"parcel": "26-44-26-13-00011.0100",
+"offeredDate": "2024-09-10",
+"openingBid": 21832.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "905 SUNNILAND BLVD LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 13 BLK 11 PB 15 PG 74 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000081",
+"parcel": "23-45-27-05-00010.0010",
+"offeredDate": "2024-09-10",
+"openingBid": 13767.49,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "737 BOBOLINK AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK.10 PB 20 PG 25 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2024000092",
+"parcel": "01-45-27-16-00089.0100",
+"offeredDate": "2024-09-10",
+"openingBid": 10428.09,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "238 NORRIS AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 89 PB 15 PG 185 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000093",
+"parcel": "12-44-26-10-00095.0050",
+"offeredDate": "2024-09-10",
+"openingBid": 14737.77,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2613 57TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK 95 PB 15 PG 61 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000101",
+"parcel": "12-46-23-01-0000F.0120",
+"offeredDate": "2024-09-10",
+"openingBid": 9055.82,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "ACCESS UNDETERMINED FORT MYERS BEACH FL",
+"legal": "GULF CITY BLK F PB 8 PG 60 LOTS 12 THRU 41",
+"status": "available"
+},
+{
+"deedNo": "2024000116",
+"parcel": "11-44-23-C2-02600.0150",
+"offeredDate": "2024-09-10",
+"openingBid": 29627.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "339 NW 2ND AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 37 BLK 2600 PB 17 PG 23 LOTS 15 + 16",
+"status": "available"
+},
+{
+"deedNo": "2024000123",
+"parcel": "12-44-23-C1-02370.0260",
+"offeredDate": "2024-09-10",
+"openingBid": 15415.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "457 NE JUANITA PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 35 BLK 2370 PB 16 PG 104 LOTS 26 + 27",
+"status": "available"
+},
+{
+"deedNo": "2024000157",
+"parcel": "06-44-24-C1-02070.0360",
+"offeredDate": "2024-09-10",
+"openingBid": 28585.24,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1425 NE 9TH AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 31 BLK 2070 PB 14 PG 163 LOTS 36 + 37",
+"status": "available"
+},
+{
+"deedNo": "2024000307",
+"parcel": "13-44-26-11-00110.0150",
+"offeredDate": "2024-09-17",
+"openingBid": 13355.58,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3411 SUNSHINE BLVD N LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 11 BLK 110 PB 15 PG 62 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2024000168",
+"parcel": "23-45-27-14-00023.0260",
+"offeredDate": "2024-09-17",
+"openingBid": 8526.4,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "947 DERBY ST LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 23 PB 20 PG 34 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2024000169",
+"parcel": "23-45-27-05-00010.0020",
+"offeredDate": "2024-09-17",
+"openingBid": 11477.38,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "739 BOBOLINK AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK.10 PB 20 PG 25 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000194",
+"parcel": "14-45-27-14-00073.0290",
+"offeredDate": "2024-09-17",
+"openingBid": 22284.97,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "633 ASPEN AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 73 PB 15 PG 147 LOTS 29 + 30",
+"status": "available"
+},
+{
+"deedNo": "2024000216",
+"parcel": "27-45-27-12-00062.0290",
+"offeredDate": "2024-09-17",
+"openingBid": 9753.38,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3056 MEADOW RD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 62 PB 18 PG 135 LOT 29",
+"status": "available"
+},
+{
+"deedNo": "2024000237",
+"parcel": "11-45-24-02-00010.0260",
+"offeredDate": "2024-09-17",
+"openingBid": 20013.53,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1924 PINE DR S FORT MYERS FL 33907",
+"legal": "PINE MANOR UNIT 2 BLK 10 PB 10 PG 40 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2024000249",
+"parcel": "15-45-27-09-00059.0080",
+"offeredDate": "2024-09-17",
+"openingBid": 7426.17,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "533 MORRIS TYLER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 59 PB 18 PG 45 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000272",
+"parcel": "31-44-26-02-00030.0120",
+"offeredDate": "2024-09-17",
+"openingBid": 30937.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "154 MEADOW RD LEHIGH ACRES FL 33973",
+"legal": "LEHIGH ESTATES UNIT 2 BLK 30 PB 15 PG 82 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000291",
+"parcel": "07-44-27-08-00254.0150",
+"offeredDate": "2024-09-17",
+"openingBid": 13177.99,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1800 MAYBERRY DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 39 PT S BLK 254 PB 27 PG 62 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2024000303",
+"parcel": "12-44-26-09-00126.0040",
+"offeredDate": "2024-09-17",
+"openingBid": 13777.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "5901 SUNSHINE BLVD N LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT SEC 12 BLK 126 PB 26 PG 109 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000309",
+"parcel": "13-45-27-01-00005.0020",
+"offeredDate": "2024-09-17",
+"openingBid": 11169.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "507 HURD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 5 PB 18 PG 19 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000282",
+"parcel": "02-44-27-13-00052.0130",
+"offeredDate": "2024-09-24",
+"openingBid": 11381.93,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2101 ROOSEVELT AVE ALVA FL 33920",
+"legal": "LEHIGH ACRES UNIT 13 BLK 52 PB 20 PG 16 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2024000298",
+"parcel": "11-45-27-14-00054.0280",
+"offeredDate": "2024-09-24",
+"openingBid": 10759.76,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "917 GREGORY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 54 PB 15 PG 164 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2024000088",
+"parcel": "07-44-23-C2-04185.0330",
+"offeredDate": "2024-09-24",
+"openingBid": 14337.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3316 TROPICANA PKWY W CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 59 BLK 4185 PB 19 PG 153 LOT 33",
+"status": "available"
+},
+{
+"deedNo": "2024000275",
+"parcel": "36-45-27-06-00032.0030",
+"offeredDate": "2024-09-24",
+"openingBid": 7005.83,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1133 COLUMBO AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 32 PB 18 PG 144 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000284",
+"parcel": "03-44-27-13-00046.0100",
+"offeredDate": "2024-09-24",
+"openingBid": 10185.02,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2156 WINNETKA DR LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 9 PART N BLK 46 PB 27 PG 15 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024000293",
+"parcel": "09-44-27-05-00020.010A",
+"offeredDate": "2024-09-24",
+"openingBid": 9026.64,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "401 E 17TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 20 PB 15 PG 11 LOT 10 W 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000294",
+"parcel": "10-45-27-03-00015.0050",
+"offeredDate": "2024-09-24",
+"openingBid": 7628.6,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "319 LIMERICK AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK.15 PB 18 PG 4 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000295",
+"parcel": "10-45-27-07-00039.0250",
+"offeredDate": "2024-09-24",
+"openingBid": 13175.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "821 CARPENTER ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK.39 PB 18 PG 8 LOT 25",
+"status": "available"
+},
+{
+"deedNo": "2024000297",
+"parcel": "11-44-26-10-00096.0080",
+"offeredDate": "2024-09-24",
+"openingBid": 10195.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3202 58TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.96 PB 15 PG 60 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000304",
+"parcel": "12-45-27-17-00077.0020",
+"offeredDate": "2024-09-24",
+"openingBid": 12209.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1132 CROQUET ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 17 BLK 77 PB 15 PG 239 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000311",
+"parcel": "13-45-27-09-00050.0180",
+"offeredDate": "2024-09-24",
+"openingBid": 9218.66,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1113 BAYLISS ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 50 PB 18 PG 27 LOT 18",
+"status": "available"
+},
+{
+"deedNo": "2024000315",
+"parcel": "14-44-26-04-00031.0060",
+"offeredDate": "2024-09-24",
+"openingBid": 8539.87,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3309 34TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES REPLAT TR Q UT 4 BLK 31 PB 26 PG 119 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2024000316",
+"parcel": "14-44-26-05-00043.0120",
+"offeredDate": "2024-09-24",
+"openingBid": 11849.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3108 43RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 5 BLK 43 PB 15 PG 63 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000317",
+"parcel": "14-44-27-05-00020.013A",
+"offeredDate": "2024-09-24",
+"openingBid": 9215.58,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2707 E 13TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 20 PB 15 PG 16 LOT 13 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000320",
+"parcel": "15-45-27-16-00106.0010",
+"offeredDate": "2024-09-24",
+"openingBid": 10527.01,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "649 HAWTHORNE AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 16 BLK 106 PB 18 PG 52 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2024000327",
+"parcel": "21-45-27-10-00057.0060",
+"offeredDate": "2024-09-24",
+"openingBid": 11080.29,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "813 OAKRIDGE AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 57 PB 18 PG 63 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2024000331",
+"parcel": "22-45-27-13-00078.0220",
+"offeredDate": "2024-09-24",
+"openingBid": 12701.26,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "842 DAWHERT AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 13 BLK 78 PB 18 PG 85 LOT 22",
+"status": "available"
+},
+{
+"deedNo": "2024000333",
+"parcel": "23-45-27-09-00020.0090",
+"offeredDate": "2024-09-24",
+"openingBid": 10749.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "825 COFFIELD AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 20 PB 20 PG 29 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2024000335",
+"parcel": "24-44-26-04-00026.0160",
+"offeredDate": "2024-09-24",
+"openingBid": 13491.08,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3010 18TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 4 PB 15 PG 68 BLK 26 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024000343",
+"parcel": "25-45-27-01-00004.0040",
+"offeredDate": "2024-09-24",
+"openingBid": 9291.88,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "917 MARY AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 4 PB 18 PG 107 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000344",
+"parcel": "25-45-27-06-00035.0070",
+"offeredDate": "2024-09-24",
+"openingBid": 6095.2,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1144 EARHART ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 35 PB 18 PG 112 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2024000345",
+"parcel": "25-45-27-11-00062.0300",
+"offeredDate": "2024-09-24",
+"openingBid": 8462.14,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1215 ECLAT ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 62 PB 18 PG 117 LOT 30",
+"status": "available"
+},
+{
+"deedNo": "2024000347",
+"parcel": "26-44-27-05-00017.001B",
+"offeredDate": "2024-09-24",
+"openingBid": 14419.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3002 E 6TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 REPLT. BLK.17 DB 263 PG 350 LOT 1 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000348",
+"parcel": "26-45-27-05-00007.0440",
+"offeredDate": "2024-09-24",
+"openingBid": 13784.59,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "937 FOXDALE AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 7 PB 20 PG 42 LOT 44",
+"status": "available"
+},
+{
+"deedNo": "2024000349",
+"parcel": "26-45-27-11-00037.0240",
+"offeredDate": "2024-09-24",
+"openingBid": 10074.78,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1020 CAPETOWN AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 37 PB 20 PG 48 LOT 24",
+"status": "available"
+},
+{
+"deedNo": "2024000371",
+"parcel": "02-44-26-05-00051.0190",
+"offeredDate": "2024-09-24",
+"openingBid": 10225.18,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3316 72ND ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 5 BLK.51 PB 15 PG 59 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2024000054",
+"parcel": "11-44-26-08-00069.0080",
+"offeredDate": "2024-10-01",
+"openingBid": 9956.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3303 51ST ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 8 BLK.69 PB 15 PG 60 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000346",
+"parcel": "25-45-27-15-00085.0070",
+"offeredDate": "2024-10-01",
+"openingBid": 11713.34,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1053 MAXWELL AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 15 BLK 85 PB 18 PG 121 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2024000356",
+"parcel": "03-44-27-05-00013.0020",
+"offeredDate": "2024-10-01",
+"openingBid": 15652.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1903 LORNA AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 3 BLK 13 PB 27 PG 6 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000357",
+"parcel": "03-44-27-05-00013.0030",
+"offeredDate": "2024-10-01",
+"openingBid": 14451.56,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1905 LORNA AVE LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 3 BLK 13 PB 27 PG 6 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000369",
+"parcel": "02-45-26-07-00059.0050",
+"offeredDate": "2024-10-01",
+"openingBid": 51239.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3413 23RD ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 7 BLK.59 PB 15 PG 94 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000381",
+"parcel": "32-43-24-C3-02220.0490",
+"offeredDate": "2024-10-01",
+"openingBid": 8830.57,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2320 DIPLOMAT PKWY E CAPE CORAL FL 33909",
+"legal": "PE CORAL UNIT 33 BLK 2220 PB 16 PG 44 LOTS 49 + 50 + VAC ALLEY DESC IN INST# 20080001655",
+"status": "available"
+},
+{
+"deedNo": "2024000386",
+"parcel": "11-44-27-07-00026.013A",
+"offeredDate": "2024-10-01",
+"openingBid": 11242.15,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2407 E 18TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 7 BLK.26 PB 15 PG 13 LOT 13 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000389",
+"parcel": "09-44-27-06-00024.0030",
+"offeredDate": "2024-10-01",
+"openingBid": 10788.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1715 MCKINLEY AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 6 REPLAT BLK.24 DB 263 PG 171 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000480",
+"parcel": "14-45-27-06-00030.0090",
+"offeredDate": "2024-10-01",
+"openingBid": 10985.44,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "555 OSAGE AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 30 PB 15 PG 136 LOT 9",
+"status": "available"
+},
+{
+"deedNo": "2024000481",
+"parcel": "14-45-27-06-00030.0150",
+"offeredDate": "2024-10-01",
+"openingBid": 10554.17,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "565 COTTONWOOD AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 30 PB 15 PG 136 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2024000482",
+"parcel": "10-45-27-09-00052.0190",
+"offeredDate": "2024-10-01",
+"openingBid": 15096.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "725 GRANT BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK.52 PB 18 PG 10 LOT 19",
+"status": "available"
+},
+{
+"deedNo": "2024000485",
+"parcel": "11-45-27-05-00022.0080",
+"offeredDate": "2024-10-01",
+"openingBid": 11739.58,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "351 HERMOSA AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK.22 PB 15 PG 154 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000504",
+"parcel": "01-45-27-06-00035.0020",
+"offeredDate": "2024-10-15",
+"openingBid": 11439.84,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1138 RAHWAY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 35 PB 15 PG 175 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000104",
+"parcel": "02-44-25-00-00010.0020",
+"offeredDate": "2024-10-15",
+"openingBid": 3524.27,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "ACCESS UNDETERMINED FORT MYERS FL",
+"legal": "THAT PORTION OF RR R/W LYING IN W 1/2 OF SW 1/4",
+"status": "available"
+},
+{
+"deedNo": "2024000491",
+"parcel": "07-45-27-10-00046.0120",
+"offeredDate": "2024-10-15",
+"openingBid": 16283.32,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "219 PEERLESS ST LEHIGH ACRES FL 33974",
+"legal": "SOUTHWOOD UNIT 10 BLK 46 PB 26 PG 70 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024000511",
+"parcel": "03-45-27-09-00036.0140",
+"offeredDate": "2024-10-15",
+"openingBid": 13851.51,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "835 SUNRISE BLVD LEHIGH ACRES FL 33974",
+"legal": "TWIN LAKE ESTATES UNIT 9 BLK 36 PB 15 PG 215 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2024000513",
+"parcel": "13-45-27-01-00003.0040",
+"offeredDate": "2024-10-15",
+"openingBid": 41949.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1118 1120 AUGUSTA ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UT 1 REPLAT SEC 13 BLK 3 PB 35 PG 55 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000524",
+"parcel": "35-44-27-05-00018.024A",
+"offeredDate": "2024-10-15",
+"openingBid": 13121.69,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2904 E 2ND ST LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 5 BLK.18 DB 254 PG 30 LOT 24 W 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000556",
+"parcel": "02-44-23-C1-02646.0510",
+"offeredDate": "2024-10-15",
+"openingBid": 18467.94,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1126 NW 6TH AVE CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 38 BLK 2646 PB 16 PG 91 LOTS 51 + 52",
+"status": "available"
+},
+{
+"deedNo": "2024000558",
+"parcel": "02-44-23-C4-02646.0050",
+"offeredDate": "2024-10-15",
+"openingBid": 32941.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1119 NW 6TH PL CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 38 BLK 2646 PB 16 PG 91 LOTS 5 + 6",
+"status": "available"
+},
+{
+"deedNo": "2024000565",
+"parcel": "03-44-26-11-00055.0260",
+"offeredDate": "2024-10-15",
+"openingBid": 18738.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3738 TARECO ST FORT MYERS FL 33905",
+"legal": "LEHIGH ACRES UNIT 11 BLK 55 PB 26 PG 14 LOT 26",
+"status": "available"
+},
+{
+"deedNo": "2024000471",
+"parcel": "10-45-27-08-00044.0220",
+"offeredDate": "2024-10-22",
+"openingBid": 13063.13,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "859 CARPENTER ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 8 BLK.44 PB 18 PG 9 LOT 22",
+"status": "available"
+},
+{
+"deedNo": "2024000570",
+"parcel": "05-44-24-C1-02093.0620",
+"offeredDate": "2024-10-22",
+"openingBid": 12725.2,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1418 NE 16TH PL CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 47 PT 2 BLK 2093 PB 23 PG 120 LOTS 62 + 63",
+"status": "available"
+},
+{
+"deedNo": "2024000580",
+"parcel": "09-44-23-C1-03750.0440",
+"offeredDate": "2024-10-22",
+"openingBid": 33150.11,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2105 NW 6TH ST CAPE CORAL FL 33993",
+"legal": "CAPE CORAL UNIT 51 BLK 3750 PB 19 PG 14 LOTS 44 + 45",
+"status": "available"
+},
+{
+"deedNo": "2024000605",
+"parcel": "18-44-27-12-00045.013A",
+"offeredDate": "2024-10-22",
+"openingBid": 11721.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1900 W 15TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 12 BLK.45 DB 252 PG 456 LOT 13 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024000612",
+"parcel": "22-44-26-02-00032.0020",
+"offeredDate": "2024-10-22",
+"openingBid": 14658.09,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1902 COLONIAL AVE N LEHIGH ACRES FL 33971",
+"legal": "LEHIGH PARK UNIT 2 BLK 32 PB 15 PG 65 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024000668",
+"parcel": "36-44-26-10-00098.0050",
+"offeredDate": "2024-10-22",
+"openingBid": 20414.65,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2502 2ND ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 10 BLK.98 DB 281 PG 50 LOT 5",
+"status": "available"
+},
+{
+"deedNo": "2024000672",
+"parcel": "36-45-27-14-00086.0140",
+"offeredDate": "2024-10-22",
+"openingBid": 11163.72,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1256 BELFAST AVE FORT MYERS FL 33913",
+"legal": "LEHIGH ACRES UNIT 14 BLK 86 PB 28 PG 72 LOT 14",
+"status": "available"
+},
+{
+"deedNo": "2024001014",
+"parcel": "05-44-24-C2-03511.0610",
+"offeredDate": "2024-10-29",
+"openingBid": 34576.43,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1515 NE 23RD AVE CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 47 PT 2 BLK 3511 PB 23 PG 124 LOTS 61 + 62",
+"status": "available"
+},
+{
+"deedNo": "2024000373",
+"parcel": "14-44-27-11-00041.0220",
+"offeredDate": "2024-10-29",
+"openingBid": 12783.86,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1519 COLUMBUS AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 11 BLK.41 DB 254 PG 80 LOT 22",
+"status": "available"
+},
+{
+"deedNo": "2024000704",
+"parcel": "16-44-26-08-00029.0030",
+"offeredDate": "2024-10-29",
+"openingBid": 18849.73,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "14240 CHANCELLOR ST FORT MYERS FL 33905",
+"legal": "BUCKINGHAM PK RE BLK B U-5 BLK 29 PB 27 PG 193 LOT 3",
+"status": "available"
+},
+{
+"deedNo": "2024000714",
+"parcel": "32-44-23-C2-05974.0170",
+"offeredDate": "2024-10-29",
+"openingBid": 71691.05,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2537 SW 27TH PL CAPE CORAL FL 33914",
+"legal": "CAPE CORAL UNIT 93 BLK 5974 PB 25 PG 15 LOTS 17 + 18",
+"status": "available"
+},
+{
+"deedNo": "2024000725",
+"parcel": "36-45-27-06-00030.0040",
+"offeredDate": "2024-10-29",
+"openingBid": 14621.54,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1135 HAVEN AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 6 BLK 30 PB 18 PG 144 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024001001",
+"parcel": "01-45-27-12-00067.0010",
+"offeredDate": "2024-10-29",
+"openingBid": 10096.75,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1246 RAPHAEL ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 12 BLK 67 PB 15 PG 181 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2024001011",
+"parcel": "04-45-26-01-00023.0040",
+"offeredDate": "2024-10-29",
+"openingBid": 27052.17,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4301 28TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 4 BLK 23 PB 15 PG 100 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000767",
+"parcel": "11-44-27-09-00033.0040",
+"offeredDate": "2024-11-05",
+"openingBid": 14245.91,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1816 COLUMBUS AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 9 BLK 33 DB 259 PG 121 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000772",
+"parcel": "13-44-27-04-00021.0080",
+"offeredDate": "2024-11-05",
+"openingBid": 15236.55,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1308 IRVING AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 4 BLK 21 DB 254 PG 85 LOT 8",
+"status": "available"
+},
+{
+"deedNo": "2024000960",
+"parcel": "02-45-27-05-00033.0280",
+"offeredDate": "2024-11-05",
+"openingBid": 13424.78,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1020 ANTHONY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 33 PB 15 PG 193 LOT 28",
+"status": "available"
+},
+{
+"deedNo": "2024000961",
+"parcel": "02-45-27-09-00056.0010",
+"offeredDate": "2024-11-05",
+"openingBid": 16089.04,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1046 BELMONT ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 56 PB 15 PG 199 LOT 1",
+"status": "available"
+},
+{
+"deedNo": "2024001135",
+"parcel": "01-45-27-02-00015.0150",
+"offeredDate": "2024-11-05",
+"openingBid": 13963.12,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "130 COLUMBUS BLVD LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 2 BLK 15 PB 15 PG 171 LOT 15",
+"status": "available"
+},
+{
+"deedNo": "2024001165",
+"parcel": "01-44-26-12-00120.0040",
+"offeredDate": "2024-11-05",
+"openingBid": 14132.03,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2509 63RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 12 BLK.120 PB 15 PG 58 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024001200",
+"parcel": "07-44-24-C1-02010.0060",
+"offeredDate": "2024-11-05",
+"openingBid": 7870.19,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "813 NE 7TH TER CAPE CORAL FL 33909",
+"legal": "CAPE CORAL UNIT 31 BLK 2010 PB 14 PG 151 LOT 6",
+"status": "available"
+},
+{
+"deedNo": "2024000887",
+"parcel": "24-44-26-10-00082.0040",
+"offeredDate": "2024-11-19",
+"openingBid": 19787.52,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2613 26TH ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 10 BLK.82 PB 15 PG 68 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024000925",
+"parcel": "11-45-27-10-00037.0130",
+"offeredDate": "2024-11-19",
+"openingBid": 13819.85,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1015 MERRY ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 37 PB 15 PG 160 LOT 13",
+"status": "available"
+},
+{
+"deedNo": "2024001091",
+"parcel": "24-45-27-07-00068.0140",
+"offeredDate": "2024-12-03",
+"openingBid": 29916.95,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "757 NAPLES AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK 68 PB 18 PG 101 LOTS 14 + 15",
+"status": "available"
+},
+{
+"deedNo": "2024000952",
+"parcel": "22-45-27-11-00064.0160",
+"offeredDate": "2024-12-03",
+"openingBid": 14690.99,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "832 LAMAR ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 11 BLK 64 PB 18 PG 82 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024000975",
+"parcel": "24-44-23-C3-01036.0160",
+"offeredDate": "2024-12-03",
+"openingBid": 96150.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1324 ACADEMY BLVD CAPE CORAL FL 33990",
+"legal": "CAPE CORAL UNIT 24 BLK 1036 PB 14 PG 74 LOTS 16 + 17",
+"status": "available"
+},
+{
+"deedNo": "2024000981",
+"parcel": "36-44-27-11-00043.0240",
+"offeredDate": "2024-12-03",
+"openingBid": 15266.68,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "323 LOUIS AVE LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 11 BLK 43 DB 254 PG 25 LOT 24",
+"status": "available"
+},
+{
+"deedNo": "2024001036",
+"parcel": "11-45-27-14-00057.0070",
+"offeredDate": "2024-12-03",
+"openingBid": 13084.5,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "942 GREEN ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 14 BLK 57 PB 15 PG 165 LOT 7",
+"status": "available"
+},
+{
+"deedNo": "2024001079",
+"parcel": "23-44-27-09-00035.0100",
+"offeredDate": "2024-12-03",
+"openingBid": 17655.06,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1004 TRUMAN AVE LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 9 BLK 35 DB 254 PG 55 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024001081",
+"parcel": "23-45-27-07-00039.0160",
+"offeredDate": "2024-12-03",
+"openingBid": 12171.48,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "764 SILVERSTAR AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 7 BLK 39 PB 20 PG 27 LOT 16",
+"status": "available"
+},
+{
+"deedNo": "2024001095",
+"parcel": "24-45-27-09-00083.0040",
+"offeredDate": "2024-12-03",
+"openingBid": 12432.3,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1238 CELLINI ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 83 PB 18 PG 104 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024001114",
+"parcel": "28-45-27-03-00010.0100",
+"offeredDate": "2024-12-03",
+"openingBid": 17616.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "933 HEPBURN AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 10 PB 20 PG 57 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024001128",
+"parcel": "36-44-26-04-00026.0020",
+"offeredDate": "2024-12-03",
+"openingBid": 19597.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "2921 8TH ST SW LEHIGH ACRES FL 33976",
+"legal": "LEHIGH ACRES UNIT 4 BLK.26 DB 281 PG 50 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024001134",
+"parcel": "24-44-27-01-00002.013B",
+"offeredDate": "2024-12-03",
+"openingBid": 11364.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3607 E 8TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 1 BLK.2 DB 254 PG 50 LOT 13 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024001211",
+"parcel": "09-44-27-09-00118.0100",
+"offeredDate": "2024-12-17",
+"openingBid": 13687.47,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1861 OCTAVIA ST LEHIGH ACRES FL 33972",
+"legal": "GREENBRIAR UNIT 20 BLK 118 PB 27 PG 32 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024001142",
+"parcel": "15-45-27-10-00065.0020",
+"offeredDate": "2024-12-17",
+"openingBid": 14060.36,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "808 FREDERICK REID ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 10 BLK 65 PB 18 PG 46 LOT 2",
+"status": "available"
+},
+{
+"deedNo": "2024001144",
+"parcel": "21-45-27-01-00003.0040",
+"offeredDate": "2024-12-17",
+"openingBid": 14811.61,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "511 ADDISON ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 1 BLK 3 PB 18 PG 54 LOT 4",
+"status": "available"
+},
+{
+"deedNo": "2024001146",
+"parcel": "25-44-27-05-00020.001B",
+"offeredDate": "2024-12-17",
+"openingBid": 12637.46,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3902 E 6TH ST LEHIGH ACRES FL 33972",
+"legal": "LEHIGH ACRES UNIT 5 BLK 20 DB 254 PG 45 LOT 1 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024001147",
+"parcel": "36-44-27-10-00038.013B",
+"offeredDate": "2024-12-17",
+"openingBid": 12304.98,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "4507 E 3RD ST LEHIGH ACRES FL 33936",
+"legal": "LEHIGH ACRES UNIT 10 BLK.38 DB 254 PG 25 LOT 13 E 1/2",
+"status": "available"
+},
+{
+"deedNo": "2024001222",
+"parcel": "11-44-26-11-00108.0100",
+"offeredDate": "2024-12-17",
+"openingBid": 16180.74,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "3207 53RD ST W LEHIGH ACRES FL 33971",
+"legal": "LEHIGH ACRES UNIT 11 BLK.108 PB 15 PG 60 LOT 10",
+"status": "available"
+},
+{
+"deedNo": "2024001229",
+"parcel": "11-45-27-03-00011.0120",
+"offeredDate": "2024-12-17",
+"openingBid": 14327.9,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "327 MANGONIA AVE LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 3 BLK 11 PB 15 PG 151 LOT 12",
+"status": "available"
+},
+{
+"deedNo": "2024001232",
+"parcel": "11-45-27-05-00022.0230",
+"offeredDate": "2024-12-17",
+"openingBid": 12762.81,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "367 BUTLER AVE S LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 5 BLK 22 PB 15 PG 155 LOT 23",
+"status": "available"
+},
+{
+"deedNo": "2024001255",
+"parcel": "12-45-27-09-00045.0090",
+"offeredDate": "2024-12-17",
+"openingBid": 13555.83,
+"openingBidNote": "Balance on the list (amount to buy from the list); call the Clerk for today's amount",
+"situs": "1122 COVE ST E LEHIGH ACRES FL 33974",
+"legal": "LEHIGH ACRES UNIT 9 BLK 45 PB 15 PG 231 LOT 9",
+"status": "available"
+}
+]
+}
