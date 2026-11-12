@@ -3,6 +3,7 @@ import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import * as usage from '../lib/usage.mjs';
 import * as S from '../lib/stripe.mjs';
+import * as alerts from '../lib/alerts.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
@@ -42,6 +43,11 @@ async function handle(event) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
       const c = await auth.mailConfig();
       return json(200, { configured: !!c, from: c ? c.from : '', source: c ? c.source : null, hint: c ? '\u2026' + c.apiKey.slice(-4) : '' });
+    }
+    if (event.query && event.query.alerts) {
+      if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+      const c = await alerts.getSettings(), mail = await auth.mailConfig();
+      return json(200, { emailOn: c.emailOn, email: c.email, mailReady: !!mail, smsOn: c.smsOn, phoneHint: c.phone ? '\u2026' + c.phone.slice(-4) : '', twilioReady: !!(c.sid && c.token && c.from), twilioSource: c.twilioSource, fromHint: c.from, log: await alerts.getLog() });
     }
     if (event.query && event.query.members) {
       if (!me || !me.owner) return json(403, { error: 'Owner only.' });
@@ -133,6 +139,26 @@ async function handle(event) {
     if (!next.apiKey && !old.apiKey) return json(400, { error: 'Paste your Resend key.' });
     await auth.saveMailConfig(next);
     return json(200, { ok: true, message: 'Saved. Tap "Send me a test email".' });
+  }
+  if (act === 'saveAlerts' || act === 'testAlerts') {
+    if (!me || !me.owner) return json(403, { error: 'Owner only.' });
+    if (act === 'testAlerts') {
+      const r = await alerts.notifyOwner('Test alert from PricePocketAsset', 'This is a test. If you can read this, signup alerts will reach you.', 'PricePocketAsset: test alert. Signup alerts are working.', 'test');
+      const bits = [r.email ? 'Email: ' + r.email : '', r.sms ? 'Text: ' + r.sms : ''].filter(Boolean);
+      return json(200, { ok: true, message: bits.length ? bits.join('. ') + '.' : 'Nothing is turned on. Turn on email or text first.' });
+    }
+    const patch = {}, old = await alerts.getSettings();
+    if (b.emailOn !== undefined) patch.emailOn = !!b.emailOn;
+    if (b.email !== undefined && String(b.email).trim()) { const e = auth.normEmail(b.email); if (!auth.validEmail(e)) return json(400, { error: 'That email does not look right.' }); patch.email = e; }
+    if (b.smsOn !== undefined) patch.smsOn = !!b.smsOn;
+    if (b.phone !== undefined && String(b.phone).trim()) { const ph = alerts.normPhone(b.phone); if (!ph) return json(400, { error: 'Enter your phone number with area code, like 555 123 4567.' }); patch.phone = ph; }
+    if (String(b.sid || '').trim()) { const v = String(b.sid).trim(); if (!/^AC[a-fA-F0-9]{32}$/.test(v)) return json(400, { error: 'A Twilio Account SID starts with AC and is 34 characters.' }); patch.sid = v; }
+    if (String(b.token || '').trim()) { const v = String(b.token).trim(); if (!/^[a-fA-F0-9]{32}$/.test(v)) return json(400, { error: 'A Twilio Auth Token is 32 letters and numbers.' }); patch.token = v; }
+    if (String(b.from || '').trim()) { const v = alerts.normPhone(b.from); if (!v) return json(400, { error: 'The Twilio number should look like +1 555 123 4567.' }); patch.from = v; }
+    const merged = Object.assign({}, old.saved, patch);
+    if (merged.smsOn && !(merged.phone && (old.sid || merged.sid) && (old.token || merged.token) && (old.from || merged.from))) return json(400, { error: 'To turn on texts, fill in your phone number and the three Twilio boxes.' });
+    await alerts.saveSettings(patch);
+    return json(200, { ok: true, message: 'Saved. Tap "Send me a test alert".' });
   }
   if (act === 'createWebhook') {
     if (!me || !me.owner) return json(403, { error: 'Owner only.' });
@@ -278,6 +304,7 @@ async function handle(event) {
     const u = await auth.createUser(email, pw, owner);
     if (!u) return json(409, { error: 'That email already has an account. Please sign in.' });
     if (hasCode && (await auth.redeemCode(b.accessCode, email)) === 'ok') { u.family = true; await auth.saveUser(u); }
+    await Promise.race([alerts.notifySignup(u, u.family ? 'with a family access code' : ''), new Promise(r => setTimeout(r, 4000))]);   // an alert never blocks or fails a signup
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
   const u = await auth.checkLogin(email, pw);

@@ -1,0 +1,31 @@
+// Run: node netlify/tests/alerts.test.mjs   (file-backed storage, mocked Resend and Twilio)
+import assert from 'node:assert/strict'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
+process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'alerts-')); process.env.RESEND_API_KEY = 're_testkey_1234567890abcdef';
+const auth = await import('../lib/auth.mjs'); const alerts = await import('../lib/alerts.mjs'); const acct = await import('../functions/account.mjs');
+let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
+const sent = []; let twilioMode = 'ok', resendMode = 'ok';
+globalThis.fetch = async (u, o) => { u = String(u); sent.push({ u, o });
+  if (/resend/.test(u)) return resendMode === 'ok' ? { ok: true, json: async () => ({}) } : { ok: false, status: 422, json: async () => ({ message: 'bad key' }) };
+  if (/twilio/.test(u)) return twilioMode === 'ok' ? { ok: true, json: async () => ({}) } : twilioMode === 'down' ? (() => { throw new Error('net'); })() : { ok: false, status: 400, json: async () => ({ message: 'unverified number' }) };
+  throw new Error('unexpected ' + u); };
+const call = async (method, body, query, cookie) => { const url = 'http://x/f' + (query ? '?' + query : ''); const r = await acct.default(new Request(url, { method, body: body ? JSON.stringify(body) : undefined, headers: { cookie: cookie || '', 'x-nf-client-connection-ip': '9.9.' + Math.floor(Math.random() * 250) + '.1' } }), {}); return { s: r.status, j: await r.json(), c: r.headers.get('set-cookie') }; };
+// owner account
+const ownerU = await auth.createUser('owner@example.com', 'password123', true); const ownerCookie = (await auth.sessionCookie('owner@example.com')).split(';')[0];
+let r = await call('GET', null, 'alerts=1', ownerCookie); ok(r.s === 200 && r.j.emailOn === true && r.j.smsOn === false && r.j.mailReady === true, 'defaults: email alerts on, text off, owner-only status readable by the owner');
+ok((await call('GET', null, 'alerts=1')).s === 403 && (await call('POST', { action: 'saveAlerts', smsOn: true })).s === 403, 'alert settings are owner-only');
+r = await call('POST', { action: 'signup', email: 'new1@example.com', password: 'password123' }); const mails = sent.filter(x => /resend/.test(x.u));
+ok(r.s === 200 && mails.length === 1 && /new1@example\.com/.test(JSON.parse(mails[0].o.body).text) && JSON.parse(mails[0].o.body).to[0] === 'skyariasa@gmail.com', 'a signup emails the owner with the new member\'s email and time');
+ok(sent.filter(x => /twilio/.test(x.u)).length === 0, 'no text is sent until texts are turned on');
+r = await call('POST', { action: 'saveAlerts', smsOn: true }, null, ownerCookie); ok(r.s === 400, 'texts cannot be turned on without a phone and Twilio details');
+r = await call('POST', { action: 'saveAlerts', smsOn: true, phone: '(555) 123-4567', sid: 'AC' + 'a'.repeat(32), token: 'b'.repeat(32), from: '+15557654321' }, null, ownerCookie); ok(r.s === 200, 'owner saves phone + Twilio details');
+sent.length = 0; r = await call('POST', { action: 'signup', email: 'new2@example.com', password: 'password123' }); const tw = sent.filter(x => /twilio/.test(x.u));
+ok(r.s === 200 && tw.length === 1 && /Accounts\/AC/.test(tw[0].u) && /To=%2B15551234567/.test(tw[0].o.body) && /From=%2B15557654321/.test(tw[0].o.body) && /new2%40example\.com/.test(tw[0].o.body) && /^Basic /.test(tw[0].o.headers.Authorization), 'a signup also texts the saved number (+1 added) through Twilio');
+r = await call('GET', null, 'alerts=1', ownerCookie); ok(r.j.phoneHint === '…4567' && r.j.twilioReady && !JSON.stringify(r.j).includes('5551234567') && !JSON.stringify(r.j).includes('bbbbbbbb') && r.j.log.length >= 2, 'status shows only the last 4 digits of the phone, never keys; recent alerts are logged');
+twilioMode = 'bad'; resendMode = 'bad'; r = await call('POST', { action: 'signup', email: 'new3@example.com', password: 'password123' }); ok(r.s === 200 && r.j.user.email === 'new3@example.com', 'a failing email or text service never blocks a signup');
+r = await call('GET', null, 'alerts=1', ownerCookie); ok(/failed: unverified number/.test(r.j.log[0].sms) && /failed/.test(r.j.log[0].email), 'failures are logged for the owner to see');
+twilioMode = 'ok'; resendMode = 'ok'; sent.length = 0; r = await call('POST', { action: 'signup', email: 'boss@example.com', password: 'password123', ownerCode: 'nope' }); ok(sent.length === 0, 'a rejected signup sends no alert');
+sent.length = 0; r = await call('POST', { action: 'testAlerts' }, null, ownerCookie); ok(r.s === 200 && /Email: sent/.test(r.j.message) && /Text: sent/.test(r.j.message), 'test button reaches both channels');
+r = await call('POST', { action: 'saveAlerts', emailOn: false, smsOn: false }, null, ownerCookie); sent.length = 0; await call('POST', { action: 'signup', email: 'new4@example.com', password: 'password123' }); ok(sent.length === 0, 'turning both off stops all alerts');
+r = await call('POST', { action: 'saveAlerts', phone: '12' }, null, ownerCookie); ok(r.s === 400, 'bad phone number is rejected');
+ok(alerts.normPhone('555 123 4567') === '+15551234567' && alerts.normPhone('+44 20 7946 0958') === '+442079460958' && alerts.normPhone('abc') === '', 'phone numbers are normalised');
+console.log('\n' + pass + ' checks passed');
