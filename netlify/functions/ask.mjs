@@ -27,7 +27,9 @@ function loadData() {
   if (!dir) throw new Error('data files not found');
   const read = f => { try { return fs.readFileSync(path.join(dir, f), 'utf8'); } catch (e) { return ''; } };
   const src = read('states.js') + '\n' + read('state-data.js') + '\n' + read('liens-data.js').replace(/^const LIENS = \[\];.*$/m, '') + '\n;({STATES: typeof STATES !== "undefined" ? STATES : [], STATE_DATA: typeof STATE_DATA !== "undefined" ? STATE_DATA : {}, FL_SALE: typeof FL_SALE !== "undefined" ? FL_SALE : null})';
-  return vm.runInNewContext(src, {}, {timeout: 2000});
+  const data = vm.runInNewContext(src, {}, {timeout: 2000});
+  try { data.UPCOMING = JSON.parse(read('upcoming-sales.json') || 'null'); } catch (e) { data.UPCOMING = null; }
+  return data;
 }
 
 function buildContext(data, a) {
@@ -55,6 +57,20 @@ function buildContext(data, a) {
     lines.push('Next sale: ' + data.FL_SALE.nextSale + '. ' + data.FL_SALE.listsPosted + '.');
     data.FL_SALE.steps.forEach((t, i) => lines.push((i + 1) + '. ' + t));
     addSrc(data.FL_SALE.statute[0], data.FL_SALE.statute[1]);
+  }
+  if (a === 'FL' && data.UPCOMING) {
+    const td = data.UPCOMING.listings.filter(l => l.type === 'taxdeed');
+    const groups = {};
+    td.forEach(l => { const k = l.county + ' ' + l.saleDate + ' ' + l.saleTime + ' ' + l.tz; (groups[k] = groups[k] || []).push(l); });
+    lines.push('\nUPCOMING TAX DEED AUCTIONS (from official county clerk lists; only these are verified):');
+    Object.entries(groups).forEach(([k, ls]) => {
+      const live = ls.filter(l => l.status === 'scheduled');
+      lines.push('- ' + k + ': ' + live.length + ' still scheduled, ' + (ls.length - live.length) + ' redeemed/withdrawn/removed. Last checked ' + ls[0].checked + ' (official list dated ' + (ls[0].published || '?') + '). Auction site: ' + ls[0].auctionUrl);
+      live.forEach(l => lines.push('  * parcel ' + l.parcel + ', certificate ' + l.cert + (l.openingBid != null ? ', opening bid $' + l.openingBid : ', opening bid not published') + (l.assessed != null ? ', assessed $' + l.assessed : '')));
+      addSrc(ls[0].source, ls[0].sourceUrl);
+    });
+    const otc = {}; data.UPCOMING.listings.filter(l => l.type === 'otc' && l.status === 'available').forEach(l => { otc[l.county] = (otc[l.county] || 0) + 1; });
+    lines.push('County-held liens (OTC, not auctions) listed on the site: ' + Object.entries(otc).map(([c, n]) => c + ' ' + n).join(', ') + '. No Lands Available for Taxes lists loaded yet. Palm Beach and Miami-Dade tax deed auction lists are not loaded: tell users to check the official clerk pages.');
   }
   if (d && d.sales) {
     section('SALES LISTED (' + d.sales.title + '): ' + d.sales.note, d.sales.rows.map(r => [r.town, r.county, r.dateText || r.date, r.time, r.how].filter(Boolean).join(' | ')));
