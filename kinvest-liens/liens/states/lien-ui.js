@@ -376,6 +376,63 @@ const FloodData = {
     });
   }
 };
+// Active Weather Alerts: current National Weather Service alerts at ONE point inside the verified lot outline (same point as the elevation sample), via
+// /.netlify/functions/weather (the backend calls api.weather.gov with an identifying User-Agent and caches briefly). Temporary information, kept apart from
+// the permanent flood-zone section. "No active alerts" only after a successful lookup with zero results; any failure is "Weather alerts unavailable".
+const WeatherData = {
+  DOCS: 'https://www.weather.gov/documentation/services-web-api', mem: {},
+  async get(l, r) {
+    if (!r || r.st !== 'matched' || !r.g || !r.bb) return {state: 'unavailable', why: 'nooutline'};
+    const pt = ElevationData.point(r); if (!pt) return {state: 'unavailable', why: 'nooutline'};
+    const key = pt.lat + ',' + pt.lng, hit = this.mem[key]; if (hit && Date.now() - hit.t < 60000) return hit.v;
+    let out; try {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 15000);
+      const res = await fetch('/.netlify/functions/weather?lat=' + pt.lat + '&lng=' + pt.lng, {signal: c.signal}).finally(() => clearTimeout(t));
+      const d = await res.json();
+      out = d && d.ok === true && Array.isArray(d.alerts) ? {state: 'ok', pt, alerts: d.alerts, pageLink: d.pageLink, queried: d.queried} : {state: 'unavailable', why: 'lookup'};
+    } catch (e) { out = {state: 'unavailable', why: 'lookup'}; }
+    if (out.state === 'ok') this.mem[key] = {t: Date.now(), v: out}; return out;
+  },
+  when(iso) { const d = new Date(iso); return isFinite(d) ? d.toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}) : ''; },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.wxbody').forEach(x => x.remove()); const body = mk('div', 'wxbody'); box.appendChild(body);
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    if (res.state !== 'ok') {
+      body.appendChild(mk('p', 'notice', 'Weather alerts unavailable'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so there is no point inside it to look up.' : 'The National Weather Service did not answer.'));
+      if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
+    } else if (!res.alerts.length) {
+      body.appendChild(mk('p', 'wxnone', 'No active alerts'));
+      body.appendChild(mk('p', 'small muted', 'The National Weather Service reports no active watches, warnings or advisories at the marked point.'));
+    } else {
+      const ul = mk('ul', 'wxlist');
+      res.alerts.forEach(a => { const li = mk('li', 'wxalert wx-' + String(a.severity || 'none').toLowerCase()); li.appendChild(mk('b', '', a.event));
+        li.appendChild(mk('span', 'small', (a.expires ? ' – expires ' + this.when(a.expires) : '') + (a.severity ? ' · ' + a.severity : ''))); if (a.headline) li.appendChild(mk('div', 'small muted', a.headline));
+        const d = mk('div', 'small'); d.appendChild(link('Official NWS alert', a.link)); li.appendChild(d); ul.appendChild(li); });
+      body.appendChild(ul);
+    }
+    const note = mk('p', 'small muted'); note.append('Temporary alerts for the marked point only; they change by the hour and are not part of the lot’s permanent flood-zone data. Source: National Weather Service, ', link('weather.gov', res.pageLink || 'https://www.weather.gov/'), ' (', link('API documentation', this.DOCS), ').' + (res.queried ? ' Checked ' + this.when(res.queried) + '.' : '')); body.appendChild(note);
+    if (res.state === 'ok') { const b = mk('button', 'btn small ghost', 'Refresh'); b.type = 'button'; b.addEventListener('click', () => { delete this.mem[res.pt.lat + ',' + res.pt.lng]; box._retry && box._retry(); }); body.appendChild(b); }
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord wxbox'); box.appendChild(mk('h4', '', 'Active Weather Alerts')); box.appendChild(mk('p', 'small muted', 'Temporary. Separate from the flood-zone information above.'));
+    const run = () => { box.querySelectorAll('.wxbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted wxbody', 'Checking the National Weather Service…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  },
+  // one status line under the lot map
+  mapAttach(L, m, box, l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const dlg = box.closest('dialog') || box.parentNode; let old = dlg.querySelector('.wxbar'); if (old) old.remove();
+    const bar = mk('p', 'clbar wxbar small'); bar.setAttribute('role', 'status'); bar.textContent = 'Weather alerts: checking…'; box.after(bar);
+    this.get(l, r).then(res => {
+      if (res.state !== 'ok') { bar.textContent = 'Weather alerts unavailable'; return; }
+      if (!res.alerts.length) { bar.textContent = 'Weather alerts at the marked point: No active alerts'; return; }
+      bar.textContent = 'Active weather alerts at the marked point: '; res.alerts.forEach((a, i) => { if (i) bar.append('; '); const x = document.createElement('a'); x.textContent = a.event; x.href = a.link; x.target = '_blank'; x.rel = 'noopener noreferrer'; bar.append(x, a.expires ? ' (expires ' + this.when(a.expires) + ')' : ''); });
+    });
+  }
+};
 // Estimated Ground Elevation: ONE point inside the verified lot outline (the point farthest from the edges), looked up in feet from the free USGS
 // Elevation Point Query Service (longitude = x, latitude = y). A single-point estimate, cached by sampled coordinates.
 const ElevationData = {
@@ -550,7 +607,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); const ws = WetlandsData.section(l, pd.r); es.after(ws); ws.after(FloodData.section(l, pd.r)); } }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); const ws = WetlandsData.section(l, pd.r); es.after(ws); const fs2 = FloodData.section(l, pd.r); ws.after(fs2); fs2.after(WeatherData.section(l, pd.r)); } }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -574,6 +631,7 @@ const LienMap = {
         ElevationData.mapAttach(L, m, box, l, pd.r);
         WetlandsData.mapAttach(L, m, box, l, pd.r);
         FloodData.mapAttach(L, m, box, l, pd.r);
+        WeatherData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;

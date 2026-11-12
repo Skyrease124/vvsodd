@@ -29,7 +29,7 @@
   const w = mk('a', 'btn small ghost', 'Bid or Pass worksheet'); w.href = '#ws'; act.appendChild(w);
   $('map').hidden = true;
   if (PF.REPORT_COUNTIES.includes(l.county)) { $('rep').hidden = false; PF.reportButtons(act, l, () => PF._rep); PF.report($('rep'), l); }
-  if ((l.state || 'FL') === 'FL') ParcelData.rec(l).then(({r}) => { $('cl').hidden = false; $('cl').appendChild(CleanupData.section(l, r)); $('el').hidden = false; $('el').appendChild(ElevationData.section(l, r)); $('wl').hidden = false; $('wl').appendChild(WetlandsData.section(l, r)); $('fz').hidden = false; $('fz').appendChild(FloodData.section(l, r)); });
+  if ((l.state || 'FL') === 'FL') ParcelData.rec(l).then(({r}) => { $('cl').hidden = false; $('cl').appendChild(CleanupData.section(l, r)); $('el').hidden = false; $('el').appendChild(ElevationData.section(l, r)); $('wl').hidden = false; $('wl').appendChild(WetlandsData.section(l, r)); $('fz').hidden = false; $('fz').appendChild(FloodData.section(l, r)); $('wx').hidden = false; $('wx').appendChild(WeatherData.section(l, r)); });
   await PF.timeline($('tl'), l);
   await PF.nearby($('nb'), l);
   await PF.worksheet($('ws'), l);
