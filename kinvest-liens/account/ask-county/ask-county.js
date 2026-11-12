@@ -10,7 +10,8 @@
   const g = q.get('gmail'); if (g) say($('ac-msg'), {connected: 'Gmail connected.', mismatch: 'That Gmail does not match your signup email (' + st.email + '). Connect the Gmail account for ' + st.email + '.', failed: 'Gmail connection did not finish. Please try again.', noscope: 'Please allow "Send email on your behalf" so we can send your request.', off: 'Gmail sending is not set up yet.'}[g] || '', g === 'connected');
   function gmailBox() {
     const b = $('ac-gmail'); b.textContent = '';
-    if (!st.gmail.available) { b.textContent = 'Sending from Gmail is not switched on yet. You can still draft and copy your message into the county’s official page.'; return; }
+    if (!st.gmail.available) { b.hidden = true; return; }
+    b.hidden = false;
     if (st.gmail.connected) { b.append('Sending from your Gmail: ' + st.gmail.email + ' (send-only permission). '); const d = mk('button', 'btn small ghost', 'Disconnect'); d.type = 'button'; d.onclick = async () => { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({act: 'disconnect'})}); st.gmail.connected = false; gmailBox(); }; b.append(d); return; }
     b.append('Connect the Gmail for ' + st.email + ' to send requests from your own address (send-only: we cannot read your mail). ');
     const a = mk('a', 'btn small', 'Connect Gmail'); a.href = API + '?act=oauth'; b.append(a);
