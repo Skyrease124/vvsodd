@@ -23,6 +23,17 @@
     <div class="tablewrap"><table id="ad-imp" class="pfws-tbl"></table></div>
     <h2>Counties tracked</h2>
     <div id="ad-counties"></div>
+    <h2>Estate links (reviewer)</h2>
+    <p class="small muted">Mark \u201cEstate record linked\u201d on a parcel only when an official document names the estate and this exact property. A matching name, an old deed or an empty probate search is not enough. Until then the report says \u201cOwner status unverified\u201d.</p>
+    <form id="ad-estate" class="pfws-form">
+      <select id="es-county" aria-label="County"><option>Miami-Dade</option><option>Palm Beach</option></select>
+      <input id="es-parcel" placeholder="Folio / PCN" aria-label="Parcel">
+      <input id="es-case" placeholder="Case number" aria-label="Case number">
+      <input id="es-doc" placeholder="Official document that names this exact property" aria-label="Document title">
+      <input id="es-url" placeholder="https:// link to the official record" aria-label="Source link">
+      <div class="lact"><button class="btn small" type="submit">Confirm estate link</button><button class="btn small ghost" type="button" id="es-rm">Remove link</button></div>
+      <p id="es-out" class="small muted" role="status"></p>
+    </form>
     <h2>Email alerts</h2>
     <p class="small muted">Send today's digest now (members who turned on email only; an alert is never sent twice).</p>
     <button class="btn small" id="ad-digest" type="button">Run the email digest</button> <span id="ad-digest-out" class="small muted" role="status"></span>
@@ -59,6 +70,9 @@
   }
   review(); imports();
   $('ad-counties').appendChild((() => { const ul = mk('ul'); D.counties.forEach(c => { const li = mk('li'); li.appendChild(mk('b', '', c.county + ', ' + c.state + ': ')); li.append(c.supports.join('; ') + '. ' + c.recurring); ul.appendChild(li); }); return ul; })());
+  const es = async (action, extra) => { const r = await fetch('/.netlify/functions/report', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(Object.assign({action, county: $('es-county').value, parcel: $('es-parcel').value}, extra || {}))}); const d = await r.json().catch(() => ({})); $('es-out').textContent = d.ok ? 'Saved.' : (d.error || 'Failed'); };
+  $('ad-estate').addEventListener('submit', e => { e.preventDefault(); es('estateSet', {caseNumber: $('es-case').value, documentTitle: $('es-doc').value, sourceUrl: $('es-url').value}); });
+  $('es-rm').addEventListener('click', () => es('estateRemove'));
   $('ad-digest').addEventListener('click', async () => { $('ad-digest-out').textContent = 'Running…'; const q = await PF.api('digest', {}); $('ad-digest-out').textContent = q.d.ok ? JSON.stringify(q.d.report) : (q.d.error || 'Failed'); });
 })();
 </script>

@@ -1,0 +1,29 @@
+{
+ "Miami-Dade": {
+  "state": "FL", "coNo": 23, "idLabel": "folio", "idDigits": 13,
+  "pa": {"name": "Miami-Dade Property Appraiser: property search", "url": "https://apps.miamidadepa.gov/propertysearch/"},
+  "deeds": {"name": "Miami-Dade Clerk: Official Records search", "url": "https://onlineservices.miamidadeclerk.gov/officialrecords/", "how": "Search by folio, or by book and page / clerk file number."},
+  "probate": {"name": "Miami-Dade Clerk: Online Case Search", "url": "https://www2.miamidadeclerk.gov/ocs/", "how": "Choose Probate, then search by the owner’s name. An empty result proves nothing."},
+  "permits": {"unincorporated": {"office": "Miami-Dade County Regulatory and Economic Resources (RER)", "name": "Miami-Dade permits and code compliance", "url": "https://www.miamidade.gov/permits/"}},
+  "crime": {"name": "Miami-Dade Sheriff’s Office: crime information", "url": "https://www.miamidade.gov/global/police/crime-statistics.page", "checked": false},
+  "cities": {
+   "Miami": ["City of Miami Building Department", "https://www.miami.gov/"], "Hialeah": ["City of Hialeah Building Department", "https://www.hialeahfl.gov/"],
+   "Homestead": ["City of Homestead Building Department", "https://www.cityofhomestead.com/"], "Coral Gables": ["City of Coral Gables Development Services", "https://www.coralgables.com/"],
+   "Miami Beach": ["City of Miami Beach Building Department", "https://www.miamibeachfl.gov/"], "North Miami": ["City of North Miami Building Department", "https://www.northmiamifl.gov/"],
+   "Doral": ["City of Doral Building Department", "https://www.cityofdoral.com/"], "Miami Gardens": ["City of Miami Gardens Building Department", "https://www.miamigardens-fl.gov/"]
+  }
+ },
+ "Palm Beach": {
+  "state": "FL", "coNo": 60, "idLabel": "property control number (PCN)", "idDigits": 17,
+  "pa": {"name": "Palm Beach County Property Appraiser: property search", "url": "https://pbcpao.gov/"},
+  "deeds": {"name": "Palm Beach County Clerk: Official Records search", "url": "https://erec.mypalmbeachclerk.com/", "how": "Search by PCN, by name, or by book and page."},
+  "probate": {"name": "Palm Beach County Clerk: eCaseView", "url": "https://appsgp.mypalmbeachclerk.com/eCaseView/", "how": "Search probate cases by the owner’s name. An empty result proves nothing."},
+  "permits": {"unincorporated": {"office": "Palm Beach County Planning, Zoning and Building", "name": "Palm Beach County building permits and code enforcement", "url": "https://discover.pbcgov.org/pzb/building/"}},
+  "crime": {"name": "Palm Beach County Sheriff’s Office", "url": "https://www.pbso.org/", "checked": true},
+  "cities": {
+   "West Palm Beach": ["City of West Palm Beach Development Services", "https://www.wpb.org/"], "Boca Raton": ["City of Boca Raton Development Services", "https://www.myboca.us/"],
+   "Jupiter": ["Town of Jupiter Building Division", "https://www.jupiter.fl.us/"], "Delray Beach": ["City of Delray Beach Development Services", "https://www.mydelraybeach.com/"],
+   "Boynton Beach": ["City of Boynton Beach Development", "https://www.boynton-beach.org/"], "Lake Worth Beach": ["City of Lake Worth Beach Building", "https://www.lakeworthbeachfl.gov/"], "Riviera Beach": ["City of Riviera Beach Building", "https://www.rbf.org/"]
+  }
+ }
+}

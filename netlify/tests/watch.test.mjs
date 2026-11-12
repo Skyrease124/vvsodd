@@ -10,6 +10,8 @@ ok((await call('', 'me', null, 'GET')).s === 401, 'signed-out visitors cannot re
 const CHG = 'CO|Larimer|9517411019|', GONE = 'CO|Larimer|9433000009|', SOLD = 'MI|Wayne|01002263|';
 for (const k of [CHG, GONE, SOLD]) ok((await call(A, 'watch', { key: k, label: k })).j.ok, 'watch ' + k);
 ok(!(await call(A, 'watch', { key: 'bad key' })).j.ok, 'a malformed parcel key is refused');
+// the live data was imported on 2026-11-11: pretend A started watching before that, so the test does not depend on today's date
+{ const f = fs.readdirSync(process.env.USERS_DIR).find(x => x.startsWith('watch_') && JSON.parse(fs.readFileSync(path.join(process.env.USERS_DIR, x))).email === 'a@example.com'); const d = JSON.parse(fs.readFileSync(path.join(process.env.USERS_DIR, f))); d.watch.filter(x => !x.key.startsWith('MI|')).forEach(x => { x.addedAt = '2026-11-05T00:00:00Z'; }); fs.writeFileSync(path.join(process.env.USERS_DIR, f), JSON.stringify(d)); }
 let me = (await call(A, 'me', null, 'GET')).j;
 ok(me.watch.length === 3, 'three parcels on the watchlist');
 const n = me.notifications;
