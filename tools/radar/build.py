@@ -10,8 +10,8 @@ idx = {c['county']: c for c in rd(TL + 'index.json')['counties']}
 imports = rd(TL + 'imports.json', {'imports': []})['imports']
 GROUP = {'El Paso': 'county-held'}   # everything else with status County-held is county-held too (set below)
 DEED = {'Wayne', 'Davidson'}
-LABEL = {'county-held': 'County-held liens', 'lien-sale': 'Advertised lien sale', 'deed': 'Tax deed sale'}
-PRICE = {'county-held': 'Lien purchase amount', 'lien-sale': 'Amount owed on the list (lien face)', 'deed': 'Amount owed on the notice (not an opening bid)'}
+LABEL = {'state-held': 'State-held land', 'county-held': 'County-held liens', 'lien-sale': 'Advertised lien sale', 'deed': 'Tax deed sale'}
+PRICE = {'state-held': 'Amount on the state list (not today\'s price)', 'county-held': 'Lien purchase amount', 'lien-sale': 'Amount owed on the list (lien face)', 'deed': 'Amount owed on the notice (not an opening bid)'}
 today = datetime.date.today().isoformat()
 def vacant(l, pj):
     u = (l.get('use') or '').lower()
@@ -45,6 +45,28 @@ for fn in sorted(glob.glob(S + 'liens-*.js')):
     if sold:
         pr = sorted(l['amount'] for l in sold); c['history'] = {'results': len(sold), 'finalMin': pr[0], 'finalMedian': statistics.median(pr), 'finalMax': pr[-1], 'date': '2026-10-13', 'label': 'September 2026 auction', 'openingBid': None, 'advertised': None}
     out['counties'].append(c)
+# ---- State-held land lists and state-run auctions loaded from official state files (AL, AR, MS, NM)
+def jsdata(fn, var):
+    p = S + fn
+    if not os.path.exists(p): return None
+    t = open(p).read(); i = t.index('const ' + var + ' = ') + len('const ' + var + ' = '); return json.JSONDecoder().raw_decode(t[i:])[0]
+def addc(st, county, group, file, amts, count, sale, checked, source, opn=None):
+    out['counties'].append({'state': st, 'county': county, 'file': file, 'group': group, 'label': LABEL[group], 'priceLabel': PRICE[group], 'count': count, 'open': count if opn is None else opn,
+                            'amounts': sorted(round(a) for a in amts if a), 'vac': [], 'sale': sale, 'checked': checked, 'tracked': False, 'source': source})
+INV = lambda txt: {'date': '', 'kind': 'inventory', 'text': txt}
+for c in jsdata('al-state-land-data.js', 'AL_STATE_LAND') or []:
+    addc('AL', c['county'], 'state-held', 'al-state-land-data.js', [r[6] for r in c['rows'] if r[6]], len(c['rows']), INV('Held by the State of Alabama: buy by price quote any time'), c['date'], c['source'])
+ar = jsdata('ar-cosl-data.js', 'AR_COSL') or []
+for cn in sorted({r[0] for r in ar}):
+    rows = [r for r in ar if r[0] == cn]
+    addc('AR', cn, 'state-held', 'ar-cosl-data.js', [r[5] for r in rows], len(rows), INV('Commissioner of State Lands online auction (rolling)'), '2026-11-12', 'https://www.cosl.org/')
+ms = jsdata('ms-forfeited-data.js', 'MS_TFL') or []
+for cn in sorted({r[0] for r in ms}):
+    rows = [r for r in ms if r[0] == cn]
+    addc('MS', cn, 'state-held', 'ms-forfeited-data.js', [], len(rows), INV('Held by the State of Mississippi: apply to buy any time'), '2026-11-10', 'https://www.sos.ms.gov/public-lands/tax-forfeited-lands')
+for a2 in jsdata('nm-auctions-data.js', 'NM_AUCTIONS') or []:
+    live = [i for i in a2['items'] if not i['removed']]
+    addc('NM', a2['county'], 'deed', 'nm-auctions-data.js', [i['minBid'] for i in live], len(a2['items']), {'date': a2['date'], 'kind': 'scheduled' if a2['date'] >= today else 'past', 'text': a2['date']}, a2['checked'], a2['source'], opn=len(live))
 # ---- What Changed: official imports compared with the previous complete version (events come from tools/imports, already de-duplicated by id)
 links = lambda st: '/liens/states/state/?s=' + st
 def agg(county, st, evs, typ, label_fn):
