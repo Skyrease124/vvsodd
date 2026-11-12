@@ -34,7 +34,7 @@
   svg.appendChild(defs);
   const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = TEX[k] ? 'url(#tx' + Object.keys(TEX).indexOf(k) + ')' : 'url(#g' + i + ')');
   const LIVE = (typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY : []).reduce((m, x) => { (m[x.state] = m[x.state] || []).push(x); return m; }, {});
-  const go = a => { location.href = base + '?s=' + a; };
+  const go = a => { if (window.TaxRadar) window.TaxRadar.openState(a); else location.href = base + '?s=' + a; };
   function show(s) {
     if (!tip) return;
     tip.innerHTML = '<b></b><span class="ty"><i></i><u></u></span><span class="de"></span><span class="tv"></span><span class="gv"></span><span class="lv"></span><a class="dbtn" href="">Open state page &rarr;</a>';
@@ -66,9 +66,9 @@
     const p = mk('path', {d: MAP_PATHS[a], class: 'st' + (a === 'FL' ? ' sel' : ''), style: 'fill:' + (GRAD[s.sys] || COL[s.sys] || '#94a3b8') + ';--i:' + (idx++), 'data-a': a, tabindex: 0, role: 'link', 'aria-label': s.n + ': ' + s.sys + (s.v ? ' (verify)' : '')});
     let was = false;
     p.addEventListener('pointerdown', () => { was = cur === a; });
-    p.addEventListener('click', () => { if (touch && !was) select(a); else go(a); });
+    p.addEventListener('click', () => { if (window.TaxRadar) { select(a); go(a); } else if (touch && !was) select(a); else go(a); });
     p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
-    ['mouseenter', 'focus'].forEach(ev => p.addEventListener(ev, () => select(a)));
+    if (!window.TaxRadarOn) ['mouseenter', 'focus'].forEach(ev => p.addEventListener(ev, () => select(a)));
     svg.appendChild(p); paths[a] = p;
   });
   // Pulsing dots on states that have real lien lists.
@@ -96,7 +96,7 @@
   const histTotal = HIST.reduce((t, x) => t + x.count, 0);
   const stats = document.getElementById('mapstats');
   if (stats) {
-    [[STATES.length, 'states and DC'], [total, 'real listings (liens and land)'], [counties, 'counties with real lists'], [histTotal, 'past sale records']].forEach(([v, label]) => {
+    [[50, 'states + DC'], [total, 'real listings (liens and land)'], [counties, 'counties with real lists'], [histTotal, 'past sale records']].forEach(([v, label]) => {
       const d = document.createElement('div'); d.className = 'ms'; const b = document.createElement('b'); b.textContent = '0'; b.dataset.to = String(v); const sp = document.createElement('span'); sp.textContent = label; d.append(b, sp); stats.appendChild(d);
     });
     const run = () => stats.querySelectorAll('b').forEach(b => {
@@ -130,7 +130,7 @@
     const build = () => { months = {}; Object.keys(STATE_DATA).forEach(a => { const w = (STATE_DATA[a].sale && STATE_DATA[a].sale.when) || ''; const m = MN.map(x => w.indexOf(x) >= 0); if (m.some(Boolean)) months[a] = m; }); };
     ['All'].concat(MN.map(x => x.slice(0, 3))).forEach((t, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false'); if (i === 0) b.className = 'on';
-      b.addEventListener('click', () => { sel = i - 1; bar.querySelectorAll('button').forEach((x, j) => { x.classList.toggle('on', j === i); x.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); if (sel < 0) apply(); else load(apply); });
+      b.addEventListener('click', () => { sel = i - 1; bar.querySelectorAll('button').forEach((x, j) => { x.classList.toggle('on', j === i); x.setAttribute('aria-pressed', j === i ? 'true' : 'false'); }); window.dispatchEvent(new CustomEvent('taxmap:month', {detail: sel})); if (sel < 0) apply(); else load(apply); });
       bar.appendChild(b);
     });
     host.parentNode.insertBefore(bar, host); host.parentNode.insertBefore(cap, host);
@@ -154,4 +154,6 @@
     a.href = l ? l[1] : base + '?s=FL'; if (l) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     fc.appendChild(a);
   });
+  window.TaxMap = {svg, paths, by, COL, select, liveLayer, base, host, MN: ['January','February','March','April','May','June','July','August','September','October','November','December']};
+  window.dispatchEvent(new Event('taxmap:ready'));
 })();

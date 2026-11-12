@@ -1,0 +1,3 @@
+# Tax Sale Radar data
+`python3 tools/radar/build.py` writes `kinvest-liens/liens/states/radar.json` (counties, price arrays for the budget filter, and the What Changed feed) from the county files and the import timeline. Run it after every county import. It is deterministic, so a reimport of the same data changes nothing. `python3 tools/radar/tests/test_radar.py` checks it.
+Sale types: **County-held liens** (the county owns the certificate, any time), **Advertised lien sale** (county list for a sale), **Tax deed** (deed sales; none are open in our data right now, so that filter correctly returns no matches). "Vacant" counts only where a list or parcel record says so.
