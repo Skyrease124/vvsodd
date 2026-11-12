@@ -152,6 +152,34 @@ const CountyAerial = {
     wrap.append(im, svg); return {wrap, im};
   }
 };
+// Nearby Traffic (tools/fl-parcels/traffic.py): FDOT measured road segments (AADT = estimated vehicles per day) matched to the lot outline.
+// One stored segment per parcel feeds the card, the filter and the map highlight, so they can never disagree.
+const TrafficData = {
+  THRESH: 10000, NEAR_FT: 500, loaded: {},
+  seg(r) { return r && r.tr && !r.tr.none && r.tr.aadt ? r.tr : null; },
+  isVacant(l, r) { return /vacant/i.test((r && r.use) || l.use || ''); },
+  async preload(list) { const cs = Array.from(new Set(list.filter(l => (l.state || 'FL') === 'FL').map(l => l.county))); await Promise.all(cs.map(async c => { this.loaded[c] = await ParcelData.load(c); })); },
+  syncRec(l) { const f = this.loaded[l.county]; return f && f.p && f.p[l.parcel] || null; },
+  passes(l) { const r = this.syncRec(l), t = this.seg(r); return !!(t && this.isVacant(l, r) && t.ft <= this.NEAR_FT && t.aadt >= this.THRESH); },
+  fmt: n => Number(n).toLocaleString('en-US'),
+  road(t) { return 'FDOT roadway ' + t.road + (t.from || t.to ? ' (' + [t.from, t.to].filter(x => x && x !== 'N/A').map(x => x.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase())).join(' to ') + ')' : ''); },
+  text(r) {
+    const t = this.seg(r);
+    if (!t) return 'Traffic data unavailable';
+    return this.fmt(t.aadt) + ' vehicles per day (AADT, count year ' + t.yr + ') · ' + (t.ft === 0 ? 'touches the lot' : this.fmt(t.ft) + ' ft from the lot') + (t.ft > this.NEAR_FT ? ' (farther than ' + this.NEAR_FT + ' ft)' : '') + ' · ' + this.road(t);
+  },
+  // card block: Nearby Traffic and, separately, legal road access (a traffic count says nothing about legal access)
+  el(l) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'ltraf'); const a = mk('p', 'small'); a.append(mk('b', '', 'Nearby Traffic: '), mk('span', '', 'checking…')); box.appendChild(a);
+    const acc = mk('p', 'small muted'); acc.append(mk('b', '', 'Legal road access: '), 'Not verified. A traffic count does not show that this lot has legal access; check the deed, plat or county.'); box.appendChild(acc);
+    ParcelData.rec(l).then(({r}) => {
+      const t = this.seg(r), sp = a.lastChild; sp.textContent = this.text(r); if (!t) sp.className = 'tr-na'; else if (t.ft <= this.NEAR_FT && t.aadt >= this.THRESH) a.classList.add('tr-hi');
+      box.dataset.seg = t ? t.id : ''; if (t) box.title = 'Source: FDOT Annual Average Daily Traffic. AADT is an estimate.';
+    });
+    return box;
+  }
+};
 // Florida property records from the parcel backfill (tools/fl-parcels/backfill.py): one JSON file per county.
 const ParcelData = {
   base: '/liens/states/parcels/',
@@ -219,9 +247,10 @@ const ParcelData = {
     const f = r.fl || {}; li(f.s === 'ok' ? 'Flood: ' + f.z.map(q => 'Zone ' + q[0] + ' ' + q[1] + '%').join(', ') + (f.sfha > 0 ? ' · ' + f.sfha + '% of the lot is in a high-risk area' : ' · no high-risk overlap mapped') : 'Flood: data unavailable' + (f.why ? ' (' + f.why + ')' : ''), f.s !== 'ok' ? 'na' : f.sfha > 0 ? 'warn' : 'ok');
     const w = r.wt || {}; li(w.s === 'ok' ? 'Wetlands: ' + w.pct + '% of the lot (' + w.t.join(', ') + ')' : w.s === 'none' ? 'Wetlands: no mapped overlap' : 'Wetlands: data unavailable', w.s === 'ok' ? 'warn' : w.s === 'none' ? 'ok' : 'na');
     const d = r.rd || {}; li(d.s === 'ok' ? 'Road frontage (mapped): about ' + d.ft.toLocaleString('en-US') + ' ft' + (d.n && d.n.length ? ' along ' + d.n.join(', ') : '') + '. Legal access: unverified.' : d.s === 'none' ? 'Road frontage: no mapped road within about 65 ft. Legal access: unverified.' : 'Road frontage: data unavailable. Legal access: unverified.', d.s === 'ok' && d.ft > 0 ? '' : 'warn');
+    { const tt = TrafficData.seg(r); li('Nearby Traffic: ' + TrafficData.text(r) + (tt ? ' (orange line on the map)' : ''), tt ? '' : 'na'); li('Legal road access: not verified. A traffic count does not show legal access.', 'na'); }
     box.appendChild(ul);
     const srcs = mk('p', 'small psrc'); srcs.append('Sources, checked ' + r.ck + ': ');
-    ['flood', 'wetlands', 'roads', 'zoning'].forEach((k, i) => { const o = S[k]; if (!o) return; const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; if (i) srcs.append(' · '); srcs.appendChild(a); });
+    ['flood', 'wetlands', 'roads', 'traffic', 'zoning'].forEach((k, i) => { const o = S[k]; if (!o) return; const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; if (i) srcs.append(' · '); srcs.appendChild(a); });
     box.appendChild(srcs);
     if (r.img && r.img.s === 'aerial') { const p = mk('p', 'small psrc'); const a = mk('a', '', S.imagery.name); a.href = S.imagery.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.append('Aerial: ', a, ', captured ' + r.img.d + '.'); box.appendChild(p); }
     return box;
@@ -270,6 +299,14 @@ const LienMap = {
         sat.addTo(m); const layersCtl = L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
         if (!CountyAerial.enabled(l.county)) { const lc = CountyAerial.labelControl(L, m); lc.set('Satellite: Esri World Imagery (capture dates vary)'); m.on('baselayerchange', e => lc.set(e.layer === street ? 'Street map: \u00a9 OpenStreetMap contributors' : 'Satellite: Esri World Imagery (capture dates vary)')); }
         const g = box._outline = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
+        { const tt = TrafficData.seg(pd.r); if (tt) { const road = L.layerGroup(tt.geo.map(pa => L.polyline(pa.map(q => [q[1], q[0]]), {color: '#ff7a00', weight: 7, opacity: 0.9, lineCap: 'round'}))).addTo(m); box._traffic = road;
+            road.eachLayer(x => x.bindTooltip(TrafficData.fmt(tt.aadt) + ' vehicles/day (' + tt.yr + ') \u00b7 ' + TrafficData.fmt(tt.ft) + ' ft away', {sticky: true}));
+            // the lot stays fully in view; when the road is within 500 ft the view widens to show both, otherwise a button does
+            const both = () => { const bb = L.latLngBounds(box._outline.getBounds().getSouthWest(), box._outline.getBounds().getNorthEast()); road.eachLayer(x => bb.extend(x.getBounds())); m.fitBounds(bb, {maxZoom: 19, padding: [30, 30]}); }, lotOnly = () => m.fitBounds(box._outline.getBounds(), {maxZoom: 19, padding: [30, 30]});
+            let bar = dlg.querySelector('.trbar'); if (bar) bar.remove(); bar = document.createElement('p'); bar.className = 'trbar small';
+            const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn small ghost'; b1.textContent = 'Zoom to the lot'; b1.addEventListener('click', lotOnly);
+            const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn small'; b2.textContent = 'Show the traffic road (orange)'; b2.addEventListener('click', both); bar.append(b2, ' ', b1); box.after(bar);
+            if (tt.ft <= TrafficData.NEAR_FT) setTimeout(both, 80); } }
         if (CountyAerial.enabled(l.county)) CountyAerial.attach(L, m, box, l, pd.r, {sat, street}, layersCtl);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
@@ -455,11 +492,14 @@ const LienUI = {
     const [floodBox, floodC] = mkChk('Hide FEMA high-risk flood zones', false);
     const [wetBox, wetC] = mkChk('Hide mapped wetlands', false);
     const hasFlags = all.some(l => landFlags(l));
+    const trafBox = mk('label', 'chk'); const trafC = mk('input'); trafC.type = 'checkbox'; const trafCount = mk('span', 'small muted', ''); trafBox.append(trafC, ' Vacant lots within 500 ft of a road with 10,000+ vehicles a day ', trafCount);
+    const hasFlTraf = all.some(l => (l.state || 'FL') === 'FL');
+    TrafficData.preload(all).then(() => { trafCount.textContent = '(' + all.filter(l => TrafficData.passes(l)).length + ')'; if (trafC.checked) apply(); });
     const hoaSel = mk('select'); hoaSel.setAttribute('aria-label', 'HOA status');
     [['', 'All HOA statuses'], ['confirmed', 'HOA confirmed'], ['possible', 'Possible HOA'], ['unknown', 'HOA status unknown']].forEach(o => hoaSel.appendChild(new Option(o[1], o[0])));
     const hasFl = all.some(HoaData.isFl);
     HoaData.preload(all).then(() => { if (hoaSel.value) apply(); });
-    tools.append(q, yr); if (hasFl) tools.append(hoaSel); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort);
+    tools.append(q, yr); if (hasFl) tools.append(hoaSel); if (hasFlTraf) tools.append(trafBox); if (hasFacts) tools.append(useSel, hideBox); if (junkN) tools.append(junkBox); if (hasFlags) tools.append(roadBox, floodBox, wetBox); tools.append(sort);
     // Sticky bar: Filters button, view switch and the live count stay pinned while you scroll.
     const bar = mk('div', 'lienbar'), fb = mk('button', 'btn small', 'Filters'); fb.type = 'button'; fb.setAttribute('aria-expanded', 'false');
     const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button';
@@ -498,6 +538,7 @@ const LienUI = {
         c.appendChild(ch);
         const facts = [l.use, l.market != null ? 'County value ' + money(l.market).replace('.00', '') + (l.market < l.amount ? ' (below face)' : '') : '', l.desc].filter(Boolean);
         if (facts.length) c.appendChild(mk('p', 'small lfacts', facts.join(' · ')));
+        if ((l.state || 'FL') === 'FL') c.appendChild(TrafficData.el(l));
         if (l.owner || l.address) c.appendChild(mk('p', 'small lfacts', [l.owner ? 'Owner: ' + l.owner : '', l.address ? 'Property: ' + l.address : '', l.mailing ? 'Mailing: ' + l.mailing : ''].filter(Boolean).join(' · ')));
         const act = mk('div', 'lact');
         if (PARCEL_MAPS[l.county] || (l.state || 'FL') === 'FL') { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
@@ -533,11 +574,11 @@ const LienUI = {
     }
     function apply() {
       const s = q.value.trim().toLowerCase();
-      list = all.filter(l => (!cty.value || l.county === cty.value) && (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
+      list = all.filter(l => (!cty.value || l.county === cty.value) && (!yr.value || String(l.taxYear) === yr.value) && (!useSel.value || l.use === useSel.value) && (!hide.checked || !STRIPS.has(l.use)) && (!junkN || !junkC.checked || !isJunk(l)) && (() => { const f = landFlags(l); if (!f) return true; if (roadC.checked && f[0] === 0) return false; if (floodC.checked && f[1] === 1) return false; if (wetC.checked && f[2] === 1) return false; return true; })() && (!hoaSel.value || HoaData.statusNow(l) === hoaSel.value) && (!trafC.checked || TrafficData.passes(l)) && (!s || (l.parcel + ' ' + (l.desc || '')).toLowerCase().indexOf(s) >= 0));
       list.sort((a, b) => sort.value === 'low' ? (a.amount || 0) - (b.amount || 0) : sort.value === 'high' ? (b.amount || 0) - (a.amount || 0) : (b.saleDate > a.saleDate ? 1 : -1));
       shown = 50; draw();
     }
-    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel, cty].forEach(e => e.addEventListener('input', apply));
+    [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel, trafC, cty].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
     apply();
   }
