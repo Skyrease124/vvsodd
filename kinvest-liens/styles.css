@@ -925,3 +925,9 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .wxalert.wx-extreme,.wxalert.wx-severe{background:rgba(239,68,68,.16)}
 /* Soil Type */
 .soval{margin:4px 0;font-weight:700;color:#67e8f9}.sounit{margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)}.sofacts{margin:4px 0 0 18px;padding:0}
+/* Upcoming Tax Sales */
+.usbox{margin:24px 0}.usfilters{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}.usfilters label{display:flex;flex-direction:column;gap:4px}.usfilters select{min-width:150px}
+.uslist{display:grid;gap:10px}.usitem{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);overflow-wrap:anywhere}
+.ustop{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px}.ustype{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#1e3a8a;color:#dbeafe}
+.us-otc .ustype{background:#14532d;color:#dcfce7}.us-laft .ustype{background:#713f12;color:#fef3c7}.usstat{font-size:12px;font-weight:700;color:#86efac}
+.st-redeemed .usstat,.st-withdrawn .usstat,.st-canceled .usstat{color:#fca5a5}.st-gone .usstat,.st-rescheduled .usstat{color:#fcd34d}.usnote{color:#fcd34d}.uscounty p{margin:6px 0}

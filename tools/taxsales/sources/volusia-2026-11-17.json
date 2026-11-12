@@ -1,0 +1,358 @@
+{
+ "county": "Volusia",
+ "state": "FL",
+ "type": "taxdeed",
+ "saleId": "volusia-2026-11-17",
+ "saleDate": "2026-11-17",
+ "saleTime": "09:00",
+ "tz": "ET",
+ "auctionUrl": "https://volusia.realtaxdeed.com/",
+ "officialPage": "https://www.clerk.org/tax-deeds.aspx",
+ "source": {
+  "name": "Volusia County Clerk of Court, Tax Deed Department: updated sale list for the Nov 17, 2026 sale (dated 11/9/2026), in the case file for certificate 3774-20",
+  "url": "https://www.clerk.org/tax-deeds.aspx",
+  "published": "2026-11-09",
+  "checked": "2026-11-12",
+  "liveCalendar": "Not checked automatically: volusia.realtaxdeed.com refuses automated requests. Sale date and 9:00 AM ET time confirmed from the Clerk's notices in the same file."
+ },
+ "items": [
+  {
+   "cert": "617-24",
+   "parcel": "600516010110",
+   "homestead": false,
+   "assessed": 13411,
+   "status": "scheduled"
+  },
+  {
+   "cert": "808-24",
+   "parcel": "603812000680",
+   "homestead": false,
+   "assessed": 131378,
+   "status": "scheduled"
+  },
+  {
+   "cert": "1548-24",
+   "parcel": "701739040110",
+   "homestead": false,
+   "assessed": 8573,
+   "status": "scheduled"
+  },
+  {
+   "cert": "1657-24",
+   "parcel": "702007010160",
+   "homestead": false,
+   "assessed": 3832,
+   "status": "scheduled"
+  },
+  {
+   "cert": "1658-24",
+   "parcel": "702007010210",
+   "homestead": false,
+   "assessed": 56869,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "2012-24",
+   "parcel": "800905140290",
+   "homestead": false,
+   "assessed": 12203,
+   "status": "scheduled"
+  },
+  {
+   "cert": "2029-24",
+   "parcel": "800906030330",
+   "homestead": false,
+   "assessed": 6888,
+   "status": "scheduled"
+  },
+  {
+   "cert": "2030-24",
+   "parcel": "800906030360",
+   "homestead": false,
+   "assessed": 9184,
+   "status": "scheduled"
+  },
+  {
+   "cert": "3550-20",
+   "parcel": "611001240130",
+   "homestead": false,
+   "assessed": 450,
+   "status": "scheduled"
+  },
+  {
+   "cert": "3697-24",
+   "parcel": "813011500010",
+   "homestead": true,
+   "assessed": 63481,
+   "status": "scheduled"
+  },
+  {
+   "cert": "3733-24",
+   "parcel": "813015200040",
+   "homestead": true,
+   "assessed": 74820,
+   "status": "scheduled"
+  },
+  {
+   "cert": "3774-20",
+   "parcel": "612901110240",
+   "homestead": false,
+   "assessed": 1563,
+   "status": "scheduled",
+   "openingBid": 2207.43,
+   "openingBidNote": "Minimum bid on the Clerk's updated certification worksheet printed 11/9/2026 (the advertised notice dated 9/25/2026 showed $2,181.66). Subject to change; call (386) 736-5919.",
+   "owner": "BOARTS DAVID L; SHAFFER DOROTHY B",
+   "ownerAddress": "5282 FIDDLELEAF DR, FORT MYERS, FL 33905",
+   "situs": "NO STREET (vacant, Volusia 32724)",
+   "legal": "29 16 31 LOTS 24 & 25 BLK 11 UNIV HIGHLANDS MB 25 PG 70 PER OR 5416 PG 4422 PER OR 5488 PGS 4579-4581 INC",
+   "applicant": "DAY INVESTMENT AND CONSULTING LLC",
+   "deedApp": "32462"
+  },
+  {
+   "cert": "3849-19",
+   "parcel": "723100001380",
+   "homestead": false,
+   "assessed": 17385,
+   "status": "scheduled"
+  },
+  {
+   "cert": "4015-20",
+   "parcel": "613301160180",
+   "homestead": false,
+   "assessed": 742,
+   "status": "scheduled"
+  },
+  {
+   "cert": "4216-24",
+   "parcel": "813074090110",
+   "homestead": true,
+   "assessed": 107223,
+   "status": "withdrawn",
+   "statusNote": "Handwritten \u201cPulled by TC\u201d (Tax Collector) on the Clerk's 11/9/2026 list sent to the Property Appraiser."
+  },
+  {
+   "cert": "4752-24",
+   "parcel": "423301010140",
+   "homestead": false,
+   "assessed": 126787,
+   "status": "scheduled"
+  },
+  {
+   "cert": "4779-24",
+   "parcel": "423309000290",
+   "homestead": false,
+   "assessed": 31620,
+   "status": "scheduled"
+  },
+  {
+   "cert": "4952-24",
+   "parcel": "424211040380",
+   "homestead": false,
+   "assessed": 26565,
+   "status": "scheduled"
+  },
+  {
+   "cert": "4985-24",
+   "parcel": "424219140150",
+   "homestead": true,
+   "assessed": 73968,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "4988-24",
+   "parcel": "424219240151",
+   "homestead": false,
+   "assessed": 138149,
+   "status": "scheduled"
+  },
+  {
+   "cert": "5015-24",
+   "parcel": "424220160151",
+   "homestead": true,
+   "assessed": 121131,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "5036-24",
+   "parcel": "424227010460",
+   "homestead": false,
+   "assessed": 141717,
+   "status": "scheduled"
+  },
+  {
+   "cert": "5041-24",
+   "parcel": "424228020340",
+   "homestead": false,
+   "assessed": 73071,
+   "status": "scheduled"
+  },
+  {
+   "cert": "5274-19",
+   "parcel": "620601110260",
+   "homestead": false,
+   "assessed": 14274,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "5390-24",
+   "parcel": "523722030170",
+   "homestead": false,
+   "assessed": 129581,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "5548-24",
+   "parcel": "523836120020",
+   "homestead": false,
+   "assessed": 75191,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "5973-24",
+   "parcel": "920701000011",
+   "homestead": false,
+   "assessed": 175283,
+   "status": "scheduled"
+  },
+  {
+   "cert": "7222-24",
+   "parcel": "630802001070",
+   "homestead": false,
+   "assessed": 77579,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "7223-24",
+   "parcel": "630802001080",
+   "homestead": false,
+   "assessed": 77767,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "7321-24",
+   "parcel": "631204004340",
+   "homestead": true,
+   "assessed": 281356,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "7380-24",
+   "parcel": "631504110510",
+   "homestead": false,
+   "assessed": 110296,
+   "status": "scheduled"
+  },
+  {
+   "cert": "7575-24",
+   "parcel": "731300000061",
+   "homestead": false,
+   "assessed": 513500,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "8123-24",
+   "parcel": "743005030820",
+   "homestead": true,
+   "assessed": 89079,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "8200-24",
+   "parcel": "744109010030",
+   "homestead": false,
+   "assessed": 177480,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "8230-24",
+   "parcel": "744130040040",
+   "homestead": false,
+   "assessed": 172994,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "8592-19",
+   "parcel": "710801040270",
+   "homestead": false,
+   "assessed": 781,
+   "status": "redeemed",
+   "statusNote": "Marked REDEEMED on the Clerk's updated sale list dated 11/9/2026."
+  },
+  {
+   "cert": "8659-19",
+   "parcel": "701033000291",
+   "homestead": false,
+   "assessed": 500,
+   "status": "scheduled"
+  },
+  {
+   "cert": "9000-24",
+   "parcel": "950600000750",
+   "homestead": true,
+   "assessed": 87080,
+   "status": "scheduled"
+  },
+  {
+   "cert": "10095-23",
+   "parcel": "853812000901",
+   "homestead": false,
+   "assessed": 407,
+   "status": "scheduled"
+  },
+  {
+   "cert": "10445-24",
+   "parcel": "402500000040",
+   "homestead": false,
+   "assessed": 559326,
+   "status": "scheduled"
+  },
+  {
+   "cert": "11114-23",
+   "parcel": "91010000009A",
+   "homestead": false,
+   "assessed": 455,
+   "status": "scheduled"
+  },
+  {
+   "cert": "12136-23",
+   "parcel": "734403002151",
+   "homestead": false,
+   "assessed": 1080,
+   "status": "scheduled"
+  },
+  {
+   "cert": "12521-20",
+   "parcel": "632204000191",
+   "homestead": false,
+   "assessed": 1000,
+   "status": "scheduled"
+  },
+  {
+   "cert": "12751-20",
+   "parcel": "802301190062",
+   "homestead": false,
+   "assessed": 1200,
+   "status": "scheduled"
+  },
+  {
+   "cert": "13852-19",
+   "parcel": "830401010360",
+   "homestead": false,
+   "assessed": 781,
+   "status": "scheduled"
+  }
+ ]
+}
