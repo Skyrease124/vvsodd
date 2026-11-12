@@ -4,20 +4,9 @@
 //   or  { ok:false, reason:'coverage'|'lookup' }     (the page shows "Wetlands data unavailable")
 // "No mapped overlap" (overlapAcres 0) is returned ONLY when the NWI status layer says the whole parcel sits in a digitally mapped area
 // AND the wetland query succeeded and clipped to nothing. Coverage missing, a failed call or a truncated result is never reported as "no overlap".
-import pc from 'polygon-clipping';
+import { pc, SQM_ACRE, json, limited, proj, multiArea, closed, esriToMulti, readOutline, outlineKey } from '../lib/geo.mjs';
 const BASE = 'https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/';
-const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
-const cache = new Map(), hits = new Map();
-const limited = (k, n, ms) => { const now = Date.now(), r = (hits.get(k) || []).filter(t => now - t < ms); if (r.length >= n) return true; r.push(now); hits.set(k, r); return false; };
-const SQM_ACRE = 4046.8564224;
-
-// local equal-area-enough projection (metres) around the parcel; error is far below 0.1% at lot scale
-const proj = (lng0, lat0) => { const k = Math.cos(lat0 * Math.PI / 180); return p => [(p[0] - lng0) * k * 111320, (p[1] - lat0) * 110574]; };
-const ringArea = r => { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return Math.abs(a) / 2; };
-const multiArea = (mp, P) => mp.reduce((s, poly) => s + poly.reduce((t, ring, i) => t + (i ? -1 : 1) * ringArea(ring.map(P)), 0), 0);
-const closed = r => (r[0][0] === r[r.length - 1][0] && r[0][1] === r[r.length - 1][1]) ? r : r.concat([r[0]]);
-// Rings (even-odd, any orientation) -> MultiPolygon, by XOR-ing the rings
-const esriToMulti = rings => { let acc = []; for (const r of rings) { if (r.length < 3) continue; const m = [[closed(r)]]; acc = acc.length ? pc.xor(acc, m) : m; } return acc; };
+const cache = new Map();
 
 async function get(layer, params) {
   const c = new AbortController(), t = setTimeout(() => c.abort(), 20000);
@@ -60,11 +49,8 @@ export default async function handler(req, context) {
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x';
   if (req.method !== 'POST') return json(405, { ok: false, error: 'POST only.' });
   if (limited('w' + ip, 40, 60000)) return json(429, { ok: false, error: 'Too many requests.' });
-  let rings; try { rings = (await req.json()).rings; } catch (e) { return json(400, { ok: false, error: 'Bad outline.' }); }
-  const okPt = p => Array.isArray(p) && p.length >= 2 && p[0] >= -88 && p[0] <= -79.5 && p[1] >= 24 && p[1] <= 31.1;
-  if (!Array.isArray(rings) || !rings.length || rings.length > 40 || !rings.every(r => Array.isArray(r) && r.length >= 4 && r.every(okPt)) || rings.flat().length > 6000) return json(400, { ok: false, error: 'Bad outline.' });
-  const xs = rings.flat().map(p => p[0]), ys = rings.flat().map(p => p[1]); if (Math.max(...xs) - Math.min(...xs) > 0.1 || Math.max(...ys) - Math.min(...ys) > 0.1) return json(400, { ok: false, error: 'Outline too large.' });
-  const key = rings.map(r => r.map(p => p[0].toFixed(7) + ',' + p[1].toFixed(7)).join(';')).join('|');
+  const inp = await readOutline(req); if (inp.error) return inp.error; const rings = inp.rings;
+  const key = outlineKey(rings);
   const hit = cache.get(key); if (hit && Date.now() - hit.t < 6 * 3600e3) return json(200, hit.v);
   let v; try { v = await analyze(rings); } catch (e) { return json(200, { ok: false, reason: 'lookup' }); }
   if (cache.size > 200) cache.clear(); if (v.ok || v.reason === 'coverage') cache.set(key, { t: Date.now(), v }); return json(200, v);

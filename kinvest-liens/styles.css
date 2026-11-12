@@ -918,3 +918,5 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .elval{margin:4px 0}.elval b{font-size:24px;color:#67e8f9}
 /* Mapped Wetlands */
 .wlval{margin:4px 0;font-weight:700;color:#67e8f9}.wltypes{margin:4px 0 8px 18px;padding:0}
+/* Flood Zone */
+.fzval{margin:4px 0;font-weight:700;color:#67e8f9}.fzval.fzhigh{color:#fca5a5}.fztypes{margin:4px 0 8px 18px;padding:0}

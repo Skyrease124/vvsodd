@@ -312,6 +312,70 @@ const WetlandsData = {
     });
   }
 };
+// Flood Zone: FEMA National Flood Hazard Layer zones intersected with the FULL verified lot outline (server side, /.netlify/functions/flood).
+// A map-based screening estimate, not a flood determination. Missing FEMA coverage, a lookup failure or no verified boundary is "Flood zone unavailable".
+const FloodData = {
+  SRC: 'https://www.fema.gov/flood-maps/national-flood-hazard-layer', MSC: 'https://msc.fema.gov/portal/home', mem: {},
+  COLOR: {high: '#ef4444', moderate: '#f59e0b'},
+  async get(l, r) {
+    if (!r || r.st !== 'matched' || !r.g || !r.g.length) return {state: 'unavailable', why: 'nooutline'};
+    const key = JSON.stringify(r.g); if (this.mem[key]) return this.mem[key];
+    let out; try {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+      const res = await fetch('/.netlify/functions/flood', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rings: r.g}), signal: c.signal}).finally(() => clearTimeout(t));
+      const d = await res.json();
+      if (d && d.ok === true && Array.isArray(d.zones) && d.zones.length && Array.isArray(d.geom) && isFinite(d.sfhaPct)) out = Object.assign({state: 'ok'}, d);
+      else out = {state: 'unavailable', why: d && d.reason === 'coverage' ? 'coverage' : 'lookup'};
+    } catch (e) { out = {state: 'unavailable', why: 'lookup'}; }
+    if (out.why !== 'lookup') this.mem[key] = out; return out;
+  },
+  pctText: p => p > 0 && p < 0.1 ? '<0.1%' : p.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%',
+  acres: a => a < 0.01 ? '<0.01' : a.toLocaleString('en-US', {minimumFractionDigits: a < 10 ? 2 : 1, maximumFractionDigits: a < 10 ? 2 : 1}),
+  RISK: {high: 'high risk (Special Flood Hazard Area)', moderate: 'moderate risk', minimal: 'minimal hazard', undetermined: 'flood hazard not determined', water: 'open water'},
+  zoneName(z) { return 'Zone ' + z.zone + (z.subty ? ' (' + z.subty.toLowerCase() + ')' : '') + ' – ' + (this.RISK[z.risk] || ''); },
+  headline(res) {
+    if (res.sfhaPct > 0) return 'Part of this lot is in a FEMA high-risk flood zone (Special Flood Hazard Area): ' + this.pctText(res.sfhaPct) + ' of the lot';
+    if (res.modPct > 0) return 'No high-risk flood zone mapped. ' + this.pctText(res.modPct) + ' of the lot is in a moderate-risk zone';
+    const z = res.zones[0]; return 'Mapped as Zone ' + z.zone + (z.risk === 'minimal' ? ' (minimal flood hazard)' : '') + ': ' + this.RISK[z.risk];
+  },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.fzbody').forEach(x => x.remove()); const body = mk('div', 'fzbody'); box.appendChild(body);
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    if (res.state !== 'ok') {
+      body.appendChild(mk('p', 'notice', 'Flood zone unavailable'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so it cannot be checked against the flood map.' : res.why === 'coverage' ? 'FEMA’s digital flood map does not cover this whole lot.' : 'The FEMA flood map service did not answer.'));
+      if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
+    } else {
+      body.appendChild(mk('p', 'fzval' + (res.sfhaPct > 0 ? ' fzhigh' : ''), this.headline(res)));
+      const ul = mk('ul', 'fztypes small'); res.zones.forEach(z => ul.appendChild(mk('li', '', this.zoneName(z) + ': ' + this.pctText(z.pct) + ' of the lot (' + this.acres(z.acres) + ' acres)' + (z.bfe != null ? '; base flood elevation ' + z.bfe + ' ft' : '') + (z.depth != null && z.depth > 0 ? '; depth ' + z.depth + ' ft' : '')))); body.appendChild(ul);
+      body.appendChild(mk('p', 'small', 'Zones A, AE, AH, AO, V and VE are FEMA’s 1%-annual-chance (“100-year”) floodplain, where flood insurance is normally required with a federally backed mortgage. Shaded Zone X is the 0.2% (“500-year”) floodplain or an area protected by a levee. Other Zone X is outside both.'));
+    }
+    body.appendChild(mk('p', 'small muted', 'Map-based screening estimate only, not a flood determination or elevation certificate. Flood maps can be out of date or changed by a LOMA or LOMR, and this is not insurance or lending advice. Check the official FEMA map and ask an insurance agent and the local floodplain office before you bid.'));
+    const src = mk('p', 'small muted'); src.append('Source: FEMA, ', link('National Flood Hazard Layer', this.SRC), ' (', link('open the FEMA Flood Map Service Center', this.MSC), ').' + (res.state === 'ok' ? (res.panelEff ? ' Flood map panel effective ' + res.panelEff + '.' : '') + ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord fzbox'); box.appendChild(mk('h4', '', 'Flood Zone'));
+    const run = () => { box.querySelectorAll('.fzbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted fzbody', 'Checking the FEMA flood map…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  },
+  mapAttach(L, m, box, l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const dlg = box.closest('dialog') || box.parentNode; let old = dlg.querySelector('.fzbar'); if (old) old.remove();
+    const bar = mk('p', 'clbar fzbar small'), b = mk('button', 'btn small ghost', 'Show flood zones'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); const st = mk('span', 'small muted', ''); st.setAttribute('role', 'status'); bar.append(b, ' ', st);
+    box.after(bar); let layer = null;
+    b.addEventListener('click', async () => {
+      if (layer && m.hasLayer(layer)) { m.removeLayer(layer); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Show flood zones'; st.textContent = ''; return; }
+      b.disabled = true; st.textContent = 'Checking the FEMA flood map…'; const res = await this.get(l, r); b.disabled = false;
+      if (res.state !== 'ok') { st.textContent = 'Flood zone unavailable'; return; }
+      if (!res.geom.length) { st.textContent = 'Whole lot is mapped as ' + this.RISK[res.zones[0].risk] + ' (Zone ' + res.zones[0].zone + '); nothing to shade.'; return; }
+      layer = L.layerGroup(res.geom.map(g => L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'MultiPolygon', coordinates: g.geom}}, {style: {color: this.COLOR[g.risk], weight: 1, fillColor: this.COLOR[g.risk], fillOpacity: 0.45}}).bindPopup('<b>Zone ' + g.zone + '</b>' + (g.subty ? '<br>' + g.subty.toLowerCase() : '') + '<br>' + (this.RISK[g.risk] || '')))).addTo(m);
+      if (box._outline && box._outline.bringToFront) box._outline.bringToFront();
+      b.setAttribute('aria-pressed', 'true'); b.textContent = 'Hide flood zones'; st.textContent = 'Red = high-risk zone (SFHA), amber = moderate-risk zone; unshaded = minimal hazard (screening estimate).';
+    });
+  }
+};
 // Estimated Ground Elevation: ONE point inside the verified lot outline (the point farthest from the edges), looked up in feet from the free USGS
 // Elevation Point Query Service (longitude = x, latitude = y). A single-point estimate, cached by sampled coordinates.
 const ElevationData = {
@@ -486,7 +550,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); es.after(WetlandsData.section(l, pd.r)); } }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); const ws = WetlandsData.section(l, pd.r); es.after(ws); ws.after(FloodData.section(l, pd.r)); } }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -509,6 +573,7 @@ const LienMap = {
         CleanupData.mapAttach(L, m, box, l, pd.r);
         ElevationData.mapAttach(L, m, box, l, pd.r);
         WetlandsData.mapAttach(L, m, box, l, pd.r);
+        FloodData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
