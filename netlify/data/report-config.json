@@ -1,29 +1,691 @@
 {
  "Miami-Dade": {
-  "state": "FL", "coNo": 23, "idLabel": "folio", "idDigits": 13,
-  "pa": {"name": "Miami-Dade Property Appraiser: property search", "url": "https://apps.miamidadepa.gov/propertysearch/"},
-  "deeds": {"name": "Miami-Dade Clerk: Official Records search", "url": "https://onlineservices.miamidadeclerk.gov/officialrecords/", "how": "Search by folio, or by book and page / clerk file number."},
-  "probate": {"name": "Miami-Dade Clerk: Online Case Search", "url": "https://www2.miamidadeclerk.gov/ocs/", "how": "Choose Probate, then search by the owner’s name. An empty result proves nothing."},
-  "permits": {"unincorporated": {"office": "Miami-Dade County Regulatory and Economic Resources (RER)", "name": "Miami-Dade permits and code compliance", "url": "https://www.miamidade.gov/permits/"}},
-  "crime": {"name": "Miami-Dade Sheriff’s Office: crime information", "url": "https://www.miamidade.gov/global/police/crime-statistics.page", "checked": false},
+  "state": "FL",
+  "coNo": 23,
+  "idLabel": "folio",
+  "idDigits": 13,
+  "pa": {
+   "name": "Miami-Dade Property Appraiser: property search",
+   "url": "https://apps.miamidadepa.gov/propertysearch/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Miami-Dade Clerk: Official Records search",
+   "url": "https://onlineservices.miamidadeclerk.gov/officialrecords/",
+   "how": "Search by folio, or by book and page / clerk file number.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Miami-Dade Clerk: Online Case Search",
+   "url": "https://www2.miamidadeclerk.gov/ocs/",
+   "how": "Choose Probate, then search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Miami-Dade County Regulatory and Economic Resources (RER)",
+    "name": "Miami-Dade permits and code compliance",
+    "url": "https://www.miamidade.gov/permits/"
+   }
+  },
+  "crime": {
+   "name": "Miami-Dade Sheriff’s Office: crime information",
+   "url": "https://www.miamidade.gov/global/police/crime-statistics.page",
+   "checked": false
+  },
   "cities": {
-   "Miami": ["City of Miami Building Department", "https://www.miami.gov/"], "Hialeah": ["City of Hialeah Building Department", "https://www.hialeahfl.gov/"],
-   "Homestead": ["City of Homestead Building Department", "https://www.cityofhomestead.com/"], "Coral Gables": ["City of Coral Gables Development Services", "https://www.coralgables.com/"],
-   "Miami Beach": ["City of Miami Beach Building Department", "https://www.miamibeachfl.gov/"], "North Miami": ["City of North Miami Building Department", "https://www.northmiamifl.gov/"],
-   "Doral": ["City of Doral Building Department", "https://www.cityofdoral.com/"], "Miami Gardens": ["City of Miami Gardens Building Department", "https://www.miamigardens-fl.gov/"]
+   "Miami": [
+    "City of Miami Building Department",
+    "https://www.miami.gov/"
+   ],
+   "Hialeah": [
+    "City of Hialeah Building Department",
+    "https://www.hialeahfl.gov/"
+   ],
+   "Homestead": [
+    "City of Homestead Building Department",
+    "https://www.cityofhomestead.com/"
+   ],
+   "Coral Gables": [
+    "City of Coral Gables Development Services",
+    "https://www.coralgables.com/"
+   ],
+   "Miami Beach": [
+    "City of Miami Beach Building Department",
+    "https://www.miamibeachfl.gov/"
+   ],
+   "North Miami": [
+    "City of North Miami Building Department",
+    "https://www.northmiamifl.gov/"
+   ],
+   "Doral": [
+    "City of Doral Building Department",
+    "https://www.cityofdoral.com/"
+   ],
+   "Miami Gardens": [
+    "City of Miami Gardens Building Department",
+    "https://www.miamigardens-fl.gov/"
+   ]
   }
  },
  "Palm Beach": {
-  "state": "FL", "coNo": 60, "idLabel": "property control number (PCN)", "idDigits": 17,
-  "pa": {"name": "Palm Beach County Property Appraiser: property search", "url": "https://pbcpao.gov/"},
-  "deeds": {"name": "Palm Beach County Clerk: Official Records search", "url": "https://erec.mypalmbeachclerk.com/", "how": "Search by PCN, by name, or by book and page."},
-  "probate": {"name": "Palm Beach County Clerk: eCaseView", "url": "https://appsgp.mypalmbeachclerk.com/eCaseView/", "how": "Search probate cases by the owner’s name. An empty result proves nothing."},
-  "permits": {"unincorporated": {"office": "Palm Beach County Planning, Zoning and Building", "name": "Palm Beach County building permits and code enforcement", "url": "https://discover.pbcgov.org/pzb/building/"}},
-  "crime": {"name": "Palm Beach County Sheriff’s Office", "url": "https://www.pbso.org/", "checked": true},
+  "state": "FL",
+  "coNo": 60,
+  "idLabel": "property control number (PCN)",
+  "idDigits": 17,
+  "pa": {
+   "name": "Palm Beach County Property Appraiser: property search",
+   "url": "https://pbcpao.gov/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Palm Beach County Clerk: Official Records search",
+   "url": "https://erec.mypalmbeachclerk.com/",
+   "how": "Search by PCN, by name, or by book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Palm Beach County Clerk: eCaseView",
+   "url": "https://appsgp.mypalmbeachclerk.com/eCaseView/",
+   "how": "Search probate cases by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Palm Beach County Planning, Zoning and Building",
+    "name": "Palm Beach County building permits and code enforcement",
+    "url": "https://discover.pbcgov.org/pzb/building/"
+   }
+  },
+  "crime": {
+   "name": "Palm Beach County Sheriff’s Office",
+   "url": "https://www.pbso.org/",
+   "checked": true
+  },
   "cities": {
-   "West Palm Beach": ["City of West Palm Beach Development Services", "https://www.wpb.org/"], "Boca Raton": ["City of Boca Raton Development Services", "https://www.myboca.us/"],
-   "Jupiter": ["Town of Jupiter Building Division", "https://www.jupiter.fl.us/"], "Delray Beach": ["City of Delray Beach Development Services", "https://www.mydelraybeach.com/"],
-   "Boynton Beach": ["City of Boynton Beach Development", "https://www.boynton-beach.org/"], "Lake Worth Beach": ["City of Lake Worth Beach Building", "https://www.lakeworthbeachfl.gov/"], "Riviera Beach": ["City of Riviera Beach Building", "https://www.rbf.org/"]
+   "West Palm Beach": [
+    "City of West Palm Beach Development Services",
+    "https://www.wpb.org/"
+   ],
+   "Boca Raton": [
+    "City of Boca Raton Development Services",
+    "https://www.myboca.us/"
+   ],
+   "Jupiter": [
+    "Town of Jupiter Building Division",
+    "https://www.jupiter.fl.us/"
+   ],
+   "Delray Beach": [
+    "City of Delray Beach Development Services",
+    "https://www.mydelraybeach.com/"
+   ],
+   "Boynton Beach": [
+    "City of Boynton Beach Development",
+    "https://www.boynton-beach.org/"
+   ],
+   "Lake Worth Beach": [
+    "City of Lake Worth Beach Building",
+    "https://www.lakeworthbeachfl.gov/"
+   ],
+   "Riviera Beach": [
+    "City of Riviera Beach Building",
+    "https://www.rbf.org/"
+   ]
   }
+ },
+ "Alachua": {
+  "state": "FL",
+  "coNo": 11,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Alachua County Property Appraiser: property search",
+   "url": "https://www.acpafl.org/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Alachua County Clerk: Official Records",
+   "url": "https://www.alachuaclerk.org/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Alachua County Clerk: court case search",
+   "url": "https://www.alachuaclerk.org/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Alachua County building, permitting and code enforcement",
+    "name": "Alachua County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://growth-management.alachuacounty.us/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Alachua County Sheriff’s Office",
+   "url": "https://www.alachuasheriff.org/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Bay": {
+  "state": "FL",
+  "coNo": 13,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Bay County Property Appraiser: property search",
+   "url": "https://www.baypa.net/",
+   "checked": false
+  },
+  "deeds": {
+   "name": "Bay County Clerk: Official Records",
+   "url": "https://www.baycoclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Bay County Clerk: court case search",
+   "url": "https://www.baycoclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Bay County building, permitting and code enforcement",
+    "name": "Bay County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.baycountyfl.gov/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Bay County Sheriff’s Office",
+   "url": "https://www.bayso.org/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Duval": {
+  "state": "FL",
+  "coNo": 26,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Duval County Property Appraiser: property search",
+   "url": "https://paopropertysearch.coj.net/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Duval County Clerk: Official Records",
+   "url": "https://oncore.duvalclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Duval County Clerk: court case search",
+   "url": "https://core.duvalclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "City of Jacksonville (Duval County is consolidated)",
+    "name": "City of Jacksonville permits and code compliance (official site)",
+    "url": "https://www.coj.net/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Duval County Sheriff’s Office",
+   "url": "https://www.jaxsheriff.org/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Escambia": {
+  "state": "FL",
+  "coNo": 27,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Escambia County Property Appraiser: property search",
+   "url": "https://www.escpa.org/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Escambia County Clerk: Official Records",
+   "url": "https://www.escambiaclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": false
+  },
+  "probate": {
+   "name": "Escambia County Clerk: court case search",
+   "url": "https://www.escambiaclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": false
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Escambia County building, permitting and code enforcement",
+    "name": "Escambia County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://myescambia.com/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Escambia County Sheriff’s Office",
+   "url": "https://www.escambiaso.com/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Hernando": {
+  "state": "FL",
+  "coNo": 37,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Hernando County Property Appraiser: property search",
+   "url": "https://hernandopa-fl.us/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Hernando County Clerk: Official Records",
+   "url": "https://www.hernandoclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Hernando County Clerk: court case search",
+   "url": "https://www.hernandoclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Hernando County building, permitting and code enforcement",
+    "name": "Hernando County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.hernandocounty.us/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Hernando County Sheriff’s Office",
+   "url": "https://www.hernandosheriff.org/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Hillsborough": {
+  "state": "FL",
+  "coNo": 39,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Hillsborough County Property Appraiser: property search",
+   "url": "https://www.hcpafl.org/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Hillsborough County Clerk: Official Records",
+   "url": "https://www.hillsclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Hillsborough County Clerk: court case search",
+   "url": "https://www.hillsclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Hillsborough County building, permitting and code enforcement",
+    "name": "Hillsborough County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.hillsboroughcounty.org/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Hillsborough County Sheriff’s Office",
+   "url": "https://www.hcso.tampa.fl.us/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Leon": {
+  "state": "FL",
+  "coNo": 47,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Leon County Property Appraiser: property search",
+   "url": "https://www.leonpa.gov/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Leon County Clerk: Official Records",
+   "url": "https://www.leonclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Leon County Clerk: court case search",
+   "url": "https://www.leonclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Leon County building, permitting and code enforcement",
+    "name": "Leon County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://cms.leoncountyfl.gov/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Leon County Sheriff’s Office",
+   "url": "https://www.leoncountyso.com/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Manatee": {
+  "state": "FL",
+  "coNo": 51,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Manatee County Property Appraiser: property search",
+   "url": "https://www.manateepao.gov/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Manatee County Clerk: Official Records",
+   "url": "https://www.manateeclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Manatee County Clerk: court case search",
+   "url": "https://www.manateeclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Manatee County building, permitting and code enforcement",
+    "name": "Manatee County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.mymanatee.org/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Manatee County Sheriff’s Office",
+   "url": "https://www.manateesheriff.com/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Nassau": {
+  "state": "FL",
+  "coNo": 55,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Nassau County Property Appraiser: property search",
+   "url": "https://www.nassauflpa.com/",
+   "checked": false
+  },
+  "deeds": {
+   "name": "Nassau County Clerk: Official Records",
+   "url": "https://www.nassauclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Nassau County Clerk: court case search",
+   "url": "https://www.nassauclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Nassau County building, permitting and code enforcement",
+    "name": "Nassau County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.nassaucountyfl.com/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Nassau County Sheriff’s Office",
+   "url": "https://www.nassauso.com/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Osceola": {
+  "state": "FL",
+  "coNo": 59,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Osceola County Property Appraiser: property search",
+   "url": "https://www.property-appraiser.org/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Osceola County Clerk: Official Records",
+   "url": "https://www.osceolaclerk.org/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Osceola County Clerk: court case search",
+   "url": "https://www.osceolaclerk.org/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Osceola County building, permitting and code enforcement",
+    "name": "Osceola County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.osceola.org/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Osceola County Sheriff’s Office",
+   "url": "https://www.osceolasheriff.org/",
+   "checked": false
+  },
+  "cities": {}
+ },
+ "Pasco": {
+  "state": "FL",
+  "coNo": 61,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Pasco County Property Appraiser: property search",
+   "url": "https://www.pascopa.com/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Pasco County Clerk: Official Records",
+   "url": "https://www.pascoclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Pasco County Clerk: court case search",
+   "url": "https://www.pascoclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Pasco County building, permitting and code enforcement",
+    "name": "Pasco County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.pascocountyfl.net/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Pasco County Sheriff’s Office",
+   "url": "https://www.pascosheriff.com/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Santa Rosa": {
+  "state": "FL",
+  "coNo": 67,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Santa Rosa County Property Appraiser: property search",
+   "url": "https://www.srcpa.gov/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Santa Rosa County Clerk: Official Records",
+   "url": "https://www.santarosaclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Santa Rosa County Clerk: court case search",
+   "url": "https://www.santarosaclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Santa Rosa County building, permitting and code enforcement",
+    "name": "Santa Rosa County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.santarosa.fl.gov/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Santa Rosa County Sheriff’s Office",
+   "url": "https://www.santarosasheriff.org/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Sarasota": {
+  "state": "FL",
+  "coNo": 68,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Sarasota County Property Appraiser: property search",
+   "url": "https://www.sc-pa.com/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Sarasota County Clerk: Official Records",
+   "url": "https://www.sarasotaclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Sarasota County Clerk: court case search",
+   "url": "https://www.sarasotaclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Sarasota County building, permitting and code enforcement",
+    "name": "Sarasota County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.scgov.net/",
+    "checked": false
+   }
+  },
+  "crime": {
+   "name": "Sarasota County Sheriff’s Office",
+   "url": "https://www.sarasotasheriff.org/",
+   "checked": false
+  },
+  "cities": {}
+ },
+ "Volusia": {
+  "state": "FL",
+  "coNo": 74,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Volusia County Property Appraiser: property search",
+   "url": "https://vcpa.vcgov.org/",
+   "checked": true
+  },
+  "deeds": {
+   "name": "Volusia County Clerk: Official Records",
+   "url": "https://www.clerk.org/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Volusia County Clerk: court case search",
+   "url": "https://www.clerk.org/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Volusia County building, permitting and code enforcement",
+    "name": "Volusia County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.volusia.gov/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Volusia County Sheriff’s Office",
+   "url": "https://volusiasheriff.gov/",
+   "checked": true
+  },
+  "cities": {}
+ },
+ "Walton": {
+  "state": "FL",
+  "coNo": 76,
+  "idLabel": "parcel ID",
+  "pidMap": true,
+  "pa": {
+   "name": "Walton County Property Appraiser: property search",
+   "url": "https://waltonpa.com/",
+   "checked": false
+  },
+  "deeds": {
+   "name": "Walton County Clerk: Official Records",
+   "url": "https://waltonclerk.com/",
+   "how": "On the clerk’s site open Official Records (or Recorded Documents) and search by parcel ID, owner name, or book and page.",
+   "checked": true
+  },
+  "probate": {
+   "name": "Walton County Clerk: court case search",
+   "url": "https://waltonclerk.com/",
+   "how": "On the clerk’s site open the court case search, choose Probate, and search by the owner’s name. An empty result proves nothing.",
+   "checked": true
+  },
+  "permits": {
+   "unincorporated": {
+    "office": "Walton County building, permitting and code enforcement",
+    "name": "Walton County permits and code enforcement (official site; find Building / Permits / Code Enforcement)",
+    "url": "https://www.co.walton.fl.us/",
+    "checked": true
+   }
+  },
+  "crime": {
+   "name": "Walton County Sheriff’s Office",
+   "url": "https://waltonso.org/",
+   "checked": true
+  },
+  "cities": {}
  }
 }

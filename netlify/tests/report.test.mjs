@@ -33,6 +33,12 @@ mode = { noRoll: true }; r = await R.buildReport('Miami-Dade', '30-3052-075-0270
 mode = {}; r = await R.buildReport('Miami-Dade', 'not-a-folio'); ok(r.match.status === 'unverified' && r.id === null, 'a malformed ID is not guessed');
 // city parcels name the city's office, not the county's
 mode = { city: 'Miami' }; r = await R.buildReport('Miami-Dade', '30-3052-075-0270'); ok(r.permits.coverage === 'city' && /City of Miami/.test(r.permits.office.office) && /own building and code departments/.test(r.permits.note), 'a city parcel is routed to the city\'s office and warns the county list may not include it');
+// other Florida counties: the statewide-roll ID found by the parcel backfill is used, and a postal city is never called the jurisdiction
+mode = { city: 'Tallahassee' }; r = await R.buildReport('Leon', Object.keys(JSON.parse(fs.readFileSync(new URL('../data/report-pids.json', import.meta.url))).Leon)[0]);
+ok(r.supported && r.permits.jurisdiction === 'Not determined' && r.permits.postalCity === 'Tallahassee' && /not the same as city limits/.test(r.permits.note) && r.permits.coverage === 'manual-county', 'Leon: postal city is shown as such, not as the municipality; permits are a manual lookup');
+ok(r.links.deeds.url.startsWith('https://') && r.links.crime.url.startsWith('https://') && r.crime.status === 'unavailable', 'Leon: official clerk and sheriff links, crime shown as unavailable');
+r = await R.buildReport('Duval', '123'); ok(/Jacksonville/.test(r.permits.jurisdiction) && /consolidated/.test(r.permits.note), 'Duval: consolidated with the City of Jacksonville');
+ok(['Alachua', 'Bay', 'Duval', 'Escambia', 'Hernando', 'Hillsborough', 'Leon', 'Manatee', 'Nassau', 'Osceola', 'Pasco', 'Santa Rosa', 'Sarasota', 'Volusia', 'Walton'].every(c => R.CONFIG[c] && R.CONFIG[c].coNo && R.CONFIG[c].deeds.url && R.CONFIG[c].probate.url && R.CONFIG[c].crime.url), 'every Florida county with listings has clerk, probate, permits and crime links');
 // estate links: only a reviewer (owner) can confirm, with an official document
 const mkU = async (e, o) => { await auth.createUser(e, 'pw-123456', false); if (o) { const u = await auth.getUser(e); u.owner = true; await auth.saveUser(u); } return (await auth.sessionCookie(e)).split(';')[0]; };
 const O = await mkU('skyariasa@gmail.com', true), M = await mkU('m@example.com');
