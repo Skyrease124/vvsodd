@@ -3,6 +3,28 @@ const AlMap = {
   files: {}, L: null,
   outline(co) { return this.files[co] || (this.files[co] = fetch('/liens/states/parcels/al-' + co + '.json').then(r => r.ok ? r.json() : null).catch(() => null)); },
   lib() { return this.L || (this.L = new Promise((res, rej) => { if (window.L) return res(window.L); const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css'; document.head.appendChild(css); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'; s.onload = () => res(window.L); s.onerror = () => { this.L = null; rej(new Error('map')); }; document.head.appendChild(s); })); },
+  // static satellite thumbnail (Esri World Imagery export, drawn live) with the county outline on top, same projection (Web Mercator)
+  thumb(c, r, host) {
+    const NS = 'http://www.w3.org/2000/svg';
+    this.outline(c.co).then(f => {
+      host.classList.remove('loading'); const m = f && f.p[r[4]];
+      const cap = document.createElement('p'); cap.className = 'lcap small';
+      if (!m) { const u = document.createElement('div'); u.className = 'lnoimg'; u.textContent = 'Image unavailable'; host.appendChild(u); cap.textContent = 'Not found on the county map, so the location is not verified.'; host.appendChild(cap); return; }
+      const R = 6378137, X = lng => lng * Math.PI / 180 * R, Y = lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * R;
+      let [x0, y0, x1, y1] = [X(m.bb[0]), Y(m.bb[1]), X(m.bb[2]), Y(m.bb[3])];
+      let w = Math.max(x1 - x0, 25), h = Math.max(y1 - y0, 25); const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      w *= 1.6; h *= 1.6; if (w / h > 1.5) h = w / 1.5; else w = h * 1.5; if (w < 180) { w = 180; h = 120; }   // the imagery service refuses views sharper than ~0.35 m per pixel
+      x0 = cx - w / 2; x1 = cx + w / 2; y0 = cy - h / 2; y1 = cy + h / 2;
+      const wrap = document.createElement('div'); wrap.className = 'althumb';
+      const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.width = 480; im.height = 320; im.alt = 'Satellite view of parcel ' + r[4] + ' with its boundary outlined';
+      im.src = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=' + [x0, y0, x1, y1].map(v => v.toFixed(1)).join(',') + '&bboxSR=3857&imageSR=3857&size=480,320&format=jpg&f=image';
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 480 320'); svg.setAttribute('preserveAspectRatio', 'none');
+      const path = document.createElementNS(NS, 'path'); path.setAttribute('d', m.g.map(ring => 'M' + ring.map(p => ((X(p[0]) - x0) / w * 480).toFixed(1) + ',' + ((y1 - Y(p[1])) / h * 320).toFixed(1)).join('L') + 'Z').join(' '));
+      path.setAttribute('fill', 'rgba(255,209,102,.15)'); path.setAttribute('stroke', '#ffd166'); path.setAttribute('stroke-width', '3'); path.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(path);
+      im.onerror = () => { im.remove(); cap.textContent = 'Satellite image could not load · outline: ' + c.county + ' GIS'; };
+      wrap.append(im, svg); host.appendChild(wrap); cap.textContent = 'Satellite: Esri World Imagery (dates vary) · outline: ' + c.county + ' GIS'; host.appendChild(cap);
+    });
+  },
   async open(c, r) {
     const mk = (t, cl, x) => { const e = document.createElement(t); if (cl) e.className = cl; if (x != null) e.textContent = x; return e; };
     let dlg = document.getElementById('aldlg'); if (dlg) dlg.remove();
@@ -41,8 +63,24 @@ const AlStateLandUI = {
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); box.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); more.type = 'button'; box.appendChild(more);
-    let list = [], shown = 50;
-    const draw = () => {
+    let list = [], shown = 24;
+    let view = 'cards';
+    const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button'; tools.appendChild(vb);
+    vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
+    const drawCards = () => {
+      wrap.textContent = ''; const g = mk('div', 'lcards');
+      list.slice(0, shown).forEach(({c, r}) => {
+        const card = mk('article', 'lcardx'); const th = mk('div', 'lthumb loading'); card.appendChild(th); AlMap.thumb(c, r, th);
+        const h = mk('div', 'lch'); h.append(mk('b', '', r[4] || 'No parcel ID'), mk('span', 'small', c.county.replace(' County', '') + ' \u00B7 tax sale ' + r[1])); card.appendChild(h);
+        const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Bid at the tax sale (not today\u2019s price)'), mk('b', '', r[6] == null ? 'Not shown' : money(r[6]))); card.appendChild(amt);
+        card.appendChild(mk('div', 'small', r[5]));
+        card.appendChild(mk('div', 'small muted', 'Owner of record: ' + r[0] + ' \u00B7 cert ' + r[2]));
+        const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => AlMap.open(c, r); act.appendChild(b); card.appendChild(act);
+        g.appendChild(card);
+      });
+      wrap.appendChild(g); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
+    };
+    const draw = () => { if (view === 'cards') return drawCards();
       wrap.textContent = ''; const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
       ['County', 'Parcel', 'Owner of record', 'Description', 'Tax sale year', 'Cert #', 'Bid at tax sale', ''].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
@@ -53,9 +91,9 @@ const AlStateLandUI = {
       const s = q.value.trim().toLowerCase();
       list = all.filter(({c, r}) => (!cs.value || c.co === cs.value) && (!s || (r[0] + ' ' + r[4] + ' ' + r[5]).toLowerCase().includes(s)));
       list.sort((a, b) => so.value === 'lo' ? (a.r[6] ?? 1e12) - (b.r[6] ?? 1e12) : so.value === 'hi' ? (b.r[6] ?? -1) - (a.r[6] ?? -1) : so.value === 'new' ? b.r[1].localeCompare(a.r[1]) : a.r[1].localeCompare(b.r[1]));
-      shown = 50; draw();
+      shown = 24; draw();
     };
-    [cs, so].forEach(x => x.addEventListener('change', apply)); q.addEventListener('input', apply); more.addEventListener('click', () => { shown += 50; draw(); });
+    [cs, so].forEach(x => x.addEventListener('change', apply)); q.addEventListener('input', apply); more.addEventListener('click', () => { shown += 24; draw(); });
     apply();
   }
 };
