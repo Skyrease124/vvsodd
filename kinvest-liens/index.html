@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="/img/favicon.png">
 <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="radar.css">
 </head>
 <body>
 <header class="dnav">
@@ -35,37 +36,29 @@
 </header>
 
 <main id="top">
-<section id="map" class="dhero">
-  <div class="dwrap dhero-grid">
-    <div class="dcopy">
-      <p id="hgreet" class="hgreet" aria-hidden="true"></p>
-      <h1>Understand the Numbers. <span class="gold">Build Assets</span> with Confidence.</h1>
-      <p class="dlead">Explore tax lien opportunities across the United States. Find counties, analyze data, and invest smarter.</p>
-      <ul class="dticks">
-        <li>Interactive 50-State Map</li>
-        <li>County-Level Links</li>
-        <li>Investment Calculators</li>
-        <li>Education &amp; Resources</li>
-      </ul>
-      <a class="dgold" href="#usmap">Explore the Map &rarr;</a>
-      <a class="dghost" href="/practice/">Try a Practice Case</a>
-    </div>
-    <div class="dmap">
-      <div id="mapstats" class="mapstats" aria-label="Site numbers"></div>
-      <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
-      <div class="dside">
-        <aside id="maptip" class="maptip" aria-live="polite">
-        <b>Click a State</b>
-        <span>Start by selecting any state to view its tax sale rules and county pages.</span>
-    </aside>
-        <p class="small chiphint">Small states and DC:</p>
-        <div id="mapchips" class="mapchips"></div>
-        <a id="flcallout" class="flcall" href="liens/states/state/?s=FL"><b>Florida</b><span>Explore Counties &rarr;</span></a>
-      </div>
-      <ul id="maplegend" class="maplegend" aria-label="Map colors"></ul>
-    </div>
-  </div>
+<section id="map" class="dhero radar-on">
   <div class="dwrap">
+    <div class="rhead">
+      <p id="hgreet" class="hgreet" aria-hidden="true"></p>
+      <h1>Tax Sale <span class="gold">Radar</span></h1>
+      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records. Educational only: verify with the county before you bid.</p>
+    </div>
+    <div id="radar" class="radar">
+      <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
+      <div class="rtabs" role="tablist" aria-label="Map views">
+        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="true">Opportunities</button>
+        <button type="button" role="tab" id="tab-cal" data-tab="cal" aria-selected="false">Auction Calendar</button>
+        <button type="button" role="tab" id="tab-hist" data-tab="hist" aria-selected="false">Sale History</button>
+      </div>
+      <div id="rfilters" class="rfilters" aria-label="Find my deal"></div>
+      <div class="rfind"><label for="rfindin" class="sr-only">Find a state</label><div class="rcombo"><input id="rfindin" type="text" role="combobox" aria-expanded="false" aria-controls="rfindlist" aria-autocomplete="list" autocomplete="off" placeholder="Type a state name or abbreviation (all 50 + DC)"><ul id="rfindlist" role="listbox" hidden></ul></div></div>
+      <div class="dmap rmap">
+        <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
+      </div>
+      <details id="rlegend" class="rlegend"><summary>Legend: what the colors and markers mean</summary><div id="rlegendbody"></div></details>
+      <aside id="rpanel" class="rpanel" role="dialog" aria-modal="false" aria-labelledby="rpanelh" hidden></aside>
+    </div>
+    <div id="mapstats" class="mapstats" aria-label="Site numbers"></div>
     <div class="flpanel">
       <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
       <div class="flintro"><h2>Florida</h2><p>Florida sells tax lien certificates (green). Select a county to open its tax collector page.</p></div>
@@ -135,6 +128,7 @@
 <script src="map-data.js"></script>
 <script src="liens/states/lien-summary.js"></script>
 <script src="map.js"></script>
+<script src="radar.js"></script>
 <script src="home-state.js"></script>
 <script src="/auth-nav.js"></script>
 </body>
