@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Ask the County | PricePocketAsset</title>
+<meta name="theme-color" content="#070d1c">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="aibody stbody">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav><a href="/#map">Map</a><a href="/account/watchlist/">Watchlist</a><a href="/account/">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section pfpage">
+  <h1>Ask the County</h1>
+  <p class="muted">Pro members: we draft a short, professional email to the right county office. You review and edit it, then send it from your own Gmail, or copy it into the county's official request page. Replies go straight to your inbox.</p>
+  <div id="ac-msg" role="status"></div>
+  <div id="ac-app" hidden>
+    <div id="ac-gmail" class="notice"></div>
+    <form id="ac-form" class="setupform" novalidate autocomplete="off">
+      <label>State <select id="ac-state"></select></label>
+      <label>County <input id="ac-county" list="ac-counties" placeholder="e.g. Volusia"><datalist id="ac-counties"></datalist></label>
+      <label>Parcel ID (optional, needed for Parcel Status) <input id="ac-parcel" placeholder="e.g. 612901110240"></label>
+      <fieldset class="ac-kinds"><legend>What do you want?</legend><div id="ac-kinds"></div></fieldset>
+      <label id="ac-qwrap" hidden>Your question <textarea id="ac-q" rows="3" maxlength="800"></textarea></label>
+      <div class="setupbtns"><button class="btn" type="submit" id="ac-draft">Draft my email</button></div>
+    </form>
+    <div id="ac-review" hidden>
+      <h2>Review before sending</h2>
+      <p id="ac-office" class="small"></p>
+      <label>To <input id="ac-to" readonly></label>
+      <label>Subject <input id="ac-subj" maxlength="150"></label>
+      <label>Message <textarea id="ac-body" rows="10" maxlength="4000"></textarea></label>
+      <div class="setupbtns" id="ac-actions"></div>
+      <p id="ac-status" class="small" role="status" aria-live="polite"></p>
+    </div>
+    <h2>Sent requests</h2>
+    <div id="ac-hist"></div>
+  </div>
+  <p class="small muted">We only send to county email addresses we verified on the county's own website. Nothing is sent until you tap Send. Educational only; not legal advice.</p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="/legal/privacy/">Privacy</a> &middot; <a href="/legal/terms/">Terms</a> &middot; <a href="/legal/disclaimer/">Disclaimer</a></p></div></footer>
+<script src="/liens/states/states.js"></script>
+<script src="ask-county.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>

@@ -30,6 +30,7 @@ const UpcomingSales = (() => {
     if (l.auctionUrl) lk.append(link('Official auction site', l.auctionUrl), ' · ');
     lk.append(link(l.type === 'otc' ? 'Official county list' : 'Official source', l.sourceUrl || l.officialPage));
     if (l.type === 'otc') lk.append(' · ', (() => { const a = mk('a', '', 'Parcel details'); a.href = '/liens/parcel/?k=' + encodeURIComponent(['FL', l.county, l.parcel, l.cert || ''].join('|')); return a; })());
+    lk.append(' \u00B7 ', (() => { const a = mk('a', '', 'Ask the County'); a.href = '/account/ask-county/?' + new URLSearchParams({state: l.state || 'FL', county: l.county, parcel: l.parcel, kind: 'status'}); return a; })());
     d.appendChild(lk);
     d.appendChild(mk('div', 'small muted', 'Last checked ' + (l.checked || 'unknown') + (l.published ? ' (official list dated ' + l.published + ')' : '') + (l.liveCalendar ? '. ' + l.liveCalendar : '')));
     return d;
