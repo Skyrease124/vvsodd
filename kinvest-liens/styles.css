@@ -909,3 +909,5 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .caer-prev svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .caer-poly{fill:none;stroke:#ffd166;stroke-width:3;vector-effect:non-scaling-stroke;stroke-linejoin:round}
 .caer-label{background:rgba(7,13,28,.88);color:#e8edf7;font-size:12px;padding:4px 8px;border-radius:6px;max-width:72%;line-height:1.25;margin:0 0 24px 8px!important;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+/* Nearby Traffic */
+.ltraf{margin:6px 0}.ltraf p{margin:3px 0}.ltraf .tr-hi{color:#ffd166}.ltraf .tr-na{color:#9fb0cc}
