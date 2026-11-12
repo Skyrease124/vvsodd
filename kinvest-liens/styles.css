@@ -923,3 +923,5 @@ a.flink,a.tlink{color:#7bd3ff!important}
 /* Active Weather Alerts (temporary; visually apart from the permanent flood-zone card) */
 .wxbox{border-left:4px solid #f59e0b}.wxnone{margin:4px 0;font-weight:700;color:#86efac}.wxlist{list-style:none;margin:6px 0;padding:0}.wxalert{margin:6px 0;padding:8px 10px;border-radius:8px;background:rgba(245,158,11,.12)}
 .wxalert.wx-extreme,.wxalert.wx-severe{background:rgba(239,68,68,.16)}
+/* Soil Type */
+.soval{margin:4px 0;font-weight:700;color:#67e8f9}.sounit{margin:8px 0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04)}.sofacts{margin:4px 0 0 18px;padding:0}
