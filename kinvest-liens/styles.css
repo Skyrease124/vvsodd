@@ -911,3 +911,6 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .caer-label{background:rgba(7,13,28,.88);color:#e8edf7;font-size:12px;padding:4px 8px;border-radius:6px;max-width:72%;line-height:1.25;margin:0 0 24px 8px!important;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 /* Nearby Traffic */
 .ltraf{margin:6px 0}.ltraf p{margin:3px 0}.ltraf .tr-hi{color:#ffd166}.ltraf .tr-na{color:#9fb0cc}
+/* Nearby Cleanup Sites */
+.cllist{list-style:none;margin:6px 0;padding:0;display:flex;flex-direction:column;gap:8px}.clsite{border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px 10px}.clsite.clon{border-color:#ffd166}.clsite p{margin:3px 0}.cltop{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.clbadge{background:#ffd166!important;color:#111!important}
+.clbar{margin:8px 0}
