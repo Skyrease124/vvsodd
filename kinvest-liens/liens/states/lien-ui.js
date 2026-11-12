@@ -252,6 +252,66 @@ const CleanupData = {
     });
   }
 };
+// Mapped Wetlands: U.S. Fish & Wildlife Service National Wetlands Inventory polygons intersected with the FULL verified lot outline (server side,
+// /.netlify/functions/wetlands). A map-based screening estimate, not a wetland delineation. "No mapped overlap" appears only when the NWI covers the lot
+// and the check came back empty; missing coverage or a failed lookup is "Wetlands data unavailable".
+const WetlandsData = {
+  SRC: 'https://www.fws.gov/program/national-wetlands-inventory/web-mapping-services', MAPPER: 'https://fwsprimary.wim.usgs.gov/wetlands/apps/wetlands-mapper/', mem: {},
+  async get(l, r) {
+    if (!r || r.st !== 'matched' || !r.g || !r.g.length) return {state: 'unavailable', why: 'nooutline'};
+    const key = JSON.stringify(r.g); if (this.mem[key]) return this.mem[key];
+    let out; try {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+      const res = await fetch('/.netlify/functions/wetlands', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({rings: r.g}), signal: c.signal}).finally(() => clearTimeout(t));
+      const d = await res.json();
+      if (d && d.ok === true && d.covered === true && isFinite(d.overlapAcres) && isFinite(d.parcelAcres) && isFinite(d.pct) && Array.isArray(d.geom)) out = Object.assign({state: d.none || d.overlapAcres <= 0 ? 'none' : 'overlap'}, d);
+      else out = {state: 'unavailable', why: d && d.reason === 'coverage' ? 'coverage' : 'lookup'};
+    } catch (e) { out = {state: 'unavailable', why: 'lookup'}; }
+    if (out.why !== 'lookup') this.mem[key] = out; return out;
+  },
+  acres: a => a < 0.01 ? '<0.01' : a.toLocaleString('en-US', {minimumFractionDigits: a < 10 ? 2 : 1, maximumFractionDigits: a < 10 ? 2 : 1}),
+  pctText: p => p > 0 && p < 0.1 ? '<0.1%' : p.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%',
+  headline(res) { return res.state === 'overlap' ? this.acres(res.overlapAcres) + ' acres (' + this.pctText(res.pct) + ' of the lot) overlap mapped wetlands' : res.state === 'none' ? 'No mapped overlap' : 'Wetlands data unavailable'; },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    box.querySelectorAll('.wlbody').forEach(x => x.remove()); const body = mk('div', 'wlbody'); box.appendChild(body);
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    if (res.state === 'unavailable') {
+      body.appendChild(mk('p', 'notice', 'Wetlands data unavailable'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so it cannot be checked against the wetlands map.' : res.why === 'coverage' ? 'The National Wetlands Inventory does not show digital mapping for this whole lot.' : 'The wetlands service did not answer.'));
+      if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
+    } else {
+      body.appendChild(mk('p', 'wlval', this.headline(res)));
+      if (res.state === 'overlap') {
+        body.appendChild(mk('p', 'small', 'Lot about ' + this.acres(res.parcelAcres) + ' acres. Overlap is the area of the lot outline that falls inside mapped wetland polygons.'));
+        if (res.types && res.types.length) { const ul = mk('ul', 'wltypes small'); res.types.forEach(t => ul.appendChild(mk('li', '', t.type + ': ' + this.acres(t.acres) + ' acres'))); body.appendChild(ul); }
+      } else body.appendChild(mk('p', 'small', 'The National Wetlands Inventory is digitally mapped for this lot and none of its mapped wetland polygons touch the lot outline.'));
+    }
+    body.appendChild(mk('p', 'small muted', 'Map-based screening estimate only. NWI is built from aerial imagery of varying age, is not a wetland delineation, and does not decide what may be built or whether a permit is needed. Check with the local government and the water management district before you bid.'));
+    const src = mk('p', 'small muted'); src.append('Source: U.S. Fish & Wildlife Service, ', link('National Wetlands Inventory web mapping services', this.SRC), ' (', link('open the Wetlands Mapper', this.MAPPER), ').' + (res.queried ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord wlbox'); box.appendChild(mk('h4', '', 'Mapped Wetlands'));
+    const run = () => { box.querySelectorAll('.wlbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted wlbody', 'Checking the National Wetlands Inventory…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  },
+  mapAttach(L, m, box, l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const dlg = box.closest('dialog') || box.parentNode; let old = dlg.querySelector('.wlbar'); if (old) old.remove();
+    const bar = mk('p', 'clbar wlbar small'), b = mk('button', 'btn small ghost', 'Show wetlands overlap'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); const st = mk('span', 'small muted', ''); st.setAttribute('role', 'status'); bar.append(b, ' ', st);
+    box.after(bar); let layer = null;
+    b.addEventListener('click', async () => {
+      if (layer && m.hasLayer(layer)) { m.removeLayer(layer); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Show wetlands overlap'; st.textContent = ''; return; }
+      b.disabled = true; st.textContent = 'Checking the National Wetlands Inventory…'; const res = await this.get(l, r); b.disabled = false;
+      if (res.state === 'unavailable') { st.textContent = 'Wetlands data unavailable'; return; }
+      if (res.state === 'none') { st.textContent = 'No mapped overlap'; return; }
+      layer = L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'MultiPolygon', coordinates: res.geom}}, {style: {color: '#1d4ed8', weight: 1, fillColor: '#3b82f6', fillOpacity: 0.55}, interactive: false}).addTo(m);
+      if (box._outline && box._outline.bringToFront) box._outline.bringToFront();
+      b.setAttribute('aria-pressed', 'true'); b.textContent = 'Hide wetlands overlap'; st.textContent = 'Blue = part of the lot inside mapped wetlands: ' + this.acres(res.overlapAcres) + ' acres, ' + this.pctText(res.pct) + ' of the lot (screening estimate).';
+    });
+  }
+};
 // Estimated Ground Elevation: ONE point inside the verified lot outline (the point farthest from the edges), looked up in feet from the free USGS
 // Elevation Point Query Service (longitude = x, latitude = y). A single-point estimate, cached by sampled coordinates.
 const ElevationData = {
@@ -426,7 +486,7 @@ const LienMap = {
     if (!dlg.open) dlg.showModal();
     const pd = await ParcelData.rec(l);
     let pr = dlg.querySelector('.precord'); if (pr) pr.remove();
-    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); cs.after(ElevationData.section(l, pd.r)); } }
+    if ((l.state || 'FL') === 'FL') { pr = ParcelData.panel(l, pd.file, pd.r); foot.before(pr); let hb = dlg.querySelector('.hoabox'); if (hb) hb.remove(); hb = await HoaData.panel(l); pr.after(hb); if (pd.r && pd.r.st === 'matched') { const cs = CleanupData.section(l, pd.r); hb.after(cs); const es = ElevationData.section(l, pd.r); cs.after(es); es.after(WetlandsData.section(l, pd.r)); } }
     if (pd.r && pd.r.st === 'matched' && pd.r.g) {
       try {
         const L = await this.load();
@@ -448,6 +508,7 @@ const LienMap = {
         if (CountyAerial.enabled(l.county)) CountyAerial.attach(L, m, box, l, pd.r, {sat, street}, layersCtl);
         CleanupData.mapAttach(L, m, box, l, pd.r);
         ElevationData.mapAttach(L, m, box, l, pd.r);
+        WetlandsData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;

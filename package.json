@@ -4,6 +4,7 @@
   "description": "Server functions for the PricePocketAsset site (question box and its setup page).",
   "dependencies": {
     "@netlify/blobs": "8.2.0",
+    "polygon-clipping": "0.15.7",
     "stripe": "^23.1.0"
   }
 }
