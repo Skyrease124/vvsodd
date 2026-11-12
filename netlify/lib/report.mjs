@@ -3,6 +3,7 @@
 // parcel is "not covered / manual lookup", never "none". Owner status is never decided here (see estate links).
 import CONFIG_JSON from '../data/report-config.json' with { type: 'json' };
 export const CONFIG = CONFIG_JSON;
+import PIDS from '../data/report-pids.json' with { type: 'json' };
 export const STATEWIDE = 'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0/query';
 const MD = 'https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/';
 export const SRC = {
@@ -25,7 +26,13 @@ const date = ms => ms ? new Date(ms).toISOString().slice(0, 10) : '';
 const ymd8 = s => /^\d{8}$/.test(String(s || '')) ? s.slice(0, 4) + '-' + s.slice(4, 6) + '-' + s.slice(6) : '';
 const clean = s => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
 const title = s => { s = clean(s).replace(/\s*&\s*$/, ''); return s && s === s.toUpperCase() ? s.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()).replace(/\bLlc\b/g, 'LLC').replace(/\bLp\b/g, 'LP') : s; };
-export const normId = (county, parcel) => { const c = CONFIG[county]; const d = String(parcel || '').replace(/[^0-9A-Za-z]/g, ''); return c && /^\d+$/.test(d) && d.length === c.idDigits ? d : null; };
+export const normId = (county, parcel) => {
+  const c = CONFIG[county]; if (!c) return null; const d = String(parcel || '').replace(/[^0-9A-Za-z]/g, '');
+  if (c.pidMap) return (PIDS[county] && PIDS[county][String(parcel).trim()]) || d || null;   // statewide-roll ID found by the parcel backfill, else the listing ID with punctuation removed
+  return /^\d+$/.test(d) && d.length === c.idDigits ? d : null;
+};
+// IDs to try against the statewide roll: the backfill's matched ID, the ID as listed, and the listed ID without punctuation
+export const idCandidates = (county, parcel) => { const c = CONFIG[county]; const a = new Set(); const m = c && c.pidMap && PIDS[county] && PIDS[county][String(parcel).trim()]; if (m) a.add(m); const id = normId(county, parcel); if (id) a.add(id); if (c && c.pidMap) { a.add(String(parcel).trim()); } return [...a].filter(Boolean); };
 const addr = s => title(s).replace(/\bPo Box\b/g, 'PO Box').replace(/\b(Fl|Florida)\b(?=\s*\d|$)/g, 'FL').replace(/\b(Nw|Ne|Sw|Se)\b/g, m => m.toUpperCase());
 const centroid = rings => { const pts = rings.flat(); const n = pts.length; return [pts.reduce((a, p) => a + p[1], 0) / n, pts.reduce((a, p) => a + p[0], 0) / n]; };
 
@@ -41,11 +48,11 @@ function permitClass(p) {
 export async function buildReport(county, parcel) {
   const cfg = CONFIG[county]; if (!cfg) return { supported: false };
   const id = normId(county, parcel);
-  const out = { supported: true, county, state: cfg.state, idLabel: cfg.idLabel, parcelAsListed: parcel, id, generatedAt: new Date().toISOString(), links: { pa: cfg.pa, deeds: cfg.deeds, probate: cfg.probate, permits: null, crime: cfg.crime }, copy: id || String(parcel) };
-  if (!id) { out.match = { status: 'unverified', note: 'The parcel number does not have the expected ' + cfg.idDigits + ' digits for ' + county + ' County, so nothing was matched automatically.' }; out.ownership = { status: 'unverified' }; out.permits = { coverage: 'manual', cases: [], permits: [] }; out.crime = { status: 'unavailable', reason: 'Parcel could not be placed.' }; return out; }
+  const out = { supported: true, county, state: cfg.state, idLabel: cfg.idLabel, parcelAsListed: parcel, id, generatedAt: new Date().toISOString(), links: { pa: cfg.pa, deeds: cfg.deeds, probate: cfg.probate, permits: null, crime: cfg.crime }, copy: (cfg.pidMap ? String(parcel) : id) || String(parcel) };
+  if (!id) { out.match = { status: 'unverified', note: cfg.pidMap ? 'No parcel number was given.' : 'The parcel number does not have the expected ' + cfg.idDigits + ' digits for ' + county + ' County, so nothing was matched automatically.' }; out.ownership = { status: 'unverified' }; out.permits = { coverage: 'manual', cases: [], permits: [] }; out.crime = { status: 'unavailable', reason: 'Parcel could not be placed.' }; return out; }
   const isMD = county === 'Miami-Dade';
   const [roll, pa, paParent, viol, cc, perm] = await Promise.all([
-    safe(() => query(STATEWIDE, { where: `CO_NO=${cfg.coNo} AND PARCEL_ID='${sq(id)}'`, outFields: 'PARCEL_ID,OWN_NAME,OWN_ADDR1,OWN_ADDR2,OWN_CITY,OWN_STATE,OWN_ZIPCD,FIDU_NAME,PHY_ADDR1,PHY_CITY,PHY_ZIPCD,S_LEGAL,SALE_PRC1,SALE_YR1,SALE_MO1,OR_BOOK1,OR_PAGE1,CLERK_NO1,SALE_PRC2,SALE_YR2,SALE_MO2,OR_BOOK2,OR_PAGE2,CLERK_NO2,ASMNT_YR,DOR_UC', returnGeometry: 'true', outSR: '4326' })),
+    safe(() => query(STATEWIDE, { where: `CO_NO=${cfg.coNo} AND PARCEL_ID IN (${idCandidates(county, parcel).map(x => "'" + sq(x) + "'").join(',')})`, outFields: 'PARCEL_ID,OWN_NAME,OWN_ADDR1,OWN_ADDR2,OWN_CITY,OWN_STATE,OWN_ZIPCD,FIDU_NAME,PHY_ADDR1,PHY_CITY,PHY_ZIPCD,S_LEGAL,SALE_PRC1,SALE_YR1,SALE_MO1,OR_BOOK1,OR_PAGE1,CLERK_NO1,SALE_PRC2,SALE_YR2,SALE_MO2,OR_BOOK2,OR_PAGE2,CLERK_NO2,ASMNT_YR,DOR_UC', returnGeometry: 'true', outSR: '4326' })),
     isMD ? safe(() => query(MD + 'PaParcelView_gdb/FeatureServer/0/query', { where: `FOLIO='${sq(id)}'`, returnGeometry: 'true', outSR: '4326' })) : { ok: true, rows: [] },
     isMD ? safe(() => query(MD + 'PaParcelView_gdb/FeatureServer/0/query', { where: `FOLIO='${sq(id.slice(0, 9) + '0000')}'`, returnGeometry: 'true', outSR: '4326' })) : { ok: true, rows: [] },
     isMD ? safe(() => query(MD + 'BuildingViolation_gdb/FeatureServer/0/query', { where: `FOLIO='${sq(id)}'`, orderByFields: 'OPEN_DATE DESC' })) : null,
@@ -87,15 +94,18 @@ export async function buildReport(county, parcel) {
   if (isMD) {
     city = title((p && p.TRUE_SITE_CITY) || (r && r.PHY_CITY) || ''); if (!city && permits.length) city = title(permits[0].city);
     if (pt && !city) { const m = await safe(() => query(MD + 'Municipalitypoly_gdb/FeatureServer/0/query', { geometry: pt[1] + ',' + pt[0], geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects', outFields: 'NAME' })); if (m.ok && m.rows[0]) { city = title(m.rows[0].attributes.NAME); cityNote = 'Municipal Boundary layer'; } }
-  } else if (pt) {
+  } else if (pt && county === 'Palm Beach') {
     const m = await safe(() => query('https://maps.co.palm-beach.fl.us/arcgis/rest/services/OpenData/Boundaries_Open_Data/MapServer/5/query', { geometry: pt[1] + ',' + pt[0], geometryType: 'esriGeometryPoint', inSR: '4326', spatialRel: 'esriSpatialRelIntersects', outFields: '*' })); if (m.ok && m.rows[0]) { const a = m.rows[0].attributes; city = title(a.MUNICIPALITY || a.NAME || a.MUNI || a.CITY || ''); cityNote = 'Municipal Boundaries layer'; }
     if (!city && r && clean(r.PHY_CITY)) city = title(r.PHY_CITY);
   } else if (r && clean(r.PHY_CITY)) city = title(r.PHY_CITY);
-  const isUni = /unincorporated/i.test(city) || (!city && false);
+  const postal = (!isMD && county !== 'Palm Beach' && r) ? title(r.PHY_CITY) : '';
+  if (cfg.pidMap) city = '';   // the roll's city is the postal city, not the municipality: do not present it as jurisdiction
+  const isUni = /unincorporated/i.test(city) || (!city && !isMD && county !== 'Palm Beach') || county === 'Duval';
   const office = isUni ? cfg.permits.unincorporated : (city && cfg.cities[city] ? { office: cfg.cities[city][0], name: cfg.cities[city][0] + ' (official site; find Building / Permits / Code Enforcement)', url: cfg.cities[city][1] } : city ? { office: 'City of ' + city + ' building and code departments', name: 'Find ' + city + '’s permit and code search', url: cfg.permits.unincorporated.url, generic: true } : null);
   const coverage = isMD ? (isUni ? 'county' : city ? 'city' : 'unknown') : (isUni ? 'manual-county' : 'manual');
-  out.permits = { coverage, jurisdiction: city || 'Not determined', jurisdictionSource: cityNote || (p ? SRC.mdpa.name : r ? SRC.roll.name : ''), office, cases, permits, checked: { violations: viol ? viol.ok : null, codeCompliance: cc ? cc.ok : null, permits: perm ? perm.ok : null },
-    note: isMD ? (isUni ? 'Miami-Dade County handles permits and code cases for unincorporated parcels, and the county lists below cover them.' : city ? city + ' has its own building and code departments. The county lists below may not include city cases, so an empty list does not mean there are none. Search the city’s office.' : 'We could not tell which office covers this parcel. Check the Property Appraiser record for the municipality.') : 'Palm Beach County permit and code records are not available as an open data feed we can query. Use the office link and the copyable PCN.',
+  const manualNote = (cfg.pidMap && county !== 'Duval' ? 'We could not determine from open data whether this parcel is inside a city. The roll lists the postal city as ' + (postal || 'not given') + ', which is not the same as city limits. If it is inside a city, that city handles permits and code cases: confirm on the Property Appraiser record. ' : county === 'Duval' ? 'Duval County is consolidated with the City of Jacksonville, which handles permits and code compliance. ' : (isUni || !city ? '' : city + ' has its own building and code departments: check the city\u2019s website. ')) + county + ' County permit and code records are not available as an open data feed we can query. Use the office link and the copyable parcel ID.';
+  out.permits = { coverage, postalCity: postal, jurisdiction: city || (county === 'Duval' ? 'City of Jacksonville (consolidated)' : 'Not determined'), jurisdictionSource: cityNote || (p ? SRC.mdpa.name : r ? SRC.roll.name : ''), office, cases, permits, checked: { violations: viol ? viol.ok : null, codeCompliance: cc ? cc.ok : null, permits: perm ? perm.ok : null },
+    note: isMD ? (isUni ? 'Miami-Dade County handles permits and code cases for unincorporated parcels, and the county lists below cover them.' : city ? city + ' has its own building and code departments. The county lists below may not include city cases, so an empty list does not mean there are none. Search the city’s office.' : 'We could not tell which office covers this parcel. Check the Property Appraiser record for the municipality.') : manualNote,
     permitsCoverage: 'The county permit list covers permits issued in the previous 2 years.' };
   out.links.permits = office;
   // ---- 3. crime: coverage only (no incident-location source has been verified for these counties)

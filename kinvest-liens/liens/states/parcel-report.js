@@ -1,6 +1,6 @@
 // Property & Neighborhood Report (Miami-Dade and Palm Beach to start). Data comes from /.netlify/functions/report, which queries
 // official services by county + folio/PCN. Every block says where it came from and when; "unavailable" is never shown as zero.
-PF.REPORT_COUNTIES = ['Miami-Dade', 'Palm Beach'];
+PF.REPORT_COUNTIES = ['Miami-Dade', 'Palm Beach', 'Alachua', 'Bay', 'Duval', 'Escambia', 'Hernando', 'Hillsborough', 'Leon', 'Manatee', 'Nassau', 'Osceola', 'Pasco', 'Santa Rosa', 'Sarasota', 'Volusia', 'Walton'];
 PF.copy = async (text, el, msg) => {
   try { await navigator.clipboard.writeText(text); } catch (e) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (x) {} t.remove(); }
   if (el) { const old = el.textContent; el.textContent = msg || 'Copied'; setTimeout(() => { el.textContent = old; }, 1600); }
@@ -35,7 +35,7 @@ PF.report = async function (host, l) {
   host.appendChild(mk('p', 'small muted', rep.match.note + ' Report generated ' + rep.generatedAt.slice(0, 16).replace('T', ' ') + ' UTC.'));
   const sec = (id, title) => { const s = mk('div', 'rep-sec'); s.id = id; s.appendChild(mk('h3', '', title)); host.appendChild(s); return s; };
   const row = (dl, k, v) => { if (v == null || v === '') return; dl.append(mk('dt', '', k), mk('dd', '', v)); };
-  const lookup = (box, lk, extra) => { if (!lk) return; const p = mk('p', 'small'); const a = mk('a', 'btn small ghost', lk.name || 'Open the official search'); a.href = lk.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.addEventListener('click', () => PF.copy(rep.copy)); p.appendChild(a); if (lk.how || extra) p.appendChild(mk('span', 'small muted', ' ' + (extra || lk.how))); box.appendChild(p); };
+  const lookup = (box, lk, extra) => { if (!lk) return; const p = mk('p', 'small'); const a = mk('a', 'btn small ghost', lk.name || 'Open the official search'); a.href = lk.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.addEventListener('click', () => PF.copy(rep.copy)); p.appendChild(a); if (lk.how || extra) p.appendChild(mk('span', 'small muted', ' ' + (extra || lk.how))); if (lk.checked === false) p.appendChild(mk('span', 'small muted', ' (We could not test this link automatically.)')); box.appendChild(p); };
 
   // ---- 1. Ownership, deeds, estates
   const o = sec('rep-own', 'Ownership, deeds and estates'); const ow = rep.ownership;
@@ -52,7 +52,7 @@ PF.report = async function (host, l) {
 
   // ---- 2. Permits and code violations
   const pm = rep.permits, ps = sec('rep-permits', 'Permits and code violations');
-  const dl = mk('dl', 'pfws-facts'); row(dl, 'Jurisdiction', pm.jurisdiction); row(dl, 'Office that covers it', pm.office && pm.office.office); ps.appendChild(dl);
+  const dl = mk('dl', 'pfws-facts'); row(dl, 'Jurisdiction', pm.jurisdiction); row(dl, 'Postal city on the roll (not city limits)', pm.postalCity); row(dl, 'Office that covers it', pm.office && pm.office.office); ps.appendChild(dl);
   if (pm.jurisdictionSource) ps.appendChild(mk('p', 'small muted', 'Jurisdiction from: ' + pm.jurisdictionSource + '.'));
   ps.appendChild(mk('p', 'small muted', pm.note));
   const failed = pm.checked && Object.entries(pm.checked).filter(([k, v]) => v === false).map(([k]) => k);
