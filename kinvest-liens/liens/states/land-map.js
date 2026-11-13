@@ -46,3 +46,22 @@ const LandMap = {
 };
 // Alabama state-held tax delinquent land (ADOR transcripts): county filter, search, sort, show more.
 const AlMap = LandMap;
+// Pro-only "Download list" button: builds a CSV of the rows currently shown (after filters) in the browser.
+const PaidDownload = {
+  me: null,
+  status() { return this.me || (this.me = fetch('/.netlify/functions/account', {credentials: 'same-origin'}).then(r => r.ok ? r.json() : null).then(d => d && d.user).catch(() => null)); },
+  csv(head, rows) { const q = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; return [head].concat(rows).map(r => r.map(q).join(',')).join('\r\n'); },
+  button(label, fileName, head, getRows) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small ghost'; b.textContent = '⬇ ' + label + ' (Pro)';
+    const msg = document.createElement('span'); msg.className = 'small muted'; msg.setAttribute('role', 'status');
+    b.addEventListener('click', async () => {
+      const u = await this.status();
+      if (!u) { msg.innerHTML = ' <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a> to download. Downloads are for Pro members.'; return; }
+      if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members. <a href="/account/">See the Pro plan</a>'; return; }
+      const blob = new Blob(['﻿' + this.csv(head, getRows())], {type: 'text/csv;charset=utf-8'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      msg.textContent = ' Downloaded.';
+    });
+    const w = document.createElement('span'); w.className = 'pdl'; w.append(b, msg); return w;
+  }
+};

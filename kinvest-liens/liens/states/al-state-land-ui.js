@@ -7,13 +7,14 @@ const AlStateLandUI = {
     const box = mk('div', 'salebox'); host.appendChild(box);
     box.appendChild(mk('h3', '', 'State-held tax delinquent land (Alabama Department of Revenue)'));
     box.appendChild(mk('p', 'small', all.length.toLocaleString('en-US') + ' parcels in ' + AL_STATE_LAND.length + ' county lists that the State of Alabama bought in at past tax sales and now offers for sale. The amount shown is what was bid at the original tax sale, not today’s price: taxes, interest and fees have been added since. Ask the Department of Revenue for the current price before you apply.'));
-    const src = mk('p', 'small'); AL_STATE_LAND.forEach((c, i) => { if (i) src.append(' · '); const a = mk('a', '', c.county + ' transcript (' + c.date + ')'); a.href = c.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a); });
-    src.append(' · '); const h = mk('a', '', 'How to buy (ADOR)'); h.href = 'https://www.revenue.alabama.gov/property-tax/tax-delinquent-property-and-land-sales/'; h.target = '_blank'; h.rel = 'noopener noreferrer'; src.append(h, ' · Owner shown is the owner of record on the transcript.'); box.appendChild(src);
+    const src = mk('p', 'small'); src.append('Source: Alabama Department of Revenue county transcripts (' + AL_STATE_LAND.length + ' counties, dated ' + [...new Set(AL_STATE_LAND.map(c => c.date))].join(', ') + ').');
+    src.append(' '); const h = mk('a', '', 'How to buy (ADOR)'); h.href = 'https://www.revenue.alabama.gov/property-tax/tax-delinquent-property-and-land-sales/'; h.target = '_blank'; h.rel = 'noopener noreferrer'; src.append(h, ' · Owner shown is the owner of record on the transcript.'); box.appendChild(src);
     const tools = mk('div', 'lientools');
     const cs = mk('select'); cs.setAttribute('aria-label', 'County'); cs.appendChild(new Option('All counties', '')); AL_STATE_LAND.forEach(c => cs.appendChild(new Option(c.county + ' (' + c.rows.length + ')', c.co)));
     const q = mk('input'); q.type = 'search'; q.placeholder = 'Search owner, parcel or description'; q.setAttribute('aria-label', 'Search');
     const so = mk('select'); so.setAttribute('aria-label', 'Sort'); [['lo', 'Lowest amount'], ['hi', 'Highest amount'], ['new', 'Most recent tax sale'], ['old', 'Oldest tax sale']].forEach(o => so.appendChild(new Option(o[1], o[0])));
     tools.append(cs, q, so); box.appendChild(tools);
+    tools.appendChild(PaidDownload.button('Download list', 'alabama-state-land.csv', ['County', 'Parcel ID', 'Owner of record', 'Description', 'Tax sale year', 'Certificate of sale', 'Class', 'Amount bid at tax sale', 'Official transcript'], () => list.map(({c, r}) => [c.county, r[4], r[0], r[5], r[1], r[2], r[3], r[6], c.source])));
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); box.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); more.type = 'button'; box.appendChild(more);

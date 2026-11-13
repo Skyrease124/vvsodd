@@ -14,6 +14,7 @@ const ArCoslUI = {
     const so = mk('select'); so.setAttribute('aria-label', 'Sort'); [['lo', 'Lowest starting bid'], ['hi', 'Highest starting bid'], ['new', 'Newest added'], ['ac', 'Most acres']].forEach(o => so.appendChild(new Option(o[1], o[0])));
     const bl = mk('label', 'chk'); const bc = mk('input'); bc.type = 'checkbox'; bl.append(bc, ' Only with bids');
     tools.append(cs, q, so, bl); box.appendChild(tools);
+    tools.appendChild(PaidDownload.button('Download list', 'arkansas-cosl-auction.csv', ['County', 'Parcel', 'Owner of record', 'Acres', 'Section-Township-Range', 'Starting bid', 'Current bid', 'Added on'], () => list.map(x => x.slice(0, 8))));
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); box.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); more.type = 'button'; box.appendChild(more);

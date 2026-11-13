@@ -13,7 +13,7 @@ const NmAuctionsUI = {
       const p = mk('p', 'small'); const a = mk('a', '', 'Official auction notice (PDF)'); a.href = s.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.append(a, ' · last checked ' + s.checked + '. Properties can be withdrawn before the sale: check with the Property Tax Division, (505) 827-0883.'); box.appendChild(p);
       const tools = mk('div', 'lientools'); const q = mk('input'); q.type = 'search'; q.placeholder = 'Search owner, place or account'; q.setAttribute('aria-label', 'Search');
       const so = mk('select'); so.setAttribute('aria-label', 'Sort'); [['item', 'Auction order'], ['lo', 'Lowest minimum bid'], ['hi', 'Highest minimum bid']].forEach(o => so.appendChild(new Option(o[1], o[0])));
-      const rl = mk('label', 'chk'); const rc = mk('input'); rc.type = 'checkbox'; rl.append(rc, ' Show removed'); tools.append(q, so, rl); box.appendChild(tools);
+      const rl = mk('label', 'chk'); const rc = mk('input'); rc.type = 'checkbox'; rl.append(rc, ' Show removed'); tools.append(q, so, rl); tools.appendChild(PaidDownload.button('Download list', 'new-mexico-' + s.county.toLowerCase().replace(/\W+/g, '-') + '-auction.csv', ['Item', 'Case', 'Removed', 'UPC', 'Account', 'Delinquent owner', 'Location', 'Minimum bid', 'Description'], () => s.items.map(i => [i.item, i.case, i.removed ? 'yes' : '', i.upc, i.account, i.owner, i.where, i.minBid, i.desc]))); box.appendChild(tools);
       const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
       const list = mk('div', 'uslist'); box.appendChild(list);
       const draw = () => {

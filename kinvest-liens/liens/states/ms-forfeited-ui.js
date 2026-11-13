@@ -14,6 +14,7 @@ const MsForfeitedUI = {
     const so = mk('select'); so.setAttribute('aria-label', 'Sort'); [['hi', 'Highest county value'], ['lo', 'Lowest county value'], ['co', 'County A to Z']].forEach(o => so.appendChild(new Option(o[1], o[0])));
     const zero = mk('label', 'chk'); const zc = mk('input'); zc.type = 'checkbox'; zero.append(zc, ' Hide $0 value');
     tools.append(cs, q, so, zero); box.appendChild(tools);
+    if (typeof PaidDownload !== 'undefined') tools.appendChild(PaidDownload.button('Download list', 'mississippi-forfeited-land.csv', ['County', 'Parcel', 'County value'], () => list.map(x => [x[0], x[1], x[2] || ''])));
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); box.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); box.appendChild(more);
