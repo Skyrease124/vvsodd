@@ -75,7 +75,7 @@ const AlStateLandUI = {
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Bid at the tax sale (not today\u2019s price)'), mk('b', '', r[6] == null ? 'Not shown' : money(r[6]))); card.appendChild(amt);
         card.appendChild(mk('div', 'small', r[5]));
         card.appendChild(mk('div', 'small muted', 'Owner of record: ' + r[0] + ' \u00B7 cert ' + r[2]));
-        const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => AlMap.open(c, r); act.appendChild(b); card.appendChild(act);
+        const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => AlMap.open(c, r); act.appendChild(b); const hb = typeof LienBuy !== 'undefined' && LienBuy.button({state: 'AL', county: c.county.replace(' County', ''), parcel: r[4], cert: r[2], amount: r[6], buyKey: 'AL-ADOR', alCounty: c.county, alDate: c.date, desc: r[5]}, 'btn small ghost'); if (hb) { hb.style.marginLeft = '6px'; act.appendChild(hb); } card.appendChild(act);
         g.appendChild(card);
       });
       wrap.appendChild(g); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
