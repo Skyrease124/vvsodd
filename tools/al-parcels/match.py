@@ -8,6 +8,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')); S =
 UA = {'User-Agent': 'PricePocketAsset research (https://pricepocketasset.com)'}
 SRC = {'01': ('https://jccgis.jccal.org/server/rest/services/BOE/JCParcelsWMS/MapServer/0/query', 'PARCELID', lambda d: d),
        '68': ('https://jccgis.jccal.org/server/rest/services/BOE/JCParcelsWMS/MapServer/0/query', 'PARCELID', lambda d: d),
+       '02': ('https://services8.arcgis.com/HND1NcQt6vgOGn1z/arcgis/rest/services/MCRC_Public_Parcels/FeatureServer/1/query', 'Parcel_Number', lambda d: d[:13] + '.' + d[13:16]),
        '63': ('https://services.arcgis.com/AWzSDaKZ41uuVges/arcgis/rest/services/Parcels/FeatureServer/0/query', 'pclnum', lambda d: d),
        '03': ('https://gis.montgomeryal.gov/server/rest/services/Parcels/MapServer/0/query', 'ParcelNo', lambda d: '%s %s %s %s %s %s.%s' % (d[0:2], d[2:4], d[4:6], d[6], d[7:10], d[10:13], d[13:16]))}
 def ador_to_county(pid):
