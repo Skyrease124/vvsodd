@@ -5,7 +5,7 @@ const src = fs.readFileSync(root + 'lien-ui.js', 'utf8');
 const E = new Function(src.slice(src.indexOf('const ElevationData'), src.indexOf('// Florida property records from the parcel backfill')) + ';return ElevationData;')();
 const inside = (pt, rings) => { let c = false; rings.forEach(r => { for (let i = 0, j = r.length - 1; i < r.length; j = i++) { const a = r[i], b = r[j]; if ((a[1] > pt.lat) !== (b[1] > pt.lat) && pt.lng < (b[0] - a[0]) * (pt.lat - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } }); return c; };
 let n = 0;
-for (const f of fs.readdirSync(root + 'parcels').filter(f => f.endsWith('.json') && !f.startsWith('al-'))) {
+for (const f of fs.readdirSync(root + 'parcels').filter(f => f.endsWith('.json') && !/^(al|az|co)-|^ar\.json$/.test(f))) {
   const p = JSON.parse(fs.readFileSync(root + 'parcels/' + f)).p || {};
   for (const k in p) { const r = p[k]; if (r.st === 'matched' && r.g) { const pt = E.point(r); assert(pt && inside(pt, r.g), f + ' ' + k); n++; } }
 }

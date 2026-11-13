@@ -781,7 +781,7 @@ const LienLand = {
   }
 };
 // Outlines for non-Florida card thumbnails (exact parcel-ID matches from official county GIS: tools/az-parcels/match.py)
-const LAND_OUTLINES = {'Pinal': {file: 'az-pinal.json', src: 'Pinal County GIS'}, 'Coconino': {file: 'az-coconino.json', src: 'Coconino County GIS'}};
+const LAND_OUTLINES = {'Pinal': {file: 'az-pinal.json', src: 'Pinal County GIS'}, 'Coconino': {file: 'az-coconino.json', src: 'Coconino County GIS'}, 'Larimer': {file: 'co-larimer.json', src: 'Larimer County GIS'}, 'Saguache': {file: 'co-saguache.json', src: 'Saguache County GIS'}, 'El Paso': {file: 'co-elpaso.json', src: 'El Paso County GIS'}, 'Boulder': {file: 'co-boulder.json', src: 'Boulder County GIS'}};
 const landSpec = l => ({file: LAND_OUTLINES[l.county].file, key: l.parcel, parcel: l.parcel, desc: [l.address, l.desc].filter(Boolean).join(' \u00B7 '), srcName: LAND_OUTLINES[l.county].src});
 const LienBuy = {
   button(l, cls) {

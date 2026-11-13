@@ -90,11 +90,15 @@
     const box = mk('div');
     rows.forEach((r, i) => {
       const c = mk('article', 'scard'), h = mk('div', 'scardh');
+      c.style.setProperty('--k', i);
+      const L = {state: r.state, county: r.county, parcel: r.parcel, address: r.area, desc: r.use};
+      if ((r.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(L, th); }
+      else if (typeof LandMap !== 'undefined' && typeof LAND_OUTLINES !== 'undefined' && LAND_OUTLINES[r.county]) { const th = mk('div', 'lthumb loading'); c.appendChild(th); LandMap.thumb(landSpec(L), th); }
       h.append(mk('b', '', (i + 1) + '. ' + r.county + ' County parcel ' + r.parcel), mk('span', 'sscore', 'Score ' + r.score + '/100'));
       c.appendChild(h);
       c.appendChild(mk('p', 'small muted', [r.area, r.use && r.use.toLowerCase(), r.acres != null && r.acres + ' acres'].filter(Boolean).join(' · ')));
       const dl = mk('dl', 'stfacts');
-      [['Tax owed', '$' + Number(r.face).toFixed(2)], ['County land value', r.market != null ? money(r.market) : 'unknown'], ['Value vs tax owed', r.coverage != null ? r.coverage + 'x' : 'n/a']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
+      [['Tax owed', '$' + Number(r.face).toFixed(2)], ['County land value', r.market != null ? money(r.market) : 'unknown'], ['Value vs tax owed', r.coverage != null ? Math.round(r.coverage).toLocaleString('en-US') + '\u00d7' : 'n/a']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
       c.appendChild(dl);
       const fl = mk('ul', 'sflags'); (r.green || []).forEach(t => fl.appendChild(mk('li', 'g', t))); (r.red || []).forEach(t => fl.appendChild(mk('li', 'r', t))); c.appendChild(fl);
       const act = mk('div', 'sact');
@@ -127,11 +131,20 @@
     thinkTimer = setInterval(() => { const p = scope[i++ % scope.length]; p.classList.add('think'); setTimeout(() => p.classList.remove('think'), 520); }, selected.size ? 260 : 70);
   }
   // Answers type themselves out, word by word.
+  // Answers write themselves smoothly: words fade in one after another, paced by the screen's refresh (no jumps).
   function typeOut(el, text) {
     return new Promise(res => {
       if (REDUCED || !text) { el.textContent = text || ''; return res(); }
-      const words = String(text).split(/(\s+)/); const step = Math.max(1, Math.ceil(words.length / 90)); let i = 0; el.classList.add('typing');
-      const t = setInterval(() => { i += step; el.textContent = words.slice(0, i).join(''); if (i >= words.length) { clearInterval(t); el.classList.remove('typing'); res(); } }, 28);
+      el.textContent = ''; el.classList.add('typing');
+      const words = String(text).split(/(\s+)/), rate = Math.max(28, words.length / 2.6); // words per second; long answers finish in about 2.6 s
+      let shown = 0, t0 = null;
+      const frame = t => {
+        if (t0 === null) t0 = t;
+        const want = Math.min(words.length, Math.floor((t - t0) / 1000 * rate));
+        if (want > shown) { const frag = document.createDocumentFragment(); for (; shown < want; shown++) { const w = words[shown]; if (/^\s+$/.test(w)) frag.appendChild(document.createTextNode(w)); else { const sp = document.createElement('span'); sp.className = 'aiw'; sp.textContent = w; frag.appendChild(sp); } } el.appendChild(frag); }
+        if (shown < words.length) requestAnimationFrame(frame); else { el.classList.remove('typing'); res(); }
+      };
+      requestAnimationFrame(frame);
     });
   }
   async function ask(q) {
