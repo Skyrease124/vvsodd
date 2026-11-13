@@ -795,11 +795,11 @@ const LienBuy = {
     const close = mk('button', 'btn small', 'Close'); close.type = 'button'; close.addEventListener('click', () => dlg.close()); head.appendChild(close); dlg.appendChild(head);
     dlg.appendChild(mk('p', 'notice small', g.status(l)));
     // things to have ready, each with a copy button
-    const ready = mk('div', 'buyready'); dlg.appendChild(mk('h4', '', 'Have this ready when you contact the county'));
+    const ready = mk('div', 'buyready'); dlg.appendChild(mk('h4', '', 'Have this ready when you contact the ' + (g.contactWho || 'county')));
     const items = [['Parcel number', l.parcel]];
     const certs = l.certList && l.certList.length ? l.certList : (l.cert ? [l.cert] : []);
     if (certs.length) items.push([certs.length > 1 ? 'Certificate numbers' : 'Certificate number', certs.join(', ')]);
-    if (l.amount != null || l.face != null) items.push(['Tax owed (face)', '$' + Number(l.amount != null ? l.amount : l.face).toFixed(2)]);
+    if (l.amount != null || l.face != null) items.push([g.amountLabel || 'Tax owed (face)', '$' + Number(l.amount != null ? l.amount : l.face).toFixed(2)]);
     items.forEach(([k, v]) => { const r = mk('div', 'buyrow'); r.append(mk('span', 'k', k), mk('b', '', v)); const c = mk('button', 'btn small ghost', 'Copy'); c.type = 'button'; c.addEventListener('click', async () => { try { await navigator.clipboard.writeText(v); c.textContent = 'Copied'; } catch (e) { c.textContent = 'Press and hold to copy'; } }); r.appendChild(c); ready.appendChild(r); });
     dlg.appendChild(ready);
     dlg.appendChild(LienLand.section(l));

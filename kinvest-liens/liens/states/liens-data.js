@@ -294,8 +294,35 @@ const COUNTY_BUY = {
     ],
     phone: '(970) 498-7020'
   },
+  'AR-COSL': {
+    office: 'Arkansas Commissioner of State Lands', contactWho: 'Commissioner of State Lands', amountLabel: 'Starting bid on our list',
+    status: l => 'This parcel is on the Commissioner of State Lands online auction list (export dated 2026-11-12): tax-delinquent land that did not sell at the county\u2019s live auction and is now offered online. Starting bid on our list: ' + (l.amount != null ? '$' + Number(l.amount).toFixed(2) : 'not shown') + '. Listings close and new ones are added all the time.',
+    record: null,
+    links: [['Commissioner of State Lands: auction catalog, Buyers Guide and rules', 'https://www.cosl.org/'], ['Online auction of unsold parcels', 'https://auction.cosl.org/']],
+    steps: [
+      'Read the Commissioner\u2019s Buyers Guide and Rules and Regulations on cosl.org before you bid.',
+      'Find the parcel on the online auction (auction.cosl.org) and check that it is still open and what the current bid is.',
+      'Sales are final: since July 1, 2023, parcels sold by the Commissioner cannot be redeemed afterward.',
+      'Full payment is due at the time of sale. The Commissioner takes personal or business check, credit or debit card, cashier\u2019s check or money order, but not cash.',
+      'Check the parcel first: the Commissioner links county property records and maps (DataScoutPro, free) from the parcel number in its catalog. Ask a title company or attorney what kind of title you get.'
+    ]
+  },
+  'AL-ADOR': {
+    office: 'Alabama Department of Revenue, Property Tax Division (Land Sales)', contactWho: 'Department of Revenue', amountLabel: 'Bid at the original tax sale (not today\u2019s price)',
+    status: l => 'This parcel is on the Alabama Department of Revenue\u2019s transcript of tax-delinquent land held by the State (' + (l.alCounty || 'county') + ' list dated ' + (l.alDate || '') + '; the State updates the lists weekly). You buy it from the State, not at an auction. The amount on our list is what was bid at the original tax sale, not the price today.',
+    record: null,
+    links: [['Alabama Department of Revenue: Tax Delinquent Property and Land Sales (application, county lists)', 'https://www.revenue.alabama.gov/property-tax/tax-delinquent-property-and-land-sales/'], ['How to read the county transcript (ADOR PDF)', 'https://www.revenue.alabama.gov/wp-content/uploads/2022/06/2017_05_DelinquentPropert_CountyTranscriptInstrucitons.pdf']],
+    steps: [
+      'Check that the parcel is still on the State\u2019s current county list (the Department updates the lists weekly).',
+      'Request a price quote by submitting the Department\u2019s electronic application (from its Tax Delinquent Property and Land Sales page). The quote is emailed to you.',
+      'You have 10 calendar days from the date on the quote to pay; your payment must be postmarked by the 10th calendar day.',
+      'What you receive: if the State has held the certificate less than three years, you get an assignment of the tax sale certificate; if more than three years, the State issues a tax deed.',
+      'Neither an assignment nor a tax deed gives clear title. Tax deeds come without any warranty, and refunds are made only if the State had no interest to sell, and only within two years. The Department advises talking to an attorney first.',
+      'Before paying, look at the lot (Show on map), check the county property record, and ask a title company or attorney about liens and what it takes to get clear title (Code of Alabama, Title 40, Chapter 10).'
+    ]
+  },
   'MS-TFL': {
-    office: 'Mississippi Secretary of State, Public Lands Division',
+    office: 'Mississippi Secretary of State, Public Lands Division', contactWho: 'Secretary of State',
     status: l => 'This parcel is on the Mississippi Secretary of State\u2019s tax-forfeited lands list (downloaded ' + (typeof MS_TFL_CHECKED !== 'undefined' ? MS_TFL_CHECKED : 'recently') + '): land that forfeited to the State for unpaid taxes. The State sells it directly. Whether it is still available, the price and the kind of deed must be confirmed with the Secretary of State.',
     record: null,
     links: [['Mississippi Secretary of State: tax-forfeited lands', 'https://www.sos.ms.gov/public-lands/tax-forfeited-lands']],

@@ -20,9 +20,9 @@ const ArCoslUI = {
     let list = [], shown = 50;
     const draw = () => {
       wrap.textContent = ''; const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
-      ['County', 'Parcel', 'Owner', 'Acres', 'S-T-R', 'Starting bid', 'Current bid', 'Added'].forEach(h => hr.appendChild(mk('th', '', h)));
+      ['County', 'Parcel', 'Owner', 'Acres', 'S-T-R', 'Starting bid', 'Current bid', 'Added', ''].forEach(h => hr.appendChild(mk('th', '', h)));
       const tb = t.createTBody();
-      list.slice(0, shown).forEach(x => { const r = tb.insertRow(); [x[0], x[1], x[2], x[3] ? x[3] : '—', x[4] || '—', money(x[5]), x[6] ? money(x[6]) : 'No bids', x[7]].forEach(v => r.insertCell().textContent = v); });
+      list.slice(0, shown).forEach(x => { const r = tb.insertRow(); [x[0], x[1], x[2], x[3] ? x[3] : '—', x[4] || '—', money(x[5]), x[6] ? money(x[6]) : 'No bids', x[7]].forEach(v => r.insertCell().textContent = v); const hb = typeof LienBuy !== 'undefined' && LienBuy.button({state: 'AR', county: x[0], parcel: x[1], amount: x[5], buyKey: 'AR-COSL'}, 'btn small ghost'); const cl = r.insertCell(); if (hb) cl.appendChild(hb); });
       wrap.appendChild(t); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
     };
     const apply = () => {
