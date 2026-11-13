@@ -100,6 +100,36 @@ for i in imports:
 out['changes'].sort(key=lambda c: (c['detectedAt'], c['id']), reverse=True)
 json.dump(out, open(S + 'radar.json', 'w'), separators=(',', ':'), sort_keys=True)
 
+# ---- What Changed: state lists and other official files loaded without the county importer (AL, AR, MS, NM, Lee LAFT, Volusia tax deeds).
+# Each list gets a "New list added" entry dated the day it first appeared on the site (git history; stored in tools/radar/added.json so it never moves).
+import subprocess
+ADDED_P = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'added.json'); ADDED = rd(ADDED_P, {}) or {}
+def first_seen(path, needle):
+    try:
+        out_ = subprocess.run(['git', 'log', '--reverse', '--format=%cs', '-S', needle, '--', path], cwd=ROOT, capture_output=True, text=True, timeout=60).stdout.split()
+        return out_[0] if out_ else today
+    except Exception: return today
+grp = collections.OrderedDict()
+for c in [x for x in out['counties'] if x['file'] in ('al-state-land-data.js', 'ar-cosl-data.js', 'ms-forfeited-data.js', 'nm-auctions-data.js')]:
+    k = c['state'] + '|' + c['county'] + '|' + c['file']
+    if k not in ADDED: ADDED[k] = first_seen('kinvest-liens/liens/states/' + c['file'], json.dumps(c['county'])[1:-1] if c['file'] != 'nm-auctions-data.js' else 'San Miguel')
+    grp.setdefault((c['state'], c['file'], ADDED[k]), []).append(c)
+for (st, fn, day), cs in grp.items():
+    n = sum(c['count'] for c in cs); c0 = cs[0]; one = len(cs) == 1
+    out['changes'].append({'count': n, 'county': c0['county'] if one else '%d counties' % len(cs), 'detectedAt': day, 'id': hashlib.sha1((st + fn + day).encode()).hexdigest()[:12],
+                           'items': [] if one else sorted(c['county'] for c in cs)[:12], 'link': links(st), 'official': True, 'publishedAt': c0['checked'],
+                           'source': {'name': c0['label'] + ': official state list', 'url': c0['source']}, 'state': st,
+                           'text': ('Auction scheduled: ' if c0['group'] == 'deed' else 'New list added: ') + format(n, ',') + (' items' if c0['group'] == 'deed' else ' parcels') + ('' if one else ' in %d counties' % len(cs)) + ' (' + c0['label'].lower() + ')', 'type': 'new_list'})
+up = rd(S + 'upcoming-sales.json', {'listings': []})
+for (cn, typ), n in collections.Counter((l['county'], l['type']) for l in up['listings'] if l['type'] in ('taxdeed', 'laft')).items():
+    k = 'FL|' + cn + '|' + typ
+    if k not in ADDED: ADDED[k] = first_seen('kinvest-liens/liens/states/upcoming-sales.json', '"county":"%s","state":"FL","type":"%s"' % (cn, typ))
+    out['changes'].append({'count': n, 'county': cn, 'detectedAt': ADDED[k], 'id': hashlib.sha1(k.encode()).hexdigest()[:12], 'items': [], 'link': '/liens/states/county/?c=' + cn.replace(' ', '%20'), 'official': True, 'publishedAt': '',
+                           'source': {'name': cn + ' County: official ' + ('tax deed sale list' if typ == 'taxdeed' else 'Lands Available for Taxes list'), 'url': next(l['sourceUrl'] for l in up['listings'] if l['county'] == cn and l['type'] == typ)}, 'state': 'FL',
+                           'text': 'New list added: ' + format(n, ',') + (' tax deed auction items' if typ == 'taxdeed' else ' Lands Available for Taxes parcels'), 'type': 'new_list'})
+json.dump(ADDED, open(ADDED_P, 'w'), indent=1, sort_keys=True)
+json.dump(out, open(S + 'radar.json', 'w'), separators=(',', ':'), sort_keys=True)
+
 # ---- keep the homepage counters (lien-summary.js LIEN_SUMMARY) in step with every list on the site
 _ls = open(S + 'lien-summary.js').read(); _a = _ls.index('const LIEN_SUMMARY = ['); _b = _ls.index('];', _a) + 2
 _rows = ',\n'.join("  {state: '%s', county: %s, count: %d}" % (c['state'], json.dumps(c['county']), c['count']) for c in sorted(out['counties'], key=lambda c: (c['state'], c['county'])))
