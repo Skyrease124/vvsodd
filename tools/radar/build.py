@@ -50,8 +50,8 @@ def jsdata(fn, var):
     p = S + fn
     if not os.path.exists(p): return None
     t = open(p).read(); i = t.index('const ' + var + ' = ') + len('const ' + var + ' = '); return json.JSONDecoder().raw_decode(t[i:])[0]
-def addc(st, county, group, file, amts, count, sale, checked, source, opn=None):
-    out['counties'].append({'state': st, 'county': county, 'file': file, 'group': group, 'label': LABEL[group], 'priceLabel': PRICE[group], 'count': count, 'open': count if opn is None else opn,
+def addc(st, county, group, file, amts, count, sale, checked, source, opn=None, price=None):
+    out['counties'].append({'state': st, 'county': county, 'file': file, 'group': group, 'label': LABEL[group], 'priceLabel': price or PRICE[group], 'count': count, 'open': count if opn is None else opn,
                             'amounts': sorted(round(a) for a in amts if a), 'vac': [], 'sale': sale, 'checked': checked, 'tracked': False, 'source': source})
 INV = lambda txt: {'date': '', 'kind': 'inventory', 'text': txt}
 for c in jsdata('al-state-land-data.js', 'AL_STATE_LAND') or []:
@@ -59,14 +59,14 @@ for c in jsdata('al-state-land-data.js', 'AL_STATE_LAND') or []:
 ar = jsdata('ar-cosl-data.js', 'AR_COSL') or []
 for cn in sorted({r[0] for r in ar}):
     rows = [r for r in ar if r[0] == cn]
-    addc('AR', cn, 'state-held', 'ar-cosl-data.js', [r[5] for r in rows], len(rows), INV('Commissioner of State Lands online auction (rolling)'), '2026-11-12', 'https://www.cosl.org/')
+    addc('AR', cn, 'state-held', 'ar-cosl-data.js', [r[5] for r in rows], len(rows), INV('Commissioner of State Lands online auction (rolling)'), '2026-11-12', 'https://www.cosl.org/', price='Starting bid on the state auction')
 ms = jsdata('ms-forfeited-data.js', 'MS_TFL') or []
 for cn in sorted({r[0] for r in ms}):
     rows = [r for r in ms if r[0] == cn]
     addc('MS', cn, 'state-held', 'ms-forfeited-data.js', [], len(rows), INV('Held by the State of Mississippi: apply to buy any time'), '2026-11-10', 'https://www.sos.ms.gov/public-lands/tax-forfeited-lands')
 for a2 in jsdata('nm-auctions-data.js', 'NM_AUCTIONS') or []:
     live = [i for i in a2['items'] if not i['removed']]
-    addc('NM', a2['county'], 'deed', 'nm-auctions-data.js', [i['minBid'] for i in live], len(a2['items']), {'date': a2['date'], 'kind': 'scheduled' if a2['date'] >= today else 'past', 'text': a2['date']}, a2['checked'], a2['source'], opn=len(live))
+    addc('NM', a2['county'], 'deed', 'nm-auctions-data.js', [i['minBid'] for i in live], len(a2['items']), {'date': a2['date'], 'kind': 'scheduled' if a2['date'] >= today else 'past', 'text': a2['date']}, a2['checked'], a2['source'], opn=len(live), price='Minimum bid on the official notice')
 # ---- What Changed: official imports compared with the previous complete version (events come from tools/imports, already de-duplicated by id)
 links = lambda st: '/liens/states/state/?s=' + st
 def agg(county, st, evs, typ, label_fn):

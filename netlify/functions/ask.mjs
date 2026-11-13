@@ -26,9 +26,10 @@ function loadData() {
   const dir = candidates.find(d => fs.existsSync(path.join(d, 'states.js')));
   if (!dir) throw new Error('data files not found');
   const read = f => { try { return fs.readFileSync(path.join(dir, f), 'utf8'); } catch (e) { return ''; } };
-  const src = read('states.js') + '\n' + read('state-data.js') + '\n' + read('liens-data.js').replace(/^const LIENS = \[\];.*$/m, '') + '\n;({STATES: typeof STATES !== "undefined" ? STATES : [], STATE_DATA: typeof STATE_DATA !== "undefined" ? STATE_DATA : {}, FL_SALE: typeof FL_SALE !== "undefined" ? FL_SALE : null})';
+  const src = read('states.js') + '\n' + read('state-data.js') + '\n' + read('liens-data.js').replace(/^const LIENS = \[\];.*$/m, '') + '\n;({STATES: typeof STATES !== "undefined" ? STATES : [], STATE_DATA: typeof STATE_DATA !== "undefined" ? STATE_DATA : {}, FL_SALE: typeof FL_SALE !== "undefined" ? FL_SALE : null, COUNTY_BUY: typeof COUNTY_BUY !== "undefined" ? COUNTY_BUY : {}})';
   const data = vm.runInNewContext(src, {}, {timeout: 2000});
   try { data.UPCOMING = JSON.parse(read('upcoming-sales.json') || 'null'); } catch (e) { data.UPCOMING = null; }
+  try { data.RADAR = JSON.parse(read('radar.json') || 'null'); } catch (e) { data.RADAR = null; }
   return data;
 }
 
@@ -57,6 +58,20 @@ function buildContext(data, a) {
     lines.push('Next sale: ' + data.FL_SALE.nextSale + '. ' + data.FL_SALE.listsPosted + '.');
     data.FL_SALE.steps.forEach((t, i) => lines.push((i + 1) + '. ' + t));
     addSrc(data.FL_SALE.statute[0], data.FL_SALE.statute[1]);
+  }
+  // state-held land and state-run auctions loaded from official state files (AL, AR, MS, NM)
+  const BUYKEY = { AL: 'AL-ADOR', AR: 'AR-COSL', MS: 'MS-TFL' };
+  const extra = data.RADAR ? data.RADAR.counties.filter(c => c.state === a && (c.group === 'state-held' || ['nm-auctions-data.js'].includes(c.file))) : [];
+  if (extra.length) {
+    const total = extra.reduce((n, c) => n + c.count, 0);
+    lines.push('\nLISTINGS ON OUR SITE FOR THIS STATE (from official state files): ' + total.toLocaleString('en-US') + ' parcels.');
+    extra.sort((x, y) => y.count - x.count).slice(0, 25).forEach(c => lines.push('- ' + c.county + (/County/.test(c.county) ? '' : ' County') + ': ' + c.count + ' parcels (' + c.label + '; ' + (c.sale && c.sale.text || '') + ')' + (c.amounts && c.amounts.length ? '; ' + c.priceLabel + ' from $' + c.amounts[0] + ' to $' + c.amounts[c.amounts.length - 1] : '') + '. Source checked ' + c.checked + '.'));
+    if (extra.length > 25) lines.push('- and ' + (extra.length - 25) + ' more counties.');
+    extra.forEach(c => addSrc(c.label + ' source', c.source));
+    const g = BUYKEY[a] && data.COUNTY_BUY[BUYKEY[a]];
+    if (g) { lines.push('\nHOW TO BUY THESE (' + g.office + '):'); g.steps.forEach((t, i) => lines.push((i + 1) + '. ' + t)); (g.links || []).forEach(l => addSrc(l[0], l[1])); }
+    if (a === 'NM') lines.push('New Mexico auctions are in person, run by the Taxation and Revenue Department Property Tax Division: register with the auctioneer before the start, pay in full before the auction ends; no title warranty, a 120-day IRS redemption may apply, and the former owner can challenge the sale for 2 years.');
+    lines.push('Amounts on state-held land lists are not today\'s price unless stated. Never invent prices or parcels.');
   }
   if (a === 'FL' && data.UPCOMING) {
     const td = data.UPCOMING.listings.filter(l => l.type === 'taxdeed');
