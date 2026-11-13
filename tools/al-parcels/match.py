@@ -8,8 +8,12 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')); S =
 UA = {'User-Agent': 'PricePocketAsset research (https://pricepocketasset.com)'}
 SRC = {'01': ('https://jccgis.jccal.org/server/rest/services/BOE/JCParcelsWMS/MapServer/0/query', 'PARCELID', lambda d: d),
        '68': ('https://jccgis.jccal.org/server/rest/services/BOE/JCParcelsWMS/MapServer/0/query', 'PARCELID', lambda d: d),
+       '63': ('https://services.arcgis.com/AWzSDaKZ41uuVges/arcgis/rest/services/Parcels/FeatureServer/0/query', 'pclnum', lambda d: d),
        '03': ('https://gis.montgomeryal.gov/server/rest/services/Parcels/MapServer/0/query', 'ParcelNo', lambda d: '%s %s %s %s %s %s.%s' % (d[0:2], d[2:4], d[4:6], d[6], d[7:10], d[10:13], d[13:16]))}
-def ador_to_county(pid): return pid[2:18] if len(pid) >= 18 and pid[2:18].isdigit() else None
+def ador_to_county(pid):
+    d = (pid or '')[2:18]
+    if len(d) >= 12 and d.isdigit(): return d.ljust(16, '0')   # a few transcripts drop trailing zeros
+    return None
 def q(url, params):
     for a in range(4):
         try:
@@ -20,7 +24,7 @@ def q(url, params):
             if a == 3: raise
             time.sleep(3 * (a + 1))
 t = open(S + 'al-state-land-data.js').read(); i = t.index('const AL_STATE_LAND = ') + 22; data = json.JSONDecoder().raw_decode(t[i:])[0]
-only = sys.argv[1:] or [c['co'] for c in data]
+only = sys.argv[1:] or [c['co'] for c in data if c['co'] in SRC]
 for c in data:
     if c['co'] not in only: continue
     url, fld, fmt = SRC[c['co']]
