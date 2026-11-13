@@ -892,7 +892,8 @@ const LienUI = {
     const ccount = {}; all.forEach(l => { ccount[l.county] = (ccount[l.county] || 0) + 1; });
     const cnames = Object.keys(ccount).sort();
     cty.appendChild(new Option('All counties (' + cnames.length + ')', '')); cnames.forEach(c => cty.appendChild(new Option(c + ' (' + ccount[c].toLocaleString('en-US') + ')', c)));
-    const top = mk('div', 'lienbar-row'); top.append(fb, vb); if (cnames.length > 1) top.append(cty); else top.append(cnt);
+    const top = mk('div', 'lienbar-row'); top.append(fb, vb);
+    if (typeof PaidDownload !== 'undefined') top.append(PaidDownload.button('Download list', 'liens-' + String((all[0] && (all[0].state || 'FL')) || 'list').toLowerCase() + '.csv', ['State', 'County', 'Parcel', 'Certificate', 'Amount', 'Price label', 'Rate', 'Sale', 'Status', 'Owner', 'Address', 'Use', 'Acres', 'County value', 'Official source'], () => list.map(l => [l.state || 'FL', l.county, l.parcel, (l.certList && l.certList.length ? l.certList.join(' ') : l.cert) || '', l.amount, l.priceLabel || 'Face', l.rate || '', l.saleDate || '', l.status || '', l.owner || '', l.address || '', l.use || '', l.acres != null ? l.acres : '', l.market != null ? l.market : '', l.source || '']))); if (cnames.length > 1) top.append(cty); else top.append(cnt);
     bar.append(top); if (cnames.length > 1) { cnt.classList.add('lcount-row'); bar.append(cnt); } bar.append(tools); host.appendChild(bar);
     fb.addEventListener('click', () => { const o = bar.classList.toggle('open'); fb.setAttribute('aria-expanded', String(o)); });
     let view = 'cards';
