@@ -780,6 +780,9 @@ const LienLand = {
     return box;
   }
 };
+// Outlines for non-Florida card thumbnails (exact parcel-ID matches from official county GIS: tools/az-parcels/match.py)
+const LAND_OUTLINES = {'Pinal': {file: 'az-pinal.json', src: 'Pinal County GIS'}, 'Coconino': {file: 'az-coconino.json', src: 'Coconino County GIS'}};
+const landSpec = l => ({file: LAND_OUTLINES[l.county].file, key: l.parcel, parcel: l.parcel, desc: [l.address, l.desc].filter(Boolean).join(' \u00B7 '), srcName: LAND_OUTLINES[l.county].src});
 const LienBuy = {
   button(l, cls) {
     const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.buyKey || l.county]; if (!g) return null;
@@ -904,6 +907,7 @@ const LienUI = {
       list.slice(0, shown).forEach(l => {
         const c = mk('article', 'lcardx'), f = landFlags(l);
         if ((l.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(l, th); }
+        else if (typeof LandMap !== 'undefined' && LAND_OUTLINES[l.county]) { const th = mk('div', 'lthumb loading'); c.appendChild(th); LandMap.thumb(landSpec(l), th); }
         const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', l.priceLabel || 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
@@ -922,6 +926,7 @@ const LienUI = {
         if (l.owner || l.address) c.appendChild(mk('p', 'small lfacts', [l.owner ? 'Owner: ' + l.owner : '', l.address ? 'Property: ' + l.address : '', l.mailing ? 'Mailing: ' + l.mailing : ''].filter(Boolean).join(' · ')));
         const act = mk('div', 'lact');
         if (PARCEL_MAPS[l.county] || (l.state || 'FL') === 'FL') { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); act.appendChild(b); }
+        else if (typeof LandMap !== 'undefined' && LAND_OUTLINES[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LandMap.open(landSpec(l))); act.appendChild(b); }
         if (l.amount != null && !l.priceLabel) { const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb); }
         const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
         const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost')); if (typeof PF !== 'undefined') PF.cardButtons(l, act, 'btn small ghost');
