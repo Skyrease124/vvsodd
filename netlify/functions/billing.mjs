@@ -39,14 +39,16 @@ async function handle(event) {
       return json(200, { url: session.url });
     }
     if (b.action === 'portal') {
-      if (!me.stripeCustomerId) return json(400, { error: 'You have no billing yet.' });
-      const p = await stripe.billingPortal.sessions.create({ customer: me.stripeCustomerId, return_url: S.siteUrl() + '/account/' });
+      const cust = await S.liveCustomer(stripe, me);
+      if (!cust) return json(400, { error: me.owner ? 'Your owner account has no live Stripe billing (the old one was from test mode). Owners have full access without paying.' : 'You do not have a paid membership yet. Tap Subscribe to start one.' });
+      const p = await stripe.billingPortal.sessions.create({ customer: cust, return_url: S.siteUrl() + '/account/' });
       return json(200, { url: p.url });
     }
     if (b.action === 'sync') {
       // After paying, do not wait for the webhook: ask Stripe for the latest subscription.
-      if (!me.stripeCustomerId) return json(200, { paid: auth.isPaid(me) });
-      const subs = await stripe.subscriptions.list({ customer: me.stripeCustomerId, status: 'all', limit: 5 });
+      const cust = await S.liveCustomer(stripe, me);
+      if (!cust) return json(200, { paid: auth.isPaid(me) });
+      const subs = await stripe.subscriptions.list({ customer: cust, status: 'all', limit: 5 });
       const best = subs.data.find(s => ['active', 'trialing'].includes(s.status)) || subs.data[0];
       if (best) await S.applySubscription(me, best);
       return json(200, { paid: auth.isPaid(me), sub: me.sub || null });
