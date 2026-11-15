@@ -49,8 +49,23 @@ export async function linkCustomer(user, customerId) {
   await kvPut('cust_' + customerId, { email: user.email });
 }
 
+// The customer saved on the account, if it still exists in the current Stripe mode. A customer made in test mode does not exist
+// in live mode ("No such customer"); such a stale ID is dropped from the account instead of breaking billing.
+export async function liveCustomer(stripe, user) {
+  if (!user.stripeCustomerId) return null;
+  try {
+    const c = await stripe.customers.retrieve(user.stripeCustomerId);
+    if (c && !c.deleted) return c.id;
+  } catch (e) {
+    if (!(e && (e.code === 'resource_missing' || e.statusCode === 404))) throw e;
+  }
+  const u = await getUser(user.email);
+  if (u && u.stripeCustomerId === user.stripeCustomerId) { u.staleStripeCustomerId = u.stripeCustomerId; delete u.stripeCustomerId; await saveUser(u); }
+  delete user.stripeCustomerId;
+  return null;
+}
 export async function ensureCustomer(stripe, user) {
-  if (user.stripeCustomerId) return user.stripeCustomerId;
+  const existing = await liveCustomer(stripe, user); if (existing) return existing;
   const c = await stripe.customers.create({ email: user.email }, { idempotencyKey: 'ppa-cust-' + crypto.createHash('sha256').update(user.email).digest('hex').slice(0, 24) });
   await linkCustomer(user, c.id);
   return c.id;
