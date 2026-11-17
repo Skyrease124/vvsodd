@@ -90,35 +90,6 @@
     const pg = mk('a', 'btn small ghost', 'Open ' + a + ' page'); pg.href = '../liens/states/state/?s=' + a; act.append(q, pg); box.appendChild(act);
     box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
   }
-  // ---- Fly-to zoom: the map eases in on the states in an answer, and back out on Reset ----
-  let baseVB = null, vbAnim = 0;
-  const parseVB = v => v.split(/\s+/).map(Number);
-  function flyTo(vb) {
-    if (!svgEl) return; const from = parseVB(svgEl.getAttribute('viewBox')), t0 = performance.now(), D = 750; cancelAnimationFrame(vbAnim);
-    if (REDUCED) { svgEl.setAttribute('viewBox', vb.join(' ')); return; }
-    const ease = t => 1 - Math.pow(1 - t, 3);
-    const step = now => { const k = Math.min(1, (now - t0) / D), e = ease(k); svgEl.setAttribute('viewBox', from.map((f, i) => (f + (vb[i] - f) * e).toFixed(2)).join(' ')); if (k < 1) vbAnim = requestAnimationFrame(step); };
-    vbAnim = requestAnimationFrame(step);
-  }
-  function zoomTo(codes) {
-    if (!svgEl || !baseVB) return; const els = codes.map(c => svgEl.querySelector('.aist[data-a="' + c + '"]')).filter(Boolean); if (!els.length) return;
-    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; els.forEach(e => { const b = e.getBBox(); x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
-    const ar = baseVB[2] / baseVB[3]; let w = Math.max(x1 - x0, 170) * 1.35, h = Math.max(y1 - y0, 170 / ar) * 1.35; if (w / h < ar) w = h * ar; else h = w / ar;
-    if (w >= baseVB[2] * .85) return flyTo(baseVB);
-    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; flyTo([cx - w / 2, cy - h / 2 + 12, w, h]);
-  }
-  function zoomOut() { if (baseVB) flyTo(baseVB); }
-  // ---- State info card: tap a state to see its key facts ----
-  function stateCard(a) {
-    const box = $('aicard'); if (!box) return; box.textContent = ''; if (!a) { box.hidden = true; return; }
-    const st = by[a]; box.hidden = false;
-    const h = mk('div', 'aich'); h.append(mk('b', '', st.n), mk('span', 'aipill', st.sys)); const x = mk('button', 'aix', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', () => { selected.delete(a); const p = svgEl.querySelector('.aist[data-a="' + a + '"]'); if (p) { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); } label(); stateCard(null); }); h.appendChild(x); box.appendChild(h);
-    const dl = mk('dl', 'aidl'); [['Interest / penalty', st.rate], ['Redemption', st.red], ['Bidding', st.bid], ['Listings on the site', TOTALS[a] ? TOTALS[a].toLocaleString('en-US') : 'No parcel list yet']].forEach(([k, v]) => { if (!v) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }); box.appendChild(dl);
-    if (st.v) box.appendChild(mk('p', 'small muted', 'Sources differ for this state \u2014 verify with the county.'));
-    const act = mk('div', 'aiact'); const q = mk('button', 'btn small', 'Ask the AI about ' + st.n); q.type = 'button'; q.addEventListener('click', () => ask('Tell me how tax sales work in ' + st.n + ' and what to check before bidding'));
-    const pg = mk('a', 'btn small ghost', 'Open ' + a + ' page'); pg.href = '../liens/states/state/?s=' + a; act.append(q, pg); box.appendChild(act);
-    box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
-  }
   // Mouse tilt on answer cards (touch screens keep the flat press effect so scrolling is never disturbed).
   (function () {
     if (REDUCED || !window.matchMedia || !matchMedia('(hover: hover)').matches) return;
