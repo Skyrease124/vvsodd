@@ -1,9 +1,8 @@
-// Weather for signed-in members.
+// Weather for paid (PricePocketPro) members only.
 //   GET ?mode=me              -> widget: approximate location from the connection (Netlify geo), no browser popup; never stored
 //   GET ?mode=me&lat=&lng=    -> widget: the member tapped "Use my exact location"; used for this one lookup only, never stored
 //   GET ?mode=spot&lat=&lng=  -> "Weather & air" on a lot / spot (paid members)
 // Adds official National Weather Service alerts for the point when there are any.
-import * as auth from '../lib/auth.mjs';
 import { requirePaid } from '../lib/paywall.mjs';
 import * as W from '../lib/wx.mjs';
 import { lookup as nwsAlerts } from './weather.mjs';
@@ -12,8 +11,7 @@ const hits = new Map();
 export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false });
   const u = new URL(req.url), mode = u.searchParams.get('mode') || 'me';
-  if (mode === 'spot') { const deny = await requirePaid(req); if (deny) return deny; }
-  else { const me = await auth.userFromCookie(req.headers.get('cookie')); if (!me) return json(401, { ok: false, error: 'Sign in first.' }); }
+  const deny = await requirePaid(req); if (deny) return deny;   // every weather view is for paid members
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x', now = Date.now(), r = (hits.get(ip) || []).filter(t => now - t < 60e3);
   if (r.length >= 20) return json(429, { ok: false, error: 'Too many requests.' }); r.push(now); hits.set(ip, r);
   let lat = Number(u.searchParams.get('lat')), lng = Number(u.searchParams.get('lng')), approx = false, exact = u.searchParams.has('lat');

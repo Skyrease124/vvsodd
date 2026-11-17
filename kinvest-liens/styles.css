@@ -1103,3 +1103,4 @@ dialog{perspective:1100px}
 .wxs{flex-direction:column;justify-content:center;gap:1px;padding:6px 4px;min-width:0;text-align:center}.wxs .rn{margin:0}
 .wxs span:nth-of-type(1){font-weight:700}
 .aiwx{padding:4px 0 10px;background:none}
+.wxlock{padding:12px 16px}.wxlock .small{opacity:.8;margin-top:4px}
