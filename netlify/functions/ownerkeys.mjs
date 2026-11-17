@@ -9,6 +9,7 @@ import * as FIRMS from '../lib/firms.mjs';
 import * as ENERGY from '../lib/energy.mjs';
 import * as WX from '../lib/wx.mjs';
 import * as GOV from '../lib/govdata.mjs';
+import * as GM from '../lib/gmaps.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -22,10 +23,14 @@ export default async function handler(req) {
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
   if (b.test === 'vision') {
     const k = KEYS.keyOf('GOOGLE_VISION_KEY'); if (!k) return json(200, { ok: false, error: 'No key saved yet.' });
-    try { const r = await fetch((process.env.VISION_BASE || 'https://vision.googleapis.com/v1') + '/images:annotate?key=' + encodeURIComponent(k), { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000), body: JSON.stringify({ requests: [{ image: { content: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' }, features: [{ type: 'TEXT_DETECTION' }] }] }) });
-      const d = await r.json().catch(() => ({})); if (!r.ok) return json(200, { ok: false, error: 'Google said: ' + ((d.error && d.error.message) || 'HTTP ' + r.status).slice(0, 200) });
-      return json(200, { ok: true, nlr: true, text: 'Open "Read a county PDF" to use it.' }); }
-    catch (e) { return json(200, { ok: false, error: 'No answer from Google.' }); }
+    const res = [], chk = async (name, f) => { try { const m = await f(); res.push(name + ': ' + (m || 'OK')); } catch (e) { res.push(name + ': FAILED (' + String(e.message || e).slice(0, 140) + ')'); } };
+    const gj = async (url, opt) => { const r = await fetch(url, Object.assign({ signal: AbortSignal.timeout(10000) }, opt)); const d = await r.json().catch(() => ({})); if (!r.ok || d.error) throw new Error((d.error && d.error.message) || 'HTTP ' + r.status); return d; };
+    await chk('PDF reading (Vision)', () => gj((process.env.VISION_BASE || 'https://vision.googleapis.com/v1') + '/images:annotate?key=' + encodeURIComponent(k), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requests: [{ image: { content: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' }, features: [{ type: 'TEXT_DETECTION' }] }] }) }).then(() => ''));
+    await chk('Google maps (Map Tiles)', () => GM.tile('satellite', 3, 2, 3).then(t => t ? '' : 'no key'));
+    await chk('Street View', async () => { const d = await gj((process.env.GMAPS_BASE || 'https://maps.googleapis.com/maps/api') + '/streetview/metadata?location=33.749,-84.388&key=' + encodeURIComponent(k)); if (d.status === 'REQUEST_DENIED') throw new Error(d.error_message || 'denied'); return ''; });
+    await chk('Nearby places (Places)', () => GM.nearby(33.749, -84.388).then(r => r.ok ? '' : 'no answer'));
+    const bad = res.filter(x => /FAILED/.test(x));
+    return json(200, bad.length === res.length ? { ok: false, error: res.join(' | ') } : { ok: true, nlr: true, text: res.join(' \u00b7 ') });
   }
   if (b.test === 'gov') {
     try { const [c, p] = await Promise.all([GOV.crime(32.84, -83.63), GOV.parks(32.84, -83.63)]); if (!c.ok && c.reason === 'nokey') return json(200, { ok: false, error: 'No key saved yet.' });

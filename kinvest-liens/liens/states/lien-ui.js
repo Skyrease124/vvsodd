@@ -18,6 +18,7 @@ const OFM = {
   },
   // adds "Street names" (on by default) and "Street map (OpenFreeMap)" to a Leaflet map + its layers control
   async add(m, ctl, labelsOn = true) {
+    if (typeof GoogleMaps !== 'undefined') GoogleMaps.addLayers(m, ctl);
     try {
       const st = await this.load(); if (!m._loaded && !m._container) return;
       const attr = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM</a>'; if (m.attributionControl) m.attributionControl.setPrefix(false);
@@ -27,6 +28,39 @@ const OFM = {
       ctl.addOverlay(names, 'Street names');
       if (labelsOn) names.addTo(m);
     } catch (e) { /* labels are optional */ }
+  }
+};
+// Google Maps for paid members (served through our own function, so the key stays on the server):
+// "Google satellite" and "Google map" base layers on every lot map, a Street View photo, and the nearest everyday places.
+const GoogleMaps = {
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  async addLayers(m, ctl) {
+    if (!(typeof PaidGate !== 'undefined' && await PaidGate.paid()) || !window.L) return;
+    const mkL = t => { const l = L.tileLayer('/.netlify/functions/gmaps?t=' + t + '&z={z}&x={x}&y={y}', {maxZoom: 21, maxNativeZoom: 20, attribution: 'Map data &copy; Google'});
+      let bad = 0; l.on('tileerror', () => { if (++bad === 6 && m.hasLayer(l)) { m.removeLayer(l); const first = Object.values(ctl._layers || []).find(x => !x.overlay && x.layer !== l); if (first) first.layer.addTo(m); } }); return l; };
+    ctl.addBaseLayer(mkL('satellite'), 'Google satellite'); ctl.addBaseLayer(mkL('roadmap'), 'Google map');
+  },
+  attach(bar, after, center) {
+    const mk = this.mk.bind(this);
+    const mkBtn = (label, cls, run) => { const b = mk('button', 'btn small ghost', label); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(document.createTextNode(' ')); bar.appendChild(b);
+      const panel = mk('div', 'govpanel ' + cls); panel.hidden = true; after.after(panel); let done = false;
+      PaidGate.paid().then(p => { if (!p) b.textContent = label + ' (Pro)'; });
+      b.addEventListener('click', async () => { if (!panel.hidden) { panel.hidden = true; b.setAttribute('aria-expanded', 'false'); return; } panel.hidden = false; b.setAttribute('aria-expanded', 'true'); if (done) return;
+        if (!(await PaidGate.paid())) { panel.textContent = ''; panel.appendChild(PaidGate.lock(label)); return; } done = await run(panel, center()); }); };
+    mkBtn('Street View photo', 'gsv', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Getting the Street View photo\u2026'));
+      try { const r = await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({sv: 1, lat: c.lat.toFixed(6), lng: c.lng.toFixed(6)}));
+        if ((r.headers.get('content-type') || '').startsWith('image/')) { const url = URL.createObjectURL(await r.blob()), d = r.headers.get('X-SV-Date'); panel.textContent = '';
+          const im = mk('img'); im.src = url; im.alt = 'Google Street View near this spot'; im.style.cssText = 'width:100%;border-radius:10px;display:block'; panel.appendChild(im);
+          panel.appendChild(mk('p', 'small muted', 'Google Street View nearest the map pin' + (d ? ', photo taken ' + d : '') + '. It may show the road beside the lot or a neighbor; legal access must be confirmed with the county.')); return true; }
+        const j = await r.json().catch(() => ({})); panel.textContent = ''; panel.appendChild(mk('p', 'small', j.none ? 'Google has no Street View photo near this spot.' : 'Street View photo unavailable right now.')); return !!j.none;
+      } catch (e) { panel.textContent = ''; panel.appendChild(mk('p', 'small', 'Street View photo unavailable right now.')); return false; } });
+    mkBtn('Nearby places', 'gplaces', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Finding the nearest stores, hospital and schools\u2026'));
+      let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({nearby: 1, lat: c.lat.toFixed(5), lng: c.lng.toFixed(5)}))).json(); } catch (e) {}
+      panel.textContent = ''; if (!d || !d.ok) { panel.appendChild(mk('p', 'small', 'Nearby places unavailable right now.')); return false; }
+      const ul = mk('ul', 'gpl'); d.places.forEach(p => { const li = mk('li', ''); li.append(mk('b', '', p.cat + ': '), p.none ? 'none within about 30 miles' : p.name + ' \u00b7 ' + p.miles + ' mi'); if (!p.none && p.address) li.appendChild(mk('div', 'small muted', p.address)); ul.appendChild(li); });
+      panel.append(ul, mk('p', 'small muted', 'Source: Google Places. Straight-line distance; driving distance is longer.')); return true; });
   }
 };
 const HoaData = {
@@ -727,6 +761,7 @@ const CameraData = {
     if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
     if (typeof EnergyData !== 'undefined') EnergyData.attach(bar, panel, center);
     if (typeof WxData !== 'undefined') WxData.attach(bar, panel, center);
+    if (typeof GoogleMaps !== 'undefined') GoogleMaps.attach(bar, panel, center);
     if (typeof GovData !== 'undefined') { GovData.attach(bar, panel, center, 'crime', L, m); GovData.attach(bar, panel, center, 'parks', L, m); }
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
