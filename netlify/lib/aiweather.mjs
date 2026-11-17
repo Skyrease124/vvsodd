@@ -7,6 +7,8 @@ import { lookup as nwsAlerts } from '../functions/weather.mjs';
 import * as GOV from './govdata.mjs';
 import * as EN from './energy.mjs';
 import * as FIRMS from './firms.mjs';
+import * as RC from './rentcast.mjs';
+import { loadLiens, FILES } from '../functions/screen.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIPS = {AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
 const CITY = { 'City of Rochester|NY': [43.1566, -77.6088] };
@@ -100,4 +102,42 @@ export async function answerTopic(t, p) {
       .concat(['Verify: NASA FIRMS satellite heat detections, not official fire perimeters or evacuation orders.']).join('\n') };
   }
   return { ok: false };
+}
+
+// "Who owns parcel 120.74-2-13?" / "property record for 81 Aberdeen St Rochester": parcels on our lists only.
+// Florida: answered from the DOR tax roll (parcels/<county>.json). Elsewhere: RentCast by the list's street address (monthly cap, saved).
+export function wantsRecord(q) { return /\b(who owns|owner of|owner for|property record|property details|details (?:on|for)|record for|look ?up)\b/i.test(q); }
+const RCOUNTY = { 'Bibb': 'GA', 'Fulton': 'GA', 'City of Rochester': 'NY', 'Monroe': 'PA' };
+export async function record(q) {
+  const t = q.toUpperCase(), norm = x => String(x || '').toUpperCase().replace(/[^0-9A-Z]/g, '');
+  const nq = norm(t), sq = ' ' + t.replace(/[^0-9A-Z ]+/g, ' ').replace(/\s+/g, ' ') + ' ';
+  const street = a => { const x = String(a || '').toUpperCase().split(',')[0].replace(/[^0-9A-Z ]+/g, ' ').replace(/\s+/g, ' ').trim(); return /^\d+ [A-Z]{3,}/.test(x) ? x : ''; };
+  let hit = null;
+  for (const c of Object.keys(FILES)) {
+    let rows; try { rows = loadLiens(c).filter(l => l.county === c); } catch (e) { continue; }
+    hit = rows.find(l => { const p = norm(l.parcel); return p.length >= 6 && /\d/.test(p) && nq.includes(p); }) || rows.find(l => { const a = street(l.address); return a && sq.includes(' ' + a + ' '); });
+    if (hit) break;
+  }
+  if (!hit) return { ok: false, reason: 'noparcel' };
+  const st = hit.state || RCOUNTY[hit.county] || 'FL', name = hit.county + (/^City of /.test(hit.county) ? '' : ' County') + ' parcel ' + hit.parcel;
+  if (st === 'FL') {
+    const slug = hit.county.toLowerCase().replace(/[^a-z0-9]+/g, '-'), root = process.env.LAMBDA_TASK_ROOT || process.cwd();
+    const f = [path.join(root, 'kinvest-liens/liens/states/parcels', slug + '.json'), path.join(HERE, '../../kinvest-liens/liens/states/parcels', slug + '.json')].find(x => fs.existsSync(x));
+    const r = f ? (JSON.parse(fs.readFileSync(f, 'utf8')).p || {})[hit.parcel] : null, rl = r && r.rl;
+    if (!rl) return { ok: true, state: 'FL', text: 'No Florida tax roll record is loaded for ' + name + '.' };
+    const L = [name + ' (Florida Department of Revenue 2026 tax roll):', '- Owner: ' + rl.own, rl.site ? '- Property address: ' + rl.site : '- Property address: none on the roll', rl.mail ? '- Owner mailing address: ' + rl.mail : '', rl.abs ? '- Owner location: ' + (rl.abs === 'out-of-state' ? 'out of state' : 'absentee') : '',
+      rl.jv ? '- Just value: $' + rl.jv.toLocaleString('en-US') : '', rl.yb ? '- Building: built ' + rl.yb + (rl.liv ? ', ' + rl.liv.toLocaleString('en-US') + ' sq ft' : '') : '- Building: none on the roll', rl.sale ? '- Last sale: $' + rl.sale[0].toLocaleString('en-US') + ' (' + rl.sale[1] + ')' : '',
+      'Verify: Florida Department of Revenue tax roll (public record); confirm with the county property appraiser.'];
+    return { ok: true, state: 'FL', text: L.filter(Boolean).join('\n') };
+  }
+  if (!hit.address || !/^\d/.test(hit.address)) return { ok: true, state: st, text: 'The ' + hit.county + ' list has no street address for ' + name + ', so a property record cannot be looked up by address. Check with the county.' };
+  const r = await RC.byAddress(hit.address);
+  if (!r.ok) return { ok: true, state: st, text: r.reason === 'cap' ? 'This month\u2019s property-record lookups are used up (they reset on the 1st). ' + name + ' is at ' + hit.address + '.' : 'Property records are not available right now.' };
+  if (r.none) return { ok: true, state: st, text: 'No property record found for ' + hit.address + ' (' + name + ').' };
+  const x = r.rec, m = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US');
+  const L = [name + ' \u00b7 ' + (x.address || hit.address) + ':', x.owner ? '- Owner: ' + x.owner : '', x.mail ? '- Owner mailing address: ' + x.mail + (x.ownerOccupied === false ? ' (absentee)' : '') : '',
+    x.type ? '- Type: ' + x.type : '', (x.beds != null || x.sqft) ? '- Building: ' + [x.beds != null ? x.beds + ' bd' : '', x.baths != null ? x.baths + ' ba' : '', x.sqft ? x.sqft.toLocaleString('en-US') + ' sq ft' : '', x.built ? 'built ' + x.built : ''].filter(Boolean).join(', ') : '',
+    x.lot ? '- Lot: ' + x.lot.toLocaleString('en-US') + ' sq ft' : '', x.lastSale ? '- Last sale: ' + (x.lastSale[0] ? m(x.lastSale[0]) + ' on ' : '') + x.lastSale[1] : '', x.assessed ? '- Assessed (' + x.assessed[0] + '): ' + m(x.assessed[1]) : '',
+    'Verify: RentCast property records' + (r.cached ? ' (saved lookup)' : '') + '; confirm owner and lot with the county before bidding.'];
+  return { ok: true, state: st, text: L.filter(Boolean).join('\n') };
 }
