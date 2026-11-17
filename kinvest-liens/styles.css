@@ -945,3 +945,18 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .aichat .scard .lcap{background:transparent!important;padding:0}
 .ecval{font-weight:600;margin:.3em 0}.echit{color:#f59e0b}.ecsite{border-left:3px solid #f59e0b;padding:4px 0 4px 10px;margin:8px 0}.ecsite ul{margin:4px 0 4px 18px;padding:0}.ecpin{background:rgba(245,158,11,.12);border-radius:6px;padding:6px 8px}
 .campanel{margin:6px 0 10px}.camlist{list-style:none;padding:0;margin:6px 0;display:grid;gap:4px}.camitem{width:100%;text-align:left;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:8px 10px;color:inherit;font:inherit;cursor:pointer}.camlist li.on .camitem{border-color:#facc15;background:rgba(250,204,21,.12)}.campv{border-top:1px solid rgba(255,255,255,.12);margin-top:8px;padding-top:8px}.campv h5{margin:0 0 4px;font-size:1rem}.cammedia img,.cammedia video{width:100%;max-height:42vh;object-fit:contain;border-radius:8px;background:#000;display:block;margin:6px 0}.camnone{font-weight:600}
+
+/* PricePocket AI: structured answers and a phone-friendly state comparison */
+.aichat{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.aibul{margin:.4em 0 .6em;padding-left:1.1em;font-size:16px;line-height:1.45}.aibul li{margin:.3em 0}.aibul b{color:#0b6e4f}
+.aiverify{margin:.6em 0 0;padding:8px 10px;border-left:3px solid #f5b301;background:rgba(245,179,1,.10);border-radius:6px;color:#3d3200}
+.aichat table.aistates td{white-space:normal;font-size:14px;vertical-align:top}.aichat table.aistates td:nth-child(3){font-weight:600}
+@media (max-width:640px){
+  .aichat table.aistates thead{display:none}
+  .aichat table.aistates,.aichat table.aistates tbody,.aichat table.aistates tr,.aichat table.aistates td{display:block;width:100%}
+  .aichat table.aistates tr{border:1px solid #d6e2db;border-radius:10px;padding:8px 10px;margin:0 0 8px;background:#fff}
+  .aichat table.aistates td{border:0;padding:3px 0;display:flex;gap:8px}
+  .aichat table.aistates td::before{content:attr(data-label);flex:0 0 6.5em;color:#5b6b63;font-weight:400;font-size:13px}
+  .aichat table.aistates td:first-child{font-size:16px;font-weight:700}.aichat table.aistates td:first-child::before{content:none}
+}
+.aichat table.aistates a{color:#0b6e4f;font-weight:700}
