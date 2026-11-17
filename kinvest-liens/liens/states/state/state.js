@@ -77,6 +77,28 @@ if (!s) {
   if (s.a === 'AL') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../al-state-land-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../al-state-land-ui.js'; a2.onload = () => AlStateLandUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
   if (s.a === 'AR') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../ar-cosl-data.js'; a1.onload = () => { const a3 = document.createElement('script'); a3.src = '../ar-cosl-post.js'; const go = () => { const a2 = document.createElement('script'); a2.src = '../ar-cosl-ui.js'; a2.onload = () => ArCoslUI.render(box); document.head.appendChild(a2); }; a3.onload = go; a3.onerror = go; document.head.appendChild(a3); }; document.head.appendChild(a1); }
   if (s.a === 'MS') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../ms-forfeited-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../ms-forfeited-ui.js'; a2.onload = () => MsForfeitedUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
+  // Camera box: pick any spot in the state and see the closest official public cameras (states with a built-in camera feed).
+  (function camBox() {
+    const CAM = {GA: [32.7, -83.4, 7, '511GA (Georgia DOT)']}[s.a]; if (!CAM || typeof CameraData === 'undefined' || typeof LienMap === 'undefined') return;
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const sec = mk('section', 'cambox'); sec.appendChild(mk('h2', '', 'Traffic cameras near a spot'));
+    sec.appendChild(mk('p', 'small muted', 'Tap the map (or use your location) to see the closest official ' + CAM[3] + ' cameras. Shows road conditions at the camera, not at any parcel.'));
+    $('clist').before(sec);
+    PaidGate.user().then(async u => {
+      if (!(u && (u.paid || u.owner))) { sec.appendChild(PaidGate.lock('Nearby Cameras')); return; }
+      const wrap = mk('div', 'camwrap'), box = mk('div', 'cammap'); wrap.appendChild(box); sec.appendChild(wrap);
+      const row = mk('p', 'small'), me = mk('button', 'btn small ghost', 'Use my location'); me.type = 'button'; row.appendChild(me); sec.appendChild(row);
+      const L = await LienMap.load(), m = L.map(box, {scrollWheelZoom: false}).setView([CAM[0], CAM[1]], CAM[2]);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(m);
+      let pin = null;
+      const pick = ll => { const h = sec.querySelector('.camhint'); if (h) h.remove(); if (pin) pin.setLatLng(ll); else pin = L.circleMarker(ll, {radius: 9, color: '#7a5200', weight: 3, fillColor: '#ffd166', fillOpacity: 1}).addTo(m);
+        m.setView(ll, Math.max(m.getZoom(), 11)); CameraData.mapAttach(L, m, box, () => pin.getLatLng());
+        const b = wrap.parentNode.querySelector('.cambar button'); if (b) b.click(); };
+      m.on('click', e => pick(e.latlng));
+      me.onclick = () => { if (!navigator.geolocation) return; me.disabled = true; navigator.geolocation.getCurrentPosition(p => { me.disabled = false; pick(L.latLng(p.coords.latitude, p.coords.longitude)); }, () => { me.disabled = false; }, {timeout: 10000}); };
+      const hint = mk('p', 'small muted camhint', 'Tap anywhere on the map to start.'); wrap.after(hint);
+    });
+  })();
   const LFS = {CO: [['liens-larimer.js', 'Larimer'], ['liens-saguache.js', 'Saguache'], ['liens-elpaso.js', 'El Paso'], ['liens-boulder.js', 'Boulder']], IA: [['liens-scott.js', 'Scott']], TN: [['liens-davidson.js', 'Davidson']], MI: [['liens-wayne.js', 'Wayne']], PA: [['liens-monroepa.js', 'Monroe']], NY: [['liens-rochester.js', 'City of Rochester']], AZ: [['liens-pinal.js', 'Pinal'], ['liens-coconino.js', 'Coconino']]}[s.a] || [];
   LFS.forEach(LF => { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); box.dataset.county = LF[1]; });
   if (LFS.length > 1) { // jump straight to a county instead of scrolling past the others
