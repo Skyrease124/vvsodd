@@ -49,7 +49,7 @@ if __name__ == '__main__':
     open(os.path.join(STATES, 'ar-cosl-post.js'), 'w', encoding='utf8').write(
         '// Arkansas COSL Post Auction Sales lists (https://cosl.org/Home/PostAuction), checked %s. Parcels also in our current auction list only.\n'
         '// "County|parcel": [delinquent year, back taxes due, lienholders named by COSL, COSL legal text]. Built by tools/ar-parcels/post_auction.py.\n'
-        'const AR_COSL_POST = {checked: "%s", counties: %d, rows: %s};\n' % (day, day, len(stats), json.dumps(out, separators=(',', ':'))))
+        'const AR_COSL_POST = {"checked": "%s", "counties": %d, "rows": %s};\n' % (day, day, len(stats), json.dumps(out, separators=(',', ':'))))
     tot = sum(a for a, b in stats.values()); kept = sum(b for a, b in stats.values())
     print(len(stats), 'counties;', tot, 'rows on COSL pages;', kept, 'matched to our list (of', len(have), ')'); print('problems:', bad)
     print(sorted(((a - b), n) for n, (a, b) in stats.items() if a - b > 0)[-8:])

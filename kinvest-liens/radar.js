@@ -33,8 +33,8 @@ window.TaxRadarOn = true;
     if (last && /^\d{4}-\d\d-\d\d$/.test(last)) return {from: last, label: 'Since your last visit (' + fmtDate(last) + ')', prior: true};
     const d = new Date(); d.setDate(d.getDate() - 7); return {from: d.toISOString().slice(0, 10), label: 'Past 7 days', prior: false};
   }
-  const TLAB = {new_list: 'New list', amount: 'Amount changed', schedule: 'Sale date changed', canceled: 'Sale canceled', result: 'Results published', missing: 'No longer listed', added: 'Listing added'};
-  const TICON = {new_list: '★', amount: '$', schedule: '⏰', canceled: '✕', result: '✓', missing: '?', added: '+'};
+  const TLAB = {new_list: 'New list', amount: 'Amount changed', schedule: 'Sale date changed', canceled: 'Sale canceled', result: 'Results published', missing: 'No longer listed', added: 'Listing added', details: 'Details added'};
+  const TICON = {new_list: '★', amount: '$', schedule: '⏰', canceled: '✕', result: '✓', missing: '?', added: '+', details: '\u2139'};
   let W = since(), changes = [];
   function renderWhat() {
     const box = $('rwhat'); box.textContent = ''; changes = S.data.changes.filter(c => c.detectedAt >= W.from);
@@ -49,7 +49,7 @@ window.TaxRadarOn = true;
     const chips = mk('div', 'rchips'); Object.keys(TLAB).filter(t => counts[t]).forEach(t => { const x = mk('button', 'rchip t-' + t); x.type = 'button'; x.setAttribute('aria-pressed', String(filterType === t)); x.append(mk('b', '', TICON[t]), ' ' + TLAB[t] + ' ' + counts[t]); x.addEventListener('click', () => { filterType = filterType === t ? null : t; feedOpen = true; renderWhat(); }); chips.appendChild(x); });
     box.appendChild(chips);
     const list = changes.filter(c => !filterType || c.type === filterType), ul = mk('ul', 'rfeed');
-    const rank = {canceled: 0, schedule: 1, amount: 2, result: 3, missing: 4, added: 5, new_list: 6};
+    const rank = {canceled: 0, schedule: 1, amount: 2, result: 3, missing: 4, added: 5, details: 5.5, new_list: 6};
     list.sort((a, b) => rank[a.type] - rank[b.type] || b.detectedAt.localeCompare(a.detectedAt));
     const tog = mk('button', 'rlink rtoggle', feedOpen ? 'Hide' : 'Show all ' + list.length); tog.type = 'button'; tog.setAttribute('aria-expanded', String(feedOpen)); tog.addEventListener('click', () => { feedOpen = !feedOpen; renderWhat(); }); box.querySelector('h2').appendChild(tog);
     if (!feedOpen) return;
@@ -195,7 +195,7 @@ window.TaxRadarOn = true;
     const sys = mk('p', 'rp-sys'); const dot = mk('i'); dot.style.background = M.COL[st.sys] || '#94a3b8'; sys.append(dot, st.sys + (st.v ? ' (verify)' : '') + ' · interest: ' + st.rate); p.appendChild(sys);
     // recent updates for this state
     const ch = changes.filter(c => c.state === a); const updEl = document.createDocumentFragment(); let showAllP = !!focusChange || ch.length <= 3;
-    if (ch.length) { const sec = mk('section', 'rp-sec'); sec.id = 'rp-upd'; sec.appendChild(mk('h4', '', 'Updates (' + W.label.toLowerCase() + ')')); const ul = mk('ul', 'rfeed'); const rank = {canceled: 0, schedule: 1, amount: 2, result: 3, missing: 4, added: 5, new_list: 6}; ch.sort((q, r) => rank[q.type] - rank[r.type] || r.detectedAt.localeCompare(q.detectedAt)); (showAllP ? ch : ch.slice(0, 3)).forEach(c => { const li = changeItem(c); if (c.id === focusChange) li.classList.add('focus'); ul.appendChild(li); }); sec.appendChild(ul); if (!showAllP) { const more = mk('button', 'rlink', 'Show all ' + ch.length + ' updates'); more.type = 'button'; more.addEventListener('click', () => renderPanel(a, ch[0].id)); sec.appendChild(more); } updEl.appendChild(sec); }
+    if (ch.length) { const sec = mk('section', 'rp-sec'); sec.id = 'rp-upd'; sec.appendChild(mk('h4', '', 'Updates (' + W.label.toLowerCase() + ')')); const ul = mk('ul', 'rfeed'); const rank = {canceled: 0, schedule: 1, amount: 2, result: 3, missing: 4, added: 5, details: 5.5, new_list: 6}; ch.sort((q, r) => rank[q.type] - rank[r.type] || r.detectedAt.localeCompare(q.detectedAt)); (showAllP ? ch : ch.slice(0, 3)).forEach(c => { const li = changeItem(c); if (c.id === focusChange) li.classList.add('focus'); ul.appendChild(li); }); sec.appendChild(ul); if (!showAllP) { const more = mk('button', 'rlink', 'Show all ' + ch.length + ' updates'); more.type = 'button'; more.addEventListener('click', () => renderPanel(a, ch[0].id)); sec.appendChild(more); } updEl.appendChild(sec); }
     else { const e0 = mk('p', 'rempty small', 'No updates for ' + st.n + ' in ' + W.label.toLowerCase() + '.'); updEl.appendChild(e0); }
     if (onlyChanges || focusChange) p.appendChild(updEl);
     // next verified sale
