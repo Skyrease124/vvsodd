@@ -604,6 +604,36 @@ const FireData = {
     });
   }
 };
+// Energy near the lot: solar estimate, local power rates and nearest EV charging, from the National Laboratory of the Rockies (formerly NREL). Estimates only.
+const EnergyData = {
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  attach(bar, after, center) {
+    const b = this.mk('button', 'btn small ghost', 'Energy'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.insertBefore(b, bar.children[2] || null); bar.insertBefore(document.createTextNode(' '), b);
+    const panel = this.mk('div', 'enpanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Energy near this spot'); after.after(panel);
+    let done = false; PaidGate.paid().then(p => { if (!p) b.textContent = 'Energy (Pro)'; });
+    b.addEventListener('click', async () => {
+      if (!panel.hidden) { panel.hidden = true; b.setAttribute('aria-expanded', 'false'); return; }
+      panel.hidden = false; b.setAttribute('aria-expanded', 'true'); if (done) return;
+      if (!(await PaidGate.paid())) { panel.textContent = ''; panel.appendChild(PaidGate.lock('Energy')); return; }
+      panel.textContent = ''; panel.appendChild(this.mk('p', 'small muted', 'Looking up solar, power rates and EV charging\u2026'));
+      const c = center(); let d = null;
+      try { d = await (await fetch('/.netlify/functions/energy?' + new URLSearchParams({lat: c.lat.toFixed(4), lng: c.lng.toFixed(4)}))).json(); } catch (e) { d = null; }
+      panel.textContent = '';
+      if (!d || !d.ok) { panel.appendChild(this.mk('p', 'notice', d && d.reason === 'nokey' ? 'Energy data is not set up yet.' : 'Energy data temporarily unavailable. Try again later.')); return; }
+      done = true; const sec = (t) => { const s = this.mk('div', 'ensec'); s.appendChild(this.mk('h5', '', t)); panel.appendChild(s); return s; };
+      const so = sec('\u2600\ufe0f Solar potential');
+      if (d.solar) { so.appendChild(this.mk('p', 'enbig', d.solar.kwhYear.toLocaleString('en-US') + ' kWh / year')); so.appendChild(this.mk('p', 'small', 'Estimated output of a ' + d.solar.size + ' kW fixed solar array here (about a typical home system). Average sun: ' + d.solar.sun + ' kWh/m\u00b2/day.')); }
+      else so.appendChild(this.mk('p', 'small muted', 'Solar estimate unavailable right now.'));
+      const ra = sec('\u26a1 Electricity');
+      if (d.rates && d.rates.utility) { ra.appendChild(this.mk('p', 'enbig', d.rates.utility)); ra.appendChild(this.mk('p', 'small', 'Average rate: ' + (d.rates.residential ? '$' + d.rates.residential.toFixed(3) + '/kWh home' : 'home n/a') + (d.rates.commercial ? ' \u00b7 $' + d.rates.commercial.toFixed(3) + '/kWh business' : '') + '.')); ra.appendChild(this.mk('p', 'small muted', 'From the lab\u2019s utility dataset' + (d.rates.source ? ' (' + d.rates.source + ')' : '') + ': rates may be out of date and the lot may not have a power hookup. Confirm service and cost with the utility.')); }
+      else ra.appendChild(this.mk('p', 'small muted', d.rates && d.rates.none ? 'No utility found in the lab\u2019s data for this spot.' : 'Utility data unavailable right now.'));
+      const ev = sec('\ud83d\udd0c EV charging nearby');
+      if (d.ev && d.ev.stations.length) { ev.appendChild(this.mk('p', 'small', d.ev.total + ' public station' + (d.ev.total === 1 ? '' : 's') + ' within 25 miles. Closest:')); const ol = this.mk('ol', 'enlist'); d.ev.stations.slice(0, 3).forEach(s => ol.appendChild(this.mk('li', '', s.miles + ' mi \u00b7 ' + s.name + ' (' + [s.fast ? s.fast + ' fast' : '', s.l2 ? s.l2 + ' Level 2' : ''].filter(Boolean).join(', ') + ') \u00b7 ' + s.address))); ev.appendChild(ol); }
+      else ev.appendChild(this.mk('p', 'small muted', d.ev ? 'No public EV charging within 25 miles.' : 'EV station data unavailable right now.'));
+      panel.appendChild(this.mk('p', 'small muted', 'Source: National Laboratory of the Rockies (formerly NREL) developer APIs. Estimates for this spot, not guarantees.'));
+    });
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -619,7 +649,7 @@ const CameraData = {
   // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
   mapAttach(L, m, box, center, frontage) {
     const dlg = box.closest('dialog') || box.parentNode;
-    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel,.enpanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
     const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
     PaidGate.paid().then(p => { if (p) return; b._label = 'Nearby Cameras (Pro)'; b.textContent = b._label; if (!sv) return;
@@ -627,6 +657,7 @@ const CameraData = {
     const panel = this.mk('div', 'campanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Nearby cameras');
     box.after(bar); bar.after(panel); if (sv) bar.after(sv.note);
     if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
+    if (typeof EnergyData !== 'undefined') EnergyData.attach(bar, panel, center);
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
