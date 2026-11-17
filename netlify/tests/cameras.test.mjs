@@ -1,6 +1,6 @@
 // Run: node netlify/tests/cameras.test.mjs   (mocked providers; TEST FIXTURE data)
 import assert from 'node:assert/strict';
-const mod = await import('../functions/cameras.mjs'); const { default: api, nearby, imageMeta, _reset, miles } = mod;
+const mod = await import('../functions/cameras.mjs'); const { default: api, nearby, imageMeta, _reset, miles, _verified } = mod;
 let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
 const fl = (id, lat, lng, img = 'https://images-dis.divas.cloud/DGI/x' + id + '.jpg') => ({ attributes: { ID: id, DESCRIPT: 'TEST FIXTURE cam ' + id, HIGHWAY: 'I-95', DIRECTION: 'N', LATITUDE: lat, LONGITUDE: lng, TIMESTAMP: '07/20/2026 8:09:58 PM', IMAGE: img } });
 let flFeats = [], flDown = false, caDown = false, heads = 0;
@@ -8,7 +8,9 @@ globalThis.fetch = async (u, o) => { u = String(u);
   if (o && o.method === 'HEAD') { heads++; return { ok: true, headers: { get: k => k === 'last-modified' ? 'Tue, 17 Nov 2026 03:31:47 GMT' : null } }; }
   if (u.includes('FL511')) { if (flDown) throw new Error('net'); return { ok: true, json: async () => ({ features: flFeats }) }; }
   if (u.includes('cwwp2.dot.ca.gov')) { if (caDown) return { ok: false, status: 500 }; return { ok: true, json: async () => ({ data: [] }) }; }
+  if (u.includes('az511.com/api/v2/get/cameras') || u.includes('511ga.org/api/v2/get/cameras')) { azCalls++; return { ok: true, json: async () => [{ Id: 2056, Roadway: 'I-10', Direction: 'Unknown', Latitude: 32.88, Longitude: -111.75, Location: 'TEST FIXTURE I-10 @ MP 200', Views: [{ Id: 960, Url: 'https://az511.com/map/Cctv/960', Status: 'Enabled', Description: 'TEST FIXTURE I-10 EB 200' }, { Id: 961, Url: 'https://az511.com/map/Cctv/961', Status: 'Disabled', Description: 'off' }] }, { Id: 9, Latitude: 0, Longitude: 0, Views: [{ Id: 1, Url: 'https://az511.com/map/Cctv/1', Status: 'Enabled' }] }] }; }
   throw new Error('unexpected ' + u); };
+let azCalls = 0;
 // Jacksonville-ish parcel near the GA line
 flFeats = [fl('1', 30.70, -81.60), fl('2', 30.75, -81.60), fl('1', 30.70, -81.60), fl('3', 30.70, -81.50), fl('4', 0, 0), fl('5', 30.71, -81.60, ''), fl('6', 31.5, -81.6)];
 let r = await nearby(30.69, -81.60, 10, 5);
@@ -34,4 +36,14 @@ ok((await imageMeta('fl', 'nope')).ok === false, 'unknown camera ID: no lookup')
 const call = async q => { const x = await api(new Request('http://x/c?' + q), {}); return { s: x.status, j: await x.json() }; };
 ok((await call('lat=abc&lng=1')).s === 400 && (await call('meta=1&src=evil&id=1')).s === 400, 'bad input refused');
 ok((await call('lat=30.69&lng=-81.6&radius=999&limit=999')).j.radius === 50, 'radius capped at 50 miles, limit at 20');
+// AZ511 / 511GA gating: off without key; off with key until verified; then parsed
+_reset(); delete process.env.AZ511_KEY; r = await nearby(32.88, -111.75, 10, 5);
+ok(r.providers.find(p => p.id === 'az').status === 'viewer' && azCalls === 0 && r.providers.find(p => p.id === 'az').viewer === 'https://az511.com/cctv', 'AZ511 without a key: official viewer link only, API never called');
+process.env.AZ511_KEY = 'TEST'; r = await nearby(32.88, -111.75, 10, 5);
+ok(r.providers.find(p => p.id === 'az').status === 'viewer' && azCalls === 0, 'AZ511 with a key but not verified: still viewer link only');
+_verified.az = true; r = await nearby(32.88, -111.75, 10, 5);
+ok(r.providers.find(p => p.id === 'az').status === 'ok' && r.cameras.length === 1 && r.cameras[0].id === '2056-960' && r.cameras[0].direction === '' && r.cameras[0].image === 'https://az511.com/map/Cctv/960' && r.cameras[0].kind === 'snapshot', 'AZ511 verified: real-format record parsed (disabled views and bad coordinates dropped)');
+await nearby(32.88, -111.75, 10, 5); ok(azCalls === 1, 'AZ511 list cached (provider allows 10 calls/minute)');
+process.env.GA511_KEY = 'TEST'; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled even with GA511_KEY until a real preview is verified');
+_verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY;
 console.log('\n' + pass + ' checks passed');

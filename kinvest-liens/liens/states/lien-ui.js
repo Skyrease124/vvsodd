@@ -637,7 +637,7 @@ const CameraData = {
     pv.appendChild(mk('p', 'small muted', 'Shows conditions at the camera’s location, not at the lot itself.'));
   },
   async updTime(c, el) {
-    if (c.src !== 'fl' && c.src !== 'ca') { el.textContent = 'Image update time unavailable'; return; }
+    if (!['fl', 'ca', 'az', 'ga'].includes(c.src)) { el.textContent = 'Image update time unavailable'; return; }
     try { const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({meta: 1, src: c.src, id: c.id})); const d = await r.json();
       el.textContent = d && d.lastModified ? 'Image updated at ' + new Date(d.lastModified).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}) : 'Image update time unavailable';
     } catch (e) { el.textContent = 'Image update time unavailable'; }
