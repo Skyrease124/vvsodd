@@ -8,6 +8,7 @@ import * as GOV from './govdata.mjs';
 import * as EN from './energy.mjs';
 import * as FIRMS from './firms.mjs';
 import * as RC from './rentcast.mjs';
+import * as CEN from './census.mjs';
 import { loadLiens, FILES } from '../functions/screen.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIPS = {AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
@@ -65,6 +66,7 @@ export async function answer(p) {
 export function topic(q) {
   if (/\b(crimes?|criminal|safe|safety|violent|burglar(?:y|ies)|thefts?|police)\b/i.test(q)) return 'crime';
   if (/\b(wild ?fires?|fires?|burning|smoke)\b/i.test(q)) return 'fires';
+  if (/\b(neighbou?rhood|median (?:household )?income|household income|demographics?|population|median (?:home|house) value|home values?|median rent|vacancy|vacant homes|renters?|owner[- ]occupied)\b/i.test(q)) return 'neighborhood';
   if (/\b(national parks?|parks?|monuments?|trails?|recreation)\b/i.test(q)) return 'parks';
   if (/\b(solar|electric(?:ity)?|power (?:company|rates?|bills?)|utility|utilities|kwh|ev charg\w*|charging stations?|energy)\b/i.test(q)) return 'energy';
   if (isWeather(q)) return 'weather';
@@ -74,6 +76,14 @@ const num = n => n == null ? 'n/a' : Number(n).toLocaleString('en-US');
 export async function answerTopic(t, p) {
   if (t === 'weather') return answer(p);
   const [lat, lng] = await point(p), where = p.kind === 'state' ? ' (center of ' + p.name + ')' : '';
+  if (t === 'neighborhood') {
+    const n = await CEN.neighborhood(lat, lng); if (!n.ok) return n; if (n.none) return { ok: true, text: 'No census data found for ' + p.name + '.', point: { lat, lng } };
+    const A = p.kind === 'state' ? n.state : n.county, m = v => v == null ? 'n/a' : '$' + Math.round(v).toLocaleString('en-US');
+    return { ok: true, point: { lat, lng }, text: [(A && A.name || p.name) + ' (Census American Community Survey ' + n.range + '):',
+      '- Median home value: ' + m(A.homeValue) + (p.kind !== 'state' && n.state ? ' (state ' + m(n.state.homeValue) + ')' : ''), '- Median rent: ' + m(A.rent), '- Median household income: ' + m(A.income) + (p.kind !== 'state' && n.state ? ' (state ' + m(n.state.income) + ')' : ''),
+      '- Homes vacant: ' + (A.vacancy != null ? A.vacancy + '%' : 'n/a') + ' \u00b7 owner-occupied: ' + (A.ownerPct != null ? A.ownerPct + '%' : 'n/a'), '- Population: ' + (A.pop != null ? A.pop.toLocaleString('en-US') : 'n/a') + (p.kind !== 'state' && n.countyGrowth != null ? ' (' + (n.countyGrowth >= 0 ? '+' : '') + n.countyGrowth + '% ' + n.growthYears + ')' : ''),
+      'Verify: ' + n.source + '. Area averages, not facts about a specific lot.'].join('\n') };
+  }
   if (t === 'crime') {
     const c = await GOV.crime(lat, lng); if (!c.ok) return c;
     if (c.none) return { ok: true, text: 'No police agency near ' + p.name + where + ' reported last year\u2019s crime data to the FBI.\nVerify: FBI Crime Data Explorer.', point: { lat, lng } };

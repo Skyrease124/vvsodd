@@ -71,6 +71,23 @@ const GoogleMaps = {
       if (x.lastSale) row('Last sale', (x.lastSale[0] ? money(x.lastSale[0]) + ' \u00b7 ' : '') + x.lastSale[1]);
       if (x.assessed) row('Assessed value (' + x.assessed[0] + ')', money(x.assessed[1])); if (x.taxes) row('Property tax (' + x.taxes[0] + ')', money(x.taxes[1])); row('Zoning', x.zoning);
       panel.append(dl, mk('p', 'small muted', 'Source: RentCast property records' + (d.cached ? ' (saved lookup)' : '') + ', nearest record to the map pin. Confirm owner and lot with the county before bidding.')); return true; });
+    mkBtn('Neighborhood', 'gnb', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Looking up Census neighborhood data\u2026'));
+      let d = null; try { d = await (await fetch('/.netlify/functions/census?' + new URLSearchParams({lat: c.lat.toFixed(5), lng: c.lng.toFixed(5)}))).json(); } catch (e) {}
+      panel.textContent = '';
+      if (!d || !d.ok) { panel.appendChild(mk('p', 'small', d && d.reason === 'nokey' ? 'Neighborhood data is not set up yet.' : 'Neighborhood data unavailable right now.')); return false; }
+      if (d.none || !d.tract) { panel.appendChild(mk('p', 'small', 'No census tract found at this spot.')); return true; }
+      const money = n => n == null ? 'n/a' : '$' + Math.round(n).toLocaleString('en-US'), pct = n => n == null ? 'n/a' : n + '%';
+      const cmp = (a, b, hiGood) => a == null || b == null || !b ? '' : Math.abs(a - b) / b < .1 ? 'near' : (a > b) === hiGood ? 'above' : 'below';
+      const ul = mk('ul', 'nblist');
+      [['Median home value', 'homeValue', money, null], ['Median rent', 'rent', money, null], ['Household income', 'income', money, true], ['Homes vacant', 'vacancy', pct, false], ['Owner-occupied', 'ownerPct', pct, true], ['Population', 'pop', n => n == null ? 'n/a' : n.toLocaleString('en-US'), null]].forEach(([lab, k, f, hi]) => {
+        const li = mk('li'), w = hi === null ? '' : cmp(d.tract[k], d.county && d.county[k], hi);
+        const top = mk('div', 'nbtop'); top.append(mk('span', 'nblab', lab), mk('b', 'nbval' + (w === 'above' ? ' lo' : w === 'below' ? ' hi' : ''), f(d.tract[k])));
+        li.append(top, mk('div', 'nbcmp', 'County ' + f(d.county && d.county[k]) + ' \u00b7 State ' + f(d.state && d.state[k]) + (w ? ' \u00b7 ' + (w === 'near' ? 'about the same as the county' : w === 'above' ? 'better than the county' : 'worse than the county') : ''))); ul.appendChild(li); });
+      panel.appendChild(mk('p', 'small', (d.tract.name || 'Census tract').replace(/;.*$/, '') + ' (about the size of a neighborhood), compared with the county and state.'));
+      panel.appendChild(ul);
+      if (d.countyGrowth != null) panel.appendChild(mk('p', 'small', 'County population ' + (d.countyGrowth >= 0 ? 'grew ' : 'shrank ') + Math.abs(d.countyGrowth) + '% (' + d.growthYears + ' estimates).'));
+      panel.appendChild(mk('p', 'small muted', 'Source: ' + d.source + ', ' + d.range + '. Income, vacancy and owner share: green = better than the county, red = worse. Area averages, not facts about this lot.')); return true; });
     mkBtn('Road access', 'groad', async (panel, c) => {
       panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Checking the nearest road\u2026'));
       let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({road: 1, lat: c.lat.toFixed(6), lng: c.lng.toFixed(6)}))).json(); } catch (e) {}
@@ -790,7 +807,7 @@ const CardTools = {
 const ToolGrid = {
   ORDER: [['Street View photo', '\ud83d\udcf7', 'Photo'], ['Street View near this parcel', '\ud83e\uddcd', 'Street View'], ['Nearby Cameras', '\ud83c\udfa5', 'Cameras'],
     ['Weather & air', '\u26c5', 'Weather'], ['Fires nearby', '\ud83d\udd25', 'Fires'], ['Crime', '\ud83d\udee1\ufe0f', 'Crime'],
-    ['Property record', '\ud83c\udfe0', 'Record'], ['Road access', '\ud83d\udee3\ufe0f', 'Road'], ['Nearby places', '\ud83d\udccd', 'Places'],
+    ['Property record', '\ud83c\udfe0', 'Record'], ['Neighborhood', '\ud83c\udfd8\ufe0f', 'Neighborhood'], ['Road access', '\ud83d\udee3\ufe0f', 'Road'], ['Nearby places', '\ud83d\udccd', 'Places'],
     ['Energy', '\u26a1', 'Energy'], ['Parks', '\ud83c\udf32', 'Parks']],
   polish(bar, sv) {
     bar.classList.add('toolgrid');
