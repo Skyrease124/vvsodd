@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>API keys | PricePocketAsset</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.okeys{max-width:560px;margin:24px auto;padding:0 16px}.okey{border:1px solid #24376a;border-radius:16px;padding:16px;margin:14px 0;background:#0e1a38;color:#e6ecf7}
+.okey h2{font-size:18px;margin:0 0 4px}.okey input{width:100%;box-sizing:border-box;font:inherit;padding:12px;border-radius:10px;border:1px solid #2a3c66;background:#070d1c;color:#fff;margin:10px 0}
+.okey .row{display:flex;gap:8px;flex-wrap:wrap}.okey .st{font-size:14px;color:#9fb1d6}.okey .good{color:#7bf0b0}.okey .bad{color:#ff9b9b}.okey .btn.ghost{color:#ffd166!important;border-color:#ffd166}.okey .btn{color:#fff!important}.okey pre{white-space:pre-wrap;font-size:13px;color:#cbd6ea}
+</style>
+</head>
+<body class="aibody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketPro</a><nav><a href="/account/">Account</a></nav></div></header>
+<main class="okeys">
+  <h1>API keys</h1>
+  <p class="st">Owner only. A saved key stays on the server: this page only ever shows its last 4 characters.</p>
+  <div id="list"><p class="st">Loading…</p></div>
+</main>
+<script>
+(function () {
+  const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  const TEST = {GA511_KEY: 'ga', AZ511_KEY: 'az'};
+  async function api(body) { const r = await fetch('/.netlify/functions/ownerkeys', body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {}); return r.json().catch(() => ({ok: false, error: 'No answer.'})); }
+  function draw(d) {
+    const box = $('list'); box.textContent = '';
+    if (!d.ok) { box.appendChild(mk('p', 'notice', d.error || 'Could not load.')); return; }
+    d.keys.forEach(k => {
+      const c = mk('section', 'okey'); c.appendChild(mk('h2', '', k.label));
+      const st = mk('p', 'st ' + (k.set ? 'good' : ''), k.set ? 'Saved (' + k.hint + ') · ' + k.source : 'No key saved'); c.appendChild(st);
+      const inp = mk('input'); inp.type = 'password'; inp.autocomplete = 'off'; inp.placeholder = 'Paste the ' + k.name + ' here'; c.appendChild(inp);
+      const row = mk('div', 'row'), save = mk('button', 'btn small', 'Save key'), test = mk('button', 'btn small ghost', 'Test it'), clr = mk('button', 'btn small ghost', 'Remove');
+      const out = mk('pre', ''); save.type = test.type = clr.type = 'button';
+      save.onclick = async () => { if (!inp.value.trim()) return; save.disabled = true; const r = await api({name: k.name, value: inp.value}); inp.value = ''; save.disabled = false; if (!r.ok) { out.textContent = r.error; out.className = 'bad'; } else draw(r); };
+      test.onclick = async () => { out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name]});
+        if (!r.ok) { out.className = 'bad'; out.textContent = 'Test failed: ' + (r.error || 'unknown'); return; }
+        out.className = r.image.ok ? 'good' : 'bad'; out.textContent = r.provider + ': ' + r.cameras + ' cameras\nSample: ' + r.sample.name + (r.sample.road ? ' (' + r.sample.road + ')' : '') + '\nPicture: ' + (r.image.ok ? 'loads OK' : 'did not load') ;
+        if (r.image.ok) { const im = mk('img'); im.src = r.sample.image; im.alt = r.sample.name; im.style.cssText = 'width:100%;border-radius:10px;margin-top:8px'; out.after(im); } };
+      clr.onclick = async () => { if (!confirm('Remove this key?')) return; draw(await api({name: k.name, remove: true})); };
+      row.append(save, test); if (k.set && k.source === 'Saved here') row.append(clr); c.append(row, out); box.appendChild(c);
+    });
+  }
+  api().then(draw);
+})();
+</script>
+</body>
+</html>
