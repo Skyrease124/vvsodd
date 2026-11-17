@@ -545,6 +545,30 @@ const EnvCtlData = {
 };
 // Nearby Cameras: official public cameras near the lot (/.netlify/functions/cameras), matched by straight-line distance from the lot
 // centre, so a camera across a state line can appear. Loads only when "Nearby Cameras" is tapped; the preview refreshes only while open and visible.
+// Street View: free Google Maps links (no key). Uses a verified road frontage point when we have one (an FDOT road segment that
+// touches the lot: the point on that road nearest the lot), otherwise the parcel map pin. Hidden when coordinates are not valid.
+const StreetView = {
+  ok: (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && !(lat === 0 && lng === 0),
+  url(lat, lng) { return 'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + encodeURIComponent(lat.toFixed(6) + ',' + lng.toFixed(6)); },
+  mapUrl(lat, lng) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat.toFixed(6) + ',' + lng.toFixed(6)); },
+  // nearest point on a [[lng,lat],...] polyline set to (lat,lng)
+  nearest(lines, lat, lng) { const k = Math.cos(lat * Math.PI / 180); let best = null;
+    for (const ln of lines) for (let i = 1; i < ln.length; i++) { const ax = (ln[i - 1][0] - lng) * k, ay = ln[i - 1][1] - lat, bx = (ln[i][0] - lng) * k, by = ln[i][1] - lat, dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+      const t = L2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / L2)) : 0, px = ax + t * dx, py = ay + t * dy, d = px * px + py * py;
+      if (!best || d < best.d) best = {d, lat: lat + py, lng: lng + px / k}; }
+    return best; },
+  frontageFrom(r, c) { const t = r && r.tr; if (!t || t.none || String(t.ft) !== '0' || !Array.isArray(t.geo)) return null; const p = this.nearest(t.geo, c.lat, c.lng); return p && this.ok(p.lat, p.lng) ? p : null; },
+  links(center, frontage) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    let c; try { c = center(); } catch (e) { return null; } if (!c || !this.ok(c.lat, c.lng)) return null;
+    const f = frontage ? frontage(c) : null, at = f || c;
+    const street = mk('a', 'btn small ghost', 'Street View near this parcel'); street.href = this.url(at.lat, at.lng); street.target = '_blank'; street.rel = 'noopener noreferrer';
+    street.setAttribute('aria-label', 'Street View near this parcel (opens Google Maps, recorded imagery)'); street.dataset.lat = at.lat.toFixed(6); street.dataset.lng = at.lng.toFixed(6); street.dataset.from = f ? 'frontage' : 'pin';
+    const map = mk('a', 'small', 'Open parcel map'); map.href = this.mapUrl(c.lat, c.lng); map.target = '_blank'; map.rel = 'noopener noreferrer';
+    const note = mk('p', 'small muted svnote', 'Street View: recorded imagery from Google, ' + (f ? 'aimed at the mapped road beside the lot' : 'aimed at the parcel map pin') + '. Google opens the closest panorama it has, which may be down the road or years old; if none appears, use “Open parcel map”. It helps you look at the road and possible entrances, but legal access must be verified separately with the county.');
+    return {street, map, note};
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -558,12 +582,13 @@ const CameraData = {
     finally { clearTimeout(t); }
   },
   // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
-  mapAttach(L, m, box, center) {
+  mapAttach(L, m, box, center, frontage) {
     const dlg = box.closest('dialog') || box.parentNode;
-    dlg.querySelectorAll('.cambar,.campanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    dlg.querySelectorAll('.cambar,.campanel,.svnote').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
+    const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
     const panel = this.mk('div', 'campanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Nearby cameras');
-    box.after(bar); bar.after(panel);
+    box.after(bar); bar.after(panel); if (sv) bar.after(sv.note);
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
@@ -899,7 +924,7 @@ const LienMap = {
         FloodData.mapAttach(L, m, box, l, pd.r);
         WeatherData.mapAttach(L, m, box, l, pd.r);
         EnvCtlData.mapAttach(L, m, box, l, pd.r);
-        CameraData.mapAttach(L, m, box, () => box._outline.getBounds().getCenter());
+        CameraData.mapAttach(L, m, box, () => box._outline.getBounds().getCenter(), c => StreetView.frontageFrom(pd.r, c));
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
