@@ -1178,3 +1178,25 @@ details.toolabout,dialog details.toolabout{background:transparent!important;bord
 .govpanel .jobspark{width:100%;max-width:420px;height:64px;display:block;margin:6px 0 2px}
 .govpanel .jobspark polyline{fill:none;stroke:#ffd166;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 .govpanel .jobspark circle{fill:#ffd166;stroke:#0b1220;stroke-width:1.5}
+/* Lot map layer controls: switch rows, calm motion (iOS-style) */
+.lotdlg .clbar:not(.toolgrid),dialog .clbar:not(.toolgrid){display:grid;gap:6px;margin:10px 0 0;padding:0}
+.lotdlg .clbar:not(.toolgrid)>button.btn,dialog .clbar:not(.toolgrid)>button.btn{position:relative;display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:50px;margin:0;padding:12px 74px 12px 16px;text-align:left;font-size:15px;font-weight:600;line-height:1.25;color:#f2f5fb!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.1)!important;border-radius:14px;box-shadow:none;-webkit-tap-highlight-color:transparent;transition:background-color .25s ease,border-color .25s ease,transform .18s cubic-bezier(.3,.7,.4,1)}
+.lotdlg .clbar:not(.toolgrid)>button.btn::after,dialog .clbar:not(.toolgrid)>button.btn::after{content:"";position:absolute;right:16px;top:50%;width:44px;height:26px;margin-top:-13px;border-radius:13px;background:rgba(255,255,255,.18);transition:background-color .25s ease}
+.lotdlg .clbar:not(.toolgrid)>button.btn::before,dialog .clbar:not(.toolgrid)>button.btn::before{content:"";position:absolute;z-index:1;right:36px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.45);transition:transform .28s cubic-bezier(.3,.9,.3,1.1)}
+.lotdlg .clbar:not(.toolgrid)>button.btn[aria-pressed="true"],dialog .clbar:not(.toolgrid)>button.btn[aria-pressed="true"]{background:rgba(255,209,102,.14)!important;border-color:rgba(255,209,102,.55)!important}
+.lotdlg .clbar:not(.toolgrid)>button.btn[aria-pressed="true"]::after,dialog .clbar:not(.toolgrid)>button.btn[aria-pressed="true"]::after{background:#ffd166}
+.lotdlg .clbar:not(.toolgrid)>button.btn[aria-pressed="true"]::before,dialog .clbar:not(.toolgrid)>button.btn[aria-pressed="true"]::before{transform:translateX(18px)}
+.lotdlg .clbar:not(.toolgrid)>button.btn:hover,dialog .clbar:not(.toolgrid)>button.btn:hover{background-color:rgba(255,255,255,.1)}
+.lotdlg .clbar:not(.toolgrid)>button.btn:active,dialog .clbar:not(.toolgrid)>button.btn:active{transform:scale(.985)}
+.lotdlg .clbar:not(.toolgrid)>button.btn:focus-visible,dialog .clbar:not(.toolgrid)>button.btn:focus-visible{outline:2px solid #ffd166;outline-offset:2px}
+.clbar:not(.toolgrid)>.muted:empty{display:none}
+.clbar:not(.toolgrid)>.muted:not(:empty){padding:0 4px;color:#aab6cf;animation:clfade .3s ease both}
+@keyframes clfade{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.lotdlg .clbar.wxbar,dialog .clbar.wxbar,.clbar.wxbar{display:block;padding:11px 14px;margin-top:10px;font-size:14px;color:#c9d3e8;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;animation:clfade .3s ease both}
+.trbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0 0;padding:0}
+.lotdlg .trbar>button.btn,dialog .trbar>button.btn{width:100%;min-height:50px;margin:0;padding:10px 12px;font-size:15px;font-weight:600;line-height:1.25;border-radius:14px;box-shadow:none;transition:background-color .25s ease,transform .18s cubic-bezier(.3,.7,.4,1),filter .2s}
+.lotdlg .trbar>button.btn:not(.ghost),dialog .trbar>button.btn:not(.ghost){color:#fff!important;background:linear-gradient(180deg,#3b8a5d,#2d6d49)!important;border:1px solid rgba(255,255,255,.14)!important}
+.lotdlg .trbar>button.btn.ghost,dialog .trbar>button.btn.ghost{color:#f2f5fb!important;background:rgba(255,255,255,.06)!important;border:1px solid rgba(255,255,255,.1)!important}
+.trbar>button.btn:hover{filter:brightness(1.1)}.trbar>button.btn:active{transform:scale(.97)}
+.lotdlg .toolabout,dialog .toolabout{transition:background-color .2s}
+@media(prefers-reduced-motion:reduce){.clbar:not(.toolgrid)>button,.clbar:not(.toolgrid)>button::before,.clbar:not(.toolgrid)>button::after,.trbar>button,.clbar:not(.toolgrid)>.muted,.clbar.wxbar{transition:none!important;animation:none!important}}
