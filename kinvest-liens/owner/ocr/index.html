@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Read a county PDF | PricePocketAsset</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.ocr{max-width:640px;margin:24px auto;padding:0 16px;color:#e6ecf7}.ocr .box{border:1px solid #24376a;border-radius:16px;padding:16px;margin:14px 0;background:#0e1a38}
+.ocr input[type=file]{width:100%;margin:8px 0;color:#cbd6ea}.ocr .bar{height:10px;border-radius:6px;background:#0b1428;overflow:hidden;margin:10px 0}.ocr .bar i{display:block;height:100%;width:0;background:#22c55e;transition:width .3s}
+.ocr textarea{width:100%;box-sizing:border-box;height:280px;font:13px/1.4 ui-monospace,monospace;background:#070d1c;color:#e6ecf7;border:1px solid #2a3c66;border-radius:10px;padding:10px}
+.ocr .st{color:#9fb1d6;font-size:14px}.ocr .good{color:#7bf0b0}.ocr .bad{color:#ff9b9b}.ocr .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.ocr .btn.ghost{color:#ffd166!important;border-color:#ffd166}
+.ocr ul{margin:6px 0 0 18px;padding:0;font-size:14px}
+</style>
+</head>
+<body class="aibody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketPro</a><nav><a href="/owner/keys/">API keys</a></nav></div></header>
+<main class="ocr">
+  <h1>Read a county PDF</h1>
+  <p class="st">Owner only. Pick a scanned county list (PDF up to about 4 MB). Google Cloud Vision reads every page; you get the text and a quick count of parcel-looking lines. The PDF is not stored. Then send the text file (and the county link) to Claude to check and add.</p>
+  <div class="box">
+    <input id="f" type="file" accept="application/pdf">
+    <div class="bar"><i id="bar"></i></div>
+    <p id="st" class="st">No file yet.</p>
+  </div>
+  <div class="box" id="res" hidden>
+    <h2 style="margin:0 0 6px;font-size:18px">Result</h2>
+    <p id="sum" class="st"></p>
+    <ul id="samp"></ul>
+    <textarea id="txt" readonly></textarea>
+    <div class="row"><button class="btn small" id="dl" type="button">Download text</button><button class="btn small ghost" id="cp" type="button">Copy text</button></div>
+  </div>
+</main>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const MAX = 4.2e6;
+  const b64 = file => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(file); });
+  const call = async (pdf, from) => { const r = await fetch('/.netlify/functions/ocr', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pdf, from})}); return r.json().catch(() => ({ok: false, error: r.status === 413 ? 'File too big for one upload.' : 'No answer (HTTP ' + r.status + ').'})); };
+  let name = 'county-list';
+  $('f').onchange = async () => {
+    const file = $('f').files[0]; if (!file) return; name = file.name.replace(/\.pdf$/i, '');
+    $('res').hidden = true; $('bar').style.width = '0';
+    if (file.size > MAX) { $('st').className = 'st bad'; $('st').textContent = 'That PDF is ' + (file.size / 1e6).toFixed(1) + ' MB. The limit is about 4 MB: send it to Claude directly instead.'; return; }
+    $('st').className = 'st'; $('st').textContent = 'Reading pages 1–5…';
+    const pdf = await b64(file); let all = [], total = null, from = 1;
+    while (true) {
+      const d = await call(pdf, from);
+      if (!d.ok) { $('st').className = 'st bad'; $('st').textContent = 'Stopped: ' + (d.error || 'unknown problem') + (all.length ? ' (' + all.length + ' pages read so far)' : ''); break; }
+      total = d.totalPages || total; all = all.concat(d.pages);
+      $('bar').style.width = Math.min(100, Math.round(100 * all.length / (total || all.length))) + '%';
+      if (!d.pages.length || (total && all.length >= total)) { $('bar').style.width = '100%'; $('st').className = 'st good'; $('st').textContent = 'Done: read ' + all.length + ' page' + (all.length === 1 ? '' : 's') + '.'; break; }
+      from += 5; $('st').textContent = 'Reading pages ' + from + '–' + Math.min(from + 4, total || from + 4) + ' of ' + (total || '?') + '…';
+    }
+    if (!all.length) return;
+    const text = all.map(p => '===== PAGE ' + p.n + ' =====\n' + p.text).join('\n');
+    const lines = text.split('\n'), pid = lines.filter(l => /\b\d{2,}[-.][0-9A-Z]{2,}[-.][0-9A-Z]{2,}/.test(l) || /\b[A-Z]?\d{3,4}-\d{4}\b/.test(l));
+    $('sum').textContent = all.length + ' pages · ' + lines.length.toLocaleString() + ' lines of text · about ' + pid.length.toLocaleString() + ' lines that look like parcel IDs (a rough count: Claude checks the real total).';
+    $('samp').textContent = ''; pid.slice(0, 5).forEach(l => { const li = document.createElement('li'); li.textContent = l.slice(0, 120); $('samp').appendChild(li); });
+    $('txt').value = text; $('res').hidden = false;
+  };
+  $('dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('txt').value], {type: 'text/plain'})); a.download = name + '-text.txt'; a.click(); };
+  $('cp').onclick = async () => { try { await navigator.clipboard.writeText($('txt').value); $('cp').textContent = 'Copied'; } catch (e) { $('txt').select(); } };
+})();
+</script>
+</body>
+</html>
