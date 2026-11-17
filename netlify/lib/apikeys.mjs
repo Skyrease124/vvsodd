@@ -1,7 +1,7 @@
 // Owner-entered API keys (stored server-side in Netlify Blobs; the value is never sent back to a browser).
 // A key in Netlify environment variables still wins if both are set.
 import * as auth from './auth.mjs';
-export const NAMES = { GA511_KEY: '511GA (Georgia DOT cameras)', AZ511_KEY: 'AZ511 (Arizona DOT cameras)', FIRMS_MAP_KEY: 'NASA FIRMS (active fires)', NLR_API_KEY: 'NLR energy data (solar, power rates, EV charging)', WEATHERAPI_KEY: 'WeatherAPI.com (weather widget, weather & air)', DATAGOV_KEY: 'api.data.gov (FBI crime data, National Park Service)', GOOGLE_VISION_KEY: 'Google Cloud (maps, Street View, places nearby, PDF reading)' };
+export const NAMES = { GA511_KEY: '511GA (Georgia DOT cameras)', AZ511_KEY: 'AZ511 (Arizona DOT cameras)', FIRMS_MAP_KEY: 'NASA FIRMS (active fires)', NLR_API_KEY: 'NLR energy data (solar, power rates, EV charging)', WEATHERAPI_KEY: 'WeatherAPI.com (weather widget, weather & air)', DATAGOV_KEY: 'api.data.gov (FBI crime data, National Park Service)', GOOGLE_VISION_KEY: 'Google Cloud (maps, Street View, places nearby, PDF reading)', RENTCAST_KEY: 'RentCast (property records outside Florida, 45 lookups/month cap)' };
 let cache = { t: 0, v: {} };
 export async function load(force) {
   if (!force && Date.now() - cache.t < 60e3) return cache.v;

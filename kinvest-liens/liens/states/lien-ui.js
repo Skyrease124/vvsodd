@@ -55,6 +55,22 @@ const GoogleMaps = {
           panel.appendChild(mk('p', 'small muted', 'Google Street View nearest the map pin' + (d ? ', photo taken ' + d : '') + '. It may show the road beside the lot or a neighbor; legal access must be confirmed with the county.')); return true; }
         const j = await r.json().catch(() => ({})); panel.textContent = ''; panel.appendChild(mk('p', 'small', j.none ? 'Google has no Street View photo near this spot.' : 'Street View photo unavailable right now.')); return !!j.none;
       } catch (e) { panel.textContent = ''; panel.appendChild(mk('p', 'small', 'Street View photo unavailable right now.')); return false; } });
+    mkBtn('Property record', 'grc', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Looking up the property record\u2026'));
+      let d = null; try { d = await (await fetch('/.netlify/functions/rentcast?' + new URLSearchParams({lat: c.lat.toFixed(5), lng: c.lng.toFixed(5)}))).json(); } catch (e) {}
+      panel.textContent = '';
+      if (d && d.covered === 'FL') { panel.appendChild(mk('p', 'small', 'Florida lots use the Florida Department of Revenue tax roll: see Owner & Public Records on the parcel.')); return true; }
+      if (!d || !d.ok) { panel.appendChild(mk('p', 'small', d && d.reason === 'cap' ? 'This month\u2019s property-record lookups are used up. They reset on the 1st.' : d && d.reason === 'nokey' ? 'Property records are not set up yet.' : 'Property record unavailable right now.')); return false; }
+      if (d.none) { panel.appendChild(mk('p', 'small', 'No property record found at this spot.')); return true; }
+      const x = d.rec, money = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US'), dl = mk('dl', 'pfacts'), row = (k, v, cls) => { if (v === '' || v == null) return; const e = mk('div'); e.append(mk('dt', '', k), mk('dd', cls || '', v)); dl.appendChild(e); };
+      row('Address', x.address); row('Owner', x.owner + (x.ownerType ? ' (' + x.ownerType.toLowerCase() + ')' : ''));
+      if (x.ownerOccupied === false && x.mail) row('Owner location', 'Absentee owner (mail goes elsewhere)', 'absflag');
+      row('Owner mailing address', x.mail); row('Property type', x.type);
+      row('Building', [x.beds != null ? x.beds + ' bd' : '', x.baths != null ? x.baths + ' ba' : '', x.sqft ? x.sqft.toLocaleString('en-US') + ' sq ft' : '', x.built ? 'built ' + x.built : ''].filter(Boolean).join(' \u00b7 '));
+      row('Lot size', x.lot ? x.lot.toLocaleString('en-US') + ' sq ft (' + (x.lot / 43560).toFixed(2) + ' acres)' : '');
+      if (x.lastSale) row('Last sale', (x.lastSale[0] ? money(x.lastSale[0]) + ' \u00b7 ' : '') + x.lastSale[1]);
+      if (x.assessed) row('Assessed value (' + x.assessed[0] + ')', money(x.assessed[1])); if (x.taxes) row('Property tax (' + x.taxes[0] + ')', money(x.taxes[1])); row('Zoning', x.zoning);
+      panel.append(dl, mk('p', 'small muted', 'Source: RentCast property records' + (d.cached ? ' (saved lookup)' : '') + ', nearest record to the map pin. Confirm owner and lot with the county before bidding.')); return true; });
     mkBtn('Road access', 'groad', async (panel, c) => {
       panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Checking the nearest road\u2026'));
       let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({road: 1, lat: c.lat.toFixed(6), lng: c.lng.toFixed(6)}))).json(); } catch (e) {}
