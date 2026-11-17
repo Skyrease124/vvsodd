@@ -86,7 +86,7 @@ export const PROVIDERS = {
 };
 // Key-based providers are integrated only after a real record was checked with the key. Until then they show the official viewer link.
 // To switch one on: add the key in Netlify (AZ511_KEY / GA511_KEY), run tools/cameras/verify.mjs with that key, check the record and preview, then set it true here.
-const VERIFIED = { az: false, ga: false, ny: false };
+const VERIFIED = { az: false, ga: true, ny: false };   // ga: verified 2026-11-17 by the owner key test (4,330 cameras, live JPEG preview)
 export const _verified = VERIFIED;   // tests only
 const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && KEYS.keyOf(p.keyEnv) && VERIFIED[id]); };
 

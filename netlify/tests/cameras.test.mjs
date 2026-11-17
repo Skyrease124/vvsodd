@@ -48,7 +48,7 @@ ok(r.providers.find(p => p.id === 'az').status === 'viewer' && azCalls === 0, 'A
 _verified.az = true; r = await nearby(32.88, -111.75, 10, 5);
 ok(r.providers.find(p => p.id === 'az').status === 'ok' && r.cameras.length === 1 && r.cameras[0].id === '2056-960' && r.cameras[0].direction === '' && r.cameras[0].image === 'https://az511.com/map/Cctv/960' && r.cameras[0].kind === 'snapshot', 'AZ511 verified: real-format record parsed (disabled views and bad coordinates dropped)');
 await nearby(32.88, -111.75, 10, 5); ok(azCalls === 1, 'AZ511 list cached (provider allows 10 calls/minute)');
-process.env.GA511_KEY = 'TEST'; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled even with GA511_KEY until a real preview is verified');
+process.env.GA511_KEY = 'TEST'; _verified.ga = false; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled with a key until a real preview is verified'); _verified.ga = true;
 _verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY;
 const anon = await api(new Request('http://x/c?lat=30.69&lng=-81.6'), {}), free = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: FREE } }), {}), pro = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: PRO } }), {});
 ok(anon.status === 402 && free.status === 402 && (await free.json()).needPaid === true && pro.status === 200, 'cameras are for paid members: signed-out and free accounts get 402, a paid account gets the data');
