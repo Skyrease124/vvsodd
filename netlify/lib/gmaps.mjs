@@ -5,9 +5,9 @@
 // A daily cap (per server instance) stops Google calls and the site falls back to the free maps.
 import * as KEYS from './apikeys.mjs';
 const T = process.env.GTILE_BASE || 'https://tile.googleapis.com/v1', M = process.env.GMAPS_BASE || 'https://maps.googleapis.com/maps/api', P = process.env.GPLACES_BASE || 'https://places.googleapis.com/v1';
-const CAP = { tiles: Number(process.env.GTILE_DAILY_CAP || 20000), street: Number(process.env.GSV_DAILY_CAP || 600), nearby: Number(process.env.GPLACES_DAILY_CAP || 400) };
-let day = '', used = { tiles: 0, street: 0, nearby: 0 };
-export function spend(kind) { const d = new Date().toISOString().slice(0, 10); if (d !== day) { day = d; used = { tiles: 0, street: 0, nearby: 0 }; } if (used[kind] >= CAP[kind]) return false; used[kind]++; return true; }
+const CAP = { tiles: Number(process.env.GTILE_DAILY_CAP || 20000), street: Number(process.env.GSV_DAILY_CAP || 600), nearby: Number(process.env.GPLACES_DAILY_CAP || 400), road: Number(process.env.GROADS_DAILY_CAP || 800) };
+let day = '', used = { tiles: 0, street: 0, nearby: 0, road: 0 };
+export function spend(kind) { const d = new Date().toISOString().slice(0, 10); if (d !== day) { day = d; used = { tiles: 0, street: 0, nearby: 0, road: 0 }; } if (used[kind] >= CAP[kind]) return false; used[kind]++; return true; }
 export const key = async () => { await KEYS.load(); return KEYS.keyOf('GOOGLE_VISION_KEY'); };
 const sess = {};
 async function session(k, type) {
@@ -50,4 +50,16 @@ export async function nearby(lat, lng) {
   }
   const v = { ok: true, places: ['Grocery', 'Pharmacy', 'Gas', 'Hospital', 'School'].map(c => out[c] ? Object.assign({ cat: c }, out[c]) : { cat: c, none: true }), source: 'Google Places' };
   if (ncache.size > 1000) ncache.clear(); ncache.set(ck, { t: Date.now(), v }); return v;
+}
+// Roads API nearestRoads: closest road segment Google knows near the spot (center + a ring of points ~60 m out).
+// Distance only: a nearby road is not proof of legal access (easement/frontage must be confirmed with the county).
+const RD = process.env.GROADS_BASE || 'https://roads.googleapis.com/v1';
+export async function road(lat, lng) {
+  const k = await key(); if (!k) return { ok: false, reason: 'nokey' };
+  const pts = [[lat, lng]]; for (let a = 0; a < 360; a += 45) { const dy = 60 / 111320, dx = 60 / (111320 * Math.cos(rad(lat))); pts.push([lat + dy * Math.cos(rad(a)), lng + dx * Math.sin(rad(a))]); }
+  const r = await fetch(RD + '/nearestRoads?points=' + pts.map(p => p[0].toFixed(6) + ',' + p[1].toFixed(6)).join('|') + '&key=' + encodeURIComponent(k), { signal: AbortSignal.timeout(9000) });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error('roads ' + r.status + ' ' + ((d.error && d.error.message) || ''));
+  const sp = (d.snappedPoints || []).map(s => ({ lat: s.location.latitude, lng: s.location.longitude, ft: Math.round(miles(lat, lng, s.location.latitude, s.location.longitude) * 5280) })).sort((a, b) => a.ft - b.ft);
+  if (!sp.length) return { ok: true, none: true };
+  return { ok: true, nearest: sp[0] };
 }
