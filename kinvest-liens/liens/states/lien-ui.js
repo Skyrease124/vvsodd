@@ -1193,7 +1193,7 @@ const LienUI = {
   table(host, county, state) {
     const all = LIENS.filter(l => (!county || l.county === county) && (!state || (l.state || 'FL') === state));
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x) e.textContent = x; return e; };
-    host.appendChild(mk('h3', '', 'Liens' + (county ? ' in ' + county + ' County' : '')));
+    host.appendChild(mk('h3', '', 'Liens' + (county ? ' in ' + county + (/^City of /.test(county) ? '' : ' County') : '')));
     if (!all.length) {
       host.appendChild(mk('p', 'muted', 'No liens are listed for this county yet. We only list liens copied from an official county list, with the source and date checked. New sale lists are expected in April and May 2027.'));
       return;
@@ -1338,7 +1338,7 @@ const LienResearch = {
     let dlg = document.getElementById('resdlg');
     if (!dlg) { dlg = document.createElement('dialog'); dlg.id = 'resdlg'; dlg.className = 'lotdlg resdlg'; dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); }); document.body.appendChild(dlg); }
     dlg.textContent = ''; const body = mk('div', 'resbody'); dlg.appendChild(body);
-    body.append(mk('h3', '', 'Research: ' + l.parcel), mk('p', 'small muted', (l.county || '') + ' County' + (l.amount != null ? ' · ' + (l.priceLabel ? 'sold for' : 'face') + ' $' + Number(l.amount).toLocaleString() : '')));
+    body.append(mk('h3', '', 'Research: ' + l.parcel), mk('p', 'small muted', (l.county || '') + (/^City of /.test(l.county || '') ? '' : ' County') + (l.amount != null ? ' · ' + (l.priceLabel ? 'sold for' : 'face') + ' $' + Number(l.amount).toLocaleString() : '')));
     const me = await this.me(), key = this.key(l); let saved = null;
     if (me) { try { const r = await fetch('/.netlify/functions/account', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'resGet'})}); const d = await r.json(); saved = d.research && d.research[key] || null; } catch (e) {} }
     const marks = Object.assign({}, saved && saved.marks);
