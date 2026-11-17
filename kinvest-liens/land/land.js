@@ -33,7 +33,7 @@
   }
   async function drawMap(r) {
     let L; try { L = await LienMap.load(); } catch (e) { return; }
-    if (!map) { map = L.map($('lmap'), {scrollWheelZoom: false}).setView([39, -96], 4); L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map); }
+    if (!map) { map = L.map($('lmap'), {scrollWheelZoom: false}).setView([39, -96], 4); const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map); const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'}); if (typeof OFM !== 'undefined') OFM.add(map, L.control.layers({'Street': osm, 'Satellite': sat}).addTo(map), false); }
     if (layer) layer.remove(); layer = L.layerGroup().addTo(map);
     const pts = [];
     r.forEach(l => { const m = L.circleMarker([l.lat, l.lng], {radius: 9, color: '#0b6e4f', fillColor: '#22c55e', fillOpacity: 0.9, weight: 2}).addTo(layer); m.bindTooltip(money(l.price) + ' · ' + l.title); m.on('click', () => open(l.id)); pts.push([l.lat, l.lng]); });

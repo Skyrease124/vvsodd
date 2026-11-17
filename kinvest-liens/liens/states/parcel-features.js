@@ -162,7 +162,7 @@ const PF = {
     const m = L.map(box), pt = [l.lat, l.lng]; box._map = m;
     const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
     const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
-    street.addTo(m); L.control.layers({'Street': street, 'Satellite': sat}).addTo(m); L.circleMarker(pt, {radius: 10, color: '#ffd166', weight: 3, fillOpacity: .5}).addTo(m);
+    street.addTo(m); const lc2 = L.control.layers({'Street': street, 'Satellite': sat}).addTo(m); if (typeof OFM !== 'undefined') OFM.add(m, lc2, false); L.circleMarker(pt, {radius: 10, color: '#ffd166', weight: 3, fillOpacity: .5}).addTo(m);
     m.setView(pt, 17); setTimeout(() => m.invalidateSize(), 50);
     msg.textContent = 'Approximate location from the address (' + (l.geoQuality === 'x' ? 'exact address match' : 'street match, position estimated') + '), not a lot outline.';
   }

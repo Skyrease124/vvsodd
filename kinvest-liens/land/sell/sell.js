@@ -50,7 +50,7 @@
     }
     $('form').hidden = false; $('mine').hidden = true; thumbs();
     const L = await LienMap.load();
-    if (!map) { map = L.map($('pmap')).setView([39, -96], 4); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri'}).addTo(map); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19}).addTo(map); map.on('click', e => setPin(e.latlng.lat, e.latlng.lng)); }
+    if (!map) { map = L.map($('pmap')).setView([39, -96], 4); const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri'}).addTo(map); L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19}).addTo(map); if (typeof OFM !== 'undefined') OFM.add(map, L.control.layers({'Satellite': sat}).addTo(map), false); map.on('click', e => setPin(e.latlng.lat, e.latlng.lng)); }
     setTimeout(() => map.invalidateSize(), 50);
     if (pin) { setPin(pin.lat, pin.lng); map.setView([pin.lat, pin.lng], 16); } else { if (marker) { marker.remove(); marker = null; } $('pin').textContent = 'No pin yet.'; map.setView([39, -96], 4); }
     $('form').scrollIntoView({behavior: 'smooth'});
