@@ -89,7 +89,8 @@ if (!s) {
       const wrap = mk('div', 'camwrap'), box = mk('div', 'cammap'); wrap.appendChild(box); sec.appendChild(wrap);
       const row = mk('p', 'small'), me = mk('button', 'btn small ghost', 'Use my location'); me.type = 'button'; row.appendChild(me); sec.appendChild(row);
       const L = await LienMap.load(), m = L.map(box, {scrollWheelZoom: false}).setView([CAM[0], CAM[1]], CAM[2]);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(m);
+      const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(m);
+      if (typeof GoogleMaps !== 'undefined') GoogleMaps.addLayers(m, L.control.layers({'Street': osm}).addTo(m));
       let pin = null;
       const pick = ll => { const h = sec.querySelector('.camhint'); if (h) h.remove(); if (pin) pin.setLatLng(ll); else pin = L.circleMarker(ll, {radius: 9, color: '#7a5200', weight: 3, fillColor: '#ffd166', fillOpacity: 1}).addTo(m);
         m.setView(ll, Math.max(m.getZoom(), 10)); CameraData.mapAttach(L, m, box, () => pin.getLatLng());
