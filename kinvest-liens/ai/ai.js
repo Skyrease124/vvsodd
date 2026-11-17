@@ -68,6 +68,18 @@
     };
     requestAnimationFrame(loop);
   }
+  // Mouse tilt on answer cards (touch screens keep the flat press effect so scrolling is never disturbed).
+  (function () {
+    if (REDUCED || !window.matchMedia || !matchMedia('(hover: hover)').matches) return;
+    const chat = $('chat'); if (!chat) return; let cur = null;
+    const off = () => { if (cur) { cur.classList.remove('tilt'); cur.style.removeProperty('--tx'); cur.style.removeProperty('--ty'); cur = null; } };
+    chat.addEventListener('pointermove', e => {
+      const c = e.target.closest && e.target.closest('.scard,.tablewrap'); if (!c) return off(); if (cur && cur !== c) off();
+      const r = c.getBoundingClientRect(); cur = c; c.classList.add('tilt');
+      c.style.setProperty('--ty', (((e.clientX - r.left) / r.width - .5) * 6).toFixed(2) + 'deg'); c.style.setProperty('--tx', ((.5 - (e.clientY - r.top) / r.height) * 4).toFixed(2) + 'deg');
+    });
+    chat.addEventListener('pointerleave', off);
+  })();
   function ripple(p) {
     if (REDUCED || !fxLayer) return; const bb = p.getBBox();
     for (let k = 0; k < 2; k++) { const c = sn('circle', {class: 'airipple', cx: bb.x + bb.width / 2, cy: bb.y + bb.height / 2, r: 60, style: 'animation-delay:' + (k * 160) + 'ms'}); fxLayer.appendChild(c); setTimeout(() => c.remove(), 1400); }
