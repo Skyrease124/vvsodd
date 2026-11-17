@@ -20,6 +20,13 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'vision') {
+    const k = KEYS.keyOf('GOOGLE_VISION_KEY'); if (!k) return json(200, { ok: false, error: 'No key saved yet.' });
+    try { const r = await fetch((process.env.VISION_BASE || 'https://vision.googleapis.com/v1') + '/images:annotate?key=' + encodeURIComponent(k), { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10000), body: JSON.stringify({ requests: [{ image: { content: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' }, features: [{ type: 'TEXT_DETECTION' }] }] }) });
+      const d = await r.json().catch(() => ({})); if (!r.ok) return json(200, { ok: false, error: 'Google said: ' + ((d.error && d.error.message) || 'HTTP ' + r.status).slice(0, 200) });
+      return json(200, { ok: true, nlr: true, text: 'Open "Read a county PDF" to use it.' }); }
+    catch (e) { return json(200, { ok: false, error: 'No answer from Google.' }); }
+  }
   if (b.test === 'gov') {
     try { const [c, p] = await Promise.all([GOV.crime(32.84, -83.63), GOV.parks(32.84, -83.63)]); if (!c.ok && c.reason === 'nokey') return json(200, { ok: false, error: 'No key saved yet.' });
       return json(200, { ok: true, nlr: true, text: 'Test spot: Macon, GA. FBI: ' + (c.agency ? c.agency.name + ' ' + c.year + ' data found' : 'no answer') + '. Parks: ' + (p.ok && p.parks[0] ? p.parks[0].name + ' ' + p.parks[0].miles + ' mi' : 'no answer') + '.' }); }
