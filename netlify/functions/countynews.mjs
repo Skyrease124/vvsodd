@@ -65,13 +65,13 @@ let chain = Promise.resolve(), lastCall = 0;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 export function _resetPacing() { chain = Promise.resolve(); lastCall = 0; }
 function paced(fn) {
-  const run = chain.then(async () => { const w = lastCall + GAP - Date.now(); if (w > 3500) throw new Error('busy'); if (w > 0) await sleep(w); lastCall = Date.now(); return fn(); });
+  const run = chain.then(async () => { const w = lastCall + GAP - Date.now(); if (w > 1500) throw new Error('busy'); if (w > 0) await sleep(w); lastCall = Date.now(); return fn(); });
   chain = run.catch(() => {}); return run;
 }
 async function gdelt(county, state) {
   const q = '"' + county + ' County" ' + STATE_NAMES[state] + ' ' + QUERY_TOPICS + ' sourcecountry:US sourcelang:english';
   const url = GDELT + '?' + new URLSearchParams({ query: q, mode: 'ArtList', maxrecords: '40', format: 'json', timespan: '3months', sort: 'DateDesc' });
-  const c = new AbortController(), t = setTimeout(() => c.abort(), 6500);
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 8000);
   try {
     const r = await fetch(url, { headers: { 'User-Agent': UA }, signal: c.signal });
     const txt = await r.text();
@@ -99,8 +99,9 @@ export async function news(state, county) {
       await auth.kvPut(key, { t: now, articles });
       return { ok: true, state, county, articles, fetchedAt: new Date(now).toISOString(), stale: false };
     } catch (e) {
-      await auth.kvPut(failKey, { t: Date.now() });
-      return serveStale() || { ok: false, reason: 'lookup' };
+      console.log('countynews: GDELT lookup failed for ' + county + ', ' + state + ': ' + String(e && e.message || e).slice(0, 160));
+      if (!(e && e.message === 'busy')) await auth.kvPut(failKey, { t: Date.now() });   // "busy" only means another county was just asked: try again soon
+      return serveStale() || { ok: false, reason: e && e.message === 'busy' ? 'busy' : 'lookup' };
     } finally { inflight.delete(key); }
   })();
   inflight.set(key, p); return p;
