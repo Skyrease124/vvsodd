@@ -1,0 +1,162 @@
+{
+ "source": "CDC NCHS, Where to Write for Vital Records",
+ "sourceUrl": "https://www.cdc.gov/nchs/w2w/index.htm",
+ "checked": "2026-11-17",
+ "states": {
+  "AK": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/alaska.htm"
+  },
+  "AL": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/alabama.htm"
+  },
+  "AR": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/arkansas.htm"
+  },
+  "AZ": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/arizona.htm"
+  },
+  "CA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/california.htm"
+  },
+  "CO": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/colorado.htm"
+  },
+  "CT": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/connecticut.htm"
+  },
+  "DC": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/dc.htm"
+  },
+  "DE": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/delaware.htm"
+  },
+  "FL": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/florida.htm",
+   "name": "Florida Department of Health: death certificates",
+   "url": "https://www.floridahealth.gov/certificates-records/death-certificates/"
+  },
+  "GA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/georgia.htm"
+  },
+  "HI": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/hawaii.htm"
+  },
+  "IA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/iowa.htm"
+  },
+  "ID": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/idaho.htm"
+  },
+  "IL": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/illinois.htm"
+  },
+  "IN": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/indiana.htm"
+  },
+  "KS": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/kansas.htm"
+  },
+  "KY": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/kentucky.htm"
+  },
+  "LA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/louisiana.htm"
+  },
+  "MA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/massachusetts.htm"
+  },
+  "MD": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/maryland.htm"
+  },
+  "ME": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/maine.htm"
+  },
+  "MI": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/michigan.htm"
+  },
+  "MN": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/minnesota.htm"
+  },
+  "MO": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/missouri.htm"
+  },
+  "MS": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/mississippi.htm"
+  },
+  "MT": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/montana.htm"
+  },
+  "NC": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/north_carolina.htm"
+  },
+  "ND": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/north_dakota.htm"
+  },
+  "NE": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/nebraska.htm"
+  },
+  "NH": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/new_hampshire.htm"
+  },
+  "NJ": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/new_jersey.htm"
+  },
+  "NM": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/new_mexico.htm"
+  },
+  "NV": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/nevada.htm"
+  },
+  "NY": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/new_york.htm"
+  },
+  "OH": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/ohio.htm"
+  },
+  "OK": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/oklahoma.htm"
+  },
+  "OR": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/oregon.htm"
+  },
+  "PA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/pennsylvania.htm"
+  },
+  "RI": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/rhode_island.htm"
+  },
+  "SC": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/south_carolina.htm"
+  },
+  "SD": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/south_dakota.htm"
+  },
+  "TN": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/tennessee.htm"
+  },
+  "TX": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/texas.htm"
+  },
+  "UT": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/utah.htm"
+  },
+  "VA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/virginia.htm"
+  },
+  "VT": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/vermont.htm"
+  },
+  "WA": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/washington.htm"
+  },
+  "WI": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/wisconsin.htm"
+  },
+  "WV": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/west_virginia.htm"
+  },
+  "WY": {
+   "cdc": "https://www.cdc.gov/nchs/w2w/wyoming.htm"
+  }
+ }
+}

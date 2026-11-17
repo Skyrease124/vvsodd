@@ -840,7 +840,7 @@ const ParcelData = {
     if (!r || r.st !== 'matched') { box.appendChild(mk('p', 'small muted', r ? (r.note || 'This parcel ID could not be matched to the statewide roll.') + ' Flagged for review.' : 'No property record loaded for this parcel yet.')); return box; }
     const S = file.sources, money = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US');
     const link = (o, extra) => { const p = mk('p', 'small psrc'); p.append('Source: '); const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.appendChild(a); if (extra) p.append(' · ' + extra); return p; };
-    box.appendChild(mk('h4', '', 'Public record'));
+    box.appendChild(mk('h4', '', 'Owner & Public Records'));
     const dl = mk('dl', 'pfacts'), row = (k, v) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); };
     row('Official parcel ID', r.pid + (r.pid !== l.parcel ? ' (list shows ' + l.parcel + ')' : ''));
     row('Current owner of record', r.own || 'Not published by the source');
@@ -851,6 +851,7 @@ const ParcelData = {
     row('Short legal description (state roll)', r.legal);
     box.appendChild(dl);
     box.appendChild(link(S.parcels, 'statewide roll updated ' + (S.parcels.date || 'date not given') + '; checked ' + r.ck + '. Owner shown is the current owner on that roll, not necessarily the owner when the certificate was sold.'));
+    box.appendChild(ProbateRecords.section(l, r, S));
     box.appendChild(mk('h4', '', 'Land checks (whole lot boundary)'));
     const ul = mk('ul', 'pchecks'), li = (t, cls) => { ul.appendChild(mk('li', cls || '', t)); };
     const z = r.zn || {}; li(z.s === 'ok' ? 'Zoning: ' + z.v : 'Zoning: data unavailable' + (z.why ? ' (' + z.why + ')' : '') + '. Check with the county or city.', z.s === 'ok' ? '' : 'na');
@@ -866,6 +867,90 @@ const ParcelData = {
     return box;
   }
 };
+// Probate & Death Records (inside the Owner & Public Records card). Everything opens on the official agency or clerk site; we collect nothing.
+// A name match is only a search lead. "Deceased" is shown only when an official record in probate-matches.json confirms the death, names the same person, and lists this parcel.
+const ProbateRecords = {
+  NAMES: {AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', DC: 'District of Columbia', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming'},
+  CDC_INDEX: 'https://www.cdc.gov/nchs/w2w/index.htm', p: null,
+  load() { return this.p || (this.p = Promise.all(['vital-records', 'probate-sources', 'probate-matches'].map(f => fetch('/liens/states/' + f + '.json').then(r => r.ok ? r.json() : null).catch(() => null))).then(([vital, sources, matches]) => ({vital, sources, matches}))); },
+  norm: s => String(s == null ? '' : s).toUpperCase().replace(/[^A-Z0-9]/g, ''),
+  tokens(n) { const skip = new Set(['JR', 'SR', 'II', 'III', 'IV', 'EST', 'ESTATE', 'OF', 'LIFE', 'ET', 'AL', 'ETAL', 'TR', 'TRUSTEE', 'TRUST', 'THE', 'AND', 'DECEASED', 'DEC']); return new Set(String(n || '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').split(/\s+/).filter(t => t && !skip.has(t))); },
+  // every word of the decedent's name (at least two) appears in the owner's name; tax rolls write names in any order
+  sameName(owner, decedent) { const o = this.tokens(owner), d = [...this.tokens(decedent)]; return d.length >= 2 && d.every(t => o.has(t)); },
+  // records: those listed for THIS parcel (the record itself lists the parcel), official, numbered and dated. Name match alone is never enough.
+  assess(owner, keys, matches) {
+    const recs = [].concat(...keys.map(k => (matches && matches.records && matches.records[k]) || [])), out = {status: 'unverified', verified: [], leads: [], note: ''}, seen = new Set();
+    const good = r => r && r.kind && r.number && /^\d{4}-\d{2}-\d{2}$/.test(r.date || '') && /^https:\/\//.test(r.url || '') && r.source && (r.tie === 'parcel-id' || r.tie === 'legal-description');
+    for (const r of recs) { const id = r.kind + '|' + r.number; if (seen.has(id) || !good(r) || !this.sameName(owner, r.decedent)) continue; seen.add(id); (r.sameDecedent === true ? out.verified : out.leads).push(r); }
+    const people = new Set(out.verified.filter(r => r.confirmsDeath === true).map(r => r.personId || r.decedent));
+    if (people.size === 1) out.status = 'deceased';
+    else if (people.size > 1) out.note = 'More than one person with this name appears in the official records for this parcel, so the owner’s identity is not established.';
+    return out;
+  },
+  copy(text, btn) {
+    const done = () => { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => { btn.textContent = t; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => this.copyOld(text, done)); else this.copyOld(text, done);
+  },
+  copyOld(text, done) { const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); done(); } catch (e) { /* the name stays on screen to copy by hand */ } t.remove(); },
+  section(l, r, S) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'probbox'); box.appendChild(mk('h4', '', 'Probate & Death Records'));
+    const body = mk('div', 'probbody'); body.appendChild(mk('p', 'small muted', 'Loading…')); box.appendChild(body);
+    this.load().then(d => this.fill(body, l, r, S, d)).catch(() => { body.textContent = ''; body.appendChild(mk('p', 'notice', 'Probate and death record links are unavailable right now.')); });
+    return box;
+  },
+  fill(body, l, r, S, d) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    body.textContent = '';
+    const st = (l.state || 'FL').toUpperCase(), owner = String((r && r.own) || '').trim(), county = l.county;
+    const keys = [...new Set([st + '|' + county + '|' + this.norm(r && r.pid), st + '|' + county + '|' + this.norm(l.parcel)])];
+    const a = this.assess(owner, keys, d.matches);
+    // 1. the owner as the tax roll shows it, with its source and date
+    const o = mk('div', 'probowner'); o.append(mk('span', 'small muted', 'Owner on the tax roll: '), mk('b', '', owner || 'not published by the source'));
+    if (owner) { const c = mk('button', 'btn small ghost', 'Copy owner name'); c.type = 'button'; c.addEventListener('click', () => this.copy(owner, c)); o.append(' ', c); }
+    body.appendChild(o);
+    const src = mk('p', 'small muted'); src.append('Source: '); if (S && S.parcels) { src.appendChild(link(S.parcels.name, S.parcels.url)); src.append(', roll updated ' + (S.parcels.date || 'date not given') + (r && r.yr ? '; tax roll year ' + r.yr : '') + '.'); } else src.append('the county tax roll.'); body.appendChild(src);
+    // 2. death status: unverified unless an official record confirms it for this person and parcel
+    if (a.status === 'deceased') { const dead = a.verified.find(x => x.confirmsDeath === true); body.appendChild(mk('p', 'probstat dead', 'Deceased — confirmed by an official record (' + dead.source + ', ' + dead.kind + ' ' + dead.number + ').')); }
+    else body.appendChild(mk('p', 'probstat', 'Death status unverified'));
+    if (/\b(LLC|L L C|INC|CORP|CORPORATION|COMPANY|LP|LLP|LTD|BANK|ASSOCIATION|ASSN|HOMES|PROPERTIES|HOLDINGS|INVESTMENTS|ENTERPRISES|PARTNERS|COUNTY|CITY|CHURCH|FUND|CAPITAL|REALTY|DEVELOPMENT|GROUP)\b/i.test(owner)) body.appendChild(mk('p', 'small muted', 'This owner looks like a company or agency. Death records apply only to people.'));
+    if (a.note) body.appendChild(mk('p', 'small usnote', a.note));
+    if (a.verified.length) { body.appendChild(mk('p', 'small', 'Official records that name this owner and list this parcel:')); const ul = mk('ul', 'small probrecs'); a.verified.forEach(x => { const li = mk('li'); li.append(x.kind[0].toUpperCase() + x.kind.slice(1) + ' ' + x.number + ' · ' + U_day(x.date) + ' · ' + x.source + ' · '); li.appendChild(link('Official record', x.url)); ul.appendChild(li); }); body.appendChild(ul); }
+    if (a.leads.length) { body.appendChild(mk('p', 'small muted', 'Possible match, not verified (same name; the record does not establish it is this owner):')); const ul = mk('ul', 'small probrecs'); a.leads.forEach(x => { const li = mk('li'); li.append(x.kind[0].toUpperCase() + x.kind.slice(1) + ' ' + x.number + ' · ' + x.source + ' · '); li.appendChild(link('Official record', x.url)); ul.appendChild(li); }); body.appendChild(ul); }
+    body.appendChild(mk('p', 'small muted', 'A name match is only a search lead: many people share a name. Check the record itself before relying on it.'));
+    // 3. death certificate: official vital records agency for the state where the death occurred
+    const dc = mk('div', 'probact'); dc.appendChild(mk('b', '', 'Death certificate'));
+    const lab = mk('label', 'small'); lab.append('State where the death occurred ');
+    const sel = mk('select'); const ph = mk('option', '', 'Choose a state…'); ph.value = ''; sel.appendChild(ph);
+    Object.keys(this.NAMES).sort((x, y) => this.NAMES[x].localeCompare(this.NAMES[y])).forEach(k => { const op = mk('option', '', this.NAMES[k]); op.value = k; sel.appendChild(op); }); lab.appendChild(sel); dc.appendChild(lab);
+    const states = [...new Set(a.verified.map(x => x.deathState).filter(Boolean))]; if (states.length === 1 && this.NAMES[states[0]]) sel.value = states[0];
+    const btn = mk('a', 'btn small', 'Request death certificate'); btn.target = '_blank'; btn.rel = 'noopener noreferrer'; dc.appendChild(btn);
+    dc.appendChild(mk('span', 'small muted', ' Official request · fees may apply.'));
+    const hint = mk('p', 'small muted'); dc.appendChild(hint);
+    const upd = () => {
+      const v = sel.value, e = d.vital && d.vital.states && d.vital.states[v];
+      if (!v) { btn.removeAttribute('href'); btn.setAttribute('aria-disabled', 'true'); hint.textContent = 'The state of death is not known from the tax roll: choose it to open that state’s official vital records office.'; return; }
+      btn.removeAttribute('aria-disabled');
+      if (!e) { btn.href = this.CDC_INDEX; hint.textContent = 'Our state list did not load. This opens the CDC directory of official vital records offices.'; return; }
+      btn.href = e.url || e.cdc;
+      hint.textContent = e.url ? 'Opens ' + (e.name || 'the state vital records office') + '.' : 'Opens the CDC directory entry for ' + this.NAMES[v] + ', which names that state’s official vital records office, its fees and its address.';
+    };
+    sel.addEventListener('change', upd); upd(); body.appendChild(dc);
+    // 4. probate: the county clerk's public search
+    const pr = mk('div', 'probact'); pr.appendChild(mk('b', '', 'Probate'));
+    const c = d.sources && d.sources.counties && d.sources.counties[st + '|' + county];
+    if (c) {
+      const pb = mk('a', 'btn small', 'Search probate records'); pb.href = c.url; pb.target = '_blank'; pb.rel = 'noopener noreferrer'; pr.appendChild(pb);
+      pr.appendChild(mk('p', 'small', c.clerk + (c.kind === 'case-search' ? ': search by the owner’s name or a probate case number.' : ': a general court records site. Choose the Probate case type; online probate search is not confirmed for this county.')));
+      if (c.note) pr.appendChild(mk('p', 'small muted', c.note));
+    } else pr.appendChild(mk('p', 'small', 'We do not have a verified probate search link for ' + county + ' County yet. Search the county clerk of court’s official website for probate records.'));
+    pr.appendChild(mk('p', 'small muted', 'Copy the owner name above and paste it into the clerk’s search. Try the last name first and spelling variants.'));
+    body.appendChild(pr);
+    body.appendChild(mk('p', 'small muted', 'Certificates and court documents stay with the state agency or the clerk who issues them. This site does not ask for Social Security numbers, cause of death, or your ID. Imagery and records are public information shown for research, not legal advice.'));
+  }
+};
+const U_day = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}) : (iso || ''); };
 const LienMap = {
   loaded: null,
   load() {
