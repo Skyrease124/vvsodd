@@ -23,8 +23,21 @@ if (!s) {
       const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('aria-hidden', 'true');
       const defs = document.createElementNS(NS, 'defs'); defs.innerHTML = '<pattern id="hp" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="' + col + '"/>' + ({'Tax lien certificate': '<path d="M-1 9L9-1M-1 1L1-1M7 9L9 7" stroke="rgba(0,0,0,.3)" stroke-width="1.7"/>', 'Redeemable deed': '<circle cx="2" cy="2" r="1.3" fill="rgba(255,255,255,.45)"/><circle cx="6" cy="6" r="1.3" fill="rgba(255,255,255,.45)"/>', 'Hybrid': '<path d="M-1 9L9-1M-1 -1L9 9" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>', 'Municipal lien': '<path d="M0 2.5H8M0 6.5H8" stroke="rgba(0,0,0,.28)" stroke-width="1.3"/>'}[s.sys] || '') + '</pattern>';
       svg.appendChild(defs);
-      const p = document.createElementNS(NS, 'path'); p.setAttribute('d', MAP_PATHS[s.a]); p.setAttribute('fill', 'url(#hp)'); p.setAttribute('class', 'sshape'); p.style.filter = 'drop-shadow(0 0 14px ' + col + '99)'; svg.appendChild(p);
-      fig.appendChild(svg); document.body.appendChild(svg); const bb = p.getBBox(); svg.setAttribute('viewBox', [bb.x - 6, bb.y - 6, bb.width + 12, bb.height + 12].join(' ')); fig.appendChild(svg);
+      const p = document.createElementNS(NS, 'path'); p.setAttribute('d', MAP_PATHS[s.a]); p.setAttribute('fill', 'url(#hp)'); p.setAttribute('class', 'sshape'); p.style.filter = 'drop-shadow(0 0 14px ' + col + '99)';
+      // 3D: ground shadow + stacked copies for thickness under the top face
+      const dark = f => { const n = parseInt(col.slice(1), 16), c = k => Math.max(0, Math.round(((n >> k) & 255) * f)); return 'rgb(' + c(16) + ',' + c(8) + ',' + c(0) + ')'; };
+      const flt = document.createElementNS(NS, 'filter'); flt.setAttribute('id', 'shblur'); flt.setAttribute('x', '-20%'); flt.setAttribute('y', '-20%'); flt.setAttribute('width', '140%'); flt.setAttribute('height', '150%'); flt.innerHTML = '<feGaussianBlur stdDeviation="6"/>'; defs.appendChild(flt);
+      const shd = document.createElementNS(NS, 'path'); shd.setAttribute('d', MAP_PATHS[s.a]); shd.setAttribute('fill', '#000'); shd.setAttribute('opacity', '.55'); shd.setAttribute('filter', 'url(#shblur)'); shd.setAttribute('transform', 'translate(6,22)'); svg.appendChild(shd);
+      const T = 9; for (let i = T; i >= 1; i--) { const e = document.createElementNS(NS, 'path'); e.setAttribute('d', MAP_PATHS[s.a]); e.setAttribute('fill', dark(.34 + .1 * (T - i) / T)); e.setAttribute('stroke', dark(.3)); e.setAttribute('stroke-width', '.6'); e.setAttribute('transform', 'translate(0,' + i + ')'); svg.appendChild(e); }
+      svg.appendChild(p);
+      fig.appendChild(svg); document.body.appendChild(svg); const bb = p.getBBox(); svg.setAttribute('viewBox', [bb.x - 16, bb.y - 12, bb.width + 32, bb.height + 48].join(' ')); fig.appendChild(svg); fig.classList.add('sfig3d');
+      if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        let tx = 0, ty = 0, cx = 0, cy = 0, last = 0; const t0 = performance.now(), hero = fig.parentNode || fig;
+        const aim = e => { const r = fig.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = Math.max(-1, Math.min(1, ((q.clientX - r.left) / r.width - .5) * 2)); ty = Math.max(-1, Math.min(1, ((q.clientY - r.top) / r.height - .5) * 2)); last = performance.now(); };
+        ['pointermove', 'touchmove'].forEach(n => document.addEventListener(n, aim, {passive: true}));
+        const loop = now => { if (!document.hidden && fig.isConnected) { if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .55) * .6; ty = Math.cos(k * .4) * .3; } cx += (tx - cx) * .07; cy += (ty - cy) * .07; fig.style.setProperty('--ry', (cx * 14).toFixed(2) + 'deg'); fig.style.setProperty('--rx', (-cy * 6).toFixed(2) + 'deg'); } requestAnimationFrame(loop); };
+        requestAnimationFrame(loop);
+      }
     }
     const tx = document.createElement('div'); tx.className = 'stx';
     const k = document.createElement('p'); k.className = 'hgreet'; k.textContent = s.sys; tx.appendChild(k);
