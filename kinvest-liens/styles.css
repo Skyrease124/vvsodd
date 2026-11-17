@@ -1066,3 +1066,7 @@ dialog{perspective:1100px}
 .aist.on{filter:brightness(1.22)}
 .aist.haslive,.dmap .usmap .st.haslive{animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*16ms)}
 @media(prefers-reduced-motion:reduce){.aimap svg{transition:none}}
+/* State page camera box */
+.cambox{margin:18px 0;padding:14px;border:1px solid #24376a;border-radius:18px;background:#0e1a38}
+.cambox h2{margin:0 0 4px;font-size:20px}.cambox .cammap{height:320px;border-radius:12px;overflow:hidden}
+.cambox .cambar a,.cambox .svnote{display:none}

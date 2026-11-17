@@ -634,7 +634,7 @@ const CameraData = {
     else if (!okP.length && badP.length) panel.appendChild(mk('p', 'notice', 'Nearby cameras temporarily unavailable'));
     else if (badP.length) panel.appendChild(mk('p', 'small muted', 'No cameras found in the feeds that answered; some feeds are temporarily unavailable (below).'));
     badP.forEach(p => { const x = mk('p', 'small'); x.append(p.name + ' cameras temporarily unavailable. ', this.link('Open the official viewer', p.viewer)); panel.appendChild(x); });
-    viewP.forEach(p => { const x = mk('p', 'small'); x.append(p.state + ' cameras near this lot: ', this.link('Open the ' + p.name + ' official viewer', p.viewer), ' (not built into this map).'); panel.appendChild(x); });
+    viewP.forEach(p => { const x = mk('p', 'small'); x.append(p.state + ' cameras nearby: ', this.link('Open the ' + p.name + ' official viewer', p.viewer), ' (not built into this map).'); panel.appendChild(x); });
     if (okP.some(p => p.partial)) panel.appendChild(mk('p', 'small muted', 'Some Caltrans districts did not answer; nearby cameras there may be missing.'));
     if (okP.length) panel.appendChild(mk('p', 'small muted', 'Cameras from: ' + okP.map(p => p.name).join('; ') + '.'));
     if (d.cameras.length) choose(d.cameras[0]);
