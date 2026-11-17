@@ -65,9 +65,15 @@ const AuctionUpdates = (() => {
   const TOPIC = {zoning: 'Zoning', roads: 'Roads & construction', flood: 'Flooding & storms', infra: 'Infrastructure', development: 'Development'};
   function newsBlock(county, state) {
     const box = mk('div', 'cnews'), list = mk('div'); box.appendChild(list);
+    const ask = async () => { const r = await fetch('/.netlify/functions/countynews?' + new URLSearchParams({state, county})); return r.json(); };
     const run = async () => {
       list.textContent = ''; list.appendChild(mk('p', 'small muted', 'Looking for recent stories about ' + county + ' County…'));
-      let d; try { const r = await fetch('/.netlify/functions/countynews?' + new URLSearchParams({state, county})); d = await r.json(); if (!d || d.ok !== true || !Array.isArray(d.articles)) throw new Error('bad'); } catch (e) {
+      let d; try {
+        d = await ask();
+        // the first search for a county runs in the background (the news index can take a minute): check back every few seconds
+        for (let n = 0; d && d.ok === true && d.pending && n < 14; n++) { list.firstChild.textContent = 'Searching for recent stories about ' + county + ' County. The first search for a county can take up to a minute…'; await new Promise(r => setTimeout(r, 6000)); if (!box.isConnected) return; d = await ask(); }
+        if (!d || d.ok !== true || d.pending || !Array.isArray(d.articles)) throw new Error('bad');
+      } catch (e) {
         list.textContent = ''; list.appendChild(mk('p', 'notice', 'County news temporarily unavailable'));
         const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', run); list.appendChild(b); return; }
       list.textContent = '';
