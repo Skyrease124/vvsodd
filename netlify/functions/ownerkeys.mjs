@@ -12,6 +12,7 @@ import * as GOV from '../lib/govdata.mjs';
 import * as GM from '../lib/gmaps.mjs';
 import * as RC from '../lib/rentcast.mjs';
 import * as CEN from '../lib/census.mjs';
+import * as BLS from '../lib/bls.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -23,6 +24,11 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'bls') {
+    try { const r = await BLS.jobsFor('13', '021'); if (!r.ok) return json(200, { ok: false, error: r.reason === 'nokey' ? 'No key saved yet.' : 'No answer.' });
+      return json(200, { ok: true, nlr: true, text: r.none ? 'Answered, but no data for the test county.' : 'Bibb County, GA unemployment ' + r.rate + '% (' + r.month + '), state ' + r.state + '%, US ' + r.us + '%.' }); }
+    catch (e) { return json(200, { ok: false, error: String(e.message || e).slice(0, 200) }); }
+  }
   if (b.test === 'census') {
     try { const r = await CEN.neighborhood(32.84, -83.63); if (!r.ok) return json(200, { ok: false, error: r.reason === 'nokey' ? 'No key saved yet.' : 'No answer.' });
       return json(200, { ok: true, nlr: true, text: 'ACS ' + r.range + '. Test spot in Macon, GA: tract median household income ' + (r.tract && r.tract.income ? '$' + r.tract.income.toLocaleString('en-US') : 'n/a') + ', ' + (r.county ? r.county.name : '') + ' population ' + (r.county && r.county.pop ? r.county.pop.toLocaleString('en-US') : 'n/a') + '.' }); }
