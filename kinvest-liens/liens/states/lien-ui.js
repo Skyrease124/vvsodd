@@ -770,6 +770,33 @@ const GovData = {
     });
   }
 };
+// Apple-style tool grid under each map: icon tiles in a fixed order, labels kept short, fine print moved into a quiet footnote.
+const ToolGrid = {
+  ORDER: [['Street View photo', '\ud83d\udcf7', 'Photo'], ['Street View near this parcel', '\ud83e\uddcd', 'Street View'], ['Nearby Cameras', '\ud83c\udfa5', 'Cameras'],
+    ['Weather & air', '\u26c5', 'Weather'], ['Fires nearby', '\ud83d\udd25', 'Fires'], ['Crime', '\ud83d\udee1\ufe0f', 'Crime'],
+    ['Property record', '\ud83c\udfe0', 'Record'], ['Road access', '\ud83d\udee3\ufe0f', 'Road'], ['Nearby places', '\ud83d\udccd', 'Places'],
+    ['Energy', '\u26a1', 'Energy'], ['Parks', '\ud83c\udf32', 'Parks']],
+  polish(bar, sv) {
+    bar.classList.add('toolgrid');
+    const items = [...bar.children].filter(e => e.matches('button, a.btn'));
+    const key = e => (e.textContent || '').replace(/\s*\(Pro\)\s*$/, '').trim();
+    const rank = e => { const i = this.ORDER.findIndex(o => o[0] === key(e)); return i < 0 ? 99 : i; };
+    items.sort((a, b) => rank(a) - rank(b));
+    bar.textContent = '';
+    items.forEach(e => {
+      const o = this.ORDER.find(x => x[0] === key(e)) || [key(e), '\u2022', key(e)], pro = /\(Pro\)\s*$/.test(e.textContent);
+      e.classList.add('tool'); e.setAttribute('aria-label', o[0] + (pro ? ' (Pro)' : '')); e.title = o[0];
+      e.textContent = ''; const ic = document.createElement('span'); ic.className = 'ti'; ic.textContent = o[1]; ic.setAttribute('aria-hidden', 'true');
+      const lb = document.createElement('span'); lb.className = 'tl'; lb.textContent = o[2]; e.append(ic, lb);
+      if (pro) { const b = document.createElement('span'); b.className = 'tpro'; b.textContent = 'PRO'; e.appendChild(b); }
+      // keep the label when other code later rewrites the text (e.g. "Hide cameras")
+      e.addEventListener('click', () => setTimeout(() => { if (!e.querySelector('.tl')) { const t = e.textContent; e.textContent = ''; const i2 = ic.cloneNode(true), l2 = lb.cloneNode(true); l2.textContent = /^Hide/.test(t) ? 'Hide' : o[2]; e.append(i2, l2); } e.classList.toggle('on', e.getAttribute('aria-expanded') === 'true'); }, 0));
+      bar.appendChild(e);
+    });
+    if (sv && sv.map) { const f = document.createElement('p'); f.className = 'toolfoot'; sv.map.textContent = 'Open the county parcel map'; f.append(sv.map); bar.after(f); }
+    if (sv && sv.note && sv.note.parentNode) { sv.note.classList.add('toolnote'); const d = document.createElement('details'); d.className = 'toolabout'; const sm = document.createElement('summary'); sm.textContent = 'About Street View images'; sv.note.before(d); d.append(sm, sv.note); }
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -797,6 +824,7 @@ const CameraData = {
     if (typeof WxData !== 'undefined') WxData.attach(bar, panel, center);
     if (typeof GoogleMaps !== 'undefined') { GoogleMaps.m = m; GoogleMaps.attach(bar, panel, center); }
     if (typeof GovData !== 'undefined') { GovData.attach(bar, panel, center, 'crime', L, m); GovData.attach(bar, panel, center, 'parks', L, m); }
+    PaidGate.paid().then(() => setTimeout(() => ToolGrid.polish(bar, sv), 0));
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};

@@ -1137,3 +1137,23 @@ details.more[open]>summary::after{content:"\2212"}details.more>*:not(summary){ma
 @media(max-width:520px){.nav nav a.btn[href$="#contact"]{display:none}.nav nav{gap:10px}}
 .plans .btn.ghost{color:#ffd166!important;border-color:#ffd166!important;background:transparent!important}
 .pglock a.small{display:inline-block;margin-top:6px}
+/* Map tools: Apple-style grid of icon tiles */
+.cambar.toolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin:12px 0 4px;padding:0}
+.toolgrid .tool{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:74px;padding:10px 4px 8px;margin:0;
+  border:1px solid rgba(255,255,255,.08)!important;border-radius:16px!important;background:rgba(255,255,255,.06)!important;color:#f2f5fb!important;
+  font:600 12.5px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:-.01em;box-shadow:none!important;transform:none!important;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:background .18s ease,border-color .18s ease,transform .12s ease!important;text-decoration:none;cursor:pointer;white-space:normal;text-align:center}
+.toolgrid .tool:hover{background:rgba(255,255,255,.1)!important}
+.toolgrid .tool:active{transform:scale(.96)!important}
+.toolgrid .tool.on,.toolgrid .tool[aria-expanded="true"]{background:rgba(255,209,102,.16)!important;border-color:rgba(255,209,102,.55)!important}
+.toolgrid .ti{font-size:22px;line-height:1}.toolgrid .tl{display:block;color:#f2f5fb}
+.toolgrid .tpro{position:absolute;top:6px;right:7px;font-size:9px;font-weight:800;letter-spacing:.06em;color:#1b1400;background:#ffd166;border-radius:6px;padding:1px 4px}
+.toolfoot{margin:2px 0 8px;font-size:13px}.toolfoot a{color:#9ecbff}
+.toolnote{font-size:12px!important;line-height:1.45;color:#9fb1d6!important;margin:6px 0 10px!important;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.04)}
+@media(min-width:700px){.cambar.toolgrid{grid-template-columns:repeat(6,1fr)}}
+
+.cambar.toolgrid .tool.btn,.lotdlg .cambar.toolgrid .tool.btn,dialog .cambar.toolgrid .tool.btn{border:1px solid rgba(255,255,255,.1)!important;color:#f2f5fb!important;background:rgba(255,255,255,.06)!important}
+.cambar.toolgrid .tool.btn.on,.cambar.toolgrid .tool.btn[aria-expanded="true"]{background:rgba(255,209,102,.16)!important;border-color:rgba(255,209,102,.6)!important}
+details.toolabout{margin:4px 0 10px}details.toolabout>summary{cursor:pointer;color:#9fb1d6;font-size:13px;list-style:none}details.toolabout>summary::before{content:"\24D8  "}
+details.toolabout .toolnote{margin-top:6px!important}
+details.toolabout,dialog details.toolabout{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}details.toolabout>summary{padding:4px 0!important;background:transparent!important}
