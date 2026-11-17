@@ -10,6 +10,7 @@ import * as ENERGY from '../lib/energy.mjs';
 import * as WX from '../lib/wx.mjs';
 import * as GOV from '../lib/govdata.mjs';
 import * as GM from '../lib/gmaps.mjs';
+import * as RC from '../lib/rentcast.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -21,6 +22,14 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'rentcast') {
+    const k = KEYS.keyOf('RENTCAST_KEY'); if (!k) return json(200, { ok: false, error: 'No key saved yet.' });
+    // A bad-key check that costs no credit: RentCast rejects invalid keys before counting a request? Not guaranteed, so test with a 0-result query only once a day.
+    try { const r = await fetch((process.env.RENTCAST_BASE || 'https://api.rentcast.io/v1') + '/properties?' + new URLSearchParams({ address: '1 Test Rd, Nowhere, ZZ 00000', limit: 1 }), { headers: { 'X-Api-Key': k }, signal: AbortSignal.timeout(10000) });
+      const d = await r.json().catch(() => ({})); if (r.status === 401 || r.status === 403) return json(200, { ok: false, error: 'RentCast said: ' + (d.message || 'key not accepted') });
+      return json(200, { ok: true, nlr: true, text: 'Used this month on the site: ' + (await RC.usedThisMonth()) + ' of ' + RC.CAP + ' (this test may count as 1 on your RentCast plan).' }); }
+    catch (e) { return json(200, { ok: false, error: 'No answer from RentCast.' }); }
+  }
   if (b.test === 'vision') {
     const k = KEYS.keyOf('GOOGLE_VISION_KEY'); if (!k) return json(200, { ok: false, error: 'No key saved yet.' });
     const res = [], chk = async (name, f) => { try { const m = await f(); res.push(name + ': ' + (m || 'OK')); } catch (e) { res.push(name + ': FAILED (' + String(e.message || e).slice(0, 140) + ')'); } };
