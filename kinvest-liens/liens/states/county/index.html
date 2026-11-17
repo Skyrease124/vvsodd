@@ -23,10 +23,17 @@
   <h1 id="cname">County</h1>
   <div class="notice" role="note"><b>Verify before you bid.</b> Dates and rules come from state law and county pages and can change. Confirm everything with the county tax collector.</div>
   <p id="clink"></p>
-  <div id="sale"></div>
-  <div id="screenhost"></div>
-  <div id="upsales"></div>
-  <div id="lienbox"></div>
+  <div class="tabs" role="tablist" aria-label="County sections">
+    <button type="button" role="tab" id="tabbtn-sales" aria-controls="tab-sales" aria-selected="true">Sales &amp; liens</button>
+    <button type="button" role="tab" id="tabbtn-news" aria-controls="tab-news" aria-selected="false" tabindex="-1">Local News &amp; Notices <span id="newsdot" class="tabdot" hidden>Update</span></button>
+  </div>
+  <div id="tab-sales" role="tabpanel" aria-labelledby="tabbtn-sales">
+    <div id="sale"></div>
+    <div id="screenhost"></div>
+    <div id="upsales"></div>
+    <div id="lienbox"></div>
+  </div>
+  <div id="tab-news" role="tabpanel" aria-labelledby="tabbtn-news" hidden></div>
   <h2>Before you buy: a checklist</h2>
   <ol id="dd" class="salesteps"></ol>
   <p class="small muted">Educational only. Not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal.</p>
@@ -60,6 +67,7 @@
 <script src="../lien-ui.js"></script>
 <script src="../parcel-features.js"></script>
 <script src="../upcoming-sales.js"></script>
+<script src="../auction-updates.js"></script>
 <script src="../land-map.js"></script>
 <script src="screen.js"></script>
 <script src="county.js"></script>

@@ -960,3 +960,14 @@ a.flink,a.tlink{color:#7bd3ff!important}
   .aichat table.aistates td:first-child{font-size:16px;font-weight:700}.aichat table.aistates td:first-child::before{content:none}
 }
 .aichat table.aistates a{color:#0b6e4f;font-weight:700}
+
+/* Auction updates, county tabs, county news */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid rgba(255,255,255,.18);margin:14px 0 12px}
+.tabs button{background:transparent;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;color:inherit;font:inherit;font-weight:600;padding:10px 14px;cursor:pointer;min-height:44px}
+.tabs button[aria-selected=true]{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#ffd166}
+.tabdot{font-size:11px;font-weight:700;background:#f59e0b;color:#1f1300;border-radius:999px;padding:1px 7px;margin-left:4px}
+.aubox .usitem,.aubox .auitem{margin:8px 0}.us-event .ustype{background:#3b0764;color:#f3e8ff}.us-taxlien .ustype{background:#7c2d12;color:#ffedd5}
+.st-postponed .usstat,.st-unverified .usstat{color:#fcd34d}.st-unverified{border-style:dashed}.uscal{margin:8px 0}.ausaved{border-left:3px solid #f59e0b;padding:4px 8px;margin:6px 0;background:rgba(245,158,11,.10);border-radius:6px}
+.newslist{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.newslist li{padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.03)}
+.newshead{display:block;font-weight:600;margin:4px 0;overflow-wrap:anywhere}.newstag{font-size:11px;font-weight:700;background:#0c4a6e;color:#e0f2fe;border-radius:999px;padding:2px 8px}
+.newstopic{font-size:11px;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:1px 7px}

@@ -36,4 +36,57 @@ check(by['1658-24']['status'] == 'redeemed', 'county-confirmed outcomes are kept
 out3 = B.build(out2, tmp, '2026-11-15')
 check(next(l for l in out3['listings'] if l.get('cert') == '617-24' and l['type'] == 'taxdeed')['goneSince'] == '2026-11-14', 'gone date is kept on later builds')
 shutil.rmtree(tmp)
+
+# ---- confirmed changes, sale events, source health, registry (TEST FIXTURE data) ----
+import check as C
+reg = [{'state': 'FL', 'county': 'Volusia', 'file': 'volusia', 'integrated': ['taxdeed'], 'calendar': {'name': 'Volusia Clerk', 'url': 'https://www.clerk.org/tax-deeds.aspx'}, 'links': {'Clerk': 'https://www.clerk.org/tax-deeds.aspx'}, 'probe': {'url': 'https://www.clerk.org/tax-deeds.aspx', 'contains': 'tax deed'}},
+       {'state': 'FL', 'county': 'Bay', 'file': 'bay', 'integrated': [], 'calendar': {'name': 'Bay Tax Collector', 'url': 'https://www.baytaxcollector.com/'}, 'links': {'TC': 'https://www.baytaxcollector.com/'}, 'probe': None}]
+def mk_src(event=None, items=None):
+    d = json.load(open(os.path.join(real, 'volusia-2026-11-17.json')))
+    d['items'] = items or d['items'][:3]
+    if event: d['event'] = event
+    t = tempfile.mkdtemp(); json.dump(d, open(os.path.join(t, 'v.json'), 'w')); return t
+CONF = {'name': 'Volusia County Clerk notice (TEST FIXTURE)', 'url': 'https://www.clerk.org/tax-deeds.aspx', 'date': '2026-11-10'}
+
+t = mk_src({'status': 'rescheduled', 'newDate': '2026-12-02', 'newTime': '09:00', 'note': 'TEST FIXTURE: sale moved', 'confirmedBy': CONF})
+o = B.build(None, t, '2026-11-12', reg, {})
+ev = o['events'][0]
+check(ev['status'] == 'rescheduled' and ev['saleDate'] == '2026-11-17' and ev['newDate'] == '2026-12-02' and ev['confirmedBy']['date'] == '2026-11-10' and ev['items'] == 3, 'confirmed date change: the sale event keeps the old and new dates and who confirmed it')
+check(all(l['status'] == 'rescheduled' and l['oldDate'] == '2026-11-17' and l['newDate'] == '2026-12-02' and l['confirmedBy']['url'] == CONF['url'] for l in o['listings'] if l['type'] == 'taxdeed'), 'every listing in that sale shows old date -> new date with the confirmation')
+shutil.rmtree(t)
+t = mk_src({'status': 'canceled', 'note': 'TEST FIXTURE: sale canceled', 'confirmedBy': CONF})
+o = B.build(None, t, '2026-11-12', reg, {}); check(o['events'][0]['status'] == 'canceled' and all(l['status'] == 'canceled' for l in o['listings'] if l['type'] == 'taxdeed'), 'confirmed cancellation: sale event and its listings are canceled')
+shutil.rmtree(t)
+for bad in ({'status': 'canceled', 'note': 'x'}, {'status': 'canceled', 'confirmedBy': {'name': 'x', 'url': 'http://not-https', 'date': '2026-11-10'}}, {'status': 'postponed'}):
+    t = mk_src(bad)
+    try: B.build(None, t, '2026-11-12', reg, {}); check(False, 'unconfirmed change accepted')
+    except AssertionError as e: check('confirmedBy' in str(e), 'a cancel / postpone without a named, https official confirmation is refused: %s' % bad.get('status'))
+    shutil.rmtree(t)
+t = mk_src({'status': 'postponed', 'note': 'TEST FIXTURE: postponed, no new date', 'confirmedBy': CONF}); o = B.build(None, t, '2026-11-12', reg, {})
+check(all(l['status'] == 'postponed' and 'oldDate' not in l and not l.get('newDate') for l in o['listings'] if l['type'] == 'taxdeed'), 'postponed with no announced date stays postponed (no invented new date)'); shutil.rmtree(t)
+t = mk_src({'status': 'rescheduled', 'confirmedBy': CONF})
+try: B.build(None, t, '2026-11-12', reg, {}); check(False, 'reschedule without a date accepted')
+except AssertionError as e: check('newDate' in str(e), 'a reschedule without a new date is refused')
+shutil.rmtree(t)
+# disappeared listing keeps the last time it was seen; a vanished listing is never turned into "canceled"
+t = mk_src(None); o1 = B.build(None, t, '2026-11-12', reg, {}); keep = [json.load(open(os.path.join(t, 'v.json')))['items'][0]]; shutil.rmtree(t)
+t = mk_src(None, keep); o2 = B.build(o1, t, '2026-11-15', reg, {}); g = [l for l in o2['listings'] if l['status'] == 'gone']
+check(len(g) == 2 and all(l['lastSeen'] == '2026-11-12' and l['goneSince'] == '2026-11-15' for l in g) and not any(l['status'] == 'canceled' for l in o2['listings']), 'listings that vanish are "gone" with the last time they were seen, never "canceled"'); shutil.rmtree(t)
+# registry + health
+o = B.build(None, real, '2026-11-12', reg, {'Volusia': {'ok': False, 'lastSuccess': '2026-11-12T10:00:00Z'}})
+check(o['counties']['Bay']['probed'] is False and o['counties']['Bay']['calendar']['url'].startswith('https://') and o['counties']['Bay']['integrated'] == [], 'a county without an integrated feed still carries its official calendar link')
+check(o['counties']['Volusia']['health']['ok'] is False and o['counties']['Volusia']['health']['lastSuccess'] == '2026-11-12T10:00:00Z', 'source health (and the last successful check) is carried into the data')
+check(set(o['counties']) == {'Volusia', 'Bay'} and not any(l['county'] == 'Bay' for l in o['listings']), 'only counties in the registry are built; a county marked non-integrated loads no lists')
+allreg = B.load_registry(); check(len(allreg) >= 18 and all(r['calendar']['url'].startswith('http') and r['state'] for r in allreg), 'the real registry has an official calendar link for every county')
+# health probe
+class R:
+    def __init__(s, body, status=200): s.body, s.status = body, status
+    def read(s, n): return s.body.encode()
+ok1 = C.probe('https://x', 'tax deed', opener=lambda req, timeout: R('<h1>Tax Deed sales</h1>'))
+ok2 = C.probe('https://x', 'tax deed', opener=lambda req, timeout: R('<h1>Moved</h1>'))
+def boom(req, timeout): raise OSError('timed out')
+ok3 = C.probe('https://x', None, opener=boom)
+check(ok1[0] is True and ok2[0] is False and 'expected text' in ok2[2] and ok3[0] is False, 'probe: ok when the page answers with its expected text; failed when the page changed or the site did not answer')
+res = C.run(reg, {'Volusia': {'lastSuccess': '2026-11-10T00:00:00Z'}}, '2026-11-17T00:00:00Z', prober=lambda u, c: (False, 0, 'down'))
+check(res['Volusia']['ok'] is False and res['Volusia']['lastSuccess'] == '2026-11-10T00:00:00Z' and 'Bay' not in res, 'a failed probe never overwrites the last successful check time; counties that refuse automated checks are not probed')
 print('\n%d checks passed' % ok)
