@@ -77,12 +77,12 @@
   $('aiclear').addEventListener('click', () => { selected.clear(); document.querySelectorAll('.aist.on').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); }); clearReact(); $('chat').textContent = ''; $('aiidle').hidden = false; label(); });
 
   function statesTable(rows) {
-    const wrap = mk('div', 'tablewrap'), t = mk('table', 'liens'), hr = t.createTHead().insertRow();
+    const wrap = mk('div', 'tablewrap'), t = mk('table', 'liens aistates'), hr = t.createTHead().insertRow();
     ['State', 'Type', 'Interest / penalty', 'Redemption', 'Bidding'].forEach(h => hr.appendChild(mk('th', '', h)));
     const tb = t.createTBody();
     rows.forEach(r => {
       const tr = tb.insertRow(); const c0 = tr.insertCell(); const a = mk('a', '', r.name); a.href = '../liens/states/state/?s=' + r.state; c0.appendChild(a); if (r.verify) c0.appendChild(mk('span', 'small muted', ' (verify)'));
-      [r.system, r.rate, r.redemption, r.bidding].forEach(v => tr.insertCell().textContent = v);
+      c0.dataset.label = 'State'; [['Type', r.system], ['Interest / penalty', r.rate], ['Redemption', r.redemption], ['Bidding', r.bidding]].forEach(([k, v]) => { const td = tr.insertCell(); td.dataset.label = k; td.textContent = v; });
     });
     wrap.appendChild(t); return wrap;
   }
@@ -159,7 +159,11 @@
       if (!r.ok) { out.className = 'aiout err'; out.textContent = d.error || 'Something went wrong. Please try again.'; }
       else {
         react(d);
-        const ap = mk('p', 'aians', ''); out.appendChild(ap); await typeOut(ap, d.answer);
+        // Lay the answer out as: summary sentence, bullet points ("- " lines), and a "Verify:" line.
+        const lines = String(d.answer || '').split(/\n+/).map(x => x.trim()).filter(Boolean), bullets = lines.filter(x => /^[-•*]\s+/.test(x)), verify = lines.filter(x => /^verify:/i.test(x)), rest = lines.filter(x => !bullets.includes(x) && !verify.includes(x));
+        const ap = mk('p', 'aians', ''); out.appendChild(ap); await typeOut(ap, rest.join(' '));
+        if (bullets.length) { const ul = mk('ul', 'aians aibul'); out.appendChild(ul); for (const b of bullets) { const li = mk('li', ''); ul.appendChild(li); const t = b.replace(/^[-•*]\s+/, ''), m = t.match(/^([^:]{2,70}):\s*(.*)$/); if (m) { li.appendChild(mk('b', '', m[1] + ': ')); const sp = mk('span'); li.appendChild(sp); await typeOut(sp, m[2]); } else await typeOut(li, t); } }
+        if (verify.length) { const vp = mk('p', 'aiverify small', ''); out.appendChild(vp); await typeOut(vp, verify.join(' ')); }
         out.scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest'});
         out.appendChild(mk('p', 'small muted', d.searched + (d.understood ? '' : ' (I could not fully read your wording, so I used a broad search)')));
         if (d.kind === 'states' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' states:')); out.appendChild(statesTable(d.results)); }
