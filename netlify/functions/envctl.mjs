@@ -3,6 +3,7 @@
 //   POST { point:[lng,lat] } -> map pin check only (no verified outline)
 //   -> { ok:true, mode:'boundary'|'point', matches:[{siteName, siteId, docs, restrictions:[{code, label|null}], mechanisms, media, engineering, effDates, address, city, pct, geom}], queried }
 //   or { ok:false, reason:'lookup' }  (the page shows "Registry check unavailable")
+import { requirePaid } from '../lib/paywall.mjs';
 import { pc, json, limited, proj, multiArea, esriToMulti, readOutline, outlineKey } from '../lib/geo.mjs';
 // Other states: official state maps where one exists, plus EPA's national Superfund institutional control boundaries.
 export const CDPHE = 'https://www.cohealthmaps.dphe.state.co.us/arcgis/rest/services/HMWMD/CDPHE_Institutional_Controls/MapServer/0/query';
@@ -114,6 +115,7 @@ export async function analyzePoint(lng, lat) {
 export default async function handler(req, context) {
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x';
   if (req.method !== 'POST') return json(405, { ok: false, error: 'POST only.' });
+  const deny = await requirePaid(req); if (deny) return deny;
   if (limited('ic' + ip, 40, 60000)) return json(429, { ok: false, error: 'Too many requests.' });
   let body; try { body = await req.clone().json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
   let key, run;

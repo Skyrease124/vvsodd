@@ -1,5 +1,9 @@
 // Run: node netlify/tests/envctl.test.mjs   (mocked Florida DEP Institutional Controls Registry; TEST FIXTURE data)
 import assert from 'node:assert/strict';
+import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
+process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'pw-'));
+const __auth = await import('../lib/auth.mjs'); await __auth.createUser('free@example.com', 'password123', false); { const u = await __auth.createUser('pro@example.com', 'password123', false); u.paidThrough = '2099-01-01'; await __auth.saveUser(u); }
+const PRO = (await __auth.sessionCookie('pro@example.com')).split(';')[0], FREE = (await __auth.sessionCookie('free@example.com')).split(';')[0];
 const { default: api, RESTRICTIONS } = await import('../functions/envctl.mjs');
 let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
 const sq = (x0, x1, y0 = 29.7, y1 = 29.701) => [[[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]]];
@@ -8,7 +12,7 @@ const site = (rings, restr) => ({ attributes: { PRIMARY_SITE_NAME: 'TEST FIXTURE
   BOUNDARY_RESTRICTIONS: restr, BOUNDARY_MECHANISM_TYPES: 'Declaration of Restrictive Covenant', BOUNDARY_CONTAMINATED_MEDIA: 'Groundwater', BOUNDARY_ENGINEERING_CONTROLS: 'None', BOUNDARY_MECHANISM_EFF_DATES: '14-APR-00' }, geometry: { rings } });
 let mode = 'ok', feats = [], lastBody = '';
 globalThis.fetch = async (u, o) => { lastBody = String(o && o.body); if (mode === 'down') throw new Error('net'); if (mode === 'http') return { ok: false, status: 500 }; if (mode === 'err') return { ok: true, json: async () => ({ error: { code: 400 } }) }; return { ok: true, json: async () => ({ features: feats }) }; };
-const call = async (body, ip = '1.1.1.1') => { const r = await api(new Request('http://x/e', { method: 'POST', body: JSON.stringify(body), headers: { 'x-nf-client-connection-ip': ip } }), {}); return { s: r.status, j: await r.json() }; };
+const call = async (body, ip = '1.1.1.1') => { const r = await api(new Request('http://x/e', { method: 'POST', body: JSON.stringify(body), headers: { 'x-nf-client-connection-ip': ip, cookie: PRO } }), {}); return { s: r.status, j: await r.json() }; };
 
 // 1. known overlap: half the lot inside a registry area
 feats = [site(sq(-82.41, -82.3995, 29.69, 29.71), 'Groundwater Use, Digging, LSSI')];
@@ -44,4 +48,6 @@ byUrl = { cohealthmaps: [cdphe(sq(-105.11, -105.09, 40.49, 40.51))] }; r = await
 failUrl = 'Superfund'; r = await call({ state: 'CO', rings: coLot(0.004) }); ok(r.j.ok === false && r.j.reason === 'lookup', 'CO: if any one source fails, the whole check is "Registry check unavailable" (never a partial "no overlap")');
 failUrl = null; byUrl = {}; r = await call({ state: 'AL', rings: sq(-86.3, -86.299, 32.3, 32.301) }); ok(r.j.ok && r.j.matches.length === 0 && /ADEM/.test(r.j.gap) && r.j.sources.length === 1, 'AL: EPA only, with an honest note that the state registry is not mapped');
 ok((await call({ state: 'TX', rings: lot(0) })).s === 400, 'unsupported state refused');
+const pw = (c) => api(new Request('http://x/e', { method: 'POST', body: JSON.stringify({ rings: lot(0) }), headers: c ? { cookie: c } : {} }), {});
+ok((await pw()).status === 402 && (await pw(FREE)).status === 402 && (await pw(PRO)).status === 200, 'environmental restrictions are for paid members: signed-out and free accounts get 402');
 console.log('\n' + pass + ' checks passed');

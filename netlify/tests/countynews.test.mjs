@@ -1,6 +1,8 @@
 // Run: node netlify/tests/countynews.test.mjs   (mocked GDELT; TEST FIXTURE headlines)
 import assert from 'node:assert/strict'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
 process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'news-'));
+const __auth = await import('../lib/auth.mjs'); await __auth.createUser('free@example.com', 'password123', false); { const u = await __auth.createUser('pro@example.com', 'password123', false); u.paidThrough = '2099-01-01'; await __auth.saveUser(u); }
+const PRO = (await __auth.sessionCookie('pro@example.com')).split(';')[0], FREE = (await __auth.sessionCookie('free@example.com')).split(';')[0];
 const N = await import('../lib/news.mjs'); const { default: api, _setTrigger, _resetStarting } = await import('../functions/countynews.mjs'); const { default: bgApi } = await import('../functions/countynews-background.mjs');
 let pass = 0; const ok = (c, msg) => { assert.ok(c, msg); pass++; console.log('ok -', msg); };
 N._setKnown(new Set(['FL|Volusia', 'FL|Lee', 'FL|Palm Beach', 'FL|Duval'])); N._setGap(5);
@@ -22,7 +24,7 @@ N._setFetch(async (u) => { u = String(u); calls++; lastQuery = decodeURIComponen
   if (mode === 'blank') return { ok: true, status: 200, text: async () => '' };
   return { ok: true, status: 200, text: async () => JSON.stringify({ articles: feed }) }; });
 let bg = null, triggers = 0; _setTrigger(async (s, c) => { triggers++; bg = N.refresh(s, c, { timeoutMs: 2000, retryMs: 5 }); });   // stands in for the background function
-const call = async (q, ip = '1.1.1.1') => { const r = await api(new Request('http://x/n?' + q, { headers: { 'x-nf-client-connection-ip': ip } }), {}); return { s: r.status, j: await r.json() }; };
+const call = async (q, ip = '1.1.1.1') => { const r = await api(new Request('http://x/n?' + q, { headers: { 'x-nf-client-connection-ip': ip, cookie: PRO } }), {}); return { s: r.status, j: await r.json() }; };
 const settle = async () => { if (bg) await bg; bg = null; };
 
 // cleaning
@@ -64,4 +66,6 @@ ok(r.j.ok === false && r.j.detail === 'empty reply', 'a blank reply from GDELT i
 // background function and method checks
 ok((await bgApi(new Request('http://x/b', { method: 'POST', body: JSON.stringify({ state: 'FL', county: 'Nowhere' }) }))).status === 400 && (await bgApi(new Request('http://x/b'))).status === 405, 'background lookup refuses unknown counties and non-POST');
 ok((await api(new Request('http://x/n', { method: 'POST' }), {})).status === 405, 'web request is GET only');
+const pwq = c => api(new Request('http://x/n?state=FL&county=Volusia', { headers: c ? { cookie: c } : {} }), {});
+ok((await pwq()).status === 402 && (await pwq(FREE)).status === 402 && (await pwq(PRO)).status === 200, 'county news is for paid members: signed-out and free accounts get 402');
 console.log('\n' + pass + ' checks passed');
