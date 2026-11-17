@@ -68,3 +68,5 @@ const PaidDownload = {
     const w = document.createElement('span'); w.className = 'pdl'; w.append(b, msg); return w;
   }
 };
+
+(function () { if (window.Map3D) return; const s = document.createElement('script'); s.src = (document.currentScript ? document.currentScript.src.replace(/[^\/]*$/, '') : '/liens/states/') + 'map3d.js'; document.head.appendChild(s); })();

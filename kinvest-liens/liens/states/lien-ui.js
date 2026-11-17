@@ -1355,3 +1355,5 @@ const LienResearch = {
     if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
   }
 };
+
+(function () { if (window.Map3D) return; const s = document.createElement('script'); s.src = (document.currentScript ? document.currentScript.src.replace(/[^\/]*$/, '') : '/liens/states/') + 'map3d.js'; document.head.appendChild(s); })();

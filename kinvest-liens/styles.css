@@ -1018,3 +1018,10 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .sfig3d{perspective:700px}
 .sfig3d svg{transform:rotateX(calc(18deg + var(--rx,0deg))) rotateY(var(--ry,0deg));transform-origin:50% 60%;overflow:visible;max-height:210px}
 @media(prefers-reduced-motion:reduce){.sfig3d svg{transform:rotateX(18deg)}}
+/* Lot maps in dialogs: 3D tilt + raised shadow (flattens while touched so panning stays exact) */
+dialog{perspective:1100px}
+.leaflet-container.m3d{border-radius:14px;transform:perspective(1000px) rotateX(9deg) rotateY(0deg);transform-origin:50% 70%;box-shadow:0 26px 28px -14px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.12);animation:m3dSway 9s ease-in-out infinite;transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s}
+.leaflet-container.m3d.flat{animation:none;transform:none;box-shadow:0 10px 18px -10px rgba(0,0,0,.5)}
+.leaflet-container.m3d.still{animation:none}
+@keyframes m3dSway{0%,100%{transform:perspective(1000px) rotateX(9deg) rotateY(-2.5deg)}50%{transform:perspective(1000px) rotateX(9deg) rotateY(2.5deg)}}
+@media(prefers-reduced-motion:reduce){.leaflet-container.m3d{animation:none}}
