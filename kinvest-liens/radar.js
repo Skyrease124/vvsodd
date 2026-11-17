@@ -162,11 +162,11 @@ window.TaxRadarOn = true;
   let fOpen = !!saved.fOpen;
   function renderFilters() {
     const f = $('rfilters'); f.textContent = ''; f.hidden = S.tab !== 'opp'; if (S.tab !== 'opp') return;
-    const head = mk('div', 'rf-head'); const tg = mk('button', 'rf-toggle'); tg.type = 'button'; tg.setAttribute('aria-expanded', String(fOpen || filtersOn()));
-    tg.append(mk('b', '', 'Find my deal'), mk('span', 'rf-sum', ' ' + (filtersOn() ? 'filters on' : 'filter by type, sale and budget')), mk('span', 'rf-car', fOpen || filtersOn() ? ' \u25B4' : ' \u25BE'));
-    tg.addEventListener('click', () => { fOpen = !(fOpen || filtersOn()); persist(); renderFilters(); renderFilterStatus(lastStat); }); head.appendChild(tg); f.appendChild(head);
+    const head = mk('div', 'rf-head'); const tg = mk('button', 'rf-toggle'); tg.type = 'button'; tg.setAttribute('aria-expanded', String(fOpen));
+    tg.append(mk('b', '', 'Find my deal'), mk('span', 'rf-sum', ' ' + (filtersOn() ? 'filters on' : 'filter by type, sale and budget')), mk('span', 'rf-car', fOpen ? ' \u25B4' : ' \u25BE'));
+    tg.addEventListener('click', () => { fOpen = !fOpen; persist(); renderFilters(); renderFilterStatus(lastStat); }); head.appendChild(tg); f.appendChild(head);
     const st = mk('div', 'rstatus'); st.setAttribute('role', 'status'); f.appendChild(st);
-    if (!(fOpen || filtersOn())) return;
+    if (!fOpen) return;
     const body = mk('div', 'rf-body');
     const row1 = mk('div', 'rf-row'); const lb = mk('label', 'rf-chk'); const cb = mk('input'); cb.type = 'checkbox'; cb.checked = S.vac; cb.addEventListener('change', () => { S.vac = cb.checked; persist(); renderMap(); updatePanel(); }); lb.append(cb, ' Vacant Land only'); row1.appendChild(lb); body.appendChild(row1);
     body.appendChild(mk('p', 'small muted rf-note', 'Vacant is counted only where the county list or its parcel records say so.'));
