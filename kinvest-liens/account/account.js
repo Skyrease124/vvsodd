@@ -50,6 +50,7 @@
       const t = document.createElement('p'); t.className = 'small muted'; t.style.margin = '4px 0 8px';
       t.textContent = [s.use && s.use.toLowerCase(), s.acres != null && s.acres + ' acres', s.market != null && 'county value $' + Math.round(s.market).toLocaleString('en-US'), s.face != null && 'tax owed $' + Number(s.face).toFixed(2), s.savedAt && 'saved ' + s.savedAt.slice(0, 10)].filter(Boolean).join(' \u00b7 ');
       li.appendChild(t);
+      { const au = document.createElement('div'); li.appendChild(au); if (typeof AuctionUpdates !== 'undefined') AuctionUpdates.badge(au, s); }   // confirmed auction changes for this saved parcel
       const row = document.createElement('div'); row.className = 'sact';
       const lien = {county: s.county, parcel: s.parcel, amount: s.face, market: s.market, use: s.use, acres: s.acres, certList: s.certList, saleDate: s.saleDate};
       const bb = typeof LienBuy !== 'undefined' ? LienBuy.button(lien, 'btn small') : null; if (bb) row.appendChild(bb);

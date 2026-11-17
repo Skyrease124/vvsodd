@@ -1,16 +1,39 @@
 // "Upcoming Tax Sales" for Florida county pages and the Florida page: data from upcoming-sales.json (tools/taxsales/build.py).
 // Sale types are kept apart and always labeled: Tax deed auction / County-held lien (OTC) / Lands Available for Taxes.
 const UpcomingSales = (() => {
-  const TYPES = {taxdeed: 'Tax deed auction', otc: 'County-held lien (OTC)', laft: 'Lands Available for Taxes'};
+  const TYPES = {taxdeed: 'Tax deed auction', taxlien: 'Tax lien certificate sale', otc: 'County-held lien (OTC)', laft: 'Lands Available for Taxes'};
   const STATUS = {scheduled: 'Scheduled', available: 'Available', redeemed: 'Redeemed – removed from sale', canceled: 'Canceled', rescheduled: 'Rescheduled',
-    withdrawn: 'Withdrawn – removed from sale', sold: 'Sold', gone: 'No longer listed · outcome unconfirmed'};
+    withdrawn: 'Withdrawn – removed from sale', sold: 'Sold', postponed: 'Postponed', gone: 'No longer listed · outcome unconfirmed', unverified: 'Status unverified'};
+  const SHOWN = ['scheduled', 'available', 'rescheduled', 'postponed', 'canceled'];   // everything else is tucked behind "Show redeemed, withdrawn and unlisted"
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
   const money = n => '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const day = d => { if (!d) return ''; const [y, m, dd] = d.split('-').map(Number); return new Date(Date.UTC(y, m - 1, dd)).toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}); };
   const time = (t, tz) => { if (!t) return ''; const [h, m] = t.split(':').map(Number); return ((h % 12) || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' AM ' : ' PM ') + (tz || 'ET'); };
-  let dataP = null;
-  const load = () => dataP || (dataP = fetch('/liens/states/upcoming-sales.json').then(r => { if (!r.ok) throw new Error(); return r.json(); }));
+  let dataP = null, cur = null;
+  const load = () => dataP || (dataP = fetch('/liens/states/upcoming-sales.json').then(r => { if (!r.ok) throw new Error(); return r.json(); }).then(d => (cur = d)));
+  const stamp = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}); };
+  const health = c => cur && cur.counties && cur.counties[c] && cur.counties[c].health || null;
+  // What to show for a listing: its recorded status, or "Status unverified" when it vanished from the official list or the county's official page could not be checked.
+  const effective = l => {
+    if (l.status === 'gone') return {status: 'unverified', why: 'gone', last: l.lastSeen || l.checked || ''};
+    const h = health(l.county);
+    if (['scheduled', 'available'].includes(l.status) && h && h.ok === false) return {status: 'unverified', why: 'source', last: h.lastSuccess || ''};
+    return {status: l.status};
+  };
+  const lastLine = (eff, county) => {
+    if (eff.why === 'gone') return 'Status unverified. This item is no longer on the official list, and the list does not say why. Last seen listed: ' + (eff.last ? (/^\d{4}-\d{2}-\d{2}$/.test(eff.last) ? day(eff.last) : eff.last) : 'date unknown') + '. It may have been redeemed, withdrawn, sold or moved: confirm with the official source.';
+    return 'Status unverified. The official page for ' + county + ' County could not be checked just now. Last successful check: ' + (eff.last ? stamp(eff.last) : 'none recorded') + '.';
+  };
+  // "Confirmed by <source>" plus, for a date change, the old and new dates.
+  function changeBlock(l, wrap) {
+    if (!['rescheduled', 'postponed', 'canceled'].includes(l.status)) return;
+    const when = (d, t) => day(d) + (t ? ', ' + time(t, l.tz) : '');
+    if (l.status === 'rescheduled') wrap.appendChild(mk('div', 'small usnote', 'Date changed: ' + when(l.oldDate || l.saleDate, l.saleTime) + ' \u2192 ' + when(l.newDate, l.newTime || l.saleTime)));
+    else if (l.status === 'postponed') wrap.appendChild(mk('div', 'small usnote', 'Postponed' + (l.newDate ? ' to ' + when(l.newDate, l.newTime) : ': a new date has not been announced') + '. Original date: ' + when(l.saleDate, l.saleTime)));
+    else wrap.appendChild(mk('div', 'small usnote', 'Canceled. Original date: ' + when(l.saleDate, l.saleTime)));
+    if (l.confirmedBy) { const c = mk('div', 'small muted', 'Confirmed by ' + l.confirmedBy.name + ' on ' + l.confirmedBy.date + ' \u00B7 '); c.appendChild(link('official notice', l.confirmedBy.url)); wrap.appendChild(c); }
+  }
 
   // Countdown + viewer's local time, computed in the browser (no outside time service).
   const ZONES = {ET: 'America/New_York', CT: 'America/Chicago', MT: 'America/Denver', PT: 'America/Los_Angeles'};
@@ -35,15 +58,18 @@ const UpcomingSales = (() => {
 
   function card(l) {
     const d = mk('div', 'usitem us-' + l.type + ' st-' + l.status);
-    const top = mk('div', 'ustop'); top.append(mk('span', 'ustype', TYPES[l.type]), mk('span', 'usstat', STATUS[l.status] || l.status)); d.appendChild(top);
+    const eff = effective(l);
+    const top = mk('div', 'ustop'); top.append(mk('span', 'ustype', TYPES[l.type]), mk('span', 'usstat', STATUS[eff.status] || eff.status)); d.appendChild(top);
+    if (eff.status === 'unverified') d.classList.add('st-unverified');
     const h = mk('div', 'ushead'); h.append(mk('b', '', 'Parcel ' + l.parcel), mk('span', 'small muted', ' · ' + l.county + ' County' + (l.cert ? ' · certificate ' + l.cert : ''))); d.appendChild(h);
-    if (l.type === 'taxdeed') d.appendChild(mk('div', 'small', 'Sale: ' + day(l.saleDate) + ', ' + time(l.saleTime, l.tz) + (l.status === 'rescheduled' && l.newDate ? ' → moved to ' + day(l.newDate) : '')));
-    if (l.type === 'taxdeed') { const w = whenLine(l); if (w) d.appendChild(w); }
+    if (l.type === 'taxdeed') { d.appendChild(mk('div', 'small', (['rescheduled', 'postponed', 'canceled'].includes(l.status) ? 'Original sale: ' : 'Sale: ') + day(l.saleDate) + ', ' + time(l.saleTime, l.tz) + ' (county local time)')); changeBlock(l, d); }
+    if (l.type === 'taxdeed' && eff.status !== 'unverified') { const w = whenLine(l); if (w) d.appendChild(w); }
     if (l.type === 'laft') d.appendChild(mk('div', 'small', 'Not an auction: offered at tax deed sale' + (l.offeredDate ? ' on ' + day(l.offeredDate) : '') + ' with no buyer; can be bought from the Clerk for the listed balance' + (l.deedNo ? ' \u00B7 tax deed #' + l.deedNo : '') + '.'));
     if (l.type === 'otc') d.appendChild(mk('div', 'small', 'Not an auction: the county holds this certificate and sells it over the counter.'));
     d.appendChild(mk('div', 'small', l.openingBid != null ? (l.type === 'otc' ? 'Listed amount: ' : l.type === 'laft' ? 'Balance to buy: ' : 'Opening bid: ') + money(l.openingBid) : 'Opening bid: not published in the official file we have'));
     if (l.openingBidNote && l.openingBid != null && l.type === 'taxdeed') d.appendChild(mk('div', 'small muted', l.openingBidNote));
-    if (l.statusNote) d.appendChild(mk('div', 'small usnote', l.statusNote));
+    if (eff.status === 'unverified') d.appendChild(mk('div', 'small usnote', lastLine(eff, l.county)));
+    else if (l.statusNote && !['rescheduled', 'postponed', 'canceled'].includes(l.status)) d.appendChild(mk('div', 'small usnote', l.statusNote));
     if (l.owner || l.ownerAddress || l.situs) d.appendChild(mk('div', 'small', [l.owner ? 'Owner: ' + l.owner : '', l.ownerAddress ? 'Mailing: ' + l.ownerAddress : '', l.situs ? 'Property: ' + l.situs : ''].filter(Boolean).join(' · ')));
     if (l.legal) d.appendChild(mk('div', 'small muted', 'Legal: ' + l.legal));
     if (l.assessed != null) d.appendChild(mk('div', 'small muted', 'Assessed value (property appraiser): ' + money(l.assessed).replace('.00', '') + (l.homestead ? ' · homestead' : '')));
@@ -58,6 +84,15 @@ const UpcomingSales = (() => {
     return d;
   }
 
+  // "Open official auction calendar" + an honest note on what we do and do not track for this county.
+  function calendarNote(data, county) {
+    const c = data.counties[county] || {}, w = mk('div', 'uscal'), integ = c.integrated || [], auction = integ.includes('taxdeed') || integ.includes('taxlien');
+    if (!auction) w.appendChild(mk('p', 'small', 'No integrated auction feed for ' + county + ' County: tax deed and tax lien sale dates, date changes and cancellations are not tracked here. Check the official calendar before you plan around any sale.'));
+    if (c.calendar && c.calendar.url) { const p = mk('p', 'small'); const a = link('Open official auction calendar', c.calendar.url); a.className = 'btn small'; p.append(a, ' ', mk('span', 'muted', '(' + c.calendar.name + ')')); w.appendChild(p); }
+    const h = c.health;
+    w.appendChild(mk('p', 'small muted', h ? (h.ok ? 'Official page checked ' + stamp(h.lastSuccess) + '.' : 'The official page could not be checked just now. Last successful check: ' + (h.lastSuccess ? stamp(h.lastSuccess) : 'none recorded') + '.') : (c.probed === false ? 'Automatic checking is not available for this county: its site refuses automated requests, so lists come from the county\u2019s published files.' : '')));
+    return w;
+  }
   async function mount(host, opt = {}) {
     host.textContent = '';
     const box = mk('section', 'usbox'); host.appendChild(box);
@@ -67,6 +102,7 @@ const UpcomingSales = (() => {
     const all = data.listings.filter(l => !opt.county || l.county === opt.county);
     const counties = Object.keys(data.counties).filter(c => !opt.county || c === opt.county);
     if (!counties.length) { box.appendChild(mk('p', 'small muted', 'We do not track upcoming sales for this county yet.')); return; }
+    if (opt.county) box.appendChild(calendarNote(data, opt.county));
     // filters
     const f = mk('div', 'usfilters');
     const sel = (label, opts) => { const l = mk('label', 'small'); l.append(label + ' '); const s = mk('select'); opts.forEach(([v, t]) => { const o = mk('option', '', t); o.value = v; s.appendChild(o); }); l.appendChild(s); f.appendChild(l); return s; };
@@ -89,8 +125,8 @@ const UpcomingSales = (() => {
     const draw = () => {
       const rows = all.filter(l => (!sc || !sc.value || l.county === sc.value) && (!st.value || l.type === st.value) &&
         (!sd.value || (sd.value === 'upcoming' ? l.saleDate >= today : l.saleDate === sd.value)) &&
-        (cb.checked || ['scheduled', 'available', 'rescheduled'].includes(l.status)));
-      const hidden = all.filter(l => !['scheduled', 'available', 'rescheduled'].includes(l.status)).length;
+        (cb.checked || SHOWN.includes(l.status)));
+      const hidden = all.filter(l => !SHOWN.includes(l.status)).length;
       list.textContent = ''; rows.slice(0, shown).forEach(l => list.appendChild(card(l)));
       sum.textContent = rows.length + ' listing' + (rows.length === 1 ? '' : 's') + (cb.checked || !hidden ? '' : ' (' + hidden + ' redeemed, withdrawn or no longer listed are hidden)') + '.';
       more.hidden = rows.length <= shown;
@@ -100,5 +136,5 @@ const UpcomingSales = (() => {
     draw();
     setInterval(() => list.querySelectorAll('.uscount').forEach(e => { const c = countdown(+e.dataset.at); if (c) e.textContent = c + e.dataset.local; else e.remove(); }), 60000);
   }
-  return {mount, load, TYPES, STATUS};
+  return {mount, load, calendarNote, card, effective, changeBlock, lastLine, stamp, day, time, TYPES, STATUS, SHOWN, link, mk, data: () => cur};
 })();

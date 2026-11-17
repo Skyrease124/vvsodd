@@ -1,0 +1,29 @@
+{
+ "checked": "2026-11-17T05:13:35Z",
+ "counties": {
+  "Volusia": {
+   "ok": true,
+   "status": 200,
+   "note": "",
+   "url": "https://www.clerk.org/tax-deeds.aspx",
+   "lastAttempt": "2026-11-17T05:13:35Z",
+   "lastSuccess": "2026-11-17T05:13:35Z"
+  },
+  "Palm Beach": {
+   "ok": true,
+   "status": 200,
+   "note": "",
+   "url": "https://www.pbctax.gov/taxes/property-tax/tax-certificates-and-deeds/",
+   "lastAttempt": "2026-11-17T05:13:35Z",
+   "lastSuccess": "2026-11-17T05:13:35Z"
+  },
+  "Miami-Dade": {
+   "ok": true,
+   "status": 200,
+   "note": "",
+   "url": "https://www.miamidadeclerk.gov/clerk/property-tax-deeds.page",
+   "lastAttempt": "2026-11-17T05:13:35Z",
+   "lastSuccess": "2026-11-17T05:13:35Z"
+  }
+ }
+}

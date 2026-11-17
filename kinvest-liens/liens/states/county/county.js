@@ -11,6 +11,14 @@ if (!link) {
   $('cname').textContent = name + ' County, Florida';
   { const ac = document.createElement('a'); ac.className = 'btn ghost'; ac.textContent = 'Ask the County (Pro)'; ac.href = '/account/ask-county/?' + new URLSearchParams({state: 'FL', county: name}); ac.style.marginLeft = '8px'; $('clink').after(ac); }
   if (typeof UpcomingSales !== 'undefined') UpcomingSales.mount($('upsales'), {county: name});
+  // Tabs: "Sales & liens" (default) and "Local News & Notices" (official auction notices, then county news). #news opens the second tab.
+  { const tabs = [['sales', $('tabbtn-sales'), $('tab-sales')], ['news', $('tabbtn-news'), $('tab-news')]]; let newsLoaded = false;
+    const show = (key, focus) => { tabs.forEach(([k, b, p]) => { const on = k === key; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; p.hidden = !on; if (on && focus) b.focus(); });
+      if (key === 'news' && !newsLoaded && typeof AuctionUpdates !== 'undefined') { newsLoaded = true; AuctionUpdates.tab($('tab-news'), name, 'FL'); }
+      try { history.replaceState(null, '', key === 'news' ? '#news' : location.pathname + location.search); } catch (e) {} };
+    tabs.forEach(([k, b], i) => { b.addEventListener('click', () => show(k)); b.addEventListener('keydown', e => { const n = {ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1}[e.key]; if (n != null) { e.preventDefault(); show(tabs[(n + tabs.length) % tabs.length][0], true); } }); });
+    if (location.hash === '#news') show('news');
+    if (typeof UpcomingSales !== 'undefined') UpcomingSales.load().then(d => { if ((d.events || []).some(e => e.county === name && e.status !== 'scheduled')) $('newsdot').hidden = false; }).catch(() => {}); }
   const a = document.createElement('a'); a.className = 'btn'; a.href = link[1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Open the county tax collector site';
   $('clink').appendChild(a);
   if (FL_PA[name]) { const b = document.createElement('a'); b.className = 'btn ghost'; b.style.marginLeft = '8px'; b.href = FL_PA[name]; b.target = '_blank'; b.rel = 'noopener noreferrer'; b.textContent = 'Find a parcel (property appraiser)'; $('clink').appendChild(b); }

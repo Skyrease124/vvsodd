@@ -1,0 +1,278 @@
+{
+ "_help": "One entry per county. Add a county or another state here: state, county, file (liens-<file>.js name, optional), integrated (sale types we load from official files: taxdeed, taxlien, otc, laft), calendar (the official auction calendar page), links (more official pages), probe ({url, contains} page that tools/taxsales/check.py fetches to record the last successful check; null when the site refuses automated requests). See README.md.",
+ "counties": [
+  {
+   "state": "FL",
+   "county": "Volusia",
+   "file": "volusia",
+   "integrated": [
+    "taxdeed",
+    "otc"
+   ],
+   "calendar": {
+    "name": "Volusia County Clerk of Court: tax deed sales",
+    "url": "https://www.clerk.org/tax-deeds.aspx"
+   },
+   "links": {
+    "Tax deed auctions (official)": "https://volusia.realtaxdeed.com/",
+    "Clerk tax deed page": "https://www.clerk.org/tax-deeds.aspx",
+    "Lands Available for Taxes": "https://www.clerk.org/lands_available.aspx"
+   },
+   "probe": {
+    "url": "https://www.clerk.org/tax-deeds.aspx",
+    "contains": "tax deed"
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Palm Beach",
+   "file": "palmbeach",
+   "integrated": [
+    "otc"
+   ],
+   "calendar": {
+    "name": "Palm Beach County Clerk: tax deed sale information",
+    "url": "https://www.mypalmbeachclerk.com/departments/courts/tax-deeds/sale-information"
+   },
+   "links": {
+    "Clerk tax deeds page": "https://www.mypalmbeachclerk.com/departments/courts/tax-deeds",
+    "Tax Collector: certificates and deeds": "https://www.pbctax.gov/taxes/property-tax/tax-certificates-and-deeds/"
+   },
+   "probe": {
+    "url": "https://www.pbctax.gov/taxes/property-tax/tax-certificates-and-deeds/",
+    "contains": "certificate"
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Lee",
+   "file": "lee",
+   "integrated": [
+    "laft"
+   ],
+   "calendar": {
+    "name": "Lee County Clerk of the Circuit Court",
+    "url": "https://www.leeclerk.org/"
+   },
+   "links": {
+    "Lee County Clerk": "https://www.leeclerk.org/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Miami-Dade",
+   "file": "miamidade",
+   "integrated": [
+    "otc"
+   ],
+   "calendar": {
+    "name": "Miami-Dade Clerk: property tax deeds",
+    "url": "https://www.miamidadeclerk.gov/clerk/property-tax-deeds.page"
+   },
+   "links": {
+    "Clerk property tax deeds page": "https://www.miamidadeclerk.gov/clerk/property-tax-deeds.page"
+   },
+   "probe": {
+    "url": "https://www.miamidadeclerk.gov/clerk/property-tax-deeds.page",
+    "contains": "tax deed"
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Alachua",
+   "file": "alachua",
+   "integrated": [],
+   "calendar": {
+    "name": "Alachua County Tax Collector: certificate sale information",
+    "url": "http://www.alachuacollector.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.alachuacollector.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Bay",
+   "file": "bay",
+   "integrated": [],
+   "calendar": {
+    "name": "Bay County Tax Collector: certificate sale information",
+    "url": "https://www.baytaxcollector.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "https://www.baytaxcollector.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Duval",
+   "file": "duval",
+   "integrated": [],
+   "calendar": {
+    "name": "Duval County Tax Collector: certificate sale information",
+    "url": "http://www.coj.net/departments/tax-collector.aspx"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.coj.net/departments/tax-collector.aspx"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Escambia",
+   "file": "escambia",
+   "integrated": [],
+   "calendar": {
+    "name": "Escambia County Tax Collector: certificate sale information",
+    "url": "http://www.escambiataxcollector.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.escambiataxcollector.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Hernando",
+   "file": "hernando",
+   "integrated": [],
+   "calendar": {
+    "name": "Hernando County Tax Collector: certificate sale information",
+    "url": "https://www.hernandotax.us/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "https://www.hernandotax.us/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Hillsborough",
+   "file": "hillsborough",
+   "integrated": [],
+   "calendar": {
+    "name": "Hillsborough County Tax Collector: certificate sale information",
+    "url": "http://www.hillstax.org/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.hillstax.org/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Leon",
+   "file": "leon",
+   "integrated": [],
+   "calendar": {
+    "name": "Leon County Tax Collector: certificate sale information",
+    "url": "http://www.leontaxcollector.net/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.leontaxcollector.net/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Manatee",
+   "file": "manatee",
+   "integrated": [],
+   "calendar": {
+    "name": "Manatee County Tax Collector: certificate sale information",
+    "url": "http://www.taxcollector.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.taxcollector.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Nassau",
+   "file": "nassau",
+   "integrated": [],
+   "calendar": {
+    "name": "Nassau County Tax Collector: certificate sale information",
+    "url": "http://nassautaxes.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://nassautaxes.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Osceola",
+   "file": "osceola",
+   "integrated": [],
+   "calendar": {
+    "name": "Osceola County Tax Collector: certificate sale information",
+    "url": "http://www.osceolataxcollector.org/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.osceolataxcollector.org/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Pasco",
+   "file": "pasco",
+   "integrated": [],
+   "calendar": {
+    "name": "Pasco County Tax Collector: certificate sale information",
+    "url": "http://www.pascotaxes.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.pascotaxes.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Santa Rosa",
+   "file": "santarosa",
+   "integrated": [],
+   "calendar": {
+    "name": "Santa Rosa County Tax Collector: certificate sale information",
+    "url": "http://www.srctc.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.srctc.com/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Sarasota",
+   "file": "sarasota",
+   "integrated": [],
+   "calendar": {
+    "name": "Sarasota County Tax Collector: certificate sale information",
+    "url": "https://www.sarasotataxcollector.gov/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "https://www.sarasotataxcollector.gov/"
+   },
+   "probe": null
+  },
+  {
+   "state": "FL",
+   "county": "Walton",
+   "file": "walton",
+   "integrated": [],
+   "calendar": {
+    "name": "Walton County Tax Collector: certificate sale information",
+    "url": "http://www.waltontaxcollector.com/"
+   },
+   "links": {
+    "Tax Collector: certificate sales": "http://www.waltontaxcollector.com/"
+   },
+   "probe": null
+  }
+ ]
+}
