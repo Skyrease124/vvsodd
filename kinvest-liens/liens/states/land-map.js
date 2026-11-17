@@ -38,7 +38,8 @@ const LandMap = {
     if (!m) { box.remove(); note.textContent = 'Location not found on the map: this parcel ID is not in the ' + sp.srcName + ' parcel layer (it may have been split, merged or renumbered). No preview shown.'; return; }
     let L; try { L = await this.lib(); } catch (e) { note.textContent = 'The map could not load.'; return; }
     const map = L.map(box, {zoomControl: true, attributionControl: true});
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 20, maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(map);
+    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 20, maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(map);
+    if (typeof OFM !== 'undefined') OFM.add(map, L.control.layers({'Satellite': sat}).addTo(map));
     const g = L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: m.g}}, {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.15}}).addTo(map);
     map.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
     note.textContent = 'Outline from ' + sp.srcName + ' (parcel ' + m.cid + '), matched by parcel ID; not a survey. Satellite imagery from Esri World Imagery, capture dates vary. Do not visit or enter the property.';

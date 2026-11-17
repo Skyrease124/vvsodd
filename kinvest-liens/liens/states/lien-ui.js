@@ -1,5 +1,34 @@
 // Shared renderers for the Florida sale box and the lien table.
 // HOA status (tools/fl-parcels/hoa_backfill.py): confirmed only from a reviewed recorded declaration; one JSON file per county.
+// OpenFreeMap (free, OpenStreetMap data): street names on top of satellite + a "Street map (OpenFreeMap)" option. Loads lazily; maps still work if it fails.
+const OFM = {
+  STYLE: 'https://tiles.openfreemap.org/styles/liberty',
+  _p: null,
+  _js(u) { return new Promise((ok, no) => { const s = document.createElement('script'); s.src = u; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); },
+  load() {
+    return this._p || (this._p = (async () => {
+      if (!document.querySelector('link[data-ofm]')) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.dataset.ofm = '1'; l.href = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css'; document.head.appendChild(l); }
+      if (!window.maplibregl) await this._js('https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js');
+      if (!(window.L && L.maplibreGL)) await this._js('https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js');
+      const r = await fetch(this.STYLE); if (!r.ok) throw new Error('style');
+      const full = await r.json();
+      const labels = Object.assign({}, full, {layers: full.layers.filter(x => x.type === 'symbol' && !/poi|housenumber/.test(x.id))});
+      return {full, labels};
+    })());
+  },
+  // adds "Street names" (on by default) and "Street map (OpenFreeMap)" to a Leaflet map + its layers control
+  async add(m, ctl) {
+    try {
+      const st = await this.load(); if (!m._loaded && !m._container) return;
+      const attr = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+      const names = L.maplibreGL({style: st.labels, attribution: attr, interactive: false});
+      const street = L.maplibreGL({style: st.full, attribution: attr, interactive: false});
+      ctl.addBaseLayer(street, 'Street map (OpenFreeMap)');
+      ctl.addOverlay(names, 'Street names');
+      names.addTo(m);
+    } catch (e) { /* labels are optional */ }
+  }
+};
 const HoaData = {
   base: '/liens/states/hoa/', cache: {}, decls: null,
   slug: c => String(c).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
@@ -671,7 +700,7 @@ const LienMap = {
         const m = L.map(box); box._map = m;
         const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
         const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
-        sat.addTo(m); const layersCtl = L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
+        sat.addTo(m); const layersCtl = L.control.layers({'Satellite': sat, 'Street': street}).addTo(m); OFM.add(m, layersCtl);
         if (!CountyAerial.enabled(l.county)) { const lc = CountyAerial.labelControl(L, m); lc.set('Satellite: Esri World Imagery (capture dates vary)'); m.on('baselayerchange', e => lc.set(e.layer === street ? 'Street map: \u00a9 OpenStreetMap contributors' : 'Satellite: Esri World Imagery (capture dates vary)')); }
         const g = box._outline = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
         { const tt = TrafficData.seg(pd.r); if (tt) { const road = L.layerGroup(tt.geo.map(pa => L.polyline(pa.map(q => [q[1], q[0]]), {color: '#ff7a00', weight: 7, opacity: 0.9, lineCap: 'round'}))).addTo(m); box._traffic = road;
@@ -715,7 +744,7 @@ const LienMap = {
       const m = L.map(box); box._map = m;
       const street = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'});
       const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
-      sat.addTo(m); L.control.layers({'Satellite': sat, 'Street': street}).addTo(m);
+      sat.addTo(m); OFM.add(m, L.control.layers({'Satellite': sat, 'Street': street}).addTo(m));
       const g = L.geoJSON(r, {style: {color: '#ff3b30', weight: 3, fillColor: '#ff3b30', fillOpacity: 0.25}}).addTo(m);
       m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
       setTimeout(() => m.invalidateSize(), 50);
