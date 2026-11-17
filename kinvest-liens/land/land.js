@@ -20,9 +20,30 @@
     else r.sort((a, b) => (b.created > a.created ? 1 : -1));
     return r;
   }
+  // Empty state: when no owner-listed land matches, point to official land opportunities already on the site, by sale type.
+  let RADAR = null;
+  async function alt(n) {
+    const box = $('alt'); if (!box) return; if (n) { box.hidden = true; return; }
+    box.hidden = false; box.textContent = '';
+    box.appendChild(mk('h2', '', 'Other land you can research now'));
+    box.appendChild(mk('p', 'small', 'No owner-listed land matches yet. These come from official government lists on PricePocketAsset. Each sale type works differently, so read the county rules before you bid.'));
+    try { RADAR = RADAR || await (await fetch('/liens/states/radar.json')).json(); } catch (e) { box.appendChild(mk('p', 'small', 'Lists are unavailable right now.')); return; }
+    const st = $('st') && $('st').value, G = [['state-held', 'State-held land', 'Land the state already owns after unpaid taxes. Usually bought from the state at any time, not at an auction.'],
+      ['deed', 'Tax deed sales', 'Auctions where the winning bidder gets a deed to the property (rules vary by state).'],
+      ['county-held', 'County-held tax liens', 'Liens the county kept after its sale. You buy the lien (the debt), not the land, unless the owner never pays.'],
+      ['lien-sale', 'Advertised tax lien sales', 'Lists published before a tax lien sale. You buy the lien, not the land.']];
+    G.forEach(([g, title, why]) => {
+      const cs = RADAR.counties.filter(c => c.group === g && (!st || c.state === st)).sort((a, b) => b.count - a.count); if (!cs.length) return;
+      const sec = mk('section', 'altsec'); sec.append(mk('h3', '', title), mk('p', 'small', why));
+      const ul = mk('ul', 'altlist'); cs.slice(0, 6).forEach(c => { const li = mk('li'), a = mk('a', '', (/County|City/.test(c.county) ? c.county : c.county + ' County') + ', ' + c.state); a.href = '/liens/states/state/?s=' + c.state + '#' + encodeURIComponent(c.county); li.append(a, ' \u00b7 ' + c.count.toLocaleString('en-US') + ' listed'); ul.appendChild(li); });
+      sec.appendChild(ul); if (cs.length > 6) sec.appendChild(mk('p', 'small', '+ ' + (cs.length - 6) + ' more on the map.')); box.appendChild(sec);
+    });
+    const end = mk('p', 'sact'); const a1 = mk('a', 'btn', 'Sell my land'); a1.href = '/land/sell/'; const a2 = mk('a', 'btn ghost', 'Open the Tax Sale map'); a2.href = '/#map'; end.append(a1, ' ', a2); box.appendChild(end);
+  }
   function render() {
     const r = rows(), box = $('list'); box.textContent = '';
-    $('msg').textContent = r.length ? r.length + (r.length === 1 ? ' listing' : ' listings') + (here ? ' (distance from you shown)' : '') : 'No land listed here yet. Own land? Be the first: tap “Sell my land”.';
+    $('msg').textContent = r.length ? r.length + (r.length === 1 ? ' listing' : ' listings') + (here ? ' (distance from you shown)' : '') : 'No land listed by owners here yet. Own land? Tap “Sell my land”. Official land lists you can research now are below.';
+    alt(r.length);
     r.forEach(l => {
       const c = mk('button', 'lcard'); c.type = 'button'; c.addEventListener('click', () => open(l.id));
       if (l.photo) { const im = mk('img'); im.src = photo(l.photo); im.alt = ''; im.loading = 'lazy'; c.appendChild(im); } else c.appendChild(mk('div', 'lnophoto', 'No photo'));

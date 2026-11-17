@@ -69,21 +69,21 @@ if (!s) {
     }
     if (!m) { x.target = '_blank'; x.rel = 'noopener noreferrer'; } li.appendChild(x); $('clist').appendChild(li);
   });
-  if (s.a !== 'FL') { const box = document.createElement('div'); $('clist').before(box); StateExtra.render(box, s.a); }
-  if (s.a === 'FL') { const box = document.createElement('div'); $('clist').before(box); LienUI.saleBox(box); LienUI.table(box, undefined, 'FL'); }
-  if (s.a === 'NY') { const box = document.createElement('div'); $('clist').before(box); const s1 = document.createElement('script'); s1.src = '../nyc-history.js'; s1.onload = () => { const s2 = document.createElement('script'); s2.src = '../nyc-ui.js'; s2.onload = () => NycUI.render(box); document.head.appendChild(s2); }; document.head.appendChild(s1); }
-  if (s.a === 'NY') { const box2 = document.createElement('div'); $('clist').before(box2); const m1 = document.createElement('script'); m1.src = '../middletown-ny.js'; m1.onload = () => { const m2 = document.createElement('script'); m2.src = '../middletown-ui.js'; m2.onload = () => MiddletownUI.render(box2); document.head.appendChild(m2); }; document.head.appendChild(m1); }
-  if (s.a === 'NM') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../nm-auctions-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../nm-auctions-ui.js'; a2.onload = () => NmAuctionsUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
-  if (s.a === 'AL') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../al-state-land-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../al-state-land-ui.js'; a2.onload = () => AlStateLandUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
-  if (s.a === 'AR') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../ar-cosl-data.js'; a1.onload = () => { const a3 = document.createElement('script'); a3.src = '../ar-cosl-post.js'; const go = () => { const a2 = document.createElement('script'); a2.src = '../ar-cosl-ui.js'; a2.onload = () => ArCoslUI.render(box); document.head.appendChild(a2); }; a3.onload = go; a3.onerror = go; document.head.appendChild(a3); }; document.head.appendChild(a1); }
-  if (s.a === 'MS') { const box = document.createElement('div'); $('clist').before(box); const a1 = document.createElement('script'); a1.src = '../ms-forfeited-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../ms-forfeited-ui.js'; a2.onload = () => MsForfeitedUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
+  if (s.a !== 'FL') { const box = document.createElement('div'); $('extrahost').appendChild(box); StateExtra.render(box, s.a); }
+  if (s.a === 'FL') { const box = document.createElement('div'); $('listings').appendChild(box); LienUI.saleBox(box); LienUI.table(box, undefined, 'FL'); }
+  if (s.a === 'NY') { const box = document.createElement('div'); $('listings').appendChild(box); const s1 = document.createElement('script'); s1.src = '../nyc-history.js'; s1.onload = () => { const s2 = document.createElement('script'); s2.src = '../nyc-ui.js'; s2.onload = () => NycUI.render(box); document.head.appendChild(s2); }; document.head.appendChild(s1); }
+  if (s.a === 'NY') { const box2 = document.createElement('div'); $('listings').appendChild(box2); const m1 = document.createElement('script'); m1.src = '../middletown-ny.js'; m1.onload = () => { const m2 = document.createElement('script'); m2.src = '../middletown-ui.js'; m2.onload = () => MiddletownUI.render(box2); document.head.appendChild(m2); }; document.head.appendChild(m1); }
+  if (s.a === 'NM') { const box = document.createElement('div'); $('listings').appendChild(box); const a1 = document.createElement('script'); a1.src = '../nm-auctions-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../nm-auctions-ui.js'; a2.onload = () => NmAuctionsUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
+  if (s.a === 'AL') { const box = document.createElement('div'); $('listings').appendChild(box); const a1 = document.createElement('script'); a1.src = '../al-state-land-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../al-state-land-ui.js'; a2.onload = () => AlStateLandUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
+  if (s.a === 'AR') { const box = document.createElement('div'); $('listings').appendChild(box); const a1 = document.createElement('script'); a1.src = '../ar-cosl-data.js'; a1.onload = () => { const a3 = document.createElement('script'); a3.src = '../ar-cosl-post.js'; const go = () => { const a2 = document.createElement('script'); a2.src = '../ar-cosl-ui.js'; a2.onload = () => ArCoslUI.render(box); document.head.appendChild(a2); }; a3.onload = go; a3.onerror = go; document.head.appendChild(a3); }; document.head.appendChild(a1); }
+  if (s.a === 'MS') { const box = document.createElement('div'); $('listings').appendChild(box); const a1 = document.createElement('script'); a1.src = '../ms-forfeited-data.js'; a1.onload = () => { const a2 = document.createElement('script'); a2.src = '../ms-forfeited-ui.js'; a2.onload = () => MsForfeitedUI.render(box); document.head.appendChild(a2); }; document.head.appendChild(a1); }
   // Camera box: pick any spot in the state and see the closest official public cameras (states with a built-in camera feed).
   (function camBox() {
     const CAM = {GA: [32.7, -83.4, 7, '511GA (Georgia DOT)']}[s.a] || [39.5, -97, 4, '']; if ( typeof CameraData === 'undefined' || typeof LienMap === 'undefined') return;
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const sec = mk('section', 'cambox'); sec.appendChild(mk('h2', '', 'Weather, fires, crime, parks, energy & cameras near a spot'));
     sec.appendChild(mk('p', 'small muted', 'Tap the map (or use your location), then tap Weather & air, Fires nearby (NASA satellite fire detections, last 3 days), Energy (solar, power company, EV charging), Crime (FBI), Parks (National Park Service) or Nearby Cameras' + (CAM[3] ? ' (official ' + CAM[3] + ' cameras)' : ' (official public cameras where available)') + '. Shows conditions near that spot, not facts about any parcel.'));
-    $('clist').before(sec);
+    $('spothost').appendChild(sec);
     PaidGate.user().then(async u => {
       if (!(u && (u.paid || u.owner))) { sec.appendChild(PaidGate.lock('Fires & cameras near a spot')); return; }
       const wrap = mk('div', 'camwrap'), box = mk('div', 'cammap'); wrap.appendChild(box); sec.appendChild(wrap);
@@ -101,12 +101,12 @@ if (!s) {
     });
   })();
   const LFS = {CO: [['liens-larimer.js', 'Larimer'], ['liens-saguache.js', 'Saguache'], ['liens-elpaso.js', 'El Paso'], ['liens-boulder.js', 'Boulder']], IA: [['liens-scott.js', 'Scott']], TN: [['liens-davidson.js', 'Davidson']], MI: [['liens-wayne.js', 'Wayne']], PA: [['liens-monroepa.js', 'Monroe']], NY: [['liens-rochester.js', 'City of Rochester']], GA: [['liens-fulton.js', 'Fulton'], ['liens-bibb.js', 'Bibb']], AZ: [['liens-pinal.js', 'Pinal'], ['liens-coconino.js', 'Coconino']]}[s.a] || [];
-  LFS.forEach(LF => { const box = document.createElement('div'); $('clist').before(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); box.dataset.county = LF[1]; });
+  LFS.forEach(LF => { const box = document.createElement('div'); $('listings').appendChild(box); const sh = document.createElement('div'); box.appendChild(sh); const sc = document.createElement('script'); sc.src = '../' + LF[0]; sc.onload = () => { Screener.mount(sh, LF[1]); LienUI.table(box, LF[1], s.a); }; document.head.appendChild(sc); box.dataset.county = LF[1]; });
   if (LFS.length > 1) { // jump straight to a county instead of scrolling past the others
     const jb = document.createElement('div'); jb.className = 'askbox'; const js = document.createElement('select'); js.setAttribute('aria-label', 'Jump to a county'); js.style.cssText = 'width:100%;max-width:420px';
     js.appendChild(new Option('Jump to a county (' + LFS.length + ' with lists)', '')); LFS.forEach(LF => js.appendChild(new Option(LF[1], LF[1])));
     js.addEventListener('change', () => { const t = document.querySelector('[data-county="' + js.value + '"]'); if (t) t.scrollIntoView({block: 'start'}); });
-    jb.appendChild(js); $('clist').before(jb); const first = document.querySelector('[data-county]'); if (first) first.before(jb);
+    jb.appendChild(js); $('listings').prepend(jb);
   }
   (function parcelBox() {
     const host = $('parcelbox'); if (!host) return;
@@ -128,3 +128,10 @@ if (!s) {
 }
 // Upcoming Tax Sales (Florida only)
 if (a === 'FL' && typeof UpcomingSales !== 'undefined' && document.getElementById('upsales')) UpcomingSales.mount(document.getElementById('upsales'));
+// Tidy the "More about this state" sections and say plainly when a state has no property lists yet.
+setTimeout(() => {
+  const $ = id => document.getElementById(id);
+  ['m-extra', 'm-sales'].forEach(id => { const d = $(id); if (d && !d.querySelector('summary ~ *').textContent.trim()) d.hidden = true; });
+  const L = $('listings'), n = $('listnone');
+  if (L && n && ![...L.children].some(x => x !== n && x.textContent.trim())) { n.hidden = false; n.textContent = 'No property lists for this state on the site yet. The rules, sale timing and official county pages are below.'; const ex = $('m-extra'); if (ex && !ex.hidden) ex.open = true; }
+}, 3000);

@@ -269,6 +269,16 @@ const TrafficData = {
 };
 // Nearby Cleanup Sites: Florida DEP cleanup sites (open, active and on-hold) within 1/2 mile of the lot boundary, via /.netlify/functions/cleanup.
 // "On parcel" only when the site's mapped point is inside the lot outline. Distances are approximate (mapped point to lot boundary).
+// Every live lookup says it is live, when it ran and where the data came from; a failed lookup is never shown as "none".
+const LiveStamp = {
+  add(body, res, name, url) {
+    const p = document.createElement('p'); p.className = 'livestamp ' + (res && res.state === 'unavailable' || res && res.state === 'failed' ? 'bad' : 'ok');
+    const t = new Date().toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'});
+    const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = name;
+    p.append(res && (res.state === 'unavailable' || res.state === 'failed') ? 'Live check failed ' + t + ' \u00b7 result unknown, not "none" \u00b7 source: ' : 'Live check ' + t + ' \u00b7 source: ', a);
+    body.appendChild(p);
+  }
+};
 const CleanupData = {
   MILE_FT: 2640, cache: {},
   STATUS: {ACTIVE: 'Active cleanup', OPEN: 'Open', ONHOLD: 'On hold'},
@@ -309,7 +319,7 @@ const CleanupData = {
   },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.clbody').forEach(x => x.remove()); const body = mk('div', 'clbody'); box.appendChild(body);
+    box.querySelectorAll('.clbody').forEach(x => x.remove()); const body = mk('div', 'clbody'); box.appendChild(body); LiveStamp.add(body, res, 'Florida DEP cleanup sites', 'https://ca.dep.state.fl.us/');
     if (res.state === 'failed') { body.appendChild(mk('p', 'notice', 'Cleanup data unavailable.')); const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); return; }
     if (res.state === 'nooutline') { body.appendChild(mk('p', 'notice', 'Cleanup data unavailable.')); body.appendChild(mk('p', 'small muted', 'This lot’s outline is not matched to the state parcel map, so distances cannot be measured.')); return; }
     if (!res.sites.length) body.appendChild(mk('p', 'small', 'No mapped cleanup sites within ½ mile.'));
@@ -361,7 +371,7 @@ const WetlandsData = {
   headline(res) { return res.state === 'overlap' ? this.acres(res.overlapAcres) + ' acres (' + this.pctText(res.pct) + ' of the lot) overlap mapped wetlands' : res.state === 'none' ? 'No mapped overlap' : 'Wetlands data unavailable'; },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.wlbody').forEach(x => x.remove()); const body = mk('div', 'wlbody'); box.appendChild(body);
+    box.querySelectorAll('.wlbody').forEach(x => x.remove()); const body = mk('div', 'wlbody'); box.appendChild(body); LiveStamp.add(body, res, 'U.S. Fish & Wildlife Service National Wetlands Inventory', 'https://www.fws.gov/program/national-wetlands-inventory/web-mapping-services');
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
     if (res.state === 'unavailable') {
       body.appendChild(mk('p', 'notice', 'Wetlands data unavailable'));
@@ -427,7 +437,7 @@ const FloodData = {
   },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.fzbody').forEach(x => x.remove()); const body = mk('div', 'fzbody'); box.appendChild(body);
+    box.querySelectorAll('.fzbody').forEach(x => x.remove()); const body = mk('div', 'fzbody'); box.appendChild(body); LiveStamp.add(body, res, 'FEMA National Flood Hazard Layer', 'https://www.fema.gov/flood-maps/national-flood-hazard-layer');
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Flood zone unavailable'));
@@ -483,7 +493,7 @@ const WeatherData = {
   when(iso) { const d = new Date(iso); return isFinite(d) ? d.toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}) : ''; },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.wxbody').forEach(x => x.remove()); const body = mk('div', 'wxbody'); box.appendChild(body);
+    box.querySelectorAll('.wxbody').forEach(x => x.remove()); const body = mk('div', 'wxbody'); box.appendChild(body); LiveStamp.add(body, res, 'National Weather Service', 'https://www.weather.gov/');
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Weather alerts unavailable'));
@@ -545,7 +555,7 @@ const EnvCtlData = {
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
-    box.querySelectorAll('.ecbody').forEach(x => x.remove()); const body = mk('div', 'ecbody'); box.appendChild(body);
+    box.querySelectorAll('.ecbody').forEach(x => x.remove()); const body = mk('div', 'ecbody'); box.appendChild(body); LiveStamp.add(body, res, 'state environmental registries and EPA', 'https://www.epa.gov/superfund');
     if (res.state === 'locked') { body.appendChild(PaidGate.lock('Environmental Restrictions')); return; }
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Registry check unavailable'));
@@ -900,7 +910,7 @@ const SoilData = {
   },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.sobody').forEach(x => x.remove()); const body = mk('div', 'sobody'); box.appendChild(body);
+    box.querySelectorAll('.sobody').forEach(x => x.remove()); const body = mk('div', 'sobody'); box.appendChild(body); LiveStamp.add(body, res, 'USDA NRCS Soil Survey', 'https://websoilsurvey.nrcs.usda.gov/app/');
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Soil data unavailable'));
@@ -967,7 +977,7 @@ const ElevationData = {
   },
   fill(box, res) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    box.querySelectorAll('.elbody').forEach(x => x.remove()); const body = mk('div', 'elbody'); box.appendChild(body);
+    box.querySelectorAll('.elbody').forEach(x => x.remove()); const body = mk('div', 'elbody'); box.appendChild(body); LiveStamp.add(body, res, 'USGS Elevation Point Query Service', 'https://epqs.nationalmap.gov/v1/docs');
     if (res.state !== 'ok') { body.appendChild(mk('p', 'notice', 'Elevation unavailable')); body.appendChild(mk('p', 'small muted', res.state === 'nooutline' ? 'This lot has no verified boundary on the state parcel map, so no sample point can be chosen inside it.' : 'The USGS elevation service did not answer.')); if (res.state === 'failed') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); } return; }
     const big = mk('p', 'elval'); big.append(mk('b', '', (Math.round(res.ft * 10) / 10).toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + ' ft'), mk('span', 'small', ' estimated ground elevation')); body.appendChild(big);
     body.appendChild(mk('p', 'small', 'Single-point estimate: one sample at the marked point inside the lot (' + res.pt.lat.toFixed(5) + ', ' + res.pt.lng.toFixed(5) + '), about ' + Math.round(res.pt.edgeFt).toLocaleString('en-US') + ' ft from the nearest edge. It is not an average of the lot, a survey or a flood elevation. Ground can rise or fall across a lot, and fill or recent work may not be in the data.'));
@@ -1071,11 +1081,12 @@ const ParcelData = {
     box.appendChild(link(S.parcels, 'statewide roll updated ' + (S.parcels.date || 'date not given') + '; checked ' + r.ck + '. Owner shown is the current owner on that roll, not necessarily the owner when the certificate was sold.'));
     if (r.rl) box.appendChild(this.rollBox(r.rl, S, mk, money));
     box.appendChild(ProbateRecords.section(l, r, S));
-    box.appendChild(mk('h4', '', 'Land checks (whole lot boundary)'));
+    box.appendChild(mk('h4', '', 'Saved land checks (whole lot boundary)'));
+    box.appendChild(mk('p', 'small savednote', 'Saved results from when this list was built (checked ' + (r.ck || 'date not recorded') + '). They are not refreshed live. The live checks on this page look again now; if a live check fails it says unavailable, and the saved result below does not prove there is no hazard.'));
     const ul = mk('ul', 'pchecks'), li = (t, cls) => { ul.appendChild(mk('li', cls || '', t)); };
-    const z = r.zn || {}; li(z.s === 'ok' ? 'Zoning: ' + z.v : 'Zoning: data unavailable' + (z.why ? ' (' + z.why + ')' : '') + '. Check with the county or city.', z.s === 'ok' ? '' : 'na');
-    const f = r.fl || {}; li(f.s === 'ok' ? 'Flood: ' + f.z.map(q => 'Zone ' + q[0] + ' ' + q[1] + '%').join(', ') + (f.sfha > 0 ? ' · ' + f.sfha + '% of the lot is in a high-risk area' : ' · no high-risk overlap mapped') : 'Flood: data unavailable' + (f.why ? ' (' + f.why + ')' : ''), f.s !== 'ok' ? 'na' : f.sfha > 0 ? 'warn' : 'ok');
-    const w = r.wt || {}; li(w.s === 'ok' ? 'Wetlands: ' + w.pct + '% of the lot (' + w.t.join(', ') + ')' : w.s === 'none' ? 'Wetlands: no mapped overlap' : 'Wetlands: data unavailable', w.s === 'ok' ? 'warn' : w.s === 'none' ? 'ok' : 'na');
+    const z = r.zn || {}; li(z.s === 'ok' ? 'Zoning (saved): ' + z.v : 'Zoning: data unavailable' + (z.why ? ' (' + z.why + ')' : '') + '. Check with the county or city.', z.s === 'ok' ? '' : 'na');
+    const f = r.fl || {}; li(f.s === 'ok' ? 'Flood (saved ' + (r.ck || '') + '): ' + f.z.map(q => 'Zone ' + q[0] + ' ' + q[1] + '%').join(', ') + (f.sfha > 0 ? ' · ' + f.sfha + '% of the lot is in a high-risk area' : ' · no high-risk overlap mapped') : 'Flood: data unavailable' + (f.why ? ' (' + f.why + ')' : ''), f.s !== 'ok' ? 'na' : f.sfha > 0 ? 'warn' : 'ok');
+    const w = r.wt || {}; li(w.s === 'ok' ? 'Wetlands (saved ' + (r.ck || '') + '): ' + w.pct + '% of the lot (' + w.t.join(', ') + ')' : w.s === 'none' ? 'Wetlands (saved ' + (r.ck || '') + '): no mapped overlap found at that time' : 'Wetlands: data unavailable', w.s === 'ok' ? 'warn' : w.s === 'none' ? 'ok' : 'na');
     const d = r.rd || {}; li(d.s === 'ok' ? 'Road frontage (mapped): about ' + d.ft.toLocaleString('en-US') + ' ft' + (d.n && d.n.length ? ' along ' + d.n.join(', ') : '') + '. Legal access: unverified.' : d.s === 'none' ? 'Road frontage: no mapped road within about 65 ft. Legal access: unverified.' : 'Road frontage: data unavailable. Legal access: unverified.', d.s === 'ok' && d.ft > 0 ? '' : 'warn');
     { const tt = TrafficData.seg(r); li('Nearby Traffic: ' + TrafficData.text(r) + (tt ? ' (orange line on the map)' : ''), tt ? '' : 'na'); li('Legal road access: not verified. A traffic count does not show legal access.', 'na'); }
     box.appendChild(ul);
@@ -1093,9 +1104,9 @@ const PaidGate = {
   async paid() { const u = await this.user(); return !!(u && u.paid); },
   lock(name) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    const d = mk('div', 'pglock'); d.setAttribute('role', 'note'); d.append(mk('span', 'pgtag', 'Pro'), ' ', mk('b', '', name + ' is for PricePocketPro members.'));
+    const d = mk('div', 'pglock'); d.setAttribute('role', 'note'); d.append(mk('span', 'pgtag', 'Pro'), ' ', mk('b', '', name + ' is for PricePocketPro members.')); d.appendChild(mk('p', 'small', 'PricePocketPro is $5.50 a week. Lists, maps and official sources stay free.'));
     const row = mk('p', 'small'); d.appendChild(row);
-    this.user().then(u => { if (!u) { const a = mk('a', 'btn small', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); row.append(a, ' '); } const b = mk('a', u ? 'btn small' : 'btn small ghost', 'See the Pro plan'); b.href = '/account/'; row.appendChild(b); });
+    this.user().then(u => { if (!u) { const a = mk('a', 'btn small', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); row.append(a, ' '); } const cmp = mk('a', 'small', 'Compare Free vs Pro'); cmp.href = '/plans/'; const b = mk('a', u ? 'btn small' : 'btn small ghost', 'See the Pro plan'); b.href = '/account/'; row.appendChild(b); row.append(' ', cmp); });
     return d;
   }
 };
@@ -1453,7 +1464,7 @@ const LienUI = {
     cty.appendChild(new Option('All counties (' + cnames.length + ')', '')); cnames.forEach(c => cty.appendChild(new Option(c + ' (' + ccount[c].toLocaleString('en-US') + ')', c)));
     const top = mk('div', 'lienbar-row'); top.append(fb, vb);
     if (typeof PaidDownload !== 'undefined') top.append(PaidDownload.button('Download list', 'liens-' + String((all[0] && (all[0].state || 'FL')) || 'list').toLowerCase() + '.csv', ['State', 'County', 'Parcel', 'Certificate', 'Amount', 'Price label', 'Rate', 'Sale', 'Status', 'Owner', 'Address', 'Use', 'Acres', 'County value', 'Official source'], () => list.map(l => [l.state || 'FL', l.county, l.parcel, (l.certList && l.certList.length ? l.certList.join(' ') : l.cert) || '', l.amount, l.priceLabel || 'Face', l.rate || '', l.saleDate || '', l.status || '', l.owner || '', l.address || '', l.use || '', l.acres != null ? l.acres : '', l.market != null ? l.market : '', l.source || '']))); if (cnames.length > 1) top.append(cty); else top.append(cnt);
-    bar.append(top); if (cnames.length > 1) { cnt.classList.add('lcount-row'); bar.append(cnt); } bar.append(tools); host.appendChild(bar);
+    bar.append(top); cnt.classList.add('lcount-row'); bar.append(cnt); bar.append(tools); host.appendChild(bar);
     fb.addEventListener('click', () => { const o = bar.classList.toggle('open'); fb.setAttribute('aria-expanded', String(o)); });
     let view = 'cards';
     vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
@@ -1496,9 +1507,39 @@ const LienUI = {
       });
       wrap.appendChild(g);
     }
+    // Count line: matching vs total, which active filters hide records, and a one-tap reset.
+    const filtersInfo = () => {
+      const base = all.filter(l => !cty.value || l.county === cty.value), f = [];
+      const add = (on, label, test) => { if (!on) return; const n = base.filter(test).length; if (n) f.push(n.toLocaleString('en-US') + ' ' + label); };
+      add(junkN && junkC.checked, 'mineral rights, strips, easements or slivers', isJunk);
+      add(roadC.checked, 'with no mapped road', l => { const x = landFlags(l); return x && x[0] === 0; });
+      add(floodC.checked, 'in high-risk flood zones', l => { const x = landFlags(l); return x && x[1] === 1; });
+      add(wetC.checked, 'in mapped wetlands', l => { const x = landFlags(l); return x && x[2] === 1; });
+      add(hide.checked, 'road/utility/water strips', l => STRIPS.has(l.use));
+      add(!!yr.value, 'from other tax years', l => String(l.taxYear) !== yr.value);
+      add(!!useSel.value, 'with other property uses', l => l.use !== useSel.value);
+      add(!!hoaSel.value, 'with a different HOA status', l => HoaData.statusNow(l) !== hoaSel.value);
+      add(trafC.checked, 'not near a busy road', l => !TrafficData.passes(l));
+      add(!!q.value.trim(), 'not matching your search', l => !(l.parcel + ' ' + (l.desc || '')).toLowerCase().includes(q.value.trim().toLowerCase()));
+      return { total: base.length, f };
+    };
+    function setCount() {
+      const { total, f } = filtersInfo(), where = cty.value ? ' in ' + cty.value + (/^City of /.test(cty.value) ? '' : ' County') : '';
+      cnt.textContent = '';
+      cnt.append(mk('b', '', list.length.toLocaleString('en-US') + ' matching listing' + (list.length === 1 ? '' : 's')), ' of ' + total.toLocaleString('en-US') + ' total' + where + (list.length > shown ? ' \u00b7 showing ' + Math.min(shown, list.length).toLocaleString('en-US') : '') + '. ');
+      if (f.length) {
+        cnt.append(mk('span', 'lhide', 'Hidden by filters: ' + f.join(' \u00b7 ') + (f.length > 1 ? ' (some match more than one)' : '') + '. '));
+        const rb = mk('button', 'lreset', 'Show all ' + total.toLocaleString('en-US')); rb.type = 'button';
+        rb.addEventListener('click', () => { [junkC, roadC, floodC, wetC, hide, trafC].forEach(c => { c.checked = false; }); yr.value = ''; useSel.value = ''; hoaSel.value = ''; q.value = ''; apply(); });
+        cnt.appendChild(rb);
+      }
+      if (all.some(l => l.payoff)) cnt.append(mk('span', 'small muted', ' * payoff as of the source file date'));
+      const certs = new Set(all.filter(l => !cty.value || l.county === cty.value).map(l => l.parcel)).size;
+      if (certs && certs < total) cnt.append(mk('span', 'small muted', ' Counts are certificates; ' + total.toLocaleString('en-US') + ' certificates cover ' + certs.toLocaleString('en-US') + ' parcels.'));
+    }
     function draw() {
       wrap.innerHTML = '';
-      if (view === 'cards') { drawCards(); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString() + ' of ' + list.length.toLocaleString() + ' (* payoff as of the source file date)'; more.hidden = shown >= list.length; return; }
+      if (view === 'cards') { drawCards(); setCount(); more.hidden = shown >= list.length; return; }
       const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
       ['County', 'Parcel (PIN)', 'Tax yr', 'Face', 'Rate', 'Payoff*', 'Sale date', 'Status', 'Land check', 'Use', 'County value', 'Homestead', 'Description', 'Source / checked', 'Map', 'Calc', 'HOA'].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
@@ -1514,7 +1555,7 @@ const LienUI = {
         if (PARCEL_MAPS[l.county]) { const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.addEventListener('click', () => LienMap.open(l)); mc.appendChild(b); }
       });
       wrap.appendChild(t);
-      cnt.textContent = 'Showing ' + Math.min(shown, list.length) + ' of ' + list.length + ' (* payoff as of the source file date)';
+      setCount();
       more.hidden = shown >= list.length;
     }
     function apply() {
@@ -1525,7 +1566,14 @@ const LienUI = {
     }
     [q, yr, sort, useSel, hide, junkC, roadC, floodC, wetC, hoaSel, trafC, cty].forEach(e => e.addEventListener('input', apply));
     more.addEventListener('click', () => { shown += 100; draw(); });
+    // A link like ?s=FL#Santa%20Rosa opens this list with that county already picked and scrolls to it.
+    const fromHash = () => { let h = ''; try { h = decodeURIComponent((location.hash || '').slice(1)); } catch (e) {} return h && ccount[h] ? h : ''; };
+    const hc = fromHash(); if (hc) cty.value = hc;
     apply();
+    if (hc) { // the page keeps growing while other lists load, so re-aim a few times unless the visitor scrolls first
+      let moved = false; const stop = () => { moved = true; }; ['wheel', 'touchstart', 'keydown'].forEach(n => window.addEventListener(n, stop, {once: true, passive: true}));
+      [300, 1200, 2500, 4500].forEach(t => setTimeout(() => { if (!moved) bar.scrollIntoView({block: 'start'}); }, t)); }
+    window.addEventListener('hashchange', () => { const h = fromHash(); if (h) { cty.value = h; apply(); bar.scrollIntoView({block: 'start'}); } });
   }
 };
 
@@ -1538,7 +1586,7 @@ const LienResearch = {
   items(l) {
     const f = landFlags(l), LES = {href: '/learn/?l=diligence', label: 'Master Class lesson 7: Due diligence (members)'};
     const src = (name, url) => ({name, url});
-    const yes = (v, a, b) => v === 1 ? a : v === 0 ? b : '';
+    const yes = (v, a, b) => v === 1 ? 'Saved check: ' + a : v === 0 ? 'Saved check (not a live lookup; confirm with the source): ' + b : 'Not checked yet.';
     return [
       {key: 'zoning', title: 'Zoning', why: 'Zoning decides what can be built, and a minimum lot size can make a small lot unbuildable.', finding: '', source: src('County zoning map', ''), checked: '', lookup: {text: 'Look up zoning with Land Information', href: '/land/'}, lesson: LES},
       {key: 'flood', title: 'Flood zone', why: 'A high-risk flood zone can mean required insurance and building limits.', finding: f ? yes(f[1], 'The lot touches a FEMA Special Flood Hazard Area (high risk).', 'The lot is not in a mapped FEMA high-risk flood zone.') : '', source: src('FEMA National Flood Hazard Layer', 'https://msc.fema.gov/portal'), checked: f ? this.LAND_CHECKED : '', lesson: LES},

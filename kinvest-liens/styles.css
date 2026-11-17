@@ -1111,3 +1111,29 @@ dialog{perspective:1100px}
 .groadok{color:#7bf0b0;font-weight:700}.groadmid{color:#ffd166;font-weight:700}.groadbad{color:#f87171;font-weight:700}
 .absflag{color:#ffd166;font-weight:800}.rollbox .pfacts{margin-top:6px}
 .sflags li.own{background:#fff4d6;color:#7a5200;border-color:#f5c96b;font-weight:700}
+/* Listing count line: matching vs total, what filters hide, reset */
+.lcount{line-height:1.5}.lcount b{color:#ffd166}.lcount .lhide{color:#cbd6ea}
+.lreset{background:none;border:1px solid #ffd166;color:#ffd166;border-radius:999px;padding:3px 10px;font:inherit;font-size:13px;cursor:pointer;margin-left:2px;box-shadow:none!important}
+.lreset:hover{background:rgba(255,209,102,.12)}
+/* State page: listings first, the rest in collapsible sections */
+.listings{margin:14px 0 8px}.moreh{margin:26px 0 8px}
+details.more{border:1px solid #24376a;border-radius:14px;margin:8px 0;background:#0e1a38}
+details.more>summary{cursor:pointer;padding:14px 16px;font-weight:700;list-style:none;color:#e6ecf7;min-height:24px}
+details.more>summary::-webkit-details-marker{display:none}details.more>summary::after{content:"+";float:right;color:#ffd166;font-weight:800}
+details.more[open]>summary::after{content:"\2212"}details.more>*:not(summary){margin-left:14px;margin-right:14px}details.more[open]{padding-bottom:10px}
+.livestamp{font-size:12px;margin:4px 0 6px;padding:3px 8px;border-radius:8px;display:inline-block}.livestamp.ok{background:rgba(34,197,94,.14);color:#bbf7d0}.livestamp.bad{background:rgba(239,68,68,.16);color:#fecaca}.livestamp a{color:inherit;text-decoration:underline}
+.savednote{background:rgba(255,209,102,.1);border-left:3px solid #ffd166;padding:6px 10px;border-radius:6px;color:#e6ecf7}
+.landalt{margin:18px 0;padding:16px;border:1px solid #d6e2db;border-radius:16px;background:#f7faf8}.landalt h2{margin:0 0 6px}.altsec{margin:14px 0 4px}.altsec h3{margin:0 0 2px;font-size:17px}.altsec p{color:#334;margin:2px 0 6px}
+.altlist{margin:0;padding-left:18px}.altlist li{margin:4px 0}
+/* Readability on navy: the light-theme gray (#5b6478) is too dark on dark panels, so dark containers use a lighter gray (contrast ≥ 7:1 on #0e1a38) */
+.aibody,.radar,.dhero,.homewx,dialog,.lienbar,.cambox,details.more,.salebox.dark,.rpanel,.precord{--muted:#b8c6e0}
+.radar .muted,.radar .rf-note,.homewx .muted,.aibody .muted,.aibody small,.offl small,dialog .muted,dialog .small.muted,.lienbar .muted,.lcount .small{color:#b8c6e0}
+.pglock .btn.small.ghost{color:#ffd166!important;border-color:#ffd166!important;background:transparent!important}
+.pglock a.small{color:#ffd166}
+.ptbl td{background:transparent}
+.aibody .ccount.live{background:#ffd166;color:#1b1400}
+.lotdlg .btn.ghost,dialog .btn.small.ghost,.cambar .btn.ghost{color:#ffd166!important;border-color:#ffd166!important;background:transparent!important}
+.leaflet-control-attribution a{color:#0b4a8b!important}
+@media(max-width:520px){.nav nav a.btn[href$="#contact"]{display:none}.nav nav{gap:10px}}
+.plans .btn.ghost{color:#ffd166!important;border-color:#ffd166!important;background:transparent!important}
+.pglock a.small{display:inline-block;margin-top:6px}

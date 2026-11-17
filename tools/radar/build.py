@@ -39,7 +39,7 @@ for fn in sorted(glob.glob(S + 'liens-*.js')):
     amts = sorted(round(l['amount']) for l in open_rows)
     vam = sorted(round(l['amount']) for l in open_rows if vacant(l, pj))
     si = saleinfo(rows) if group != 'county-held' else {'date': '', 'kind': 'inventory', 'text': 'Held by the county: buy any time (confirm with the county)'}
-    c = {'state': st, 'county': cn, 'file': base, 'group': group, 'label': LABEL[group], 'priceLabel': PRICE_O.get(cn, PRICE[group]), 'count': len(rows), 'open': len(open_rows), 'amounts': amts, 'vac': vam,
+    c = {'state': st, 'county': cn, 'file': base, 'group': group, 'label': LABEL[group], 'priceLabel': PRICE_O.get(cn, PRICE[group]), 'count': len(rows), 'parcels': len({r.get('parcel') for r in rows}), 'mineral': sum(1 for r in rows if r.get('mineral')), 'open': len(open_rows), 'amounts': amts, 'vac': vam,
          'sale': si, 'checked': max(l.get('checked', '') for l in rows), 'tracked': cn in idx, 'source': next((l['source'] for l in rows if str(l.get('source', '')).startswith('http')), '')}
     if cn == 'Monroe': si = {'date': '', 'kind': 'inventory', 'text': 'Repository list as of 10/21/26: available from the Tax Claim Bureau (confirm with the Bureau)'}; c['sale'] = si
     if cn == 'Wayne': si = {'date': '', 'kind': 'completed', 'text': 'September 2026 auction (completed)'}; c['sale'] = si

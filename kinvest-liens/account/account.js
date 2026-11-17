@@ -39,7 +39,7 @@
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
     $('codebox').hidden = !!(paid || user.owner);
-    $('plantext').textContent = user.owner ? 'Owner: AI tools are on.' : user.family ? 'Family access: everything is on and free for you. The AI question box and screener are on.' : paid ? 'Paid member through ' + user.paidThrough + '. The AI question box and screener are on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'The AI question box and screener are locked. Paid members ($5.50 a week) can use them. ';
+    $('plantext').textContent = user.owner ? 'Owner: every Pro feature is on.' : user.family ? 'Family access: every Pro feature is on and free for you.' : paid ? 'Pro member through ' + user.paidThrough + '. Every Pro feature is on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'Lists, maps and official sources are free. Pro ($5.50 a week) adds the AI, live checks on every lot (Street View, weather, fires, crime, energy, cameras), owner mailing details, downloads and the full course. ';
     $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'No favorites yet. Tap \u2606 Favorite on a lien to keep it here.'; ul.appendChild(li); }
