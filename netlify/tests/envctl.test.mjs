@@ -29,4 +29,19 @@ for (const [i, md] of ['down', 'http', 'err'].entries()) { mode = md; r = await 
 mode = 'ok'; feats = [site(sq(-82.41, -82.39, 29.69, 29.71), 'Land Use')];
 feats[0].attributes.PRIMARY_SITE_DOCUMENTS = 'https://evil.example/x'; r = await call({ rings: lot(-0.005) }); ok(r.j.matches[0].docs === '', 'non-DEP document links are dropped');
 ok((await api(new Request('http://x/e'), {})).status === 405, 'GET refused');
+
+// ---- other states (TEST FIXTURE data) ----
+const coLot = dx => sq(-105.1 + dx, -105.099 + dx, 40.5, 40.501);
+const cdphe = (rings) => ({ attributes: { Site: 'TEST FIXTURE CO SITE', PGM_SYS_ID: 'RSNOT1', Feature_ID: 'Restrictive Notice Area', Document: 'https://oitco.hylandcloud.com/CDPHERMPop/docpop/docpop.aspx?docid=1', Summary: '' }, geometry: { rings } });
+let byUrl = {}, failUrl = null, urls = [];
+globalThis.fetch = async (u, o) => { u = String(u); urls.push(u); lastBody = String(o && o.body); if (failUrl && u.includes(failUrl)) throw new Error('net'); const k = Object.keys(byUrl).find(x => u.includes(x)); return { ok: true, json: async () => ({ features: k ? byUrl[k] : [] }) }; };
+byUrl = { cohealthmaps: [cdphe(sq(-105.11, -105.0995, 40.49, 40.51))] };
+r = await call({ state: 'CO', rings: coLot(0) }); m = r.j.matches && r.j.matches[0];
+ok(r.j.ok && r.j.usState === 'CO' && m && m.agency === 'CDPHE' && Math.abs(m.pct - 50) < 1.5 && m.docs.startsWith('https://oitco.hylandcloud.com/') && urls.some(u => /cohealthmaps/.test(u)) && urls.some(u => /Superfund/.test(u)), 'CO overlap: CDPHE + EPA both checked; site, % of lot and official record link');
+ok(r.j.sources.length === 2 && !r.j.gap, 'CO lists both official sources and no coverage gap');
+byUrl = {}; r = await call({ state: 'CO', rings: coLot(0.002) }); ok(r.j.ok && r.j.matches.length === 0, 'CO no overlap: zero matches ("No mapped restriction overlap found")');
+byUrl = { cohealthmaps: [cdphe(sq(-105.11, -105.09, 40.49, 40.51))] }; r = await call({ state: 'CO', point: [-105.1, 40.5005] }); ok(r.j.ok && r.j.mode === 'point' && r.j.matches.length === 1 && r.j.matches[0].pct === null, 'CO pin only: point mode');
+failUrl = 'Superfund'; r = await call({ state: 'CO', rings: coLot(0.004) }); ok(r.j.ok === false && r.j.reason === 'lookup', 'CO: if any one source fails, the whole check is "Registry check unavailable" (never a partial "no overlap")');
+failUrl = null; byUrl = {}; r = await call({ state: 'AL', rings: sq(-86.3, -86.299, 32.3, 32.301) }); ok(r.j.ok && r.j.matches.length === 0 && /ADEM/.test(r.j.gap) && r.j.sources.length === 1, 'AL: EPA only, with an honest note that the state registry is not mapped');
+ok((await call({ state: 'TX', rings: lot(0) })).s === 400, 'unsupported state refused');
 console.log('\n' + pass + ' checks passed');
