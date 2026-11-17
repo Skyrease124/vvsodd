@@ -14,7 +14,7 @@ const ArCoslUI = {
     const so = mk('select'); so.setAttribute('aria-label', 'Sort'); [['lo', 'Lowest starting bid'], ['hi', 'Highest starting bid'], ['new', 'Newest added'], ['ac', 'Most acres']].forEach(o => so.appendChild(new Option(o[1], o[0])));
     const bl = mk('label', 'chk'); const bc = mk('input'); bc.type = 'checkbox'; bl.append(bc, ' Only with bids');
     tools.append(cs, q, so, bl); box.appendChild(tools);
-    tools.appendChild(PaidDownload.button('Download list', 'arkansas-cosl-auction.csv', ['County', 'Parcel', 'Owner of record', 'Acres', 'Section-Township-Range', 'Starting bid', 'Current bid', 'Added on'], () => list.map(x => x.slice(0, 8))));
+    tools.appendChild(PaidDownload.button('Download list', 'arkansas-cosl-auction.csv', ['County', 'Parcel', 'Owner of record', 'Acres', 'Section-Township-Range', 'Starting bid', 'Current bid', 'Added on', 'Delinquent year', 'Back taxes due', 'Lienholders named by COSL'], () => list.map(x => { const po = post(x); return x.slice(0, 8).concat(po ? [po[0], po[1], po[2] === '0' ? '' : po[2]] : ['', '', '']); })));
     const cnt = mk('p', 'muted small'); cnt.setAttribute('role', 'status'); box.appendChild(cnt);
     const wrap = mk('div', 'tablewrap'); box.appendChild(wrap);
     const more = mk('button', 'btn ghost', 'Show more'); more.type = 'button'; box.appendChild(more);
@@ -23,6 +23,7 @@ const ArCoslUI = {
     const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button'; tools.appendChild(vb);
     vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
     const spec = x => ({file: 'ar.json', key: x[0] + '|' + x[1], parcel: x[1], desc: [x[4], x[3] ? x[3] + ' acres' : ''].filter(Boolean).join(' \u00B7 '), srcName: 'Arkansas statewide parcel map (Arkansas GIS Office)'});
+    const post = x => (typeof AR_COSL_POST !== 'undefined' && AR_COSL_POST.rows[x[0] + '|' + x[1]]) || null;   // delinquent year, back taxes due, lienholders (COSL post-auction list)
     const drawCards = () => {
       wrap.textContent = ''; const g = mk('div', 'lcards');
       list.slice(0, shown).forEach(x => {
@@ -31,6 +32,11 @@ const ArCoslUI = {
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Starting bid'), mk('b', '', money(x[5]))); card.appendChild(amt);
         card.appendChild(mk('div', 'small', x[6] ? 'Current bid: ' + money(x[6]) : 'No bids yet'));
         card.appendChild(mk('div', 'small muted', 'Owner of record: ' + x[2] + (x[4] ? ' \u00B7 ' + x[4] : '') + ' \u00B7 added ' + x[7]));
+        const po = post(x);
+        if (po) {
+          card.appendChild(mk('div', 'small', 'Delinquent tax year ' + po[0] + ' \u00B7 back taxes due ' + money(po[1]) + ' (COSL post-auction list)'));
+          if (po[2] && po[2] !== '0') { const d = mk('details', 'small'); d.appendChild(mk('summary', '', 'Lienholders named by COSL')); d.appendChild(mk('div', 'muted', po[2])); d.appendChild(mk('div', 'muted', 'Named on the COSL list; not verified by us. Confirm with COSL and the county.')); card.appendChild(d); }
+        }
         const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => LandMap.open(spec(x)); act.appendChild(b);
         const hb = typeof LienBuy !== 'undefined' && LienBuy.button({state: 'AR', county: x[0], parcel: x[1], amount: x[5], buyKey: 'AR-COSL'}, 'btn small ghost'); if (hb) { hb.style.marginLeft = '6px'; act.appendChild(hb); }
         card.appendChild(act); g.appendChild(card);
