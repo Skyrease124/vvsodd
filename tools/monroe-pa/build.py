@@ -33,7 +33,7 @@ if __name__ == '__main__':
     declared, asof, rows = parse(txt)
     assert len(rows) == declared, 'read %d parcels but the list says %d' % (len(rows), declared)
     m, d, y = asof.split('/'); iso = '20%s-%s-%s' % (y, m.zfill(2), d.zfill(2))
-    out = [{'county': 'Monroe', 'state': 'PA', 'parcel': r['parcel'], 'saleDate': 'Repository list', 'status': "On the Tax Claim Bureau's Repository List as of %s (confirm still available)" % asof, 'rate': '', 'cert': '',
+    out = [{'county': 'Monroe', 'state': 'PA', 'parcel': r['parcel'], 'saleDate': 'Repository list', 'priceLabel': 'Price (ask the Tax Claim Bureau)', 'status': "On the Tax Claim Bureau's Repository List as of %s (confirm still available)" % asof, 'rate': '', 'cert': '',
             'source': URL, 'checked': '2026-11-17', 'desc': r['legal'], 'owner': r['owner'], 'mapNumber': r['map']} for r in rows]
     hdr = ("// Monroe County, Pennsylvania: parcels on the Tax Claim Bureau's Repository List as of %s (%d parcels): properties that did not sell at the upset or judicial sale and can be bought from the Bureau.\n"
            "// The list prints the owner of record, a short legal description and the county map number; it prints NO price. The Bureau says it makes no warranty and that purchases are at your own risk with no refund unless by court order.\n"
