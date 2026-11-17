@@ -1074,3 +1074,10 @@ dialog{perspective:1100px}
 .firepanel .firenone{color:#7bf0b0;font-weight:700;margin:0 0 6px}.firelist{margin:6px 0 8px 18px;padding:0;font-size:14px}
 .enpanel{margin:6px 0 10px;padding:10px 12px;border-radius:12px;border:1px solid #1d4ed8;background:rgba(29,78,216,.14)}
 .ensec{margin:0 0 10px}.ensec h5{margin:0 0 2px;font-size:15px}.enbig{font-size:20px;font-weight:800;color:#ffd166;margin:2px 0}.enlist{margin:4px 0 0 18px;padding:0;font-size:14px}
+/* Weather & air */
+.wxpanel{margin:6px 0 10px;padding:10px 12px;border-radius:14px;border:1px solid #2b3f73;background:linear-gradient(180deg,#14234a,#0b1428);color:#e6ecf7}
+.wxnow{display:flex;align-items:center;gap:8px}.wxtemp{font-size:28px;font-weight:800;color:#ffd166}
+.wxdays{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0}.wxday{display:flex;flex-direction:column;align-items:center;background:#0b1428;border:1px solid #24376a;border-radius:10px;padding:6px 4px;font-size:14px}
+.wxalert{margin:0 0 8px;padding:6px 10px;border-radius:8px;background:#7f1d1d}.wxalert a{color:#fff;font-weight:700}
+.wxair{margin:4px 0;font-weight:600}.wxair.aq1{color:#7bf0b0}.wxair.aq2{color:#ffd166}.wxair.aq3,.wxair.aq4{color:#fb923c}.wxair.aq5,.wxair.aq6{color:#f87171}
+.homewx{max-width:720px;margin:10px auto 0;padding:0 16px}.wxhome{box-shadow:0 10px 24px rgba(0,0,0,.35)}

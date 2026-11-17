@@ -81,8 +81,8 @@ if (!s) {
   (function camBox() {
     const CAM = {GA: [32.7, -83.4, 7, '511GA (Georgia DOT)']}[s.a] || [39.5, -97, 4, '']; if ( typeof CameraData === 'undefined' || typeof LienMap === 'undefined') return;
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    const sec = mk('section', 'cambox'); sec.appendChild(mk('h2', '', 'Fires, cameras & energy near a spot'));
-    sec.appendChild(mk('p', 'small muted', 'Tap the map (or use your location), then tap Fires nearby (NASA satellite fire detections, last 3 days), Energy (solar, power company, EV charging) or Nearby Cameras' + (CAM[3] ? ' (official ' + CAM[3] + ' cameras)' : ' (official public cameras where available)') + '. Shows conditions near that spot, not facts about any parcel.'));
+    const sec = mk('section', 'cambox'); sec.appendChild(mk('h2', '', 'Weather, fires, cameras & energy near a spot'));
+    sec.appendChild(mk('p', 'small muted', 'Tap the map (or use your location), then tap Weather & air, Fires nearby (NASA satellite fire detections, last 3 days), Energy (solar, power company, EV charging) or Nearby Cameras' + (CAM[3] ? ' (official ' + CAM[3] + ' cameras)' : ' (official public cameras where available)') + '. Shows conditions near that spot, not facts about any parcel.'));
     $('clist').before(sec);
     PaidGate.user().then(async u => {
       if (!(u && (u.paid || u.owner))) { sec.appendChild(PaidGate.lock('Fires & cameras near a spot')); return; }

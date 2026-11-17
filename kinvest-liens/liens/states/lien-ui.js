@@ -634,6 +634,37 @@ const EnergyData = {
     });
   }
 };
+// Weather & air at the lot: WeatherAPI.com current + 3-day forecast + air quality, plus any official NWS alert.
+const WxData = {
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  render(panel, d, title) {
+    const mk = this.mk.bind(this); panel.textContent = '';
+    (d.alerts || []).forEach(a => { const p = mk('p', 'wxalert'); const l = mk('a', '', '\u26a0\ufe0f ' + a.event); l.href = a.link; l.target = '_blank'; l.rel = 'noopener noreferrer'; p.appendChild(l); panel.appendChild(p); });
+    const top = mk('div', 'wxnow'), im = mk('img'); im.src = d.now.icon; im.alt = ''; im.width = 48; im.height = 48;
+    const t = mk('div'); t.append(mk('b', 'wxtemp', d.now.f + '\u00b0F'), mk('span', 'small', ' ' + d.now.text));
+    t.appendChild(mk('div', 'small muted', (title || (d.place.name + ', ' + d.place.region)) + ' \u00b7 feels ' + d.now.feels + '\u00b0 \u00b7 wind ' + d.now.wind + ' mph ' + d.now.windDir + ' \u00b7 humidity ' + d.now.humidity + '%'));
+    top.append(im, t); panel.appendChild(top);
+    const row = mk('div', 'wxdays'); d.days.forEach((x, i) => { const c = mk('div', 'wxday'); const di = mk('img'); di.src = x.icon; di.alt = x.text; di.width = 32; di.height = 32;
+      c.append(mk('b', '', i === 0 ? 'Today' : new Date(x.date + 'T12:00').toLocaleDateString('en-US', {weekday: 'short'})), di, mk('span', '', x.hi + '\u00b0 / ' + x.lo + '\u00b0'), mk('span', 'small muted', x.rain + '% rain')); row.appendChild(c); }); panel.appendChild(row);
+    if (d.air) panel.appendChild(mk('p', 'wxair aq' + d.air.index, 'Air quality: ' + d.air.label + (d.air.pm25 != null ? ' \u00b7 PM2.5 ' + d.air.pm25 + ' \u00b5g/m\u00b3' : '')));
+    panel.appendChild(mk('p', 'small muted', 'Weather: WeatherAPI.com, updated ' + d.now.updated + ' local time. Alerts: National Weather Service.'));
+  },
+  attach(bar, after, center) {
+    const b = this.mk('button', 'btn small ghost', 'Weather & air'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.insertBefore(b, bar.children[3] || null); bar.insertBefore(document.createTextNode(' '), b);
+    const panel = this.mk('div', 'wxpanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Weather and air quality'); after.after(panel);
+    let done = false; PaidGate.paid().then(p => { if (!p) b.textContent = 'Weather & air (Pro)'; });
+    b.addEventListener('click', async () => {
+      if (!panel.hidden) { panel.hidden = true; b.setAttribute('aria-expanded', 'false'); return; }
+      panel.hidden = false; b.setAttribute('aria-expanded', 'true'); if (done) return;
+      if (!(await PaidGate.paid())) { panel.textContent = ''; panel.appendChild(PaidGate.lock('Weather & air')); return; }
+      panel.textContent = ''; panel.appendChild(this.mk('p', 'small muted', 'Getting the weather here\u2026'));
+      const c = center(); let d = null;
+      try { d = await (await fetch('/.netlify/functions/wxnow?' + new URLSearchParams({mode: 'spot', lat: c.lat.toFixed(4), lng: c.lng.toFixed(4)}))).json(); } catch (e) { d = null; }
+      if (!d || !d.ok) { panel.textContent = ''; panel.appendChild(this.mk('p', 'notice', d && d.reason === 'nokey' ? 'Weather is not set up yet.' : 'Weather temporarily unavailable. Try again later.')); return; }
+      done = true; this.render(panel, d, 'Near this spot');
+    });
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -649,7 +680,7 @@ const CameraData = {
   // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
   mapAttach(L, m, box, center, frontage) {
     const dlg = box.closest('dialog') || box.parentNode;
-    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel,.enpanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel,.enpanel,.wxpanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
     const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
     PaidGate.paid().then(p => { if (p) return; b._label = 'Nearby Cameras (Pro)'; b.textContent = b._label; if (!sv) return;
@@ -658,6 +689,7 @@ const CameraData = {
     box.after(bar); bar.after(panel); if (sv) bar.after(sv.note);
     if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
     if (typeof EnergyData !== 'undefined') EnergyData.attach(bar, panel, center);
+    if (typeof WxData !== 'undefined') WxData.attach(bar, panel, center);
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
