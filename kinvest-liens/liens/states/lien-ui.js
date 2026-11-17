@@ -464,6 +464,78 @@ const WeatherData = {
 };
 // Soil Type: USDA NRCS SSURGO soil map units intersected with the FULL verified lot outline (server side, /.netlify/functions/soil, USDA Soil Data Access).
 // A map-based screening summary, not a soil test. No verified boundary, no survey coverage or a failed lookup is "Soil data unavailable".
+// Environmental Restrictions: Florida DEP Institutional Controls Registry (ICR) mapped areas overlapping the FULL verified lot outline
+// (/.netlify/functions/envctl). Without an outline but with a geocoded pin, a point check labeled "Map pin check only". Any failure: "Registry check unavailable".
+const EnvCtlData = {
+  SRC: 'https://ca.dep.state.fl.us/arcgis/rest/services/OpenData/DWM_WASTE_ICR_BACKG/MapServer/12', mem: {},
+  async get(l, r) {
+    let body, mode;
+    if (r && r.st === 'matched' && r.g && r.g.length) { body = {rings: r.g}; mode = 'boundary'; }
+    else if (isFinite(l.lat) && isFinite(l.lng)) { body = {point: [Number(l.lng), Number(l.lat)]}; mode = 'point'; }
+    else return {state: 'unavailable', why: 'nolocation'};
+    const key = JSON.stringify(body); if (this.mem[key]) return this.mem[key];
+    let out; try {
+      const c = new AbortController(), t = setTimeout(() => c.abort(), 25000);
+      const res = await fetch('/.netlify/functions/envctl', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: key, signal: c.signal}).finally(() => clearTimeout(t));
+      const d = await res.json();
+      out = d && d.ok === true && Array.isArray(d.matches) && d.mode === mode ? Object.assign({state: 'ok'}, d) : {state: 'unavailable', why: 'lookup'};
+    } catch (e) { out = {state: 'unavailable', why: 'lookup'}; }
+    if (out.state === 'ok') this.mem[key] = out; return out;
+  },
+  fill(box, res) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
+    box.querySelectorAll('.ecbody').forEach(x => x.remove()); const body = mk('div', 'ecbody'); box.appendChild(body);
+    if (res.state !== 'ok') {
+      body.appendChild(mk('p', 'notice', 'Registry check unavailable'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nolocation' ? 'This lot has no verified boundary or map pin, so it cannot be checked against the DEP registry map.' : 'The Florida DEP registry map service did not answer.'));
+      if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
+    } else {
+      if (res.mode === 'point') body.appendChild(mk('p', 'small ecpin', 'Map pin check only: this lot has no verified boundary, so only its map pin was checked. A restriction on part of the lot could be missed.'));
+      if (!res.matches.length) body.appendChild(mk('p', 'ecval', res.mode === 'point' ? 'No mapped DEP registry area at the map pin.' : 'No mapped DEP registry overlap found.'));
+      else {
+        body.appendChild(mk('p', 'ecval echit', (res.mode === 'point' ? 'The map pin is inside ' : 'This lot overlaps ') + (res.matches.length === 1 ? 'a mapped DEP institutional control area.' : res.matches.length + ' mapped DEP institutional control areas.')));
+        res.matches.forEach(m => {
+          const d = mk('div', 'ecsite'); d.appendChild(mk('b', '', m.siteName || 'DEP site ' + m.siteId));
+          const meta = [m.siteId ? 'DEP site ' + m.siteId : '', [m.address, m.city].filter(Boolean).join(', '), m.pct != null ? (m.pct < 0.1 ? '<0.1' : m.pct.toFixed(1)) + '% of the lot' : ''].filter(Boolean).join(' · ');
+          if (meta) d.appendChild(mk('div', 'small muted', meta));
+          if (m.pct != null && m.pct < 2) d.appendChild(mk('div', 'small muted', 'Only a small edge overlaps; this may be a mapping offset. Confirm in the DEP records.'));
+          if (m.restrictions.length) { const ul = mk('ul', 'small'); m.restrictions.forEach(x => ul.appendChild(mk('li', '', x.label ? x.code + ': ' + x.label : x.code + ': See DEP records for details.'))); d.appendChild(ul); }
+          else d.appendChild(mk('div', 'small', 'No restriction type listed in the registry. See DEP records for details.'));
+          const extra = [m.mechanisms.length ? 'Recorded as: ' + m.mechanisms.join(', ') : '', m.media.length ? 'Contaminated media: ' + m.media.join(', ') : '', m.engineering.length ? 'Engineering controls: ' + m.engineering.join(', ') : '', m.effDates.length ? 'Effective: ' + m.effDates.join(', ') : ''].filter(Boolean);
+          extra.forEach(t => d.appendChild(mk('div', 'small muted', t)));
+          if (m.docs) { const p = mk('div', 'small'); p.appendChild(link('Official DEP records for this site', m.docs)); d.appendChild(p); }
+          body.appendChild(d);
+        });
+      }
+    }
+    body.appendChild(mk('p', 'small muted', 'Map-based screening only, not a title search or environmental assessment. Institutional controls are usually recorded with the county as restrictive covenants and stay with the land. Check the official DEP records and the county Official Records before you bid.'));
+    const src = mk('p', 'small muted'); src.append('Source: Florida Department of Environmental Protection, ', link('Institutional Controls Registry', this.SRC), '.' + (res.state === 'ok' ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+  },
+  mapAttach(L, m, box, l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const dlg = box.closest('dialog') || box.parentNode; let old = dlg.querySelector('.ecbar'); if (old) old.remove();
+    const bar = mk('p', 'clbar ecbar small'), b = mk('button', 'btn small ghost', 'Show DEP restriction areas'); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); const st = mk('span', 'small muted', ''); st.setAttribute('role', 'status'); bar.append(b, ' ', st);
+    (dlg.querySelector('.fzbar') || box).after(bar); let layer = null;
+    b.addEventListener('click', async () => {
+      if (layer && m.hasLayer(layer)) { m.removeLayer(layer); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Show DEP restriction areas'; st.textContent = ''; return; }
+      b.disabled = true; st.textContent = 'Checking the Florida DEP registry…'; const res = await this.get(l, r); b.disabled = false;
+      if (res.state !== 'ok') { st.textContent = 'Registry check unavailable'; return; }
+      const gs = res.matches.filter(x => x.geom && x.geom.length);
+      if (!gs.length) { st.textContent = res.mode === 'point' ? 'Map pin check only: no mapped DEP registry area at the pin.' : 'No mapped DEP registry overlap found.'; return; }
+      const esc = t => String(t).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+      layer = L.layerGroup(gs.map(x => L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'MultiPolygon', coordinates: x.geom}}, {style: {color: '#a855f7', weight: 2, fillColor: '#a855f7', fillOpacity: 0.35}}).bindPopup('<b>' + esc(x.siteName) + '</b><br>' + esc(x.restrictions.map(y => y.code).join(', ') || 'See DEP records for details.')))).addTo(m);
+      if (box._outline && box._outline.bringToFront) box._outline.bringToFront();
+      b.setAttribute('aria-pressed', 'true'); b.textContent = 'Hide DEP restriction areas'; st.textContent = 'Purple = mapped DEP institutional control area' + (res.mode === 'point' ? ' (map pin check only).' : ' inside this lot.');
+    });
+  },
+  section(l, r) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const box = mk('div', 'precord ecbox'); box.appendChild(mk('h4', '', 'Environmental Restrictions'));
+    const run = () => { box.querySelectorAll('.ecbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted ecbody', 'Checking the Florida DEP registry…')); this.get(l, r).then(res => this.fill(box, res)); };
+    box._retry = run; run(); return box;
+  }
+};
 const SoilData = {
   WSS: 'https://websoilsurvey.nrcs.usda.gov/app/', SDA: 'https://sdmdataaccess.sc.egov.usda.gov/', mem: {},
   async get(l, r) {
@@ -719,6 +791,7 @@ const LienMap = {
         WetlandsData.mapAttach(L, m, box, l, pd.r);
         FloodData.mapAttach(L, m, box, l, pd.r);
         WeatherData.mapAttach(L, m, box, l, pd.r);
+        EnvCtlData.mapAttach(L, m, box, l, pd.r);
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
