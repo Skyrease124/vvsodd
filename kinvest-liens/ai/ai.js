@@ -18,9 +18,12 @@
     const svg = sn('svg', {viewBox: '30 55 915 520', role: 'group', 'aria-label': 'Map of US states. Tap states to focus the AI.'}); svgEl = svg;
     const defs = sn('defs', {});
     Object.keys(COL).forEach((k, i) => { const g = sn('linearGradient', {id: 'ag' + i, x1: '0', y1: '0', x2: '0', y2: '1'}); g.appendChild(sn('stop', {offset: '0', 'stop-color': shade(COL[k], 1.22)})); g.appendChild(sn('stop', {offset: '1', 'stop-color': shade(COL[k], 0.78)})); defs.appendChild(g); });
+    const bl = sn('filter', {id: 'aiblur', x: '-10%', y: '-10%', width: '120%', height: '130%'}); bl.appendChild(sn('feGaussianBlur', {stdDeviation: '7'})); defs.appendChild(bl);
     svg.appendChild(defs);
     const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = 'url(#ag' + i + ')');
     let idx = 0;
+    const sh = sn('g', {class: 'aishadow', 'pointer-events': 'none'}), ex = sn('g', {class: 'aiextr', 'pointer-events': 'none'});
+    sh.setAttribute('filter', 'url(#aiblur)'); svg.appendChild(sh); svg.appendChild(ex);
     const stg = sn('g', {}); svg.appendChild(stg); fxLayer = sn('g', {'pointer-events': 'none'});
     Object.keys(MAP_PATHS).forEach(a => {
       const s = by[a]; if (!s) return;
@@ -29,6 +32,10 @@
       p.addEventListener('click', toggle); p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
       const t = sn('title', {}); t.textContent = s.n + ': ' + s.sys; p.appendChild(t);
       stg.appendChild(p);
+      const base = col => { const d = sn('path', {d: MAP_PATHS[a], class: 'aibase', style: 'fill:' + col + ';--i:' + (idx - 1), 'data-a': a}); return d; };
+      const c0 = COL[s.sys] || '#94a3b8';
+      ex.appendChild(base(shade(c0, .38))); const e2 = base(shade(c0, .5)); e2.classList.add('e2'); ex.appendChild(e2);
+      const sd = sn('path', {d: MAP_PATHS[a]}); sh.appendChild(sd);
     });
     svg.appendChild(fxLayer);
     // pulsing dots where real lien lists exist
@@ -37,12 +44,29 @@
       const r = Math.max(5, Math.min(13, 4 + Math.log10(TOTALS[a] + 1) * 2.4));
       if (el) el.classList.add('haslive');
       const g = sn('g', {class: 'live', transform: 'translate(' + pos[0] + ',' + (pos[1] - 16) + ')', 'pointer-events': 'none'});
-      g.appendChild(sn('circle', {class: 'ring', r: r + 1})); g.appendChild(sn('circle', {class: 'ring r2', r: r + 1})); g.appendChild(sn('circle', {class: 'core', r}));
+      g.appendChild(sn('line', {class: 'beam3d', x1: 0, y1: 0, x2: 0, y2: -22})); g.appendChild(sn('ellipse', {class: 'foot', rx: r + 3, ry: (r + 3) * .45})); g.appendChild(sn('circle', {class: 'ring', r: r + 1})); g.appendChild(sn('circle', {class: 'ring r2', r: r + 1})); g.appendChild(sn('circle', {class: 'core', r}));
       svg.appendChild(g);
     });
     badgeLayer = sn('g', {class: 'badges', 'pointer-events': 'none'}); svg.appendChild(badgeLayer);
     $('aimap').appendChild(svg);
     try { const bb = stg.getBBox(), pad = 14; const x0 = Math.max(bb.x - pad, 18), x1 = bb.x + bb.width + pad; svg.setAttribute('viewBox', [x0, bb.y - pad, x1 - x0, bb.height + pad * 2].join(' ')); } catch (e) {}
+  }
+  // Gentle 3D tilt: follows a finger or mouse over the map, and sways slowly when idle. Paused when hidden or with reduced motion.
+  function tilt() {
+    const stage = $('aistage'), map = $('aimap'); if (!stage || !map || REDUCED) return;
+    let tx = 0, ty = 0, cx = 0, cy = 0, last = 0, t0 = performance.now();
+    const aim = e => { const r = stage.getBoundingClientRect(), p = e.touches ? e.touches[0] : e; tx = ((p.clientX - r.left) / r.width - .5) * 2; ty = ((p.clientY - r.top) / r.height - .5) * 2; last = performance.now(); };
+    ['pointermove', 'touchmove'].forEach(n => stage.addEventListener(n, aim, {passive: true}));
+    const loop = now => {
+      if (!document.hidden) {
+        if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .5) * .55; ty = Math.cos(k * .37) * .3; }
+        cx += (tx - cx) * .07; cy += (ty - cy) * .07;
+        map.style.setProperty('--ry', (cx * 9).toFixed(2) + 'deg'); map.style.setProperty('--rx', (-cy * 5).toFixed(2) + 'deg');
+        map.style.setProperty('--lx', (cx * -10).toFixed(1) + 'px'); map.style.setProperty('--ly', (cy * -6 + 10).toFixed(1) + 'px');
+      }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
   }
   function ripple(p) {
     if (REDUCED || !fxLayer) return; const bb = p.getBBox();
@@ -199,6 +223,6 @@
     if (!d || !d.enabled) { g.hidden = false; g.textContent = 'PricePocket AI is not switched on yet.'; return; }
     if (!d.signedIn) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> <a href="/login/?next=/ai/">Sign in</a> or <a href="/account/?mode=up">create an account</a>. PricePocket AI is for Pro members ($5.50 a week).'; return; }
     if (!d.paid) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> PricePocket AI is for Pro members ($5.50 a week). <a href="/account/">See my plan</a>'; return; }
-    $('app').hidden = false; drawMap(); idle();
+    $('app').hidden = false; drawMap(); tilt(); idle();
   })();
 })();
