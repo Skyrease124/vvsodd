@@ -155,11 +155,11 @@
       const L = {state: r.state, county: r.county, parcel: r.parcel, address: r.area, desc: r.use};
       if ((r.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(L, th); }
       else if (typeof LandMap !== 'undefined' && typeof LAND_OUTLINES !== 'undefined' && LAND_OUTLINES[r.county]) { const th = mk('div', 'lthumb loading'); c.appendChild(th); LandMap.thumb(landSpec(L), th); }
-      h.append(mk('b', '', (i + 1) + '. ' + r.county + ' County parcel ' + r.parcel), mk('span', 'sscore', 'Score ' + r.score + '/100'));
+      h.append(mk('b', '', (i + 1) + '. ' + r.county + (/^City of /.test(r.county) ? '' : ' County') + ' parcel ' + r.parcel), mk('span', 'sscore', 'Score ' + r.score + '/100'));
       c.appendChild(h);
       c.appendChild(mk('p', 'small muted', [r.area, r.use && r.use.toLowerCase(), r.acres != null && r.acres + ' acres'].filter(Boolean).join(' · ')));
       const dl = mk('dl', 'stfacts');
-      [['Tax owed', '$' + Number(r.face).toFixed(2)], ['County land value', r.market != null ? money(r.market) : 'unknown'], ['Value vs tax owed', r.coverage != null ? Math.round(r.coverage).toLocaleString('en-US') + '\u00d7' : 'n/a']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
+      [r.noPrice ? ['Price', r.priceNote || 'Not on the list'] : ['Tax owed', '$' + Number(r.face).toFixed(2)], ['County land value', r.market != null ? money(r.market) : 'unknown'], ['Value vs tax owed', r.coverage != null ? Math.round(r.coverage).toLocaleString('en-US') + '\u00d7' : 'n/a']].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); });
       c.appendChild(dl);
       const fl = mk('ul', 'sflags'); (r.green || []).forEach(t => fl.appendChild(mk('li', 'g', t))); (r.red || []).forEach(t => fl.appendChild(mk('li', 'r', t))); c.appendChild(fl);
       const act = mk('div', 'sact');
