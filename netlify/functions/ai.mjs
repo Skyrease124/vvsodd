@@ -270,6 +270,11 @@ async function handle(event) {
   rec.push(now); hits.set(me.email, rec);
 
   // Weather questions: answered from WeatherAPI + NWS for places on the site only (no model, so nothing is made up).
+  if (AIWX.wantsRecord(q)) {
+    try { const rr = await AIWX.record(q);
+      if (rr.ok) { await usage.record('ai', true); return json(200, { answer: rr.text, understood: true, searched: 'property record', kind: 'weather', scope: rr.state ? [rr.state] : [] }); } }
+    catch (e) { console.log('ai record failed', e.message); }
+  }
   const topic = AIWX.topic(q);
   if (topic && !/\b(liens?|parcels?|cheapest|list)\b/i.test(q)) {
     const place = AIWX.findPlace(q, data.STATES, uiScope);
