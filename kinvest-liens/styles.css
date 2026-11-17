@@ -1326,3 +1326,47 @@ body.loginpg #msg:empty{display:none}
 .stbody .lsrc{font-size:12px;color:#8ea0c4}.stbody .lsrc a{color:#9ec5ff}
 @media(prefers-reduced-motion:reduce){.stbody .lcardx{transition:none}.stbody .lcardx:hover{transform:none}}
 .stbody .lienbar-row{gap:6px}.stbody .lienbar .lienbar-row>button,.stbody .lienbar .lienbar-row>a,.stbody .lienbar .lienbar-row>.pdl>button{padding:0 12px;font-size:13.5px}
+/* ===== PricePocket AI: calm glass, Siri-style glow, dark answer cards ===== */
+.aibody .aihello{font-size:clamp(26px,7.2vw,38px);font-weight:700;letter-spacing:-.035em;line-height:1.1;margin:14px 6px 14px;background:linear-gradient(95deg,#fff 0%,#fff 55%,#cfe3ff 100%);-webkit-background-clip:text;background-clip:text}
+.aibody .aistage{border:0;border-radius:28px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12),0 30px 60px -30px rgba(0,0,0,.9),inset 0 0 70px rgba(60,110,255,.12)}
+.aibody .aitag{background:rgba(255,255,255,.1);border:0;color:#fff;font-weight:600;letter-spacing:-.01em;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.aibody .aihint{color:#8ea0c4}
+/* composer: one glass capsule, round send button */
+.aibody .aibar{margin:14px 4px 0;padding:6px 6px 6px 18px;gap:8px;border-radius:999px;background:rgba(255,255,255,.08);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.16),0 18px 40px -20px rgba(0,0,0,.8)}
+.aibody .aibar::before{inset:-1px;border-radius:999px;padding:1px;opacity:0;transition:opacity .4s;background:conic-gradient(from var(--aiang),#ff7ab8,#ffb86b,#7af0c4,#6ab0ff,#b48cff,#ff7ab8)}
+.aibody .aibar:focus-within::before{opacity:.85}
+.aibody .aibar.busy::before{opacity:1;filter:blur(.4px) drop-shadow(0 0 10px rgba(122,176,255,.7))}
+.aibody .aibar input{padding:12px 0;font-size:17px;letter-spacing:-.01em}
+.aibody .aibar button{flex:none;width:44px;height:44px;padding:0;border-radius:50%;font-size:0;background:#fff;color:#0b1633;box-shadow:0 6px 16px -6px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;transition:transform .18s cubic-bezier(.3,.7,.4,1),opacity .2s}
+.aibody .aibar button::after{content:"";width:11px;height:11px;border-left:3px solid currentColor;border-top:3px solid currentColor;transform:translateY(2px) rotate(45deg)}
+.aibody .aibar button:hover{filter:none;transform:scale(1.06)}.aibody .aibar button:active{transform:scale(.92)}
+.aibody .aibar.busy button{opacity:.55}
+/* chips */
+.aibody .aichip{background:rgba(255,255,255,.08);border:0;border-radius:999px;color:#e8edf7;font-weight:500;padding:9px 16px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1);transition:background-color .2s,transform .15s}
+.aibody .aichip:hover{background:rgba(255,255,255,.15)}.aibody .aichip:active{transform:scale(.95)}
+/* stats + try asking */
+.aibody .aistats{gap:0;background:rgba(255,255,255,.05);border-radius:20px;padding:12px 4px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1)}
+.aibody .aistat{background:none;border:0;border-radius:0;padding:2px 4px}.aibody .aistat+.aistat{box-shadow:inset .5px 0 0 rgba(255,255,255,.12)}
+.aibody .aistat b{color:#fff;font-weight:700;letter-spacing:-.02em;font-size:clamp(20px,6vw,26px)}.aibody .aistat span{color:#8ea0c4}
+.aibody .aitrylabel{letter-spacing:.08em;color:#8ea0c4;font-weight:600;font-size:12px;margin:22px 4px 10px}
+.aibody .aitrycard{background:rgba(255,255,255,.05);border:0;border-radius:22px;padding:16px;gap:6px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1),0 18px 34px -24px rgba(0,0,0,.9);transition:transform .25s cubic-bezier(.3,.7,.4,1),background-color .25s,box-shadow .25s}
+.aibody .aitrycard:hover{transform:translateY(-3px);border:0;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.2),0 24px 40px -24px rgba(0,0,0,.95)}
+.aibody .aitrycard .ic{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);font-size:22px;margin-bottom:4px}
+.aibody .aitrycard b{font-size:16px;font-weight:600;letter-spacing:-.01em}.aibody .aitrycard .ex{color:#9fb0cc}
+/* conversation */
+.aibody .aichat .aiturn{display:flex;flex-direction:column;gap:12px;animation:aiTurn .5s cubic-bezier(.2,.9,.25,1) both}
+@keyframes aiTurn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+.aibody .aichat .aiq{align-self:flex-end;max-width:86%;margin:0;padding:10px 16px;border-radius:20px 20px 6px 20px;background:linear-gradient(180deg,#3d8bff,#2a6df0);color:#fff;font-size:16px;font-weight:500;line-height:1.35;box-shadow:0 10px 20px -10px rgba(42,109,240,.7)}
+.aibody .aichat .aiout{background:rgba(255,255,255,.06);color:#f2f5fb;border:0;border-radius:22px 22px 22px 6px;padding:16px 18px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12),0 24px 44px -28px rgba(0,0,0,.9);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.aibody .aichat .aiout .muted,.aibody .aichat .aiout .small{color:#9fb0cc}
+.aibody .aichat .aiout.thinking{display:inline-flex;align-items:center;gap:8px;width:fit-content;padding:12px 18px;color:#9fb0cc;border-radius:22px 22px 22px 6px}
+.aibody .aichat .aiout.thinking span:not(.aidots){background:linear-gradient(100deg,#6b7a99 20%,#fff 45%,#6b7a99 70%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:aiShimmer 1.6s linear infinite}
+@keyframes aiShimmer{from{background-position:120% 0}to{background-position:-120% 0}}
+.aibody .aidots::before{color:#9ec5ff}
+.aibody .aians{font-size:17px;line-height:1.55;letter-spacing:-.005em}
+.aibody .aians.typing::after{background:#9ec5ff}
+.aibody .aibul b{color:#fff;font-weight:600}.aibody .aibul{font-size:16px;line-height:1.5}
+.aibody .aiverify{border-left:0;background:rgba(255,159,10,.12);color:#ffd9a0;border-radius:12px;padding:10px 14px}
+.aibody .aichat .tablewrap{border-radius:16px;overflow:auto;background:#fff}
+@media(prefers-reduced-motion:reduce){.aibody .aichat .aiturn,.aibody .aichat .aiout.thinking span{animation:none!important}}
+.aibody .aibar button::after{content:"\2191";width:auto;height:auto;border:0;transform:none;font-size:24px;font-weight:700;line-height:1}
