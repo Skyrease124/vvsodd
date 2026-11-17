@@ -971,3 +971,9 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .newslist{list-style:none;padding:0;margin:8px 0;display:grid;gap:10px}.newslist li{padding:10px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.03)}
 .newshead{display:block;font-weight:600;margin:4px 0;overflow-wrap:anywhere}.newstag{font-size:11px;font-weight:700;background:#0c4a6e;color:#e0f2fe;border-radius:999px;padding:2px 8px}
 .newstopic{font-size:11px;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:1px 7px}
+
+/* Probate & Death Records */
+.probbox{margin:10px 0;padding:10px 12px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.03)}.probbox h4{margin:0 0 6px}
+.probowner b{overflow-wrap:anywhere}.probstat{font-weight:700;margin:6px 0;padding:6px 10px;border-radius:8px;background:rgba(245,158,11,.14);color:#fcd34d}.probstat.dead{background:rgba(220,38,38,.16);color:#fecaca}
+.probact{margin:10px 0;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)}.probact select{max-width:100%;margin:4px 6px 6px 0;font:inherit;padding:8px;border-radius:8px}.probact a[aria-disabled=true]{opacity:.5;pointer-events:none}.probrecs{margin:4px 0 8px 18px;padding:0}
+.probact>b{display:block;margin:2px 0 4px}.probact>span.small{display:block;margin:4px 0}

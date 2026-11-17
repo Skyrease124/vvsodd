@@ -1,0 +1,108 @@
+{
+ "checked": "2026-11-17",
+ "help": "One entry per county: the clerk\u2019s official public site. kind \"case-search\" = the clerk says probate cases can be looked up online; \"general\" = the clerk\u2019s general site or probate page (probate search online is not confirmed). Only addresses that answered (or whose domain the county itself uses) are listed; counties not listed show a plain \"no verified link yet\" message.",
+ "counties": {
+  "FL|Volusia": {
+   "clerk": "Volusia County Clerk of the Circuit Court",
+   "url": "https://clerk.org/Search-Records.aspx",
+   "kind": "case-search",
+   "note": "The clerk lists Probate among the case types you can look up by name or case number."
+  },
+  "FL|Miami-Dade": {
+   "clerk": "Miami-Dade Clerk of the Courts",
+   "url": "https://www2.miamidadeclerk.gov/ocs",
+   "kind": "case-search",
+   "note": "The clerk\u2019s online system covers civil, family and probate cases (Standard or Advanced Search)."
+  },
+  "FL|Hillsborough": {
+   "clerk": "Hillsborough County Clerk of Court & Comptroller",
+   "url": "https://hillsclerk.com/court-services/probate-guardianship-and-trust",
+   "kind": "case-search",
+   "note": "The clerk\u2019s probate page explains how to search probate cases by name."
+  },
+  "FL|Palm Beach": {
+   "clerk": "Palm Beach County Clerk & Comptroller",
+   "url": "https://appsgp.mypalmbeachclerk.com/eCaseView/",
+   "kind": "general",
+   "note": "eCaseView is the clerk\u2019s public case viewer; the clerk does not say it includes probate. Probate: call the clerk\u2019s probate line, (561) 355-2986."
+  },
+  "FL|Lee": {
+   "clerk": "Lee County Clerk of the Circuit Court",
+   "url": "https://www.leeclerk.org/",
+   "kind": "general",
+   "note": "General clerk site (it refuses automated checks, so the page was not machine-checked). Look for Court Records and choose Probate."
+  },
+  "FL|Manatee": {
+   "clerk": "Manatee County Clerk",
+   "url": "https://records.manateeclerk.com/CourtRecords/Search",
+   "kind": "general",
+   "note": "The clerk\u2019s court records search; choose probate cases (case numbers start with CP)."
+  },
+  "FL|Sarasota": {
+   "clerk": "Sarasota County Clerk",
+   "url": "https://www.sarasotaclerk.com/Courts/Wills-Probate-and-Guardianship/Wills",
+   "kind": "general",
+   "note": "The clerk\u2019s wills and probate page; its records search is reached from the clerk\u2019s site."
+  },
+  "FL|Duval": {
+   "clerk": "Duval County Clerk of the Courts",
+   "url": "https://www.duvalclerk.gov/departments/civil-court-services/probate",
+   "kind": "general",
+   "note": "The clerk\u2019s probate page."
+  },
+  "FL|Pasco": {
+   "clerk": "Pasco County Clerk & Comptroller",
+   "url": "https://pascoclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Alachua": {
+   "clerk": "Alachua County Clerk of Court",
+   "url": "https://www.alachuaclerk.org/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Bay": {
+   "clerk": "Bay County Clerk of Court",
+   "url": "https://www.baycoclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Hernando": {
+   "clerk": "Hernando County Clerk of Circuit Court & Comptroller",
+   "url": "https://hernandoclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Leon": {
+   "clerk": "Leon County Clerk of Court & Comptroller",
+   "url": "https://leonclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Nassau": {
+   "clerk": "Nassau County Clerk of Circuit Court and Comptroller",
+   "url": "https://www.nassauclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Osceola": {
+   "clerk": "Osceola County Clerk of the Circuit Court & Comptroller",
+   "url": "https://osceolaclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Santa Rosa": {
+   "clerk": "Santa Rosa County Clerk of Court & Comptroller",
+   "url": "https://santarosaclerk.com/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  },
+  "FL|Walton": {
+   "clerk": "Walton County Clerk of Courts & Comptroller",
+   "url": "https://waltonclerkfl.gov/",
+   "kind": "general",
+   "note": "General clerk site: look for court records and choose probate."
+  }
+ }
+}

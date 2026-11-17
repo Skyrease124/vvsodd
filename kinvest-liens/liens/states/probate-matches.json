@@ -1,0 +1,4 @@
+{
+ "help": "Official probate cases, recorded instruments and death records that can be tied to BOTH the owner and the parcel. Key: STATE|County|parcel ID (letters and digits only, upper case). Only verified records go here (see tools/probate/validate.py): number, date, official https link, how it ties to the parcel, whether it confirms the death, and whether it identifies the same person. Never add Social Security numbers, cause of death, dates of birth or applicant details.",
+ "records": {}
+}
