@@ -1200,3 +1200,39 @@ details.toolabout,dialog details.toolabout{background:transparent!important;bord
 .trbar>button.btn:hover{filter:brightness(1.1)}.trbar>button.btn:active{transform:scale(.97)}
 .lotdlg .toolabout,dialog .toolabout{transition:background-color .2s}
 @media(prefers-reduced-motion:reduce){.clbar:not(.toolgrid)>button,.clbar:not(.toolgrid)>button::before,.clbar:not(.toolgrid)>button::after,.trbar>button,.clbar:not(.toolgrid)>.muted,.clbar.wxbar{transition:none!important;animation:none!important}}
+/* Sell my land: soft 3D cards, raised buttons, staggered entrance */
+body.sellpg main{background:radial-gradient(1200px 400px at 50% -80px,rgba(11,110,79,.09),transparent 70%)}
+body.sellpg h1{letter-spacing:-.02em;animation:sellUp .5s cubic-bezier(.2,.8,.2,1) both}
+body.sellpg .notice{border-radius:16px;box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 10px 24px -12px rgba(90,67,0,.35);animation:sellUp .5s .06s cubic-bezier(.2,.8,.2,1) both}
+body.sellpg .btn{border-radius:14px;padding:14px 22px;background:linear-gradient(180deg,#14966c,#0b6e4f);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 4px 0 #064733,0 12px 20px -8px rgba(6,71,51,.55);transition:transform .16s cubic-bezier(.3,.7,.4,1),box-shadow .16s,filter .2s}
+body.sellpg .btn:hover{transform:translateY(-2px);filter:brightness(1.07);box-shadow:0 1px 0 rgba(255,255,255,.35) inset,0 6px 0 #064733,0 18px 26px -10px rgba(6,71,51,.5);background:linear-gradient(180deg,#14966c,#0b6e4f)}
+body.sellpg .btn:active{transform:translateY(4px);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 0 0 #064733,0 4px 8px -4px rgba(6,71,51,.5)}
+body.sellpg .btn.ghost{background:var(--bg);color:var(--brand)!important;border:2px solid var(--brand);box-shadow:0 4px 0 rgba(11,110,79,.35),0 10px 18px -10px rgba(15,23,42,.35)}
+body.sellpg .btn.ghost:hover{background:rgba(11,110,79,.06);box-shadow:0 6px 0 rgba(11,110,79,.35),0 16px 24px -10px rgba(15,23,42,.3)}
+body.sellpg .btn.ghost:active{transform:translateY(4px);box-shadow:0 0 0 rgba(11,110,79,.35)}
+body.sellpg .btn.small{padding:9px 16px;border-radius:12px}
+body.sellpg .btn:disabled{opacity:.6;transform:none;filter:grayscale(.3)}
+body.sellpg .sact{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}
+body.sellpg .scard{border-radius:18px;border:1px solid var(--line);background:var(--bg);padding:16px;margin:14px 0;box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 14px 30px -18px rgba(15,23,42,.45);animation:sellUp .45s cubic-bezier(.2,.8,.2,1) both}
+body.sellpg .scard:nth-of-type(2){animation-delay:.05s}body.sellpg .scard:nth-of-type(3){animation-delay:.1s}body.sellpg .scard:nth-of-type(4){animation-delay:.15s}
+body.sellpg .scard:hover{transform:translateY(-3px);box-shadow:0 20px 36px -18px rgba(15,23,42,.5)}
+body.sellpg .setupform{gap:16px;padding:20px 16px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,var(--bg),var(--card));box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 26px 50px -26px rgba(15,23,42,.5);animation:sellPop .45s cubic-bezier(.2,.9,.25,1.05) both}
+body.sellpg .setupform[hidden]{display:none}
+body.sellpg .setupform>*{animation:sellUp .45s cubic-bezier(.2,.8,.2,1) both}
+body.sellpg .setupform>*:nth-child(2){animation-delay:.04s}body.sellpg .setupform>*:nth-child(3){animation-delay:.08s}body.sellpg .setupform>*:nth-child(4){animation-delay:.12s}body.sellpg .setupform>*:nth-child(5){animation-delay:.16s}body.sellpg .setupform>*:nth-child(6){animation-delay:.2s}body.sellpg .setupform>*:nth-child(n+7){animation-delay:.24s}
+body.sellpg .setupform label{display:grid;gap:7px;font-weight:600;font-size:14px;color:var(--fg)}
+body.sellpg .setupform input:not([type=file]),body.sellpg .setupform select,body.sellpg .setupform textarea{width:100%;box-sizing:border-box;padding:14px;font:inherit;font-weight:400;border:1.5px solid var(--line);border-radius:14px;background:var(--bg);color:var(--fg);box-shadow:0 2px 0 rgba(15,23,42,.05) inset,0 6px 14px -10px rgba(15,23,42,.35);transition:border-color .2s,box-shadow .25s,transform .2s}
+body.sellpg .setupform input:focus,body.sellpg .setupform select:focus,body.sellpg .setupform textarea:focus{outline:0;border-color:var(--brand);transform:translateY(-1px);box-shadow:0 0 0 4px rgba(11,110,79,.16),0 12px 22px -12px rgba(11,110,79,.45)}
+body.sellpg .setupform input[type=file]{width:100%;box-sizing:border-box;padding:18px 14px;border:2px dashed #9ccbb7;border-radius:16px;background:rgba(11,110,79,.05);transition:background-color .2s,border-color .2s,transform .2s}
+body.sellpg .setupform input[type=file]:hover{background:rgba(11,110,79,.1);border-color:var(--brand);transform:translateY(-2px)}
+body.sellpg .setupform input[type=file]::file-selector-button{margin-right:12px;padding:9px 16px;border:0;border-radius:12px;font:inherit;font-weight:600;color:#fff;cursor:pointer;background:linear-gradient(180deg,#14966c,#0b6e4f);box-shadow:0 3px 0 #064733}
+body.sellpg .landmap{border:0;border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(15,23,42,.1),0 22px 40px -20px rgba(15,23,42,.6);transform:perspective(1100px) rotateX(2deg);transform-origin:50% 100%;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+body.sellpg .landmap:hover,body.sellpg .landmap:focus-within{transform:perspective(1100px) rotateX(0)}
+body.sellpg .lthumbs img{border-radius:14px;box-shadow:0 10px 20px -10px rgba(15,23,42,.5);animation:sellPop .35s ease both}
+body.sellpg #pin:not(:empty){padding:9px 14px;border-radius:12px;background:rgba(11,110,79,.09);color:var(--brand);font-weight:600;animation:sellUp .3s ease both}
+body.sellpg #save{min-width:170px}
+@media(max-width:520px){body.sellpg #save{width:100%;margin-bottom:12px}body.sellpg .setupform p:last-of-type .btn,body.sellpg #cancel{width:100%;text-align:center}}
+@keyframes sellUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sellPop{from{opacity:0;transform:scale(.97) translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-color-scheme:dark){body.sellpg .setupform input[type=file]{border-color:#2d5a47;background:rgba(47,191,140,.07)}body.sellpg .btn{background:linear-gradient(180deg,#34c995,#1f9c70);box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 4px 0 #0f5a40,0 12px 20px -8px rgba(0,0,0,.6)}}
+@media(prefers-reduced-motion:reduce){body.sellpg *{animation:none!important;transition:none!important}body.sellpg .landmap{transform:none}}
