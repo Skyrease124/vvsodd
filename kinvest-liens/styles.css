@@ -983,7 +983,7 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .aistage{perspective:1100px}
 .aimap{transform:rotateX(calc(16deg + var(--rx,0deg))) rotateY(var(--ry,0deg)) translateZ(0);transform-origin:50% 62%;transform-style:preserve-3d;will-change:transform}
 .aimap svg{overflow:visible}
-.aishadow path{fill:#000;opacity:.55;transform:translate(calc(6px + var(--lx,0px)*.5),calc(22px + var(--ly,0px)*.5));animation:aiFade .9s .3s backwards}
+.aishadow path{fill:#000;opacity:.55;transform:translate(6px,22px);animation:aiFade .9s .3s backwards}
 .aibase{stroke:rgba(0,0,0,.35);stroke-width:.6;animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*16ms);transform:translate(0,9px);transition:opacity .3s}
 .aibase.e2{transform:translate(0,4.5px);stroke:none}
 .aist{transition:transform .22s cubic-bezier(.2,.8,.2,1),filter .18s,opacity .3s,stroke .18s}
@@ -1003,7 +1003,7 @@ a.flink,a.tlink{color:#7bd3ff!important}
 /* Home map: same 3D treatment as the AI map */
 .dmap .usmap{perspective:1100px}
 .dmap .usmap svg{transform:rotateX(calc(14deg + var(--rx,0deg))) rotateY(var(--ry,0deg)) scale(.95);transform-origin:50% 62%;will-change:transform;overflow:visible}
-.hmshadow path{fill:#000;opacity:.55;transform:translate(calc(6px + var(--lx,0px)*.5),calc(20px + var(--ly,0px)*.5));animation:aiFade .9s .3s backwards}
+.hmshadow path{fill:#000;opacity:.55;transform:translate(6px,20px);animation:aiFade .9s .3s backwards}
 .hmbase{stroke:rgba(0,0,0,.35);stroke-width:.6;pointer-events:none;transform:translate(0,9px);animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*16ms);transition:opacity .35s}
 .hmbase.e2{transform:translate(0,4.5px);stroke:none}
 .dmap .usmap .st:hover,.dmap .usmap .st:focus,.dmap .usmap .st.sel{transform:translateY(-6px) scale(1.012);filter:drop-shadow(0 10px 8px rgba(0,0,0,.55)) brightness(1.2)}
@@ -1056,3 +1056,13 @@ dialog{perspective:1100px}
 .aicard .muted{color:#9fb1d6}
 .aiheat{transform:translateY(-7px);animation:aiFade .6s backwards;mix-blend-mode:screen}
 @media(prefers-reduced-motion:reduce){.aicard.pop,.aiheat{animation:none}}
+
+/* Smoother 3D maps: GPU layers, CSS zoom instead of redrawing, lighter shadows */
+.aimap,.dmap .usmap svg,.sfig3d svg{will-change:transform;backface-visibility:hidden}
+.aimap{transition:none}.aimap svg{transform-origin:50% 50%;transition:transform .7s cubic-bezier(.22,.8,.25,1)}
+.aishadow,.hmshadow{opacity:.85}
+.aist,.dmap .usmap .st{will-change:auto}
+.aist:hover,.aist:focus,.dmap .usmap .st:hover,.dmap .usmap .st:focus{filter:brightness(1.2)}
+.aist.on{filter:brightness(1.22)}
+.aist.haslive,.dmap .usmap .st.haslive{animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*16ms)}
+@media(prefers-reduced-motion:reduce){.aimap svg{transition:none}}

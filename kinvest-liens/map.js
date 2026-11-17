@@ -99,19 +99,12 @@
   host.appendChild(svg);
   // Tilt follows a finger or mouse; slow sway when idle. Paused when the tab is hidden or reduced motion is on.
   if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-    let tx = 0, ty = 0, cx = 0, cy = 0, last = 0; const t0 = performance.now();
-    const aim = e => { const r = host.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = ((q.clientX - r.left) / r.width - .5) * 2; ty = ((q.clientY - r.top) / r.height - .5) * 2; last = performance.now(); };
+    const sv = svg; let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, idle = 0;
+    const set = () => { sv.style.transform = 'rotateX(' + (14 - cy * 4).toFixed(2) + 'deg) rotateY(' + (cx * 8).toFixed(2) + 'deg) scale(.95)'; };
+    const run = () => { cx += (tx - cx) * .12; cy += (ty - cy) * .12; set(); raf = (Math.abs(tx - cx) + Math.abs(ty - cy) > .002) ? requestAnimationFrame(run) : 0; };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(run); };
+    const aim = e => { const r = host.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = Math.max(-1, Math.min(1, ((q.clientX - r.left) / r.width - .5) * 2)); ty = Math.max(-1, Math.min(1, ((q.clientY - r.top) / r.height - .5) * 2)); kick(); clearTimeout(idle); idle = setTimeout(() => { tx = 0; ty = 0; kick(); }, 1800); };
     ['pointermove', 'touchmove'].forEach(n => host.addEventListener(n, aim, {passive: true}));
-    const loop = now => {
-      if (!document.hidden) {
-        if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .5) * .55; ty = Math.cos(k * .37) * .3; }
-        cx += (tx - cx) * .07; cy += (ty - cy) * .07;
-        host.style.setProperty('--ry', (cx * 8).toFixed(2) + 'deg'); host.style.setProperty('--rx', (-cy * 4).toFixed(2) + 'deg');
-        host.style.setProperty('--lx', (cx * -10).toFixed(1) + 'px'); host.style.setProperty('--ly', (cy * -6 + 10).toFixed(1) + 'px');
-      }
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
   }
   // Counters that count up when the map scrolls into view.
   const total = Object.values(LIVE).reduce((t, l) => t + l.reduce((u, x) => u + x.count, 0), 0), counties = Object.values(LIVE).reduce((t, l) => t + l.length, 0);

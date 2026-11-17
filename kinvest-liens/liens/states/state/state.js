@@ -32,11 +32,12 @@ if (!s) {
       svg.appendChild(p);
       fig.appendChild(svg); document.body.appendChild(svg); const bb = p.getBBox(); svg.setAttribute('viewBox', [bb.x - 16, bb.y - 12, bb.width + 32, bb.height + 48].join(' ')); fig.appendChild(svg); fig.classList.add('sfig3d');
       if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
-        let tx = 0, ty = 0, cx = 0, cy = 0, last = 0; const t0 = performance.now(), hero = fig.parentNode || fig;
-        const aim = e => { const r = fig.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = Math.max(-1, Math.min(1, ((q.clientX - r.left) / r.width - .5) * 2)); ty = Math.max(-1, Math.min(1, ((q.clientY - r.top) / r.height - .5) * 2)); last = performance.now(); };
-        ['pointermove', 'touchmove'].forEach(n => document.addEventListener(n, aim, {passive: true}));
-        const loop = now => { if (!document.hidden && fig.isConnected) { if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .55) * .6; ty = Math.cos(k * .4) * .3; } cx += (tx - cx) * .07; cy += (ty - cy) * .07; fig.style.setProperty('--ry', (cx * 14).toFixed(2) + 'deg'); fig.style.setProperty('--rx', (-cy * 6).toFixed(2) + 'deg'); } requestAnimationFrame(loop); };
-        requestAnimationFrame(loop);
+        const sv = svg; let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, idle = 0;
+    const set = () => { sv.style.transform = 'rotateX(' + (18 - cy * 6).toFixed(2) + 'deg) rotateY(' + (cx * 14).toFixed(2) + 'deg)'; };
+    const run = () => { cx += (tx - cx) * .12; cy += (ty - cy) * .12; set(); raf = (Math.abs(tx - cx) + Math.abs(ty - cy) > .002) ? requestAnimationFrame(run) : 0; };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(run); };
+    const aim = e => { const r = fig.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = Math.max(-1, Math.min(1, ((q.clientX - r.left) / r.width - .5) * 2)); ty = Math.max(-1, Math.min(1, ((q.clientY - r.top) / r.height - .5) * 2)); kick(); clearTimeout(idle); idle = setTimeout(() => { tx = 0; ty = 0; kick(); }, 1800); };
+    ['pointermove', 'touchmove'].forEach(n => fig.addEventListener(n, aim, {passive: true}));
       }
     }
     const tx = document.createElement('div'); tx.className = 'stx';
