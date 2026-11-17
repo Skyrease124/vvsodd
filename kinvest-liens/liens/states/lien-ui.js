@@ -17,15 +17,15 @@ const OFM = {
     })());
   },
   // adds "Street names" (on by default) and "Street map (OpenFreeMap)" to a Leaflet map + its layers control
-  async add(m, ctl) {
+  async add(m, ctl, labelsOn = true) {
     try {
       const st = await this.load(); if (!m._loaded && !m._container) return;
-      const attr = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors';
+      const attr = '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM</a>'; if (m.attributionControl) m.attributionControl.setPrefix(false);
       const names = L.maplibreGL({style: st.labels, attribution: attr, interactive: false});
       const street = L.maplibreGL({style: st.full, attribution: attr, interactive: false});
       ctl.addBaseLayer(street, 'Street map (OpenFreeMap)');
       ctl.addOverlay(names, 'Street names');
-      names.addTo(m);
+      if (labelsOn) names.addTo(m);
     } catch (e) { /* labels are optional */ }
   }
 };
