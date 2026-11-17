@@ -12,11 +12,33 @@ const UpcomingSales = (() => {
   let dataP = null;
   const load = () => dataP || (dataP = fetch('/liens/states/upcoming-sales.json').then(r => { if (!r.ok) throw new Error(); return r.json(); }));
 
+  // Countdown + viewer's local time, computed in the browser (no outside time service).
+  const ZONES = {ET: 'America/New_York', CT: 'America/Chicago', MT: 'America/Denver', PT: 'America/Los_Angeles'};
+  const instant = (d, t, tz) => { // sale date/time in the county's zone -> Date
+    if (!d || !t) return null; const zone = ZONES[tz || 'ET']; if (!zone) return null;
+    const [y, mo, dd] = d.split('-').map(Number), [h, mi] = t.split(':').map(Number);
+    let u = Date.UTC(y, mo - 1, dd, h, mi);
+    for (let i = 0; i < 2; i++) { const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {timeZone: zone, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'}).formatToParts(new Date(u)).map(x => [x.type, x.value]));
+      u += Date.UTC(y, mo - 1, dd, h, mi) - Date.UTC(+p.year, p.month - 1, +p.day, +p.hour, +p.minute); }
+    return new Date(u);
+  };
+  const countdown = at => { const ms = at - Date.now(); if (ms <= 0) return null; const m = Math.floor(ms / 60000), dd = Math.floor(m / 1440), hh = Math.floor(m % 1440 / 60), mm = m % 60;
+    return 'Starts in ' + (dd ? dd + ' day' + (dd > 1 ? 's' : '') + ', ' : '') + hh + ' hr' + (dd ? '' : ', ' + mm + ' min'); };
+  function whenLine(l) {
+    const at = instant(l.saleDate, l.saleTime, l.tz); if (!at || !['scheduled'].includes(l.status)) return null;
+    const cd = countdown(at); if (!cd) return null;
+    const me = Intl.DateTimeFormat().resolvedOptions().timeZone, zone = ZONES[l.tz || 'ET'];
+    const fmt = z => at.toLocaleString('en-US', {timeZone: z, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'});
+    const local = me && fmt(me) !== fmt(zone) ? ' \u00B7 your time: ' + fmt(me) : '';
+    const e = mk('div', 'small uscount', cd + local); e.dataset.at = at.getTime(); e.dataset.local = local; return e;
+  }
+
   function card(l) {
     const d = mk('div', 'usitem us-' + l.type + ' st-' + l.status);
     const top = mk('div', 'ustop'); top.append(mk('span', 'ustype', TYPES[l.type]), mk('span', 'usstat', STATUS[l.status] || l.status)); d.appendChild(top);
     const h = mk('div', 'ushead'); h.append(mk('b', '', 'Parcel ' + l.parcel), mk('span', 'small muted', ' · ' + l.county + ' County' + (l.cert ? ' · certificate ' + l.cert : ''))); d.appendChild(h);
     if (l.type === 'taxdeed') d.appendChild(mk('div', 'small', 'Sale: ' + day(l.saleDate) + ', ' + time(l.saleTime, l.tz) + (l.status === 'rescheduled' && l.newDate ? ' → moved to ' + day(l.newDate) : '')));
+    if (l.type === 'taxdeed') { const w = whenLine(l); if (w) d.appendChild(w); }
     if (l.type === 'laft') d.appendChild(mk('div', 'small', 'Not an auction: offered at tax deed sale' + (l.offeredDate ? ' on ' + day(l.offeredDate) : '') + ' with no buyer; can be bought from the Clerk for the listed balance' + (l.deedNo ? ' \u00B7 tax deed #' + l.deedNo : '') + '.'));
     if (l.type === 'otc') d.appendChild(mk('div', 'small', 'Not an auction: the county holds this certificate and sells it over the counter.'));
     d.appendChild(mk('div', 'small', l.openingBid != null ? (l.type === 'otc' ? 'Listed amount: ' : l.type === 'laft' ? 'Balance to buy: ' : 'Opening bid: ') + money(l.openingBid) : 'Opening bid: not published in the official file we have'));
@@ -76,6 +98,7 @@ const UpcomingSales = (() => {
     [sc, st, sd, cb].filter(Boolean).forEach(x => x.addEventListener('change', () => { shown = 40; draw(); }));
     more.addEventListener('click', () => { shown += 40; draw(); });
     draw();
+    setInterval(() => list.querySelectorAll('.uscount').forEach(e => { const c = countdown(+e.dataset.at); if (c) e.textContent = c + e.dataset.local; else e.remove(); }), 60000);
   }
   return {mount, load, TYPES, STATUS};
 })();
