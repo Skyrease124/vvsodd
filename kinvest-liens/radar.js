@@ -19,7 +19,7 @@ window.TaxRadarOn = true;
   const bis = (a, x) => { let lo = 0, hi = a.length; while (lo < hi) { const m = (lo + hi) >> 1; if (a[m] <= x) lo = m + 1; else hi = m; } return lo; };   // count of values <= x
 
   // ---- filtering ("Find my deal")
-  const filtersOn = () => S.vac || S.budget != null || S.types.size !== 3;
+  const filtersOn = () => S.vac || S.budget != null || S.types.size !== TYPES.length;
   // listings in county c that match the current filters (only listings that are open now)
   function matches(c) {
     if (!S.types.has(c.group)) return 0;
