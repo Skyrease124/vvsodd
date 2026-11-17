@@ -56,34 +56,25 @@
   // Gentle 3D tilt: follows a finger or mouse over the map, and sways slowly when idle. Paused when hidden or with reduced motion.
   function tilt() {
     const stage = $('aistage'), map = $('aimap'); if (!stage || !map || REDUCED) return;
-    let tx = 0, ty = 0, cx = 0, cy = 0, last = 0, t0 = performance.now();
-    const aim = e => { const r = stage.getBoundingClientRect(), p = e.touches ? e.touches[0] : e; tx = ((p.clientX - r.left) / r.width - .5) * 2; ty = ((p.clientY - r.top) / r.height - .5) * 2; last = performance.now(); };
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, idle = 0;
+    const set = () => { map.style.transform = 'rotateX(' + (16 - cy * 5).toFixed(2) + 'deg) rotateY(' + (cx * 9).toFixed(2) + 'deg)'; };
+    const run = () => { cx += (tx - cx) * .12; cy += (ty - cy) * .12; set(); raf = (Math.abs(tx - cx) + Math.abs(ty - cy) > .002) ? requestAnimationFrame(run) : 0; };
+    const kick = () => { if (!raf) raf = requestAnimationFrame(run); };
+    const aim = e => { const r = stage.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = Math.max(-1, Math.min(1, ((q.clientX - r.left) / r.width - .5) * 2)); ty = Math.max(-1, Math.min(1, ((q.clientY - r.top) / r.height - .5) * 2)); kick(); clearTimeout(idle); idle = setTimeout(() => { tx = 0; ty = 0; kick(); }, 1800); };
     ['pointermove', 'touchmove'].forEach(n => stage.addEventListener(n, aim, {passive: true}));
-    const loop = now => {
-      if (!document.hidden) {
-        if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .5) * .55; ty = Math.cos(k * .37) * .3; }
-        cx += (tx - cx) * .07; cy += (ty - cy) * .07;
-        map.style.setProperty('--ry', (cx * 9).toFixed(2) + 'deg'); map.style.setProperty('--rx', (-cy * 5).toFixed(2) + 'deg');
-        map.style.setProperty('--lx', (cx * -10).toFixed(1) + 'px'); map.style.setProperty('--ly', (cy * -6 + 10).toFixed(1) + 'px');
-      }
-      requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
   }
   // ---- Fly-to zoom: the map eases in on the states in an answer, and back out on Reset ----
   let baseVB = null, vbAnim = 0;
   const parseVB = v => v.split(/\s+/).map(Number);
   function flyTo(vb) {
-    if (!svgEl) return; const from = parseVB(svgEl.getAttribute('viewBox')), t0 = performance.now(), D = 750; cancelAnimationFrame(vbAnim);
-    if (REDUCED) { svgEl.setAttribute('viewBox', vb.join(' ')); return; }
-    const ease = t => 1 - Math.pow(1 - t, 3);
-    const step = now => { const k = Math.min(1, (now - t0) / D), e = ease(k); svgEl.setAttribute('viewBox', from.map((f, i) => (f + (vb[i] - f) * e).toFixed(2)).join(' ')); if (k < 1) vbAnim = requestAnimationFrame(step); };
-    vbAnim = requestAnimationFrame(step);
+    if (!svgEl || !baseVB) return; const k = baseVB[2] / vb[2], W = svgEl.getBoundingClientRect().width || 1, px = W / baseVB[2] / 1;
+    const dx = ((baseVB[0] + baseVB[2] / 2) - (vb[0] + vb[2] / 2)) * px, dy = ((baseVB[1] + baseVB[3] / 2) - (vb[1] + vb[3] / 2)) * px;
+    svgEl.style.transform = k === 1 && !dx && !dy ? '' : 'scale(' + k.toFixed(3) + ') translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
   }
   function zoomTo(codes) {
     if (!svgEl || !baseVB) return; const els = codes.map(c => svgEl.querySelector('.aist[data-a="' + c + '"]')).filter(Boolean); if (!els.length) return;
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; els.forEach(e => { const b = e.getBBox(); x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
-    const ar = baseVB[2] / baseVB[3]; let w = Math.max(x1 - x0, 170) * 1.35, h = Math.max(y1 - y0, 170 / ar) * 1.35; if (w / h < ar) w = h * ar; else h = w / ar;
+    const ar = baseVB[2] / baseVB[3]; let w = Math.max(x1 - x0, 360) * 1.3, h = Math.max(y1 - y0, 360 / ar) * 1.3; if (w / h < ar) w = h * ar; else h = w / ar;
     if (w >= baseVB[2] * .85) return flyTo(baseVB);
     const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; flyTo([cx - w / 2, cy - h / 2 + 12, w, h]);
   }
