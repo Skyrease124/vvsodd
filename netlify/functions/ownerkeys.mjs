@@ -5,6 +5,7 @@
 import * as auth from '../lib/auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 import { PROVIDERS } from './cameras.mjs';
+import * as FIRMS from '../lib/firms.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -16,6 +17,11 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'firms') {
+    try { const r = await FIRMS.nearby(37.5, -120.5, 50, 2); if (!r.ok) return json(200, { ok: false, error: 'No key saved yet.' });
+      return json(200, { ok: true, firms: true, provider: 'NASA FIRMS', fires: r.total, partial: r.partial }); }
+    catch (e) { return json(200, { ok: false, error: String(e.message || e).replace(/csv\/[^/]+\//, 'csv/\u2026/') }); }
+  }
   if (b.test) {
     const p = PROVIDERS[b.test]; if (!p || !p.keyed) return json(400, { ok: false, error: 'Unknown provider.' });
     if (!KEYS.keyOf(p.keyEnv)) return json(200, { ok: false, error: 'No key saved yet.' });

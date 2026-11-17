@@ -1070,3 +1070,5 @@ dialog{perspective:1100px}
 .cambox{margin:18px 0;padding:14px;border:1px solid #24376a;border-radius:18px;background:#0e1a38}
 .cambox h2{margin:0 0 4px;font-size:20px}.cambox .cammap{height:320px;border-radius:12px;overflow:hidden}
 .cambox .cambar a,.cambox .svnote{display:none}
+.firepanel{margin:6px 0 10px;padding:10px 12px;border-radius:12px;border:1px solid #7c2d12;background:rgba(124,45,18,.18)}
+.firepanel .firenone{color:#7bf0b0;font-weight:700;margin:0 0 6px}.firelist{margin:6px 0 8px 18px;padding:0;font-size:14px}
