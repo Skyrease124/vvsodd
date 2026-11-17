@@ -29,6 +29,7 @@ export default async function handler(req) {
     await chk('Google maps (Map Tiles)', () => GM.tile('satellite', 3, 2, 3).then(t => t ? '' : 'no key'));
     await chk('Street View', async () => { const d = await gj((process.env.GMAPS_BASE || 'https://maps.googleapis.com/maps/api') + '/streetview/metadata?location=33.749,-84.388&key=' + encodeURIComponent(k)); if (d.status === 'REQUEST_DENIED') throw new Error(d.error_message || 'denied'); return ''; });
     await chk('Nearby places (Places)', () => GM.nearby(33.749, -84.388).then(r => r.ok ? '' : 'no answer'));
+    await chk('Road access (Roads)', () => GM.road(33.749, -84.388).then(r => r.ok ? '' : 'no answer'));
     const bad = res.filter(x => /FAILED/.test(x));
     return json(200, bad.length === res.length ? { ok: false, error: res.join(' | ') } : { ok: true, nlr: true, text: res.join(' \u00b7 ') });
   }

@@ -55,6 +55,14 @@ const GoogleMaps = {
           panel.appendChild(mk('p', 'small muted', 'Google Street View nearest the map pin' + (d ? ', photo taken ' + d : '') + '. It may show the road beside the lot or a neighbor; legal access must be confirmed with the county.')); return true; }
         const j = await r.json().catch(() => ({})); panel.textContent = ''; panel.appendChild(mk('p', 'small', j.none ? 'Google has no Street View photo near this spot.' : 'Street View photo unavailable right now.')); return !!j.none;
       } catch (e) { panel.textContent = ''; panel.appendChild(mk('p', 'small', 'Street View photo unavailable right now.')); return false; } });
+    mkBtn('Road access', 'groad', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Checking the nearest road\u2026'));
+      let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({road: 1, lat: c.lat.toFixed(6), lng: c.lng.toFixed(6)}))).json(); } catch (e) {}
+      panel.textContent = ''; if (!d || !d.ok) { panel.appendChild(mk('p', 'small', 'Road check unavailable right now.')); return false; }
+      if (d.none) panel.appendChild(mk('p', 'groadbad', 'No road found within about 200 ft of the map pin: possible landlocked lot.'));
+      else { const f = d.nearest.ft; panel.appendChild(mk('p', f <= 150 ? 'groadok' : f <= 400 ? 'groadmid' : 'groadbad', 'Nearest road: about ' + f.toLocaleString('en-US') + ' ft from the map pin' + (f <= 150 ? ' (road next to or close to the lot)' : f <= 400 ? ' (road nearby; check the lot touches it)' : ' (far from a road: possible landlocked lot)') + '.'));
+        if (this.m && window.L) { try { L.polyline([[c.lat, c.lng], [d.nearest.lat, d.nearest.lng]], {color: '#ffd166', weight: 3, dashArray: '6 6'}).addTo(this.m); L.circleMarker([d.nearest.lat, d.nearest.lng], {radius: 6, color: '#7a5200', weight: 2, fillColor: '#ffd166', fillOpacity: 1}).addTo(this.m).bindTooltip('Nearest road point'); } catch (e) {} } }
+      panel.appendChild(mk('p', 'small muted', 'Source: Google Roads, measured from the map pin (lot center). A road nearby is not proof of legal access: confirm road frontage or an easement with the county.')); return true; });
     mkBtn('Nearby places', 'gplaces', async (panel, c) => {
       panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Finding the nearest stores, hospital and schools\u2026'));
       let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({nearby: 1, lat: c.lat.toFixed(5), lng: c.lng.toFixed(5)}))).json(); } catch (e) {}
@@ -761,7 +769,7 @@ const CameraData = {
     if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
     if (typeof EnergyData !== 'undefined') EnergyData.attach(bar, panel, center);
     if (typeof WxData !== 'undefined') WxData.attach(bar, panel, center);
-    if (typeof GoogleMaps !== 'undefined') GoogleMaps.attach(bar, panel, center);
+    if (typeof GoogleMaps !== 'undefined') { GoogleMaps.m = m; GoogleMaps.attach(bar, panel, center); }
     if (typeof GovData !== 'undefined') { GovData.attach(bar, panel, center, 'crime', L, m); GovData.attach(bar, panel, center, 'parks', L, m); }
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };

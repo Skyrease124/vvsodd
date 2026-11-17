@@ -21,6 +21,7 @@ export default async function handler(req) {
     if (!(lat >= 18 && lat <= 72 && lng >= -180 && lng <= -60)) return json(400, { ok: false });
     if (q('sv')) { if (!G.spend('street')) return json(200, { ok: false, reason: 'cap' }); const r = await G.street(lat, lng); if (!r.ok || r.none) return json(200, r);
       return new Response(r.body, { status: 200, headers: { 'Content-Type': r.type, 'Cache-Control': 'private, max-age=86400', 'X-SV-Date': r.date } }); }
+    if (q('road')) { if (!G.spend('road')) return json(200, { ok: false, reason: 'cap' }); return json(200, await G.road(lat, lng)); }
     if (q('nearby')) { if (!G.spend('nearby')) return json(200, { ok: false, reason: 'cap' }); return json(200, await G.nearby(lat, lng)); }
     return json(400, { ok: false });
   } catch (e) { console.log('gmaps', e.message); return q('t') ? new Response(null, { status: 503 }) : json(200, { ok: false, reason: 'lookup' }); }
