@@ -4,6 +4,7 @@
 //                                 or  { ok:false, reason:'lookup' }
 // A story is never parcel-specific: this function takes no parcel ID and every story is "county" scope.
 import * as N from '../lib/news.mjs';
+import { requirePaid } from '../lib/paywall.mjs';
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const hits = new Map();
 const limited = ip => { const now = Date.now(), r = (hits.get(ip) || []).filter(t => now - t < 60e3); if (r.length >= 40) return true; r.push(now); hits.set(ip, r); return false; };
@@ -30,6 +31,7 @@ export async function news(state, county, origin) {
 
 export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false, error: 'GET only.' });
+  const deny = await requirePaid(req); if (deny) return deny;
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x';
   if (limited('n' + ip)) return json(429, { ok: false, error: 'Too many requests.' });
   const u = new URL(req.url), state = String(u.searchParams.get('state') || '').toUpperCase(), county = String(u.searchParams.get('county') || '').trim();

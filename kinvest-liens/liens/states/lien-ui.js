@@ -473,6 +473,7 @@ const EnvCtlData = {
     if (r && r.st === 'matched' && r.g && r.g.length) { body = {rings: r.g}; mode = 'boundary'; }
     else if (isFinite(l.lat) && isFinite(l.lng)) { body = {point: [Number(l.lng), Number(l.lat)]}; mode = 'point'; }
     else return {state: 'unavailable', why: 'nolocation'};
+    if (!(await PaidGate.paid())) return {state: 'locked'};
     const st = (l.state || 'FL').toUpperCase(); if (st !== 'FL') body.state = st;
     const key = JSON.stringify(body); if (this.mem[key]) return this.mem[key];
     let out; try {
@@ -487,6 +488,7 @@ const EnvCtlData = {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const link = (txt, href) => { const a = mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
     box.querySelectorAll('.ecbody').forEach(x => x.remove()); const body = mk('div', 'ecbody'); box.appendChild(body);
+    if (res.state === 'locked') { body.appendChild(PaidGate.lock('Environmental Restrictions')); return; }
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Registry check unavailable'));
       body.appendChild(mk('p', 'small muted', res.why === 'nolocation' ? 'This lot has no verified boundary or map pin, so it cannot be checked against an official restriction map.' : box._fl ? 'The Florida DEP registry map service did not answer.' : 'An official restriction map service did not answer.'));
@@ -527,6 +529,7 @@ const EnvCtlData = {
     b.addEventListener('click', async () => {
       if (layer && m.hasLayer(layer)) { m.removeLayer(layer); b.setAttribute('aria-pressed', 'false'); b.textContent = 'Show DEP restriction areas'; st.textContent = ''; return; }
       b.disabled = true; st.textContent = 'Checking the Florida DEP registry…'; const res = await this.get(l, r); b.disabled = false;
+      if (res.state === 'locked') { st.textContent = 'Environmental restriction areas are for Pro members.'; return; }
       if (res.state !== 'ok') { st.textContent = 'Registry check unavailable'; return; }
       const gs = res.matches.filter(x => x.geom && x.geom.length);
       if (!gs.length) { st.textContent = res.mode === 'point' ? 'Map pin check only: no mapped DEP registry area at the pin.' : 'No mapped DEP registry overlap found.'; return; }
@@ -587,17 +590,20 @@ const CameraData = {
     dlg.querySelectorAll('.cambar,.campanel,.svnote').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
     const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
+    PaidGate.paid().then(p => { if (p) return; b._label = 'Nearby Cameras (Pro)'; b.textContent = b._label; if (!sv) return;
+      [sv.street, sv.map].forEach(a => { a.removeAttribute('href'); a.setAttribute('role', 'button'); a.tabIndex = 0; a.style.cursor = 'pointer'; a.textContent += ' (Pro)'; const show = () => { panel.hidden = false; panel.textContent = ''; panel.appendChild(PaidGate.lock('Street View')); }; a.addEventListener('click', show); a.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } }); }); });
     const panel = this.mk('div', 'campanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Nearby cameras');
     box.after(bar); bar.after(panel); if (sv) bar.after(sv.note);
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
-    const close = () => { stopPreview(); panel.hidden = true; b.setAttribute('aria-expanded', 'false'); b.textContent = 'Nearby Cameras'; if (pins && m.hasLayer(pins)) m.removeLayer(pins); };
+    const close = () => { stopPreview(); panel.hidden = true; b.setAttribute('aria-expanded', 'false'); b.textContent = b._label || 'Nearby Cameras'; if (pins && m.hasLayer(pins)) m.removeLayer(pins); };
     panel._stop = close;
     dlg.addEventListener('close', close);
     document.addEventListener('visibilitychange', () => { if (!panel.isConnected) return; if (document.hidden) stopPreview(); else if (!panel.hidden && sel) this.preview(panel.querySelector('.campv'), sel, ctl); });
     b.addEventListener('click', async () => {
       if (!panel.hidden) return close();
+      if (!(await PaidGate.paid())) { panel.hidden = false; panel.textContent = ''; panel.appendChild(PaidGate.lock('Nearby Cameras')); b.setAttribute('aria-expanded', 'true'); b.textContent = 'Hide'; return; }
       panel.hidden = false; b.setAttribute('aria-expanded', 'true'); b.textContent = 'Hide cameras';
       if (pins) { pins.addTo(m); if (sel) this.preview(panel.querySelector('.campv'), sel, ctl); return; }
       if (loaded) return;
@@ -867,6 +873,19 @@ const ParcelData = {
     return box;
   }
 };
+// Paid-member gate for the newer features (cameras, Street View, environmental restrictions, auction updates, news, probate). The data functions enforce this on the server too.
+const PaidGate = {
+  me: null,
+  user() { return this.me || (this.me = fetch('/.netlify/functions/account', {credentials: 'same-origin'}).then(r => r.ok ? r.json() : null).then(d => (d && d.user) || null).catch(() => null)); },
+  async paid() { const u = await this.user(); return !!(u && u.paid); },
+  lock(name) {
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const d = mk('div', 'pglock'); d.setAttribute('role', 'note'); d.append(mk('span', 'pgtag', 'Pro'), ' ', mk('b', '', name + ' is for PricePocketPro members.'));
+    const row = mk('p', 'small'); d.appendChild(row);
+    this.user().then(u => { if (!u) { const a = mk('a', 'btn small', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); row.append(a, ' '); } const b = mk('a', u ? 'btn small' : 'btn small ghost', 'See the Pro plan'); b.href = '/account/'; row.appendChild(b); });
+    return d;
+  }
+};
 // Probate & Death Records (inside the Owner & Public Records card). Everything opens on the official agency or clerk site; we collect nothing.
 // A name match is only a search lead. "Deceased" is shown only when an official record in probate-matches.json confirms the death, names the same person, and lists this parcel.
 const ProbateRecords = {
@@ -896,7 +915,7 @@ const ProbateRecords = {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const box = mk('div', 'probbox'); box.appendChild(mk('h4', '', 'Probate & Death Records'));
     const body = mk('div', 'probbody'); body.appendChild(mk('p', 'small muted', 'Loading…')); box.appendChild(body);
-    this.load().then(d => this.fill(body, l, r, S, d)).catch(() => { body.textContent = ''; body.appendChild(mk('p', 'notice', 'Probate and death record links are unavailable right now.')); });
+    PaidGate.paid().then(p => { if (!p) { body.textContent = ''; body.appendChild(PaidGate.lock('Probate & Death Records')); return; } return this.load().then(d => this.fill(body, l, r, S, d)); }).catch(() => { body.textContent = ''; body.appendChild(mk('p', 'notice', 'Probate and death record links are unavailable right now.')); });
     return box;
   },
   fill(body, l, r, S, d) {

@@ -1,5 +1,9 @@
 // Run: node netlify/tests/cameras.test.mjs   (mocked providers; TEST FIXTURE data)
 import assert from 'node:assert/strict';
+import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
+process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'pw-'));
+const __auth = await import('../lib/auth.mjs'); await __auth.createUser('free@example.com', 'password123', false); { const u = await __auth.createUser('pro@example.com', 'password123', false); u.paidThrough = '2099-01-01'; await __auth.saveUser(u); }
+const PRO = (await __auth.sessionCookie('pro@example.com')).split(';')[0], FREE = (await __auth.sessionCookie('free@example.com')).split(';')[0];
 const mod = await import('../functions/cameras.mjs'); const { default: api, nearby, imageMeta, _reset, miles, _verified } = mod;
 let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
 const fl = (id, lat, lng, img = 'https://images-dis.divas.cloud/DGI/x' + id + '.jpg') => ({ attributes: { ID: id, DESCRIPT: 'TEST FIXTURE cam ' + id, HIGHWAY: 'I-95', DIRECTION: 'N', LATITUDE: lat, LONGITUDE: lng, TIMESTAMP: '07/20/2026 8:09:58 PM', IMAGE: img } });
@@ -33,7 +37,7 @@ caDown = false;
 // image update time from Last-Modified, only for cameras in our own cache (no open proxy)
 r = await nearby(30.69, -81.60, 10, 5); const m1 = await imageMeta('fl', '1'); ok(m1.ok && m1.lastModified === '2026-11-17T03:31:47.000Z', 'image update time read from the image server Last-Modified header');
 ok((await imageMeta('fl', 'nope')).ok === false, 'unknown camera ID: no lookup');
-const call = async q => { const x = await api(new Request('http://x/c?' + q), {}); return { s: x.status, j: await x.json() }; };
+const call = async q => { const x = await api(new Request('http://x/c?' + q, { headers: { cookie: PRO } }), {}); return { s: x.status, j: await x.json() }; };
 ok((await call('lat=abc&lng=1')).s === 400 && (await call('meta=1&src=evil&id=1')).s === 400, 'bad input refused');
 ok((await call('lat=30.69&lng=-81.6&radius=999&limit=999')).j.radius === 50, 'radius capped at 50 miles, limit at 20');
 // AZ511 / 511GA gating: off without key; off with key until verified; then parsed
@@ -46,4 +50,6 @@ ok(r.providers.find(p => p.id === 'az').status === 'ok' && r.cameras.length === 
 await nearby(32.88, -111.75, 10, 5); ok(azCalls === 1, 'AZ511 list cached (provider allows 10 calls/minute)');
 process.env.GA511_KEY = 'TEST'; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled even with GA511_KEY until a real preview is verified');
 _verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY;
+const anon = await api(new Request('http://x/c?lat=30.69&lng=-81.6'), {}), free = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: FREE } }), {}), pro = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: PRO } }), {});
+ok(anon.status === 402 && free.status === 402 && (await free.json()).needPaid === true && pro.status === 200, 'cameras are for paid members: signed-out and free accounts get 402, a paid account gets the data');
 console.log('\n' + pass + ' checks passed');

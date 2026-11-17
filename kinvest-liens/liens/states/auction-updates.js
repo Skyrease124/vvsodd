@@ -1,6 +1,13 @@
 // Auction Updates (parcel pages), sale-event notices and County news (the county "Local News & Notices" tab), and portfolio badges.
 // Official sources only for auctions (upcoming-sales.json, built by tools/taxsales/build.py). County news is kept apart and is never shown as a parcel update.
 // Needs upcoming-sales.js (UpcomingSales) loaded first.
+// Pages without lien-ui.js (the watchlist) get the same paid-member gate here.
+if (typeof PaidGate === 'undefined') window.PaidGate = {
+  me: null,
+  user() { return this.me || (this.me = fetch('/.netlify/functions/account', {credentials: 'same-origin'}).then(r => r.ok ? r.json() : null).then(d => (d && d.user) || null).catch(() => null)); },
+  async paid() { const u = await this.user(); return !!(u && u.paid); },
+  lock(name) { const d = document.createElement('div'); d.className = 'pglock'; d.setAttribute('role', 'note'); const t = document.createElement('span'); t.className = 'pgtag'; t.textContent = 'Pro'; const b = document.createElement('b'); b.textContent = name + ' is for PricePocketPro members.'; const a = document.createElement('a'); a.className = 'btn small'; a.href = '/account/'; a.textContent = 'See the Pro plan'; const p = document.createElement('p'); p.className = 'small'; p.appendChild(a); d.append(t, ' ', b, p); return d; }
+};
 const AuctionUpdates = (() => {
   const U = UpcomingSales, mk = U.mk, link = U.link;
   const norm = s => String(s == null ? '' : s).toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -57,7 +64,7 @@ const AuctionUpdates = (() => {
   function section(l) {
     const box = mk('div', 'precord aubox'); box.appendChild(mk('h4', '', 'Auction Updates'));
     const body = mk('div', 'aubody'); body.appendChild(mk('p', 'small muted', 'Checking the official sale lists…')); box.appendChild(body);
-    U.load().then(d => fill(box, d, l)).catch(() => { body.textContent = ''; body.appendChild(mk('p', 'notice', 'Auction updates are unavailable right now.')); body.appendChild(mk('p', 'small muted', 'Check the county’s official auction calendar.')); });
+    PaidGate.paid().then(p => { if (!p) { body.textContent = ''; body.appendChild(PaidGate.lock('Auction Updates')); return; } return U.load().then(d => fill(box, d, l)); }).catch(() => { body.textContent = ''; body.appendChild(mk('p', 'notice', 'Auction updates are unavailable right now.')); body.appendChild(mk('p', 'small muted', 'Check the county’s official auction calendar.')); });
     return box;
   }
 
@@ -89,6 +96,7 @@ const AuctionUpdates = (() => {
   }
   async function tab(host, county, state) {
     host.textContent = '';
+    if (!(await PaidGate.paid())) { host.appendChild(mk('h2', '', 'Local News & Notices')); host.appendChild(PaidGate.lock('Official auction notices and county news')); return false; }
     host.appendChild(mk('h2', '', 'Official auction notices'));
     host.appendChild(mk('p', 'small muted', 'From official county clerk and tax collector sources. Only changes an official source confirmed are shown as rescheduled, postponed or canceled.'));
     const notices = mk('div'); host.appendChild(notices); notices.appendChild(mk('p', 'small muted', 'Checking the official sale lists…'));
@@ -106,6 +114,7 @@ const AuctionUpdates = (() => {
 
   // ---- portfolio (favorites and watchlist): confirmed changes on saved parcels ----
   async function badge(host, s) {
+    if (!(await PaidGate.paid())) return;
     let data; try { data = await U.load(); } catch (e) { return; }
     const m = match(data, {county: s.county, parcel: s.parcel, cert: s.cert || (s.certList && s.certList[0]) || '', state: s.state || 'FL'});
     const lines = [];

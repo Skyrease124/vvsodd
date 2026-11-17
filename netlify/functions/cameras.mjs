@@ -6,6 +6,7 @@
 //            image, video, viewer, operator, sourceMeta }
 // Each provider has its own cache and its own failure state, so one outage never hides the others. Keys (when added) stay on the server.
 import { BEACH_CAMS } from '../lib/beach-cams.mjs';
+import { requirePaid } from '../lib/paywall.mjs';
 
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 const TTL = 15 * 60e3, FAIL_TTL = 2 * 60e3;
@@ -133,6 +134,7 @@ const hits = new Map();
 const limited = ip => { const now = Date.now(), r = (hits.get(ip) || []).filter(t => now - t < 60e3); if (r.length >= 60) return true; r.push(now); hits.set(ip, r); return false; };
 export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false, error: 'GET only.' });
+  const deny = await requirePaid(req); if (deny) return deny;
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x'; if (limited(ip)) return json(429, { ok: false, error: 'Too many requests.' });
   const u = new URL(req.url), q = k => u.searchParams.get(k);
   if (q('meta')) { const src = q('src'), id = q('id'); if (!PROVIDERS[src] || !isLive(src) || !id) return json(400, { ok: false });
