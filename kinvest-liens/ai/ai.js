@@ -7,7 +7,7 @@
   const by = {}; STATES.forEach(s => by[s.a] = s);
   const selected = new Set();
 
-  let svgEl = null, badgeLayer = null, fxLayer = null;
+  let svgEl = null, badgeLayer = null, fxLayer = null, heatLayer = null;
   const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const SUMMARY = typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY : [];
   const TOTALS = {}; SUMMARY.forEach(x => { TOTALS[x.state] = (TOTALS[x.state] || 0) + x.count; });
@@ -28,7 +28,7 @@
     Object.keys(MAP_PATHS).forEach(a => {
       const s = by[a]; if (!s) return;
       const p = sn('path', {d: MAP_PATHS[a], class: 'aist', style: 'fill:' + (GRAD[s.sys] || COL[s.sys] || '#94a3b8') + ';--i:' + (idx++), tabindex: '0', role: 'button', 'aria-pressed': 'false', 'aria-label': s.n, 'data-a': a});
-      const toggle = () => { if (selected.has(a)) selected.delete(a); else selected.add(a); p.classList.toggle('on', selected.has(a)); p.setAttribute('aria-pressed', String(selected.has(a))); ripple(p); label(a); };
+      const toggle = () => { if (selected.has(a)) selected.delete(a); else selected.add(a); p.classList.toggle('on', selected.has(a)); p.setAttribute('aria-pressed', String(selected.has(a))); ripple(p); label(a); stateCard(selected.has(a) ? a : ([...selected].pop() || null)); if (selected.has(a)) zoomTo([...selected]); else if (!selected.size) zoomOut(); else zoomTo([...selected]); };
       p.addEventListener('click', toggle); p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
       const t = sn('title', {}); t.textContent = s.n + ': ' + s.sys; p.appendChild(t);
       stg.appendChild(p);
@@ -47,9 +47,11 @@
       g.appendChild(sn('line', {class: 'beam3d', x1: 0, y1: 0, x2: 0, y2: -22})); g.appendChild(sn('ellipse', {class: 'foot', rx: r + 3, ry: (r + 3) * .45})); g.appendChild(sn('circle', {class: 'ring', r: r + 1})); g.appendChild(sn('circle', {class: 'ring r2', r: r + 1})); g.appendChild(sn('circle', {class: 'core', r}));
       svg.appendChild(g);
     });
+    heatLayer = sn('g', {class: 'aiheats', 'pointer-events': 'none'}); svg.appendChild(heatLayer);
     badgeLayer = sn('g', {class: 'badges', 'pointer-events': 'none'}); svg.appendChild(badgeLayer);
     $('aimap').appendChild(svg);
     try { const bb = stg.getBBox(), pad = 14; const x0 = Math.max(bb.x - pad, 18), x1 = bb.x + bb.width + pad; svg.setAttribute('viewBox', [x0, bb.y - pad, x1 - x0, bb.height + pad * 2].join(' ')); } catch (e) {}
+    baseVB = parseVB(svg.getAttribute('viewBox'));
   }
   // Gentle 3D tilt: follows a finger or mouse over the map, and sways slowly when idle. Paused when hidden or with reduced motion.
   function tilt() {
@@ -67,6 +69,35 @@
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
+  }
+  // ---- Fly-to zoom: the map eases in on the states in an answer, and back out on Reset ----
+  let baseVB = null, vbAnim = 0;
+  const parseVB = v => v.split(/\s+/).map(Number);
+  function flyTo(vb) {
+    if (!svgEl) return; const from = parseVB(svgEl.getAttribute('viewBox')), t0 = performance.now(), D = 750; cancelAnimationFrame(vbAnim);
+    if (REDUCED) { svgEl.setAttribute('viewBox', vb.join(' ')); return; }
+    const ease = t => 1 - Math.pow(1 - t, 3);
+    const step = now => { const k = Math.min(1, (now - t0) / D), e = ease(k); svgEl.setAttribute('viewBox', from.map((f, i) => (f + (vb[i] - f) * e).toFixed(2)).join(' ')); if (k < 1) vbAnim = requestAnimationFrame(step); };
+    vbAnim = requestAnimationFrame(step);
+  }
+  function zoomTo(codes) {
+    if (!svgEl || !baseVB) return; const els = codes.map(c => svgEl.querySelector('.aist[data-a="' + c + '"]')).filter(Boolean); if (!els.length) return;
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; els.forEach(e => { const b = e.getBBox(); x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); });
+    const ar = baseVB[2] / baseVB[3]; let w = Math.max(x1 - x0, 170) * 1.35, h = Math.max(y1 - y0, 170 / ar) * 1.35; if (w / h < ar) w = h * ar; else h = w / ar;
+    if (w >= baseVB[2] * .85) return flyTo(baseVB);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2; flyTo([cx - w / 2, cy - h / 2 + 12, w, h]);
+  }
+  function zoomOut() { if (baseVB) flyTo(baseVB); }
+  // ---- State info card: tap a state to see its key facts ----
+  function stateCard(a) {
+    const box = $('aicard'); if (!box) return; box.textContent = ''; if (!a) { box.hidden = true; return; }
+    const st = by[a]; box.hidden = false;
+    const h = mk('div', 'aich'); h.append(mk('b', '', st.n), mk('span', 'aipill', st.sys)); const x = mk('button', 'aix', '\u00d7'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', () => { selected.delete(a); const p = svgEl.querySelector('.aist[data-a="' + a + '"]'); if (p) { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); } label(); stateCard(null); }); h.appendChild(x); box.appendChild(h);
+    const dl = mk('dl', 'aidl'); [['Interest / penalty', st.rate], ['Redemption', st.red], ['Bidding', st.bid], ['Listings on the site', TOTALS[a] ? TOTALS[a].toLocaleString('en-US') : 'No parcel list yet']].forEach(([k, v]) => { if (!v) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }); box.appendChild(dl);
+    if (st.v) box.appendChild(mk('p', 'small muted', 'Sources differ for this state \u2014 verify with the county.'));
+    const act = mk('div', 'aiact'); const q = mk('button', 'btn small', 'Ask the AI about ' + st.n); q.type = 'button'; q.addEventListener('click', () => ask('Tell me how tax sales work in ' + st.n + ' and what to check before bidding'));
+    const pg = mk('a', 'btn small ghost', 'Open ' + a + ' page'); pg.href = '../liens/states/state/?s=' + a; act.append(q, pg); box.appendChild(act);
+    box.classList.remove('pop'); void box.offsetWidth; box.classList.add('pop');
   }
   // Mouse tilt on answer cards (touch screens keep the flat press effect so scrolling is never disturbed).
   (function () {
@@ -107,10 +138,13 @@
       g.appendChild(sn('circle', {r: 15})); const t = sn('text', {y: 6}); t.textContent = ranked ? String(i + 1) : (d.kind === 'liens' && counts[c] > 1 ? '\u00d7' + counts[c] : '\u2713'); g.appendChild(t);
       badgeLayer.appendChild(g);
     });
+    // Heat: ranked answers shade each state from strongest (bright gold) to weakest, drawn on top of the state tile
+    if (ranked && fxLayer) { const n = codes.length; codes.forEach((c, i) => { const el = svgEl.querySelector('.aist[data-a="' + c + '"]'); if (!el) return; const hp = sn('path', {d: MAP_PATHS[c], class: 'aiheat', style: 'fill:#ffd166;opacity:' + (0.78 - 0.55 * (n > 1 ? i / (n - 1) : 0)).toFixed(2) + ';animation-delay:' + (i * 70) + 'ms'}); heatLayer.appendChild(hp); }); }
+    zoomTo(codes);
     $('aiclear').hidden = false;
   }
-  function clearReact() { document.querySelectorAll('.aist.hit,.aist.dim').forEach(p => p.classList.remove('hit', 'dim')); if (badgeLayer) badgeLayer.textContent = ''; }
-  $('aiclear').addEventListener('click', () => { selected.clear(); document.querySelectorAll('.aist.on').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); }); clearReact(); $('chat').textContent = ''; $('aiidle').hidden = false; label(); });
+  function clearReact() { document.querySelectorAll('.aist.hit,.aist.dim').forEach(p => p.classList.remove('hit', 'dim')); if (badgeLayer) badgeLayer.textContent = ''; if (heatLayer) heatLayer.textContent = ''; }
+  $('aiclear').addEventListener('click', () => { selected.clear(); document.querySelectorAll('.aist.on').forEach(p => { p.classList.remove('on'); p.setAttribute('aria-pressed', 'false'); }); clearReact(); stateCard(null); zoomOut(); $('chat').textContent = ''; $('aiidle').hidden = false; label(); });
 
   function statesTable(rows) {
     const wrap = mk('div', 'tablewrap'), t = mk('table', 'liens aistates'), hr = t.createTHead().insertRow();
