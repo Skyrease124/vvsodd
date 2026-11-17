@@ -59,8 +59,8 @@ const PaidDownload = {
     const msg = document.createElement('span'); msg.className = 'small muted'; msg.setAttribute('role', 'status');
     b.addEventListener('click', async () => {
       const u = await this.status();
-      if (!u) { msg.innerHTML = ' <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a> to download. Downloads are for Pro members.'; return; }
-      if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members. <a href="/account/">See the Pro plan</a>'; return; }
+      if (!u) { msg.innerHTML = ' <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a> to download. Downloads are for Pro members. <a href="/plans/">Compare Free vs Pro</a>'; return; }
+      if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members ($5.50 a week). <a href="/account/">See the Pro plan</a> \u00b7 <a href="/plans/">Compare Free vs Pro</a>'; return; }
       const blob = new Blob(['﻿' + this.csv(head, getRows())], {type: 'text/csv;charset=utf-8'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       msg.textContent = ' Downloaded.';

@@ -42,6 +42,7 @@
       const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup (owner)';
       const lk = document.createElement('a'); lk.href = '/owner/keys/'; lk.textContent = 'API keys (owner)';
       const lo = document.createElement('a'); lo.href = '/owner/ocr/'; lo.textContent = 'Read a county PDF (owner)';
+      const lp = document.createElement('a'); lp.href = '/plans/'; lp.textContent = 'Free vs Pro';
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';
       const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/ai/'; aiLink.textContent = 'PricePocket AI'; }
@@ -56,7 +57,7 @@
       }
       const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      p.append(who); if (aiLink) p.append(aiLink); p.append(l8, l9, l1, l2, l6, l7); if (ms) p.append(ms); if (user.owner) p.append(l4, l10, lk, lo, l3, l5); p.append(out); wrap.append(b, p);
+      p.append(who); if (aiLink) p.append(aiLink); p.append(l8, l9, l1, l2, l6, l7); if (ms) p.append(ms); if (user.owner) p.append(l4, l10, lk, lo, l3, l5); p.append(lp, out); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
       if (cta) cta.replaceWith(wrap);
@@ -72,6 +73,7 @@
       s.href = '/login/?next=' + next; s.textContent = 'Sign in';
       s.className = (cta ? cta.className.replace(/\b(ghost)\b/, '') : 'btn small') + ' pp-signin';
       if (cta) {
+        navLinks.forEach(a => { a.hidden = true; }); // one Sign in button, not a link and a button
         cta.before(s);
         if (cta.classList.contains('dbtn')) { cta.textContent = 'Sign Up'; cta.href = '/account/?mode=up'; }
       } else { const nav = header && header.querySelector('nav'); if (nav && !navLinks.length) nav.appendChild(s); }
