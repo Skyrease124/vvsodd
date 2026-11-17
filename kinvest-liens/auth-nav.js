@@ -3,9 +3,17 @@
 (function () {
   const API = '/.netlify/functions/account';
   const css = document.createElement('style');
-  css.textContent = '.pp-menu{position:relative;display:inline-block}.pp-panel{position:absolute;right:0;top:calc(100% + 8px);min-width:210px;background:#fff;color:#12201a;border:1px solid #c9d6cf;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:6px;z-index:50}' +
-    '.pp-panel[hidden]{display:none}.pp-panel a,.pp-panel button{display:block;width:100%;box-sizing:border-box;text-align:left;padding:12px 14px;border:0;background:none;border-radius:8px;font:inherit;font-weight:600;color:#12201a;text-decoration:none;cursor:pointer}' +
-    '.pp-panel a:hover,.pp-panel button:hover{background:#e8f3ed}.pp-panel .pp-who{font-size:12px;font-weight:500;color:#5a6b62;padding:8px 14px 4px;word-break:break-all}' +
+  css.textContent = '.pp-menu{position:relative;display:inline-block}.pp-panel{position:absolute;right:0;top:calc(100% + 10px);width:272px;max-width:calc(100vw - 24px);max-height:min(76vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:rgba(250,251,252,.86);-webkit-backdrop-filter:saturate(1.8) blur(24px);backdrop-filter:saturate(1.8) blur(24px);color:#1d1d1f;border:.5px solid rgba(0,0,0,.12);border-radius:20px;box-shadow:0 0 0 .5px rgba(255,255,255,.6) inset,0 24px 60px -12px rgba(0,0,0,.45),0 6px 18px rgba(0,0,0,.14);padding:8px;z-index:50;transform-origin:calc(100% - 36px) -8px;animation:ppPanelIn .26s cubic-bezier(.2,.9,.25,1.1) both}' +
+    '@keyframes ppPanelIn{from{opacity:0;transform:scale(.92) translateY(-6px)}to{opacity:1;transform:none}}' +
+    '.pp-panel[hidden]{display:none}.pp-panel a,.pp-panel button{display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;text-align:left;padding:13px 14px;border:0;background:none;border-radius:0;font:inherit;font-size:16px;font-weight:500;letter-spacing:-.01em;color:#1d1d1f;text-decoration:none;cursor:pointer;transition:background-color .15s;-webkit-tap-highlight-color:transparent}' +
+    '.pp-grp{background:rgba(255,255,255,.72);border-radius:14px;overflow:hidden;margin:0 0 10px}.pp-grp>*+*{box-shadow:0 -.5px 0 rgba(0,0,0,.12)}' +
+    '.pp-grp>a::after{content:"\\203A";font-size:22px;line-height:1;color:#b4b8bf;font-weight:400;margin-left:10px}' +
+    '.pp-panel a:hover,.pp-panel button:hover{background:rgba(11,110,79,.09)}.pp-panel a:active,.pp-panel button:active{background:rgba(11,110,79,.18)}' +
+    '.pp-panel .pp-out{color:#d70015;justify-content:center;font-weight:600}.pp-panel .pp-ownlab{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6e6e73;padding:4px 14px 6px}' +
+    '.pp-panel .pp-who{display:flex;align-items:center;gap:12px;padding:6px 6px 14px}.pp-av{flex:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff;background:linear-gradient(160deg,#2bb585,#0b6e4f);box-shadow:0 4px 10px -3px rgba(11,110,79,.6)}' +
+    '.pp-who b{display:block;font-size:15px;font-weight:600;color:#1d1d1f;word-break:break-all;line-height:1.25}.pp-who small{display:block;font-size:13px;color:#6e6e73;margin-top:2px}' +
+    '@media(prefers-color-scheme:dark){.pp-panel{background:rgba(38,38,42,.82);color:#f5f5f7;border-color:rgba(255,255,255,.14)}.pp-grp{background:rgba(255,255,255,.08)}.pp-panel a,.pp-panel button,.pp-who b{color:#f5f5f7}.pp-grp>*+*{box-shadow:0 -.5px 0 rgba(255,255,255,.14)}.pp-panel .pp-out{color:#ff6961}.pp-who small,.pp-panel .pp-ownlab{color:#a1a1a6}.pp-panel a:hover,.pp-panel button:hover{background:rgba(47,191,140,.16)}}' +
+    '@media(prefers-reduced-motion:reduce){.pp-panel{animation:none}}' +
     '.pp-signin{margin-right:8px;background:transparent!important;border:2px solid currentColor;color:inherit!important}.dnav .pp-signin{color:#e6ecf7!important;border-color:#e6ecf7}' +
     '.dnav .pp-signin,.dnav .dbtn{padding:9px 16px}.pp-signin,.pp-menu>a,.dnav .dbtn{white-space:nowrap}' +
     '@media(max-width:520px){.dnav-in{gap:8px!important}.dnav .dlogo small{display:none}.dnav .dlogo svg{width:34px;height:28px}.dnav .dlogo b{font-size:18px}.dnav .pp-signin,.dnav .dbtn{padding:8px 11px;font-size:14px}.pp-signin{margin-right:4px}.nav .btn.small{padding:8px 11px;font-size:14px;white-space:nowrap}}';
@@ -30,20 +38,20 @@
       const wrap = document.createElement('div'); wrap.className = 'pp-menu';
       const b = document.createElement('a'); b.href = '#'; b.className = cta ? cta.className.replace(/\bghost\b/, '') : 'btn small'; b.textContent = 'My account ▾'; b.setAttribute('aria-haspopup', 'true'); b.setAttribute('aria-expanded', 'false');
       const p = document.createElement('div'); p.className = 'pp-panel'; p.hidden = true;
-      const who = document.createElement('div'); who.className = 'pp-who'; who.textContent = user.email + (user.owner ? ' (owner)' : '');
+      const who = document.createElement('div'); who.className = 'pp-who'; { const av = document.createElement('span'); av.className = 'pp-av'; av.textContent = (user.email || '?').charAt(0).toUpperCase(); const tx = document.createElement('div'), nm = document.createElement('b'), rl = document.createElement('small'); nm.textContent = user.email; rl.textContent = user.owner ? 'Owner' : (user.paid || (user.paidThrough && user.paidThrough >= today)) ? 'PricePocketPro member' : 'Free account'; tx.append(nm, rl); who.append(av, tx); }
       const l1 = document.createElement('a'); l1.href = '/portfolio/'; l1.textContent = 'My portfolio';
       const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
       const l9 = document.createElement('a'); l9.href = '/account/watchlist/'; l9.textContent = 'My watchlist';
-      const l10 = document.createElement('a'); l10.href = '/admin/imports/'; l10.textContent = 'Imports & review (owner)';
+      const l10 = document.createElement('a'); l10.href = '/admin/imports/'; l10.textContent = 'Imports & review';
       const l8 = document.createElement('a'); l8.href = '/learn/'; l8.textContent = 'Master Class';
       const l6 = document.createElement('a'); l6.href = '/land/'; l6.textContent = 'Land for sale';
       const l7 = document.createElement('a'); l7.href = '/land/sell/'; l7.textContent = 'Sell my land';
-      const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members (owner)';
-      const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup (owner)';
-      const lk = document.createElement('a'); lk.href = '/owner/keys/'; lk.textContent = 'API keys (owner)';
-      const lo = document.createElement('a'); lo.href = '/owner/ocr/'; lo.textContent = 'Read a county PDF (owner)';
+      const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members';
+      const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup';
+      const lk = document.createElement('a'); lk.href = '/owner/keys/'; lk.textContent = 'API keys';
+      const lo = document.createElement('a'); lo.href = '/owner/ocr/'; lo.textContent = 'Read a county PDF';
       const lp = document.createElement('a'); lp.href = '/plans/'; lp.textContent = 'Free vs Pro';
-      const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage (owner)';
+      const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage';
       const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/ai/'; aiLink.textContent = 'PricePocket AI'; }
       let ms = null;
@@ -55,9 +63,12 @@
           ms.disabled = false; ms.textContent = 'Manage subscription';
         });
       }
-      const out = document.createElement('button'); out.type = 'button'; out.textContent = 'Sign out';
+      const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      p.append(who); if (aiLink) p.append(aiLink); p.append(l8, l9, l1, l2, l6, l7); if (ms) p.append(ms); if (user.owner) p.append(l4, l10, lk, lo, l3, l5); p.append(lp, out); wrap.append(b, p);
+      const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
+      p.append(who, grp(aiLink, l8, l9, l1, l2), grp(l6, l7)); if (ms) p.append(grp(ms));
+      if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lk, lo, l3, l5)); }
+      p.append(grp(lp), grp(out)); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
       if (cta) cta.replaceWith(wrap);
