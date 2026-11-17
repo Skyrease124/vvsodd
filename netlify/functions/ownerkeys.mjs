@@ -8,6 +8,7 @@ import { PROVIDERS } from './cameras.mjs';
 import * as FIRMS from '../lib/firms.mjs';
 import * as ENERGY from '../lib/energy.mjs';
 import * as WX from '../lib/wx.mjs';
+import * as GOV from '../lib/govdata.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -19,6 +20,11 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'gov') {
+    try { const [c, p] = await Promise.all([GOV.crime(32.84, -83.63), GOV.parks(32.84, -83.63)]); if (!c.ok && c.reason === 'nokey') return json(200, { ok: false, error: 'No key saved yet.' });
+      return json(200, { ok: true, nlr: true, text: 'Test spot: Macon, GA. FBI: ' + (c.agency ? c.agency.name + ' ' + c.year + ' data found' : 'no answer') + '. Parks: ' + (p.ok && p.parks[0] ? p.parks[0].name + ' ' + p.parks[0].miles + ' mi' : 'no answer') + '.' }); }
+    catch (e) { return json(200, { ok: false, error: String(e.message || e).replace(/(api_key|API_KEY)=[^&\s]+/g, '$1=\u2026') }); }
+  }
   if (b.test === 'wx') {
     try { const r = await WX.forecast(33.749, -84.388, 2, 0); if (!r.ok) return json(200, { ok: false, error: 'No key saved yet.' });
       return json(200, { ok: true, nlr: true, text: 'Test spot: ' + r.place.name + ', ' + r.place.region + '. Now ' + r.now.f + '\u00b0F, ' + r.now.text + (r.air ? '. Air: ' + r.air.label : '') + '.' }); }
