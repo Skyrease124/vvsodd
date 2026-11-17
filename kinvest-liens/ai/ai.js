@@ -87,7 +87,7 @@
   function label(last) {
     const l = [...selected].map(a => by[a].n);
     const info = a => by[a].n + ' \u00b7 ' + by[a].sys + (TOTALS[a] ? ' \u00b7 ' + TOTALS[a].toLocaleString('en-US') + ' listings' : '');
-    $('aisel').textContent = l.length > 1 ? 'Focused: ' + l.join(', ') : l.length === 1 ? 'Focused: ' + info([...selected][0]) : (last ? info(last) : 'Tap states to focus, or tap a question below');
+    $('aisel').textContent = l.length > 1 ? 'Focused: ' + l.join(', ') : l.length === 1 ? 'Focused: ' + info([...selected][0]) : (last ? info(last) : 'Tap states to focus, or just ask');
     $('aiclear').hidden = !l.length && !document.querySelector('.aist.hit');
   }
   // The map reacts to answers: states in the answer glow, the rest dim, and gold badges show rank or count.
