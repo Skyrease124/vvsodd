@@ -1025,3 +1025,13 @@ dialog{perspective:1100px}
 .leaflet-container.m3d.still{animation:none}
 @keyframes m3dSway{0%,100%{transform:perspective(1000px) rotateX(9deg) rotateY(-2.5deg)}50%{transform:perspective(1000px) rotateX(9deg) rotateY(2.5deg)}}
 @media(prefers-reduced-motion:reduce){.leaflet-container.m3d{animation:none}}
+/* AI answers: 3D cards (depth shadow, edge light, flip-in; mouse tilt via ai.js) */
+.aichat{perspective:1200px}
+.aichat .aiout{transform-origin:50% 0;animation:aiCardIn .6s cubic-bezier(.2,.8,.2,1) backwards;box-shadow:0 1px 0 #fff inset,0 -3px 0 rgba(0,0,0,.08) inset,0 6px 0 -2px #0b1428,0 22px 34px -8px rgba(0,0,0,.6)}
+.aichat .scard,.aichat .tablewrap,.aichat table.aistates tr{transform-style:preserve-3d;transform-origin:50% 100%;box-shadow:0 1px 0 #fff inset,0 5px 0 -1px #c9d7cf,0 16px 22px -8px rgba(8,20,40,.45);animation:aiCardIn .6s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--k,0) * 90ms);transition:transform .2s ease,box-shadow .2s ease}
+.aichat .scard.tilt,.aichat .tablewrap.tilt{transform:rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg)) translateZ(0);box-shadow:0 1px 0 #fff inset,0 6px 0 -1px #c9d7cf,calc(var(--ty,0deg)*-2) 22px 28px -8px rgba(8,20,40,.55)}
+.aichat .scard:active{transform:translateY(3px);box-shadow:0 1px 0 #fff inset,0 2px 0 -1px #c9d7cf,0 8px 12px -6px rgba(8,20,40,.45)}
+.aichat .scard .sscore{box-shadow:0 2px 0 rgba(0,0,0,.2),0 6px 10px -4px rgba(0,0,0,.35)}
+.aichat .scard .btn{box-shadow:0 3px 0 rgba(0,0,0,.22)}
+@keyframes aiCardIn{from{opacity:0;transform:rotateX(22deg) translateY(26px) scale(.97)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.aichat .aiout,.aichat .scard,.aichat .tablewrap,.aichat table.aistates tr{animation:none!important;transition:none}}
