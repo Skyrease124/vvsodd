@@ -9,8 +9,8 @@ def liens(fn):
 idx = {c['county']: c for c in rd(TL + 'index.json')['counties']}
 imports = rd(TL + 'imports.json', {'imports': []})['imports']
 GROUP = {'El Paso': 'county-held'}   # everything else with status County-held is county-held too (set below)
-DEED = {'Wayne', 'Davidson', 'Monroe', 'City of Rochester'}
-PRICE_O = {'City of Rochester': 'Estimated minimum bid on the auction list'}
+DEED = {'Wayne', 'Davidson', 'Monroe', 'City of Rochester', 'Bibb'}
+PRICE_O = {'City of Rochester': 'Estimated minimum bid on the auction list', 'Bibb': 'Opening bid = taxes and fees past due (not on the list)'}
 LABEL = {'state-held': 'State-held land', 'county-held': 'County-held liens', 'lien-sale': 'Advertised lien sale', 'deed': 'Tax deed sale'}
 PRICE = {'state-held': 'Amount on the state list (not today\'s price)', 'county-held': 'Lien purchase amount', 'lien-sale': 'Amount owed on the list (lien face)', 'deed': 'Amount owed on the notice (not an opening bid)'}
 today = datetime.date.today().isoformat()
@@ -112,7 +112,7 @@ def first_seen(path, needle):
         return out_[0] if out_ else today
     except Exception: return today
 grp = collections.OrderedDict()
-for c in [x for x in out['counties'] if x['file'] in ('al-state-land-data.js', 'ar-cosl-data.js', 'ms-forfeited-data.js', 'nm-auctions-data.js', 'liens-monroepa.js', 'liens-rochester.js')]:
+for c in [x for x in out['counties'] if x['file'] in ('al-state-land-data.js', 'ar-cosl-data.js', 'ms-forfeited-data.js', 'nm-auctions-data.js', 'liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js')]:
     k = c['state'] + '|' + c['county'] + '|' + c['file']
     if k not in ADDED: ADDED[k] = first_seen('kinvest-liens/liens/states/' + c['file'], json.dumps(c['county'])[1:-1] if c['file'] != 'nm-auctions-data.js' else 'San Miguel')
     grp.setdefault((c['state'], c['file'], ADDED[k]), []).append(c)
@@ -120,8 +120,8 @@ for (st, fn, day), cs in grp.items():
     n = sum(c['count'] for c in cs); c0 = cs[0]; one = len(cs) == 1
     out['changes'].append({'count': n, 'county': c0['county'] if one else '%d counties' % len(cs), 'detectedAt': day, 'id': hashlib.sha1((st + fn + day).encode()).hexdigest()[:12],
                            'items': [] if one else sorted(c['county'] for c in cs)[:12], 'link': links(st), 'official': True, 'publishedAt': c0['checked'],
-                           'source': {'name': ('Monroe County Tax Claim Bureau: Repository List (official county PDF)' if c0['file'] == 'liens-monroepa.js' else 'City of Rochester: 2026 foreclosure auction list (official city PDF)' if c0['file'] == 'liens-rochester.js' else c0['label'] + ': official state list'), 'url': c0['source']}, 'state': st,
-                           'text': ('Auction scheduled: ' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js') else 'New list added: ') + format(n, ',') + (' items' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js') else ' parcels') + ('' if one else ' in %d counties' % len(cs)) + (' (repository list of unsold properties, no prices)' if c0['file'] == 'liens-monroepa.js' else ' (foreclosure auction list with estimated minimum bids)' if c0['file'] == 'liens-rochester.js' else ' (' + c0['label'].lower() + ')'), 'type': 'new_list'})
+                           'source': {'name': ('Monroe County Tax Claim Bureau: Repository List (official county PDF)' if c0['file'] == 'liens-monroepa.js' else 'City of Rochester: 2026 foreclosure auction list (official city PDF)' if c0['file'] == 'liens-rochester.js' else 'Macon-Bibb Tax Commissioner: judicial in rem list (official county PDF)' if c0['file'] == 'liens-bibb.js' else c0['label'] + ': official state list'), 'url': c0['source']}, 'state': st,
+                           'text': ('Auction scheduled: ' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else 'New list added: ') + format(n, ',') + (' items' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else ' parcels') + ('' if one else ' in %d counties' % len(cs)) + (' (repository list of unsold properties, no prices)' if c0['file'] == 'liens-monroepa.js' else ' (foreclosure auction list with estimated minimum bids)' if c0['file'] == 'liens-rochester.js' else ' (judicial in rem auction list, no prices or owners)' if c0['file'] == 'liens-bibb.js' else ' (' + c0['label'].lower() + ')'), 'type': 'new_list'})
 up = rd(S + 'upcoming-sales.json', {'listings': []})
 for (cn, typ), n in collections.Counter((l['county'], l['type']) for l in up['listings'] if l['type'] in ('taxdeed', 'laft')).items():
     k = 'FL|' + cn + '|' + typ
