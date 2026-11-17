@@ -1174,3 +1174,7 @@ details.toolabout,dialog details.toolabout{background:transparent!important;bord
 .nblist{list-style:none;margin:8px 0;padding:0}.nblist li{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
 .nbtop{display:flex;justify-content:space-between;align-items:baseline;gap:10px}.nblab{color:#e6ecf7;font-size:14px}.nbval{font-size:18px;color:#fff;font-variant-numeric:tabular-nums}
 .nbval.lo{color:#7bf0b0}.nbval.hi{color:#f87171}.nbcmp{font-size:12.5px;color:#9fb1d6;margin-top:2px}
+/* Jobs tile sparkline */
+.govpanel .jobspark{width:100%;max-width:420px;height:64px;display:block;margin:6px 0 2px}
+.govpanel .jobspark polyline{fill:none;stroke:#ffd166;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.govpanel .jobspark circle{fill:#ffd166;stroke:#0b1220;stroke-width:1.5}

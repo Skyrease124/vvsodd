@@ -88,6 +88,24 @@ const GoogleMaps = {
       panel.appendChild(ul);
       if (d.countyGrowth != null) panel.appendChild(mk('p', 'small', 'County population ' + (d.countyGrowth >= 0 ? 'grew ' : 'shrank ') + Math.abs(d.countyGrowth) + '% (' + d.growthYears + ' estimates).'));
       panel.appendChild(mk('p', 'small muted', 'Source: ' + d.source + ', ' + d.range + '. Income, vacancy and owner share: green = better than the county, red = worse. Area averages, not facts about this lot.')); return true; });
+    mkBtn('Jobs', 'gjobs', async (panel, c) => {
+      panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Looking up county jobs data\u2026'));
+      let d = null; try { d = await (await fetch('/.netlify/functions/bls?' + new URLSearchParams({lat: c.lat.toFixed(5), lng: c.lng.toFixed(5)}))).json(); } catch (e) {}
+      panel.textContent = '';
+      if (!d || !d.ok) { panel.appendChild(mk('p', 'small', d && d.reason === 'nokey' ? 'Jobs data is not set up yet.' : 'Jobs data unavailable right now.')); return false; }
+      if (d.none) { panel.appendChild(mk('p', 'small', 'No county jobs data found for this spot.')); return true; }
+      const pc = v => v == null ? 'n/a' : v.toFixed(1) + '%', ul = mk('ul', 'nblist'), w = d.state == null ? '' : d.rate < d.state - .3 ? 'lo' : d.rate > d.state + .3 ? 'hi' : '';
+      const li = (lab, val, cls, sub) => { const e = mk('li'), t = mk('div', 'nbtop'); t.append(mk('span', 'nblab', lab), mk('b', 'nbval' + (cls ? ' ' + cls : ''), val)); e.appendChild(t); if (sub) e.appendChild(mk('div', 'nbcmp', sub)); ul.appendChild(e); };
+      li('Unemployment rate', pc(d.rate), w, 'State ' + pc(d.state) + ' \u00b7 US ' + pc(d.us) + (w ? ' \u00b7 ' + (w === 'lo' ? 'lower than the state (better)' : 'higher than the state (worse)') : ' \u00b7 about the same as the state'));
+      if (d.yearAgo != null) { const ch = Math.round((d.rate - d.yearAgo) * 10) / 10; li('One year ago', pc(d.yearAgo), ch <= -.3 ? 'lo' : ch >= .3 ? 'hi' : '', Math.abs(ch) < .3 ? 'About the same as a year ago' : ch < 0 ? 'Improving: down ' + Math.abs(ch).toFixed(1) + ' points' : 'Getting worse: up ' + ch.toFixed(1) + ' points'); }
+      if (d.laborForce) li('Labor force', d.laborForce.toLocaleString('en-US') + ' people', d.laborForceChange == null ? '' : d.laborForceChange >= .5 ? 'lo' : d.laborForceChange <= -.5 ? 'hi' : '', d.laborForceChange == null ? '' : (d.laborForceChange >= 0 ? 'Grew ' : 'Shrank ') + Math.abs(d.laborForceChange) + '% in a year');
+      panel.appendChild(mk('p', 'small', 'County jobs, ' + d.month + (d.prelim ? ' (preliminary)' : '') + '.')); panel.appendChild(ul);
+      if (d.trend && d.trend.length > 2) { const v = d.trend.map(x => x.v), lo = Math.min(...v), hi = Math.max(...v), W = 300, H = 60, sx = i => 6 + i * (W - 12) / (v.length - 1), sy = x => H - 8 - (hi === lo ? .5 : (x - lo) / (hi - lo)) * (H - 16);
+        const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('class', 'jobspark'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Unemployment rate, ' + d.trend[0].label + ' to ' + d.trend[d.trend.length - 1].label + ': ' + v.map(x => x.toFixed(1)).join(', ') + ' percent');
+        const pl = document.createElementNS(ns, 'polyline'); pl.setAttribute('points', v.map((x, i) => sx(i).toFixed(1) + ',' + sy(x).toFixed(1)).join(' ')); svg.appendChild(pl);
+        const dot = document.createElementNS(ns, 'circle'); dot.setAttribute('cx', sx(v.length - 1)); dot.setAttribute('cy', sy(v[v.length - 1])); dot.setAttribute('r', 3.5); svg.appendChild(dot);
+        panel.append(svg, mk('p', 'small muted jobsaxis', d.trend[0].label + ' \u2192 ' + d.trend[d.trend.length - 1].label + ' \u00b7 range ' + pc(lo) + '\u2013' + pc(hi))); }
+      panel.appendChild(mk('p', 'small muted', 'Source: ' + d.source + '. Whole-county numbers, not facts about this lot.')); return true; });
     mkBtn('Road access', 'groad', async (panel, c) => {
       panel.textContent = ''; panel.appendChild(mk('p', 'small muted', 'Checking the nearest road\u2026'));
       let d = null; try { d = await (await fetch('/.netlify/functions/gmaps?' + new URLSearchParams({road: 1, lat: c.lat.toFixed(6), lng: c.lng.toFixed(6)}))).json(); } catch (e) {}
@@ -807,7 +825,7 @@ const CardTools = {
 const ToolGrid = {
   ORDER: [['Street View photo', '\ud83d\udcf7', 'Photo'], ['Street View near this parcel', '\ud83e\uddcd', 'Street View'], ['Nearby Cameras', '\ud83c\udfa5', 'Cameras'],
     ['Weather & air', '\u26c5', 'Weather'], ['Fires nearby', '\ud83d\udd25', 'Fires'], ['Crime', '\ud83d\udee1\ufe0f', 'Crime'],
-    ['Property record', '\ud83c\udfe0', 'Record'], ['Neighborhood', '\ud83c\udfd8\ufe0f', 'Neighborhood'], ['Road access', '\ud83d\udee3\ufe0f', 'Road'], ['Nearby places', '\ud83d\udccd', 'Places'],
+    ['Property record', '\ud83c\udfe0', 'Record'], ['Neighborhood', '\ud83c\udfd8\ufe0f', 'Neighborhood'], ['Jobs', '\ud83d\udcbc', 'Jobs'], ['Road access', '\ud83d\udee3\ufe0f', 'Road'], ['Nearby places', '\ud83d\udccd', 'Places'],
     ['Energy', '\u26a1', 'Energy'], ['Parks', '\ud83c\udf32', 'Parks']],
   polish(bar, sv) {
     bar.classList.add('toolgrid');
