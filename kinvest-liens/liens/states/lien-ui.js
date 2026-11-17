@@ -543,6 +543,106 @@ const EnvCtlData = {
     box._retry = run; run(); return box;
   }
 };
+// Nearby Cameras: official public cameras near the lot (/.netlify/functions/cameras), matched by straight-line distance from the lot
+// centre, so a camera across a state line can appear. Loads only when "Nearby Cameras" is tapped; the preview refreshes only while open and visible.
+const CameraData = {
+  RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  link(txt, href) { const a = this.mk('a', '', txt); a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; },
+  kindLabel(c) { return c.kind === 'video' ? 'Live video' : c.kind === 'snapshot' ? 'Updated snapshot' : 'Open official camera'; },
+  mi(n) { return (n < 0.1 ? '<0.1' : n.toFixed(1)) + ' mi'; },
+  js(u) { return new Promise((ok, no) => { if (window.Hls) return ok(); const x = document.createElement('script'); x.src = u; x.onload = ok; x.onerror = no; document.head.appendChild(x); }); },
+  async fetch(lat, lng) {
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 25000);
+    try { const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat: lat.toFixed(6), lng: lng.toFixed(6), radius: this.RADIUS, limit: this.LIMIT}), {signal: c.signal}); const d = await r.json(); if (!d || d.ok !== true || !Array.isArray(d.cameras)) throw new Error('bad'); return d; }
+    finally { clearTimeout(t); }
+  },
+  // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
+  mapAttach(L, m, box, center) {
+    const dlg = box.closest('dialog') || box.parentNode;
+    dlg.querySelectorAll('.cambar,.campanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
+    const panel = this.mk('div', 'campanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Nearby cameras');
+    box.after(bar); bar.after(panel);
+    let pins = null, timer = null, hls = null, sel = null, loaded = false;
+    const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
+    const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
+    const close = () => { stopPreview(); panel.hidden = true; b.setAttribute('aria-expanded', 'false'); b.textContent = 'Nearby Cameras'; if (pins && m.hasLayer(pins)) m.removeLayer(pins); };
+    panel._stop = close;
+    dlg.addEventListener('close', close);
+    document.addEventListener('visibilitychange', () => { if (!panel.isConnected) return; if (document.hidden) stopPreview(); else if (!panel.hidden && sel) this.preview(panel.querySelector('.campv'), sel, ctl); });
+    b.addEventListener('click', async () => {
+      if (!panel.hidden) return close();
+      panel.hidden = false; b.setAttribute('aria-expanded', 'true'); b.textContent = 'Hide cameras';
+      if (pins) { pins.addTo(m); if (sel) this.preview(panel.querySelector('.campv'), sel, ctl); return; }
+      if (loaded) return;
+      panel.textContent = ''; panel.appendChild(this.mk('p', 'small muted', 'Finding public cameras near this lot…'));
+      const ctr = center(); let d;
+      try { d = await this.fetch(ctr.lat, ctr.lng); } catch (e) {
+        panel.textContent = ''; panel.appendChild(this.mk('p', 'notice', 'Nearby cameras temporarily unavailable'));
+        const p = this.mk('p', 'small'); p.append('Try the official ', this.link('FL511 camera viewer', 'https://www.fl511.com/cctv'), '.'); panel.appendChild(p); return; }
+      loaded = true; this.render(L, m, panel, d, ctr, c => { sel = c; }, pl => { pins = pl; }, ctl);
+    });
+  },
+  render(L, m, panel, d, ctr, onSel, onPins, ctl) {
+    const mk = this.mk.bind(this); panel.textContent = '';
+    const okP = d.providers.filter(p => p.status === 'ok'), badP = d.providers.filter(p => p.status === 'unavailable'), viewP = d.providers.filter(p => p.status === 'viewer');
+    const list = mk('ol', 'camlist'), pv = mk('div', 'campv'); pv.setAttribute('aria-live', 'polite');
+    const items = [], pinsL = L.layerGroup().addTo(m); onPins(pinsL);
+    const choose = c => { onSel(c); items.forEach(x => { x.li.classList.toggle('on', x.c === c); x.pin.setStyle({fillColor: x.c === c ? '#facc15' : '#38bdf8'}); });
+      m.fitBounds(L.latLngBounds([ctr, [c.lat, c.lng]]), {padding: [40, 40], maxZoom: 16}); this.preview(pv, c, ctl); };
+    d.cameras.forEach((c, i) => {
+      const pin = L.circleMarker([c.lat, c.lng], {radius: 8, color: '#0c4a6e', weight: 2, fillColor: '#38bdf8', fillOpacity: 0.95}).addTo(pinsL).bindTooltip((i + 1) + '. ' + c.name);
+      const li = mk('li', ''), btn = mk('button', 'camitem'); btn.type = 'button';
+      btn.append(mk('b', '', (i + 1) + '. ' + c.name), mk('span', 'small muted', ' · ' + this.mi(c.miles) + ' · ' + c.type + ' · ' + this.kindLabel(c)));
+      btn.addEventListener('click', () => choose(c)); pin.on('click', () => choose(c)); li.appendChild(btn); list.appendChild(li); items.push({c, li, pin});
+    });
+    if (d.cameras.length) { panel.appendChild(mk('p', 'small', d.cameras.length + ' closest public camera' + (d.cameras.length === 1 ? '' : 's') + ' within ' + d.radius + ' miles (straight-line distance' + (d.totalInRadius > d.cameras.length ? '; ' + d.totalInRadius + ' in range' : '') + '). Tap one or its blue pin to preview.')); panel.append(list, pv); }
+    else if (okP.length && !badP.length) { panel.appendChild(mk('p', 'camnone', 'No public cameras found within ' + d.radius + ' miles'));
+      if (okP.some(x => x.state === 'FL')) { const p = mk('p', 'small'); p.append('Try the official ', this.link('FL511 camera viewer', 'https://www.fl511.com/cctv'), '.'); panel.appendChild(p); } }
+    else if (!okP.length && badP.length) panel.appendChild(mk('p', 'notice', 'Nearby cameras temporarily unavailable'));
+    else if (badP.length) panel.appendChild(mk('p', 'small muted', 'No cameras found in the feeds that answered; some feeds are temporarily unavailable (below).'));
+    badP.forEach(p => { const x = mk('p', 'small'); x.append(p.name + ' cameras temporarily unavailable. ', this.link('Open the official viewer', p.viewer)); panel.appendChild(x); });
+    viewP.forEach(p => { const x = mk('p', 'small'); x.append(p.state + ' cameras near this lot: ', this.link('Open the ' + p.name + ' official viewer', p.viewer), ' (not built into this map).'); panel.appendChild(x); });
+    if (okP.some(p => p.partial)) panel.appendChild(mk('p', 'small muted', 'Some Caltrans districts did not answer; nearby cameras there may be missing.'));
+    if (okP.length) panel.appendChild(mk('p', 'small muted', 'Cameras from: ' + okP.map(p => p.name).join('; ') + '.'));
+    if (d.cameras.length) choose(d.cameras[0]);
+  },
+  preview(pv, c, ctl) {
+    if (!pv) return; const mk = this.mk.bind(this); ctl.stop(); pv.textContent = '';
+    pv.appendChild(mk('h5', '', c.name));
+    const meta = [c.road, c.direction].filter(Boolean).join(' · '); if (meta) pv.appendChild(mk('div', 'small', meta));
+    pv.appendChild(mk('div', 'small', this.mi(c.miles) + ' from the lot (straight-line distance) · ' + c.type + ' · ' + (c.kind === 'video' ? 'Live video' : c.kind === 'snapshot' ? 'Traffic snapshot' : 'Official livestream page')));
+    const media = mk('div', 'cammedia'), upd = mk('div', 'small muted camupd'); pv.append(media, upd);
+    const unavailable = () => { media.textContent = ''; media.appendChild(mk('p', 'notice', 'Camera unavailable')); upd.textContent = ''; };
+    const snap = () => {
+      if (!c.image) return unavailable();
+      const img = mk('img'); img.alt = 'Latest snapshot from ' + c.name; img.decoding = 'async'; img.referrerPolicy = 'no-referrer';
+      const load = () => { img.src = c.image + (c.image.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 60000); this.updTime(c, upd); };
+      img.onerror = unavailable; media.appendChild(img); load();
+      ctl.timer = setInterval(() => { if (!document.hidden && img.isConnected) load(); }, this.REFRESH);
+    };
+    if (c.kind === 'viewer') {
+      const a = this.link('Open official camera', c.viewer); a.className = 'btn small'; media.appendChild(a);
+      upd.textContent = 'The live view opens on the operator’s official page.';
+    } else if (c.kind === 'video' && c.video) {
+      const v = mk('video'); v.muted = true; v.playsInline = true; v.controls = true; v.autoplay = true; v.setAttribute('aria-label', 'Live video from ' + c.name); media.appendChild(v);
+      upd.textContent = 'Live video from the official stream.';
+      let failed = false; const fail = () => { if (failed || !v.isConnected) return; failed = true; ctl.stop(); media.textContent = ''; media.appendChild(mk('p', 'small muted', 'Live video did not play here; showing the latest snapshot instead.')); snap(); };
+      v.addEventListener('error', fail); setTimeout(() => { if (!failed && v.readyState < 2) fail(); }, 12000);
+      if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = c.video;
+      else this.js(this.HLS).then(() => { if (!window.Hls || !Hls.isSupported()) return fail(); const h = new Hls(); ctl.hls = h; h.on(Hls.Events.ERROR, (e, x) => { if (x && x.fatal) fail(); }); h.loadSource(c.video); h.attachMedia(v); }).catch(fail);
+    } else snap();
+    const src = mk('p', 'small muted'); src.append('Source: ' + c.operator + '. ', this.link('Official viewer', c.viewer)); if (c.sourceMeta) src.append(' · ' + c.sourceMeta + '.'); pv.appendChild(src);
+    pv.appendChild(mk('p', 'small muted', 'Shows conditions at the camera’s location, not at the lot itself.'));
+  },
+  async updTime(c, el) {
+    if (c.src !== 'fl' && c.src !== 'ca') { el.textContent = 'Image update time unavailable'; return; }
+    try { const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({meta: 1, src: c.src, id: c.id})); const d = await r.json();
+      el.textContent = d && d.lastModified ? 'Image updated at ' + new Date(d.lastModified).toLocaleString('en-US', {month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short'}) : 'Image update time unavailable';
+    } catch (e) { el.textContent = 'Image update time unavailable'; }
+  }
+};
 const SoilData = {
   WSS: 'https://websoilsurvey.nrcs.usda.gov/app/', SDA: 'https://sdmdataaccess.sc.egov.usda.gov/', mem: {},
   async get(l, r) {
@@ -799,6 +899,7 @@ const LienMap = {
         FloodData.mapAttach(L, m, box, l, pd.r);
         WeatherData.mapAttach(L, m, box, l, pd.r);
         EnvCtlData.mapAttach(L, m, box, l, pd.r);
+        CameraData.mapAttach(L, m, box, () => box._outline.getBounds().getCenter());
         m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
         setTimeout(() => m.invalidateSize(), 50);
         box.dataset.pid = pd.r.pid;
@@ -829,6 +930,7 @@ const LienMap = {
       sat.addTo(m); OFM.add(m, L.control.layers({'Satellite': sat, 'Street': street}).addTo(m));
       const g = L.geoJSON(r, {style: {color: '#ff3b30', weight: 3, fillColor: '#ff3b30', fillOpacity: 0.25}}).addTo(m);
       m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
+      CameraData.mapAttach(L, m, box, () => g.getBounds().getCenter());
       setTimeout(() => m.invalidateSize(), 50);
       { const old = dlg.querySelector('.ecbox'); if (old) old.remove(); const st = (l.state || '').toUpperCase(), gm = r.features[0].geometry;
         const rings = gm && (gm.type === 'Polygon' ? gm.coordinates : gm.type === 'MultiPolygon' ? gm.coordinates.flat() : null);

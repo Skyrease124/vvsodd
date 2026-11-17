@@ -42,6 +42,7 @@ const LandMap = {
     if (typeof OFM !== 'undefined') OFM.add(map, L.control.layers({'Satellite': sat}).addTo(map));
     const g = L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: m.g}}, {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.15}}).addTo(map);
     map.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
+    if (typeof CameraData !== 'undefined') CameraData.mapAttach(L, map, box, () => g.getBounds().getCenter());
     if (typeof EnvCtlData !== 'undefined') { const st = /^co-/.test(sp.file) ? 'CO' : /^az-/.test(sp.file) ? 'AZ' : /^al-/.test(sp.file) ? 'AL' : /^ar/.test(sp.file) ? 'AR' : null; if (st) dlg.appendChild(EnvCtlData.section({state: st, parcel: sp.parcel}, {st: 'matched', g: m.g})); }
     note.textContent = 'Outline from ' + sp.srcName + ' (parcel ' + m.cid + '), matched by parcel ID; not a survey. Satellite imagery from Esri World Imagery, capture dates vary. Do not visit or enter the property.';
   }
