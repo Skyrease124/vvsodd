@@ -473,6 +473,7 @@ const EnvCtlData = {
     if (r && r.st === 'matched' && r.g && r.g.length) { body = {rings: r.g}; mode = 'boundary'; }
     else if (isFinite(l.lat) && isFinite(l.lng)) { body = {point: [Number(l.lng), Number(l.lat)]}; mode = 'point'; }
     else return {state: 'unavailable', why: 'nolocation'};
+    const st = (l.state || 'FL').toUpperCase(); if (st !== 'FL') body.state = st;
     const key = JSON.stringify(body); if (this.mem[key]) return this.mem[key];
     let out; try {
       const c = new AbortController(), t = setTimeout(() => c.abort(), 25000);
@@ -488,29 +489,35 @@ const EnvCtlData = {
     box.querySelectorAll('.ecbody').forEach(x => x.remove()); const body = mk('div', 'ecbody'); box.appendChild(body);
     if (res.state !== 'ok') {
       body.appendChild(mk('p', 'notice', 'Registry check unavailable'));
-      body.appendChild(mk('p', 'small muted', res.why === 'nolocation' ? 'This lot has no verified boundary or map pin, so it cannot be checked against the DEP registry map.' : 'The Florida DEP registry map service did not answer.'));
+      body.appendChild(mk('p', 'small muted', res.why === 'nolocation' ? 'This lot has no verified boundary or map pin, so it cannot be checked against an official restriction map.' : box._fl ? 'The Florida DEP registry map service did not answer.' : 'An official restriction map service did not answer.'));
       if (res.why === 'lookup') { const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', () => box._retry && box._retry()); body.appendChild(b); }
     } else {
       if (res.mode === 'point') body.appendChild(mk('p', 'small ecpin', 'Map pin check only: this lot has no verified boundary, so only its map pin was checked. A restriction on part of the lot could be missed.'));
-      if (!res.matches.length) body.appendChild(mk('p', 'ecval', res.mode === 'point' ? 'No mapped DEP registry area at the map pin.' : 'No mapped DEP registry overlap found.'));
+      const fl = !res.usState || res.usState === 'FL';
+      if (!res.matches.length) body.appendChild(mk('p', 'ecval', fl ? (res.mode === 'point' ? 'No mapped DEP registry area at the map pin.' : 'No mapped DEP registry overlap found.') : (res.mode === 'point' ? 'No mapped restriction area at the map pin.' : 'No mapped restriction overlap found.')));
       else {
-        body.appendChild(mk('p', 'ecval echit', (res.mode === 'point' ? 'The map pin is inside ' : 'This lot overlaps ') + (res.matches.length === 1 ? 'a mapped DEP institutional control area.' : res.matches.length + ' mapped DEP institutional control areas.')));
+        body.appendChild(mk('p', 'ecval echit', (res.mode === 'point' ? 'The map pin is inside ' : 'This lot overlaps ') + (res.matches.length === 1 ? 'a mapped ' + (fl ? 'DEP ' : '') + 'institutional control area.' : res.matches.length + ' mapped ' + (fl ? 'DEP ' : '') + 'institutional control areas.')));
         res.matches.forEach(m => {
           const d = mk('div', 'ecsite'); d.appendChild(mk('b', '', m.siteName || 'DEP site ' + m.siteId));
-          const meta = [m.siteId ? 'DEP site ' + m.siteId : '', [m.address, m.city].filter(Boolean).join(', '), m.pct != null ? (m.pct < 0.1 ? '<0.1' : m.pct.toFixed(1)) + '% of the lot' : ''].filter(Boolean).join(' · ');
+          const meta = [m.agency ? m.agency : '', m.siteId ? (fl ? 'DEP site ' : '') + m.siteId : '', [m.address, m.city].filter(Boolean).join(', '), m.pct != null ? (m.pct < 0.1 ? '<0.1' : m.pct.toFixed(1)) + '% of the lot' : ''].filter(Boolean).join(' · ');
           if (meta) d.appendChild(mk('div', 'small muted', meta));
           if (m.pct != null && m.pct < 2) d.appendChild(mk('div', 'small muted', 'Only a small edge overlaps; this may be a mapping offset. Confirm in the DEP records.'));
-          if (m.restrictions.length) { const ul = mk('ul', 'small'); m.restrictions.forEach(x => ul.appendChild(mk('li', '', x.label ? x.code + ': ' + x.label : x.code + ': See DEP records for details.'))); d.appendChild(ul); }
+          if (!fl && !m.restrictions.length) { d.appendChild(mk('div', 'small', 'Restriction details are not in the map. See ' + (m.agency || 'agency') + ' records for details.')); }
+          else if (m.restrictions.length) { const ul = mk('ul', 'small'); m.restrictions.forEach(x => ul.appendChild(mk('li', '', x.label ? x.code + ': ' + x.label : x.code + ': See DEP records for details.'))); d.appendChild(ul); }
           else d.appendChild(mk('div', 'small', 'No restriction type listed in the registry. See DEP records for details.'));
           const extra = [m.mechanisms.length ? 'Recorded as: ' + m.mechanisms.join(', ') : '', m.media.length ? 'Contaminated media: ' + m.media.join(', ') : '', m.engineering.length ? 'Engineering controls: ' + m.engineering.join(', ') : '', m.effDates.length ? 'Effective: ' + m.effDates.join(', ') : ''].filter(Boolean);
           extra.forEach(t => d.appendChild(mk('div', 'small muted', t)));
-          if (m.docs) { const p = mk('div', 'small'); p.appendChild(link('Official DEP records for this site', m.docs)); d.appendChild(p); }
+          if (m.docs) { const p = mk('div', 'small'); p.appendChild(link('Official ' + (fl ? 'DEP' : m.agency || 'agency') + ' records for this site', m.docs)); if (m.summary) p.append(' \u00B7 ', link('Summary', m.summary)); d.appendChild(p); }
           body.appendChild(d);
         });
       }
     }
-    body.appendChild(mk('p', 'small muted', 'Map-based screening only, not a title search or environmental assessment. Institutional controls are usually recorded with the county as restrictive covenants and stay with the land. Check the official DEP records and the county Official Records before you bid.'));
-    const src = mk('p', 'small muted'); src.append('Source: Florida Department of Environmental Protection, ', link('Institutional Controls Registry', this.SRC), '.' + (res.state === 'ok' ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+    body.appendChild(mk('p', 'small muted', 'Map-based screening only, not a title search or environmental assessment. Institutional controls are usually recorded with the county as restrictive covenants and stay with the land. Check the official ' + (box._fl ? 'DEP' : 'agency') + ' records and the county Official Records before you bid.'));
+    if (res.state === 'ok' && res.gap) { const g = mk('p', 'small ecpin'); g.append('Not fully covered: ' + res.gap + ' '); if (res.gapLink) g.appendChild(link('State program page', res.gapLink)); body.appendChild(g); }
+    const src = mk('p', 'small muted');
+    if (box._fl) src.append('Source: Florida Department of Environmental Protection, ', link('Institutional Controls Registry', this.SRC), '.' + (res.state === 'ok' ? ' Checked ' + res.queried + '.' : ''));
+    else src.append('Source: ' + (res.sources ? res.sources.join('; ') : 'official state and EPA restriction maps') + '.' + (res.state === 'ok' ? ' Checked ' + res.queried + '.' : ''));
+    body.appendChild(src);
   },
   mapAttach(L, m, box, l, r) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
@@ -531,7 +538,7 @@ const EnvCtlData = {
   },
   section(l, r) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-    const box = mk('div', 'precord ecbox'); box.appendChild(mk('h4', '', 'Environmental Restrictions'));
+    const box = mk('div', 'precord ecbox'); box._fl = (l.state || 'FL').toUpperCase() === 'FL'; box.appendChild(mk('h4', '', 'Environmental Restrictions'));
     const run = () => { box.querySelectorAll('.ecbody').forEach(x => x.remove()); box.appendChild(mk('p', 'small muted ecbody', 'Checking the Florida DEP registry…')); this.get(l, r).then(res => this.fill(box, res)); };
     box._retry = run; run(); return box;
   }
@@ -823,6 +830,9 @@ const LienMap = {
       const g = L.geoJSON(r, {style: {color: '#ff3b30', weight: 3, fillColor: '#ff3b30', fillOpacity: 0.25}}).addTo(m);
       m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
       setTimeout(() => m.invalidateSize(), 50);
+      { const old = dlg.querySelector('.ecbox'); if (old) old.remove(); const st = (l.state || '').toUpperCase(), gm = r.features[0].geometry;
+        const rings = gm && (gm.type === 'Polygon' ? gm.coordinates : gm.type === 'MultiPolygon' ? gm.coordinates.flat() : null);
+        if (st && st !== 'FL' && rings && rings.length) foot.before(EnvCtlData.section(l, {st: 'matched', g: rings})); }
       const ac = r.features[0].properties && r.features[0].properties.ACRES;
       msg.textContent = ac ? 'Lot size: about ' + Number(ac).toFixed(3) + ' acres (' + Math.round(ac * 43560).toLocaleString() + ' sq ft).' : '';
     } catch (e) {

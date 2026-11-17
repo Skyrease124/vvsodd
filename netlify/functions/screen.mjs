@@ -105,8 +105,8 @@ function score(g) {
   if (g.flood === 1) { s -= 10; red.push('In a FEMA high-risk flood zone'); }
   if (g.wet === 1) { s -= 10; red.push('Mapped wetlands touch the lot'); }
   const em = envMain(g);
-  if (em && em.pct >= 2) { s -= 15; red.push('Florida DEP environmental restriction on ' + (em.pct >= 99.95 ? 100 : Math.min(99, Math.round(em.pct))) + '% of the lot (' + em.site + (em.r.length ? ': ' + em.r.join(', ') : '') + ')'); }
-  else if (em) red.push('A Florida DEP restriction area touches the edge of the lot (' + em.site + '); may be a map offset');
+  if (em && em.pct >= 2) { s -= 15; red.push((em.agency ? em.agency : 'Florida DEP') + ' environmental restriction on ' + (em.pct >= 99.95 ? 100 : Math.min(99, Math.round(em.pct))) + '% of the lot (' + em.site + (em.r.length ? ': ' + em.r.join(', ') : '') + ')'); }
+  else if (em) red.push('A ' + (em.agency || 'Florida DEP') + ' restriction area touches the edge of the lot (' + em.site + '); may be a map offset');
   g.junk = junkReason(g);
   if (g.junk) { s -= 40; red.push(g.junk); }
   g.score = Math.max(0, Math.min(100, Math.round(s)));
