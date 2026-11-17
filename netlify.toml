@@ -27,6 +27,7 @@
     "kinvest-liens/liens/states/upcoming-sales.json",
     "kinvest-liens/liens/states/radar.json",
     "kinvest-liens/liens/states/lien-summary.js",
+    "kinvest-liens/liens/states/parcels/*.json",
     "kinvest-liens/liens/states/liens-bibb.js",
     "kinvest-liens/liens/states/liens-fulton.js",
     "kinvest-liens/liens/states/liens-rochester.js",
