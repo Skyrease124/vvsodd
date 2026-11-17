@@ -771,6 +771,22 @@ const GovData = {
   }
 };
 // Apple-style tool grid under each map: icon tiles in a fixed order, labels kept short, fine print moved into a quiet footnote.
+// Parcel card actions as icon tiles (same look as the map tools). Buttons that change their own text (Favorite, Watch, How to buy) are re-decorated automatically.
+const CardTools = {
+  MAP: [[/^show on map/i, '\ud83d\uddfa\ufe0f', 'Map'], [/^research/i, '\ud83d\udccb', 'Research'], [/^how to buy/i, '\ud83c\udfdb\ufe0f', 'How to buy'], [/^calculate/i, '\ud83e\uddee', 'Calculate'],
+    [/^\u2605\s*favorite/i, '\u2605', 'Saved'], [/^\u2606\s*favorite|favorite/i, '\u2606', 'Favorite'], [/^details/i, '\ud83d\udd52', 'Timeline'], [/watching/i, '\ud83d\udc41\ufe0f', 'Watching'], [/watch/i, '\ud83d\udc41\ufe0f', 'Watch']],
+  deco(e) {
+    if (!e.matches || !e.matches('button, a.btn') || e.querySelector(':scope > .tl')) return;
+    const t = (e.textContent || '').trim(), m = this.MAP.find(x => x[0].test(t)); if (!m) return;
+    e.classList.add('tool'); e.title = t.replace(/^[\u2605\u2606\ud83d\udc41\ufe0f\s]+/, ''); e.setAttribute('aria-label', e.title);
+    e.textContent = ''; const i = document.createElement('span'); i.className = 'ti'; i.setAttribute('aria-hidden', 'true'); i.textContent = m[1]; const l = document.createElement('span'); l.className = 'tl'; l.textContent = m[2]; e.append(i, l);
+    e.classList.toggle('on', e.getAttribute('aria-pressed') === 'true');
+  },
+  watch(act) {
+    const run = () => [...act.children].forEach(e => this.deco(e)); run();
+    new MutationObserver(() => run()).observe(act, {childList: true, subtree: true, characterData: true});
+  }
+};
 const ToolGrid = {
   ORDER: [['Street View photo', '\ud83d\udcf7', 'Photo'], ['Street View near this parcel', '\ud83e\uddcd', 'Street View'], ['Nearby Cameras', '\ud83c\udfa5', 'Cameras'],
     ['Weather & air', '\u26c5', 'Weather'], ['Fires nearby', '\ud83d\udd25', 'Fires'], ['Crime', '\ud83d\udee1\ufe0f', 'Crime'],
@@ -1529,6 +1545,7 @@ const LienUI = {
         if (l.amount != null && !l.priceLabel) { const cb = mk('a', 'btn small ghost', 'Calculate'); cb.href = '../../?' + new URLSearchParams({amount: l.amount, rate: String(l.rate || '').replace('%', ''), months: 24, fees: 0, from: l.county + ' parcel ' + l.parcel + ' (face $' + l.amount + (l.market != null && l.market < l.amount ? '; the county values the lot below the lien, so check why' : '') + ')'}).toString() + '#calculator'; act.appendChild(cb); }
         const rb = mk('button', 'btn small', 'Research'); rb.type = 'button'; rb.addEventListener('click', () => LienResearch.open(l)); act.appendChild(rb);
         const bb = LienBuy.button(l, 'btn small'); if (bb) act.appendChild(bb); act.appendChild(LienSave.button(l, 'btn small ghost')); if (typeof PF !== 'undefined') PF.cardButtons(l, act, 'btn small ghost');
+        act.classList.add('toolgrid', 'cardtools'); CardTools.watch(act);
         c.appendChild(act);
         const src = mk('p', 'small lsrc'); const a = mk('a', '', 'Source'); a.href = l.source; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.append(a, ' ' + (l.checked || '')); c.appendChild(src);
         g.appendChild(c);

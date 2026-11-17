@@ -1157,3 +1157,14 @@ details.more[open]>summary::after{content:"\2212"}details.more>*:not(summary){ma
 details.toolabout{margin:4px 0 10px}details.toolabout>summary{cursor:pointer;color:#9fb1d6;font-size:13px;list-style:none}details.toolabout>summary::before{content:"\24D8  "}
 details.toolabout .toolnote{margin-top:6px!important}
 details.toolabout,dialog details.toolabout{background:transparent!important;border:0!important;padding:0!important;box-shadow:none!important}details.toolabout>summary{padding:4px 0!important;background:transparent!important}
+/* Parcel card actions: same icon tiles as the map tools */
+.lact.cardtools{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:10px}
+.lact.cardtools .tool.btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:66px;padding:9px 4px 7px;margin:0;
+  border:1px solid rgba(255,255,255,.1)!important;border-radius:14px!important;background:rgba(255,255,255,.06)!important;color:#f2f5fb!important;
+  font:600 12.5px/1.2 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;box-shadow:none!important;transform:none!important;text-decoration:none;white-space:normal;text-align:center}
+.lact.cardtools .tool.btn:hover{background:rgba(255,255,255,.1)!important}.lact.cardtools .tool.btn:active{transform:scale(.96)!important}
+.lact.cardtools .tool.btn.on,.lact.cardtools .tool.btn.faved{background:rgba(255,209,102,.16)!important;border-color:rgba(255,209,102,.6)!important}
+.lact.cardtools .ti{font-size:20px;line-height:1}.lact.cardtools .tl{display:block}
+.lcardx .lact.cardtools .tool.btn,.lcardx .lact.cardtools .tool.btn.ghost,.lcardx .lact.cardtools .tool.btn.small.ghost{border:1px solid rgba(255,255,255,.1)!important;background:rgba(255,255,255,.06)!important;color:#f2f5fb!important}
+.lcardx .lact.cardtools .tool.btn.faved,.lcardx .lact.cardtools .tool.btn.on{background:rgba(255,209,102,.16)!important;border-color:rgba(255,209,102,.6)!important}
+.lcardx .lact.cardtools .tool.btn.small.ghost.faved,.lcardx .lact.cardtools .tool.btn.small.faved,.lcardx .lact.cardtools .tool.btn.small.ghost[aria-pressed="true"]{background:rgba(255,209,102,.16)!important;border-color:rgba(255,209,102,.6)!important}.lcardx .lact.cardtools .tool.faved .ti{color:#ffd166}
