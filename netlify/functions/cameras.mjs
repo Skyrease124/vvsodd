@@ -7,6 +7,7 @@
 // Each provider has its own cache and its own failure state, so one outage never hides the others. Keys (when added) stay on the server.
 import { BEACH_CAMS } from '../lib/beach-cams.mjs';
 import { requirePaid } from '../lib/paywall.mjs';
+import * as KEYS from '../lib/apikeys.mjs';
 
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 const TTL = 15 * 60e3, FAIL_TTL = 2 * 60e3;
@@ -25,7 +26,7 @@ const https = u => (typeof u === 'string' && /^https:\/\//.test(u.trim())) ? u.t
 // (format documented at https://az511.com/help/endpoint/cameras). Throttled to 10 calls/60 s by the provider: one call returns every camera and is cached.
 function ibi511(base, src, operator, viewer) {
   return async function load() {
-    const key = process.env[this.keyEnv]; if (!key) throw new Error('no key');
+    const key = KEYS.keyOf(this.keyEnv); if (!key) throw new Error('no key');
     const d = await getJson(base + '/api/v2/get/cameras?' + new URLSearchParams({ key, format: 'json' }), 9000);
     if (!Array.isArray(d)) throw new Error('bad 511 answer');
     const out = [];
@@ -87,7 +88,7 @@ export const PROVIDERS = {
 // To switch one on: add the key in Netlify (AZ511_KEY / GA511_KEY), run tools/cameras/verify.mjs with that key, check the record and preview, then set it true here.
 const VERIFIED = { az: false, ga: false, ny: false };
 export const _verified = VERIFIED;   // tests only
-const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && process.env[p.keyEnv] && VERIFIED[id]); };
+const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && KEYS.keyOf(p.keyEnv) && VERIFIED[id]); };
 
 const cache = {};   // per provider: { t, list, err }
 async function provider(id) {
@@ -135,6 +136,7 @@ const limited = ip => { const now = Date.now(), r = (hits.get(ip) || []).filter(
 export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false, error: 'GET only.' });
   const deny = await requirePaid(req); if (deny) return deny;
+  await KEYS.load();
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x'; if (limited(ip)) return json(429, { ok: false, error: 'Too many requests.' });
   const u = new URL(req.url), q = k => u.searchParams.get(k);
   if (q('meta')) { const src = q('src'), id = q('id'); if (!PROVIDERS[src] || !isLive(src) || !id) return json(400, { ok: false });
