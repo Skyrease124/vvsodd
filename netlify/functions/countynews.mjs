@@ -24,7 +24,7 @@ export async function news(state, county, origin) {
     return { ok: true, pending: true, state, county };
   }
   if (c && c.usable) return shape(c, true);
-  if (failed) return { ok: false, reason: 'lookup' };
+  if (failed) return { ok: false, reason: 'lookup', detail: fail.why || '' };
   return { ok: true, pending: true, state, county };            // a lookup is already running
 }
 

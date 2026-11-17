@@ -103,7 +103,7 @@ export async function refresh(state, county, { timeoutMs = 50000, retryMs = 7000
     return { ok: true, count: articles.length };
   } catch (e) {
     console.log('countynews: GDELT lookup failed for ' + county + ', ' + state + ': ' + String(e && e.message || e).slice(0, 160));
-    await auth.kvPut(failKey, { t: Date.now() }); return { ok: false };
+    await auth.kvPut(failKey, { t: Date.now(), why: String(e && e.message || e).slice(0, 100) }); return { ok: false };
   } finally { await auth.kvPut(runKey, { t: 0 }); }
 }
 // Should a lookup start now? Not while the cache is fresh, a lookup is already running, or a recent one failed.
