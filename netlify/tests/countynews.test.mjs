@@ -18,7 +18,8 @@ N._setFetch(async (u) => { u = String(u); calls++; lastQuery = decodeURIComponen
   if (mode === 'down') throw new Error('net');
   if (limitOnce) { limitOnce = false; return { ok: true, status: 200, text: async () => 'Please limit requests to one every 5 seconds or contact' }; }
   if (mode === 'limit') return { ok: false, status: 429, text: async () => 'Please limit requests to one every 5 seconds' };
-  if (mode === 'empty') return { ok: true, status: 200, text: async () => '' };
+  if (mode === 'empty') return { ok: true, status: 200, text: async () => '{}' };
+  if (mode === 'blank') return { ok: true, status: 200, text: async () => '' };
   return { ok: true, status: 200, text: async () => JSON.stringify({ articles: feed }) }; });
 let bg = null, triggers = 0; _setTrigger(async (s, c) => { triggers++; bg = N.refresh(s, c, { timeoutMs: 2000, retryMs: 5 }); });   // stands in for the background function
 const call = async (q, ip = '1.1.1.1') => { const r = await api(new Request('http://x/n?' + q, { headers: { 'x-nf-client-connection-ip': ip } }), {}); return { s: r.status, j: await r.json() }; };
@@ -36,14 +37,14 @@ ok((await call('state=FL&county=Nowhere')).s === 400 && (await call('state=ZZ&co
 let r = await call('state=FL&county=Volusia');
 ok(r.j.ok && r.j.pending === true && triggers === 1, 'first visit: nothing cached, so the background lookup starts and the page is told "pending"');
 await settle(); r = await call('state=FL&county=Volusia');
-ok(r.j.ok && !r.j.pending && r.j.articles.length === 3 && r.j.stale === false && calls === 1, 'next visit: cached stories, GDELT was asked once');
+ok(r.j.ok && !r.j.pending && r.j.articles.length === 3 && r.j.found === 6 && r.j.stale === false && calls === 1, 'next visit: cached stories (found:6 raw hits, 3 kept), GDELT was asked once');
 ok(/"Volusia County" Florida/.test(lastQuery) && /sourcecountry:US/.test(lastQuery) && /rezoning/.test(lastQuery), 'search uses county AND state together, US sources, the five topics');
 r = await call('state=FL&county=Volusia&parcel=402500000040'); ok(r.j.articles.length === 3 && calls === 1 && triggers === 1 && r.j.articles.every(a => a.scope === 'county' && !('parcel' in a)), 'cached for the county; a parcel parameter is ignored and no story is ever parcel-scoped');
 // duplicate lookups
 await Promise.all([call('state=FL&county=Duval', '9.9.9.1'), call('state=FL&county=Duval', '9.9.9.2')]); await settle();
 ok(triggers === 2, 'two visitors at once start only one lookup (a "running" marker guards it)');
 // GDELT answers with its rate-limit text once: the lookup tries again and succeeds
-mode = 'ok'; limitOnce = true; await N.auth.kvPut('news-fl-duval', { t: 0, articles: [] }); await N.auth.kvPut('newsrun-fl-duval', { t: 0 }); await N.auth.kvPut('newsreq-fl-duval', { t: 0 }); _resetStarting(); const before = calls;
+mode = 'ok'; limitOnce = true; await N.auth.kvPut('news-fl-duval', { v: 2, t: 0, articles: [] }); await N.auth.kvPut('newsrun-fl-duval', { t: 0 }); await N.auth.kvPut('newsreq-fl-duval', { t: 0 }); _resetStarting(); const before = calls;
 await call('state=FL&county=Duval', '9.9.9.3'); await settle(); r = await call('state=FL&county=Duval', '9.9.9.4');
 ok(calls === before + 2 && r.j.ok && !r.j.pending && r.j.articles.length === 3, 'a rate-limit reply from GDELT is retried once and then succeeds');
 // failures
@@ -57,7 +58,9 @@ r = await call('state=FL&county=Volusia', '4.4.4.4'); await settle(); ok(r.j.ok 
 r = await call('state=FL&county=Volusia', '4.4.4.5'); ok(r.j.stale === true && r.j.articles.length === 3, 'and they stay available while the failure window lasts');
 // zero results after a successful lookup
 mode = 'empty'; await N.auth.kvPut('newsfail-fl-palm-beach', { t: 0 }); await N.auth.kvPut('newsreq-fl-palm-beach', { t: 0 }); _resetStarting(); await call('state=FL&county=Palm%20Beach', '5.5.5.5'); await settle(); r = await call('state=FL&county=Palm%20Beach', '5.5.5.6');
-ok(r.j.ok === true && !r.j.pending && r.j.articles.length === 0, 'successful lookup with zero stories: ok:true and an empty list ("No recent stories found")');
+ok(r.j.ok === true && !r.j.pending && r.j.articles.length === 0 && r.j.found === 0, 'GDELT answered {} (nothing matched): ok:true, an empty list and found:0 ("No recent stories found")');
+mode = 'blank'; await N.auth.kvPut('news-fl-palm-beach', { v: 2, t: 0, articles: [] }); await N.auth.kvPut('newsfail-fl-palm-beach', { t: 0 }); await N.auth.kvPut('newsreq-fl-palm-beach', { t: 0 }); _resetStarting(); await call('state=FL&county=Palm%20Beach', '6.6.6.6'); await settle(); r = await call('state=FL&county=Palm%20Beach', '6.6.6.7');
+ok(r.j.ok === false && r.j.detail === 'empty reply', 'a blank reply from GDELT is a failure ("temporarily unavailable"), never "no stories"');
 // background function and method checks
 ok((await bgApi(new Request('http://x/b', { method: 'POST', body: JSON.stringify({ state: 'FL', county: 'Nowhere' }) }))).status === 400 && (await bgApi(new Request('http://x/b'))).status === 405, 'background lookup refuses unknown counties and non-POST');
 ok((await api(new Request('http://x/n', { method: 'POST' }), {})).status === 405, 'web request is GET only');
