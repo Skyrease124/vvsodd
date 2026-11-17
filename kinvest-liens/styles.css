@@ -1104,3 +1104,6 @@ dialog{perspective:1100px}
 .wxs span:nth-of-type(1){font-weight:700}
 .aiwx{padding:4px 0 10px;background:none}
 .wxlock{padding:12px 16px}.wxlock .small{opacity:.8;margin-top:4px}
+.govpanel{margin:6px 0 10px;padding:10px 12px;border-radius:12px;border:1px solid #2b3f73;background:#0e1a38;color:#e6ecf7}
+.govt{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}.govt th,.govt td{padding:5px 4px;border-bottom:1px solid #24376a;text-align:right}.govt th:first-child,.govt td:first-child{text-align:left}
+.govt td.hi{color:#f87171;font-weight:700}.govt td.lo{color:#7bf0b0;font-weight:700}.govpanel a{color:#ffd166}

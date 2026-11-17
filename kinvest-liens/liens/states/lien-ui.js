@@ -665,6 +665,43 @@ const WxData = {
     });
   }
 };
+// Crime (FBI Crime Data Explorer, nearest reporting police agency, last full year) and National Park Service units nearby. Paid members.
+const GovData = {
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  attach(bar, after, center, kind, L, m) {
+    const label = kind === 'crime' ? 'Crime' : 'Parks', b = this.mk('button', 'btn small ghost', label); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(document.createTextNode(' ')); bar.appendChild(b);
+    const panel = this.mk('div', 'govpanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', label); after.after(panel);
+    let done = false, pins = null; PaidGate.paid().then(p => { if (!p) b.textContent = label + ' (Pro)'; });
+    b.addEventListener('click', async () => {
+      if (!panel.hidden) { panel.hidden = true; b.setAttribute('aria-expanded', 'false'); if (pins && m.hasLayer(pins)) m.removeLayer(pins); return; }
+      panel.hidden = false; b.setAttribute('aria-expanded', 'true'); if (pins) pins.addTo(m); if (done) return;
+      if (!(await PaidGate.paid())) { panel.textContent = ''; panel.appendChild(PaidGate.lock(label)); return; }
+      panel.textContent = ''; panel.appendChild(this.mk('p', 'small muted', kind === 'crime' ? 'Looking up FBI crime data\u2026' : 'Finding national parks nearby\u2026'));
+      const c = center(); let d = null;
+      try { d = await (await fetch('/.netlify/functions/govdata?' + new URLSearchParams({kind, lat: c.lat.toFixed(4), lng: c.lng.toFixed(4)}))).json(); } catch (e) { d = null; }
+      panel.textContent = ''; const mk = this.mk.bind(this);
+      if (!d || !d.ok) { panel.appendChild(mk('p', 'notice', d && d.reason === 'nokey' ? label + ' data is not set up yet.' : label + ' data temporarily unavailable. Try again later.')); return; }
+      done = true;
+      if (kind === 'crime') {
+        if (d.none) { panel.appendChild(mk('p', 'small', 'No nearby police agency reported crime data to the FBI for last year.')); }
+        else {
+          panel.appendChild(mk('p', 'small', 'Nearest reporting agency: ' + d.agency.name + ' (' + d.agency.miles + ' mi from this spot). ' + d.year + ', whole agency area:'));
+          const t = mk('table', 'govt'), h = t.createTHead().insertRow(); ['', 'Reported', 'Per 100k', 'State', 'US'].forEach(x => h.appendChild(mk('th', '', x)));
+          [['Violent crime', d.violent], ['Property crime', d.property]].forEach(([n, v]) => { const r = t.insertRow(); [n, v.count != null ? v.count.toLocaleString('en-US') : 'n/a', v.rate != null ? v.rate.toLocaleString('en-US') : 'n/a', v.state != null ? v.state.toLocaleString('en-US') : 'n/a', v.us != null ? v.us.toLocaleString('en-US') : 'n/a'].forEach((x, i) => { const td = r.insertCell(); td.textContent = x; if (i === 2 && v.rate != null && v.state) td.className = v.rate > v.state * 1.25 ? 'hi' : v.rate < v.state * .8 ? 'lo' : ''; }); });
+          panel.appendChild(t);
+          panel.appendChild(mk('p', 'small muted', 'Source: FBI Crime Data Explorer. Counts cover the agency\u2019s whole area, not this lot, and the agency may not patrol this exact spot. Not a safety rating.'));
+        }
+      } else {
+        if (!d.parks.length) panel.appendChild(mk('p', 'small', 'No National Park Service sites within 120 miles.'));
+        else { const ol = mk('ol', 'enlist'); pins = L.layerGroup().addTo(m);
+          d.parks.forEach(p => { const li = mk('li', ''); const a = mk('a', '', p.name); a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.append(p.miles + ' mi \u00b7 ', a, p.type ? ' (' + p.type + ')' : ''); ol.appendChild(li);
+            L.circleMarker([p.lat, p.lng], {radius: 7, color: '#14532d', weight: 2, fillColor: '#4ade80', fillOpacity: .95}).addTo(pins).bindTooltip(p.name + ' \u00b7 ' + p.miles + ' mi'); });
+          panel.append(mk('p', 'small', 'National Park Service sites nearest this spot (straight-line distance):'), ol); }
+        panel.appendChild(mk('p', 'small muted', 'Source: National Park Service. State and local parks are not included.'));
+      }
+    });
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -680,7 +717,7 @@ const CameraData = {
   // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
   mapAttach(L, m, box, center, frontage) {
     const dlg = box.closest('dialog') || box.parentNode;
-    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel,.enpanel,.wxpanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel,.enpanel,.wxpanel,.govpanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
     const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
     PaidGate.paid().then(p => { if (p) return; b._label = 'Nearby Cameras (Pro)'; b.textContent = b._label; if (!sv) return;
@@ -690,6 +727,7 @@ const CameraData = {
     if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
     if (typeof EnergyData !== 'undefined') EnergyData.attach(bar, panel, center);
     if (typeof WxData !== 'undefined') WxData.attach(bar, panel, center);
+    if (typeof GovData !== 'undefined') { GovData.attach(bar, panel, center, 'crime', L, m); GovData.attach(bar, panel, center, 'parks', L, m); }
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
