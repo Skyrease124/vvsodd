@@ -13,7 +13,7 @@ export const _setTrigger = f => { trigger = f; };
 const starting = new Set();
 export const _resetStarting = () => starting.clear();
 export async function news(state, county, origin) {
-  const c = await N.readCache(state, county), shape = (x, stale) => ({ ok: true, state, county, articles: x.articles, fetchedAt: new Date(x.t).toISOString(), stale });
+  const c = await N.readCache(state, county), shape = (x, stale) => ({ ok: true, state, county, articles: x.articles, found: x.found, fetchedAt: new Date(x.t).toISOString(), stale });
   if (c && c.fresh) return shape(c, false);
   const { failKey } = N.keys(state, county), fail = await N.auth.kvGet(failKey), failed = fail && Date.now() - fail.t < N.FAIL_TTL;
   const { key: ck, reqKey } = N.keys(state, county);

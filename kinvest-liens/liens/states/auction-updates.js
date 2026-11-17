@@ -78,7 +78,7 @@ const AuctionUpdates = (() => {
         const b = mk('button', 'btn small ghost', 'Try again'); b.type = 'button'; b.addEventListener('click', run); list.appendChild(b); return; }
       list.textContent = '';
       if (d.stale) list.appendChild(mk('p', 'small usnote', 'The news service did not answer, so these are saved results from ' + U.stamp(d.fetchedAt) + '.'));
-      if (!d.articles.length) list.appendChild(mk('p', 'camnone', 'No recent stories found for ' + county + ' County.'));
+      if (!d.articles.length) list.appendChild(mk('p', 'camnone', 'No recent stories found for ' + county + ' County.' + (d.found ? ' (' + d.found + ' search hits were set aside: their headlines did not name the county or one of the topics.)' : '')));
       else { const ul = mk('ul', 'newslist'); d.articles.forEach(a => {
         const li = mk('li'), t = mk('div', 'small'); t.append(mk('span', 'newstag', 'County news')); (a.topics || []).forEach(k => t.append(' ', mk('span', 'newstopic', TOPIC[k] || k))); li.appendChild(t);
         const h = link(a.title, a.url); h.className = 'newshead'; li.appendChild(h);

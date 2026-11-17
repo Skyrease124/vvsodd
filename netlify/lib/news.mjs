@@ -78,7 +78,7 @@ async function gdelt(county, state, ms) {
     const r = await (fetchImpl || fetch)(url, { headers: { 'User-Agent': UA }, signal: c.signal });
     const txt = await r.text();
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    if (!txt.trim()) return [];                                        // an empty body means nothing matched
+    if (!txt.trim()) throw new Error('empty reply');                    // GDELT answers {} when nothing matched; a blank body is a failure, never "no stories"
     let d; try { d = JSON.parse(txt); } catch (e) { throw new Error('not JSON: ' + txt.slice(0, 60)); }   // rate-limit and syntax errors arrive as plain text
     return Array.isArray(d.articles) ? d.articles : [];
   } finally { clearTimeout(t); }
@@ -86,8 +86,9 @@ async function gdelt(county, state, ms) {
 
 export const keys = (state, county) => ({ key: 'news-' + state.toLowerCase() + '-' + slug(county), failKey: 'newsfail-' + state.toLowerCase() + '-' + slug(county), runKey: 'newsrun-' + state.toLowerCase() + '-' + slug(county), reqKey: 'newsreq-' + state.toLowerCase() + '-' + slug(county) });
 export async function readCache(state, county) {
-  const { key } = keys(state, county), c = await auth.kvGet(key);
-  return c ? { t: c.t, articles: c.articles, fresh: Date.now() - c.t < TTL, usable: Date.now() - c.t < STALE_MAX } : null;
+  const { key } = keys(state, county); let c = await auth.kvGet(key);
+  c = c && c.v === 2 ? c : null;
+  return c ? { t: c.t, articles: c.articles, found: c.found, fresh: Date.now() - c.t < TTL, usable: Date.now() - c.t < STALE_MAX } : null;
 }
 // Look the county up (runs in the background function) and store the result. Two tries when GDELT answers with its rate-limit text or does not answer.
 export async function refresh(state, county, { timeoutMs = 50000, retryMs = 7000 } = {}) {
@@ -99,7 +100,7 @@ export async function refresh(state, county, { timeoutMs = 50000, retryMs = 7000
       try { await gap(); raw = await gdelt(county, state, timeoutMs); } catch (e) { err = e; if (attempt === 0) await sleep(retryMs); }
     }
     if (raw === undefined) throw err;
-    const articles = clean(raw, county); await auth.kvPut(key, { t: Date.now(), articles });
+    const articles = clean(raw, county); await auth.kvPut(key, { v: 2, t: Date.now(), articles, found: raw.length });
     return { ok: true, count: articles.length };
   } catch (e) {
     console.log('countynews: GDELT lookup failed for ' + county + ', ' + state + ': ' + String(e && e.message || e).slice(0, 160));
