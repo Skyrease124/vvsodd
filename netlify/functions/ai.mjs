@@ -8,6 +8,7 @@ import * as auth from '../lib/auth.mjs';
 import { complete } from '../lib/llm.mjs';
 import { loadLiens, FILES, cleanFilters, _group, _score, _apply } from './screen.mjs';
 import { _loadData } from './ask.mjs';
+import * as AIWX from '../lib/aiweather.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -244,6 +245,16 @@ async function handle(event) {
   if (rec.length >= PER_USER_HOURLY) return json(429, { error: 'That is a lot of questions in an hour. Please wait a bit.' });
   rec.push(now); hits.set(me.email, rec);
 
+  // Weather questions: answered from WeatherAPI + NWS for places on the site only (no model, so nothing is made up).
+  if (AIWX.isWeather(q)) {
+    const place = AIWX.findPlace(q, data.STATES, uiScope);
+    if (!place) { await usage.record('ai', true); return json(200, { answer: 'I can give the weather for the states and counties on PricePocketAsset. Try "What\u2019s the weather in Fulton County?" or tap a state on the map and ask "What\u2019s the weather here?"', understood: true, searched: 'weather', kind: 'general', scope: [] }); }
+    if (place.ambiguous) { await usage.record('ai', true); return json(200, { answer: 'Which one do you mean: ' + place.ambiguous.join(' or ') + '? Add the state, for example "weather in ' + place.ambiguous[0] + '".', understood: true, searched: 'weather', kind: 'general', scope: [] }); }
+    try { const w = await AIWX.answer(place); await usage.record('ai', true);
+      if (!w.ok) return json(200, { answer: w.reason === 'nokey' ? 'Weather is not switched on yet.' : 'Weather is temporarily unavailable. Please try again soon.', understood: true, searched: 'weather: ' + place.name, kind: 'general', scope: [place.state] });
+      return json(200, { answer: w.text, understood: true, searched: 'weather: ' + place.name, kind: 'weather', scope: [place.state], point: w.point }); }
+    catch (e) { return json(200, { answer: 'Weather is temporarily unavailable for ' + place.name + '. Please try again soon.', understood: true, searched: 'weather', kind: 'general', scope: [place.state] }); }
+  }
   let it = cleanIntent({}, codes, uiScope), parsed = false;
   const byRules = ruleIntent(q, data);
   if (byRules) { it = cleanIntent({ ...byRules, scope: byRules.scope.length ? byRules.scope : undefined }, codes, uiScope); parsed = true; }
