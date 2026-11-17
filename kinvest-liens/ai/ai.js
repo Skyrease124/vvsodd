@@ -175,7 +175,7 @@
   function add(q) {
     $('chat').textContent = ''; clearReact(); // one answer at a time
     const turn = mk('section', 'aiturn');
-    turn.appendChild(mk('p', 'aiq', 'You: ' + q));
+    turn.appendChild(mk('p', 'aiq', q));
     const out = mk('div', 'aiout thinking'); out.append(mk('span', 'aidots'), mk('span', '', ' Scanning the map\u2026')); turn.appendChild(out);
     $('aiidle').hidden = true; $('chat').appendChild(turn);
     $('aistage').scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block: 'start'});
