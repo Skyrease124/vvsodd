@@ -19,7 +19,7 @@ const BUILDABLE = new Set(['VACANT', 'VACANT COMMERCIAL LAND', 'VACANT TOWNHOUSE
 const STRIPS = new Set(['R/W - BUFFER', 'RIVER/LAKES', 'UTILITY', 'RESIDENTIAL COMMON AREA/ELEMENT']);
 const PUBLIC = new Set(['STATE', 'FEDERAL', 'DISTRICTS']);
 
-const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js', 'Pinal': 'liens-pinal.js', 'Coconino': 'liens-coconino.js', 'Leon': 'liens-leon.js', 'Manatee': 'liens-manatee.js', 'Alachua': 'liens-alachua.js', 'Bay': 'liens-bay.js', 'Miami-Dade': 'liens-miamidade.js', 'Saguache': 'liens-saguache.js', 'El Paso': 'liens-elpaso.js', 'Boulder': 'liens-boulder.js', 'Scott': 'liens-scott.js', 'Davidson': 'liens-davidson.js', 'Wayne': 'liens-wayne.js', 'Walton': 'liens-walton.js', 'Santa Rosa': 'liens-santarosa.js', 'Volusia': 'liens-volusia.js', 'Pasco': 'liens-pasco.js', 'Osceola': 'liens-osceola.js', 'Sarasota': 'liens-sarasota.js', 'Duval': 'liens-duval.js', 'Escambia': 'liens-escambia.js', 'Hillsborough': 'liens-hillsborough.js', 'Hernando': 'liens-hernando.js', 'Nassau': 'liens-nassau.js'};
+const FILES = {'Palm Beach': 'liens-palmbeach.js', 'Larimer': 'liens-larimer.js', 'Pinal': 'liens-pinal.js', 'Coconino': 'liens-coconino.js', 'Leon': 'liens-leon.js', 'Manatee': 'liens-manatee.js', 'Alachua': 'liens-alachua.js', 'Bay': 'liens-bay.js', 'Miami-Dade': 'liens-miamidade.js', 'Saguache': 'liens-saguache.js', 'El Paso': 'liens-elpaso.js', 'Boulder': 'liens-boulder.js', 'Scott': 'liens-scott.js', 'Davidson': 'liens-davidson.js', 'Wayne': 'liens-wayne.js', 'Walton': 'liens-walton.js', 'Santa Rosa': 'liens-santarosa.js', 'Volusia': 'liens-volusia.js', 'Pasco': 'liens-pasco.js', 'Osceola': 'liens-osceola.js', 'Sarasota': 'liens-sarasota.js', 'Duval': 'liens-duval.js', 'Escambia': 'liens-escambia.js', 'Hillsborough': 'liens-hillsborough.js', 'Hernando': 'liens-hernando.js', 'Nassau': 'liens-nassau.js', 'Bibb': 'liens-bibb.js', 'Fulton': 'liens-fulton.js', 'City of Rochester': 'liens-rochester.js', 'Monroe': 'liens-monroepa.js'};
 function loadLiens(county) {
   const root = process.env.LAMBDA_TASK_ROOT || process.cwd();
   const cands = [path.join(root, 'kinvest-liens/liens/states'), path.join(HERE, '../../kinvest-liens/liens/states'), path.join(process.cwd(), 'kinvest-liens/liens/states')];
@@ -63,6 +63,7 @@ function groupByParcel(liens) {
   liens.forEach(l => {
     let g = m.get(l.parcel);
     if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: l.market, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate, certList: [], saleDate: l.saleDate || null, mineral: false}; m.set(l.parcel, g); }
+    if (l.amount == null) { g.noPrice = true; g.priceLabel = l.priceLabel; if (!g.area && l.address) g.area = l.address; if (l.status) g.status = l.status; }
     if (l.mineral) g.mineral = true; if (l.env) g.env = l.env;
     if (l.road != null) { g.road = l.road; g.flood = l.flood; g.wet = l.wet; }
     g.face += l.amount || 0; g.payoff += l.payoff || l.amount || 0; g.certs++; if (l.cert && !g.certList.includes(l.cert)) g.certList.push(l.cert); if (l.taxYear) g.years.push(l.taxYear);
@@ -97,7 +98,8 @@ function score(g) {
   if (g.homestead) { s -= 15; red.push('Homestead exemption: owner likely lives there'); }
   if (g.certs >= 4) { s -= 8; red.push('Unpaid for ' + g.certs + ' tax years'); }
   else if (g.certs >= 2) red.push('Unpaid for ' + g.certs + ' tax years');
-  if (g.face < 1000) { s += 5; green.push('Small tax debt ($' + Math.round(g.face) + ')'); }
+  if (g.noPrice) red.push('No price on the list: ask the county');
+  else if (g.face < 1000) { s += 5; green.push('Small tax debt ($' + Math.round(g.face) + ')'); }
   else if (g.face > 20000) { s -= 5; red.push('Large tax debt ($' + Math.round(g.face).toLocaleString('en-US') + ')'); }
   if (g.lastPrice >= 1000 && g.market != null && g.market < g.lastPrice * 0.1) red.push('County value is far below the last recorded sale price: check why');
   if (g.road === 0) { s -= 25; red.push('No mapped road within about 65 ft: may be landlocked'); }
@@ -130,7 +132,7 @@ function cleanFilters(f, allUses) {
 }
 function applyFilters(rows, f) {
   return rows.filter(g => {
-    if (!(g.face > 0)) return false; // credits or zero balances are not liens
+    if (!(g.face > 0) && !g.noPrice) return false; // credits or zero balances are not liens (lists that print no price are kept)
     if (STRIPS.has(g.use) || PUBLIC.has(g.use)) return false;
     if (f.hideJunk && g.junk) return false;
     if (f.hideLandlocked && g.road === 0) return false;
