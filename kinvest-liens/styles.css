@@ -1014,3 +1014,7 @@ a.flink,a.tlink{color:#7bd3ff!important}
 .dmap .live .ring{animation-name:aiPing3d;transform:scale(1,.45)}
 @keyframes aiBob2{0%,100%{transform:translateY(-18px)}50%{transform:translateY(-23px)}}
 @media(prefers-reduced-motion:reduce){.dmap .usmap svg{transform:rotateX(14deg) scale(.95)}.hmshadow path,.hmbase,.dmap .live .lift,.dmap .live .beam3d{animation:none!important}.dmap .live .lift{transform:translateY(-18px)}}
+/* State page map: 3D */
+.sfig3d{perspective:700px}
+.sfig3d svg{transform:rotateX(calc(18deg + var(--rx,0deg))) rotateY(var(--ry,0deg));transform-origin:50% 60%;overflow:visible;max-height:210px}
+@media(prefers-reduced-motion:reduce){.sfig3d svg{transform:rotateX(18deg)}}
