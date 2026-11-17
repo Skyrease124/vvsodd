@@ -20,6 +20,23 @@ const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 const validLL = (lat, lng) => lat != null && lng != null && Math.abs(lat) > 1 && Math.abs(lng) > 1 && lat >= 17 && lat <= 72 && lng >= -180 && lng <= -60;
 const https = u => (typeof u === 'string' && /^https:\/\//.test(u.trim())) ? u.trim() : '';
 
+// 511 platform (AZ511, 511GA): GET {base}/api/v2/get/cameras?key=...&format=json -> [{Id, Roadway, Direction, Latitude, Longitude, Location, Views:[{Id, Url, Status, Description}]}]
+// (format documented at https://az511.com/help/endpoint/cameras). Throttled to 10 calls/60 s by the provider: one call returns every camera and is cached.
+function ibi511(base, src, operator, viewer) {
+  return async function load() {
+    const key = process.env[this.keyEnv]; if (!key) throw new Error('no key');
+    const d = await getJson(base + '/api/v2/get/cameras?' + new URLSearchParams({ key, format: 'json' }), 9000);
+    if (!Array.isArray(d)) throw new Error('bad 511 answer');
+    const out = [];
+    for (const c of d) { const lat = num(c.Latitude), lng = num(c.Longitude); if (!validLL(lat, lng) || c.Id == null) continue;
+      for (const v of (Array.isArray(c.Views) ? c.Views : [])) { const img = https(v.Url); if (!img || (v.Status && v.Status !== 'Enabled')) continue;
+        out.push({ src, id: c.Id + (c.Views.length > 1 ? '-' + v.Id : ''), name: String(v.Description || c.Location || '').trim() || src.toUpperCase() + ' camera ' + c.Id, road: String(c.Roadway || '').trim(),
+          direction: /^(Unknown|None)$/i.test(c.Direction || '') ? '' : String(c.Direction || '').trim(), lat, lng, kind: 'snapshot', type: 'Traffic camera', image: img, video: '', viewer, operator, sourceMeta: '' }); } }
+    if (!out.length) throw new Error('511 returned no cameras');
+    return out;
+  };
+}
+
 // ---- providers ----------------------------------------------------------------------------------------------
 const FL511 = 'https://services.arcgis.com/3wFbqsFPLeKqOlIK/ArcGIS/rest/services/FL511_Traffic_Cameras/FeatureServer/0/query';
 const CALTRANS = d => `https://cwwp2.dot.ca.gov/data/d${d}/cctv/cctvStatusD${String(d).padStart(2, '0')}.json`;
@@ -57,22 +74,26 @@ export const PROVIDERS = {
   fmy: { name: 'Visit Fort Myers official webcams (Lee County VCB)', state: 'FL', bbox: [-82.4, 26.2, -81.6, 26.9], viewer: 'https://www.visitfortmyers.com/webcams',
     async load() { return BEACH_CAMS; } },
   // Key-based feeds: switched on only when the key is set on the server AND a real record has been verified (see VERIFIED below).
-  ga: { name: '511GA (Georgia DOT)', state: 'GA', bbox: [-85.7, 30.3, -80.8, 35.1], viewer: 'https://511ga.org/cctv', keyEnv: 'GA511_KEY', endpoint: 'https://511ga.org/api/v2/get/cameras' },
-  ny: { name: '511NY (New York State DOT)', state: 'NY', bbox: [-79.8, 40.4, -71.8, 45.1], viewer: 'https://511ny.org/cctv', keyEnv: 'NY511_KEY', endpoint: 'https://511ny.org/api/getcameras' },
+  az: { name: 'AZ511 (Arizona DOT)', state: 'AZ', bbox: [-114.9, 31.3, -109.0, 37.0], viewer: 'https://az511.com/cctv', keyEnv: 'AZ511_KEY', keyed: ibi511('https://az511.com', 'az', 'AZ511 / Arizona DOT', 'https://az511.com/cctv') },
+  ga: { name: '511GA (Georgia DOT)', state: 'GA', bbox: [-85.7, 30.3, -80.8, 35.1], viewer: 'https://511ga.org/cctv', keyEnv: 'GA511_KEY', keyed: ibi511('https://511ga.org', 'ga', '511GA / Georgia DOT', 'https://511ga.org/cctv') },
+  ny: { name: '511NY (New York State DOT)', state: 'NY', bbox: [-79.8, 40.4, -71.8, 45.1], viewer: 'https://511ny.org/cctv', keyEnv: 'NY511_KEY' },   // adapter not built: different API, developer access pending
   // Viewer-only states: official viewer link, no integrated feed.
   tn: { name: 'TDOT SmartWay (Tennessee DOT)', state: 'TN', bbox: [-90.4, 34.9, -81.6, 36.7], viewer: 'https://smartway.tn.gov/' },
   mi: { name: 'Mi Drive (Michigan DOT)', state: 'MI', bbox: [-90.5, 41.6, -82.1, 48.4], viewer: 'https://www.michigan.gov/drive' },
   al: { name: 'ALGO Traffic (Alabama DOT)', state: 'AL', bbox: [-88.5, 30.1, -84.8, 35.1], viewer: 'https://algotraffic.com/Cameras' },
 };
 // Key-based providers are integrated only after a real record was checked with the key. Until then they show the official viewer link.
-const VERIFIED = { ga: false, ny: false };
+// To switch one on: add the key in Netlify (AZ511_KEY / GA511_KEY), run tools/cameras/verify.mjs with that key, check the record and preview, then set it true here.
+const VERIFIED = { az: false, ga: false, ny: false };
+export const _verified = VERIFIED;   // tests only
+const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && process.env[p.keyEnv] && VERIFIED[id]); };
 
 const cache = {};   // per provider: { t, list, err }
 async function provider(id) {
   const p = PROVIDERS[id], c = cache[id];
   if (c && Date.now() - c.t < (c.err ? FAIL_TTL : TTL)) { if (c.err) throw c.err; return c.list; }
   if (c && c.p) return c.p;
-  const run = p.load().then(list => { cache[id] = { t: Date.now(), list }; return list; }, err => { cache[id] = { t: Date.now(), err }; throw err; });
+  const run = (p.load || p.keyed).call(p).then(list => { cache[id] = { t: Date.now(), list }; return list; }, err => { cache[id] = { t: Date.now(), err }; throw err; });
   cache[id] = Object.assign({}, c || { t: 0 }, { p: run }); return run;
 }
 export function _reset() { for (const k of Object.keys(cache)) delete cache[k]; }
@@ -86,8 +107,7 @@ export async function nearby(lat, lng, radius = 10, limit = 5) {
   const providers = [], all = [];
   await Promise.all(ids.map(async id => {
     const p = PROVIDERS[id];
-    const integrated = !!p.load || (p.keyEnv && process.env[p.keyEnv] && VERIFIED[id]);
-    if (!integrated) { providers.push({ id, name: p.name, state: p.state, status: 'viewer', viewer: p.viewer }); return; }
+    if (!isLive(id)) { providers.push({ id, name: p.name, state: p.state, status: 'viewer', viewer: p.viewer }); return; }
     try {
       const list = await provider(id); const seen = new Set();
       for (const c of list) { const k = c.src + '|' + c.id; if (seen.has(k)) continue; seen.add(k); const mi = miles(lat, lng, c.lat, c.lng); if (mi <= radius) all.push(Object.assign({}, c, { miles: Math.round(mi * 100) / 100 })); }
@@ -115,7 +135,7 @@ export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false, error: 'GET only.' });
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x'; if (limited(ip)) return json(429, { ok: false, error: 'Too many requests.' });
   const u = new URL(req.url), q = k => u.searchParams.get(k);
-  if (q('meta')) { const src = q('src'), id = q('id'); if (!PROVIDERS[src] || !PROVIDERS[src].load || !id) return json(400, { ok: false });
+  if (q('meta')) { const src = q('src'), id = q('id'); if (!PROVIDERS[src] || !isLive(src) || !id) return json(400, { ok: false });
     try { return json(200, await imageMeta(src, id)); } catch (e) { return json(200, { ok: false }); } }
   const lat = num(q('lat')), lng = num(q('lng'));
   if (!validLL(lat, lng)) return json(400, { ok: false, error: 'Bad location.' });
