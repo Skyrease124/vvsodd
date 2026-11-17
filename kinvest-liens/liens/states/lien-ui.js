@@ -1017,23 +1017,43 @@ const ParcelData = {
   },
   mapBox(r) { const d = document.createElement('div'); d.className = 'lmapprev'; d.appendChild(this.svg(r)); const b = document.createElement('span'); b.className = 'lbadge'; b.textContent = 'Map preview'; d.appendChild(b); return d; },
   // The public-record panel shown with "Show on map".
+  // Florida DOR 2026 tax roll extras: owner mailing address, absentee / out-of-state flag, last sale, land value, building. Paid members.
+  rollBox(rl, S, mk, money) {
+    const w = mk('div', 'rollbox');
+    PaidGate.paid().then(p => {
+      if (!p) { w.appendChild(PaidGate.lock('Owner mailing address, absentee flag and sale history')); return; }
+      const dl = mk('dl', 'pfacts'), row = (k, v, cls) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', cls || '', v)); dl.appendChild(d); };
+      if (rl.abs) row('Owner location', rl.abs === 'out-of-state' ? 'Out-of-state owner' : 'Absentee owner (mail goes to a different address)', 'absflag');
+      row('Owner mailing address', rl.mail); if (rl.fidu) row('Fiduciary / in care of', rl.fidu);
+      if (rl.sale) row('Last sale on the roll', money(rl.sale[0]) + ' \u00b7 ' + (rl.sale[2] ? rl.sale[2] + '/' : '') + rl.sale[1] + (rl.sale[3] === 'Q' || rl.sale[3] === '01' ? ' (qualified)' : ''));
+      row('Land value', money(rl.lv)); if (rl.yb) row('Building', 'Built ' + rl.yb + (rl.liv ? ' \u00b7 ' + rl.liv.toLocaleString('en-US') + ' sq ft living area' : '')); else row('Building', 'None on the roll (vacant land)');
+      w.appendChild(dl);
+      const p2 = mk('p', 'small psrc'); p2.append('Source: '); const a = mk('a', '', (S.roll && S.roll.name) || 'Florida Department of Revenue 2026 tax roll'); a.href = (S.roll && S.roll.url) || 'https://floridarevenue.com/property/dataportal/'; a.target = '_blank'; a.rel = 'noopener noreferrer'; p2.appendChild(a); p2.append(' \u00b7 public record; confirm with the county property appraiser.'); w.appendChild(p2);
+    });
+    return w;
+  },
   panel(l, file, r) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const box = mk('div', 'precord');
-    if (!r || r.st !== 'matched') { box.appendChild(mk('p', 'small muted', r ? (r.note || 'This parcel ID could not be matched to the statewide roll.') + ' Flagged for review.' : 'No property record loaded for this parcel yet.')); return box; }
-    const S = file.sources, money = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US');
+    const S = (file && file.sources) || {}, money = n => n == null ? '' : '$' + Math.round(n).toLocaleString('en-US');
+    if (!r || r.st !== 'matched') {
+      if (r && r.rl) { box.appendChild(mk('h4', '', 'Owner & Public Records')); const dl0 = mk('dl', 'pfacts'), row0 = (k, v) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl0.appendChild(d); };
+        row0('Current owner of record', r.rl.own); row0('Property address', r.rl.site || 'No street address on the roll'); row0('Just (market) value', money(r.rl.jv)); row0('Land use', r.rl.uc ? 'DOR code ' + r.rl.uc : ''); box.appendChild(dl0); box.appendChild(this.rollBox(r.rl, S, mk, money));
+        box.appendChild(mk('p', 'small muted', /^09[37]$/.test(r.rl.uc || '') ? 'Mineral / subsurface rights only (state land-use code ' + r.rl.uc + '): there is no land surface or lot outline to map. Buying this does not give you the land on top.' : r.pt ? 'Condo unit: shown as a pin on the building. Land checks cover whole lots, so they are not available for a single unit.' : 'No lot boundary matched for this parcel yet, so the land checks are not available.')); return box; }
+      box.appendChild(mk('p', 'small muted', r ? (r.note || 'This parcel ID could not be matched to the statewide roll.') + ' Flagged for review.' : 'No property record loaded for this parcel yet.')); return box; }
     const link = (o, extra) => { const p = mk('p', 'small psrc'); p.append('Source: '); const a = mk('a', '', o.name); a.href = o.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.appendChild(a); if (extra) p.append(' · ' + extra); return p; };
     box.appendChild(mk('h4', '', 'Owner & Public Records'));
     const dl = mk('dl', 'pfacts'), row = (k, v) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); };
     row('Official parcel ID', r.pid + (r.pid !== l.parcel ? ' (list shows ' + l.parcel + ')' : ''));
-    row('Current owner of record', r.own || 'Not published by the source');
-    row('Property address', r.addr || 'No street address assigned');
+    row('Current owner of record', r.own || (r.rl && r.rl.own) || 'Not published by the source');
+    row('Property address', r.addr || (r.rl && r.rl.site) || 'No street address assigned');
     row('Lot size', this.sizeText(r) + (r.aEst ? '' : ' (reported by the county)'));
     row('Land use', (r.use || 'Not given') + (r.uc ? ' (DOR code ' + r.uc + ')' : ''));
     row('Just (market) value', money(r.jv)); row('Assessed value', money(r.av)); row('Tax roll year', r.yr);
     row('Short legal description (state roll)', r.legal);
     box.appendChild(dl);
     box.appendChild(link(S.parcels, 'statewide roll updated ' + (S.parcels.date || 'date not given') + '; checked ' + r.ck + '. Owner shown is the current owner on that roll, not necessarily the owner when the certificate was sold.'));
+    if (r.rl) box.appendChild(this.rollBox(r.rl, S, mk, money));
     box.appendChild(ProbateRecords.section(l, r, S));
     box.appendChild(mk('h4', '', 'Land checks (whole lot boundary)'));
     const ul = mk('ul', 'pchecks'), li = (t, cls) => { ul.appendChild(mk('li', cls || '', t)); };
@@ -1213,6 +1233,7 @@ const LienMap = {
         return;
       } catch (e) { /* fall through to the live county lookup */ }
     }
+    if (pd.r && pd.r.pt && typeof PF !== 'undefined') { try { await PF.pointMap(box, msg, Object.assign({}, l, {lat: pd.r.pt[1], lng: pd.r.pt[0]})); msg.textContent = 'Condo unit: the pin marks the building (Florida Department of Revenue condo map). Units have no separate lot outline.'; return; } catch (e) { /* fall through */ } }
     if (!cfg && l.lat != null && typeof PF !== 'undefined') { try { await PF.pointMap(box, msg, l); return; } catch (e) { /* fall through */ } }
     if (!cfg) { msg.textContent = 'No map is available for this county yet.'; return; }
     try {
