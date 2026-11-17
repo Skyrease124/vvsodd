@@ -572,6 +572,38 @@ const StreetView = {
     return {street, map, note};
   }
 };
+// Active fires near the lot: NASA FIRMS satellite heat detections (last 3 days, 25 miles). Not fire perimeters or evacuation orders.
+const FireData = {
+  mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
+  attach(L, m, bar, after, center) {
+    const b = this.mk('button', 'btn small ghost', 'Fires nearby'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.insertBefore(b, bar.children[1] || null); bar.insertBefore(document.createTextNode(' '), b);
+    const panel = this.mk('div', 'firepanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Active fires nearby'); after.after(panel);
+    let pins = null, done = false;
+    PaidGate.paid().then(p => { if (!p) b.textContent = 'Fires nearby (Pro)'; });
+    const close = () => { panel.hidden = true; b.setAttribute('aria-expanded', 'false'); if (pins && m.hasLayer(pins)) m.removeLayer(pins); };
+    b.addEventListener('click', async () => {
+      if (!panel.hidden) return close();
+      panel.hidden = false; b.setAttribute('aria-expanded', 'true'); if (pins) { pins.addTo(m); return; } if (done) return;
+      if (!(await PaidGate.paid())) { panel.textContent = ''; panel.appendChild(PaidGate.lock('Fires nearby')); return; }
+      panel.textContent = ''; panel.appendChild(this.mk('p', 'small muted', 'Checking NASA satellite fire detections near this spot\u2026'));
+      const c = center(); let d = null;
+      try { const r = await fetch('/.netlify/functions/fires?' + new URLSearchParams({lat: c.lat.toFixed(5), lng: c.lng.toFixed(5), radius: 25, days: 3})); d = await r.json(); } catch (e) { d = null; }
+      panel.textContent = '';
+      if (!d || !d.ok) { panel.appendChild(this.mk('p', 'notice', d && d.reason === 'nokey' ? 'Fire data is not set up yet.' : 'Fire data temporarily unavailable. Try again later.')); const p = this.mk('p', 'small'); const a = this.mk('a', '', 'Open the NASA FIRMS fire map'); a.href = 'https://firms.modaps.eosdis.nasa.gov/usfs/map/#d:24hrs;@' + c.lng.toFixed(3) + ',' + c.lat.toFixed(3) + ',10z'; a.target = '_blank'; a.rel = 'noopener noreferrer'; p.appendChild(a); panel.appendChild(p); return; }
+      done = true;
+      if (!d.total) panel.appendChild(this.mk('p', 'firenone', 'No active fires detected within ' + d.radius + ' miles in the last ' + d.days + ' days.'));
+      else {
+        panel.appendChild(this.mk('p', 'small', d.total + ' satellite fire detection' + (d.total === 1 ? '' : 's') + ' within ' + d.radius + ' miles in the last ' + d.days + ' days' + (d.total > d.fires.length ? ' (closest ' + d.fires.length + ' shown)' : '') + '. Closest: ' + d.fires[0].miles + ' mi.'));
+        const ol = this.mk('ol', 'firelist'); pins = L.layerGroup().addTo(m);
+        d.fires.slice(0, 8).forEach(f => { ol.appendChild(this.mk('li', '', f.miles + ' mi \u00b7 ' + f.date + ' ' + String(f.time).padStart(4, '0').replace(/(..)(..)/, '$1:$2') + ' UTC' + (f.conf ? ' \u00b7 confidence ' + ({l: 'low', n: 'nominal', h: 'high'}[f.conf] || f.conf) : ''))); });
+        d.fires.forEach(f => L.circleMarker([f.lat, f.lng], {radius: 6, color: '#7f1d1d', weight: 2, fillColor: '#f97316', fillOpacity: .95}).addTo(pins).bindTooltip('Fire detection ' + f.miles + ' mi \u00b7 ' + f.date));
+        panel.appendChild(ol);
+        try { m.fitBounds(L.latLngBounds([c, ...d.fires.slice(0, 5).map(f => [f.lat, f.lng])]), {padding: [30, 30], maxZoom: 12}); } catch (e) {}
+      }
+      panel.appendChild(this.mk('p', 'small muted', 'Source: ' + d.source + '. These are satellite heat detections (about 375 m), not official fire perimeters or evacuation orders. Check local officials for emergencies.'));
+    });
+  }
+};
 const CameraData = {
   RADIUS: 10, LIMIT: 5, REFRESH: 60000, HLS: 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js',
   mk(t, c, x) { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; },
@@ -587,13 +619,14 @@ const CameraData = {
   // center(): returns the lot centre (L.LatLng). The button and panel go right under the map, so the map is never covered.
   mapAttach(L, m, box, center, frontage) {
     const dlg = box.closest('dialog') || box.parentNode;
-    dlg.querySelectorAll('.cambar,.campanel,.svnote').forEach(x => { if (x._stop) x._stop(); x.remove(); });
+    dlg.querySelectorAll('.cambar,.campanel,.svnote,.firepanel').forEach(x => { if (x._stop) x._stop(); x.remove(); });
     const bar = this.mk('p', 'clbar cambar small'), b = this.mk('button', 'btn small ghost', 'Nearby Cameras'); b.type = 'button'; b.setAttribute('aria-expanded', 'false'); bar.appendChild(b);
     const sv = StreetView.links(center, frontage); if (sv) { bar.append(' ', sv.street, ' ', sv.map); }
     PaidGate.paid().then(p => { if (p) return; b._label = 'Nearby Cameras (Pro)'; b.textContent = b._label; if (!sv) return;
       [sv.street, sv.map].forEach(a => { a.removeAttribute('href'); a.setAttribute('role', 'button'); a.tabIndex = 0; a.style.cursor = 'pointer'; a.textContent += ' (Pro)'; const show = () => { panel.hidden = false; panel.textContent = ''; panel.appendChild(PaidGate.lock('Street View')); }; a.addEventListener('click', show); a.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); } }); }); });
     const panel = this.mk('div', 'campanel'); panel.hidden = true; panel.setAttribute('role', 'region'); panel.setAttribute('aria-label', 'Nearby cameras');
     box.after(bar); bar.after(panel); if (sv) bar.after(sv.note);
+    if (typeof FireData !== 'undefined') FireData.attach(L, m, bar, panel, center);
     let pins = null, timer = null, hls = null, sel = null, loaded = false;
     const stopPreview = () => { if (timer) { clearInterval(timer); timer = null; } if (hls) { try { hls.destroy(); } catch (e) {} hls = null; } panel.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); };
     const ctl = {set timer(v) { timer = v; }, set hls(v) { hls = v; }, stop: stopPreview};
