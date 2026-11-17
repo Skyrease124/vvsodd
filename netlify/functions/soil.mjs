@@ -1,5 +1,5 @@
 // Soil Type: USDA NRCS Soil Data Access (SSURGO) map units intersected with the verified parcel outline.
-//   POST { rings }  ->  { ok:true, units:[{mukey,musym,name,kind,pct,acres,drainage,hydgrp,hydricPct,flood,pond,wtFt,bedrockFt,septic,dwellings}], coveredPct, parcelAcres, queried }
+//   POST { rings }  ->  { ok:true, units:[{mukey,musym,name,kind,pct,acres,drainage,hydgrp,hydricPct,flood,pond,wtFt,bedrockFt,septic,dwellings,farmland,capClass}], coveredPct, parcelAcres, queried }
 //   or  { ok:false, reason:'coverage'|'lookup' }     (the page shows "Soil data unavailable")
 // pct is the share of the LOT outline inside each map unit (planar area ratio, accurate at lot scale). Map units are mixtures of soils mapped at county scale.
 import { pc, SQM_ACRE, json, limited, proj, multiArea, esriToMulti, readOutline, outlineKey } from '../lib/geo.mjs';
@@ -20,6 +20,29 @@ const wkt = mp => 'MULTIPOLYGON(' + mp.map(poly => '(' + poly.map(r => '(' + r.m
 const txt = v => (v == null || v === '' || v === 'null') ? '' : String(v).trim();
 const numOrNull = v => { const n = Number(v); return v == null || v === '' || !isFinite(n) ? null : n; };
 
+// Backup when Soil Data Access is down: USDA NRCS geodata soil map (same SSURGO map units; name, farmland class, capability class only).
+const FS = 'https://apps.geo.fpac.usda.gov/nrcs-geodata/rest/services/soils/cg_soils/FeatureServer/0/query';
+export async function analyzeBackup(rings) {
+  const pts = rings.flat(), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const lng0 = (Math.min(...xs) + Math.max(...xs)) / 2, lat0 = (Math.min(...ys) + Math.max(...ys)) / 2, P = proj(lng0, lat0), mp = esriToMulti(rings), parcelM2 = multiArea(mp, P);
+  if (!mp.length || !(parcelM2 > 0)) throw new Error('bad parcel');
+  const body = new URLSearchParams({ geometry: JSON.stringify({ rings, spatialReference: { wkid: 4326 } }), geometryType: 'esriGeometryPolygon', inSR: '4326', outSR: '4326', spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'mukey,musym,muname,mukind,farmlndcl,nirrcapcl', returnGeometry: 'true', f: 'json' });
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 9000);
+  let d; try { const r = await fetch(FS, { method: 'POST', body, signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); d = await r.json(); } finally { clearTimeout(t); }
+  if (!d || d.error || !Array.isArray(d.features)) throw new Error('bad result');
+  const by = {};
+  for (const f of d.features) { const a = f.attributes || {}, k = String(a.mukey); if (!/^\d{1,9}$/.test(k) || !f.geometry) continue;
+    let m2 = 0; try { m2 = multiArea(pc.intersection(mp, esriToMulti(f.geometry.rings)), P); } catch (e) { continue; }
+    if (!(m2 > 0)) continue; (by[k] = by[k] || { a, m2: 0 }).m2 += m2; }
+  const round = (v, n) => Number(v.toFixed(n));
+  const units = Object.entries(by).map(([k, { a, m2 }]) => { const pct = Math.min(100, m2 / parcelM2 * 100);
+    return { mukey: k, musym: txt(a.musym), name: txt(a.muname), kind: txt(a.mukind), pct: round(pct, 2), acres: round(pct / 100 * parcelM2 / SQM_ACRE, 4), farmland: txt(a.farmlndcl), capClass: txt(a.nirrcapcl) }; })
+    .filter(u => u.name && u.pct > 0).sort((a, b) => b.pct - a.pct);
+  if (!units.length) return { ok: false, reason: 'coverage' };
+  return { ok: true, backup: true, units, coveredPct: round(Math.min(100, units.reduce((s, u) => s + u.pct, 0)), 1), parcelAcres: round(parcelM2 / SQM_ACRE, 4), queried: new Date().toISOString().slice(0, 10) };
+}
+
 export async function analyze(rings) {
   const pts = rings.flat(), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
   const lng0 = (Math.min(...xs) + Math.max(...xs)) / 2, lat0 = (Math.min(...ys) + Math.max(...ys)) / 2, P = proj(lng0, lat0), mp = esriToMulti(rings), parcelM2 = multiArea(mp, P);
@@ -29,12 +52,12 @@ export async function analyze(rings) {
   const rows = areas.map(r => ({ mukey: String(r.mukey), a: Number(r.a), aoi: Number(r.aoi) })).filter(r => r.a > 0 && r.aoi > 0);
   if (!rows.length) return { ok: false, reason: 'coverage' };
   const keys = rows.map(r => r.mukey); if (!keys.every(k => /^\d{1,9}$/.test(k))) throw new Error('bad key');
-  const det = await sda(`SELECT mu.mukey, mu.musym, mu.muname, mu.mukind, ma.drclassdcd, ma.hydgrpdcd, ma.hydclprs, ma.flodfreqdcd, ma.pondfreqprs, ma.wtdepannmin, ma.brockdepmin, ma.engstafdcd, ma.engdwobdcd FROM mapunit mu LEFT JOIN muaggatt ma ON ma.mukey = mu.mukey WHERE mu.mukey IN (${keys.join(',')})`);
+  const det = await sda(`SELECT mu.mukey, mu.musym, mu.muname, mu.mukind, mu.farmlndcl, ma.niccdcd, ma.drclassdcd, ma.hydgrpdcd, ma.hydclprs, ma.flodfreqdcd, ma.pondfreqprs, ma.wtdepannmin, ma.brockdepmin, ma.engstafdcd, ma.engdwobdcd FROM mapunit mu LEFT JOIN muaggatt ma ON ma.mukey = mu.mukey WHERE mu.mukey IN (${keys.join(',')})`);
   const byKey = Object.fromEntries(det.map(r => [String(r.mukey), r]));
   const round = (v, d) => Number(v.toFixed(d)), cm2ft = v => v == null ? null : round(v / 30.48, 1);
   const units = rows.map(r => { const d = byKey[r.mukey]; if (!d) return null; const pct = Math.min(100, r.a / r.aoi * 100);
     return { mukey: r.mukey, musym: txt(d.musym), name: txt(d.muname), kind: txt(d.mukind), pct: round(pct, 2), acres: round(pct / 100 * parcelM2 / SQM_ACRE, 4),
-      drainage: txt(d.drclassdcd), hydgrp: txt(d.hydgrpdcd), hydricPct: numOrNull(d.hydclprs), flood: txt(d.flodfreqdcd), pond: numOrNull(d.pondfreqprs), wtFt: cm2ft(numOrNull(d.wtdepannmin)), bedrockFt: cm2ft(numOrNull(d.brockdepmin)), septic: txt(d.engstafdcd), dwellings: txt(d.engdwobdcd) }; }).filter(u => u && u.name).sort((a, b) => b.pct - a.pct);
+      drainage: txt(d.drclassdcd), hydgrp: txt(d.hydgrpdcd), hydricPct: numOrNull(d.hydclprs), flood: txt(d.flodfreqdcd), pond: numOrNull(d.pondfreqprs), wtFt: cm2ft(numOrNull(d.wtdepannmin)), bedrockFt: cm2ft(numOrNull(d.brockdepmin)), septic: txt(d.engstafdcd), dwellings: txt(d.engdwobdcd), farmland: txt(d.farmlndcl), capClass: txt(d.niccdcd) }; }).filter(u => u && u.name).sort((a, b) => b.pct - a.pct);
   if (!units.length) return { ok: false, reason: 'coverage' };
   return { ok: true, units, coveredPct: round(Math.min(100, units.reduce((s, u) => s + u.pct, 0)), 1), parcelAcres: round(parcelM2 / SQM_ACRE, 4), queried: new Date().toISOString().slice(0, 10) };
 }
@@ -45,6 +68,6 @@ export default async function handler(req, context) {
   if (limited('s' + ip, 40, 60000)) return json(429, { ok: false, error: 'Too many requests.' });
   const inp = await readOutline(req); if (inp.error) return inp.error; const rings = inp.rings, key = outlineKey(rings);
   const hit = cache.get(key); if (hit && Date.now() - hit.t < 24 * 3600e3) return json(200, hit.v);
-  let v; try { v = await analyze(rings); } catch (e) { return json(200, { ok: false, reason: 'lookup' }); }
+  let v; try { v = await analyze(rings); } catch (e) { try { v = await analyzeBackup(rings); } catch (e2) { return json(200, { ok: false, reason: 'lookup' }); } }
   if (cache.size > 300) cache.clear(); cache.set(key, { t: Date.now(), v }); return json(200, v);
 }

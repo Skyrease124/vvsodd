@@ -482,6 +482,8 @@ const SoilData = {
   acres: a => a < 0.01 ? '<0.01' : a.toLocaleString('en-US', {minimumFractionDigits: a < 10 ? 2 : 1, maximumFractionDigits: a < 10 ? 2 : 1}),
   facts(u) {
     const f = [];
+    if (u.farmland) f.push('Farmland class: ' + u.farmland);
+    if (/^[1-8]$/.test(u.capClass)) f.push('Land capability class ' + u.capClass + ' of 8 (non-irrigated; ' + ['', 'few limits for crops', 'moderate limits for crops', 'severe limits for crops', 'very severe limits for crops', 'not suited to crops: little erosion risk, other limits', 'not suited to crops: pasture, woodland', 'not suited to crops: grazing, woodland', 'not suited to crops or grazing'][+u.capClass] + ')');
     if (u.drainage) f.push('Drainage: ' + u.drainage);
     if (u.hydgrp) f.push('Hydrologic group ' + u.hydgrp);
     if (u.hydricPct != null) f.push('Hydric (wetland-type) soil: about ' + u.hydricPct + '% of the map unit');
@@ -509,7 +511,7 @@ const SoilData = {
       if (res.coveredPct < 98) body.appendChild(mk('p', 'small muted', 'The soil survey covers about ' + this.pctText(res.coveredPct) + ' of this lot; the rest is not mapped.'));
     }
     body.appendChild(mk('p', 'small muted', 'Map-based screening summary only. Soil map units are drawn at county scale and can contain other soils, and “Urban land” units are partly paved or built over. It is not a soil test, a percolation test or an engineering report. For septic, wells or a foundation, ask the county health department or a soil scientist.'));
-    const src = mk('p', 'small muted'); src.append('Source: USDA Natural Resources Conservation Service, SSURGO soil survey via ', link('Soil Data Access', this.SDA), ' (', link('open Web Soil Survey', this.WSS), ').' + (res.queried ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
+    const src = mk('p', 'small muted'); src.append('Source: USDA Natural Resources Conservation Service, SSURGO soil survey via ', res.backup ? link('NRCS soil map service', 'https://apps.geo.fpac.usda.gov/nrcs-geodata/rest/services/soils/cg_soils/FeatureServer') : link('Soil Data Access', this.SDA), res.backup ? ' (backup while Soil Data Access is down, so drainage, flooding and septic details are not shown)' : '', ' (', link('open Web Soil Survey', this.WSS), ').' + (res.queried ? ' Checked ' + res.queried + '.' : '')); body.appendChild(src);
   },
   section(l, r) {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
