@@ -1260,3 +1260,17 @@ body.landpg #landdlg[open]{animation:sellPop .35s cubic-bezier(.2,.9,.25,1.05) b
 body.landpg #landdlg::backdrop{background:rgba(8,16,30,.55);backdrop-filter:blur(3px)}
 body.landpg .landinfo{border-radius:18px;box-shadow:0 14px 28px -18px rgba(15,23,42,.5)}
 body.landpg .landgrid .lcard:nth-child(n+4){animation-delay:.18s}
+/* Sign in page */
+body.loginpg .narrow{max-width:460px;margin-left:auto;margin-right:auto}
+body.loginpg h1{text-align:center;margin-bottom:4px}
+body.loginpg .setupform{margin-top:20px}
+body.loginpg #go{width:100%;margin-top:4px;font-size:17px;padding:16px}
+body.loginpg #msg:not(:empty){text-align:center;padding:10px 14px;border-radius:12px;background:rgba(11,110,79,.08);color:var(--brand);font-weight:600;animation:sellUp .3s ease both}
+body.loginpg #eye{transition:transform .2s,opacity .2s;opacity:.7;border-radius:10px}
+body.loginpg #eye:hover{opacity:1;transform:translateY(-50%) scale(1.08)!important}
+body.loginpg #eye:active{transform:translateY(-50%) scale(.92)!important}
+body.loginpg main .narrow>p{text-align:center;margin:12px 0;animation:sellUp .5s .25s cubic-bezier(.2,.8,.2,1) both}
+body.loginpg main .narrow>p a{font-weight:700;color:var(--brand);text-decoration:none;border-bottom:2px solid rgba(11,110,79,.25);transition:border-color .2s}
+body.loginpg main .narrow>p a:hover{border-bottom-color:var(--brand)}
+body.loginpg .narrow>p.small{max-width:380px;margin-left:auto;margin-right:auto}
+body.loginpg #msg:empty{display:none}
