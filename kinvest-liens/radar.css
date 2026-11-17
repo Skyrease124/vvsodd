@@ -93,3 +93,44 @@ body.rpanel-open{padding-bottom:0}
 .radar .rf-chk{flex-direction:row!important}
 @media (min-width:1021px){.dnav-in{gap:14px}.dnav .dlinks{gap:14px}.dnav .dbtn{padding:10px 16px}}
 @media (min-width:1021px) and (max-width:1400px){.dnav .dlinks{gap:12px;font-size:14px}.dnav .dlinks a{padding-left:4px;padding-right:4px}.dlogo small{display:none}}
+
+/* ===== Map-first home: one calm glass style, controls tucked away ===== */
+.radar-on .radar{display:flex;flex-direction:column;gap:12px}
+.radar-on .rtabs{order:1}.radar-on .rfind{order:2}.radar-on .dmap.rmap{order:3}.radar-on .rwhat{order:4}.radar-on .rfilters{order:5}.radar-on .rlegend{order:6}
+.radar-on .rhead h1{letter-spacing:-.03em}
+.radar-on .dlead{font-size:15px;line-height:1.45;color:#9fb0cc;margin-top:6px}
+/* segmented control */
+.radar-on .rtabs{background:rgba(255,255,255,.07);border:0;border-radius:14px;padding:3px;gap:2px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.08)}
+.radar-on .rtabs button{min-height:38px;border-radius:11px;color:#aebbd6;font-weight:600;font-size:14px;letter-spacing:-.01em;transition:background-color .28s ease,color .28s ease,box-shadow .28s ease,transform .15s}
+.radar-on .rtabs button:active{transform:scale(.97)}
+.radar-on .rtabs button[aria-selected=true]{background:rgba(255,255,255,.2);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.4),inset 0 .5px 0 rgba(255,255,255,.35)}
+/* search pill */
+.radar-on .rcombo input{height:46px;padding:0 16px 0 44px;border:0;border-radius:14px;background:rgba(255,255,255,.07) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238ea0c4' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 15px center;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1);transition:box-shadow .25s,background-color .25s}
+.radar-on .rcombo input:focus{outline:0;background-color:rgba(255,255,255,.11);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.45),0 0 0 4px rgba(255,255,255,.07)}
+/* grouped glass cards */
+.radar-on .rwhat,.radar-on .rfilters{background:rgba(255,255,255,.05);border:0;border-radius:20px;padding:14px 16px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1),0 16px 32px -22px rgba(0,0,0,.8);animation:rdIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rdIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.radar-on .rwhat h2{margin:0 0 10px;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.radar-on .rwhen{font-size:13px;font-weight:500;color:#8ea0c4}
+.radar-on .rtoggle{margin-left:auto;background:rgba(255,255,255,.1);color:#fff;text-decoration:none;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;transition:background-color .2s,transform .15s}
+.radar-on .rtoggle:hover{background:rgba(255,255,255,.18)}.radar-on .rtoggle:active{transform:scale(.95)}
+.radar-on .rchips{flex-wrap:nowrap;overflow-x:auto;gap:8px;margin:0;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.radar-on .rchips::-webkit-scrollbar{display:none}
+.radar-on .rchip{flex:none;min-height:34px;padding:6px 14px;border:0;border-radius:999px;background:rgba(255,255,255,.09);color:#e8edf7;font-weight:500;transition:background-color .22s,color .22s,transform .15s,box-shadow .22s}
+.radar-on .rchip b{color:#ffd166}.radar-on .rchip:active{transform:scale(.95)}
+.radar-on .rchip[aria-pressed=true]{background:#fff;color:#0b1633;box-shadow:0 4px 12px rgba(0,0,0,.35)}.radar-on .rchip[aria-pressed=true] b{color:#0b1633}
+.radar-on .rf-types .rchip[aria-pressed=true]{background:rgba(34,197,94,.22);color:#d9f9e4;box-shadow:inset 0 0 0 1px rgba(34,197,94,.55)}
+.radar-on .rf-types .rchip[aria-pressed=false]{opacity:.55}
+.radar-on .rlink{color:#9ec5ff;text-decoration:none;font-weight:600}
+/* Find my deal: one tidy row that opens */
+.radar-on .rfilters{padding:4px 16px}
+.radar-on .rf-toggle{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;color:#fff;font:inherit;font-size:17px;padding:12px 0;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.radar-on .rf-toggle b{font-weight:600;letter-spacing:-.01em}.radar-on .rf-sum{font-size:13px;color:#8ea0c4}.radar-on .rf-car{display:none}
+.radar-on .rf-toggle::after{content:"";margin-left:auto;flex:none;width:9px;height:9px;border-right:2.5px solid #8ea0c4;border-bottom:2.5px solid #8ea0c4;transform:rotate(45deg) translateY(-2px);transition:transform .3s cubic-bezier(.3,.9,.3,1.1)}
+.radar-on .rf-toggle[aria-expanded=true]::after{transform:rotate(-135deg) translate(-2px,0)}
+.radar-on .rfilters .rstatus{margin:-4px 0 10px;font-size:13px;color:#8ea0c4}
+.radar-on .rf-body{padding-bottom:12px;animation:rdIn .35s cubic-bezier(.2,.8,.2,1) both}
+.radar-on .rf-bud input{height:40px;border:0;border-radius:12px;background:rgba(255,255,255,.09);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12)}
+.radar-on .rf-bud input:focus{outline:0;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.radar-on .rf-note{font-size:12px;color:#8ea0c4}
+@media(prefers-reduced-motion:reduce){.radar-on .rwhat,.radar-on .rfilters,.radar-on .rf-body{animation:none}}
+.radar-on .rf-types .rchip{font-size:14px;padding:6px 12px}
