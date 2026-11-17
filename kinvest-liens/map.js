@@ -31,7 +31,10 @@
     const tmp = document.createElementNS(NS, 'g'); tmp.innerHTML = TEX[k]; while (tmp.firstChild) pt.appendChild(tmp.firstChild);
     defs.appendChild(pt);
   });
+  const bl = mk('filter', {id: 'hmblur', x: '-10%', y: '-10%', width: '120%', height: '130%'}); bl.appendChild(mk('feGaussianBlur', {stdDeviation: '7'})); defs.appendChild(bl);
   svg.appendChild(defs);
+  // 3D look: soft ground shadow + extruded edge under every state (the tops are the clickable paths)
+  const sh = mk('g', {class: 'hmshadow', filter: 'url(#hmblur)', 'pointer-events': 'none'}), ex = mk('g', {class: 'hmextr', 'pointer-events': 'none'}); svg.appendChild(sh); svg.appendChild(ex);
   const GRAD = {}; Object.keys(COL).forEach((k, i) => GRAD[k] = TEX[k] ? 'url(#tx' + Object.keys(TEX).indexOf(k) + ')' : 'url(#g' + i + ')');
   const LIVE = (typeof LIEN_SUMMARY !== 'undefined' ? LIEN_SUMMARY : []).reduce((m, x) => { (m[x.state] = m[x.state] || []).push(x); return m; }, {});
   const go = a => { if (window.TaxRadar) window.TaxRadar.openState(a); else location.href = base + '?s=' + a; };
@@ -70,6 +73,8 @@
     p.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
     if (!window.TaxRadarOn) ['mouseenter', 'focus'].forEach(ev => p.addEventListener(ev, () => select(a)));
     svg.appendChild(p); paths[a] = p;
+    const c0 = COL[s.sys] || '#94a3b8', bs = (col, c) => mk('path', {d: MAP_PATHS[a], class: 'hmbase' + c, style: 'fill:' + col + ';--i:' + (idx - 1)});
+    ex.appendChild(bs(shade(c0, .38), '')); ex.appendChild(bs(shade(c0, .5), ' e2')); sh.appendChild(mk('path', {d: MAP_PATHS[a]}));
   });
   // Pulsing dots on states that have real lien lists.
   const liveLayer = mk('g', {class: 'livelayer'});
@@ -79,10 +84,12 @@
     const stEl = svg.querySelector('path.st[data-a="' + a + '"]'); if (stEl) stEl.classList.add('haslive');
     const rr = Math.max(5, Math.min(13, 4 + Math.log10(n + 1) * 2.4));
     const g = mk('g', {class: 'live', transform: 'translate(' + pos[0] + ',' + (pos[1] - 16) + ')', tabindex: 0, role: 'link', 'aria-label': by[a].n + ': real liens listed (' + n.toLocaleString() + ')'});
-    g.appendChild(mk('circle', {class: 'ring', r: rr + 1})); g.appendChild(mk('circle', {class: 'ring r2', r: rr + 1})); g.appendChild(mk('circle', {class: 'core', r: rr}));
+    g.appendChild(mk('line', {class: 'beam3d', x1: 0, y1: 0, x2: 0, y2: -18})); g.appendChild(mk('ellipse', {class: 'foot', rx: rr + 2, ry: (rr + 2) * .45}));
+    g.appendChild(mk('circle', {class: 'ring', r: rr + 1})); g.appendChild(mk('circle', {class: 'ring r2', r: rr + 1}));
+    const lift = mk('g', {class: 'lift'}); lift.appendChild(mk('circle', {class: 'core', r: rr})); g.appendChild(lift);
     const gv = mk('g', {class: 'gavel', transform: 'rotate(-35) scale(' + (rr / 9).toFixed(2) + ')'});
     gv.appendChild(mk('rect', {x: -5, y: -7, width: 10, height: 5, rx: 1.2})); gv.appendChild(mk('rect', {x: -1, y: -3, width: 2, height: 10, rx: 1}));
-    g.appendChild(gv);
+    lift.appendChild(gv);
     g.addEventListener('click', () => go(a)); g.addEventListener('mouseenter', () => select(a));
     g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(a); } });
     liveLayer.appendChild(g);
@@ -90,6 +97,22 @@
   svg.appendChild(liveLayer);
   svg.appendChild(lab);
   host.appendChild(svg);
+  // Tilt follows a finger or mouse; slow sway when idle. Paused when the tab is hidden or reduced motion is on.
+  if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    let tx = 0, ty = 0, cx = 0, cy = 0, last = 0; const t0 = performance.now();
+    const aim = e => { const r = host.getBoundingClientRect(), q = e.touches ? e.touches[0] : e; tx = ((q.clientX - r.left) / r.width - .5) * 2; ty = ((q.clientY - r.top) / r.height - .5) * 2; last = performance.now(); };
+    ['pointermove', 'touchmove'].forEach(n => host.addEventListener(n, aim, {passive: true}));
+    const loop = now => {
+      if (!document.hidden) {
+        if (now - last > 2500) { const k = (now - t0) / 1000; tx = Math.sin(k * .5) * .55; ty = Math.cos(k * .37) * .3; }
+        cx += (tx - cx) * .07; cy += (ty - cy) * .07;
+        host.style.setProperty('--ry', (cx * 8).toFixed(2) + 'deg'); host.style.setProperty('--rx', (-cy * 4).toFixed(2) + 'deg');
+        host.style.setProperty('--lx', (cx * -10).toFixed(1) + 'px'); host.style.setProperty('--ly', (cy * -6 + 10).toFixed(1) + 'px');
+      }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
   // Counters that count up when the map scrolls into view.
   const total = Object.values(LIVE).reduce((t, l) => t + l.reduce((u, x) => u + x.count, 0), 0), counties = Object.values(LIVE).reduce((t, l) => t + l.length, 0);
   const HIST = typeof HISTORY_SUMMARY !== 'undefined' ? HISTORY_SUMMARY : [];

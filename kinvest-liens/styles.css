@@ -1000,3 +1000,17 @@ a.flink,a.tlink{color:#7bd3ff!important}
 @keyframes aiBeamUp{0%,100%{opacity:.35}50%{opacity:.9}}
 @keyframes aiFade{from{opacity:0}}
 @media(prefers-reduced-motion:reduce){.aimap{transform:rotateX(16deg)}.aibody .live .core,.aibody .live .beam3d,.aishadow path,.aibase{animation:none!important}.aibody .live .core{transform:translateY(-22px)}}
+/* Home map: same 3D treatment as the AI map */
+.dmap .usmap{perspective:1100px}
+.dmap .usmap svg{transform:rotateX(calc(14deg + var(--rx,0deg))) rotateY(var(--ry,0deg)) scale(.95);transform-origin:50% 62%;will-change:transform;overflow:visible}
+.hmshadow path{fill:#000;opacity:.55;transform:translate(calc(6px + var(--lx,0px)*.5),calc(20px + var(--ly,0px)*.5));animation:aiFade .9s .3s backwards}
+.hmbase{stroke:rgba(0,0,0,.35);stroke-width:.6;pointer-events:none;transform:translate(0,9px);animation:stRise .7s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i)*16ms);transition:opacity .35s}
+.hmbase.e2{transform:translate(0,4.5px);stroke:none}
+.dmap .usmap .st:hover,.dmap .usmap .st:focus,.dmap .usmap .st.sel{transform:translateY(-6px) scale(1.012);filter:drop-shadow(0 10px 8px rgba(0,0,0,.55)) brightness(1.2)}
+.dmap .usmap:has(.st.dim) .hmbase{opacity:.2}
+.dmap .live .beam3d{stroke:#ffd166;stroke-width:2;stroke-linecap:round;opacity:.7;pointer-events:none;animation:aiBeamUp 2.6s ease-in-out infinite}
+.dmap .live .foot{fill:rgba(255,209,102,.25);stroke:#ffd166;stroke-width:1;pointer-events:none}
+.dmap .live .lift{transform:translateY(-18px);animation:aiBob2 2.6s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(255,209,102,.8))}
+.dmap .live .ring{animation-name:aiPing3d;transform:scale(1,.45)}
+@keyframes aiBob2{0%,100%{transform:translateY(-18px)}50%{transform:translateY(-23px)}}
+@media(prefers-reduced-motion:reduce){.dmap .usmap svg{transform:rotateX(14deg) scale(.95)}.hmshadow path,.hmbase,.dmap .live .lift,.dmap .live .beam3d{animation:none!important}.dmap .live .lift{transform:translateY(-18px)}}
