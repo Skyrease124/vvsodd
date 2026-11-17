@@ -70,6 +70,12 @@ function buildContext(data, a) {
     extra.forEach(c => addSrc(c.label + ' source', c.source));
     const g = BUYKEY[a] && data.COUNTY_BUY[BUYKEY[a]];
     if (g) { lines.push('\nHOW TO BUY THESE (' + g.office + '):'); g.steps.forEach((t, i) => lines.push((i + 1) + '. ' + t)); (g.links || []).forEach(l => addSrc(l[0], l[1])); }
+    const post = a === 'AR' && data.RADAR && data.RADAR.post && data.RADAR.post.AR;
+    if (post) {
+      const old = Object.entries(post.years).filter(([y]) => +y < 2020).reduce((n, [, c]) => n + c, 0);
+      lines.push('\nARKANSAS POST-AUCTION DETAILS (from the Commissioner of State Lands post-auction sales lists, checked ' + post.checked + '): ' + post.parcels.toLocaleString('en-US') + ' of the parcels above have a delinquent tax year, back taxes due and, for ' + post.withLienholders.toLocaleString('en-US') + ' of them, lienholders named by the COSL. Delinquent tax year 2021: ' + (post.years['2021'] || 0).toLocaleString('en-US') + ' parcels; 2020: ' + (post.years['2020'] || 0).toLocaleString('en-US') + '; earlier: ' + old + '. Back taxes due add up to about $' + post.backTaxes.toLocaleString('en-US') + ' across ' + post.counties + ' counties. Back taxes due are not the starting bid. Lienholders are as named by the COSL, not verified by us. The COSL page carries a 2021 notice, so its update schedule is unclear. Per-parcel details are on the Arkansas page cards.');
+      addSrc('Arkansas COSL post-auction sales lists', 'https://cosl.org/Home/PostAuction');
+    }
     if (a === 'NM') lines.push('New Mexico auctions are in person, run by the Taxation and Revenue Department Property Tax Division: register with the auctioneer before the start, pay in full before the auction ends; no title warranty, a 120-day IRS redemption may apply, and the former owner can challenge the sale for 2 years.');
     lines.push('Amounts on state-held land lists are not today\'s price unless stated. Never invent prices or parcels.');
   }
@@ -84,6 +90,12 @@ function buildContext(data, a) {
       live.forEach(l => lines.push('  * parcel ' + l.parcel + ', certificate ' + l.cert + (l.openingBid != null ? ', opening bid $' + l.openingBid : ', opening bid not published') + (l.assessed != null ? ', assessed $' + l.assessed : '')));
       addSrc(ls[0].source, ls[0].sourceUrl);
     });
+    const chg = data.UPCOMING.listings.filter(l => ['rescheduled', 'postponed', 'canceled'].includes(l.status));
+    const evc = (data.UPCOMING.events || []).filter(e => e.status !== 'scheduled');
+    lines.push(chg.length || evc.length ? 'CONFIRMED SALE CHANGES (only changes an official source confirmed; each names its source):' : 'No sale changes (date changes, postponements or cancellations) are confirmed in the official lists we load. Never say a sale is canceled or moved unless it is listed here.');
+    evc.forEach(e => lines.push('- ' + e.county + ' ' + e.type + ' sale of ' + e.saleDate + ': ' + e.status + (e.newDate ? ' to ' + e.newDate : '') + ', confirmed by ' + (e.confirmedBy && e.confirmedBy.name) + ' on ' + (e.confirmedBy && e.confirmedBy.date)));
+    chg.slice(0, 20).forEach(l => lines.push('- parcel ' + l.parcel + ' (' + l.county + '): ' + l.status + (l.newDate ? ', ' + (l.oldDate || l.saleDate) + ' to ' + l.newDate : '') + (l.confirmedBy ? ', confirmed by ' + l.confirmedBy.name + ' on ' + l.confirmedBy.date : '')));
+    const gone = data.UPCOMING.listings.filter(l => l.status === 'gone').length; if (gone) lines.push(gone + ' listings vanished from an official list without explanation: their status is unverified (not canceled).');
     const otc = {}; data.UPCOMING.listings.filter(l => l.type === 'otc' && l.status === 'available').forEach(l => { otc[l.county] = (otc[l.county] || 0) + 1; });
     lines.push('County-held liens (OTC, not auctions) listed on the site: ' + Object.entries(otc).map(([c, n]) => c + ' ' + n).join(', ') + '. No Lands Available for Taxes lists loaded yet. Palm Beach and Miami-Dade tax deed auction lists are not loaded: tell users to check the official clerk pages.');
   }

@@ -127,6 +127,17 @@ for (cn, typ), n in collections.Counter((l['county'], l['type']) for l in up['li
     out['changes'].append({'count': n, 'county': cn, 'detectedAt': ADDED[k], 'id': hashlib.sha1(k.encode()).hexdigest()[:12], 'items': [], 'link': '/liens/states/county/?c=' + cn.replace(' ', '%20'), 'official': True, 'publishedAt': '',
                            'source': {'name': cn + ' County: official ' + ('tax deed sale list' if typ == 'taxdeed' else 'Lands Available for Taxes list'), 'url': next(l['sourceUrl'] for l in up['listings'] if l['county'] == cn and l['type'] == typ)}, 'state': 'FL',
                            'text': 'New list added: ' + format(n, ',') + (' tax deed auction items' if typ == 'taxdeed' else ' Lands Available for Taxes parcels'), 'type': 'new_list'})
+# Arkansas COSL post-auction details (ar-cosl-post.js): summary for the AI + a "details added" change
+_pp = S + 'ar-cosl-post.js'
+if os.path.exists(_pp):
+    _post = json.loads(re.search(r'const AR_COSL_POST = (\{.*\});', open(_pp, encoding='utf8').read(), re.S).group(1)); _prow = _post['rows']
+    _yrs = collections.Counter(str(v[0]) for v in _prow.values())
+    out['post'] = {'AR': {'parcels': len(_prow), 'counties': len({k.split('|')[0] for k in _prow}), 'backTaxes': round(sum(v[1] for v in _prow.values())), 'years': dict(_yrs), 'withLienholders': sum(1 for v in _prow.values() if v[2] and v[2] != '0'), 'checked': _post['checked']}}
+    _k = 'AR|post-auction|details'
+    if _k not in ADDED: ADDED[_k] = first_seen('kinvest-liens/liens/states/ar-cosl-post.js', 'AR_COSL_POST')
+    out['changes'].append({'count': len(_prow), 'county': '%d counties' % out['post']['AR']['counties'], 'detectedAt': ADDED[_k], 'id': hashlib.sha1(_k.encode()).hexdigest()[:12], 'items': [], 'link': '/liens/states/state/?s=AR', 'official': True, 'publishedAt': _post['checked'],
+                           'source': {'name': 'Arkansas Commissioner of State Lands: post-auction sales lists', 'url': 'https://cosl.org/Home/PostAuction'}, 'state': 'AR',
+                           'text': 'Details added: delinquent tax year, back taxes due and lienholders for ' + format(len(_prow), ',') + ' parcels in ' + str(out['post']['AR']['counties']) + ' counties', 'type': 'details'})
 json.dump(ADDED, open(ADDED_P, 'w'), indent=1, sort_keys=True)
 json.dump(out, open(S + 'radar.json', 'w'), separators=(',', ':'), sort_keys=True)
 
