@@ -7,6 +7,7 @@ import * as KEYS from '../lib/apikeys.mjs';
 import { PROVIDERS } from './cameras.mjs';
 import * as FIRMS from '../lib/firms.mjs';
 import * as ENERGY from '../lib/energy.mjs';
+import * as WX from '../lib/wx.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -18,6 +19,11 @@ export default async function handler(req) {
   if (req.method === 'GET') return json(200, { ok: true, keys: list() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.test === 'wx') {
+    try { const r = await WX.forecast(33.749, -84.388, 2, 0); if (!r.ok) return json(200, { ok: false, error: 'No key saved yet.' });
+      return json(200, { ok: true, nlr: true, text: 'Test spot: ' + r.place.name + ', ' + r.place.region + '. Now ' + r.now.f + '\u00b0F, ' + r.now.text + (r.air ? '. Air: ' + r.air.label : '') + '.' }); }
+    catch (e) { return json(200, { ok: false, error: String(e.message || e) }); }
+  }
   if (b.test === 'nlr') {
     try { const r = await ENERGY.lookup(33.749, -84.388); if (!r.ok) return json(200, { ok: false, error: 'No key saved yet.' });
       return json(200, { ok: true, nlr: true, text: 'Test spot: downtown Atlanta. Solar: ' + (r.solar ? r.solar.kwhYear.toLocaleString('en-US') + ' kWh/year for 4 kW' : 'no answer') + '. Utility: ' + (r.rates && r.rates.utility ? r.rates.utility : 'no answer') + '. EV stations within 25 mi: ' + (r.ev ? r.ev.total : 'no answer') + '.' }); }
