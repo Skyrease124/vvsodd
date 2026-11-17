@@ -1102,3 +1102,4 @@ dialog{perspective:1100px}
 @media(prefers-reduced-motion:reduce){.wxin,.wxskel i{animation:none}}
 .wxs{flex-direction:column;justify-content:center;gap:1px;padding:6px 4px;min-width:0;text-align:center}.wxs .rn{margin:0}
 .wxs span:nth-of-type(1){font-weight:700}
+.aiwx{padding:4px 0 10px;background:none}
