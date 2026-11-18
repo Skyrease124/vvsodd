@@ -1,0 +1,10 @@
+import http from 'node:http'; let mode = 'ok', seen = null;
+const mock = http.createServer((q, r) => { let b = ''; q.on('data', d => b += d); q.on('end', () => { seen = { auth: q.headers.authorization, body: JSON.parse(b || '{}') }; r.setHeader('content-type', 'application/json'); if (mode === 'bad') { r.statusCode = 401; return r.end('{"errors":["Access denied"]}'); } r.end(JSON.stringify({ id: '', errors: ['All included players are not subscribed'] })); }); });
+await new Promise(r => mock.listen(0, r)); process.env.ONESIGNAL_API_URL = 'http://127.0.0.1:' + mock.address().port + '/n'; process.env.ONESIGNAL_REST_API_KEY = 'os_v2_app_testtesttest';
+const { ID, call } = await import('./harness.mjs'); let bad = 0; const ok = (c, m) => { console.log(c ? 'PASS' : 'FAIL', m); if (!c) bad++; };
+let r = await call('ownerkeys', { method: 'POST', body: { test: 'onesignal' }, cookie: ID.owner }); let j = JSON.parse(r.text);
+ok(j.ok && /accepted/.test(j.text) && seen.body.include_aliases.external_id[0] === 'pp_key_check_nobody', 'valid key: accepted, sent to a nobody id (no real notification)'); ok(!JSON.stringify(j).includes('testtesttest'), 'response never contains the key');
+mode = 'bad'; r = await call('ownerkeys', { method: 'POST', body: { test: 'onesignal' }, cookie: ID.owner }); j = JSON.parse(r.text); ok(!j.ok && /rejected/.test(j.error), 'bad key: clear message');
+r = await call('ownerkeys', { method: 'POST', body: { test: 'onesignal' }, cookie: ID.pro }); ok(r.status === 403 || r.status === 401, 'non-owner cannot run it (' + r.status + ')');
+r = await call('ownerkeys', { method: 'POST', body: { test: 'onesignal' }, cookie: ID.free }); ok(r.status === 403 || r.status === 401, 'free cannot run it');
+console.log(bad ? 'FAILED' : 'ALL PASS'); process.exit(bad ? 1 : 0);
