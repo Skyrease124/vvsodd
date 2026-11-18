@@ -77,6 +77,26 @@ export async function findPriceId(stripe) {
   return r.data[0] ? r.data[0].id : null;
 }
 
+// The Customer Portal is where members cancel, update their card and see invoices. Creates Stripe's default portal configuration if (and only if) none exists.
+// Cancellation is at the end of the paid period, as the Billing policy says. Returns 'existing' or 'created'.
+export async function ensurePortal(stripe) {
+  const cfgs = await stripe.billingPortal.configurations.list({ is_default: true, limit: 1 });
+  if (cfgs.data.length) return 'existing';
+  const site = siteUrl();
+  await stripe.billingPortal.configurations.create({
+    business_profile: { headline: 'Manage your PricePocketAsset membership', privacy_policy_url: site + '/legal/privacy/', terms_of_service_url: site + '/legal/terms/' },
+    features: {
+      subscription_cancel: { enabled: true, mode: 'at_period_end' },
+      payment_method_update: { enabled: true },
+      invoice_history: { enabled: true },
+      customer_update: { enabled: true, allowed_updates: ['email'] }
+    }
+  });
+  return 'created';
+}
+// True when Stripe refused to open a portal only because no default portal configuration exists yet.
+export const noPortalConfig = e => !!e && e.type === 'StripeInvalidRequestError' && /configuration/i.test(e.message || '') && /(default|provided|not been created|no configuration)/i.test(e.message || '');
+
 // Creates the Product and weekly Price (and a default Customer Portal) if they do not exist yet. Safe to run twice.
 export async function ensurePlan(stripe) {
   let priceId = await findPriceId(stripe);
@@ -85,19 +105,6 @@ export async function ensurePlan(stripe) {
     const price = await stripe.prices.create({ product: product.id, unit_amount: 550, currency: 'usd', recurring: { interval: 'week' }, nickname: 'Weekly member', lookup_key: LOOKUP_KEY });
     priceId = price.id;
   }
-  let portal = 'existing';
-  const cfgs = await stripe.billingPortal.configurations.list({ is_default: true, limit: 1 });
-  if (!cfgs.data.length) {
-    await stripe.billingPortal.configurations.create({
-      business_profile: { headline: 'Manage your PricePocketAsset membership' },
-      features: {
-        subscription_cancel: { enabled: true, mode: 'at_period_end' },
-        payment_method_update: { enabled: true },
-        invoice_history: { enabled: true },
-        customer_update: { enabled: true, allowed_updates: ['email'] }
-      }
-    });
-    portal = 'created';
-  }
+  const portal = await ensurePortal(stripe);
   return { priceId, portal };
 }
