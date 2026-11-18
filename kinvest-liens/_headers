@@ -1,0 +1,7 @@
+# Security headers for every page. (No full Content Security Policy yet: the maps load tiles and scripts from many hosts and a strict one could break them.)
+/*
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(self)
