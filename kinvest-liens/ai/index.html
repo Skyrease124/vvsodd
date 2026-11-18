@@ -3,61 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<meta name="description" content="PricePocketAsset member tools: research tax liens, tax deeds and land with free official data.">
-<title>PricePocket AI | PricePocketPro</title>
+<meta name="robots" content="noindex">
+<title>Parcel Map + AI | PricePocketAsset</title>
 <meta name="theme-color" content="#070d1c">
 <link rel="icon" type="image/png" href="/img/favicon.png">
-<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="PricePocket">
-<link rel="stylesheet" href="../styles.css">
+<link rel="canonical" href="https://pricepocketasset.com/map/">
+<meta http-equiv="refresh" content="0;url=/map/?ai=1">
+<script>
+// PricePocket AI now lives inside the Parcel Map (one feature). Old links keep working and carry any question along.
+(function () { var q = new URLSearchParams(location.search).get('q'); location.replace('/map/?ai=1' + (q ? '&q=' + encodeURIComponent(q.slice(0, 300)) : '')); })();
+</script>
 </head>
-<body class="aibody">
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="logo" href="../"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
-    <nav><a href="../#map">Home</a><a href="../account/">Account</a></nav>
-  </div>
-</header>
-<main class="aipage">
-  <p id="gate" class="notice" hidden></p>
-  <div id="app" hidden>
-    <div id="homewx" class="homewx aiwx" hidden aria-live="polite"></div>
-    <h1 id="aihello" class="aihello"></h1>
-    <div class="aistage" id="aistage">
-      <div class="aiaurora" aria-hidden="true"></div>
-      <div class="aibeam" aria-hidden="true"></div>
-      <div class="aitag"><span class="aidot"></span>PricePocket AI</div>
-      <button class="aireset" id="aiclear" type="button" hidden>Reset map</button>
-      <div id="aimap" class="aimap"></div>
-      <div id="aicard" class="aicard" hidden aria-live="polite"></div>
-    </div>
-    <div id="aisel" class="aihint" role="status">Tap states to focus, or just ask</div>
-    <form id="aiform" class="aibar" novalidate>
-      <input id="aiq" type="text" maxlength="300" autocomplete="off" placeholder="Ask PricePocket AI anything about tax liens…" aria-label="Ask PricePocket AI">
-      <button id="aigo" type="submit" aria-label="Ask">Ask</button>
-    </form>
-    <div id="aichips" class="aichips" aria-label="Examples"></div>
-    <div id="chat" class="aichat" aria-live="polite"></div>
-    <div id="aiidle" class="aiidle">
-      <div id="aistats" class="aistats"></div>
-      <p class="aitrylabel">Try asking</p>
-      <div id="aitry" class="aitry"></div>
-    </div>
-    <p class="aifine" id="aifine">Educational only, not advice. Verify with the county.</p>
-  </div>
-</main>
-<script src="../liens/states/states.js"></script>
-<script src="../map-data.js"></script>
-<script src="../liens/states/lien-summary.js"></script>
-<script src="../liens/states/liens-data.js"></script>
-<script src="../liens/states/lien-ui.js"></script>
-<script src="../liens/states/land-map.js"></script>
-<script src="ai.js"></script>
-<script src="/home-wx.js"></script>
-<script src="/auth-nav.js"></script>
+<body style="background:#070d1c;color:#e8eefb;font:16px system-ui,sans-serif;padding:24px">
+<p>PricePocket AI is now part of the <a href="/map/?ai=1" style="color:#93c5fd">Parcel Map</a>. Taking you there&hellip;</p>
 </body>
 </html>

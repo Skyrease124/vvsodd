@@ -51,7 +51,6 @@
       const ldl = document.createElement('a'); ldl.href = '/downloads/'; ldl.textContent = 'Download Center';
       const lnot = document.createElement('a'); lnot.href = '/account/#pushhost'; lnot.textContent = 'Notifications';
       const l8 = document.createElement('a'); l8.href = '/learn/'; l8.textContent = 'Master Class';
-      const lmap = document.createElement('a'); lmap.href = '/map/'; lmap.textContent = 'Parcel Map';
       const l6 = document.createElement('a'); l6.href = '/land/'; l6.textContent = 'Land for sale';
       const l7 = document.createElement('a'); l7.href = '/land/sell/'; l7.textContent = 'Sell my land';
       const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members';
@@ -61,7 +60,7 @@
       const lp = document.createElement('a'); lp.href = '/plans/'; lp.textContent = 'Free vs Pro';
       const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage';
       const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
-      let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/ai/'; aiLink.textContent = 'PricePocket AI'; }
+      let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/map/?ai=1'; aiLink.textContent = 'Parcel Map + AI'; }
       let ms = null;
       if (user.hasCustomer) {
         ms = document.createElement('button'); ms.type = 'button'; ms.textContent = 'Manage subscription';
@@ -74,7 +73,7 @@
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
       const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
-      p.append(who, grp(aiLink, l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2), grp(lmap, l6, l7)); if (ms) p.append(grp(ms));
+      p.append(who, grp(aiLink || (() => { const x = document.createElement('a'); x.href = '/map/'; x.textContent = 'Parcel Map + AI'; return x; })(), l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2), grp(l6, l7)); if (ms) p.append(grp(ms));
       if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lk, lo, l3, l5)); }
       p.append(grp(lp), grp(out)); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
