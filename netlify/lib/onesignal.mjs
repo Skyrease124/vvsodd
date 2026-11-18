@@ -11,7 +11,14 @@ const SITE = 'https://pricepocketasset.com';
 const h = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 
 export async function restKey() { await KEYS.load(); return KEYS.keyOf('ONESIGNAL_REST_API_KEY'); }
-export async function configured() { return !!(await restKey()); }
+// Every key we hold, Netlify setting first, then the one saved on the owner page. If the first is rejected we try the next,
+// so one stale value can never block delivery. Returns [{key, source}].
+export async function candidates() {
+  const box = (await KEYS.load(true)).ONESIGNAL_REST_API_KEY || '', env = process.env.ONESIGNAL_REST_API_KEY || '', out = [];
+  if (env) out.push({ key: env, source: 'Netlify setting' }); if (box && box !== env) out.push({ key: box, source: 'saved on the owner page' });
+  return out;
+}
+export async function configured() { return (await candidates()).length > 0; }
 
 // Opaque id for OneSignal (never the email). Same member always gets the same id.
 export function externalId(email) {
@@ -35,6 +42,12 @@ export async function post(apiKey, payload, signal) {
   }
   return { r, scheme: used };
 }
+// Tries each held key until one is not rejected. Returns {r, scheme, source} (r null if no key at all).
+export async function postAny(payload, signal) {
+  let last = { r: null, scheme: '', source: '' };
+  for (const c of await candidates()) { const x = await post(c.key, payload, signal); last = { ...x, source: c.source }; if (x.r.status !== 401 && x.r.status !== 403) return last; }
+  return last;
+}
 // send({email, title, body, path, key, topic}) -> {ok, skipped?, error?, id?}
 // key: a stable unique key for this notification (event id etc.). The same key is never sent to the same member twice.
 export async function send({ email, title, body, path = '/account/', key, topic, dry }) {
@@ -42,13 +55,13 @@ export async function send({ email, title, body, path = '/account/', key, topic,
   if (!safeText(title) || !safeText(body)) return { ok: false, error: 'blocked: wording makes an availability claim' };
   const log = (await kvGet(logKey(email))) || { keys: [] };
   if (log.keys.includes(key)) return { ok: true, skipped: 'duplicate' };
-  const apiKey = await restKey(); if (!apiKey) return { ok: false, error: 'OneSignal key is not set' };
+  if (!(await configured())) return { ok: false, error: 'OneSignal key is not set' };
   if (dry) return { ok: true, dry: true };
   const payload = { app_id: APP_ID, target_channel: 'push', include_aliases: { external_id: [externalId(email)] }, headings: { en: String(title).slice(0, 80) }, contents: { en: String(body).slice(0, 240) }, url: SITE + path, idempotency_key: uuidOf(email + '|' + key), ttl: 86400 };
   if (topic) payload.web_push_topic = String(topic).slice(0, 60);
   const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
   try {
-    const { r } = await post(apiKey, payload, c.signal);
+    const { r } = await postAny(payload, c.signal); if (!r) return { ok: false, error: 'OneSignal key is not set' };
     let d = {}; try { d = await r.json(); } catch (e) { /* not json */ }
     const errs = Array.isArray(d.errors) ? d.errors.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join('; ') : (d.errors ? JSON.stringify(d.errors) : '');
     if (!r.ok) return { ok: false, error: ('HTTP ' + r.status + (errs ? ': ' + errs : '')).slice(0, 200) };
