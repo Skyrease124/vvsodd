@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const about = document.querySelector('#about .narrow'); if (!about || document.getElementById('a2hsCard')) return;
-  const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); if (standalone) return;
+  const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); // installed: the card still shows, as a confirmation, with the steps tucked away for sharing
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const ico = {
     share: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>',
@@ -21,7 +21,7 @@
   let cur = ios ? 'ios' : android ? 'android' : 'pc';
   const card = mk('section', 'a2c'); card.id = 'a2hsCard'; card.setAttribute('aria-labelledby', 'a2hsh');
   const head = mk('div', 'a2c-head'), icon = mk('div', 'a2c-icon'); const img = mk('img'); img.src = '/img/apple-touch-icon.png'; img.alt = ''; img.width = 56; img.height = 56; icon.appendChild(img);
-  const tx = mk('div'); const h = mk('h3', '', 'Put PricePocket on your Home Screen'); h.id = 'a2hsh'; tx.append(h, mk('p', '', 'One tap to open, full screen, and push notifications for your watchlist, sales and deadlines.')); head.append(icon, tx);
+  const tx = mk('div'); const h = mk('h3', '', standalone ? 'PricePocket is on your Home Screen' : 'Put PricePocket on your Home Screen'); h.id = 'a2hsh'; tx.append(h, mk('p', '', standalone ? 'Opens in one tap, full screen.' : 'One tap to open, full screen, and push notifications for your watchlist, sales and deadlines.')); head.append(icon, tx);
   const seg = mk('div', 'a2c-seg'); seg.setAttribute('role', 'tablist'); seg.setAttribute('aria-label', 'Device');
   const body = mk('div', 'a2c-body'); body.setAttribute('aria-live', 'polite');
   function draw() {
@@ -31,6 +31,9 @@
     body.appendChild(mk('p', 'a2c-tip', T.tip));
   }
   Object.keys(TABS).forEach(k => { const b = mk('button', '', TABS[k].name); b.type = 'button'; b.dataset.k = k; b.setAttribute('role', 'tab'); b.addEventListener('click', () => { cur = k; draw(); }); seg.appendChild(b); });
-  card.append(head, seg, body); draw();
+  if (standalone) {
+    card.classList.add('done'); const ok = mk('div', 'a2c-ok'); ok.innerHTML = ico.check; const ot = mk('div'); ot.append(mk('b', '', 'You\u2019re all set'), mk('span', '', 'PricePocket is on this Home Screen. Notifications, if you turned them on, work from here.')); ok.appendChild(ot);
+    const det = mk('details', 'a2c-more'); det.appendChild(mk('summary', '', 'Show the steps (to set it up on another device)')); det.append(seg, body); card.append(head, ok, det); draw();
+  } else { card.append(head, seg, body); draw(); }
   const anchor = about.querySelector('.abtbtns'); about.insertBefore(card, anchor || null);
 })();
