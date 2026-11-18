@@ -1456,3 +1456,17 @@ body.loginpg #msg:empty{display:none}
 .precord .livestamp::before{display:inline-block;vertical-align:middle;margin:0 8px 0 0;position:relative;top:-1px}
 .precord a{color:#9ec5ff!important;font-weight:inherit}
 .precord .hoab,.precord .lchip{vertical-align:middle}
+/* Home: About section */
+.abt .narrow{max-width:760px}
+.abt h2{letter-spacing:-.02em}
+.abtlede{font-size:18px;line-height:1.6;color:#2b3550;margin:0 0 22px}
+.abtplans{display:grid;gap:14px;margin:0 0 22px}@media(min-width:640px){.abtplans{grid-template-columns:1fr 1fr}}
+.abtplan{background:#fff;border-radius:22px;padding:20px;box-shadow:0 0 0 1px rgba(15,23,42,.07),0 18px 34px -24px rgba(15,23,42,.45);transition:transform .25s cubic-bezier(.3,.7,.4,1),box-shadow .25s}
+.abtplan:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(11,110,79,.25),0 24px 40px -24px rgba(15,23,42,.5)}
+.abtplan h3{margin:10px 0 6px;font-size:20px;letter-spacing:-.015em}.abtplan p{margin:0;color:#44506a;line-height:1.55}
+.abttag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:999px;background:#eef1f5;color:#44506a}
+.abtplan.pro{background:linear-gradient(165deg,#0f2a22,#0b1c18);color:#e8f3ee;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 22px 40px -22px rgba(6,40,30,.7)}
+.abtplan.pro h3{color:#fff}.abtplan.pro p{color:#c4d8cf}.abtplan.pro .abttag{background:rgba(255,209,102,.18);color:#ffd166}
+.abtbtns{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px}.abtbtns .dbtn{flex:1 1 220px;text-align:center}
+.abt .abtbtns .dghost{background:#fff;color:#0b6e4f!important;border:2px solid #0b6e4f}
+.abtfine{font-size:13px;line-height:1.5;color:#6b7690;margin:0;padding-top:14px;border-top:1px solid rgba(15,23,42,.1)}
