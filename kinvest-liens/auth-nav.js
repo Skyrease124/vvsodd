@@ -21,10 +21,15 @@
 
   const header = document.querySelector('header');
   const cta = document.querySelector('header .dbtn[href="#contact"], header a.btn.small[href$="#contact"]');
+  // Push: load push.js only when this device already turned notifications on (or on the account page). Never asks for permission.
+  function ppPushLoad() { return new Promise(res => { if (window.PPPush) return res(window.PPPush); const s = document.createElement('script'); s.src = '/push.js'; s.onload = () => res(window.PPPush); s.onerror = () => res(null); document.head.appendChild(s); }); }
+  function ppDevice() { try { return localStorage.getItem('ppPushDevice') === '1'; } catch (e) { return false; } }
+  function ppPush(user) { if (ppDevice()) ppPushLoad().then(P => { if (P) P.sync(user || null); }); }
   const navLinks = [...document.querySelectorAll('a[href$="account/"]')].filter(a => /^\s*(Account|Sign in)\s*$/i.test(a.textContent));
 
   fetch(API).then(r => r.ok ? r.json() : null).then(d => {
     const user = d && d.user;
+    ppPush(user); // keep this device tied to the signed-in account (only on devices that already turned notifications on)
     // Paid members (and the owner) see "PricePocketPro" instead of "PricePocketAsset".
     const today = new Date().toISOString().slice(0, 10);
     if (user && (user.owner || user.paid || (user.paidThrough && user.paidThrough >= today))) {
@@ -64,7 +69,7 @@
         });
       }
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
-      out.addEventListener('click', async () => { try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
+      out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
       const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
       p.append(who, grp(aiLink, l8, l9, l1, l2), grp(l6, l7)); if (ms) p.append(grp(ms));
       if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lk, lo, l3, l5)); }

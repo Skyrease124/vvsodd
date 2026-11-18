@@ -37,6 +37,7 @@
     window.__ppUser = user;
     if (user) { const pro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) planButtons(user);
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
+    { const pp = () => { if (window.PPPush) { window.PPPush.mount($('pushhost'), user); window.PPPush.sync(user); } }; if (window.PPPush) pp(); else window.addEventListener('load', pp, {once: true}); }
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
     $('codebox').hidden = !!(paid || user.owner);
     $('plantext').textContent = user.owner ? 'Owner: every Pro feature is on.' : user.family ? 'Family access: every Pro feature is on and free for you.' : paid ? 'Pro member through ' + user.paidThrough + '. Every Pro feature is on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'Lists, maps and official sources are free. Pro ($5.50 a week) adds the AI, live checks on every lot (Street View, weather, fires, crime, energy, cameras), owner mailing details, downloads and the full course. ';
@@ -74,6 +75,6 @@
     $('go').disabled = false;
     if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
-  $('logout').addEventListener('click', async () => { await post({action: 'logout'}); show(null); });
+  $('logout').addEventListener('click', async () => { if (window.PPPush) await window.PPPush.logout(); await post({action: 'logout'}); show(null); });
   fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
 })();
