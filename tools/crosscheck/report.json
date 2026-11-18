@@ -1,0 +1,238 @@
+{
+ "CO-Larimer": {
+  "county": "Larimer",
+  "state": "CO",
+  "records": 1831,
+  "found": 1790,
+  "notFound": 41,
+  "checks": {
+   "owner": [
+    1768,
+    20,
+    2
+   ],
+   "address": [
+    976,
+    1,
+    813
+   ],
+   "acres": [
+    0,
+    0,
+    0
+   ]
+  },
+  "examples": {
+   "owner": [
+    {
+     "parcel": "9712316026",
+     "list": "A And W Properties LLC",
+     "county_gis": "ACKERMAN STEPHEN G"
+    },
+    {
+     "parcel": "3028418004",
+     "list": "Applehans Tracy",
+     "county_gis": "COLORADO HOUSING AND FINANCE AUTHORITY"
+    },
+    {
+     "parcel": "3028418022",
+     "list": "Applehans Tracy",
+     "county_gis": "COLORADO HOUSING AND FINANCE AUTHORITY"
+    },
+    {
+     "parcel": "8805005704",
+     "list": "Brewer Adam",
+     "county_gis": "NOCO HOMES LLC"
+    },
+    {
+     "parcel": "2627407050",
+     "list": "Burger Robert F",
+     "county_gis": "LONG FAMILY TRUST"
+    },
+    {
+     "parcel": "3028421003",
+     "list": "Carroll Richard F/Kira D",
+     "county_gis": "COLBERT JANNA L"
+    }
+   ],
+   "address": [
+    {
+     "parcel": "3535112010",
+     "list": "1041 Riverside Dr, Estes Park, CO 80517",
+     "county_gis": "1173 TURKEY TRAIL LN"
+    }
+   ],
+   "acres": []
+  },
+  "fields": {
+   "owner": true,
+   "address": true,
+   "acres": false
+  }
+ },
+ "CO-Boulder": {
+  "county": "Boulder",
+  "state": "CO",
+  "records": 661,
+  "found": 654,
+  "notFound": 7,
+  "checks": {
+   "owner": [
+    616,
+    38,
+    0
+   ],
+   "address": [
+    560,
+    17,
+    77
+   ],
+   "acres": [
+    0,
+    0,
+    0
+   ]
+  },
+  "examples": {
+   "owner": [
+    {
+     "parcel": "R0115375",
+     "list": "Smith Nathan",
+     "county_gis": "PAN PACIFIC VENTURES LLC"
+    },
+    {
+     "parcel": "R0617296",
+     "list": "Stratus Canyon Creek Llc",
+     "county_gis": "LAFFERTY CANYON METRO DISTRICT"
+    },
+    {
+     "parcel": "R0617295",
+     "list": "Stratus Canyon Creek Llc",
+     "county_gis": "LAFFERTY CANYON METRO DISTRICT"
+    },
+    {
+     "parcel": "R0617292",
+     "list": "Stratus Canyon Creek Llc",
+     "county_gis": "LAFFERTY CANYON METRO DISTRICT"
+    },
+    {
+     "parcel": "R0617291",
+     "list": "Stratus Canyon Creek Llc",
+     "county_gis": "LAFFERTY CANYON METRO DISTRICT"
+    },
+    {
+     "parcel": "R0617294",
+     "list": "Stratus Canyon Creek Llc",
+     "county_gis": "LAFFERTY CANYON METRO DISTRICT"
+    }
+   ],
+   "address": [
+    {
+     "parcel": "R0049115",
+     "list": "20 Mumford Pl Longmont 80501",
+     "county_gis": "22 MUMFORD PL"
+    },
+    {
+     "parcel": "R0030751",
+     "list": "7223 Marshall Dr Unincorporated 80027",
+     "county_gis": "7227 MARSHALL DR"
+    },
+    {
+     "parcel": "R0075680",
+     "list": "428 4Th Ave Lyons 80540",
+     "county_gis": "430 4TH AVE"
+    },
+    {
+     "parcel": "R0617921",
+     "list": "826 Coal Creek Dr Louisville 80027",
+     "county_gis": "867 COAL CREEK DR"
+    },
+    {
+     "parcel": "R0606829",
+     "list": "1600 Dry Creek Dr Longmont 80503",
+     "county_gis": "1630 DRY CREEK DR"
+    },
+    {
+     "parcel": "R0032753",
+     "list": "190 Logan Mill Rd Unincorporated 80302-",
+     "county_gis": "62 WILD TURKEY TRL"
+    }
+   ],
+   "acres": []
+  },
+  "fields": {
+   "owner": true,
+   "address": true,
+   "acres": false
+  }
+ },
+ "AZ-Pinal": {
+  "county": "Pinal",
+  "state": "AZ",
+  "records": 88,
+  "found": 83,
+  "notFound": 5,
+  "checks": {
+   "owner": [
+    83,
+    0,
+    0
+   ],
+   "address": [
+    0,
+    0,
+    83
+   ],
+   "acres": [
+    70,
+    0,
+    13
+   ]
+  },
+  "examples": {
+   "owner": [],
+   "address": [],
+   "acres": []
+  },
+  "fields": {
+   "owner": true,
+   "address": true,
+   "acres": true
+  }
+ },
+ "AZ-Coconino": {
+  "county": "Coconino",
+  "state": "AZ",
+  "records": 1421,
+  "found": 1406,
+  "notFound": 15,
+  "checks": {
+   "owner": [
+    0,
+    0,
+    0
+   ],
+   "address": [
+    0,
+    0,
+    1406
+   ],
+   "acres": [
+    0,
+    0,
+    0
+   ]
+  },
+  "examples": {
+   "owner": [],
+   "address": [],
+   "acres": []
+  },
+  "fields": {
+   "owner": false,
+   "address": true,
+   "acres": false
+  }
+ },
+ "_built": "2026-11-18"
+}
