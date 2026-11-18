@@ -147,5 +147,12 @@
     const a = mk('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], {type: 'text/csv'})); a.download = 'my-portfolio.csv'; a.click();
   });
   (function () { const g = $('pfgreet'), h = new Date().getHours(); g.textContent = (h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening') + ' \u00b7 here is where your liens stand'; })();
-  fetch(API).then(r => r.json()).then(d => { user = d.user; if (!user) { $('gate').hidden = false; return; } items = user.portfolio || []; $('app').hidden = false; render(); }).catch(() => { $('gate').hidden = false; });
+  // From the parcel map: /portfolio/?add=1&state=&county=&parcel=&paid= opens the form with these filled in (nothing is saved until you press save).
+  function prefill() {
+    const q = new URLSearchParams(location.search); if (q.get('add') !== '1') return; openForm(null);
+    const stv = (q.get('state') || '').toUpperCase(); if (/^[A-Z]{2}$/.test(stv)) { $('state').value = stv; hint(); }
+    if (q.get('county')) $('county').value = q.get('county').slice(0, 80); if (q.get('parcel')) $('parcel').value = q.get('parcel').slice(0, 80);
+    if (/^\d+(\.\d+)?$/.test(q.get('paid') || '')) $('paid').value = q.get('paid');
+  }
+  fetch(API).then(r => r.json()).then(d => { user = d.user; if (!user) { $('gate').hidden = false; return; } items = user.portfolio || []; $('app').hidden = false; render(); prefill(); }).catch(() => { $('gate').hidden = false; });
 })();
