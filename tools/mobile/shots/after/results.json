@@ -11,7 +11,7 @@
    "b",
    "button.rchip"
   ],
-  "smallTaps": 26,
+  "smallTaps": 25,
   "tapEx": [
    "★ New list 34",
    "$ Amount changed 1",
@@ -517,7 +517,7 @@
   "over": [
    "button.rchip"
   ],
-  "smallTaps": 19,
+  "smallTaps": 18,
   "tapEx": [
    "★ New list 34",
    "$ Amount changed 1",
@@ -782,7 +782,7 @@
   "ok": true,
   "scrollW": 1440,
   "over": [],
-  "smallTaps": 24,
+  "smallTaps": 30,
   "tapEx": [
    "◎ Use exact location",
    "Show all 38",

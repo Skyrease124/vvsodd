@@ -1497,3 +1497,6 @@ body.loginpg #msg:empty{display:none}
  .pp-top{width:44px;height:44px}
  header .logo,.dnav a.dlogo,a.logo{display:inline-flex;align-items:center;min-height:44px}
 }
+.ppskip{position:fixed;left:12px;top:-60px;z-index:100000;background:#22c55e;color:#06210f;font-weight:700;padding:10px 16px;border-radius:10px;text-decoration:none;transition:top .15s}
+.ppskip:focus{top:12px}
+@media(prefers-reduced-motion:reduce){.ppskip{transition:none}}
