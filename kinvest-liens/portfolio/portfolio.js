@@ -154,5 +154,13 @@
     if (q.get('county')) $('county').value = q.get('county').slice(0, 80); if (q.get('parcel')) $('parcel').value = q.get('parcel').slice(0, 80);
     if (/^\d+(\.\d+)?$/.test(q.get('paid') || '')) $('paid').value = q.get('paid');
   }
-  fetch(API).then(r => r.json()).then(d => { user = d.user; if (!user) { $('gate').hidden = false; return; } items = user.portfolio || []; $('app').hidden = false; render(); prefill(); }).catch(() => { $('gate').hidden = false; });
+  // Pro: saved property lists live next to the portfolio (organizing never uses the weekly download allowance)
+  function collections() {
+    fetch('/.netlify/functions/export', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d || !d.paid) return; const n = (d.lists || []).reduce((a, l) => a + l.items.length, 0), box = $('pfcol'); box.textContent = '';
+      box.append(document.createTextNode('Property lists: ' + (d.lists || []).length + ' lists, ' + n + ' saved properties. ' + (d.unlimited ? '' : 'Downloads this week: ' + d.used + ' of ' + d.limit + '. ')));
+      const a = document.createElement('a'); a.href = '/downloads/'; a.textContent = 'Open your Download Center'; box.appendChild(a); box.hidden = false;
+    }).catch(() => {});
+  }
+  fetch(API).then(r => r.json()).then(d => { user = d.user; if (!user) { $('gate').hidden = false; return; } items = user.portfolio || []; $('app').hidden = false; render(); prefill(); collections(); }).catch(() => { $('gate').hidden = false; });
 })();

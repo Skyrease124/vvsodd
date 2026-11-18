@@ -48,6 +48,7 @@
       const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
       const l9 = document.createElement('a'); l9.href = '/account/watchlist/'; l9.textContent = 'My watchlist';
       const l10 = document.createElement('a'); l10.href = '/admin/imports/'; l10.textContent = 'Imports & review';
+      const ldl = document.createElement('a'); ldl.href = '/downloads/'; ldl.textContent = 'Download Center';
       const lnot = document.createElement('a'); lnot.href = '/account/#pushhost'; lnot.textContent = 'Notifications';
       const l8 = document.createElement('a'); l8.href = '/learn/'; l8.textContent = 'Master Class';
       const l6 = document.createElement('a'); l6.href = '/land/'; l6.textContent = 'Land for sale';
@@ -72,7 +73,7 @@
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
       const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
-      p.append(who, grp(aiLink, l8, l9, l1, isPro ? lnot : null, l2), grp(l6, l7)); if (ms) p.append(grp(ms));
+      p.append(who, grp(aiLink, l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2), grp(l6, l7)); if (ms) p.append(grp(ms));
       if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lk, lo, l3, l5)); }
       p.append(grp(lp), grp(out)); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });

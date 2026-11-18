@@ -7,6 +7,7 @@
   $('back').href = '/liens/states/state/?s=' + encodeURIComponent(key.state); 
   await new Promise(r => { const s = document.createElement('script'); s.src = '/liens/states/' + FILES[key.county]; s.onload = r; s.onerror = r; document.head.appendChild(s); });
   let l = LIENS.find(x => PF.key(x) === k);
+  if (l) { const sp = document.createElement('span'); sp.setAttribute('data-ppasel', JSON.stringify({ i: k, t: key.parcel + ' \u00b7 ' + key.county + ', ' + key.state })); $('psub').after(sp); } // Pro: Select for download (dl/select.js)
   const tl = await PF.tl({state: key.state, county: key.county});
   let gone = false;
   if (!l && tl && tl.gone && tl.gone[k]) { l = Object.assign({state: key.state, county: key.county, status: 'No longer listed. Outcome unconfirmed.', source: tl.lastVerified && tl.lastVerified.sourceUrl || ''}, tl.gone[k]); gone = true; }

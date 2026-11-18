@@ -62,7 +62,7 @@ function emit(id, state, county, recs0, meta) {
   const DICT = ['sl', 't', 'fr', 'src', 'su', 'al', 'st', 'os', 'ot', 'rt', 'sd', 'ck', 'us', 'zn', 'hoa', 'why', 'k', 'w'], dict = Object.fromEntries(DICT.map(k => [k, []])), enc = recs.map(r => { const o = { ...r }; for (const k of DICT) if (o[k] != null) { const v = JSON.stringify(o[k]); let i = dict[k].indexOf(v); if (i < 0) { i = dict[k].length; dict[k].push(v); } o[k] = i; } return o; });
   for (const k of DICT) dict[k] = dict[k].map(x => JSON.parse(x));
   const file = id + '.json'; fs.writeFileSync(path.join(OUT, 'data', file), JSON.stringify({ id, state, county, built: TODAY, ...meta, dict, recs: enc }));
-  index.push({ id, state, county, file, detail: meta.kind === 'county-list' && DETAIL.includes(county), report: meta.kind === 'county-list' && REPORT.includes(county), gis: gisFor(state, county), records: recs.length, mapped, cats, vacant: vac, bb, updated: meta.updated || null, sources: meta.sources, kb: Math.round(fs.statSync(path.join(OUT, 'data', file)).size / 1024) });
+  index.push({ id, state, county, ik: recs[0] ? recs[0].i.split('|').slice(0, 2).join('|') : null, file, detail: meta.kind === 'county-list' && DETAIL.includes(county), report: meta.kind === 'county-list' && REPORT.includes(county), gis: gisFor(state, county), records: recs.length, mapped, cats, vacant: vac, bb, updated: meta.updated || null, sources: meta.sources, kb: Math.round(fs.statSync(path.join(OUT, 'data', file)).size / 1024) });
 }
 // 1) county sale lists
 for (const f of fs.readdirSync(ST).filter(x => /^liens-.*\.js$/.test(x) && x !== 'liens-data.js')) {

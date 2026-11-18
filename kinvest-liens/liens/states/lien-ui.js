@@ -1563,6 +1563,7 @@ const LienUI = {
         if ((l.state || 'FL') === 'FL') { const th = mk('div', 'lthumb'); c.appendChild(th); ParcelData.thumb(l, th); }
         else if (typeof LandMap !== 'undefined' && LAND_OUTLINES[l.county]) { const th = mk('div', 'lthumb loading'); c.appendChild(th); LandMap.thumb(landSpec(l), th); }
         const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
+        { const sp = mk('span'); sp.setAttribute('data-ppasel', JSON.stringify({ i: (l.state || 'FL') + '|' + l.county + '|' + l.parcel + '|' + (l.cert || ''), t: l.parcel + ' · ' + l.county + ', ' + (l.state || 'FL') })); c.appendChild(sp); } // Pro members get a Select checkbox here (dl/select.js)
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', l.priceLabel || 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
         if (typeof DataStatusUI !== 'undefined' && typeof DataStatus !== 'undefined') c.appendChild(DataStatusUI.chips(l));
