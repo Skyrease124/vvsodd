@@ -1523,3 +1523,33 @@ body.loginpg #msg:empty{display:none}
 .a2hs-b{margin:8px 0 12px}.a2hs-b b{display:block;margin-bottom:4px}
 .a2hs ol{margin:0 0 0 20px;padding:0}.a2hs li{margin:4px 0;line-height:1.45}
 .a2hs p{margin:6px 0 12px}
+
+/* Master Class hub pages: glossary, paths, drills, county guides */
+.mchub .gsearch{display:block;margin:12px 0;font-weight:600}
+.mchub .gsearch input,.mchub .gsearch select{display:block;width:100%;max-width:520px;min-height:44px;margin-top:6px;font-size:16px}
+.gchips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.gchips .chip{min-height:44px;padding:8px 14px;border-radius:99px;border:1px solid rgba(128,140,160,.45);background:transparent;color:inherit;cursor:pointer;font:inherit}
+.gchips .chip.on{background:#0b6e4f;border-color:#0b6e4f;color:#fff}
+.gl2 dt{font-weight:700}.gl2 dd{margin:2px 0 14px}
+.gtag{display:inline-block;margin-left:8px;font-size:.7rem;font-weight:600;padding:1px 8px;border-radius:99px;border:1px solid currentColor;opacity:.8}.gtag.st{color:#b45309}
+.pathgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:14px 0}
+.pathcard{border:1px solid rgba(128,140,160,.35);border-radius:14px;padding:14px}.pathcard h3{margin:0 0 6px}.pathcard .btn{margin:6px 8px 0 0}
+.pbar{height:8px;border-radius:99px;background:rgba(128,140,160,.25);overflow:hidden;margin:8px 0}.pbar span{display:block;height:100%;background:#22c55e;border-radius:99px}
+.chlist{list-style:none;margin:0;padding:0}.chlist>li{border:1px solid rgba(128,140,160,.3);border-radius:12px;margin:8px 0;padding:0 14px}
+.chlist summary{cursor:pointer;min-height:48px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.chles{margin:6px 0 10px 18px;padding:0}.chles li{margin:6px 0;line-height:1.45}
+.drcard{border:1px solid rgba(128,140,160,.35);border-radius:14px;padding:16px;margin:14px 0}
+.drfacts{display:grid;gap:6px;margin:8px 0}.drfacts div{display:grid;grid-template-columns:minmax(120px,40%) 1fr;gap:10px}.drfacts dt{opacity:.75}.drfacts dd{margin:0}
+.drq{font-weight:700;margin:12px 0}.drbtns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.drwork{border-left:3px solid #22c55e;padding:4px 14px;margin:10px 0}.drwork ol{margin:6px 0 0 18px;padding:0}.drwork li{margin:6px 0}
+.mchub .good{color:#4ade80;font-weight:700}.mchub .bad{color:#f87171;font-weight:700}
+.chlist details,.chlist details[open]{background:transparent!important;color:inherit!important;border:0!important;box-shadow:none!important;padding:0!important}
+.chlist summary,.chlist summary b,.chlist details p,.chlist details li{color:inherit!important}
+.chlist .muted,.chlist summary .small{color:#b8c4d6!important}
+.gl2 dd,.gl2 dt{color:inherit}
+.drcard,.pathcard{background:rgba(255,255,255,.03)}
+.drtable{border-collapse:collapse;width:100%;font-size:.9rem}.drtable th,.drtable td{border-bottom:1px solid rgba(128,140,160,.3);padding:8px 6px;text-align:left}
+.cty{margin:8px 0 14px 18px;padding:0}.cty li{margin:8px 0;line-height:1.45}
+@media(max-width:560px){.drfacts div{grid-template-columns:1fr;gap:0}}
+.mchub h2,.mchub h3{color:#e6edf7}
+.mchub .notice{color:#e6edf7}
