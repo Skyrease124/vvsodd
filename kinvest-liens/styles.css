@@ -1621,13 +1621,18 @@ body.loginpg #msg:empty{display:none}
 .dqsrc a{color:#f5c542}
 @media(max-width:480px){.dqgeo{align-items:flex-start}.dqmap{width:80px;height:80px}.dqfact .k{width:90px}}
 
-/* Home: live cameras (Pro) */
-.hcams-sec{padding-top:24px}.hcams .hc-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:12px 0}.hcams .hc-chips{display:flex;flex-wrap:wrap;gap:8px}
-.hc-chip{min-height:44px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600;cursor:pointer}.hc-chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
-.hc-msg{color:var(--muted);margin:8px 0}.hc-lock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--fg)}
-.hc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.hc-card{display:block;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--card);text-decoration:none;color:inherit;transition:transform .25s cubic-bezier(.32,.72,0,1),box-shadow .25s}.hc-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.25)}.hc-card.off{opacity:.55}
-.hc-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#05080f}.hc-cap{padding:10px 12px}.hc-cap b{display:block;font-size:.95rem}.hc-cap span{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
-@media(prefers-reduced-motion:reduce){.hc-card{transition:none}}
+/* Home: live cameras (Pro), compact */
+.hcams-sec{padding-top:8px;padding-bottom:8px}.hcams{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+.hc-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}.hc-head h2{margin:2px 0 0;font-size:1.5rem;letter-spacing:-.02em}.hc-head .eyebrow{margin:0}.hc-all{font-weight:600;font-size:.9rem;color:var(--brand);text-decoration:none;white-space:nowrap;display:inline;min-height:0;line-height:1.4;padding:0 0 4px}
+.hc-sub{margin:6px 0 12px;color:var(--muted);font-size:.9rem;line-height:1.45;max-width:640px}
+.hc-chips{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -16px;padding:2px 16px 8px}.hc-chips::-webkit-scrollbar{display:none}
+.hc-chip{flex:none;scroll-snap-align:start;min-height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:600 .88rem inherit;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s,border-color .2s}.hc-chip[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+.hc-msg{color:var(--muted);margin:6px 0 0;font-size:.8rem}.hc-lock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;color:var(--fg);font-size:.95rem}
+.hc-grid{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -16px;padding:4px 16px 4px;scroll-padding-left:16px}.hc-grid::-webkit-scrollbar{display:none}
+.hc-card{flex:none;width:min(78%,300px);scroll-snap-align:start;display:block;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--card);text-decoration:none;color:inherit;transition:transform .25s cubic-bezier(.32,.72,0,1),box-shadow .25s}.hc-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.2)}.hc-card.off{opacity:.5}
+.hc-card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#05080f}.hc-cap{padding:9px 12px 11px}.hc-cap b{display:block;font-size:.9rem;line-height:1.3}.hc-cap span{display:block;color:var(--muted);font-size:.75rem;margin-top:2px;line-height:1.35}
+@media(min-width:760px){.hc-chips,.hc-grid{margin:0;padding-left:0;padding-right:0}.hc-card{width:280px}}
+@media(prefers-reduced-motion:reduce){.hc-card,.hc-chip{transition:none}}
 
 /* Home: Add to Home Screen card (Apple-style) */
 .a2c{background:#fff;border-radius:26px;padding:22px;margin:0 0 22px;box-shadow:0 0 0 1px rgba(15,23,42,.07),0 22px 44px -26px rgba(15,23,42,.5);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;color:#14213d}
