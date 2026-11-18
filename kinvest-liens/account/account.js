@@ -15,7 +15,17 @@
     if (r.ok && r.d.url) { location.href = r.d.url; return; }
     $('planmsg').textContent = r.d.error || 'Something went wrong.'; btn.disabled = false;
   }
-  $('upgrade').addEventListener('click', () => go('checkout', $('upgrade')));
+  // Subscribing: show the terms first; checkout starts only after the member ticks the box (the server checks this again and records it).
+  const POLICY_VERSION = '2026-11-18';
+  $('upgrade').addEventListener('click', () => { $('subterms').hidden = false; $('subok').checked = false; $('subgo').disabled = true; $('subterms').scrollIntoView({behavior: 'smooth', block: 'nearest'}); });
+  $('subok').addEventListener('change', () => { $('subgo').disabled = !$('subok').checked; });
+  $('subcancel').addEventListener('click', () => { $('subterms').hidden = true; });
+  $('subgo').addEventListener('click', async () => {
+    if (!$('subok').checked) return; const b = $('subgo'); b.disabled = true; $('planmsg').textContent = 'One moment\u2026';
+    const r = await fetch('/.netlify/functions/billing', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'checkout', consent: {terms: true, recurring: true, version: POLICY_VERSION}})}).then(async x => ({ok: x.ok, d: await x.json().catch(() => ({}))})).catch(() => ({ok: false, d: {error: 'Could not reach the server. Please try again.'}}));
+    if (r.ok && r.d.url) { location.href = r.d.url; return; }
+    $('planmsg').textContent = r.d.error || 'Something went wrong.'; b.disabled = !$('subok').checked;
+  });
   $('manage').addEventListener('click', () => go('portal', $('manage')));
   function planButtons(user) {
     const subOn = user.sub && ['active', 'trialing', 'past_due'].includes(user.sub.status);

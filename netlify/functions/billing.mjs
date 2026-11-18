@@ -2,6 +2,8 @@
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import * as S from '../lib/stripe.mjs';
+import * as P from '../lib/policy.mjs';
+import * as RL from '../lib/ratelimit.mjs';
 
 const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 const tries = new Map();
@@ -25,6 +27,10 @@ async function handle(event) {
   try {
     if (b.action === 'checkout') {
       if (me.sub && ['active', 'trialing', 'past_due'].includes(me.sub.status) && !me.sub.cancelAtPeriodEnd) return json(400, { error: 'You already have a membership. Use Manage billing.' });
+      // Affirmative consent is required BEFORE any Stripe call: accepted terms and authorization of recurring weekly billing, for the current policy version.
+      if (!(b.consent && b.consent.terms === true && b.consent.recurring === true && b.consent.version === P.POLICY_VERSION)) return json(400, { error: 'Please tick the box to accept the terms and authorize weekly billing before you continue.', needConsent: true, version: P.POLICY_VERSION });
+      if (!(await RL.hit('checkout:' + me.email, 8, 3600e3)).ok) return json(429, { error: 'Too many checkout attempts. Please wait a while or contact billing support.' });
+      const rec = P.consentRecord('subscription', { terms: true, recurring: true, priceCents: P.PLAN.cents, interval: P.PLAN.interval }); P.addConsent(me, rec); await auth.saveUser(me);
       const price = await S.findPriceId(stripe);
       if (!price) return json(503, { error: 'The membership plan is not set up yet.' });
       const customer = await S.ensureCustomer(stripe, me);
@@ -34,6 +40,10 @@ async function handle(event) {
         line_items: [{ price, quantity: 1 }],
         success_url: S.siteUrl() + '/account/?paid=1',
         cancel_url: S.siteUrl() + '/account/?canceled=1',
+        custom_text: { submit: { message: P.subscriptionCheckoutText(S.siteUrl()) } },
+        payment_method_options: { card: { request_three_d_secure: 'automatic' } }, // Stripe decides when to ask for 3D Secure (Radar and the card issuer); not forced on every payment
+        subscription_data: { metadata: { policy_version: rec.version, consent_at: rec.at, consent_recurring: 'true' } },
+        metadata: { policy_version: rec.version, consent_at: rec.at },
         integration_identifier: 'ppa-membership-' + rand(8)
       });
       return json(200, { url: session.url });

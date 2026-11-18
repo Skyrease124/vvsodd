@@ -1661,3 +1661,9 @@ body.loginpg #msg:empty{display:none}
 @media(prefers-reduced-motion:reduce){.dn-amt,.dn-go{transition:none}}
 .dnbody .dn-card h1{color:#fff}.dnbody .dn-card a{color:#93c5fd}.dnbody .dn-card .eyebrow{color:#34c995}
 .aibody .a2hs{background:rgba(255,255,255,.06);color:#e8eefb;border:1px solid rgba(255,255,255,.14)}.aibody .a2hs summary{color:#e8eefb}
+
+/* Account: terms shown before subscribing */
+.subterms{margin:14px 0;padding:16px 18px;border-radius:18px;border:1px solid var(--line);background:var(--card)}.subterms h4{margin:0 0 8px;font-size:1.05rem}.subterms ul{margin:0 0 12px;padding-left:18px;line-height:1.5;font-size:.92rem}.subterms li{margin:5px 0}
+.subchk{display:flex;gap:12px;align-items:flex-start;flex-direction:row;font-weight:500;font-size:.9rem;line-height:1.45;padding:12px;border-radius:14px;background:rgba(127,140,160,.1);cursor:pointer}.subchk input{flex:none;width:24px;height:24px;margin:1px 0 0;padding:0;accent-color:#0b6e4f}
+.dn-chk{display:flex;gap:12px;align-items:flex-start;margin:6px 0 14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.06);font-size:.86rem;line-height:1.45;color:#e8eefb;cursor:pointer}.dn-chk input{flex:none;width:24px;height:24px;margin:1px 0 0;accent-color:#2fbf8c}.dn-chk a{color:#93c5fd}
+.legal p a,.legal li a,.legal td a{display:inline;min-height:0;line-height:inherit;padding:0}
