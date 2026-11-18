@@ -11,3 +11,4 @@
 - The REST API key comes from the **App API Keys** section (one string, no spaces, new keys start with `os_v2_app_`). It is not the Identity Verification key pair.
 - Netlify functions read `ONESIGNAL_REST_API_KEY` only after a new deploy.
 - The first real delivery test must run on https://pricepocketasset.com (the OneSignal app allows only that origin).
+- Key lookup order: the Netlify environment variable wins over the owner key box. If both exist and differ, the Netlify one is used (a wrong Netlify value caused a 401 during rollout). Keep one source only.
