@@ -1,0 +1,10 @@
+import { createRequire } from 'module'; const require = createRequire(import.meta.url); const { chromium, devices } = require('playwright');
+process.env.PORT = '8097'; const { server, COOKIES } = await import('./serve.mjs'); await new Promise(r => server.listen(8097, r));
+const B = 'http://localhost:8097', b = await chromium.launch();
+const shot = async (name, path, cookie, act) => { const ctx = await b.newContext({ ...devices['iPhone 14'], deviceScaleFactor: 2 }); if (cookie) await ctx.addCookies([{ name: cookie.split('=')[0], value: cookie.split('=').slice(1).join('='), url: B }]); const p = await ctx.newPage(); await p.goto(B + path); await p.waitForTimeout(1800); if (act) await act(p); await p.waitForTimeout(900); await p.screenshot({ path: 'tools/masterclass/shots/' + name + '.png', fullPage: false }); await ctx.close(); };
+await shot('v2-paths', '/learn/paths/?c=fl', COOKIES.pro, async p => { await p.evaluate(() => window.scrollTo(0, 360)); await p.locator('.chlist summary').nth(2).click(); });
+await shot('v2-paths-top', '/learn/paths/?c=fl', COOKIES.pro);
+await shot('v2-glossary', '/learn/glossary/?q=redemption', null, async p => { await p.evaluate(() => window.scrollTo(0, 380)); });
+await shot('v2-drills', '/learn/drills/', COOKIES.pro, async p => { await p.fill('.drcard input', '0.01'); await p.click('button:has-text("Check my answer")'); await p.waitForTimeout(600); await p.evaluate(() => window.scrollTo(0, 560)); });
+await shot('v2-county', '/learn/county/?c=Palm%20Beach', null, async p => { await p.evaluate(() => window.scrollTo(0, 900)); });
+await b.close(); server.close(); process.exit(0);
