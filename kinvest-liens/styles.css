@@ -1370,3 +1370,28 @@ body.loginpg #msg:empty{display:none}
 .aibody .aichat .tablewrap{border-radius:16px;overflow:auto;background:#fff}
 @media(prefers-reduced-motion:reduce){.aibody .aichat .aiturn,.aibody .aichat .aiout.thinking span{animation:none!important}}
 .aibody .aibar button::after{content:"\2191";width:auto;height:auto;border:0;transform:none;font-size:24px;font-weight:700;line-height:1}
+/* ===== Lot detail cards: one calm glass style ===== */
+.precord{background:rgba(255,255,255,.05)!important;border:0!important;border-radius:22px;padding:18px!important;margin:14px 0;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1),0 18px 36px -26px rgba(0,0,0,.9);color:#e8edf7;animation:ppFadeUp .4s ease both}
+.precord h4{margin:0 0 12px;font-size:19px;font-weight:600;letter-spacing:-.015em;color:#fff}
+.precord p{font-size:15px;line-height:1.55;color:#cbd6ea;margin:10px 0}
+.precord p.small,.precord .psrc{font-size:13px;line-height:1.5;color:#8ea0c4}
+.precord a{color:#9ec5ff;text-decoration:none;border-bottom:1px solid rgba(158,197,255,.35)}.precord a:hover{border-bottom-color:#9ec5ff}
+.precord .livestamp{display:flex;align-items:flex-start;gap:8px;width:fit-content;max-width:100%;margin:0 0 12px;padding:7px 12px;border-radius:999px;font-size:13px;line-height:1.4;background:rgba(255,255,255,.08);color:#cbd6ea}
+.precord .livestamp::before{content:"";flex:none;width:8px;height:8px;margin-top:5px;border-radius:50%;background:#30d158;box-shadow:0 0 0 3px rgba(48,209,88,.2)}
+.precord .livestamp.bad::before{background:#ff453a;box-shadow:0 0 0 3px rgba(255,69,58,.2)}
+.precord .livestamp.bad{background:rgba(255,69,58,.12);color:#ffb4ae}
+.precord .livestamp a{color:inherit;border-bottom-color:rgba(255,255,255,.35)}
+.precord .elval{margin:6px 0 10px}.precord .elval b{font-size:34px;font-weight:700;letter-spacing:-.03em;color:#fff}
+.precord .elval span,.precord .elval{color:#a9b6d3}
+.precord .savednote,.savednote{background:rgba(255,159,10,.12);border:0;border-radius:14px;padding:12px 14px;color:#ffd9a0;font-size:14px}
+.precord .pchecks{gap:8px}
+.precord .pchecks li{padding:12px 14px;border:0;border-radius:14px;font-size:15px;line-height:1.45;background:rgba(48,209,88,.13);color:#d3f5e0}
+.precord .pchecks li.warn{background:rgba(255,159,10,.15);color:#ffe0ad}.precord .pchecks li.na{background:rgba(255,255,255,.07);color:#cbd6ea}
+.precord .pfacts>div,.precord .pfact{background:rgba(255,255,255,.06);border:0;border-radius:14px}
+.lotdlg,dialog.lotdlg{border:0!important;border-radius:28px!important;box-shadow:0 40px 90px -30px rgba(0,0,0,.9),inset 0 0 0 .5px rgba(255,255,255,.12)}
+@media(prefers-reduced-motion:reduce){.precord{animation:none}}
+.precord p.savednote{color:#ffd9a0;font-size:14px}.precord .precord{background:rgba(255,255,255,.04)!important;box-shadow:none;padding:14px!important}
+.precord .livestamp{display:block;width:auto;border-radius:14px;padding:9px 14px}
+.precord .livestamp::before{display:inline-block;vertical-align:middle;margin:0 8px 0 0;position:relative;top:-1px}
+.precord a{color:#9ec5ff!important;font-weight:inherit}
+.precord .hoab,.precord .lchip{vertical-align:middle}
