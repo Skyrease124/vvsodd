@@ -334,9 +334,9 @@ select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .faved{border-color:#f5b301!important;color:#b07a00!important}
 /* Logo images */
 .logoimg{height:27px;width:auto;vertical-align:middle;margin-right:8px}
-.dmark{height:40px;width:auto}
+.dmark{height:40px;width:auto;flex-shrink:0;object-fit:contain}
 .aboutlogo{display:block;max-width:min(520px,100%);height:auto;margin:0 auto 20px;border-radius:12px}
-@media(max-width:520px){.dnav .dlogo .dmark{width:68px;height:32px}}
+@media(max-width:520px){.dnav .dlogo .dmark{width:68px;height:32px;flex-shrink:0}}
 .nav .logo{display:inline-flex;align-items:center;white-space:nowrap}
 /* Land Information */
 .landinfo{border:1px solid #e3e8ef;border-radius:10px;padding:10px 12px;margin:12px 0}
@@ -1484,3 +1484,19 @@ body.loginpg #msg:empty{display:none}
 .prod.soon{background:transparent;box-shadow:none;border:2px dashed #cdd5e1}.prod.soon:hover{transform:none;box-shadow:none;border-color:#cdd5e1}
 .prod.soon .n{background:#e9edf3;color:#6b7690;box-shadow:none}.prod.soon h3{color:#44506a}.prod.soon p{color:#6b7690}
 .prod.soon p:last-child{padding-top:0;margin-top:0}.prod.soon h3{margin-top:10px}
+
+/* Mobile audit: comfortable touch targets (44px) on touch screens, links in running text excluded. */
+@media(pointer:coarse){
+ footer a,.foot a,.legal a,.fnav a{display:inline-block;min-height:44px;line-height:44px;padding:0 6px}
+ .dnav .dlogo{min-height:44px}
+ .btn,select{min-height:44px}
+ input[type=text],input[type=email],input[type=password],input[type=search],input[type=number]{min-height:44px;font-size:16px}
+}
+@media(pointer:coarse){
+ .dbtn,.wxloc,.rlink,.rchip{min-height:44px}
+ .pp-top{width:44px;height:44px}
+ header .logo,.dnav a.dlogo,a.logo{display:inline-flex;align-items:center;min-height:44px}
+}
+.ppskip{position:fixed;left:12px;top:-60px;z-index:100000;background:#22c55e;color:#06210f;font-weight:700;padding:10px 16px;border-radius:10px;text-decoration:none;transition:top .15s}
+.ppskip:focus{top:12px}
+@media(prefers-reduced-motion:reduce){.ppskip{transition:none}}

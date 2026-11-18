@@ -1,0 +1,1112 @@
+[
+ {
+  "vp": "iphone",
+  "page": "/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [
+   "button.rchip",
+   "b",
+   "button.rchip",
+   "b",
+   "button.rchip"
+  ],
+  "smallTaps": 28,
+  "tapEx": [
+   "PricePocketAssetInvest ·",
+   "Sign Up",
+   "◎ Use exact location",
+   "Show all 38"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/liens/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [
+   "table",
+   "thead",
+   "tr",
+   "th",
+   "tbody"
+  ],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "See the full state guide",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/land/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 5,
+  "tapEx": [
+   "PricePocketAsset",
+   "Privacy",
+   "Terms",
+   "Disclaimer"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/learn/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 13,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Open the Florida course",
+   "Open the Texas course"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/learn/course/?c=fl",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/portfolio/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in or create a free",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/ai/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 2,
+  "tapEx": [
+   "PricePocketAsset",
+   "↑"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/account/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Forgot your password?",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/plans/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 1,
+  "tapEx": [
+   "PricePocketAsset"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/login/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Forgot your password?",
+   "Create a free account",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/practice/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "iphone",
+  "page": "/about/",
+  "ok": true,
+  "scrollW": 390,
+  "over": [],
+  "smallTaps": 5,
+  "tapEx": [
+   "PricePocketAsset",
+   "Privacy",
+   "Terms",
+   "Disclaimer"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [
+   "button.rchip",
+   "button.rchip",
+   "b",
+   "button.rchip",
+   "b"
+  ],
+  "smallTaps": 22,
+  "tapEx": [
+   "PricePocketAssetInvest ·",
+   "Sign Up",
+   "◎ Use exact location",
+   "Show all 38"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/liens/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [
+   "table",
+   "thead",
+   "tr",
+   "th",
+   "tbody"
+  ],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "See the full state guide",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/land/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 5,
+  "tapEx": [
+   "PricePocketAsset",
+   "Privacy",
+   "Terms",
+   "Disclaimer"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/learn/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 13,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Open the Florida course",
+   "Open the Texas course"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/learn/course/?c=fl",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/portfolio/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in or create a free",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/ai/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 2,
+  "tapEx": [
+   "PricePocketAsset",
+   "↑"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/account/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Forgot your password?",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/plans/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 1,
+  "tapEx": [
+   "PricePocketAsset"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/login/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Forgot your password?",
+   "Create a free account",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/practice/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 6,
+  "tapEx": [
+   "PricePocketAsset",
+   "Sign in",
+   "Privacy",
+   "Terms"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "android",
+  "page": "/about/",
+  "ok": true,
+  "scrollW": 412,
+  "over": [],
+  "smallTaps": 5,
+  "tapEx": [
+   "PricePocketAsset",
+   "Privacy",
+   "Terms",
+   "Disclaimer"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [
+   "button.rchip"
+  ],
+  "smallTaps": 28,
+  "tapEx": [
+   "◎ Use exact location",
+   "Show all 38",
+   "★ New list 34",
+   "$ Amount changed 1"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/liens/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "Calculator",
+   "FAQ"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/land/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 7,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Land for sale",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/learn/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 15,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Master Class",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/learn/course/?c=fl",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Master Class",
+   "All states",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/portfolio/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Sign in",
+   "Sign in or create a free"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/ai/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 4,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "Sign in",
+   "↑"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/account/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Account",
+   "Forgot your password?"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/plans/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 3,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "Account"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/login/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Sign in",
+   "Forgot your password?"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/practice/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Master Class",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "tablet",
+  "page": "/about/",
+  "ok": true,
+  "scrollW": 820,
+  "over": [],
+  "smallTaps": 7,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Get updates",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 30,
+  "tapEx": [
+   "◎ Use exact location",
+   "Show all 38",
+   "★ New list 34",
+   "$ Amount changed 1"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/liens/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 12,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "How it works",
+   "Calculator"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/land/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 7,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Land for sale",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/learn/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 15,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Master Class",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/learn/course/?c=fl",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Master Class",
+   "All states",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/portfolio/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Sign in",
+   "Sign in or create a free"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/ai/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 4,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "Sign in",
+   "↑"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/account/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Account",
+   "Forgot your password?"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/plans/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 3,
+  "tapEx": [
+   "PricePocketAsset",
+   "Home",
+   "Account"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/login/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Sign in",
+   "Forgot your password?"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/practice/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 8,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Master Class",
+   "Sign in"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ },
+ {
+  "vp": "desktop",
+  "page": "/about/",
+  "ok": true,
+  "scrollW": 1440,
+  "over": [],
+  "smallTaps": 7,
+  "tapEx": [
+   "PricePocketAsset",
+   "Map",
+   "Get updates",
+   "Privacy"
+  ],
+  "nolabel": 0,
+  "imgBad": 0,
+  "tinyText": 0,
+  "viewportMeta": true,
+  "hOverflow": false,
+  "errors": [
+   "Failed to load resource: the server responded with a status of 404 (File not found)"
+  ],
+  "failed": []
+ }
+]
