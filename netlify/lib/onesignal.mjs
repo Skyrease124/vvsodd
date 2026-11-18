@@ -25,6 +25,16 @@ const logKey = email => 'pushlog_' + h(String(email).toLowerCase()).slice(0, 32)
 const BANNED = /\b(available now|now available|still available|is available|guaranteed|can't lose|act now|last chance|sure thing)\b/i;
 export const safeText = s => !BANNED.test(String(s || ''));
 
+// OneSignal has two key styles: new App API keys (start with os_v2_app_) use "Authorization: Key <key>"; older REST API keys use "Basic <key>".
+// Try the likely one first and fall back once, so either style works. Returns {r, scheme}.
+export async function post(apiKey, payload, signal) {
+  const schemes = /^os_/.test(apiKey) ? ['Key'] : ['Key', 'Basic']; let r, used;
+  for (const sc of schemes) {
+    used = sc; r = await fetch(API, { method: 'POST', signal, headers: { 'Content-Type': 'application/json', Authorization: sc + ' ' + apiKey }, body: JSON.stringify(payload) });
+    if (r.status !== 401 && r.status !== 403) break;
+  }
+  return { r, scheme: used };
+}
 // send({email, title, body, path, key, topic}) -> {ok, skipped?, error?, id?}
 // key: a stable unique key for this notification (event id etc.). The same key is never sent to the same member twice.
 export async function send({ email, title, body, path = '/account/', key, topic, dry }) {
@@ -38,7 +48,7 @@ export async function send({ email, title, body, path = '/account/', key, topic,
   if (topic) payload.web_push_topic = String(topic).slice(0, 60);
   const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
   try {
-    const r = await fetch(API, { method: 'POST', signal: c.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Key ' + apiKey }, body: JSON.stringify(payload) });
+    const { r } = await post(apiKey, payload, c.signal);
     let d = {}; try { d = await r.json(); } catch (e) { /* not json */ }
     const errs = Array.isArray(d.errors) ? d.errors.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join('; ') : (d.errors ? JSON.stringify(d.errors) : '');
     if (!r.ok) return { ok: false, error: ('HTTP ' + r.status + (errs ? ': ' + errs : '')).slice(0, 200) };

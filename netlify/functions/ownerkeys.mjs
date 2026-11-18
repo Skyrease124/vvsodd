@@ -4,7 +4,7 @@
 //   POST {test:'ga'|'az'}       -> server-side check: camera count, one sample camera, and whether its image loads (the key is never returned)
 import * as auth from '../lib/auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
-import { APP_ID as OSAPP } from '../lib/onesignal.mjs';
+import { APP_ID as OSAPP, post as OSPOST } from '../lib/onesignal.mjs';
 import { PROVIDERS } from './cameras.mjs';
 import * as FIRMS from '../lib/firms.mjs';
 import * as ENERGY from '../lib/energy.mjs';
@@ -29,11 +29,11 @@ export default async function handler(req) {
     // Checks the key without sending anyone a notification: the target is an external id nobody has, so a valid key gets "no recipients".
     const k = KEYS.keyOf('ONESIGNAL_REST_API_KEY'); if (!k) return json(200, { ok: false, error: 'No key saved yet.' });
     try {
-      const r = await fetch(process.env.ONESIGNAL_API_URL || 'https://api.onesignal.com/notifications?c=push', { method: 'POST', signal: AbortSignal.timeout(10000), headers: { 'Content-Type': 'application/json', Authorization: 'Key ' + k }, body: JSON.stringify({ app_id: OSAPP, target_channel: 'push', include_aliases: { external_id: ['pp_key_check_nobody'] }, headings: { en: 'Key check' }, contents: { en: 'Key check' } }) });
+      const { r, scheme } = await OSPOST(k, { app_id: OSAPP, target_channel: 'push', include_aliases: { external_id: ['pp_key_check_nobody'] }, headings: { en: 'Key check' }, contents: { en: 'Key check' } }, AbortSignal.timeout(10000));
       const d = await r.json().catch(() => ({})); const msg = JSON.stringify(d.errors || d.message || '').slice(0, 160);
-      if (r.status === 401 || r.status === 403) return json(200, { ok: false, error: 'OneSignal rejected the key (' + r.status + '). Use the REST API key from Settings > Keys & IDs > App API Keys, not the Identity Verification key.' });
+      if (r.status === 401 || r.status === 403) return json(200, { ok: false, error: 'OneSignal rejected the key (' + r.status + ', tried both key styles). Check that it is the key for THIS app (App ID starts 0bfd191b) from Settings > Keys & IDs > App API Keys, copied whole with no spaces. An Organization key or the Identity Verification key will not work.' });
       if (r.status >= 500) return json(200, { ok: false, error: 'OneSignal had a problem (' + r.status + '). Try again.' });
-      return json(200, { ok: true, nlr: true, text: 'The key was accepted for app ' + OSAPP.slice(0, 8) + '\u2026. No notification was sent (' + (d.id ? 'sent' : 'no recipients, as expected') + ').' + (r.ok ? '' : ' Note: ' + msg) });
+      return json(200, { ok: true, nlr: true, text: 'The key was accepted (' + scheme + ' style) for app ' + OSAPP.slice(0, 8) + '\u2026. No notification was sent (' + (d.id ? 'sent' : 'no recipients, as expected') + ').' + (r.ok ? '' : ' Note: ' + msg) });
     } catch (e) { return json(200, { ok: false, error: 'No answer from OneSignal.' }); }
   }
   if (b.test === 'bls') {
