@@ -1370,3 +1370,17 @@ body.loginpg #msg:empty{display:none}
 .aibody .aichat .tablewrap{border-radius:16px;overflow:auto;background:#fff}
 @media(prefers-reduced-motion:reduce){.aibody .aichat .aiturn,.aibody .aichat .aiout.thinking span{animation:none!important}}
 .aibody .aibar button::after{content:"\2191";width:auto;height:auto;border:0;transform:none;font-size:24px;font-weight:700;line-height:1}
+/* ===== Data status, freshness and sources ===== */
+.dsrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dschip{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.09);color:#cbd6ea}
+.dschip.tone-ok,.dspanel .tone-ok{color:#6ee7a0}.dschip.tone-ok{background:rgba(48,209,88,.16)}
+.dschip.tone-info{background:rgba(64,156,255,.18);color:#9ec5ff}.dschip.tone-warn{background:rgba(255,159,10,.16);color:#ffc266}.dschip.tone-bad{background:rgba(255,69,58,.16);color:#ff8f87}.dschip.tone-muted{background:rgba(255,255,255,.09);color:#b8c6e0}
+.dswarn{flex:1 1 100%;margin:2px 0 0;color:#ffc266}
+.dspanel{background:rgba(255,255,255,.05);border-radius:20px;padding:16px;margin:14px 0;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.1);color:#e8edf7}
+.dspanel h2{margin:0 0 10px;font-size:19px;color:#fff;letter-spacing:-.01em}
+.dsgrid{display:grid;grid-template-columns:1fr;gap:10px}@media(min-width:560px){.dsgrid{grid-template-columns:1fr 1fr}}
+.dscell{background:rgba(255,255,255,.06);border-radius:14px;padding:10px 14px}.dsk{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#93a3cc}.dscell b{display:block;font-size:16px;margin-top:3px;color:#fff;line-height:1.3}.dscell b.tone-warn{color:#ffc266}.dscell b.tone-info{color:#9ec5ff}.dscell b.tone-muted{color:#cbd6ea}
+.dssub{display:block;font-size:13px;color:#a9b6d3;margin-top:4px;line-height:1.4}
+.dsways{margin:12px 0;padding-left:20px;font-size:14px;line-height:1.5}.dsways li.ok{color:#6ee7a0}.dsways li.warn{color:#ffd9a0}
+.dswarnbox{background:rgba(255,159,10,.12);border-radius:14px;padding:10px 14px;color:#ffd9a0;font-size:14px;margin:10px 0}.dswarnbox ul{margin:6px 0 0;padding-left:18px}
+.dspanel a{color:#9ec5ff}

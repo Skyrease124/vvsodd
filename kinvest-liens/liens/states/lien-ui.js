@@ -1561,6 +1561,7 @@ const LienUI = {
         const h = mk('div', 'lch'); h.append(mk('b', '', l.parcel), mk('span', 'small', (l.county ? l.county + ' · ' : '') + (l.taxYear ? 'tax yr ' + l.taxYear : ''))); c.appendChild(h);
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', l.priceLabel || 'Face (price of the lien)'), mk('b', '', money(l.amount))); c.appendChild(amt);
         const meta = mk('div', 'lmeta'); [l.rate ? 'Rate ' + l.rate : '', l.payoff ? 'Payoff* ' + money(l.payoff) : '', l.saleDate ? 'Sale ' + l.saleDate : '', l.status || ''].filter(Boolean).forEach(t => meta.appendChild(mk('span', '', t))); c.appendChild(meta);
+        if (typeof DataStatusUI !== 'undefined' && typeof DataStatus !== 'undefined') c.appendChild(DataStatusUI.chips(l));
         const ch = mk('div', 'lchips');
         { const hb = HoaData.badge(l); if (hb) ch.appendChild(hb); }
         if (!f) ch.appendChild(chip('na', 'Land: not checked'));
