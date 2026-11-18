@@ -1,0 +1,1258 @@
+{
+ "auditDate": "2026-11-18",
+ "generatedBy": "tools/audit/audit.mjs",
+ "readOnly": true,
+ "totals": {
+  "lienRecords": 17482,
+  "countyFiles": 30,
+  "counties": 30,
+  "stateLevelRecords": 25332,
+  "stateDatasets": 4
+ },
+ "freshness": {
+  "current": 4799,
+  "aging": 12683,
+  "outdated": 0,
+  "unknown": 0
+ },
+ "status": {
+  "county-held": 5322,
+  "deed-sale": 2968,
+  "tax-lien": 4985,
+  "historical": 46,
+  "sold": 1437,
+  "unknown": 2724
+ },
+ "noSourceLink": 0,
+ "duplicates": {
+  "exactDuplicateGroups": 1,
+  "extraCopies": 1,
+  "examples": [
+   {
+    "county": "Palm Beach",
+    "parcel": "72-41-43-36-13-006-0001",
+    "cert": "20543",
+    "copies": 2,
+    "files": [
+     "liens-palmbeach.js"
+    ]
+   }
+  ],
+  "parcelsWithMultipleCertificates": 1333,
+  "note": "Several certificates on one parcel are normal and are not counted as duplicates."
+ },
+ "missingInformation": {
+  "owner name": 4804,
+  "property address": 4198,
+  "acreage": 14389,
+  "land use / zoning": 13301,
+  "amount owed": 5501,
+  "interest rate": 12160,
+  "legal description": 4345
+ },
+ "validation": {
+  "recordsWithIssues": 151,
+  "examples": [
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "TU10-0024",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "TU10-0070",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "TU10-0077",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "TU10-0085",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "VW10-0010",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "VW10-0088",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "VW10-0099",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "VW10-0100",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "GA",
+    "county": "Bibb",
+    "parcel": "VW10-0101",
+    "issues": [
+     "unusual parcel ID format (AA99-9999)"
+    ]
+   },
+   {
+    "state": "CO",
+    "county": "Larimer",
+    "parcel": "1432406029",
+    "issues": [
+     "negative amount"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "01.31.1.3-1",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.11.2.9-1",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.112194",
+    "issues": [
+     "unusual parcel ID format (99.999999)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-10",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-100",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-999)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-114",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-999)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-119",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-999)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-15",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-20",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-92",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.1-99",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.1.8-1",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.2.1-11",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.15.2.1-2",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "02.4.3.1",
+    "issues": [
+     "unusual parcel ID format (99.9.9.9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.14E.2.5",
+    "issues": [
+     "unusual parcel ID format (99.99A.9.9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.14E.2.6",
+    "issues": [
+     "unusual parcel ID format (99.99A.9.9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.17A.1.2",
+    "issues": [
+     "unusual parcel ID format (99.99A.9.9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.107-1",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.107-4",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.107-5",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.161-1",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.161-2",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.5.1.161-3",
+    "issues": [
+     "unusual parcel ID format (99.9.9.999-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "03.9.1.7-8",
+    "issues": [
+     "unusual parcel ID format (99.9.9.9-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "05-4.1.14.12-9",
+    "issues": [
+     "unusual parcel ID format (99-9.9.99.99-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "05-5.2.12.16",
+    "issues": [
+     "unusual parcel ID format (99-9.9.99.99)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "06.117608",
+    "issues": [
+     "unusual parcel ID format (99.999999)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "06.4.1.13-5",
+    "issues": [
+     "unusual parcel ID format (99.9.9.99-9)"
+    ]
+   },
+   {
+    "state": "PA",
+    "county": "Monroe",
+    "parcel": "07.12.2.2-69",
+    "issues": [
+     "unusual parcel ID format (99.99.9.9-99)"
+    ]
+   }
+  ]
+ },
+ "crossVerification": {
+  "gisFileExists": 9992,
+  "noGisFileForCounty": 7490,
+  "parcelIdMatchedInOfficialGis": 6756,
+  "notMatched": 3236,
+  "ownerCompared": 2073,
+  "ownerAgrees": 2068,
+  "ownerDiffers": 5,
+  "acresCompared": 1930,
+  "acresAgree": 1846,
+  "acresDiffer": 84,
+  "verifiedRecords": 6668,
+  "ownerMismatchExamples": [
+   {
+    "county": "Alachua",
+    "parcel": "09133-010-000",
+    "list": "Colson & Pearce Heirs",
+    "roll": "COLSON EDDIE SUE"
+   },
+   {
+    "county": "Hernando",
+    "parcel": "R36-122-21-0775-00A0-0000",
+    "list": "Ranchette Estates Homeowners Assn, %Bohne",
+    "roll": "FORE MANAGEMENT LLC"
+   },
+   {
+    "county": "Hillsborough",
+    "parcel": "A0925880500",
+    "list": "Franklin Jahney Ann",
+    "roll": "GONZALEZ PALAU HERIBERTO MIGUE"
+   },
+   {
+    "county": "Santa Rosa",
+    "parcel": "17-1N-29-0000-00300-0000",
+    "list": "Southland Builders Inc",
+    "roll": "SANTA ROSA COUNTY BOCC"
+   },
+   {
+    "county": "Sarasota",
+    "parcel": "1129233724",
+    "list": "Tortuga Properties Inc",
+    "roll": "NORTH PORT ROAD AND DRAINAGE D"
+   }
+  ],
+  "acreageMismatchExamples": [
+   {
+    "county": "Alachua",
+    "parcel": "06134-000-000",
+    "list": 1.4596,
+    "gis": 1
+   },
+   {
+    "county": "Alachua",
+    "parcel": "06656-700-000",
+    "list": 2.917,
+    "gis": 2.16
+   },
+   {
+    "county": "Alachua",
+    "parcel": "06656-700-000",
+    "list": 2.917,
+    "gis": 2.16
+   },
+   {
+    "county": "Alachua",
+    "parcel": "17099-009-000",
+    "list": 0.0226,
+    "gis": 0.1
+   },
+   {
+    "county": "Alachua",
+    "parcel": "06134-000-000",
+    "list": 1.4596,
+    "gis": 1
+   },
+   {
+    "county": "Alachua",
+    "parcel": "06656-700-000",
+    "list": 2.917,
+    "gis": 2.16
+   },
+   {
+    "county": "Miami-Dade",
+    "parcel": "30-2205-000-0200",
+    "list": 0.6983,
+    "gis": 0.23
+   },
+   {
+    "county": "Miami-Dade",
+    "parcel": "30-3951-015-0010",
+    "list": 0.7371,
+    "gis": 1.1165
+   },
+   {
+    "county": "Miami-Dade",
+    "parcel": "30-5822-000-0071",
+    "list": 0.1894,
+    "gis": 0.38
+   },
+   {
+    "county": "Miami-Dade",
+    "parcel": "30-6813-000-0610",
+    "list": 0.0857,
+    "gis": 0.47
+   },
+   {
+    "county": "Miami-Dade",
+    "parcel": "30-6910-000-0089",
+    "list": 0.3829,
+    "gis": 0.77
+   },
+   {
+    "county": "Nassau",
+    "parcel": "37-1N-25-299S-0009-0081",
+    "list": 0.0607,
+    "gis": 0.17
+   },
+   {
+    "county": "Palm Beach",
+    "parcel": "74-43-43-22-41-000-2200",
+    "list": 1,
+    "gis": 1.7346
+   },
+   {
+    "county": "Palm Beach",
+    "parcel": "72-41-43-26-08-005-1020",
+    "list": 1,
+    "gis": 5.803
+   },
+   {
+    "county": "Palm Beach",
+    "parcel": "18-42-44-23-12-408-0022",
+    "list": 1,
+    "gis": 23.6583
+   }
+  ]
+ },
+ "stateDatasets": [
+  {
+   "state": "AL",
+   "name": "Alabama Department of Revenue: state-held tax delinquent land",
+   "records": 15312,
+   "counties": 26,
+   "checked": "2026-11-06",
+   "source": "https://www.revenue.alabama.gov/wp-content/uploads/property-tax-transcripts/WWW_TRANS_01.PDF",
+   "withAmount": 15185
+  },
+  {
+   "state": "AR",
+   "name": "Arkansas Commissioner of State Lands: tax-delinquent land auction listing",
+   "records": 2936,
+   "counties": 53,
+   "checked": "2026-11-11",
+   "source": "https://www.cosl.org/"
+  },
+  {
+   "state": "MS",
+   "name": "Mississippi Secretary of State: tax-forfeited lands",
+   "records": 6980,
+   "counties": 71,
+   "checked": "2026-11-10",
+   "source": "https://www.sos.ms.gov/public-lands/tax-forfeited-lands",
+   "withValue": 6464
+  },
+  {
+   "state": "NM",
+   "name": "New Mexico Taxation and Revenue: public auction notices",
+   "records": 104,
+   "removed": 32,
+   "counties": 1,
+   "checked": "2026-11-12",
+   "source": "https://www.tax.newmexico.gov/businesses/wp-content/uploads/sites/4/2026/11/AuctionAdvertisement-San-Miguel-11.19.26-1.pdf"
+  }
+ ],
+ "counties": [
+  {
+   "state": "AZ",
+   "county": "Coconino",
+   "records": 1421,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE",
+   "probe": {
+    "url": "https://www.coconino.az.gov/DocumentCenter/View/70663/2026-ACCT-BAL-EXTRACT-WEBSITE",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 1421,
+    "matched": 1406
+   },
+   "statusMix": {
+    "tax-lien": 1421
+   }
+  },
+  {
+   "state": "AZ",
+   "county": "Pinal",
+   "records": 88,
+   "freshness": "aging",
+   "ageDays": 15,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale",
+   "probe": {
+    "url": "https://treasurer.pinal.gov/ParcelInquiry/Main/TaxLienSale",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 88,
+    "matched": 83
+   },
+   "statusMix": {
+    "tax-lien": 88
+   }
+  },
+  {
+   "state": "CO",
+   "county": "Boulder",
+   "records": 661,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://bouldercounty.gov/property-and-land/treasurer/",
+   "probe": {
+    "url": "https://bouldercounty.gov/property-and-land/treasurer/",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 661,
+    "matched": 654
+   },
+   "statusMix": {
+    "tax-lien": 661
+   }
+  },
+  {
+   "state": "CO",
+   "county": "El Paso",
+   "records": 171,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://treasurer.elpasoco.com/",
+   "probe": {
+    "url": "https://treasurer.elpasoco.com/",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "county-held": 171
+   }
+  },
+  {
+   "state": "CO",
+   "county": "Larimer",
+   "records": 1831,
+   "freshness": "current",
+   "ageDays": 7,
+   "updateMode": "automated import (official file)",
+   "sourceUrl": "https://www.larimer.gov/treasurer/thirdparty/liens/sale",
+   "probe": {
+    "url": "https://www.larimer.gov/treasurer/thirdparty/liens/sale",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": {
+    "url": "https://apps.larimer.org/treasuryfiles/Advertising_Files/Real_Property_Tax_Sale.xls",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "gis": {
+    "checked": 1831,
+    "matched": 1790
+   },
+   "statusMix": {
+    "tax-lien": 1831
+   }
+  },
+  {
+   "state": "CO",
+   "county": "Saguache",
+   "records": 840,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://saguachecounty.colorado.gov/departments/treasurer/public-trustee",
+   "probe": {
+    "url": "https://saguachecounty.colorado.gov/departments/treasurer/public-trustee",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 840,
+    "matched": 750
+   },
+   "statusMix": {
+    "tax-lien": 840
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Alachua",
+   "records": 226,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/alachua/certsale/",
+   "probe": {
+    "url": "https://lienhub.com/county/alachua/certsale/",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 226,
+    "matched": 150
+   },
+   "statusMix": {
+    "county-held": 226
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Bay",
+   "records": 5,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/bay/certsale/",
+   "probe": {
+    "url": "https://lienhub.com/county/bay/certsale/",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 5,
+    "matched": 5
+   },
+   "statusMix": {
+    "county-held": 5
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Duval",
+   "records": 116,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/duval/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/duval/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 116,
+    "matched": 116
+   },
+   "statusMix": {
+    "county-held": 116
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Escambia",
+   "records": 27,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/escambia/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/escambia/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 27,
+    "matched": 19
+   },
+   "statusMix": {
+    "county-held": 27
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Hernando",
+   "records": 27,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/hernando/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/hernando/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 27,
+    "matched": 26
+   },
+   "statusMix": {
+    "county-held": 27
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Hillsborough",
+   "records": 47,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/hillsborough/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/hillsborough/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 47,
+    "matched": 47
+   },
+   "statusMix": {
+    "county-held": 47
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Leon",
+   "records": 113,
+   "freshness": "aging",
+   "ageDays": 16,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://leontaxcollector.net/Services/property-taxes/Certificate-Lists",
+   "probe": {
+    "url": "https://leontaxcollector.net/Services/property-taxes/Certificate-Lists",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 113,
+    "matched": 112
+   },
+   "statusMix": {
+    "county-held": 113
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Manatee",
+   "records": 297,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.taxcollector.com/services/property-tax/tax-certs.cfm",
+   "probe": {
+    "url": "https://www.taxcollector.com/services/property-tax/tax-certs.cfm",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 297,
+    "matched": 283
+   },
+   "statusMix": {
+    "county-held": 297
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Miami-Dade",
+   "records": 248,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/miamidade/certsale/",
+   "probe": {
+    "url": "https://lienhub.com/county/miamidade/certsale/",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 248,
+    "matched": 12
+   },
+   "statusMix": {
+    "county-held": 248
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Nassau",
+   "records": 8,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/nassau/certsale/",
+   "probe": {
+    "url": "https://lienhub.com/county/nassau/certsale/",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 8,
+    "matched": 8
+   },
+   "statusMix": {
+    "county-held": 8
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Osceola",
+   "records": 2,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/osceola/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/osceola/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 2,
+    "matched": 2
+   },
+   "statusMix": {
+    "county-held": 2
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Palm Beach",
+   "records": 841,
+   "freshness": "aging",
+   "ageDays": 16,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.pbctax.gov/wp-content/uploads/2026/10/County_Certs_PBCTax-10.2.26.xlsx",
+   "probe": {
+    "url": "https://www.pbctax.gov/wp-content/uploads/2026/10/County_Certs_PBCTax-10.2.26.xlsx",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 841,
+    "matched": 841
+   },
+   "statusMix": {
+    "county-held": 841
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Pasco",
+   "records": 100,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/pasco/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/pasco/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 100,
+    "matched": 95
+   },
+   "statusMix": {
+    "county-held": 100
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Santa Rosa",
+   "records": 1950,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/santarosa/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/santarosa/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 1950,
+    "matched": 221
+   },
+   "statusMix": {
+    "county-held": 1950
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Sarasota",
+   "records": 118,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/sarasota/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/sarasota/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 118,
+    "matched": 118
+   },
+   "statusMix": {
+    "county-held": 118
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Volusia",
+   "records": 950,
+   "freshness": "aging",
+   "ageDays": 8,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/volusia/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/volusia/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 950,
+    "matched": 13
+   },
+   "statusMix": {
+    "county-held": 950
+   }
+  },
+  {
+   "state": "FL",
+   "county": "Walton",
+   "records": 76,
+   "freshness": "aging",
+   "ageDays": 10,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://lienhub.com/county/walton/certsale/main",
+   "probe": {
+    "url": "https://lienhub.com/county/walton/certsale/main",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": {
+    "checked": 76,
+    "matched": 5
+   },
+   "statusMix": {
+    "county-held": 76
+   }
+  },
+  {
+   "state": "GA",
+   "county": "Bibb",
+   "records": 1762,
+   "freshness": "current",
+   "ageDays": 1,
+   "updateMode": "manual copy of the official list",
+   "sourceUrl": "https://images-governmentwindow.s3.amazonaws.com/resources/sites/bibbcountyga/docs/rp.pdf",
+   "probe": {
+    "url": "https://images-governmentwindow.s3.amazonaws.com/resources/sites/bibbcountyga/docs/rp.pdf",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "deed-sale": 1762
+   }
+  },
+  {
+   "state": "GA",
+   "county": "Fulton",
+   "records": 110,
+   "freshness": "current",
+   "ageDays": 1,
+   "updateMode": "manual copy of the official list",
+   "sourceUrl": "https://www.fultoncountyga.gov/-/media/Departments/Sheriff/Tax-Sales/2026/Sheriffs-December-1-2026-Tax--Levy-Sale-List--1st-Posting-1162026.pdf",
+   "probe": {
+    "url": "https://www.fultoncountyga.gov/-/media/Departments/Sheriff/Tax-Sales/2026/Sheriffs-December-1-2026-Tax--Levy-Sale-List--1st-Posting-1162026.pdf",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "deed-sale": 110
+   }
+  },
+  {
+   "state": "IA",
+   "county": "Scott",
+   "records": 144,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.scottcountyiowa.gov/treasurer",
+   "probe": {
+    "url": "https://www.scottcountyiowa.gov/treasurer",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "tax-lien": 144
+   }
+  },
+  {
+   "state": "MI",
+   "county": "Wayne",
+   "records": 4161,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.waynecountytreasurermi.com/",
+   "probe": {
+    "url": "https://www.waynecountytreasurermi.com/",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 503,
+    "note": "error"
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "sold": 1437,
+    "unknown": 2724
+   }
+  },
+  {
+   "state": "NY",
+   "county": "City of Rochester",
+   "records": 191,
+   "freshness": "current",
+   "ageDays": 1,
+   "updateMode": "manual copy of the official list",
+   "sourceUrl": "https://www.cityofrochester.gov/sites/default/files/2026-11/City%20of%20Roc%20Auction%20List%2011.16.26.pdf",
+   "probe": {
+    "url": "https://www.cityofrochester.gov/sites/default/files/2026-11/City%20of%20Roc%20Auction%20List%2011.16.26.pdf",
+    "checked": "2026-11-18",
+    "ok": false,
+    "status": 403,
+    "note": "blocks automated requests (not worked around)"
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "deed-sale": 191
+   }
+  },
+  {
+   "state": "PA",
+   "county": "Monroe",
+   "records": 905,
+   "freshness": "current",
+   "ageDays": 1,
+   "updateMode": "manual copy of the official list",
+   "sourceUrl": "https://www.monroecountypa.gov/getmedia/b45073e8-1221-4f2c-80e6-0f4c34793681/A_20261021_RepositoryList.pdf",
+   "probe": {
+    "url": "https://www.monroecountypa.gov/getmedia/b45073e8-1221-4f2c-80e6-0f4c34793681/A_20261021_RepositoryList.pdf",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "deed-sale": 905
+   }
+  },
+  {
+   "state": "TN",
+   "county": "Davidson",
+   "records": 46,
+   "freshness": "aging",
+   "ageDays": 9,
+   "updateMode": "import adapter (official list)",
+   "sourceUrl": "https://www.nashville.gov/chancery",
+   "probe": {
+    "url": "https://www.nashville.gov/chancery",
+    "checked": "2026-11-18",
+    "ok": true,
+    "status": 200,
+    "note": ""
+   },
+   "fileProbe": null,
+   "gis": null,
+   "statusMix": {
+    "historical": 46
+   }
+  }
+ ],
+ "probed": true
+}

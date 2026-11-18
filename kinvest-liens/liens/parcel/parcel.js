@@ -15,6 +15,7 @@
   $('ptitle').textContent = 'Parcel ' + l.parcel;
   $('psub').textContent = l.county + ' County, ' + (l.state || 'FL') + (l.cert ? ' · certificate ' + l.cert : '') + (l.owner ? ' · Owner: ' + l.owner : '') + (l.address ? ' · ' + l.address : '');
   if (gone) { const n = mk('p', 'notice', 'No longer listed. Outcome unconfirmed.'); n.setAttribute('role', 'status'); $('pstatus').appendChild(n); }
+  if (typeof DataStatusUI !== 'undefined' && typeof DataStatus !== 'undefined') $('pstatus').appendChild(DataStatusUI.panel(l));
   const f = $('pfacts'); const add = (a, b) => { if (b == null || b === '') return; const d = mk('div', 'pfact'); d.append(mk('span', 'small muted', a), mk('b', '', b)); f.appendChild(d); };
   add(l.priceLabel === 'Sold for' ? 'Actual sale price' : PF.amountLabel(l), l.amount != null ? PF.money(l.amount) : (l.priceLabel ? 'Not listed' : '')); add('Payoff (list date)', l.payoff != null ? PF.money(l.payoff) : ''); add('Sale', l.saleDate); add('Rate', l.rate); add('Acres', l.acres); add('Use', l.use); add('County value', l.market != null ? PF.money(l.market).replace('.00', '') : '');
   if (l.mailing) add('Owner mailing address', l.mailing);
