@@ -1592,3 +1592,25 @@ body.loginpg #msg:empty{display:none}
 .mchub .notice{color:var(--mc-text);border-radius:14px}
 @media(max-width:560px){.mchub{padding-left:16px;padding-right:16px}.psum{grid-template-columns:64px 1fr}.ring{width:64px;height:64px}}
 @media(prefers-reduced-motion:reduce){.skel i,.ch[open] .chbody,.drres,.gl2>div{animation:none}.ring,.ch,.seg button,.gchips .chip,.drbtns .btn,.rowlink{transition:none}.mchub{scroll-behavior:auto}}
+/* Virginia Beach unpaid-tax records page */
+.dq{max-width:820px}.dq h2{font-size:1.3rem;margin:30px 0 10px;color:#e8eefb}.dq h3{margin:20px 0 6px;color:#e8eefb}
+.dqnote{border:1px solid #f59e0b;background:rgba(245,158,11,.1);color:#fde6b8;border-radius:16px;padding:14px 16px;margin:14px 0;line-height:1.5}.dqnote b{color:#ffd37a}
+.dqtiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0}
+.dqtile{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);border-radius:18px;padding:16px}.dqtile b{display:block;font-size:1.7rem;letter-spacing:-.02em;color:#fff}.dqtile span{color:#aebbd1;font-size:.9rem}
+.dqbar{display:grid;grid-template-columns:130px 1fr auto;gap:10px;align-items:center;min-height:36px}.dqbar .l{color:#d3dcee;font-size:.92rem}.dqbar .n{color:#aebbd1;font-size:.85rem;text-align:right}
+.dqbar .b{height:10px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}.dqbar .b i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px;animation:dqgrow .7s cubic-bezier(.2,.8,.2,1)}
+@keyframes dqgrow{from{width:0!important}}
+.dqfacts{margin:6px 0}.dqfacts div{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.12)}.dqfacts dt{color:#aebbd1}.dqfacts dd{margin:0;font-weight:600;text-align:right;color:#e8eefb}
+.dqul{margin:6px 0 0 18px;padding:0;color:#d3dcee}.dqul li{margin:8px 0;line-height:1.5}
+.dqform{display:grid;gap:12px;margin:10px 0}.dqform label{display:block;font-weight:600;color:#e8eefb}.dqform input[type=search],.dqform select{display:block;width:100%;min-height:50px;margin-top:6px;font-size:17px;border-radius:14px;border:1px solid rgba(255,255,255,.18);padding:0 14px;background:#fff;color:#0b1220}
+.dqform .dqcheck{display:flex;gap:12px;align-items:center;min-height:44px;font-weight:500}.dqform .dqcheck input{width:22px;height:22px;flex:none}.dqform .btn{min-height:50px;border-radius:14px}
+.dqcard{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.045);border-radius:18px;padding:16px;margin:12px 0;animation:dqgrow .35s both}
+.dqtop{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}.dqtop b{display:block;color:#fff}.dqowed{text-align:right;flex:none}.dqowed b{font-size:1.25rem}
+.dqchips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.dqchips span{font-size:.8rem;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.09);color:#d3dcee}
+.dqwarn{color:#fcd34d}
+@media(max-width:560px){.dqbar{grid-template-columns:104px 1fr;grid-template-areas:'l b' 'n n'}.dqbar .n{grid-area:n;text-align:left;margin-bottom:6px}.dqtile b{font-size:1.45rem}}
+@media(min-width:700px){.dqtiles{grid-template-columns:repeat(4,1fr)}.dqform{grid-template-columns:repeat(2,1fr)}.dqform .dqcheck,.dqform .btn{grid-column:1/-1}.dqform .btn{width:max-content;padding:0 28px}}
+@media(prefers-reduced-motion:reduce){.dqbar .b i,.dqcard{animation:none}}
+.skel{display:grid;gap:12px;margin:14px 0}.skel i{display:block;height:64px;border-radius:16px;background:linear-gradient(100deg,rgba(255,255,255,.05) 30%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.05) 70%);background-size:300% 100%;animation:mcshim 1.4s ease-in-out infinite}.skel i:first-child{height:44px;width:70%}
+@keyframes mcshim{from{background-position:100% 0}to{background-position:0 0}}
+@media(prefers-reduced-motion:reduce){.skel i{animation:none}}
