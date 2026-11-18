@@ -72,7 +72,7 @@
       const how = mk('details', 'pfhow'); how.appendChild(mk('summary', '', 'How this is calculated'));
       how.appendChild(mk('p', '', 'Method: ' + r.method + '.'));
       const ol = mk('ol'); r.steps.forEach(x => ol.appendChild(mk('li', '', x))); how.appendChild(ol);
-      if (r.sources.length) { how.appendChild(mk('p', 'small', 'Official sources (statute text read on ' + r.verifiedOn + '):')); const ul = mk('ul', 'pfsrc'); r.sources.forEach(x => { const li = mk('li'), a = mk('a', '', x.label); a.href = x.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.appendChild(a); ul.appendChild(li); }); how.appendChild(ul); }
+      if (r.sources.length) { how.appendChild(mk('p', 'small', 'Official sources (statute text read on ' + r.verifiedOn + (r.edition ? '; ' + r.edition : '') + '):')); const ul = mk('ul', 'pfsrc'); r.sources.forEach(x => { const li = mk('li'), a = mk('a', '', x.label); a.href = x.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.appendChild(a); ul.appendChild(li); }); how.appendChild(ul); }
       else how.appendChild(mk('p', 'small', 'No official source is attached because this state\u2019s rules have not been verified here yet. Check the state page and the county tax collector.'));
       how.appendChild(mk('p', 'small pfnot', r.disclaimer)); holder.appendChild(how);
     };

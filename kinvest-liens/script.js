@@ -41,7 +41,7 @@ function renderDetail(box, e, R) {
   if (e.missing.length) { const m = mk('div', 'cmiss'); m.appendChild(mk('b', '', 'Missing information for a more accurate estimate')); const ul = mk('ul'); e.missing.forEach(x => ul.appendChild(mk('li', '', x))); m.appendChild(ul); box.appendChild(m); }
   const how = mk('details', 'chow'); how.appendChild(mk('summary', '', 'How this is calculated'));
   const ol = mk('ol'); e.steps.forEach(x => ol.appendChild(mk('li', '', x))); how.appendChild(ol);
-  how.appendChild(mk('p', '', 'Official sources (statute text read on ' + e.verifiedOn + '):'));
+  how.appendChild(mk('p', '', 'Official sources (statute text read on ' + e.verifiedOn + (e.edition ? '; ' + e.edition : '') + '):'));
   const ul = mk('ul'); e.sources.forEach(x => { const li = mk('li'), a = mk('a', '', x.label); a.href = x.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; li.appendChild(a); ul.appendChild(li); }); how.appendChild(ul);
   how.appendChild(mk('p', 'cnot', e.disclaimer)); box.appendChild(how);
 }
@@ -62,7 +62,7 @@ if ($('calc')) {
     n.textContent = 'Prefilled from ' + qs.get('from').slice(0, 200) + '. The real purchase price, interest and timing can differ. Confirm with the county tax collector. Estimate only, not advice.';
     $('calc').before(n);
   }
-  if ($('cstate')) { const sp = qs.get('state'); if (sp && ['FL','AZ','IA'].includes(sp.toUpperCase())) $('cstate').value = sp.toUpperCase(); $('cstate').addEventListener('change', () => { syncCalcMode(); calc(); }); syncCalcMode(); }
+  if ($('cstate')) { const sp = qs.get('state'); if (sp && ['FL','AZ','CO','IA'].includes(sp.toUpperCase())) $('cstate').value = sp.toUpperCase(); $('cstate').addEventListener('change', () => { syncCalcMode(); calc(); }); syncCalcMode(); }
   $('calc').addEventListener('input', calc);
   $('calc').addEventListener('submit', e => e.preventDefault());
   calc();

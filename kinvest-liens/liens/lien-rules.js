@@ -57,6 +57,19 @@
       eventLabel: 'Action to foreclose the right to redeem filed (date)',
       eventHint: 'The lien can be redeemed until the treasurer delivers a deed. A foreclosure action filed in court can change how fast that happens.'
     },
+    CO: {
+      name: 'Colorado',
+      method: 'Annual rate set by formula (9 points over the Kansas City Fed discount rate), simple interest from the date of sale, a portion of a month counts as a whole month; premium bids are not returned',
+      verifiedOn: '2026-11-18', edition: 'C.R.S. 2024 edition (the newest edition published online when this was read)',
+      sources: [
+        { label: 'C.R.S. 39-12-103: Redemption made, interest (rate formula; fractions of a month count as whole months)', url: 'https://leg.colorado.gov/sites/default/files/images/olls/crs2024-title-39.pdf' },
+        { label: 'C.R.S. 39-11-115: To whom tax lien shall be sold (premium goes to the county general fund)', url: 'https://leg.colorado.gov/sites/default/files/images/olls/crs2024-title-39.pdf' },
+        { label: 'C.R.S. 39-11-120 and 39-11-128: Deed presentation (amended effective July 1, 2024, HB 24-1056)', url: 'https://leg.colorado.gov/sites/default/files/images/olls/crs2024-title-39.pdf' }
+      ],
+      maxRate: null, step: null, minReturnPct: 0,
+      eventLabel: 'Application for treasurer\u2019s deed filed (date)',
+      eventHint: 'Colorado changed its deed rules on July 1, 2024. We do not calculate the deed date; use the treasurer\u2019s notice.'
+    },
     IA: {
       name: 'Iowa',
       method: 'Fixed 2% per month, each fraction of a month counts as a whole month',
@@ -91,7 +104,7 @@
     if (!opts.asOf && closed) asOf = closed;
     const out = { state: st, verified: !!R, basis: R ? 'statute' : 'basic', label: R ? R.name + ' rules' : 'Basic estimate (state rules not verified)',
       method: R ? R.method : 'Simple interest: amount x rate x days / 365', invest: paid, asOf: iso(asOf), interest: null, total: null, rateUsed: null, monthsCharged: null,
-      floorApplied: false, dates: [], steps: [], missing: [], warnings: [], sources: R ? R.sources : [], verifiedOn: R ? R.verifiedOn : null, disclaimer: NOT_ADVICE };
+      floorApplied: false, dates: [], steps: [], missing: [], warnings: [], sources: R ? R.sources : [], verifiedOn: R ? R.verifiedOn : null, edition: R && R.edition || null, disclaimer: NOT_ADVICE };
 
     if (paid == null || paid < 0) out.missing.push('The amount you paid');
     if (!bought) out.missing.push('The date you bought the lien');
@@ -118,6 +131,7 @@
       if (st === 'FL') flCompute(h, R, out, paid, bought, asOf, rate, extra);
       if (st === 'AZ') azCompute(h, R, out, paid, bought, asOf, rate, extra);
       if (st === 'IA') iaCompute(h, R, out, paid, bought, asOf, extra);
+      if (st === 'CO') coCompute(h, R, out, paid, bought, asOf, rate, extra);
       if (event) out.dates.push({ key: 'event', label: R.eventLabel.replace(/ \(date\)$/, ''), date: iso(event), kind: 'user', note: 'Entered by you.' });
     }
 
@@ -186,6 +200,32 @@
     out.missing.push('Later-year taxes and fees endorsed on your certificate');
   }
 
+  // Colorado: interest from the DATE OF SALE (C.R.S. 39-12-103(3)); a portion of a month counts as a whole month (39-12-103(6)).
+  function coMonths(sale, asOf) {
+    if (asOf <= sale) return 0;
+    let c = monthIndex(asOf) - monthIndex(sale); if (asOf.getUTCDate() < sale.getUTCDate()) c -= 1; c = Math.max(0, c);
+    return c + (asOf > addMonthsClamped(sale, c) ? 1 : 0);
+  }
+  function coCompute(h, R, out, paid, bought, asOf, rate, extra) {
+    out.rateUsed = rate;
+    if (rate == null) out.missing.push('The redemption interest rate for your sale year (set each September 1 under C.R.S. 39-12-103; see the treasurer\u2019s sale notice)');
+    if (paid != null && bought && rate != null) {
+      const months = coMonths(bought, asOf); out.monthsCharged = months;
+      const int1 = round2(paid * (rate / 100) * months / 12);
+      out.steps.push('Interest runs from the date of sale, and a portion of a month counts as a whole month (C.R.S. 39-12-103).');
+      out.steps.push(money(paid) + ' x ' + rate + '% x ' + months + '/12 = ' + money(int1) + ' (' + months + ' month' + (months === 1 ? '' : 's') + ', simple interest). Colorado has no minimum-interest rule, so none is applied.');
+      let int2 = 0;
+      if (extra) { int2 = round2(extra * (rate / 100) * Math.max(0, months - 1) / 12); out.warnings.push('Later-year taxes you paid earn the same rate from the date you paid them. We assumed about a month after the sale; use the amounts endorsed on your certificate.'); out.steps.push('Later-year taxes: ' + money(extra) + ' at the same rate, estimated at ' + money(int2) + '.'); }
+      out.interest = round2(int1 + int2); out.total = round2(paid + extra + out.interest);
+      out.steps.push('Projected redemption total = lien amount + later payments + interest = ' + money(paid) + ' + ' + money(extra) + ' + ' + money(out.interest) + ' = ' + money(out.total) + ' (if redeemed on ' + out.asOf + ').');
+    }
+    out.warnings.push('Enter only the lien amount (taxes, delinquent interest and fees) as "what you paid". A premium bid above that goes to the county general fund and is never returned or earns interest (C.R.S. 39-11-115).');
+    out.warnings.push('Colorado changed its tax lien deed rules effective July 1, 2024 (HB 24-1056). We do not calculate a deed date. The owner can redeem until the treasurer executes a deed (C.R.S. 39-12-103(3)).');
+    out.steps.push('Redemption timing: the owner may redeem at any time before a treasurer\u2019s deed is executed. Because the deed timing changed in 2024, take the deadline from the treasurer, not from the purchase date.');
+    out.missing.push('The deed application date and any county-confirmed deadline');
+    out.missing.push('Later-year taxes you paid and the date you paid them');
+  }
+
   function iaCompute(h, R, out, paid, bought, asOf, extra) {
     out.rateUsed = R.fixedRatePct;
     const given = num(h.rate);
@@ -217,6 +257,6 @@
     out.missing.push('Later-year taxes you paid and the month you paid them');
   }
 
-  const api = { RULES, estimate, verified, NOT_ADVICE, helpers: { parse, iso, addYears, addMonthsClamped, endOfMonth, nextBusinessDay, monthIndex, money } };
+  const api = { RULES, estimate, verified, NOT_ADVICE, helpers: { coMonths, parse, iso, addYears, addMonthsClamped, endOfMonth, nextBusinessDay, monthIndex, money } };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LienCalc = api;
 })(typeof window !== 'undefined' ? window : globalThis);

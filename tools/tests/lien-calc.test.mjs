@@ -89,8 +89,31 @@ t('Iowa: without a service date the expiry is reported as missing, not guessed',
   assert.equal(date(r, 'expire'), undefined); assert.ok(r.missing.some(m => /notice of expiration/i.test(m)));
 });
 
+// ---------- Colorado ----------
+t('CO: portion of a month counts as a whole month (sale Nov 19 2026, redeem Mar 2 2027 = 4 months)', () => {
+  const r = E({ state: 'CO', paid: 1000, rate: 13, bought: '2026-11-19' }, '2027-03-02');
+  assert.equal(r.monthsCharged, 4); assert.equal(r.interest, 43.33); assert.equal(r.total, 1043.33); assert.equal(r.floorApplied, false);
+});
+t('CO: exactly six months is six, redeeming the day of sale is zero', () => {
+  assert.equal(E({ state: 'CO', paid: 1000, rate: 13, bought: '2026-11-19' }, '2027-05-19').monthsCharged, 6);
+  assert.equal(E({ state: 'CO', paid: 1000, rate: 13, bought: '2026-11-19' }, '2026-11-19').interest, 0);
+  assert.equal(E({ state: 'CO', paid: 1000, rate: 13, bought: '2026-11-19' }, '2027-05-20').monthsCharged, 7);
+});
+t('CO: the year rate is required and listed as missing, never assumed', () => {
+  const r = E({ state: 'CO', paid: 1000, rate: '', bought: '2026-11-19' }, '2027-03-02'); assert.equal(r.total, null); assert.ok(r.missing.some(m => /redemption interest rate/i.test(m)));
+});
+t('CO: no deed date is calculated (rules changed July 1, 2024); warns instead', () => {
+  const r = E({ state: 'CO', paid: 1000, rate: 13, bought: '2026-11-19' }, '2027-03-02');
+  assert.equal(r.dates.filter(d => d.kind === 'statute').length, 0); assert.ok(r.warnings.some(w => /July 1, 2024/.test(w))); assert.ok(r.warnings.some(w => /premium/i.test(w)));
+});
+t('CO: carries the statute edition used', () => { assert.match(E({ state: 'CO', paid: 1, rate: 1, bought: '2026-11-19' }, '2026-12-01').edition, /2024 edition/); });
+t('CO rules never leak into Florida or Arizona results', () => {
+  const fl = E({ state: 'FL', paid: 1000, rate: 2, bought: '2026-06-02' }, '2026-11-15'), az = E({ state: 'AZ', paid: 1000, rate: 10, bought: '2026-02-20' }, '2026-08-15');
+  assert.equal(fl.floorApplied, true); assert.equal(az.interest, 50); assert.ok(!fl.warnings.concat(az.warnings).some(w => /premium bid/i.test(w)));
+});
+
 // ---------- Unverified states: basic estimate only ----------
-for (const st of ['NJ', 'IL', 'CO', 'TX']) t(st + ': labeled basic estimate, no statute dates, no Florida rules', () => {
+for (const st of ['NJ', 'IL', 'TX']) t(st + ': labeled basic estimate, no statute dates, no Florida rules', () => {
   const r = E({ state: st, paid: 1000, rate: 3, bought: '2026-01-01', months: 24 }, '2026-07-02');
   assert.equal(r.verified, false); assert.equal(r.basis, 'basic'); assert.equal(r.floorApplied, false);
   assert.ok(/not verified/i.test(r.label)); assert.equal(r.interest, round(1000 * 0.03 * 182 / 365)); assert.equal(kind(r, 'basic'), 'basic');
