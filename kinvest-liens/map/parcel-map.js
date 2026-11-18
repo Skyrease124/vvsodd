@@ -7,7 +7,7 @@
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const CATS = { tax_deed: { n: 'Tax deed', c: '#a855f7' }, tax_lien: { n: 'Tax lien', c: '#3b82f6' }, land_bank: { n: 'Land bank / state-held', c: '#22c55e' } };
   const VAC = '#eab308', MI = 1609.344, TODAY = new Date().toISOString().slice(0, 10);
-  const money = n => n == null ? null : '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: n >= 1000 ? 0 : 2 });
+  const money = n => n == null ? null : (n < 0 ? '-$' : '$') + Math.abs(Number(n)).toLocaleString('en-US', { maximumFractionDigits: Math.abs(n) >= 1000 ? 0 : 2 });
   const acres = r => r.ac != null ? (r.ac >= 0.1 ? r.ac.toFixed(2) : r.ac.toFixed(3)) + ' acres' : null;
   const sqft = r => r.sf ? r.sf.toLocaleString('en-US') + ' sq ft' : (r.ac != null ? Math.round(r.ac * 43560).toLocaleString('en-US') + ' sq ft' : null);
   const slugState = a => a;
@@ -149,7 +149,8 @@
     inn.append(mk('b', '', r.a || 'Parcel ' + r.p), mk('span', 's', r.o || 'Owner not available'));
     const meta = [CATS[r.c].n, acres(r), r.amt != null ? money(r.amt) : null].filter(Boolean).join(' · '); inn.appendChild(mk('span', 's', meta + (extra ? ' · ' + extra : '')));
     inn.appendChild(mk('span', 'pm-chip ' + (r.v ? 'ok' : 'warn'), r.v ? 'On the list we checked' : 'Not confirmed available')); if (!r.g) inn.appendChild(mk('span', 'pm-chip', 'Not drawn: no verified boundary'));
-    b.appendChild(mk('span', 'bar')); b.appendChild(inn); b.addEventListener('click', () => select(r, { fly: true })); return b;
+    b.appendChild(mk('span', 'bar')); b.appendChild(inn); b.addEventListener('click', () => select(r, { fly: true }));
+    const w = mk('div', 'pm-cardw'); w.appendChild(b); const sp = mk('span'); sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + (IDX.datasets.find(x => x.id === r._d) || {}).county })); sp.style.cssText = 'display:block;padding:0 4px'; w.appendChild(sp); return w;
   }
   function renderResults(rs) {
     if (near) return renderNear(); const R = $('pmResults'); R.textContent = ''; $('pmGrip').textContent = ''; const gl = mk('span', '', rs.length ? rs.length.toLocaleString('en-US') + ' properties' : 'Results'); $('pmGrip').appendChild(gl);
@@ -197,6 +198,7 @@
     const pdf = mk('a', '', 'Download parcel PDF' + (paid ? '' : ' (Pro)')); if (d.report) { pdf.href = '/ai/report/?county=' + encodeURIComponent(d.county) + '&parcel=' + encodeURIComponent(r.p); pdf.target = '_blank'; pdf.rel = 'noopener'; } else { pdf.setAttribute('aria-disabled', 'true'); pdf.title = 'A research report is not available for this county yet.'; } ac.appendChild(pdf);
     const pf = mk('a', '', 'Add to my portfolio'); pf.href = '/portfolio/?add=1&state=' + d.state + '&county=' + encodeURIComponent(d.county.replace(/ County$/, '')) + '&parcel=' + encodeURIComponent(r.p) + (r.amt != null ? '&paid=' + r.amt : ''); ac.appendChild(pf);
     const nb = mk('button', '', 'View nearby properties'); nb.type = 'button'; nb.addEventListener('click', () => { showNear(r, 1); }); ac.appendChild(nb);
+    { const sp = mk('span'); sp.style.cssText = 'grid-column:1/-1'; sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + d.county + ', ' + d.state })); ac.insertBefore(sp, ac.children[1]); } // Pro: Select for download
     p.appendChild(ac); p.hidden = false;
   }
   function select(r, o) {

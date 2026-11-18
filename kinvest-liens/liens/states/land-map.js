@@ -55,12 +55,14 @@ const PaidDownload = {
   status() { return this.me || (this.me = fetch('/.netlify/functions/account', {credentials: 'same-origin'}).then(r => r.ok ? r.json() : null).then(d => d && d.user).catch(() => null)); },
   csv(head, rows) { const q = v => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }; return [head].concat(rows).map(r => r.map(q).join(',')).join('\r\n'); },
   button(label, fileName, head, getRows) {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small ghost'; b.textContent = '⬇ ' + label + ' (Pro)';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn small ghost'; b.textContent = '⬇ ' + label + ' (Pro)'; this.status().then(u => { if (u && u.paid && !u.owner) b.textContent = '\u2611 Select properties to download'; });
     const msg = document.createElement('span'); msg.className = 'small muted'; msg.setAttribute('role', 'status');
     b.addEventListener('click', async () => {
       const u = await this.status();
       if (!u) { msg.innerHTML = ' <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a> to download. Downloads are for Pro members. <a href="/plans/">Compare Free vs Pro</a>'; return; }
       if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members ($5.50 a week). <a href="/account/">See the Pro plan</a> \u00b7 <a href="/plans/">Compare Free vs Pro</a>'; return; }
+      // Pro members pick the properties they want (100 per week). Whole-county files are for the site owner only.
+      if (!u.owner) { msg.innerHTML = ' Tick <b>Select</b> on the properties you want, then use <b>Download Selected</b> (100 per week). <a href="/downloads/">Download Center</a>'; return; }
       const blob = new Blob(['﻿' + this.csv(head, getRows())], {type: 'text/csv;charset=utf-8'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
       msg.textContent = ' Downloaded.';
@@ -70,3 +72,5 @@ const PaidDownload = {
 };
 
 (function () { if (window.Map3D) return; const s = document.createElement('script'); s.src = (document.currentScript ? document.currentScript.src.replace(/[^\/]*$/, '') : '/liens/states/') + 'map3d.js'; document.head.appendChild(s); })();
+// Property selection for Pro members (checkboxes, toolbar, counted downloads). Loads once, only does anything for signed-in Pro accounts.
+(function () { if (window.PPASel || document.getElementById('ppa-sel-js')) return; const q = document.createElement('script'); q.id = 'ppa-sel-js'; q.src = '/dl/select.js'; q.defer = true; document.head.appendChild(q); })();

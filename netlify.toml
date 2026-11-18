@@ -49,5 +49,7 @@
     "kinvest-liens/liens/states/nyc-history.js",
     "netlify/private/roll/*.json",
     "netlify/private/delinquent/*.json",
-    "kinvest-liens/liens/delinquent/*.json"
+    "kinvest-liens/liens/delinquent/*.json",
+    "kinvest-liens/map/index.json",
+    "kinvest-liens/map/data/*.json"
   ]
