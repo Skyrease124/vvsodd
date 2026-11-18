@@ -1500,3 +1500,10 @@ body.loginpg #msg:empty{display:none}
 .ppskip{position:fixed;left:12px;top:-60px;z-index:100000;background:#22c55e;color:#06210f;font-weight:700;padding:10px 16px;border-radius:10px;text-decoration:none;transition:top .15s}
 .ppskip:focus{top:12px}
 @media(prefers-reduced-motion:reduce){.ppskip{transition:none}}
+
+/* AI 2.0: research steps and uncertainty box */
+.aitrace{margin:10px 0;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 12px;background:rgba(10,18,32,.92);color:#e6edf7}.aitrace .muted,.aitrace li{color:#c9d5e6}
+.aitrace summary{cursor:pointer;min-height:32px;display:flex;align-items:center}
+.aitrace ol{margin:6px 0 4px 18px;padding:0}.aitrace li{margin:4px 0}
+.aiunsure{margin:10px 0;border:1px solid #f59e0b;border-radius:12px;padding:10px 12px;background:rgba(245,158,11,.08)}
+.aiunsure ul{margin:6px 0 0 18px;padding:0}
