@@ -45,5 +45,16 @@
     "kinvest-liens/liens/states/liens-hillsborough.js",
     "kinvest-liens/liens/states/liens-hernando.js",
     "kinvest-liens/liens/states/liens-nassau.js",
-    "kinvest-liens/liens/states/nyc-history.js"
+    "kinvest-liens/liens/states/nyc-history.js",
+    "netlify/private/roll/*.json"
   ]
+
+# Security headers for every page. (No full Content Security Policy yet: the maps load tiles and scripts from many hosts and a strict one could break them.)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    Content-Security-Policy = "frame-ancestors 'self'"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self), camera=(), microphone=(), payment=(self)"

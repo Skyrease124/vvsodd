@@ -149,7 +149,7 @@ async function handle(event) {
 
   const today = new Date().toISOString().slice(0, 10);
   if (today !== day) { day = today; hits.clear(); }
-  if ((await usage.today()) >= (await usage.getLimit())) return json(429, {error: 'The question box is busy today. Please try again tomorrow.'});
+  { const slot = await usage.take('ask', me.email); if (!slot.ok) return json(429, { error: slot.why === 'user' ? 'You have reached today\u2019s question limit. It resets tomorrow.' : 'The question box is busy today. Please try again tomorrow.' }); }
   const ip = ((event.headers || {})['x-nf-client-connection-ip'] || (event.headers || {})['x-forwarded-for'] || 'unknown').split(',')[0].trim();
   const now = Date.now(), recent = (hits.get(ip) || []).filter(t => now - t < 3600000);
   if (recent.length >= PER_IP_HOURLY) return json(429, {error: 'That is a lot of questions. Please wait a while and try again.'});

@@ -80,7 +80,7 @@ export async function checkLogin(email, password) {
   return u && crypto.timingSafeEqual(h, want) ? u : null;
 }
 export async function sessionCookie(email) {
-  const tok = await sign({ e: email, iat: Date.now(), exp: Date.now() + DAYS * 864e5 });
+  const tok = await sign({ e: email, iat: Date.now(), exp: Date.now() + DAYS * 864e5, sid: crypto.randomBytes(9).toString('base64url') });
   return `${COOKIE}=${tok}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 export const clearCookie = () => `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
@@ -93,9 +93,19 @@ export async function userFromCookie(cookieHeader) {
   // a password change signs out every older session
   if (!u || (p.iat || 0) < (u.pwChanged || 0)) return null;
   if (u.revoked) return null;
+  // a signed-out session stays dead (new sessions carry an id; sessions from before that change are cut off by the sign-out time)
+  if (p.sid ? (u.rs || []).some(x => x.sid === p.sid) : (p.iat || 0) < (u.loggedOutLegacy || 0)) return null;
   return markOwner(u);
 }
 export async function saveUser(u) { await put(userKey(u.email), u); }
+// Sign out: remember this session's id until it would have expired anyway, so a copied cookie stops working.
+export async function revokeSession(cookieHeader) {
+  const m = String(cookieHeader || '').match(new RegExp('(?:^|;\\s*)' + COOKIE + '=([^;]+)')); const p = m && await verify(m[1]); if (!p) return false;
+  const u = await get(userKey(p.e)); if (!u) return false;
+  if (p.sid) { u.rs = (u.rs || []).filter(x => x.exp > Date.now()).concat({ sid: p.sid, exp: p.exp }).slice(-50); }
+  else u.loggedOutLegacy = Date.now();
+  await put(userKey(u.email), u); return true;
+}
 
 export const getUser = async email => { const u = await get(userKey(email)); return u ? markOwner(u) : u; };
 export async function setPassword(email, password) {
