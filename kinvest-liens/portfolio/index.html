@@ -21,7 +21,7 @@
 <section class="wrap section">
   <p id="pfgreet" class="hgreet"></p>
   <h1 class="pfh">My <span class="gold">portfolio</span></h1>
-  <div class="notice" role="note"><b>A record-keeper, not advice.</b> Dates and interest here are estimates from what you type and from our state guide. Confirm every deadline and payoff with the county.</div>
+  <div class="notice" role="note"><b>A record-keeper, not advice.</b> Where we have read a state&rsquo;s statute (Florida, Arizona and Iowa so far) the numbers follow that state&rsquo;s rules; every other state shows a clearly labeled basic estimate. Projected returns are never guaranteed. Confirm every deadline and payoff with the county.</div>
   <p id="gate" class="notice" hidden><a href="../account/">Sign in or create a free account</a> to keep a portfolio.</p>
   <div id="app" hidden>
     <div id="sum" class="salebox"></div>
@@ -33,10 +33,17 @@
       <label>County <input id="county" maxlength="60"></label>
       <label>Parcel number (PIN) <input id="parcel" maxlength="40" autocomplete="off"></label>
       <label>What I paid ($) <input id="paid" inputmode="decimal"></label>
-      <label>Interest rate (% per year) <input id="rate" inputmode="decimal"></label>
+      <label id="ratelabel">Interest rate (% per year) <input id="rate" inputmode="decimal"></label>
       <label>Date I bought it <input id="bought" type="date"></label>
-      <label>Redemption period (months) <input id="months" inputmode="numeric"></label>
-      <p class="small muted" id="mhint"></p>
+      <div id="monthswrap"><label>Redemption period (months) <input id="months" inputmode="numeric"></label>
+      <p class="small muted" id="mhint"></p></div>
+      <div id="rulebox" class="pfrule" hidden></div>
+      <details class="pfopt"><summary>Optional: events that change the deadline</summary>
+        <label id="evlabel">Notice, tax deed application or foreclosure filed (date, optional) <input id="deedApplied" type="date"></label>
+        <p class="small muted" id="evhint"></p>
+        <label>Deadline confirmed by the county (date, optional) <input id="countyDeadline" type="date"></label>
+        <label>Later-year taxes and fees you paid ($, optional) <input id="extra" inputmode="decimal"></label>
+      </details>
       <label>Status <select id="status"><option value="open">Open (waiting)</option><option value="redeemed">Redeemed (owner paid)</option><option value="foreclosure">Foreclosure started</option><option value="other">Other / closed</option></select></label>
       <label id="closedwrap" hidden>Date it closed <input id="closed" type="date"></label>
       <label>Notes <textarea id="notes" maxlength="300" rows="3" style="width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px"></textarea></label>
@@ -51,6 +58,7 @@
 </main>
 <footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
 <script src="../liens/states/states.js"></script>
+<script src="../liens/lien-rules.js"></script>
 <script src="portfolio.js"></script>
 <script src="/auth-nav.js"></script>
 </body>

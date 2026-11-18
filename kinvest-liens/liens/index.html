@@ -51,13 +51,20 @@
 <section id="calculator" class="band">
   <div class="wrap section">
     <h2>Return calculator</h2>
-    <p class="muted">Illustrative simple-interest estimate. Actual rules (premium bids, penalty tiers, fees) vary by state and county.</p>
+    <p class="muted" id="calcintro">Pick a state to use its own rules where we have read the statute (Florida, Arizona and Iowa so far). Any other choice gives a basic simple-interest estimate only. Projected returns are never guaranteed.</p>
     <form id="calc" class="calc" novalidate>
+      <label>State<select id="cstate"><option value="">Basic estimate (any state)</option><option value="FL">Florida (rules verified)</option><option value="AZ">Arizona (rules verified)</option><option value="IA">Iowa (rules verified)</option></select></label>
+      <div id="cdates" class="cdates" hidden>
+        <label>Purchase date<input id="cbought" type="date"></label>
+        <label>Date the owner redeems (your guess)<input id="credeem" type="date"></label>
+        <label id="cevlabel">Notice, tax deed or foreclosure filed (optional)<input id="cevent" type="date"></label>
+      </div>
       <label>Lien amount ($)<input id="amount" type="number" min="0" step="100" value="5000"></label>
-      <label>Annual interest rate (%)<input id="rate" type="number" min="0" max="50" step="0.25" value="12"></label>
-      <label>Months until redemption<input id="months" type="number" min="1" max="60" step="1" value="12"></label>
+      <label id="crlabel"><span>Annual interest rate (%)</span><input id="rate" type="number" min="0" max="50" step="0.25" value="12"></label>
+      <label id="cmwrap"><span>Months until redemption</span><input id="months" type="number" min="1" max="60" step="1" value="12"></label>
       <label>Fees &amp; costs ($)<input id="fees" type="number" min="0" step="10" value="100"></label>
     </form>
+    <div id="cdetail" class="cdetail" aria-live="polite"></div>
     <div class="results" aria-live="polite">
       <div><span>Interest earned</span><b id="r-int">$0</b></div>
       <div><span>Total repaid to you</span><b id="r-tot">$0</b></div>
@@ -108,6 +115,7 @@
     <p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p>
   </div>
 </footer>
+<script src="lien-rules.js"></script>
 <script src="../script.js"></script>
 <script src="/auth-nav.js"></script>
 </body>
