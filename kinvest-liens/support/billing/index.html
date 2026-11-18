@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Billing support | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<meta name="description" content="Contact PricePocketAsset about a charge, a refund, cancelling, or a payment you did not authorize.">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="../../"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav><a href="../../account/">Account</a></nav>
+  </div>
+</header>
+<main>
+<section class="wrap section narrow legal">
+<h1>Billing support</h1>
+<p>Use this form for a charge you do not recognize, a refund request, a billing question, or a payment you did not authorize. Please do not include card numbers or security codes. We will reply by email.</p>
+<p><b>You can cancel without contacting us:</b> open <a href="../../account/">Account</a> and tap <b>Manage subscription</b>. If you think a payment was made without your permission, you can also contact your bank or card issuer at any time; you do not have to wait for us.</p>
+<form id="bill" class="lead-form" name="billing-support" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+  <input type="hidden" name="form-name" value="billing-support">
+  <p hidden><label>Leave blank <input name="bot-field"></label></p>
+  <label>Your email (the one on your account)<input name="email" type="email" required autocomplete="email"></label>
+  <label>What is this about?
+    <select name="topic" required>
+      <option value="">Choose one</option>
+      <option>A charge I do not recognize or did not authorize</option>
+      <option>Refund request</option>
+      <option>Cancel my subscription</option>
+      <option>Billing question</option>
+      <option>Donation question</option>
+      <option>Something else about payments</option>
+    </select>
+  </label>
+  <label>Charge date and amount, if you know them<input name="charge" autocomplete="off" placeholder="e.g. Nov 18, $5.50"></label>
+  <label>Tell us what happened<textarea name="message" rows="5" required maxlength="2000"></textarea></label>
+  <button class="btn" type="submit">Send</button>
+  <p id="bill-msg" class="muted" role="status"></p>
+</form>
+<p class="small muted"><a href="../../legal/privacy/">Privacy</a> &middot; <a href="../../legal/terms/">Terms</a> &middot; <a href="../../legal/billing/">Billing &amp; refunds</a> &middot; <a href="../../legal/donations/">Donations</a></p>
+</section>
+</main>
+<footer><div class="wrap"><p><b>PricePocketAsset</b> &copy; <span id="yr"></span></p></div></footer>
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.getElementById('bill').addEventListener('submit', async e => {
+  e.preventDefault(); const f = e.target, m = document.getElementById('bill-msg'); m.textContent = 'Sending...';
+  try { const r = await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(new FormData(f)).toString() }); if (!r.ok) throw new Error(r.status); m.textContent = 'Thank you. We received your message and will reply by email.'; f.reset(); }
+  catch (err) { m.textContent = 'Sorry, that did not send. Please try again.'; }
+});
+</script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>

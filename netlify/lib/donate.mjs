@@ -6,12 +6,15 @@ export function cents(v) {
   if (!Number.isFinite(n)) return null; const c = Math.round(n * 100);
   return c >= MIN_USD * 100 && c <= MAX_USD * 100 ? c : null;
 }
-export function sessionParams(c, site) {
+import * as P from './policy.mjs';
+export function sessionParams(c, site, ack) {
+  const meta = { kind: 'donation', policy_version: P.POLICY_VERSION, ack_at: ack || '' };
   return {
     mode: 'payment', submit_type: 'donate',
     line_items: [{ quantity: 1, price_data: { currency: 'usd', unit_amount: c, product_data: { name: 'Support PricePocketAsset', description: 'A voluntary donation to help keep the website running. It does not unlock any features.' } } }],
     success_url: site + '/donate/?thanks=1', cancel_url: site + '/donate/',
-    payment_intent_data: { description: 'PricePocketAsset donation', metadata: { kind: 'donation' } }, metadata: { kind: 'donation' },
+    payment_intent_data: { description: 'PricePocketAsset donation', metadata: meta }, metadata: meta,
+    custom_text: { submit: { message: P.donationCheckoutText(site) } }, payment_method_options: { card: { request_three_d_secure: 'automatic' } },
     billing_address_collection: 'auto', allow_promotion_codes: false
   };
 }
