@@ -5,7 +5,7 @@ let bad = 0; const ok = (c, m) => { console.log(c ? 'PASS' : 'FAIL', m); if (!c)
 const FAKE = `window.__os=[];window.OneSignalDeferred=window.OneSignalDeferred||[];
 const st={perm:false,opted:false,ext:null};const rec=(n,a)=>window.__os.push(n+(a!==undefined?':'+a:''));
 const OS={init:async o=>{rec('init',o.appId);rec('autoPromptOff:'+(o.promptOptions.slidedown.prompts[0].autoPrompt===false));rec('sw:'+o.serviceWorkerPath)},
- login:async id=>{st.ext=id;rec('login',id)},logout:async()=>{st.ext=null;rec('logout')},
+ login:async id=>{if(window.__hangLogin)return new Promise(()=>{});st.ext=id;rec('login',id)},logout:async()=>{st.ext=null;rec('logout')},
  Notifications:{get permission(){return st.perm},isPushSupported:()=>true,requestPermission:async()=>{rec('requestPermission');st.perm=true}},
  User:{PushSubscription:{get optedIn(){return st.opted},optIn:async()=>{st.opted=true;rec('optIn')},optOut:async()=>{st.opted=false;rec('optOut')}}}};
 const q=window.OneSignalDeferred;window.OneSignalDeferred={push:f=>{Promise.resolve().then(()=>f(OS))}};q.forEach(f=>window.OneSignalDeferred.push(f));`;
@@ -66,6 +66,10 @@ await p.locator('.pushbox').screenshot({ path: OUT + '/iphone-homescreen.png' })
 ctx = await b.newContext({ ...devices['Pixel 7'], permissions: ['notifications'] }); ({ p } = await setup(ctx, 'a')); await p.goto(BASE + '/account/'); await p.waitForTimeout(1500);
 ok(await p.locator('button:has-text("Enable notifications")').isVisible(), 'Android: Enable button shown'); await p.locator('.pushbox').screenshot({ path: OUT + '/android.png' });
 ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'Android: no sideways scrolling'); await ctx.close();
+// 5b. OneSignal never finishes login (Token Identity Verification on): clear message instead of hanging
+ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); await ctx.addInitScript(() => { window.__hangLogin = true; }); ({ p } = await setup(ctx, 'a')); await p.goto(BASE + '/account/'); await p.waitForTimeout(1200);
+await p.click('text=Enable notifications'); await p.waitForTimeout(14000);
+ok(await p.locator('text=Token Identity Verification').first().isVisible(), 'login that never finishes: tells the owner to turn off Token Identity Verification'); await ctx.close();
 // 6b. permission already blocked in the browser: clear message, no button
 ctx = await b.newContext({ viewport: { width: 390, height: 844 } }); ctx.__noperm = true; ({ p } = await setup(ctx, 'a')); await p.goto(BASE + '/account/'); await p.waitForTimeout(1500);
 ok(await p.locator('text=Blocked in your browser settings').isVisible(), 'blocked permission: explains how to fix, no button'); await ctx.close();

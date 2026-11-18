@@ -28,6 +28,7 @@
     return loading;
   }
   const api = async (method, body) => { const r = await fetch(FN, { method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined }); let d = {}; try { d = await r.json(); } catch (e) { /* empty */ } return { ok: r.ok, status: r.status, d }; };
+  const withTO = (p, ms, label) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout:' + label)), ms))]);
   const timeout = (p, ms) => Promise.race([p, new Promise(res => setTimeout(() => res(null), ms))]);
 
   // Called on every page by auth-nav.js with the signed-in user (or null). Keeps the device tied to the right account.
@@ -77,10 +78,10 @@
         if (!OS.Notifications.isPushSupported()) { say('This browser does not support push notifications.', true); return; }
         await OS.Notifications.requestPermission(); // the browser prompt: only now, after the member tapped Enable
         if (!OS.Notifications.permission) { say('Permission was not given, so nothing was turned on.', true); await refresh(); return; }
-        await OS.login(cfg.pushId); await OS.User.PushSubscription.optIn();
+        await withTO(OS.login(cfg.pushId), 12000, 'login'); await withTO(OS.User.PushSubscription.optIn(), 12000, 'optIn');
         const r = await api('POST', { action: 'enable', enabled: true, subscribed: true }); if (!r.ok) { say(r.d.error || 'Could not save.', true); return; }
         cfg.prefs = r.d.prefs; store.set(FLAG, '1'); say(''); await refresh();
-      } catch (e) { say(/only be used on|origin/i.test(String(e && (e.message || e))) ? 'Notifications can only be turned on at pricepocketasset.com (not on a preview address).' : 'Could not turn notifications on. Please try again.', true); } finally { en.disabled = false; }
+      } catch (e) { say(/timeout:login/.test(String(e && e.message)) ? 'This device is subscribed, but OneSignal did not link it to your account. In OneSignal, turn OFF Token Identity Verification (Settings > Keys & IDs), then tap Enable again.' : /timeout:/.test(String(e && e.message)) ? 'OneSignal is taking too long. Please try again.' : /only be used on|origin/i.test(String(e && (e.message || e))) ? 'Notifications can only be turned on at pricepocketasset.com (not on a preview address).' : 'Could not turn notifications on. Please try again.', true); } finally { en.disabled = false; }
     });
     off.addEventListener('click', async () => { off.disabled = true; try { OS = OS || await load(cfg.appId); await OS.User.PushSubscription.optOut(); } catch (e) { /* still turn off on our side */ } const r = await api('POST', { action: 'enable', enabled: false }); if (r.ok) { cfg.prefs = r.d.prefs; optedIn = false; say('Notifications are off.'); } off.disabled = false; await refresh(); });
     test.addEventListener('click', async () => { test.disabled = true; say('Sending…'); const r = await api('POST', { action: 'test' }); say(r.ok ? 'Sent. It should arrive in a few seconds.' : (r.d.error || 'Could not send.'), !r.ok); test.disabled = false; });
