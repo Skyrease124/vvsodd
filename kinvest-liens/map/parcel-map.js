@@ -86,7 +86,7 @@
   function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || { top: 90, bottom: 60, left: 40, right: window.innerWidth > 979 ? 40 : 20 }, maxZoom: 17.5, duration: REDUCED ? 0 : 1100, easing: t => 1 - Math.pow(1 - t, 3) }); }
 
   // ---------- top bar and filters ----------
-  const ICON = { layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
+  const ICON = { layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
   function iconBtn(svg, label, fn, cls) { const b = mk('button', 'pm-ib ' + (cls || '')); b.type = 'button'; b.innerHTML = svg; b.setAttribute('aria-label', label); b.title = label; b.addEventListener('click', fn); return b; }
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
@@ -99,7 +99,7 @@
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
     const lay = iconBtn(ICON.layers, 'Map type', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => openAi(), 'pm-aib');
-    const stack = mk('div', 'pm-stack'); stack.append(lay, fb, aib, seg);
+    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); stack.append(lay, fb, camb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     t.append(pill, stack, area); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
@@ -205,7 +205,7 @@
   const tile = (k, v, s) => { const t = mk('div', 't'); t.append(mk('span', 'k', k), mk('b', '', v == null || v === '' ? '—' : String(v))); if (s) t.appendChild(mk('span', 's', s)); return t; };
   function group(title, open, fill) { const g = mk('details', 'grp'); if (open) g.open = true; const s = mk('summary'); s.append(mk('span', '', title), mk('i', 'chev')); g.appendChild(s); const dl = mk('dl'); fill(dl, g); g.appendChild(dl); return g; }
   function popup(r) {
-    const ap = $('pmAi'); if (ap) ap.hidden = true; const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
+    const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
     const hd = mk('div', 'hd'), ttl = mk('div', 't'); ttl.append(mk('b', r.a ? '' : 'idt', r.a || r.p), mk('span', '', (r.a ? '' : 'Parcel ID · ') + d.county + ', ' + d.state + (r.a ? ' · ' + r.p : ''))); const x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closePop); hd.append(ttl, x); p.appendChild(hd);
     const bd = mk('div', 'bd'); bd.appendChild(hero(r, d));
     // key facts
@@ -233,6 +233,7 @@
     if (d.gis) more.appendChild(li('View official county GIS', d.gis.url, true));
     if (d.report) more.appendChild(li('Download parcel PDF' + (paid ? '' : ' (Pro)'), '/ai/report/?county=' + encodeURIComponent(d.county) + '&parcel=' + encodeURIComponent(r.p), true));
     more.appendChild(li('Add to my portfolio', '/portfolio/?add=1&state=' + d.state + '&county=' + encodeURIComponent(d.county.replace(/ County$/, '')) + '&parcel=' + encodeURIComponent(r.p) + (r.amt != null ? '&paid=' + r.amt : '')));
+    if (r.cx) { const cb = li('Live cameras near here'); cb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); more.appendChild(cb); }
     const nb = li('View nearby properties'); nb.addEventListener('click', () => { showNear(r, 1); }); more.appendChild(nb);
     const mb = ab('More', '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>', () => { more.hidden = !more.hidden; mb.classList.toggle('on', !more.hidden); });
     bar.append(sp, ai, det, mb); p.append(more, bar); p.hidden = false;
@@ -296,7 +297,7 @@
     if (open) openRight(true); if (t === 'ai') { aiRefresh(); }
   }
   function openAi(q0, run) {
-    showTab('ai', true); $('pmPop').hidden = true; if (!aiEls) { if (q0) say('Sign in with a Pro account to ask PricePocket AI.'); return; }
+    showTab('ai', true); $('pmPop').hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } if (!aiEls) { if (q0) say('Sign in with a Pro account to ask PricePocket AI.'); return; }
     if (q0) { aiEls.i.value = q0; if (run) aiEls.f.requestSubmit(); } setTimeout(() => { try { aiEls.i.focus({ preventScroll: true }); } catch (e) {} }, 60);
   }
   function setStateHl(codes) { hlStates = codes; if (mapReady && map.getLayer('st-hl')) map.setFilter('st-hl', ['in', ['get', 'a'], ['literal', codes.length ? codes : ['__none__']]]); }
@@ -321,6 +322,55 @@
     aiAgain();
   }
   function aiAgain() { const b = mk('button', 'pm-btn', 'Ask something else'); b.type = 'button'; b.style.margin = '6px 0 12px'; b.addEventListener('click', () => { aiEls.out.textContent = ''; aiEls.tryH.hidden = false; aiEls.grid.hidden = false; aiEls.i.value = ''; setStateHl([]); if (mapReady) map.getSource('near').setData(empty); aiEls.i.focus(); }); aiEls.out.appendChild(b); }
+
+    // ---------- Live cameras (Pro): official public camera feeds near the map or a parcel. Uses the site's existing /cameras service; nothing is guessed. ----------
+  let camsOn = false, camMk = [], camTimer = null, camHls = null, camLast = null, camSel = null, camCtl = null, camMove = null;
+  const CAM_HLS = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js';
+  const camHav = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 3958.8 * 2 * Math.asin(Math.sqrt(h)); };
+  function camPanel() { let p = $('pmCam'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmCam'; p.setAttribute('aria-label', 'Live cameras'); $('pmTop').parentNode.appendChild(p); } return p; }
+  function camStop() { if (camTimer) { clearInterval(camTimer); camTimer = null; } if (camHls) { try { camHls.destroy(); } catch (e) {} camHls = null; } const p = $('pmCam'); if (p) p.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
+  function camClear() { camMk.forEach(x => x.remove()); camMk = []; }
+  function camOff() { camsOn = false; camStop(); camClear(); const p = $('pmCam'); if (p) p.hidden = true; const b = $('pmCamBtn'); if (b) b.classList.remove('on'); if (map && map.off) map.off('moveend', camMoved); }
+  function toggleCams() { if (camsOn) return camOff(); openCams(null, null, false); }
+  function camMoved() { if (!camsOn) return; clearTimeout(camMove); camMove = setTimeout(() => { if (!camLast || !mapReady) return; const c = map.getCenter(); if (camHav(c.lat, c.lng, camLast.lat, camLast.lng) > Math.max(2, camLast.radius / 3)) openCams(null, null, true); }, 900); }
+  async function openCams(center, radius, keep) {
+    const p = camPanel(); camsOn = true; $('pmCamBtn').classList.add('on'); p.hidden = false; $('pmPop').hidden = true; const ai = $('pmAi'); if (ai) ai.hidden = true; if (isMobile()) setSnap('peek');
+    p.textContent = ''; const hd = mk('div', 'hd'), x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close cameras'); x.addEventListener('click', camOff); hd.append(mk('b', '', 'Live cameras'), x); p.appendChild(hd);
+    if (!signedIn || !paid) { const g = mk('p', 'pm-flag warn'); g.append(document.createTextNode(signedIn ? 'Live cameras are for Pro members. ' : 'Sign in to see live cameras. ')); const a = mk('a', '', signedIn ? 'See the Pro plan' : 'Sign in'); a.href = signedIn ? '/account/' : '/login/?next=/map/%3Fcams%3D1'; a.style.color = '#fde68a'; g.appendChild(a); p.appendChild(g); return; }
+    if (!mapReady) { p.appendChild(mk('p', 'note', 'The map is still loading.')); return; }
+    if (!center && map.getZoom() < 8) { p.appendChild(mk('p', 'note', 'Zoom in a little (to about a county) and the public cameras in view will appear.')); camClear(); camLast = null; map.off('moveend', camMoved); map.on('moveend', camMoved); return; }
+    let lat, lng, rad; if (center) { lat = center.lat; lng = center.lng; rad = radius || 10; map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 12), duration: REDUCED ? 0 : 900 }); } else { const c = map.getCenter(), b = map.getBounds(); lat = c.lat; lng = c.lng; rad = Math.max(3, Math.min(50, Math.round(camHav(b.getSouth(), b.getWest(), b.getNorth(), b.getEast()) / 2))); }
+    p.appendChild(mk('p', 'note', 'Finding public cameras…')); let d; const ac = new AbortController(), to = setTimeout(() => ac.abort(), 25000);
+    try { const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat: lat.toFixed(5), lng: lng.toFixed(5), radius: rad, limit: 20 }), { credentials: 'same-origin', signal: ac.signal }); d = await r.json(); if (!r.ok || !d || d.ok !== true) throw new Error(); } catch (e) { clearTimeout(to); p.lastChild.remove(); p.appendChild(mk('p', 'pm-flag warn', 'Cameras are temporarily unavailable. Please try again in a moment.')); return; } clearTimeout(to);
+    camLast = { lat, lng, radius: rad }; camSel = null; camStop(); camClear(); p.querySelectorAll('.note').forEach(n => n.remove()); renderCams(p, d, { lat, lng });
+    map.off('moveend', camMoved); map.on('moveend', camMoved);
+  }
+  function renderCams(p, d, ctr) {
+    const okP = d.providers.filter(x => x.status === 'ok'), badP = d.providers.filter(x => x.status === 'unavailable'), viewP = d.providers.filter(x => x.status === 'viewer');
+    const list = mk('div', 'camlist'), pv = mk('div', 'campv'); pv.setAttribute('aria-live', 'polite'); const items = [];
+    const choose = c => { camSel = c; items.forEach(it => { it.b.classList.toggle('on', it.c === c); it.el.classList.toggle('on', it.c === c); }); camPreview(pv, c, ctr); };
+    d.cameras.forEach((c, i) => { const el = mk('button', 'pm-cammk', String(i + 1)); el.type = 'button'; el.title = c.name; el.setAttribute('aria-label', 'Camera ' + (i + 1) + ': ' + c.name); el.addEventListener('click', e => { e.stopPropagation(); choose(c); }); camMk.push(new maplibregl.Marker({ element: el }).setLngLat([c.lng, c.lat]).addTo(map));
+      const b = mk('button', 'camitem'); b.type = 'button'; b.append(mk('b', '', (i + 1) + '. ' + c.name), mk('span', '', (c.miles < 0.1 ? '<0.1' : c.miles.toFixed(1)) + ' mi · ' + c.type + ' · ' + (c.kind === 'video' ? 'Live video' : c.kind === 'snapshot' ? 'Updated snapshot' : 'Official page'))); b.addEventListener('click', () => { choose(c); map.easeTo({ center: [c.lng, c.lat], duration: REDUCED ? 0 : 700 }); }); list.appendChild(b); items.push({ c, b, el }); });
+    if (d.cameras.length) { p.appendChild(mk('p', 'note', d.cameras.length + ' closest public camera' + (d.cameras.length === 1 ? '' : 's') + ' within ' + d.radius + ' miles (straight-line distance' + (d.totalInRadius > d.cameras.length ? '; ' + d.totalInRadius + ' in range, showing the closest' : '') + ').')); p.append(pv, list); }
+    else if (okP.length) p.appendChild(mk('p', 'note', 'No public cameras found within ' + d.radius + ' miles of this view. Try zooming out or moving the map.'));
+    else if (!badP.length) p.appendChild(mk('p', 'note', 'We do not have a live camera feed for this area yet. Live cameras are built in where an official state feed is available (today: Florida, California and the Fort Myers beaches).'));
+    badP.forEach(x => { const q = mk('p', 'note'); q.append(x.name + ' cameras are temporarily unavailable. '); const a = mk('a', '', 'Open the official viewer'); a.href = x.viewer; a.target = '_blank'; a.rel = 'noopener noreferrer'; q.appendChild(a); p.appendChild(q); });
+    viewP.forEach(x => { const q = mk('p', 'note'); q.append(x.state + ' cameras nearby: '); const a = mk('a', '', 'open the ' + x.name + ' official viewer'); a.href = x.viewer; a.target = '_blank'; a.rel = 'noopener noreferrer'; q.append(a, ' (not built into this map).'); p.appendChild(q); });
+    p.appendChild(mk('p', 'note', 'Cameras show conditions where the camera is, not at any property. Feeds come from state transportation departments and tourism offices; availability and update times vary.'));
+    if (d.cameras.length) choose(d.cameras[0]);
+  }
+  function camPreview(pv, c, ctr) {
+    camStop(); pv.textContent = ''; pv.appendChild(mk('h4', '', c.name)); const meta = [c.road, c.direction].filter(Boolean).join(' · '); if (meta) pv.appendChild(mk('div', 'note', meta));
+    const media = mk('div', 'cammedia'), upd = mk('div', 'note'); pv.append(media, upd);
+    const bad = () => { media.textContent = ''; media.appendChild(mk('p', 'pm-flag warn', 'Camera unavailable right now.')); upd.textContent = ''; };
+    const snap = () => { if (!c.image) return bad(); const img = mk('img'); img.alt = 'Latest snapshot from ' + c.name; img.decoding = 'async'; img.referrerPolicy = 'no-referrer'; const load = () => { img.src = c.image + (c.image.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 60000); upd.textContent = 'Snapshot refreshes about every minute. Last loaded ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) + '.'; }; img.onerror = bad; media.appendChild(img); load(); camTimer = setInterval(() => { if (!document.hidden && img.isConnected) load(); }, 60000); };
+    if (c.kind === 'viewer') { const a = mk('a', 'pm-btn', 'Open official camera'); a.href = c.viewer; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.cssText = 'display:inline-flex;align-items:center;text-decoration:none'; media.appendChild(a); upd.textContent = 'The live view opens on the operator’s official page.'; }
+    else if (c.kind === 'video' && c.video) { const v = mk('video'); v.muted = true; v.playsInline = true; v.controls = true; v.autoplay = true; v.setAttribute('aria-label', 'Live video from ' + c.name); media.appendChild(v); upd.textContent = 'Live video from the official stream.'; let failed = false; const fail = () => { if (failed || !v.isConnected) return; failed = true; camStop(); media.textContent = ''; snap(); upd.textContent = 'Live video did not play here; showing the latest snapshot instead.'; }; v.addEventListener('error', fail); setTimeout(() => { if (!failed && v.readyState < 2) fail(); }, 12000);
+      if (v.canPlayType('application/vnd.apple.mpegurl')) v.src = c.video; else new Promise((ok, no) => { if (window.Hls) return ok(); const s = document.createElement('script'); s.src = CAM_HLS; s.onload = ok; s.onerror = no; document.head.appendChild(s); }).then(() => { if (!window.Hls || !Hls.isSupported()) return fail(); const h = new Hls(); camHls = h; h.on(Hls.Events.ERROR, (e, x) => { if (x && x.fatal) fail(); }); h.loadSource(c.video); h.attachMedia(v); }).catch(fail); }
+    else snap();
+    const src = mk('p', 'note'); src.append('Source: ' + c.operator + '. '); if (c.viewer) { const a = mk('a', '', 'Official viewer'); a.href = c.viewer; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); } if (c.sourceMeta) src.append(' · ' + c.sourceMeta + '.'); pv.appendChild(src);
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) camStop(); else if (camsOn && camSel) { const pv = document.querySelector('#pmCam .campv'); if (pv) camPreview(pv, camSel); } });
 
   // ---------- states layer: the national view (tap a state to zoom in; the AI follows) ----------
   async function addStates() {
@@ -356,7 +406,7 @@
 
   // ---------- start ----------
   async function start2() {
-    const q = new URLSearchParams(location.search), c = q.get('c'), p = q.get('p'); if (q.get('s') && IDX.allStates.some(x => x.a === q.get('s'))) focusState(q.get('s')); if (!c || !IDX.datasets.some(d => d.id === c)) return;
+    const q = new URLSearchParams(location.search), c = q.get('c'), p = q.get('p'); if (q.get('s') && IDX.allStates.some(x => x.a === q.get('s'))) focusState(q.get('s')); if (q.get('cams') && q.get('lat') && q.get('lng')) setTimeout(() => openCams({ lat: +q.get('lat'), lng: +q.get('lng') }, 15, true), 800); if (!c || !IDX.datasets.some(d => d.id === c)) return;
     await pickCounty(c); if (p) { const r = all().find(x => x.p === p); if (r) select(r, { fly: true }); }
   }
   function loadLib() { return new Promise((res, rej) => { if (window.maplibregl) return res(); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = () => rej(new Error('map library')); document.head.appendChild(s); }); }
