@@ -16,6 +16,7 @@ const LAND = vm.runInNewContext('(' + fs.readFileSync(path.join(ST, 'lien-ui.js'
 const readJson = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return null; } };
 const OWNER_ENTITY = /\b(LLC|L\.L\.C|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LP|LLP|LTD|TRUST|TR|ESTATE|ASSOC|ASSOCIATION|BANK|CHURCH|PARTNERS|PARTNERSHIP|HOLDINGS|PROPERTIES|INVESTMENTS?|REALTY|DEVELOPMENT|ENTERPRISES?|FOUNDATION|CITY OF|COUNTY OF|STATE OF|UNITED STATES|HOA|HOMEOWNERS)\b/i;
 const ownerType = o => !o ? null : /\b(CITY OF|COUNTY OF|STATE OF|UNITED STATES|COUNTY|DISTRICT|AUTHORITY)\b/i.test(o) ? 'Government' : /\bTRUST|ESTATE\b/i.test(o) ? 'Trust or estate' : OWNER_ENTITY.test(o) ? 'Business or entity' : 'Individual(s)';
+const XC = readJson(path.join(ROOT, 'tools/crosscheck/owners.json')) || {};
 const tidy = s => String(s || '').replace(/\s+/g, ' ').trim();
 const normOwner = s => tidy(s).toUpperCase().replace(/[^A-Z0-9 ]/g, '').replace(/\b(LLC|INC|CORP|CO)\b/g, '').trim();
 
@@ -68,7 +69,9 @@ for (const f of fs.readdirSync(ST).filter(x => /^liens-.*\.js$/.test(x) && x !==
   const L = run(f, 'this.LIENS=LIENS').LIENS; if (!L.length) continue; const county = L[0].county, state = L[0].state || 'FL';
   const lo = LAND[county]; const file = state === 'FL' ? slug(county) + '.json' : lo && lo.file;
   const outlines = file && readJson(path.join(ST, 'parcels', file)), hoa = state === 'FL' ? readJson(path.join(ST, 'hoa', slug(county) + '.json')) : null;
-  const recs = L.map(l => recFrom(l, state, outlines, hoa)); const checked = recs.map(r => r.ck).filter(Boolean).sort();
+  const recs = L.map(l => recFrom(l, state, outlines, hoa)); const XD = (XC.differ || {})[state + '-' + county]; // county GIS owner differs from the sale list: show the GIS owner, note the list name
+  if (XD) recs.forEach((r, n) => { const g = XD[L[n].parcel]; if (g) { r.oa = r.o; r.o = g; r.os = 'County GIS parcel record'; r.ot = ownerType(g); } });
+  const checked = recs.map(r => r.ck).filter(Boolean).sort();
   emit(state + '-' + slug(county), state, county, recs, { kind: 'county-list', updated: checked.length ? checked[checked.length - 1] : null, sources: [...new Set(recs.map(r => r.su).filter(Boolean))].slice(0, 3), outlineSource: outlines ? (outlines.source || outlines.sources || (lo && lo.src) || 'county GIS') : null });
 }
 // 2) Alabama state-held land (ADOR transcripts), outlines where an exact-ID outline file exists
