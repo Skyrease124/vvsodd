@@ -53,7 +53,8 @@
     r.d.rows.forEach(x => hr.append(mk('th', '', x['Property address'] || 'Parcel ' + x['Parcel ID']))); t.appendChild(hr);
     const row = (label, f) => { const tr = mk('tr'); tr.append(mk('td', '', label)); r.d.rows.forEach(x => tr.append(mk('td', '', f(x)))); t.appendChild(tr); };
     row('Parcel ID', x => x['Parcel ID']); CMP.forEach(k => row(k, x => x[k] === '' || x[k] == null ? 'Not on file' : (k === 'Amount on the list' ? '$' + Number(x[k]).toLocaleString('en-US') : String(x[k]))));
-    w.appendChild(t); bd.appendChild(w); if (r.d.missing && r.d.missing.length) bd.append(mk('p', 'note', r.d.missing.length + ' selected ' + (r.d.missing.length === 1 ? 'property is' : 'properties are') + ' not in our records yet.'));
+    w.appendChild(t); bd.appendChild(w);
+    { const rs = r.d.rows.slice(0, 3), cs = new Set(rs.map(x => x.County + '|' + x.State)); if (rs.length > 1 && cs.size === 1) { const q = 'Compare parcels ' + rs.map(x => x['Parcel ID']).join(', ') + ' in ' + rs[0].County + ', ' + rs[0].State + ': risks and what to verify before bidding'; const a = mk('a', 'ppab', 'Ask AI to compare' + (rs.length < r.d.rows.length ? ' the first 3' : '')); a.href = '/ai/?q=' + encodeURIComponent(q); a.style.cssText = 'display:inline-flex;align-items:center;text-decoration:none;color:#fff'; ft.prepend(a); } } if (r.d.missing && r.d.missing.length) bd.append(mk('p', 'note', r.d.missing.length + ' selected ' + (r.d.missing.length === 1 ? 'property is' : 'properties are') + ' not in our records yet.'));
   }
   async function openSave(list) {
     const { d, bd, ft } = dialog('Save to a list'); if (!list.length) { bd.append(mk('p', '', 'Select some properties first.')); ft.append(btn('Close', '', () => d.close())); return; }
