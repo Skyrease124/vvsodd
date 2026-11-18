@@ -18,9 +18,10 @@
 
   // ---------- data ----------
   function expand(ds) { const D = ds.dict; ds.recs.forEach(r => { for (const k in D) if (r[k] != null) r[k] = D[k][r[k]]; r._d = ds.id; r._n = ((r.a || '') + ' ' + (r.o || '') + ' ' + r.p).toLowerCase(); }); return ds; }
+  function skeleton() { const R = $('pmResults'); R.textContent = ''; for (let i = 0; i < 6; i++) { const s = mk('div', 'pm-skel'); s.append(mk('i'), mk('i'), mk('i')); R.appendChild(s); } }
   async function load(id) {
     if (loaded[id]) return loaded[id]; const d = IDX.datasets.find(x => x.id === id); if (!d) return null;
-    say('Loading ' + d.county + ', ' + d.state + '…', true);
+    say('Loading ' + d.county + ', ' + d.state + '…', true); skeleton();
     try { const ds = expand(await api('/map/data/' + d.file)); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
   }
   const all = () => Object.values(loaded).flatMap(d => d.recs);
@@ -45,12 +46,12 @@
     sources: { osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' },
       sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' },
       ref: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 } },
-    layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' } }, { id: 'sat', type: 'raster', source: 'sat' }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'none' } }] });
+    layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' }, paint: { 'raster-saturation': -0.35, 'raster-brightness-max': 0.9, 'raster-fade-duration': 250 } }, { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-brightness-max': 0.86, 'raster-saturation': -0.08, 'raster-fade-duration': 250 } }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'none' } }] });
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
   function initMap() {
-    map = new maplibregl.Map({ container: 'pmMap', style: STYLE(), center: [-96, 38.5], zoom: 3.4, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
+    map = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: { top: 150, bottom: 150, left: 12, right: 12 } }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
     map.touchZoomRotate.disableRotation(); map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
     map.on('load', () => {
       mapReady = true; ['parcels', 'near', 'sel', 'pts'].forEach(s => map.addSource(s, { type: 'geojson', data: empty }));
@@ -69,7 +70,7 @@
       map.addLayer({ id: 'pts', type: 'circle', source: 'pts', paint: { 'circle-radius': 7, 'circle-color': catColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
       ['p-fill', 'pts'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); map.on('click', l, e => { const f = e.features && e.features[0]; if (f) { const r = byId(f.properties.i); if (r) select(r, { fly: false }); } }); });
       map.on('click', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) closePop(); });
-      setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend();
+      setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
     });
   }
   function natLegend() { const lg = $('pmLegend'); if (lg && mapReady) { const nat = map.getZoom() < 6.5; lg.classList.toggle('nat', nat); $('pmMap').classList.toggle('nat', map.getZoom() < 7); } }
@@ -82,9 +83,11 @@
     if (mapReady) { map.getSource('parcels').setData({ type: 'FeatureCollection', features: polys.map(feature) }); map.getSource('pts').setData({ type: 'FeatureCollection', features: pts.map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); }
     renderResults(rs); renderCounts();
   }
-  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || { top: 90, bottom: 60, left: 40, right: window.innerWidth > 979 ? 40 : 20 }, maxZoom: 17.5, duration: 900 }); }
+  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || { top: 90, bottom: 60, left: 40, right: window.innerWidth > 979 ? 40 : 20 }, maxZoom: 17.5, duration: REDUCED ? 0 : 1100, easing: t => 1 - Math.pow(1 - t, 3) }); }
 
   // ---------- top bar and filters ----------
+  const ICON = { layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
+  function iconBtn(svg, label, fn, cls) { const b = mk('button', 'pm-ib ' + (cls || '')); b.type = 'button'; b.innerHTML = svg; b.setAttribute('aria-label', label); b.title = label; b.addEventListener('click', fn); return b; }
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
@@ -93,11 +96,13 @@
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
     stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = ''; fillCounties(coSel); aiRefresh(); return; } focusState(stSel.value); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
-    const seg = mk('div', 'pm-seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => setBase(k)); seg.appendChild(b); });
-    const area = mk('button', 'pm-btn', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.addEventListener('click', searchArea);
-    const fb = mk('button', 'pm-btn pm-fab', 'Filters'); fb.type = 'button'; fb.addEventListener('click', () => $('pmLeft').classList.add('open'));
-    const aib = mk('button', 'pm-btn pm-aib', '\u2728 Ask AI'); aib.type = 'button'; aib.addEventListener('click', () => openAi());
-    t.append(stSel, coSel, seg, area, fb, aib); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
+    const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
+    const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
+    const lay = iconBtn(ICON.layers, 'Map type', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => openAi(), 'pm-aib');
+    const stack = mk('div', 'pm-stack'); stack.append(lay, fb, aib, seg);
+    const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
+    t.append(pill, stack, area); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
+    document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
     window.__pm = { stSel, coSel };
   }
   function fillCounties(coSel) {
@@ -119,7 +124,7 @@
   async function searchArea() {
     const b = map.getBounds(), z = map.getZoom(); const hit = IDX.datasets.filter(d => d.bb && !(d.bb[2] < b.getWest() || d.bb[0] > b.getEast() || d.bb[3] < b.getSouth() || d.bb[1] > b.getNorth()));
     if (z < 9 && hit.length > 4) { say('Zoom in a little first: ' + hit.length + ' counties are in view.'); return; }
-    await Promise.all(hit.filter(d => !loaded[d.id]).slice(0, 4).map(d => load(d.id))); F.inView = true; $('pmArea').textContent = 'Showing this area ✓'; $('pmArea').classList.add('on'); refresh();
+    await Promise.all(hit.filter(d => !loaded[d.id]).slice(0, 4).map(d => load(d.id))); F.inView = true; $('pmArea').textContent = 'Showing this area ✓'; $('pmArea').classList.add('on'); $('pmArea').hidden = false; refresh();
     if (!all().some(passes)) say('No records with a verified position in this view.');
   }
   function clearArea() { F.inView = false; const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); } refresh(); }
@@ -155,7 +160,7 @@
     const w = mk('div', 'pm-cardw'); w.appendChild(b); const sp = mk('span'); sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + (IDX.datasets.find(x => x.id === r._d) || {}).county })); sp.style.cssText = 'display:block;padding:0 4px'; w.appendChild(sp); return w;
   }
   function renderResults(rs) {
-    if (near) return renderNear(); const R = $('pmResults'); R.textContent = ''; $('pmGrip').textContent = ''; const gl = mk('span', '', rs.length ? rs.length.toLocaleString('en-US') + ' properties' : 'Results'); $('pmGrip').appendChild(gl);
+    if (near) return renderNear(); const R = $('pmResults'); R.textContent = ''; $('tabList').textContent = rs.length ? 'Properties · ' + rs.length.toLocaleString('en-US') : 'Properties';
     if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
     const hd = mk('h3', '', 'Properties'); R.appendChild(hd); const cnt = mk('p', 'cnt', rs.length.toLocaleString('en-US') + ' match your filters' + (F.inView ? ' in this view' : '') + '. Showing ' + Math.min(rs.length, pageN) + '.'); R.appendChild(cnt);
     const ss = mk('select'); ss.setAttribute('aria-label', 'Sort'); [['sale', 'Closest to sale'], ['low', 'Lowest amount'], ['big', 'Largest lot']].forEach(([v, t]) => { const o = mk('option', '', t); o.value = v; if (v === sort) o.selected = true; ss.appendChild(o); }); ss.addEventListener('change', () => { sort = ss.value; refresh(); }); ss.style.width = '100%'; ss.style.marginBottom = '6px'; R.appendChild(ss);
@@ -163,7 +168,21 @@
     if (rs.length > pageN) { const m = mk('button', 'pm-btn', 'Show more'); m.type = 'button'; m.style.width = '100%'; m.addEventListener('click', () => { pageN += 40; refresh(); }); R.appendChild(m); }
     if (!rs.length) R.appendChild(mk('p', 'pm-empty', 'Nothing matches these filters. Try resetting them.'));
   }
-  const openRight = on => { if (window.innerWidth < 980) $('pmRight').classList.toggle('open', on); };
+  const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => window.innerWidth < 980;
+  // Bottom sheet with three resting heights (peek, half, full). Drag the handle or the tabs; it springs to the nearest one.
+  const SNAPS = ['peek', 'half', 'full']; let snap = 'peek';
+  function setSnap(s) { snap = s; const r = $('pmRight'); r.dataset.snap = s; r.style.removeProperty('--sy'); r.classList.remove('dragging'); }
+  const openRight = on => { if (isMobile()) setSnap(on ? (snap === 'peek' ? 'half' : snap) : 'peek'); };
+  function initSheet() {
+    const r = $('pmRight'), h = $('pmRH'); setSnap('peek'); let y0 = 0, base0 = 0, t0 = 0, drag = false, moved = false;
+    const px = { peek: () => r.offsetHeight - 124, half: () => r.offsetHeight * 0.46, full: () => r.offsetHeight * 0.06 };
+    h.addEventListener('pointerdown', e => { if (!isMobile()) return; drag = true; moved = false; y0 = e.clientY; t0 = e.timeStamp; base0 = px[snap](); });
+    h.addEventListener('pointermove', e => { if (!drag) return; const dy = e.clientY - y0; if (!moved && Math.abs(dy) > 6) { moved = true; try { h.setPointerCapture(e.pointerId); } catch (x) {} } if (!moved) return; r.classList.add('dragging'); r.style.setProperty('--sy', Math.max(px.full(), Math.min(px.peek(), base0 + dy)) + 'px'); });
+    const end = e => { if (!drag) return; drag = false; try { h.releasePointerCapture(e.pointerId); } catch (x) {} if (!moved) return; const dy = e.clientY - y0, v = dy / Math.max(1, e.timeStamp - t0), cur = base0 + dy + v * 120; const target = SNAPS.reduce((b, s) => Math.abs(px[s]() - cur) < Math.abs(px[b]() - cur) ? s : b, 'peek'); h.dataset.moved = '1'; setTimeout(() => { delete h.dataset.moved; }, 60); setSnap(target); };
+    h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+    $('pmGrip').addEventListener('click', () => { if (h.dataset.moved) return; setSnap(snap === 'peek' ? 'half' : snap === 'half' ? 'full' : 'peek'); });
+    h.addEventListener('click', e => { if (h.dataset.moved) { e.stopPropagation(); e.preventDefault(); } }, true);
+  }
 
   // ---------- popup ----------
   function closePop() { $('pmPop').hidden = true; sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('near').setData(empty); } refresh(); history.replaceState(null, '', curCounty ? '?c=' + curCounty : location.pathname); }
@@ -203,10 +222,11 @@
     const nb = mk('button', '', 'View nearby properties'); nb.type = 'button'; nb.addEventListener('click', () => { showNear(r, 1); }); ac.appendChild(nb);
     { const sp = mk('span'); sp.style.cssText = 'grid-column:1/-1'; sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + d.county + ', ' + d.state })); ac.insertBefore(sp, ac.children[1]); } // Pro: Select for download
     p.appendChild(ac); p.hidden = false;
+    { const hdr = p.querySelector('.hd'); let y0 = null; hdr.addEventListener('pointerdown', e => { if (isMobile()) { y0 = e.clientY; try { hdr.setPointerCapture(e.pointerId); } catch (x) {} p.style.transition = 'none'; } }); hdr.addEventListener('pointermove', e => { if (y0 != null) p.style.transform = 'translateY(' + Math.max(0, e.clientY - y0) + 'px)'; }); const up = e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; p.style.transition = ''; p.style.transform = ''; if (dy > 90) closePop(); }; hdr.addEventListener('pointerup', up); hdr.addEventListener('pointercancel', up); }
   }
   function select(r, o) {
     sel = r; near = null; popup(r); if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); }
-    if (o && o.fly && r.bb && mapReady) map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], { padding: { top: 120, bottom: window.innerWidth < 980 ? 330 : 120, left: 60, right: window.innerWidth > 979 ? 420 : 40 }, maxZoom: 18.5, duration: 800 });
+    if (o && o.fly && r.bb && mapReady) map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], { padding: { top: 120, bottom: window.innerWidth < 980 ? 330 : 120, left: 60, right: window.innerWidth > 979 ? 420 : 40 }, maxZoom: 18.5, duration: REDUCED ? 0 : 1000, easing: t => 1 - Math.pow(1 - t, 3) });
     else if (r.cx && mapReady && o && o.fly) map.easeTo({ center: r.cx, zoom: Math.max(map.getZoom(), 16) });
     openRight(false); history.replaceState(null, '', '?c=' + r._d + '&p=' + encodeURIComponent(r.p)); refresh(); aiRefresh();
   }
@@ -224,7 +244,7 @@
   }
   const passesNoView = x => { const v = F.inView; F.inView = false; const o = passes(x); F.inView = v; return o; };
   function renderNear() {
-    const R = $('pmResults'); R.textContent = ''; const { of, miles, list } = near; $('pmGrip').textContent = ''; $('pmGrip').appendChild(mk('span', '', 'Nearby: ' + list.length));
+    const R = $('pmResults'); R.textContent = ''; const { of, miles, list } = near; $('tabList').textContent = 'Nearby · ' + list.length;
     const back = mk('button', 'pm-btn', '← All results'); back.type = 'button'; back.addEventListener('click', () => { near = null; if (mapReady) map.getSource('near').setData(empty); refresh(); }); R.appendChild(back);
     R.appendChild(mk('h3', '', 'Near ' + (of.a || 'parcel ' + of.p)));
     const tabs = mk('div', 'pm-tabs'); [1, 5, 10].forEach(m => { const b = mk('button', '', m + (m === 1 ? ' mile' : ' miles')); b.type = 'button'; b.setAttribute('aria-pressed', String(m === miles)); b.addEventListener('click', () => showNear(of, m)); tabs.appendChild(b); }); R.appendChild(tabs);
@@ -334,7 +354,7 @@
   async function boot() {
     try { IDX = await api('/map/index.json'); } catch (e) { $('pmResults').textContent = 'The map data could not be loaded. Please try again.'; return; }
     fetch('/.netlify/functions/account', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { const u = d && d.user; signedIn = !!u; paid = !!(u && (u.owner || u.paid || (u.paidThrough && u.paidThrough >= TODAY))); if (sel) popup(sel); afterAccount(); }).catch(() => afterAccount());
-    buildTop(); buildFilters(); renderCounts(); $('pmGrip').addEventListener('click', () => $('pmRight').classList.toggle('open')); $('tabAi').addEventListener('click', () => showTab('ai', true)); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
+    buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => showTab('ai', true)); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
     try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
   }
   function refresh0() { renderResults([]); }
