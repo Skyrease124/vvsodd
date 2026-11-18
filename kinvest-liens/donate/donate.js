@@ -3,7 +3,7 @@
   'use strict';
   const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   if (/[?&]thanks=1/.test(location.search)) $('dnThanks').hidden = false;
-  const PRE = [5, 10, 25, 50]; let amt = 10, custom = false, off = false; const box = $('dnAmts'), go = $('dnGo'), other = $('dnOther'), msg = $('dnMsg');
+  const PRE = [5, 10, 25, 50]; let amt = 10, custom = false, off = false; { const q = parseInt((location.search.match(/[?&]amount=(\d+)/) || [])[1], 10); if (PRE.includes(q)) amt = q; } const box = $('dnAmts'), go = $('dnGo'), other = $('dnOther'), msg = $('dnMsg');
   const val = () => custom ? parseFloat(String(other.value).replace(/[$,\s]/g, '')) : amt, valid = v => Number.isFinite(v) && v >= 1 && v <= 500;
   const fmt = v => '$' + (Math.round(v * 100) % 100 ? v.toFixed(2) : String(Math.round(v)));
   function paint() { box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(!custom && +b.dataset.a === amt))); const v = val(); go.textContent = valid(v) ? 'Donate ' + fmt(v) + ' with Stripe' : 'Donate with Stripe'; go.disabled = off || !valid(v) || !$('dnOk').checked; }

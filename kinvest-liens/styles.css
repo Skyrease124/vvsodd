@@ -1667,3 +1667,11 @@ body.loginpg #msg:empty{display:none}
 .subchk{display:flex;gap:12px;align-items:flex-start;flex-direction:row;font-weight:500;font-size:.9rem;line-height:1.45;padding:12px;border-radius:14px;background:rgba(127,140,160,.1);cursor:pointer}.subchk input{flex:none;width:24px;height:24px;margin:1px 0 0;padding:0;accent-color:#0b6e4f}
 .dn-chk{display:flex;gap:12px;align-items:flex-start;margin:6px 0 14px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.06);font-size:.86rem;line-height:1.45;color:#e8eefb;cursor:pointer}.dn-chk input{flex:none;width:24px;height:24px;margin:1px 0 0;accent-color:#2fbf8c}.dn-chk a{color:#93c5fd}
 .legal p a,.legal li a,.legal td a{display:inline;min-height:0;line-height:inherit;padding:0}
+
+/* Home: donation call-out (visible to everyone) */
+.supp-sec{padding-top:16px;padding-bottom:16px}.supp{display:grid;gap:14px;padding:24px;border-radius:26px;background:linear-gradient(135deg,#0f2f27,#0b1f2f);color:#e8efe9;box-shadow:0 24px 50px -28px rgba(0,0,0,.6);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif}
+.supp h2{margin:4px 0 6px;color:#fff;letter-spacing:-.02em}.supp p{margin:0;line-height:1.55;color:#c9d8d0}.supp .eyebrow{color:#34c995}
+.supp-btns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.supp-amt{display:grid;place-items:center;min-height:56px;border-radius:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#fff;font-weight:700;font-size:1.1rem;text-decoration:none;transition:transform .2s cubic-bezier(.32,.72,0,1),background .2s}.supp-amt:hover{background:rgba(52,201,149,.3)}.supp-amt:active{transform:scale(.96)}
+.supp-fine{font-size:.82rem!important;color:#9fb5ab!important}.supp-fine a{color:#93c5fd;display:inline;min-height:0;line-height:inherit;padding:0}
+@media(min-width:760px){.supp{grid-template-columns:1.4fr 1fr;align-items:center}.supp-fine{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.supp-amt{transition:none}}
