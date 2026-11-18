@@ -12,6 +12,10 @@ import { _loadData } from './ask.mjs';
 import * as AIWX from '../lib/aiweather.mjs';
 import * as PFAI from '../lib/portfolioai.mjs';
 import { cite } from '../lib/source-registry.mjs';
+import * as AGENT from '../lib/agent.mjs';
+import * as KB from '../lib/knowledge.mjs';
+import crypto from 'node:crypto';
+import { kvGet, kvPut } from '../lib/auth.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -250,6 +254,38 @@ function describe(it) {
   return bits.join(' · ');
 }
 
+
+// ---- AI 2.0: multistep research agent (LangGraph) over our records and a searchable knowledge index (LlamaIndex + BM25). ----
+const RESEARCH_SYS = `You are PricePocket AI, writing a research summary for a member of a tax lien website.
+You get EVIDENCE as JSON: rules, liens, passages, gaps, conflicts, notes. Write at most 170 words in plain words:
+1) one sentence answering the question, 2) up to 6 lines starting with "- " with the key facts, 3) one line starting "Uncertain:" naming the biggest gap or conflict.
+Rules: use ONLY facts in EVIDENCE; never invent parcel numbers, owners, dates, rates or prices; say "not on the list" for missing items; never predict returns or call anything a good deal; mention historical listings as historical.`;
+
+// Exact parcel lookup across every county list we carry (never a fuzzy guess) and what lists we hold per state.
+const normP = x => String(x).replace(/[^0-9a-z]/gi, '').toLowerCase();
+function findParcel(parcel) {
+  const want = normP(parcel), out = [];
+  for (const c of Object.keys(FILES)) { let rows; try { rows = loadLiens(c); } catch (e) { continue; } for (const l of rows) if (normP(l.parcel) === want) out.push({ county: l.county, state: COUNTY_STATE[c] || null, parcel: l.parcel, amount: l.amount != null ? l.amount : null, market: l.market != null ? l.market : null, status: l.status || null, saleDate: l.saleDate || null, checked: l.checked || null, source: l.source || null, flood: l.flood != null ? l.flood : null }); }
+  return out.slice(0, 5);
+}
+let COV = null;
+function coverage(state) {
+  if (!COV) { COV = {}; for (const c of Object.keys(FILES)) { const st = COUNTY_STATE[c]; if (!st) continue; let rows = []; try { rows = loadLiens(c); } catch (e) { continue; } const o = COV[st] = COV[st] || { liens: 0, counties: [], cheapest: null }; o.liens += rows.length; o.counties.push(c); for (const l of rows) if (l.amount > 0 && (o.cheapest == null || l.amount < o.cheapest)) o.cheapest = l.amount; } }
+  return COV[state] || { liens: 0, counties: [], cheapest: null };
+}
+async function runAgent(q, data, uiScope, cfg, me) {
+  const codes = data.STATES.map(s => s.a), idx = await KB.getIndex(data), today = new Date().toISOString().slice(0, 10);
+  const scopeKey = uiScope.join(',');
+  const key = 'ai:rc:' + crypto.createHash('sha256').update(q.toLowerCase() + '|' + scopeKey + '|' + idx.hash + '|' + today).digest('hex').slice(0, 24);
+  try { const hit = await kvGet(key); if (hit && hit.result && Date.now() - hit.t < 6 * 3600e3) return { ...hit.result, cached: true }; } catch (e) { /* no cache */ }
+  const ctx = { data, codes, idx, uiScope, today, findParcel, coverage, ruleIntent, cleanIntent, runStates, runLiens, describe,
+    parse: async text => { const { text: out } = await complete(cfg, PARSE_SYS(codes, Object.keys(FILES)), 'Selected states on the map: ' + (uiScope.join(',') || 'none') + '\nQuestion: ' + text, { maxTokens: 400 }); return parseJson(out); },
+    write: async pack => (await complete(cfg, RESEARCH_SYS, 'QUESTION: ' + q + '\nEVIDENCE: ' + JSON.stringify(pack).slice(0, 9000), { maxTokens: 500 })).text.slice(0, 1600) };
+  const result = await AGENT.research(q, ctx);
+  try { await kvPut(key, { t: Date.now(), result }); } catch (e) { /* cache is optional */ }
+  return result;
+}
+
 async function handle(event) {
   const cfg = await keystore.getConfig();
   const me = await auth.userFromCookie((event.headers || {}).cookie);
@@ -290,6 +326,14 @@ async function handle(event) {
       if (!w.ok) return json(200, { answer: w.reason === 'nokey' ? 'That data is not switched on yet.' : 'That data is temporarily unavailable. Please try again soon.', understood: true, searched: topic + ': ' + place.name, kind: 'general', scope: [place.state] });
       return json(200, { answer: w.text, understood: true, searched: topic + ': ' + place.name, kind: 'weather', topic, scope: [place.state], point: w.point }); }
     catch (e) { return json(200, { answer: 'That data is temporarily unavailable for ' + place.name + '. Please try again soon.', understood: true, searched: topic, kind: 'general', scope: [place.state] }); }
+  }
+  // Research questions ("research", "compare", "risks", a parcel number...) go through the multistep agent. Set b.classic=true to use the older one-shot path.
+  if (!b.classic && AGENT.wantsResearch(q)) {
+    try {
+      const r = await runAgent(q, data, uiScope, cfg, me);
+      await usage.record('ai', true);
+      return json(200, { kind: 'research', answer: r.answer, understood: true, searched: 'research agent: ' + r.plan.length + ' steps', plan: r.plan, trace: r.trace, results: r.evidence.liens, states: r.evidence.states, total: r.evidence.total, findings: r.findings, uncertainty: r.uncertainty, sources: r.sources, cached: !!r.cached, usedModel: r.usedModel, scope: uiScope });
+    } catch (e) { console.log('ai agent failed', e && e.message); /* fall back to the classic path below */ }
   }
   let it = cleanIntent({}, codes, uiScope), parsed = false;
   const byRules = ruleIntent(q, data);
@@ -332,4 +376,4 @@ export default async (req, context) => {
   const r = await handle(await toEvent(req, context));
   return new Response(r.body, { status: r.statusCode, headers: r.headers });
 };
-export { handle as _handle, runStates, runLiens, cleanIntent, runHistory };
+export { handle as _handle, runStates, runLiens, cleanIntent, runHistory, describe };
