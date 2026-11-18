@@ -140,7 +140,8 @@
   function add() {
     if (document.querySelector('.a2hs')) return;
     const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); if (standalone) return;
-    const foot = document.querySelector('footer .wrap') || document.querySelector('footer'); if (!foot) return;
+    let foot = document.querySelector('footer .wrap') || document.querySelector('footer');
+    if (!foot) { const m = document.querySelector('main') || document.body; foot = document.createElement('div'); foot.className = 'wrap a2hs-wrap'; foot.style.cssText = 'padding:8px 16px 32px'; m.appendChild(foot); } // pages without a footer
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const d = mk('details', 'a2hs'), s = mk('summary', '', 'Add PricePocket to your Home Screen'); d.appendChild(s);
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), android = /Android/i.test(navigator.userAgent);
