@@ -16,7 +16,7 @@ Severity: **High** = money or broad data exposure, easy to exploit. **Medium** =
 | C4 | **Low-Medium** | **Signing out did not end the session.** A copied session cookie kept working for up to 30 days. | After logout the same cookie was still signed in. | Each session now has an id; logout records it as ended. Older cookies from before this change are cut off at their owner's next logout. | After logout the same cookie is signed out. |
 | C5 | **Low** | **Public setup endpoint showed the last 4 characters of the AI API key** to anyone. | Anonymous GET returned the key hint. | Only the signed-in owner sees details; the public sees only whether the question box is on. | Anonymous GET: `{"enabled":true}`. |
 | C6 | **Low** | **Sign-in accepted a multi-megabyte password field** (wasted work, easy to abuse). | 5 MB password: processed. | Over 200 characters is refused before any hashing. | 5 MB password: 400. |
-| C7 | **Low** | **No browser security headers** other than HSTS: the site could be framed by other sites (clickjacking) and files could be content-sniffed. | Live site: no X-Frame-Options, no X-Content-Type-Options, no Referrer-Policy. | Added in `netlify.toml`: X-Frame-Options, `frame-ancestors 'self'`, nosniff, Referrer-Policy, Permissions-Policy. A full Content Security Policy is intentionally **not** added yet (the maps load from many hosts and could break). | To be confirmed on the Netlify preview (see below). |
+| C7 | **Low** | **No browser security headers** other than HSTS: the site could be framed by other sites (clickjacking) and files could be content-sniffed. | Live site: no X-Frame-Options, no X-Content-Type-Options, no Referrer-Policy. | Added in `kinvest-liens/_headers` (the first attempt in `netlify.toml` was ignored by Netlify): X-Frame-Options, `frame-ancestors 'self'`, nosniff, Referrer-Policy, Permissions-Policy. A full Content Security Policy is intentionally **not** added yet (the maps load from many hosts and could break). | Netlify preview: pages now return all five headers. |
 
 Also hardened (no exploit shown, same pattern as C3): guessing the owner setup code was limited only per IP in one instance's memory. It now also has a stored global limit of 20 tries per hour across signup, claim and setup.
 
@@ -53,3 +53,6 @@ Stripe prices and payment configuration, subscriptions, existing accounts, portf
 
 ## E. How to re-run
 `node tools/security/all.mjs` runs every security test. Details in `tools/security/README.md`.
+
+## F. Netlify preview checks (no accounts were created on the preview)
+Anonymous request to the new paid endpoint: 402. Public parcel file: 0 private fields. The private data folder is not reachable as a static file (404). Public setup endpoint: `{"enabled":true}`. Security headers present on pages. Production is unchanged (the new endpoint does not exist there yet, and the public parcel file there still has the old fields until this is approved). Paid-member behavior was tested locally with the same code, not on the preview.
