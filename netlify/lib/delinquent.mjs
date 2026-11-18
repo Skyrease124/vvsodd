@@ -15,6 +15,10 @@ export function loadParcels(id) {
   const ds = DATASETS[id]; if (!ds) return null; if (cache[id]) return cache[id];
   const d = dir('private'); if (!d) return null; try { cache[id] = JSON.parse(fs.readFileSync(path.join(d, ds.file), 'utf8')); } catch (e) { return null; } return cache[id];
 }
+export function loadGeo(id) {
+  const k = id + ':geo'; if (cache[k]) return cache[k]; const d = dir('private'); if (!d) return null;
+  try { cache[k] = JSON.parse(fs.readFileSync(path.join(d, id + '-geo.json'), 'utf8')).g; } catch (e) { cache[k] = {}; } return cache[k];
+}
 export function loadSummary(id) { const d = dir('public'); if (!d || !DATASETS[id]) return null; try { return JSON.parse(fs.readFileSync(path.join(d, id + '-summary.json'), 'utf8')); } catch (e) { return null; } }
 const clamp = (v, lo, hi, dflt) => { if (v === null || v === undefined || v === '') return dflt; const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
 // opts: q, minOwed, maxOwed, minYears, oldest (earliest delinquent tax year at or before), noAddress, district, sort, limit, offset
@@ -28,4 +32,4 @@ export function search(parcels, o) {
   const limit = clamp(o.limit, 1, 50, 25), offset = clamp(o.offset, 0, 1e6, 0);
   return { total: rows.length, rows: rows.slice(offset, offset + limit), districts: null };
 }
-export const publicRow = p => ({ gpin: p.g, address: p.a || null, description: p.d, district: p.z, owed: p.t, tax: p.x, penalty: p.p, interest: p.i, fees: p.f, taxYears: p.ys, oldest: p.ys[0], newest: p.ys[p.ys.length - 1], installments: p.n, totalsDiffer: p.m > 0 });
+export const publicRow = (p, geo) => ({ ...(geo ? { outline: geo.r, facts: { landUse: geo.lu || null, zoning: geo.zn || null, floodZone: geo.fz || null, subdivision: geo.sd || null, propertyClass: geo.pc || null, acres: geo.ac || null } } : {}), gpin: p.g, address: p.a || null, description: p.d, district: p.z, owed: p.t, tax: p.x, penalty: p.p, interest: p.i, fees: p.f, taxYears: p.ys, oldest: p.ys[0], newest: p.ys[p.ys.length - 1], installments: p.n, totalsDiffer: p.m > 0 });

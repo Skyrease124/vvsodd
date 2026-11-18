@@ -42,5 +42,8 @@ r = await call(pro, 'minOwed=25000&limit=5'); ok(r.s === 200 && r.j.rows.length 
 const g = r.j.rows[0].gpin; r = await call(pro, 'gpin=' + encodeURIComponent(g.slice(0, 4) + ' ' + g.slice(4))); ok(r.s === 200 && r.j.parcel.gpin === g, 'lookup by parcel id (spaces ignored)');
 ok((await call(pro, 'gpin=9999')).s === 404, 'unknown parcel id is a 404, not a guess');
 ok((await call(pro, 'd=nowhere&q=x')).s === 404, 'unknown dataset 404');
+let r0; ok(r0 = (await call(pro, 'minOwed=25000&limit=5')).j.rows, 'rows load'); 
+const withGeo = (await call(pro, 'minOwed=1000&limit=50')).j.rows.filter(x => x.outline); ok(withGeo.length > 25 && Array.isArray(withGeo[0].outline[0][0]) && withGeo[0].facts, 'rows carry the city outline and facts (' + withGeo.length + ' of 50)');
+ok(Object.keys(withGeo[0].facts).every(k => !/owner|mail/i.test(k)) && !/owner|mail/i.test(JSON.stringify(Object.keys(D.loadGeo('virginia-beach')[real.p[0].g] || {}))), 'geometry and facts have no owner fields');
 r = await call(pro, 'q=zzzz-nothing'); ok(r.j.total === 0, 'no match returns nothing');
 console.log('\n' + pass + ' checks passed');

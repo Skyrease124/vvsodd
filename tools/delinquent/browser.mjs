@@ -5,6 +5,7 @@ process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'ppa-dqb-')); proc
 const SITE = path.resolve('kinvest-liens'); const auth = await import('../../netlify/lib/auth.mjs'); const dq = (await import('../../netlify/functions/delinquent.mjs')).default;
 const day = n => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 const mk = async (e, patch) => { const u = await auth.createUser(e, 'pw-123456', false); Object.assign(u, patch || {}); await auth.saveUser(u); return (await auth.sessionCookie(e)).split(';')[0]; };
+const D = await import('../../netlify/lib/delinquent.mjs'); const SUM = D.loadSummary('virginia-beach'), ALL = D.loadParcels('virginia-beach').p, N = n => n.toLocaleString('en-US');
 const pro = await mk('pro@t.invalid', { paidThrough: day(30) }), free = await mk('free@t.invalid');
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json' };
 const server = http.createServer(async (req, res) => {
@@ -18,19 +19,21 @@ const B = 'http://localhost:8096', b = await chromium.launch(); let bad = 0; con
 const open = async (cookie, dev = devices['iPhone 14']) => { const ctx = await b.newContext({ ...dev }); if (cookie) await ctx.addCookies([{ name: cookie.split('=')[0], value: cookie.split('=').slice(1).join('='), url: B }]); const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); await p.goto(B + '/liens/delinquent/'); await p.waitForTimeout(2000); return { ctx, p, errs }; };
 let { ctx, p, errs } = await open(null);
 ok(/Not a sale list/.test(await p.locator('.dqnote').innerText()), 'the "not a sale list" notice is the first thing under the title');
-ok(await p.locator('.dqtile').count() === 4 && /3,116/.test(await p.locator('.dqtiles').innerText()), 'four summary tiles with 3,116 parcels');
+ok(await p.locator('.dqtile').count() === 4 && new RegExp(N(SUM.parcels)).test(await p.locator('.dqtiles').innerText()), 'four summary tiles with ' + N(SUM.parcels) + ' parcels');
 ok(await p.locator('.dqbar').count() === 12, 'two bar charts (12 bars)');
 ok(await p.locator('.dqcard').count() === 0 && /Pro members/.test(await p.locator('.dqsearch').innerText()), 'signed out: no parcel rows, a sign-in prompt instead');
 await p.screenshot({ path: 'tools/delinquent/shots/top-iphone.png' }); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'no sideways scrolling'); ok(!errs.length, 'no page errors ' + errs.join('|')); await ctx.close();
 ({ ctx, p } = await open(free)); ok(await p.locator('.dqcard').count() === 0 && await p.locator('a:has-text("See Pro")').count() === 1, 'free account: upgrade prompt, no parcel rows'); await ctx.close();
 ({ ctx, p, errs } = await open(pro));
 ok(await p.locator('.dqcard').count() === 20, 'pro: first 20 parcels shown');
-ok(/3,116 parcels match/.test(await p.locator('.dqsearch [role=status]').innerText()), 'pro: shows how many match');
+ok(new RegExp(N(SUM.parcels) + ' parcels match').test(await p.locator('.dqsearch [role=status]').innerText()), 'pro: shows how many match');
 const txt = await p.locator('.dqsearch').innerText(); ok(!/owner|mailing/i.test(txt.replace(/Owner/g, '')) || !/ owner name|mailing address/i.test(txt), 'no owner or mailing information on screen');
-await p.selectOption('.dqform select >> nth=0', '10000'); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); ok(/434 parcels match/.test(await p.locator('.dqsearch [role=status]').innerText()), 'filter $10,000 or more -> 434 parcels');
+await p.selectOption('.dqform select >> nth=0', '10000'); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); ok(new RegExp(ALL.filter(x => x.t >= 10000).length + ' parcels match').test(await p.locator('.dqsearch [role=status]').innerText()), 'filter $10,000 or more -> ' + ALL.filter(x => x.t >= 10000).length + ' parcels');
 await p.fill('.dqform input[type=search]', 'zzzz nothing'); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); ok(/0 parcels match/.test(await p.locator('.dqsearch [role=status]').innerText()), 'no match is stated plainly');
-await p.fill('.dqform input[type=search]', ''); await p.selectOption('.dqform select >> nth=0', ''); await p.click('.dqform input[type=checkbox]'); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); ok(/116 parcels|\d+ parcels match/.test(await p.locator('.dqsearch [role=status]').innerText()) && !(await p.locator('.dqcard b').first().innerText()).includes('0 '), 'no-street-address filter works');
+await p.fill('.dqform input[type=search]', ''); await p.selectOption('.dqform select >> nth=0', ''); await p.click('.dqform input[type=checkbox]'); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); ok(new RegExp(ALL.filter(x => !x.a).length + ' parcels match').test(await p.locator('.dqsearch [role=status]').innerText()), 'no-street-address filter -> ' + ALL.filter(x => !x.a).length + ' parcels');
 const first = await p.locator('.dqcard').first().innerText(); ok(/No street address/.test(first) && /Overdue tax only/.test(first), 'no-address card says so, and every card says it is not a listing');
-await p.locator('.dqsearch').scrollIntoViewIfNeeded(); await p.screenshot({ path: 'tools/delinquent/shots/search-iphone.png' }); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'pro: no sideways scrolling'); ok(!errs.length, 'no page errors'); await ctx.close();
+ok(await p.locator('.dqcard svg.dqmap path').count() >= 1 && /Land use|Zoning|FEMA flood zone/.test(await p.locator('.dqgeo').first().innerText()), 'cards show the parcel outline and the city\u2019s land use, zoning and flood zone');
+ok(/last edited by the city 2026/.test(await p.locator('.dqsrc').innerText()), 'source and the city\u2019s edit date are stated');
+await p.fill('.dqform input[type=search]', ''); await p.click('.dqform input[type=checkbox]'); await p.selectOption('.dqform select >> nth=2', 'owedDesc').catch(() => {}); await p.click('.dqform button[type=submit]'); await p.waitForTimeout(800); await p.locator('.dqgeo').first().scrollIntoViewIfNeeded(); await p.screenshot({ path: 'tools/delinquent/shots/search-iphone.png' }); ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'pro: no sideways scrolling'); ok(!errs.length, 'no page errors'); await ctx.close();
 ({ ctx, p } = await open(null, { viewport: { width: 1200, height: 900 } })); await p.screenshot({ path: 'tools/delinquent/shots/top-desktop.png' }); await ctx.close();
 await b.close(); server.close(); console.log(bad ? 'FAILED ' + bad : 'ALL PASS'); process.exit(bad ? 1 : 0);
