@@ -1,0 +1,17 @@
+const { ID, call } = await import('./harness.mjs'); const { loadLiens } = await import('../../netlify/functions/screen.mjs');
+let bad = 0; const ok = (c, m) => { console.log(c ? 'PASS' : 'FAIL', m); if (!c) bad++; };
+const pb = loadLiens('Palm Beach')[0], co = loadLiens('Larimer')[0];
+const g = (cookie, q, extra = '') => call('aireport', { method: 'GET', q: q + extra, cookie });
+let r = await g(ID.pro, `county=Palm%20Beach&parcel=${pb.parcel}`); let j = JSON.parse(r.text);
+ok(r.status === 200 && j.report.sections.length === 10, 'pro gets 10-section report');
+ok(/not a certified title search/.test(j.report.disclaimer), 'disclaimer present');
+ok(j.report.sections[1].items.find(x => x.label === 'Amount on the list').value.includes(String(Math.floor(pb.amount))), 'amount matches county list');
+ok(j.report.sections.flatMap(s => s.items).every(x => ['verified', 'estimate', 'missing', 'todo'].includes(x.status)), 'every line labeled');
+ok(!/guarantee|will earn|good deal/i.test(r.text), 'no promises or scores');
+r = await g(ID.pro, `county=Larimer&parcel=${co.parcel}`); ok(r.status === 200, 'Colorado report builds');
+r = await g(ID.pro, `county=Palm%20Beach&parcel=${pb.parcel}`, '&format=csv'); ok(r.status === 200 && /"Section","Item"/.test(r.text) && /Disclaimer/.test(r.text), 'CSV export');
+r = await g(ID.pro, 'county=Palm%20Beach&parcel=NOPE-0000'); ok(r.status === 404, 'unknown parcel 404 (no invented parcel)');
+r = await g(ID.free, `county=Palm%20Beach&parcel=${pb.parcel}`); ok(r.status === 402, 'free refused');
+r = await g(ID.anon, `county=Palm%20Beach&parcel=${pb.parcel}`); ok(r.status === 401, 'anon refused');
+r = await g(ID.expired, `county=Palm%20Beach&parcel=${pb.parcel}`); ok(r.status === 402, 'expired refused');
+console.log(bad ? 'FAILED ' + bad : 'ALL PASS'); process.exit(bad ? 1 : 0);

@@ -10,6 +10,8 @@ import { complete } from '../lib/llm.mjs';
 import { loadLiens, FILES, cleanFilters, _group, _score, _apply } from './screen.mjs';
 import { _loadData } from './ask.mjs';
 import * as AIWX from '../lib/aiweather.mjs';
+import * as PFAI from '../lib/portfolioai.mjs';
+import { cite } from '../lib/source-registry.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -25,7 +27,7 @@ function loadNyc() {
   if (!dir) throw new Error('nyc data not found');
   return vm.runInNewContext(fs.readFileSync(path.join(dir, 'nyc-history.js'), 'utf8') + '\n;NYC_HISTORY', {}, { timeout: 2000 });
 }
-const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL', 'Miami-Dade': 'FL', 'Saguache': 'CO', 'El Paso': 'CO', 'Boulder': 'CO', 'Scott': 'IA', 'Davidson': 'TN', 'Wayne': 'MI', 'Walton': 'FL', 'Santa Rosa': 'FL', 'Volusia': 'FL', 'Pasco': 'FL', 'Osceola': 'FL', 'Sarasota': 'FL', 'Duval': 'FL', 'Escambia': 'FL', 'Hillsborough': 'FL', 'Hernando': 'FL', 'Nassau': 'FL', 'Bibb': 'GA', 'Fulton': 'GA', 'City of Rochester': 'NY', 'Monroe': 'PA' };
+export const COUNTY_STATE = { 'Palm Beach': 'FL', 'Larimer': 'CO', 'Pinal': 'AZ', 'Coconino': 'AZ', 'Leon': 'FL', 'Manatee': 'FL', 'Alachua': 'FL', 'Bay': 'FL', 'Miami-Dade': 'FL', 'Saguache': 'CO', 'El Paso': 'CO', 'Boulder': 'CO', 'Scott': 'IA', 'Davidson': 'TN', 'Wayne': 'MI', 'Walton': 'FL', 'Santa Rosa': 'FL', 'Volusia': 'FL', 'Pasco': 'FL', 'Osceola': 'FL', 'Sarasota': 'FL', 'Duval': 'FL', 'Escambia': 'FL', 'Hillsborough': 'FL', 'Hernando': 'FL', 'Nassau': 'FL', 'Bibb': 'GA', 'Fulton': 'GA', 'City of Rochester': 'NY', 'Monroe': 'PA' };
 const SYS = ['Tax lien certificate', 'Tax deed', 'Redeemable deed', 'Hybrid', 'Municipal lien', 'Sources differ'];
 const BID = ['Bid-down rate', 'Premium bidding', 'Other', 'Not applicable'];
 const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
@@ -261,6 +263,9 @@ async function handle(event) {
   if (q.length < 3) return json(400, { error: 'Type a question.' });
   if (q.length > 300) return json(400, { error: 'Keep the question under 300 characters.' });
 
+  // Questions about the member's OWN portfolio: answered by code from me.portfolio only (never another account's), no model call, no AI spend.
+  if (PFAI.wantsPortfolio(q)) { const r = PFAI.answer(q, me.portfolio, new Date().toISOString().slice(0, 10)); return json(200, { answer: r.text, understood: true, searched: 'your portfolio', kind: 'portfolio', rows: r.rows, source: r.source }); }
+
   let data; try { data = _loadData(); } catch (e) { return json(500, { error: 'Could not load the data.' }); }
   const codes = data.STATES.map(s => s.a);
   const uiScope = (Array.isArray(b.states) ? b.states : []).map(x => String(x).toUpperCase()).filter(c => codes.includes(c)).slice(0, 12);
@@ -316,7 +321,7 @@ async function handle(event) {
   } catch (e) { failed = true; console.log('ai answer failed', e && e.detail); }
   await usage.record('ai', !failed && (parsed || !!answer));
   if (failed && !res) return json(502, { error: 'The AI had a problem. Please try again.', detail: 'answer' });
-  return json(200, { answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task === 'history' && !table ? 'general' : it.task, sortBy: it.sortBy || null, scope: it.scope, total: res ? res.total : null, results: res && it.task !== 'history' ? res.rows : [], noData: !!(res && res.noData), table: table ? { columns: table.columns, rows: table.rows } : null, aiNote: !failed, understood: parsed });
+  return json(200, { sources: cite(it.task === 'general' || it.task === 'states' ? ['state-rules'] : ['county-lists', 'state-rules']), answer: answer || (res ? 'Here is what the data shows.' : ''), searched: describe(it), kind: it.task === 'history' && !table ? 'general' : it.task, sortBy: it.sortBy || null, scope: it.scope, total: res ? res.total : null, results: res && it.task !== 'history' ? res.rows : [], noData: !!(res && res.noData), table: table ? { columns: table.columns, rows: table.rows } : null, aiNote: !failed, understood: parsed });
 }
 
 async function toEvent(req, context) {
