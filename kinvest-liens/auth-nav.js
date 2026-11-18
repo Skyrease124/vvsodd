@@ -119,3 +119,13 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
+// Skip link for keyboard and screen reader users: jumps past the header to the page's main content.
+(function () {
+  function add() {
+    const m = document.querySelector('main'); if (!m || document.querySelector('.ppskip')) return;
+    if (!m.id) m.id = 'main'; if (!m.hasAttribute('tabindex')) m.setAttribute('tabindex', '-1');
+    const a = document.createElement('a'); a.className = 'ppskip'; a.href = '#' + m.id; a.textContent = 'Skip to main content';
+    document.body.insertBefore(a, document.body.firstChild);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
+})();
