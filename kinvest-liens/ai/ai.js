@@ -226,6 +226,8 @@
         if (bullets.length) { const ul = mk('ul', 'aians aibul'); out.appendChild(ul); for (const b of bullets) { const li = mk('li', ''); ul.appendChild(li); const t = b.replace(/^[-•*]\s+/, ''), m = t.match(/^([^:]{2,70}):\s*(.*)$/); if (m) { li.appendChild(mk('b', '', m[1] + ': ')); const sp = mk('span'); li.appendChild(sp); await typeOut(sp, m[2]); } else await typeOut(li, t); } }
         if (verify.length) { const vp = mk('p', 'aiverify small', ''); out.appendChild(vp); await typeOut(vp, verify.join(' ')); }
         out.scrollIntoView({behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest'});
+        if (Array.isArray(d.sources) && d.sources.length) { const sp = mk('p', 'small muted aisrc', 'Sources: '); d.sources.forEach((x, i) => { if (i) sp.appendChild(document.createTextNode(' · ')); if (x.url) { const l = mk('a', '', x.name); l.href = x.url; if (/^https?:/.test(x.url)) { l.target = '_blank'; l.rel = 'noopener noreferrer'; } sp.appendChild(l); } else sp.appendChild(document.createTextNode(x.name)); }); out.appendChild(sp); }
+        if (d.kind === 'portfolio' && d.source) out.appendChild(mk('p', 'small muted aisrc', d.source));
         out.appendChild(mk('p', 'small muted', d.searched + (d.understood ? '' : ' (I could not fully read your wording, so I used a broad search)')));
         if (d.kind === 'states' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' states:')); out.appendChild(statesTable(d.results)); }
         else if (d.kind === 'liens' && d.results.length) { out.appendChild(mk('p', 'small muted', 'Showing ' + d.results.length + ' of ' + d.total + ' liens:')); out.appendChild(lienCards(d.results)); }
@@ -235,7 +237,7 @@
     think(false); $('aigo').disabled = false;
   }
   $('aiform').addEventListener('submit', e => { e.preventDefault(); ask($('aiq').value); });
-  [['Highest interest', 'Which states pay the highest interest?'], ['Shortest redemption', 'Which states have the shortest redemption period?'], ['Cheapest liens', 'List the cheapest liens with the most land value behind them'], ['Most valuable lots', 'Most valuable lots with under $2,000 tax owed']].forEach(([t, q]) => {
+  [['My deadlines', 'Which of my certificates have upcoming deadlines?'], ['Highest interest', 'Which states pay the highest interest?'], ['Shortest redemption', 'Which states have the shortest redemption period?'], ['Cheapest liens', 'List the cheapest liens with the most land value behind them'], ['Most valuable lots', 'Most valuable lots with under $2,000 tax owed']].forEach(([t, q]) => {
     const b = mk('button', 'aichip', t); b.type = 'button'; b.addEventListener('click', () => ask(q)); $('aichips').appendChild(b);
   });
 
