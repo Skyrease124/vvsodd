@@ -51,7 +51,9 @@ async function handle(event) {
     if (b.action === 'portal') {
       const cust = await S.liveCustomer(stripe, me);
       if (!cust) return json(400, { error: me.owner ? 'Your owner account has no live Stripe billing (the old one was from test mode). Owners have full access without paying.' : 'You do not have a paid membership yet. Tap Subscribe to start one.' });
-      const p = await stripe.billingPortal.sessions.create({ customer: cust, return_url: S.siteUrl() + '/account/' });
+      const open = () => stripe.billingPortal.sessions.create({ customer: cust, return_url: S.siteUrl() + '/account/' });
+      let p; try { p = await open(); }
+      catch (e) { if (!S.noPortalConfig(e)) throw e; await S.ensurePortal(stripe); p = await open(); } // first use: create the default portal (cancel at period end, update card, invoices), then retry once
       return json(200, { url: p.url });
     }
     if (b.action === 'sync') {
