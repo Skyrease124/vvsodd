@@ -1470,3 +1470,17 @@ body.loginpg #msg:empty{display:none}
 .abtbtns{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 18px}.abtbtns .dbtn{flex:1 1 220px;text-align:center}
 .abt .abtbtns .dghost{background:#fff;color:#0b6e4f!important;border:2px solid #0b6e4f}
 .abtfine{font-size:13px;line-height:1.5;color:#6b7690;margin:0;padding-top:14px;border-top:1px solid rgba(15,23,42,.1)}
+/* Home: Products */
+.prods h2{letter-spacing:-.02em}
+.prods .grid4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.prod{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:22px;border:0;border-radius:24px;background:#fff;box-shadow:0 0 0 1px rgba(15,23,42,.07),0 20px 38px -26px rgba(15,23,42,.5)}
+.prod:hover{box-shadow:0 0 0 1px rgba(11,110,79,.28),0 28px 46px -26px rgba(15,23,42,.55)}
+.prod .n{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(160deg,#ffd166,#e0a526);color:#3a2a00;font-weight:800;font-size:20px;box-shadow:0 8px 16px -8px rgba(224,165,38,.8)}
+.prod h3{margin:12px 0 4px;font-size:22px;letter-spacing:-.02em}
+.prod p{line-height:1.55;color:#44506a}
+.prod p:last-child{margin-top:auto;padding-top:14px}
+.prodlink{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:999px;background:var(--brand);color:#fff!important;font-weight:700;text-decoration:none;box-shadow:0 4px 0 #064733,0 12px 20px -10px rgba(6,71,51,.55);transition:transform .16s cubic-bezier(.3,.7,.4,1),box-shadow .16s}
+.prodlink:hover{transform:translateY(-2px);box-shadow:0 6px 0 #064733,0 16px 24px -10px rgba(6,71,51,.5)}.prodlink:active{transform:translateY(4px);box-shadow:0 0 0 #064733}
+.prod.soon{background:transparent;box-shadow:none;border:2px dashed #cdd5e1}.prod.soon:hover{transform:none;box-shadow:none;border-color:#cdd5e1}
+.prod.soon .n{background:#e9edf3;color:#6b7690;box-shadow:none}.prod.soon h3{color:#44506a}.prod.soon p{color:#6b7690}
+.prod.soon p:last-child{padding-top:0;margin-top:0}.prod.soon h3{margin-top:10px}
