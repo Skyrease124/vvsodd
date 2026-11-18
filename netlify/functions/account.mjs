@@ -25,9 +25,13 @@ function cleanHolding(h) {
   if (months === undefined) return 'Redemption months must be between 0 and 240.';
   if (bought === undefined || bought === null) return 'Enter the date you bought it.';
   if (closed === undefined) return 'Bad closing date.';
+  // Optional calculator fields (added later; older entries simply do not have them).
+  const deedApplied = dateOrNull(h.deedApplied), countyDeadline = dateOrNull(h.countyDeadline), extra = numOrNull(h.extra, 0, 1e9);
+  if (deedApplied === undefined || countyDeadline === undefined) return 'Bad date in the deadline fields.';
+  if (extra === undefined) return 'Later taxes and fees must be a number.';
   const status = STATUS.includes(h.status) ? h.status : 'open';
   const id = /^[a-z0-9]{6,24}$/.test(String(h.id || '')) ? String(h.id) : Math.random().toString(36).slice(2, 12);
-  return { id, state, county: String(h.county || '').slice(0, 60), parcel: String(h.parcel || '').slice(0, 40), paid, rate, bought, months, status, closed, notes: String(h.notes || '').slice(0, 300) };
+  return { id, state, county: String(h.county || '').slice(0, 60), parcel: String(h.parcel || '').slice(0, 40), paid, rate, bought, months, status, closed, notes: String(h.notes || '').slice(0, 300), deedApplied, countyDeadline, extra };
 }
 
 async function handle(event) {
