@@ -1,0 +1,30 @@
+// Subscription lifecycle through the REAL webhook code, with signed test events (no Stripe account, no network).
+import Stripe from '/home/user/vvsodd/node_modules/stripe/esm/stripe.esm.node.js';
+const { ID, call, auth, ROOT } = await import('./harness.mjs');
+const S = await import(ROOT + '/netlify/lib/stripe.mjs');
+let bad = 0; const t = (n, ok, i) => { if (!ok) bad++; console.log((ok ? 'PASS ' : 'FAIL ') + n + (i ? ' :: ' + i : '')); };
+const SECRET = 'whsec_test_not_real'; await S.saveConfig({ secretKey: 'sk_test_not_real', webhookSecret: SECRET });
+const stripe = new Stripe('sk_test_not_real');
+const email = 'life@test.invalid'; await auth.createUser(email, 'pass word 1234', false); let u = await auth.getUser(email); await S.linkCustomer(u, 'cus_TEST1');
+const send = async (event, sig) => { const payload = JSON.stringify(event); const header = sig === undefined ? stripe.webhooks.generateTestHeaderString({ payload, secret: SECRET }) : sig; return call('stripe-webhook', { method: 'POST', body: payload, headers: { 'stripe-signature': header } }); };
+const sec = d => Math.floor((Date.now() + d * 864e5) / 1000);
+const sub = (status, endDays, cancel) => ({ id: 'sub_1', object: 'subscription', status, customer: 'cus_TEST1', cancel_at_period_end: !!cancel, items: { data: [{ current_period_end: sec(endDays) }] } });
+const ev = (id, type, obj) => ({ id, type, data: { object: obj } });
+const cookie = async () => (await auth.sessionCookie(email)).split(';')[0];
+const paid = async () => JSON.parse((await call('account', { cookie: await cookie() })).text).user.paid;
+t('unsigned webhook is rejected', (await send(ev('e0', 'customer.subscription.created', sub('active', 7)), 't=1,v1=00')).status === 400);
+t('webhook with no signature header is rejected', (await send(ev('e0b', 'customer.subscription.created', sub('active', 7)), '')).status === 400);
+t('before paying: free', (await paid()) === false);
+t('active subscription turns Pro on', (await send(ev('e1', 'customer.subscription.created', sub('active', 7)))).status === 200 && (await paid()) === true);
+const again = await send(ev('e1', 'customer.subscription.created', sub('active', 7))); t('same event twice is handled once', /already handled/.test(again.text));
+t('"cancel at period end" keeps access until the paid week is over', (await send(ev('e2', 'customer.subscription.updated', sub('active', 7, true)))).status === 200 && (await paid()) === true);
+t('subscription deleted: access stays only until the last paid day (not extended)', (await send(ev('e3', 'customer.subscription.deleted', sub('canceled', 7)))).status === 200 && (await paid()) === true);
+u = await auth.getUser(email); const keep = u.paidThrough; t('canceled subscription does not push the paid date later', keep === new Date(sec(7) * 1000).toISOString().slice(0, 10), keep);
+u.paidThrough = new Date(Date.now() - 864e5).toISOString().slice(0, 10); await auth.saveUser(u); t('after the paid week ends: free again', (await paid()) === false);
+t('a later payment failure never grants access', (await send(ev('e4', 'invoice.payment_failed', { id: 'in_1', customer: 'cus_TEST1', subscription: 'sub_1' }))).status !== 1 && (await paid()) === false);
+const pastDue = await send(ev('e5', 'customer.subscription.updated', sub('past_due', 14))); t('past_due does not extend access', (await paid()) === false);
+const un = await send(ev('e6', 'customer.subscription.updated', sub('unpaid', 14))); t('unpaid does not extend access', (await paid()) === false);
+const act = await send(ev('e7', 'customer.subscription.updated', sub('active', 7))); t('renewing (active) turns Pro back on', (await paid()) === true);
+t('refund / dispute events flag the account for the owner but are not an automatic free pass', (await send(ev('e8', 'charge.dispute.created', { id: 'dp_1', charge: 'ch_1' }))).status !== 400);
+// admin sets paidThrough through the member tool must stay owner-only (already tested) and stale test-mode customer ids handled
+console.log(bad ? bad + ' FAILED' : 'all passed'); process.exit(0);

@@ -1123,10 +1123,14 @@ const ParcelData = {
   mapBox(r) { const d = document.createElement('div'); d.className = 'lmapprev'; d.appendChild(this.svg(r)); const b = document.createElement('span'); b.className = 'lbadge'; b.textContent = 'Map preview'; d.appendChild(b); return d; },
   // The public-record panel shown with "Show on map".
   // Florida DOR 2026 tax roll extras: owner mailing address, absentee / out-of-state flag, last sale, land value, building. Paid members.
-  rollBox(rl, S, mk, money) {
+  rollBox(rl0, S, mk, money, l) {
     const w = mk('div', 'rollbox');
-    PaidGate.paid().then(p => {
+    PaidGate.paid().then(async p => {
       if (!p) { w.appendChild(PaidGate.lock('Owner mailing address, absentee flag and sale history')); return; }
+      // The mailing address, absentee flag, fiduciary and last sale are NOT in any public file: they come from a members-only server call.
+      const rl = Object.assign({}, rl0); let note = '';
+      try { const r = await fetch('/.netlify/functions/roll?' + new URLSearchParams({county: l.county, parcel: l.parcel})); const d = r.ok ? await r.json() : null; if (d && d.ok) Object.assign(rl, d.roll || {}); else note = 'Owner mailing details are unavailable right now.'; } catch (e) { note = 'Owner mailing details are unavailable right now.'; }
+      if (note) w.appendChild(mk('p', 'small muted', note));
       const dl = mk('dl', 'pfacts'), row = (k, v, cls) => { if (v === '' || v == null) return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', cls || '', v)); dl.appendChild(d); };
       if (rl.abs) row('Owner location', rl.abs === 'out-of-state' ? 'Out-of-state owner' : 'Absentee owner (mail goes to a different address)', 'absflag');
       row('Owner mailing address', rl.mail); if (rl.fidu) row('Fiduciary / in care of', rl.fidu);
@@ -1158,7 +1162,7 @@ const ParcelData = {
     row('Short legal description (state roll)', r.legal);
     box.appendChild(dl);
     box.appendChild(link(S.parcels, 'statewide roll updated ' + (S.parcels.date || 'date not given') + '; checked ' + r.ck + '. Owner shown is the current owner on that roll, not necessarily the owner when the certificate was sold.'));
-    if (r.rl) box.appendChild(this.rollBox(r.rl, S, mk, money));
+    if (r.rl) box.appendChild(this.rollBox(r.rl, S, mk, money, l));
     box.appendChild(ProbateRecords.section(l, r, S));
     box.appendChild(mk('h4', '', 'Saved land checks (whole lot boundary)'));
     box.appendChild(mk('p', 'small savednote', 'Saved results from when this list was built (checked ' + (r.ck || 'date not recorded') + '). They are not refreshed live. The live checks on this page look again now; if a live check fails it says unavailable, and the saved result below does not prove there is no hazard.'));

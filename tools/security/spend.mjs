@@ -1,0 +1,15 @@
+import http from 'node:http';
+let hits = 0;
+const mock = http.createServer((q, r) => { let b = ''; q.on('data', d => b += d); q.on('end', () => { hits++; setTimeout(() => { r.setHeader('content-type', 'application/json'); r.end(JSON.stringify({ choices: [{ message: { content: 'No structured result, here is a short plain answer.' } }] })); }, 400); }); });
+await new Promise(r => mock.listen(0, r));
+process.env.NVIDIA_API_URL = 'http://127.0.0.1:' + mock.address().port + '/v1/chat/completions'; process.env.NVIDIA_API_KEY = 'k-test-0123456789abcdefghij'; process.env.ASK_DAILY_LIMIT = '3';
+const { ID, call } = await import('./harness.mjs');
+const N = 40; const qs = Array.from({ length: N }, (_, i) => 'Tell me an unusual story about taxes and surprises number ' + i);
+const t0 = Date.now();
+const res = await Promise.all(qs.map((q, i) => call('ai', { method: 'POST', body: { question: q }, cookie: ID.pro, ip: '10.0.0.' + (i + 1) })));
+const codes = {}; res.forEach(r => codes[r.status] = (codes[r.status] || 0) + 1);
+console.log('parallel burst of', N, 'questions from ONE Pro account, daily limit set to 3');
+console.log('responses by status:', JSON.stringify(codes), '| calls that reached the AI provider:', hits, '| seconds:', ((Date.now() - t0) / 1000).toFixed(1));
+const again = await call('ai', { method: 'POST', body: { question: 'Another unusual question about wacky taxes' }, cookie: ID.pro, ip: '10.9.9.9' });
+console.log('next single request after the burst:', again.status);
+process.exit(0);

@@ -2,6 +2,8 @@
 // Protected by a one-time setup code (only its SHA-256 hash is stored here).
 import crypto from 'node:crypto';
 import * as keystore from '../lib/keystore.mjs';
+import * as auth from '../lib/auth.mjs';
+import * as RL from '../lib/ratelimit.mjs';
 
 const CODE_HASH = process.env.SETUP_CODE_HASH || '7bcea3ec427a6a4ee2a7a7320f380be5ab648b3659bb38ca3420e92b17e7ae7b';
 const MODELS_URL = process.env.NVIDIA_MODELS_URL || 'https://integrate.api.nvidia.com/v1/models';
@@ -22,6 +24,9 @@ const hint = k => '…' + String(k).slice(-4);
 async function handle(event) {
   if (event.httpMethod === 'GET') {
     const c = await keystore.getConfig();
+    // the public only learns whether the question box is on; key details are for the signed-in owner
+    const me = await auth.userFromCookie((event.headers || {}).cookie);
+    if (!(me && me.owner)) return json(200, { enabled: !!c });
     return json(200, { enabled: !!c, source: c ? c.source : 'none', hint: c ? hint(c.key) : '', model: c && c.model ? c.model : '' });
   }
   if (event.httpMethod !== 'POST') return json(405, { error: 'Use POST.' });
@@ -32,6 +37,7 @@ async function handle(event) {
   if (recent.length >= 6) return json(429, { error: 'Too many tries. Wait 10 minutes and try again.' });
   recent.push(now); tries.set(ip, recent);
 
+  { const g = await RL.hit('ownercode-global', 20, 3600e3); if (!g.ok) return json(429, { error: 'Too many tries. Wait an hour and try again.' }); }
   if (!codeOk(b.code)) { await new Promise(r => setTimeout(r, 800)); return json(403, { error: 'That setup code is not right.' }); }
 
   if (b.action === 'remove') {
@@ -60,7 +66,7 @@ async function handle(event) {
 
 async function toEvent(req, context) {
   return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
-    headers: { 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
 }
 export default async (req, context) => {
   const r = await handle(await toEvent(req, context));

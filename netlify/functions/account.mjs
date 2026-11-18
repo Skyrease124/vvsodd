@@ -4,6 +4,7 @@ import * as auth from '../lib/auth.mjs';
 import * as usage from '../lib/usage.mjs';
 import * as S from '../lib/stripe.mjs';
 import * as alerts from '../lib/alerts.mjs';
+import * as RL from '../lib/ratelimit.mjs';
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
@@ -216,6 +217,7 @@ async function handle(event) {
     const nowc = Date.now(), recc = (tries.get('c' + ipc) || []).filter(t => nowc - t < 600000);
     if (recc.length >= 6) return json(429, { error: 'Too many tries. Please wait 10 minutes.' });
     recc.push(nowc); tries.set('c' + ipc, recc);
+    { const g = await RL.hit('ownercode-global', 20, 3600e3); if (!g.ok) return json(429, { error: 'Too many tries. Please wait an hour.' }); }
     if (!auth.codeOk(b.code)) return json(400, { error: 'That setup code is not right.' });
     me.owner = true; await auth.saveUser(me);
     return json(200, { ok: true });
@@ -230,7 +232,7 @@ async function handle(event) {
     await auth.clearResetRequest(em);
     return json(200, { email: em, temp });
   }
-  if (act === 'logout') return json(200, { ok: true }, auth.clearCookie());
+  if (act === 'logout') { await auth.revokeSession((event.headers || {}).cookie); return json(200, { ok: true }, auth.clearCookie()); }
 
   if (act === 'pfSave' || act === 'pfDelete') {
     if (!me) return json(401, { error: 'Please sign in first.' });
@@ -314,6 +316,7 @@ async function handle(event) {
   if (act === 'signup') {
     if (pw.length < 8) return json(400, { error: 'Password must be at least 8 characters.' });
     if (pw.length > 200) return json(400, { error: 'Password is too long.' });
+    if (String(b.ownerCode || '').trim()) { const g = await RL.hit('ownercode-global', 20, 3600e3); if (!g.ok) return json(429, { error: 'Too many tries. Please wait an hour.' }); }
     const owner = !!String(b.ownerCode || '').trim() && auth.codeOk(b.ownerCode);
     if (String(b.ownerCode || '').trim() && !owner) return json(400, { error: 'That owner code is not right. Leave it empty if you are not the owner.' });
     const hasCode = !!String(b.accessCode || '').trim();
@@ -324,9 +327,15 @@ async function handle(event) {
     await Promise.race([alerts.notifySignup(u, u.family ? 'with a family access code' : ''), new Promise(r => setTimeout(r, 4000))]);   // an alert never blocks or fails a signup
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
+  // Password guessing protection that works across all server instances and all IP addresses:
+  // 10 wrong passwords for one account lock sign-in for 15 minutes (the password-reset email still works), and one IP gets 40 tries per 10 minutes.
+  if (pw.length > 200) return json(400, { error: 'Wrong email or password.' });
+  { const ipl = await RL.hit('login-ip:' + ip, 40, 600e3); if (!ipl.ok) return json(429, { error: 'Too many tries. Please wait ' + Math.ceil(ipl.retryAfterSec / 60) + ' minutes.' });
+    const lk = await RL.peek('login-fail:' + email, 10, 900e3); if (!lk.ok) return json(429, { error: 'Too many wrong passwords for this account. Try again in ' + Math.ceil(lk.retryAfterSec / 60) + ' minutes, or reset your password.' }); }
   const u = await auth.checkLogin(email, pw);
   if (u === 'revoked') return json(403, { error: 'This account has been turned off. Contact the site owner.' });
-  if (!u) return json(401, { error: 'Wrong email or password.' });
+  if (!u) { await RL.hit('login-fail:' + email, 10, 900e3); return json(401, { error: 'Wrong email or password.' }); }
+  await RL.clear('login-fail:' + email);
   u.lastLogin = new Date().toISOString(); await auth.saveUser(u);
   return json(200, { user: pub(u) }, await auth.sessionCookie(email));
 }

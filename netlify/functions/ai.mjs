@@ -4,6 +4,7 @@
 //  3) it writes a short plain answer using only the rows our code found. The rows are shown next to the answer.
 import * as keystore from '../lib/keystore.mjs';
 import * as usage from '../lib/usage.mjs';
+import * as PR from '../lib/privateroll.mjs';
 import * as auth from '../lib/auth.mjs';
 import { complete } from '../lib/llm.mjs';
 import { loadLiens, FILES, cleanFilters, _group, _score, _apply } from './screen.mjs';
@@ -189,9 +190,9 @@ function ownerState(mail) {
 }
 function rollFor(county) {
   if (ROLL[county] !== undefined) return ROLL[county];
-  const slug = county.toLowerCase().replace(/[^a-z0-9]+/g, '-'), root = process.env.LAMBDA_TASK_ROOT || process.cwd();
-  const f = [path.join(root, 'kinvest-liens/liens/states/parcels', slug + '.json'), path.join(HERE, '../../kinvest-liens/liens/states/parcels', slug + '.json')].find(x => fs.existsSync(x));
-  let m = null; try { if (f) { const d = JSON.parse(fs.readFileSync(f, 'utf8')); m = {}; for (const [k, v] of Object.entries(d.p || {})) if (v.rl) m[k] = { abs: v.rl.abs || '', st: v.rl.abs === 'out-of-state' ? ownerState(v.rl.mail) : '' }; } } catch (e) { m = null; }
+  // owner location comes from the PRIVATE roll file (not published); only this paid-member function reads it
+  const pr = PR.load(county); let m = null;
+  if (pr) { m = {}; for (const [k, v] of Object.entries(pr)) m[k] = { abs: v.abs || '', st: v.abs === 'out-of-state' ? ownerState(v.mail) : '' }; }
   return (ROLL[county] = m);
 }
 function runLiens(it) {
@@ -264,7 +265,7 @@ async function handle(event) {
   const codes = data.STATES.map(s => s.a);
   const uiScope = (Array.isArray(b.states) ? b.states : []).map(x => String(x).toUpperCase()).filter(c => codes.includes(c)).slice(0, 12);
 
-  if ((await usage.today()) >= (await usage.getLimit())) return json(429, { error: 'PricePocket AI is busy today. Please try again tomorrow.' });
+  { const slot = await usage.take('ai', me.email); if (!slot.ok) return json(429, { error: slot.why === 'user' ? 'You have reached today\u2019s question limit. It resets tomorrow.' : 'PricePocket AI is busy today. Please try again tomorrow.' }); }
   const now = Date.now(), rec = (hits.get(me.email) || []).filter(t => now - t < 3600000);
   if (rec.length >= PER_USER_HOURLY) return json(429, { error: 'That is a lot of questions in an hour. Please wait a bit.' });
   rec.push(now); hits.set(me.email, rec);

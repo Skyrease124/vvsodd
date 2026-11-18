@@ -1,0 +1,10 @@
+import http from 'node:http';
+const mock = http.createServer((q, r) => { let b = ''; q.on('data', d => b += d); q.on('end', () => { r.setHeader('content-type', 'application/json'); r.end(JSON.stringify({ choices: [{ message: { content: 'Short summary using only the rows shown. Verify with the county.' } }] })); }); });
+await new Promise(r => mock.listen(0, r));
+process.env.NVIDIA_API_URL = 'http://127.0.0.1:' + mock.address().port + '/v1/chat/completions'; process.env.NVIDIA_API_KEY = 'k-test-0123456789abcdefghij'; process.env.ASK_DAILY_LIMIT = '500';
+const { ID, call } = await import('./harness.mjs');
+const r = await call('ai', { method: 'POST', body: { question: 'Show Florida liens where the owner lives out of state' }, cookie: ID.pro });
+const j = JSON.parse(r.text); console.log(r.status, 'kind', j.kind, 'rows', (j.results || []).length, 'total', j.total, '| first:', JSON.stringify((j.results || [])[0] || {}).slice(0, 200));
+const free = await call('ai', { method: 'POST', body: { question: 'Show Florida liens where the owner lives out of state' }, cookie: ID.free }); console.log('free:', free.status);
+const rec = await call('ai', { method: 'POST', body: { question: 'Tell me about parcel 74-43-44-04-24-000-0243 owner' }, cookie: ID.pro }); const jr = JSON.parse(rec.text); console.log('record answer includes mailing:', /mailing/i.test(jr.answer || ''), (jr.answer || '').slice(0, 160).replace(/\n/g, ' | '));
+process.exit(0);

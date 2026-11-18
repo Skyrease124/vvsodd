@@ -9,6 +9,7 @@ import * as EN from './energy.mjs';
 import * as FIRMS from './firms.mjs';
 import * as RC from './rentcast.mjs';
 import * as CEN from './census.mjs';
+import * as PRIV from './privateroll.mjs';
 import * as BLS from './bls.mjs';
 import { loadLiens, FILES } from '../functions/screen.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -145,7 +146,7 @@ export async function record(q) {
   if (st === 'FL') {
     const slug = hit.county.toLowerCase().replace(/[^a-z0-9]+/g, '-'), root = process.env.LAMBDA_TASK_ROOT || process.cwd();
     const f = [path.join(root, 'kinvest-liens/liens/states/parcels', slug + '.json'), path.join(HERE, '../../kinvest-liens/liens/states/parcels', slug + '.json')].find(x => fs.existsSync(x));
-    const r = f ? (JSON.parse(fs.readFileSync(f, 'utf8')).p || {})[hit.parcel] : null, rl = r && r.rl;
+    const r = f ? (JSON.parse(fs.readFileSync(f, 'utf8')).p || {})[hit.parcel] : null, rl = r && r.rl && Object.assign({}, r.rl, PRIV.get(hit.county, hit.parcel) || {});
     if (!rl) return { ok: true, state: 'FL', text: 'No Florida tax roll record is loaded for ' + name + '.' };
     const L = [name + ' (Florida Department of Revenue 2026 tax roll):', '- Owner: ' + rl.own, rl.site ? '- Property address: ' + rl.site : '- Property address: none on the roll', rl.mail ? '- Owner mailing address: ' + rl.mail : '', rl.abs ? '- Owner location: ' + (rl.abs === 'out-of-state' ? 'out of state' : 'absentee') : '',
       rl.jv ? '- Just value: $' + rl.jv.toLocaleString('en-US') : '', rl.yb ? '- Building: built ' + rl.yb + (rl.liv ? ', ' + rl.liv.toLocaleString('en-US') + ' sq ft' : '') : '- Building: none on the roll', rl.sale ? '- Last sale: $' + rl.sale[0].toLocaleString('en-US') + ' (' + rl.sale[1] + ')' : '',
