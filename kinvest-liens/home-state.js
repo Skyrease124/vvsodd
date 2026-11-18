@@ -59,7 +59,7 @@
       go.disabled = false;
     }
     form.addEventListener('submit', e => { e.preventDefault(); ask(); });
-    const all = mk('p', 'small'); const al = mk('a', '', 'Open PricePocket AI to search across all states \u2192'); al.href = '/ai/'; all.appendChild(al);
+    const all = mk('p', 'small'); const al = mk('a', '', 'Open the Parcel Map + AI to search across all states \u2192'); al.href = '/map/?ai=1'; all.appendChild(al);
     aiHost.append(form, chips, out, all);
   }
 
