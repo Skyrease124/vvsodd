@@ -1516,3 +1516,10 @@ body.loginpg #msg:empty{display:none}
 .pushbox .pushrow>span{display:block;flex:1;min-width:0}
 .pushbox .pushrow>span>b{display:block}
 .pushbox legend{padding:0;margin-bottom:4px}
+
+/* Add to Home Screen help (footer) */
+.a2hs{margin:16px 0 4px;border:1px solid rgba(128,140,160,.35);border-radius:12px;padding:0 14px;max-width:560px}
+.a2hs summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:600}
+.a2hs-b{margin:8px 0 12px}.a2hs-b b{display:block;margin-bottom:4px}
+.a2hs ol{margin:0 0 0 20px;padding:0}.a2hs li{margin:4px 0;line-height:1.45}
+.a2hs p{margin:6px 0 12px}

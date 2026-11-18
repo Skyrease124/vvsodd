@@ -135,3 +135,24 @@
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
 })();
+// "Add to Home Screen" help at the bottom of every page: steps for iPhone, Android and desktop. Hidden once the site is already installed.
+(function () {
+  function add() {
+    if (document.querySelector('.a2hs')) return;
+    const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); if (standalone) return;
+    const foot = document.querySelector('footer .wrap') || document.querySelector('footer'); if (!foot) return;
+    const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+    const d = mk('details', 'a2hs'), s = mk('summary', '', 'Add PricePocket to your Home Screen'); d.appendChild(s);
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1), android = /Android/i.test(navigator.userAgent);
+    const block = (title, steps, open) => { const b = mk('div', 'a2hs-b'); b.appendChild(mk('b', '', title)); const ol = mk('ol'); steps.forEach(x => ol.appendChild(mk('li', '', x))); b.appendChild(ol); return b; };
+    const blocks = [
+      [ 'iPhone or iPad (use Safari)', ['Open pricepocketasset.com in Safari.', 'Tap the Share button (the square with an arrow, at the bottom of the screen).', 'Scroll down and tap “Add to Home Screen”.', 'Tap “Add”. The icon appears on your Home Screen.', 'Open the site from that icon. Notifications on iPhone only work from the icon.'], ios ],
+      [ 'Android (Chrome)', ['Open pricepocketasset.com in Chrome.', 'Tap the ⋮ menu at the top right.', 'Tap “Install app” or “Add to Home screen”.', 'Tap “Install”, then open it from the new icon.'], android ],
+      [ 'Computer (Chrome or Edge)', ['Open pricepocketasset.com.', 'Click the install icon at the right of the address bar, or open the browser menu.', 'Choose “Install PricePocketAsset”.'], !ios && !android ]
+    ];
+    blocks.sort((a, b) => (b[2] ? 1 : 0) - (a[2] ? 1 : 0)).forEach(x => d.appendChild(block(x[0], x[1])));
+    d.appendChild(mk('p', 'small muted', 'Why: one tap to open, full screen, and push notifications for your watchlist, sales and deadlines.'));
+    foot.appendChild(d);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
+})();
