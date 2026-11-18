@@ -270,5 +270,6 @@
     if (!d.signedIn) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> <a href="/login/?next=/ai/">Sign in</a> or <a href="/account/?mode=up">create an account</a>. PricePocket AI is for Pro members ($5.50 a week).'; return; }
     if (!d.paid) { g.hidden = false; g.innerHTML = '<b>🔒 Pro members only.</b> PricePocket AI is for Pro members ($5.50 a week). <a href="/account/">See my plan</a>'; return; }
     $('app').hidden = false; drawMap(); tilt(); idle();
+    { const q0 = new URLSearchParams(location.search).get('q'); if (q0) { const i = $('aiq'); i.value = q0.slice(0, 300); try { i.focus({preventScroll: true}); } catch (e) {} } } // from the Parcel Map: question is filled in; the member presses Ask (nothing is sent automatically)
   })();
 })();
