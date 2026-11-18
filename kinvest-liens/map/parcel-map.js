@@ -95,7 +95,8 @@
     const seg = mk('div', 'pm-seg'); seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => setBase(k)); seg.appendChild(b); });
     const area = mk('button', 'pm-btn', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.addEventListener('click', searchArea);
     const fb = mk('button', 'pm-btn pm-fab', 'Filters'); fb.type = 'button'; fb.addEventListener('click', () => $('pmLeft').classList.add('open'));
-    t.append(stSel, coSel, seg, area, fb); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
+    const aib = mk('button', 'pm-btn pm-aib', '\u2728 Ask AI'); aib.type = 'button'; aib.addEventListener('click', () => openAi());
+    t.append(stSel, coSel, seg, area, fb, aib); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     window.__pm = { stSel, coSel };
   }
   function fillCounties(coSel) {
@@ -197,7 +198,7 @@
     const gis = mk('a', '', 'View official county GIS'); if (d.gis) { gis.href = d.gis.url; gis.target = '_blank'; gis.rel = 'noopener noreferrer'; gis.title = d.gis.name; } else gis.setAttribute('aria-disabled', 'true'); ac.appendChild(gis);
     const pdf = mk('a', '', 'Download parcel PDF' + (paid ? '' : ' (Pro)')); if (d.report) { pdf.href = '/ai/report/?county=' + encodeURIComponent(d.county) + '&parcel=' + encodeURIComponent(r.p); pdf.target = '_blank'; pdf.rel = 'noopener'; } else { pdf.setAttribute('aria-disabled', 'true'); pdf.title = 'A research report is not available for this county yet.'; } ac.appendChild(pdf);
     const pf = mk('a', '', 'Add to my portfolio'); pf.href = '/portfolio/?add=1&state=' + d.state + '&county=' + encodeURIComponent(d.county.replace(/ County$/, '')) + '&parcel=' + encodeURIComponent(r.p) + (r.amt != null ? '&paid=' + r.amt : ''); ac.appendChild(pf);
-    const ai = mk('a', '', 'Ask PricePocket AI' + (paid ? '' : ' (Pro)')); ai.href = '/ai/?q=' + encodeURIComponent('Research parcel ' + r.p + ' in ' + d.county + ', ' + d.state + ': what are the risks and what should I verify before bidding?'); ac.appendChild(ai);
+    const ai = mk('button', '', 'Ask AI about this parcel' + (paid ? '' : ' (Pro)')); ai.type = 'button'; ai.addEventListener('click', () => openAi('Research parcel ' + r.p + ' in ' + d.county + ', ' + d.state + ': risks and what to verify before bidding')); ac.appendChild(ai);
     const nb = mk('button', '', 'View nearby properties'); nb.type = 'button'; nb.addEventListener('click', () => { showNear(r, 1); }); ac.appendChild(nb);
     { const sp = mk('span'); sp.style.cssText = 'grid-column:1/-1'; sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + d.county + ', ' + d.state })); ac.insertBefore(sp, ac.children[1]); } // Pro: Select for download
     p.appendChild(ac); p.hidden = false;
@@ -230,9 +231,38 @@
     list.slice(0, 50).forEach(x => R.appendChild(card(x.r, x.d.toFixed(x.d < 10 ? 2 : 1) + ' mi')));
   }
 
+
+  // ---------- PricePocket AI on the map (Pro). The question carries the county and parcel you are looking at; nothing is sent until you press Ask. ----------
+  let aiBusy = false;
+  const aiCtx = () => { const d = curCounty && IDX.datasets.find(x => x.id === curCounty); return sel ? { d: IDX.datasets.find(x => x.id === sel._d), r: sel } : d ? { d } : null; };
+  function aiChips() { const c = aiCtx(); if (!c) return ['Which states pay the highest interest?', 'Which states have the shortest redemption period?']; const w = c.d.county + ', ' + c.d.state; return c.r ? ['Research parcel ' + c.r.p + ' in ' + w + ': risks and what to verify before bidding', 'What are the redemption rules in ' + c.d.state + '?', 'What does ' + c.d.state + ' law say about tax ' + (c.r.c === 'tax_deed' ? 'deed' : 'lien') + ' sales?'] : ['Cheapest liens in ' + w, 'What are the redemption rules in ' + c.d.state + '?', 'Which counties in ' + c.d.state + ' pay the highest interest?']; }
+  function openAi(q0) {
+    let p = $('pmAi'); if (!p) { p = mk('section', 'pm-ai'); p.id = 'pmAi'; p.setAttribute('aria-label', 'Ask PricePocket AI'); $('pmTop').parentNode.appendChild(p); }
+    p.hidden = false; p.textContent = ''; const hd = mk('div', 'hd'), x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', () => { p.hidden = true; }); hd.append(mk('b', '', 'Ask PricePocket AI'), x); p.appendChild(hd);
+    const c = aiCtx(); p.appendChild(mk('p', 'note', c ? 'Looking at: ' + (c.r ? 'parcel ' + c.r.p + ' · ' : '') + c.d.county + ', ' + c.d.state : 'Tip: open a county or tap a parcel and the AI will know what you are looking at.'));
+    if (!signedIn || !paid) { const g = mk('p', 'pm-flag warn'); g.append(document.createTextNode(signedIn ? 'PricePocket AI is for Pro members. ' : 'Sign in to use PricePocket AI. ')); const a = mk('a', '', signedIn ? 'See the Pro plan' : 'Sign in'); a.href = signedIn ? '/account/' : '/login/?next=/map/'; a.style.color = '#fde68a'; g.appendChild(a); p.appendChild(g); return; }
+    const f = mk('form', 'aif'), i = mk('input'); i.type = 'text'; i.maxLength = 300; i.placeholder = 'Ask about this county or parcel…'; i.setAttribute('aria-label', 'Your question'); const go = mk('button', 'pm-btn primary', 'Ask'); go.type = 'submit'; f.append(i, go); p.appendChild(f);
+    const chips = mk('div', 'pm-chips-row'); aiChips().forEach(t => { const b = mk('button', '', t.length > 60 ? t.slice(0, 57) + '…' : t); b.type = 'button'; b.title = t; b.addEventListener('click', () => { i.value = t; f.requestSubmit(); }); chips.appendChild(b); }); p.appendChild(chips);
+    const out = mk('div', 'aiout'); out.setAttribute('aria-live', 'polite'); p.appendChild(out);
+    f.addEventListener('submit', async e => { e.preventDefault(); const q = i.value.replace(/\s+/g, ' ').trim(); if (q.length < 3 || aiBusy) return; aiBusy = true; go.disabled = true; out.textContent = ''; out.appendChild(mk('p', 'note', 'Researching… this can take a few seconds.')); await runAi(q, out); aiBusy = false; go.disabled = false; });
+    if (q0) { i.value = q0; } setTimeout(() => { try { i.focus({ preventScroll: true }); } catch (e) {} }, 50);
+  }
+  async function runAi(q, out) {
+    let r, d; try { r = await fetch('/.netlify/functions/ai', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q.slice(0, 300), states: curState ? [curState] : [] }) }); d = await r.json().catch(() => ({})); } catch (e) { out.textContent = ''; out.appendChild(mk('p', 'pm-flag warn', 'Could not reach PricePocket AI. Please try again.')); return; }
+    out.textContent = ''; if (!r.ok) { out.appendChild(mk('p', 'pm-flag warn', d.error || 'Something went wrong. Please try again.')); return; }
+    const lines = String(d.answer || '').split(/\n+/).map(x => x.trim()).filter(Boolean), bullets = lines.filter(x => /^[-•*]\s+/.test(x)), verify = lines.filter(x => /^verify:/i.test(x)), rest = lines.filter(x => !bullets.includes(x) && !verify.includes(x));
+    if (rest.length) out.appendChild(mk('p', 'ans', rest.join(' '))); if (bullets.length) { const ul = mk('ul'); bullets.forEach(b => ul.appendChild(mk('li', '', b.replace(/^[-•*]\s+/, '')))); out.appendChild(ul); } if (verify.length) out.appendChild(mk('p', 'pm-flag warn', verify.join(' ')));
+    if (Array.isArray(d.uncertainty) && d.uncertainty.length) { const u = mk('div', 'note'); u.appendChild(mk('b', '', 'What I could not confirm')); const ul = mk('ul'); d.uncertainty.forEach(x => ul.appendChild(mk('li', '', x))); u.appendChild(ul); out.appendChild(u); }
+    if (Array.isArray(d.sources) && d.sources.length) { const s = mk('p', 'note', 'Sources: '); d.sources.forEach((x, n) => { if (n) s.appendChild(document.createTextNode(' · ')); if (x.url && /^https?:/.test(x.url)) { const a = mk('a', '', x.name); a.href = x.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.color = '#93c5fd'; s.appendChild(a); } else s.appendChild(document.createTextNode(x.name)); }); out.appendChild(s); }
+    // parcels the answer lists: show the ones we hold a verified boundary for on the map
+    const ids = new Set((Array.isArray(d.results) ? d.results : []).map(x => x && x.parcel).filter(Boolean)); const hits = all().filter(x => x.g && ids.has(x.p));
+    if (hits.length && mapReady) { near = null; map.getSource('near').setData({ type: 'FeatureCollection', features: hits.slice(0, 200).map(feature) }); out.appendChild(mk('p', 'note', hits.length + ' of the parcels mentioned are highlighted in blue-green on the map.')); }
+    out.appendChild(mk('p', 'note', 'AI can be wrong. It answers from the county lists and state rules on this site. Verify with the county before you bid. Not legal or investment advice.'));
+  }
+
   // ---------- start ----------
   async function start2() {
-    const q = new URLSearchParams(location.search), c = q.get('c'), p = q.get('p'); if (!c || !IDX.datasets.some(d => d.id === c)) return;
+    const q = new URLSearchParams(location.search), c = q.get('c'), p = q.get('p'); if (q.get('ai')) openAi(q.get('ai')); if (!c || !IDX.datasets.some(d => d.id === c)) return;
     await pickCounty(c); if (p) { const r = all().find(x => x.p === p); if (r) select(r, { fly: true }); }
   }
   function loadLib() { return new Promise((res, rej) => { if (window.maplibregl) return res(); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = () => rej(new Error('map library')); document.head.appendChild(s); }); }
