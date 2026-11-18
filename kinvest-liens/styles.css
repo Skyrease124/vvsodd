@@ -1546,3 +1546,9 @@ body.loginpg #msg:empty{display:none}
 .skel{display:grid;gap:12px;margin:14px 0}.skel i{display:block;height:64px;border-radius:16px;background:linear-gradient(100deg,rgba(255,255,255,.05) 30%,rgba(255,255,255,.12) 50%,rgba(255,255,255,.05) 70%);background-size:300% 100%;animation:mcshim 1.4s ease-in-out infinite}.skel i:first-child{height:44px;width:70%}
 @keyframes mcshim{from{background-position:100% 0}to{background-position:0 0}}
 @media(prefers-reduced-motion:reduce){.skel i{animation:none}}
+
+.dqgeo{display:flex;gap:16px;align-items:center;margin:10px 0;padding:12px;border-radius:14px;background:rgba(255,255,255,.04)}
+.dqmap{flex:none;width:96px;height:96px;border-radius:12px;background:rgba(255,255,255,.06)}.dqmap path{fill:rgba(74,222,128,.35);stroke:#4ade80;stroke-width:1.2;stroke-linejoin:round}
+.dqfact{display:flex;gap:10px;font-size:.88rem;line-height:1.45}.dqfact .k{flex:none;width:112px;color:#aebbd1}.dqfact .v{color:#e8eefb;overflow-wrap:anywhere}
+.dqsrc a{color:#f5c542}
+@media(max-width:480px){.dqgeo{align-items:flex-start}.dqmap{width:80px;height:80px}.dqfact .k{width:90px}}

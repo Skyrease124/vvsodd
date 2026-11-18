@@ -510,7 +510,7 @@ export const TRACKER = [
   "state": "VA",
   "name": "Virginia",
   "system": "Tax deed",
-  "research": "Partial: sourced sale steps on the state page",
+  "research": "Partial: Code of Virginia Title 58.1 Ch. 39 Art. 4 (58.1-3965 to 3971, judicial sale of delinquent tax land) read 2026-11-18; sourced guide at /liens/virginia/. Local rates and Virginia Beach procedures not read (city site unreachable)",
   "writing": "Short state class only (one page and a 3-question quiz)",
   "review": "Not started",
   "publication": "Not published",

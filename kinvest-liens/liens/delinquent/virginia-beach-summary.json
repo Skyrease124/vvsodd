@@ -2,81 +2,81 @@
  "dataset": "Virginia Beach, VA: delinquent real estate taxes",
  "kind": "delinquent-tax-records",
  "notASaleList": true,
- "source": "City of Virginia Beach delinquent real estate tax export, provided to PricePocketAsset by its owner. The official city page was not confirmed from our server.",
+ "source": "City of Virginia Beach GIS (VBCGIS) public service: Delinquent Real Estate Taxes table, read directly from the city on 2026-11-18. Data last edited by the city 2026-11-18.",
  "received": "2026-11-18",
- "asOf": null,
- "asOfNote": "The file does not say what date it was exported. Tax years run through 2026.",
- "parcels": 3116,
- "rowsRead": 14309,
- "owed": 16577945.96,
- "tax": 14612878.89,
- "penalty": 1432071.13,
- "interest": 2200420.77,
- "fees": 26313.81,
- "medianOwed": 2820.57,
- "maxOwed": 284408,
+ "asOf": "2026-11-18",
+ "asOfNote": null,
+ "parcels": 2799,
+ "rowsRead": 13754,
+ "owed": 15620555.18,
+ "tax": 13594356.22,
+ "penalty": 1334647.03,
+ "interest": 2208017.09,
+ "fees": 25988.81,
+ "medianOwed": 3019.7,
+ "maxOwed": 286219.1,
  "ownedBuckets": [
   {
    "label": "Under $500",
-   "parcels": 469,
-   "owed": 76519.96
+   "parcels": 431,
+   "owed": 69709.92
   },
   {
    "label": "$500 to $999",
-   "parcels": 215,
-   "owed": 161034.94
+   "parcels": 187,
+   "owed": 139061.45
   },
   {
    "label": "$1,000 to $2,499",
-   "parcels": 764,
-   "owed": 1288114.86
+   "parcels": 608,
+   "owed": 1023644.26
   },
   {
    "label": "$2,500 to $4,999",
-   "parcels": 662,
-   "owed": 2362190.36
+   "parcels": 607,
+   "owed": 2166007.04
   },
   {
    "label": "$5,000 to $9,999",
-   "parcels": 572,
-   "owed": 4023832.1
+   "parcels": 547,
+   "owed": 3846744.18
   },
   {
    "label": "$10,000 to $24,999",
-   "parcels": 357,
-   "owed": 5194998.86
+   "parcels": 346,
+   "owed": 5026137.66
   },
   {
    "label": "$25,000 and up",
-   "parcels": 77,
-   "owed": 3471254.88
+   "parcels": 73,
+   "owed": 3349250.67
   }
  ],
  "yearsBehind": [
   {
    "label": "1 year",
-   "parcels": 1795,
-   "owed": 4429468.77
+   "parcels": 1519,
+   "owed": 3882969.26
   },
   {
    "label": "2 years",
-   "parcels": 501,
-   "owed": 3456110.36
+   "parcels": 484,
+   "owed": 3321805.8
   },
   {
    "label": "3 years",
-   "parcels": 437,
-   "owed": 4986804.17
+   "parcels": 424,
+   "owed": 4869472.42
   },
   {
    "label": "4 to 5 years",
-   "parcels": 171,
-   "owed": 2207305.84
+   "parcels": 163,
+   "owed": 2076061.79
   },
   {
    "label": "6 or more years",
-   "parcels": 212,
-   "owed": 1498256.82
+   "parcels": 209,
+   "owed": 1470245.91
   }
  ],
  "byTaxYear": {
@@ -90,28 +90,28 @@
   "2014": 149,
   "2015": 153,
   "2016": 160,
-  "2017": 170,
-  "2018": 173,
-  "2019": 190,
-  "2020": 210,
-  "2021": 219,
-  "2022": 242,
-  "2023": 375,
-  "2024": 819,
-  "2025": 1298,
-  "2026": 2921
+  "2017": 169,
+  "2018": 172,
+  "2019": 187,
+  "2020": 207,
+  "2021": 216,
+  "2022": 237,
+  "2023": 362,
+  "2024": 793,
+  "2025": 1259,
+  "2026": 2606
  },
  "oldestYear": "2007",
  "noStreetAddress": {
-  "parcels": 567,
-  "medianOwed": 1045.69
+  "parcels": 541,
+  "medianOwed": 1020.63
  },
  "oldParcels": {
-  "since2020": 318
+  "since2020": 315
  },
  "quality": [
-  "14309 rows are single bill installments; each parcel total is the sum of its rows.",
-  "1237 rows have tax + penalty + interest + fees different from the city’s stated total (for example after a partial payment). The stated total is used.",
+  "13754 rows are single bill installments; each parcel total is the sum of its rows.",
+  "1156 rows have tax + penalty + interest + fees different from the city’s stated total (for example after a partial payment). The stated total is used.",
   "793 parcel ids had stray spaces and were cleaned.",
   "Owner names and mailing addresses in the file are not used or stored."
  ],
@@ -119,5 +119,15 @@
   "This is a list of overdue tax, not a list of properties for sale. Nothing here says a parcel is available, will be sold, or can be bought.",
   "Balances grow with penalty and interest and change when owners pay. Confirm any figure with the Virginia Beach Treasurer.",
   "Educational only. Not legal, tax or investment advice."
- ]
+ ],
+ "sourceUrl": "https://services2.arcgis.com/CyVvlIiUfRBmMQuu/arcgis/rest/services/Delinquent_Real_Estate_Taxes_view/FeatureServer/0",
+ "parcelSource": {
+  "name": "City of Virginia Beach GIS: Property Information, Parcels layer",
+  "url": "https://geo.vbgov.com/mapservices/rest/services/Basemaps/Property_Information/MapServer/12"
+ },
+ "outlines": {
+  "matched": 2317,
+  "of": 2799,
+  "recordedOnly": 0
+ }
 }
