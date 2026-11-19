@@ -31,11 +31,12 @@ r = await call(P, { action: 'deletePost', key: pp.j.rows[0].key }); ok(r.s === 2
 // blocks hide posts
 await call(A, { action: 'block', uid: mp.uid }); fd = await call(A, { feed: 1 }); ok(!fd.j.rows.some(x => x.author.uid === mp.uid), 'blocked member\'s posts are hidden'); await call(A, { action: 'unblock', uid: mp.uid });
 // photos
-const jpg = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xdb]), Buffer.alloc(400, 7), Buffer.from([0xff, 0xd9])]).toString('base64');
-const exif = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0, 20]), Buffer.from('Exif\0\0', 'latin1'), Buffer.alloc(400, 7)]).toString('base64');
+const jpg = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0, 4, 1, 1, 0xff, 0xda]), Buffer.alloc(400, 7), Buffer.from([0xff, 0xd9])]).toString('base64');
+const exif = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0, 20]), Buffer.from('Exif\0\0GPSGPSGPSGPS', 'latin1'), Buffer.from([0xff, 0xda]), Buffer.alloc(400, 7)]).toString('base64');
 r = await call(A, { action: 'setPhoto', kind: 'avatar', data: jpg }); ok(r.s === 402, 'free member cannot change photos (server refuses)');
 r = await call(P, { action: 'setPhoto', kind: 'avatar', data: 'data:image/jpeg;base64,' + Buffer.from('<html>' + 'a'.repeat(400)).toString('base64') }); ok(r.s === 400, 'non-picture refused even if labeled JPEG');
-r = await call(P, { action: 'setPhoto', kind: 'avatar', data: exif }); ok(r.s === 400 && /camera data/.test(r.j.error), 'picture with hidden EXIF data refused');
+r = await call(P, { action: 'setPhoto', kind: 'avatar', data: exif }); ok(r.s === 200, 'picture with hidden EXIF data is accepted with the data stripped (iPhone Safari adds it)');
+{ const pr = (await call(A, { u: mp.username })).j.profile; const mm = await media(new Request('http://x' + pr.photo, { headers: { cookie: A } })); const bb = Buffer.from(await mm.arrayBuffer()); ok(bb.indexOf(Buffer.from('Exif')) === -1 && bb.indexOf(Buffer.from('GPS')) === -1 && bb[0] === 0xff && bb[1] === 0xd8, 'stored photo has no EXIF/GPS data'); }
 r = await call(P, { action: 'setPhoto', kind: 'cover', data: 'data:image/jpeg;base64,' + Buffer.alloc(2e6, 1).toString('base64') }); ok(r.s === 413, 'too-large picture refused');
 r = await call(P, { action: 'setPhoto', kind: 'avatar', data: jpg }); ok(r.s === 200, 'paid member sets a profile photo');
 r = await call(P, { action: 'setPhoto', kind: 'cover', data: jpg }); ok(r.s === 200, 'paid member sets a background photo');
