@@ -10,6 +10,7 @@ import crypto from 'node:crypto';
 import * as auth from './auth.mjs';
 
 export const FOUNDER_EMAIL = () => auth.normEmail(process.env.FOUNDER_EMAIL || 'skyariasa@gmail.com');   // config: set FOUNDER_USER_ID to pin by id instead
+export const VERIFY_MIN = () => Math.max(1, +(process.env.VERIFY_MIN_FOLLOWERS || 1000));   // followers needed before a member may ASK for the blue check (the owner still decides)
 export const EARLY_UNTIL = () => process.env.EARLY_MEMBER_UNTIL || '2027-01-01';
 export const ROLES = ['Tax Lien Investor', 'Tax Deed Investor', 'Land Buyer', 'Real Estate Investor', 'Realtor', 'Developer', 'Contractor', 'Wholesaler', 'Teacher', 'Student', 'Beginner Investor', 'Other'];
 export const EXPERIENCE = ['Beginner', 'Intermediate', 'Advanced'];
@@ -210,6 +211,23 @@ export async function saveCollection(p, b) {
   c.updated = now(); await auth.kvPut(K.c(p.uid, c.id), c); return { ok: true, id: c.id };
 }
 export async function deleteCollection(p, id) { if (!/^[a-f0-9]{8}$/.test(String(id)) || !(await auth.kvGet(K.c(p.uid, id)))) return err(404, 'Collection not found.'); await auth.kvPut(K.c(p.uid, id), null); return { ok: true }; }
+
+// ---- verification requests ---------------------------------------------------------------------------------------
+// The blue check is chosen by the owner. A member may only ASK once they have enough followers and a complete profile; nothing is granted automatically.
+export async function verifyStatus(p) {
+  const f = (p.stats || {}).followers || 0, min = VERIFY_MIN(), req = await auth.kvGet('cv_' + p.uid), done = !!p.verified || await isFounderProfile(p);
+  const complete = !!(p.name && p.name !== 'New member' && p.role && p.bio);
+  return { verified: done, followers: f, min, complete, requested: !!(req && req.status === 'open'), canRequest: !done && f >= min && complete && !(req && req.status === 'open') };
+}
+export async function requestVerify(p, note) {
+  const s = await verifyStatus(p); if (s.verified) return err(400, 'This account is already verified.');
+  if (s.requested) return err(400, 'Your request is already with PricePocketAsset.');
+  if (s.followers < s.min) return err(403, 'Verification requests open at ' + s.min.toLocaleString('en-US') + ' followers. You have ' + s.followers.toLocaleString('en-US') + '.');
+  if (!s.complete) return err(400, 'Add your name, role and a short bio before asking for verification.');
+  await auth.kvPut('cv_' + p.uid, { uid: p.uid, username: p.username, note: clean(note, 300), at: now(), status: 'open', followers: s.followers }); return { ok: true };
+}
+export async function listVerifyRequests() { const out = []; for (const k of (await auth.kvList('cv_')).slice(0, 200)) { const r = await auth.kvGet(k); if (r && r.status === 'open') { const p = await getByUid(r.uid); out.push(Object.assign({}, r, { name: p ? p.name : '?', username: p ? p.username : r.username })); } } return out.sort((a, b) => (a.at < b.at ? 1 : -1)); }
+export async function closeVerifyRequest(uid, approve) { const r = await auth.kvGet('cv_' + uid); if (!r) return err(404, 'No request found.'); r.status = approve ? 'approved' : 'declined'; r.closed = now(); await auth.kvPut('cv_' + uid, r); return { ok: true }; }
 
 // ---- discovery -------------------------------------------------------------------------------------------------
 export async function search(q, viewer, limit = 20) {

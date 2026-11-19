@@ -85,6 +85,18 @@ ok(!(await badgeKeys(B, 'ann_land')).includes('verified') && (await badgeKeys(B,
 ok((await call(A, { action: 'ownerAward', username: 'ann_land', verified: true })).s === 403, 'members cannot award themselves badges');
 await call(F, { action: 'ownerAward', username: 'ann_land', verified: true, awards: ['helpful', 'educator'] }); ok((await badgeKeys(B, 'ann_land')).join() === 'verified,early,helpful,educator', 'owner awards Verified, Helpful Contributor and Educator');
 ok((await call(F, { action: 'ownerAward', username: 'ann_land', awards: ['founder'] })).s === 400, 'the Founder badge cannot be handed out');
+// --- the blue check: only the Founder by default; members can ASK after enough followers; the owner decides ---
+ok((await call(A, { u: 'pricepocketasset' })).j.profile.badges.some(b => b.key === 'verified') && !(await call(F, { u: mc.username })).j.profile.verified && !(await call(F, { u: mb.username })).j.profile.verified, 'only the Founder has the blue check; regular members do not');
+r = await call(Cy, { action: 'requestVerify' }); ok(r.s === 403 && /1,000 followers/.test(r.j.error), 'a member below the follower minimum cannot even ask for the check');
+process.env.VERIFY_MIN_FOLLOWERS = '2'; await call(F, { action: 'ownerAward', username: 'ann_land', verified: false }); await call(Cy, { action: 'follow', uid: (await me(A)).uid });
+ok((await me(A)).verify.min === 2 && (await me(A)).verify.canRequest === true, 'status says the member may now ask');
+r = await call(B, { action: 'requestVerify' }); ok(r.s === 403, 'not enough followers: refused by the server');
+r = await call(A, { action: 'requestVerify', note: 'Land educator' }); ok(r.s === 200, 'with enough followers and a complete profile a member can send a request');
+r = await call(A, { action: 'requestVerify' }); ok(r.s === 400, 'a second request while one is open is refused');
+ok((await call(A, { verifyRequests: 1 })).s === 403 && (await call(F, { verifyRequests: 1 })).j.requests.length === 1, 'only the owner sees verification requests');
+ok((await call(A, { action: 'ownerVerifyDecision', username: 'ann_land', approve: true })).s === 403, 'members cannot approve their own request');
+r = await call(F, { action: 'ownerVerifyDecision', username: 'ann_land', approve: true }); ok(r.s === 200 && (await call(B, { u: 'ann_land' })).j.profile.verified === true && (await call(F, { verifyRequests: 1 })).j.requests.length === 0, 'owner approves: the check appears and the request closes');
+delete process.env.VERIFY_MIN_FOLLOWERS;
 // --- deactivated members disappear ---
 const u = await auth.getUser('bob@example.com'); u.revoked = true; await auth.saveUser(u);
 ok((await call(A, { u: mb.username })).s === 404, 'a deactivated member\'s profile is hidden');
