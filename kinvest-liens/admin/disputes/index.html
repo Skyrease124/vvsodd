@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Disputes &amp; Chargeback Evidence | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="../../styles.css">
+<style>
+  .dv{max-width:980px;margin:0 auto;padding:16px;font:15px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;color:#1d1d1f}
+  .dv h1{font-size:1.5rem;margin:8px 0 4px}.dv h2{font-size:1.1rem;margin:22px 0 8px;border-bottom:1px solid #d9d9de;padding-bottom:4px}
+  .dv .muted{color:#6e6e73;font-size:.9rem}
+  .dv .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin:12px 0}
+  .dv .card{background:#fff;border:1px solid #e5e5ea;border-radius:12px;padding:10px}.dv .card b{display:block;font-size:1.4rem}
+  .dv .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+  .dv select,.dv input,.dv textarea{font:inherit;padding:8px 10px;border:1px solid #c7c7cc;border-radius:10px;background:#fff;color:#1d1d1f;min-height:40px}
+  .dv textarea{width:100%;min-height:70px}
+  .dv button{font:inherit;min-height:40px;padding:0 14px;border-radius:999px;border:0;background:#0b6e4f;color:#fff;font-weight:600;cursor:pointer}
+  .dv button.alt{background:#e5e5ea;color:#1d1d1f}.dv button.warn{background:#b00020}
+  .dv table{width:100%;border-collapse:collapse}.dv th,.dv td{text-align:left;padding:6px 8px 6px 0;vertical-align:top;border-bottom:1px solid #f0f0f3}
+  .dv th{width:38%;color:#424245;font-weight:600}
+  .dv ul{padding-left:18px}.dv li{margin:4px 0}
+  .dv .list button{display:block;width:100%;text-align:left;background:#fff;color:#1d1d1f;border:1px solid #e5e5ea;margin:6px 0;border-radius:12px;padding:10px 12px}
+  .dv .pill{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:999px;background:#e5e5ea}
+  .dv .pill.DISPUTED,.dv .pill.HIGH{background:#ffd60a}.dv .pill.MANUAL{background:#ff9f0a}.dv .pill.WON{background:#34c759;color:#fff}.dv .pill.LOST{background:#d70015;color:#fff}
+  .dv .msg{min-height:1.2em}.dv .ok{color:#1f9d55}.dv .bad{color:#d70015}
+  .dv .note{background:#fff;border:1px solid #e5e5ea;border-radius:10px;padding:8px 10px;margin:6px 0}
+  .dv .hide{display:none}
+</style>
+</head>
+<body>
+<main class="dv">
+  <p class="muted"><a href="../">Admin</a> &middot; private owner page</p>
+  <h1>Disputes &amp; Chargeback Evidence</h1>
+  <p class="muted">Evidence is recorded as things happen. Nothing here is sent to Stripe. Review each packet yourself before you respond.</p>
+  <div id="err" class="msg bad" role="alert"></div>
+
+  <section aria-labelledby="sum">
+    <h2 id="sum">Overview</h2>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section>
+    <h2>Cases</h2>
+    <div class="row">
+      <select id="fStatus" aria-label="Status">
+        <option value="">All statuses</option><option value="open">Open (disputed)</option><option value="closed">Closed</option>
+        <option value="CHARGEBACK WON">Won</option><option value="CHARGEBACK LOST">Lost</option><option value="REFUNDED">Refunded</option><option value="PARTIALLY REFUNDED">Partially refunded</option>
+      </select>
+      <select id="fRisk" aria-label="Risk">
+        <option value="">Any risk</option><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>MANUAL REVIEW</option>
+      </select>
+      <input id="fQ" type="search" placeholder="Email or dispute ID" aria-label="Search">
+      <button id="fGo" class="alt" type="button">Filter</button>
+    </div>
+    <div class="list" id="cases"></div>
+  </section>
+
+  <section id="detail" class="hide" aria-labelledby="dtitle">
+    <h2 id="dtitle">Case</h2>
+    <div class="row">
+      <button id="btnPacket" type="button">Generate Evidence Packet</button>
+      <button id="btnBack" class="alt" type="button">Back to cases</button>
+    </div>
+    <div id="facts"></div>
+    <h2>Timeline</h2>
+    <ul id="timeline"></ul>
+    <h2>Internal risk flags (not for submission)</h2>
+    <ul id="flags"></ul>
+    <h2>Admin notes (private)</h2>
+    <div class="row"><textarea id="noteText" aria-label="New note" placeholder="Example: Customer contacted support before the dispute."></textarea></div>
+    <div class="row"><button id="btnNote" type="button">Add note</button><span id="noteMsg" class="msg"></span></div>
+    <div id="notes"></div>
+    <h2>Restore paid access</h2>
+    <p class="muted" id="holdText"></p>
+    <div id="restoreBox" class="hide">
+      <div class="row"><input id="rEmail" type="email" readonly aria-label="Account email"></div>
+      <div class="row"><input id="rReason" type="text" placeholder="Reason (required)" aria-label="Reason" style="flex:1;min-width:220px"><button id="btnRestore" class="warn" type="button">Restore access</button></div>
+      <span id="restoreMsg" class="msg"></span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Payment &amp; Trust History (customer lookup)</h2>
+    <div class="row"><input id="cEmail" type="email" placeholder="Customer email" aria-label="Customer email"><button id="btnCust" class="alt" type="button">Look up</button></div>
+    <div id="custBox"></div>
+  </section>
+
+  <section>
+    <h2>Settings</h2>
+    <div class="row"><label><input type="checkbox" id="sSuspend"> Suspend paid access during an active dispute (ON by default)</label></div>
+    <div class="row">
+      <label>After a dispute is won: <select id="sWin"><option value="manual">Admin restores (recommended)</option><option value="auto">Restore automatically</option></select></label>
+    </div>
+    <div class="row">
+      <label>Download-burst alert: <input id="sBurstFiles" type="number" min="1" max="1000" style="width:90px"> files within <input id="sBurstHours" type="number" min="1" max="720" style="width:90px"> hours</label>
+    </div>
+    <div class="row">
+      <label>Automated-looking alert: <input id="sRapidFiles" type="number" min="2" max="100" style="width:90px"> files within <input id="sRapidSeconds" type="number" min="5" max="3600" style="width:90px"> seconds</label>
+    </div>
+    <div class="row">
+      <label>Keep records for <input id="sRetention" type="number" min="1" max="30" style="width:90px"> years (stored setting; automatic deletion is not built yet)</label>
+    </div>
+    <div class="row"><button id="btnSettings" type="button">Save settings</button><span id="setMsg" class="msg"></span></div>
+  </section>
+</main>
+<script>
+(function () {
+  var API = '/.netlify/functions/disputes';
+  var $ = function (id) { return document.getElementById(id); };
+  var cur = null;
+  function fail(el, msg) { el.textContent = msg; el.className = 'msg bad'; }
+  function ok(el, msg) { el.textContent = msg; el.className = 'msg ok'; }
+  function txt(tag, text, cls) { var e = document.createElement(tag); e.textContent = text; if (cls) e.className = cls; return e; }
+  function when(iso) { return iso ? new Date(iso).toLocaleString('en-US', { timeZone: 'UTC', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }) : 'Not recorded'; }
+  function money(a, c) { return a == null ? 'Not recorded' : '$' + Number(a).toFixed(2) + ' ' + String(c || 'usd').toUpperCase(); }
+  function get(q) { return fetch(API + q, { credentials: 'same-origin' }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not load.'); return j; }); }); }
+  function post(body) { return fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || 'Could not save.'); return j; }); }); }
+  function kv(list, k, v) { var li = document.createElement('tr'); li.appendChild(txt('th', k)); li.appendChild(txt('td', v == null || v === '' ? 'Not recorded' : String(v))); list.appendChild(li); }
+  function table() { var t = document.createElement('table'); var b = document.createElement('tbody'); t.appendChild(b); return { t: t, b: b }; }
+
+  function loadSummary() {
+    get('').then(function (d) {
+      var s = d.summary, cards = $('cards'); cards.textContent = '';
+      [['Open disputes', s.open], ['Evidence due in 7 days', s.evidenceDueSoon], ['Won', s.won], ['Lost', s.lost], ['Needs review', s.needsReview], ['Suspicious accounts', s.suspicious], ['Unmatched Stripe events', s.unmatchedEvents], ['All cases', s.total]].forEach(function (x) {
+        var c = document.createElement('div'); c.className = 'card'; c.appendChild(txt('span', x[0], 'muted')); c.appendChild(txt('b', String(x[1]))); cards.appendChild(c);
+      });
+      setSettings(d.settings);
+      var box = $('cases'); box.textContent = '';
+      if (!d.cases.length) box.appendChild(txt('p', 'No cases yet. A case appears here when Stripe reports a dispute.', 'muted'));
+      d.cases.forEach(function (c) {
+        var b = document.createElement('button'); b.type = 'button';
+        b.appendChild(txt('b', (c.customerEmail || 'No matching account') + '  ' + money(c.amount, c.currency)));
+        b.appendChild(document.createElement('br'));
+        b.appendChild(txt('span', c.reason ? 'Reason: ' + c.reason : 'Reason not given', 'muted'));
+        b.appendChild(document.createTextNode('  '));
+        b.appendChild(txt('span', c.paymentStatus, 'pill ' + (c.paymentStatus === 'DISPUTED' ? 'DISPUTED' : c.paymentStatus === 'CHARGEBACK WON' ? 'WON' : c.paymentStatus === 'CHARGEBACK LOST' ? 'LOST' : '')));
+        b.appendChild(document.createTextNode(' '));
+        b.appendChild(txt('span', 'Risk: ' + c.riskStatus, 'pill ' + (c.riskStatus === 'HIGH' ? 'HIGH' : c.riskStatus === 'MANUAL REVIEW' ? 'MANUAL' : '')));
+        b.addEventListener('click', function () { openCase(c.id); });
+        box.appendChild(b);
+      });
+    }).catch(function (e) { fail($('err'), e.message); });
+  }
+  function setSettings(s) {
+    $('sSuspend').checked = !!s.suspendDuringDispute; $('sWin').value = s.restoreOnWin;
+    $('sBurstFiles').value = s.burstFiles; $('sBurstHours').value = s.burstHours; $('sRapidFiles').value = s.rapidFiles; $('sRapidSeconds').value = s.rapidSeconds; $('sRetention').value = s.retentionYears;
+  }
+  function openCase(id) {
+    get('?id=' + encodeURIComponent(id)).then(function (d) {
+      var c = d.case; cur = c; $('detail').classList.remove('hide'); $('dtitle').textContent = 'Dispute ' + c.id;
+      var f = $('facts'); f.textContent = ''; var tb = table(); f.appendChild(tb.t);
+      [['Payment status', c.paymentStatus], ['Stripe status', c.status], ['Customer email', c.customerEmail], ['User ID', c.uid], ['Account status', c.userStatus], ['Amount', money(c.amount, c.currency)],
+       ['Reason', c.reason], ['Purchased', when(c.purchasedAt)], ['Dispute opened', when(c.disputedAt)], ['Evidence due', when(c.dueBy)], ['Invoice', c.invoice], ['Order reference', c.orderRef],
+       ['Stripe charge', c.chargeId], ['Stripe payment intent', c.paymentIntent], ['Stripe subscription', c.subscriptionId], ['Stripe customer', c.stripeCustomerId],
+       ['Account created', when(c.accountCreated)], ['Last sign-in', when(c.lastLogin)], ['Sign-ins after payment', c.paidLogins], ['First sign-in after payment', when(c.firstLoginAfterPayment)],
+       ['Files downloaded (all)', c.downloadCount], ['Files downloaded after payment', c.downloadsAfterPayment], ['Premium features used after payment', (c.premiumFeatures || []).join(', ') || 'Not recorded'],
+       ['Refunds', (c.refunds || []).length ? c.refunds.map(function (r) { return r.status + ' ' + money(r.refunded, r.currency); }).join('; ') : 'None recorded'], ['Previous disputes on this account', c.previousDisputes],
+       ['Terms accepted', (c.terms || []).length ? c.terms.map(function (t) { return 'Terms v' + t.termsVersion + ', Refund Policy v' + t.refundPolicyVersion + ' on ' + when(t.at); }).join('; ') : 'Not recorded'],
+       ['Overall internal risk', c.riskStatus], ['Access suspended for this dispute', c.accessHold ? 'Yes, since ' + when(c.accessHold.at) : 'No']
+      ].forEach(function (x) { kv(tb.b, x[0], x[1]); });
+      var tl = $('timeline'); tl.textContent = '';
+      if (!c.timeline.length) tl.appendChild(txt('li', 'Not recorded'));
+      c.timeline.forEach(function (r) { tl.appendChild(txt('li', when(r.at) + ' — ' + r.text)); });
+      tl.appendChild(txt('li', when(c.disputedAt) + ' — Payment dispute opened'));
+      var fl = $('flags'); fl.textContent = '';
+      if (!c.flags.length) fl.appendChild(txt('li', 'No internal risk flags recorded.'));
+      c.flags.forEach(function (x) { fl.appendChild(txt('li', x.status + ': ' + x.reason + ' (' + x.code + ')')); });
+      var nb = $('notes'); nb.textContent = '';
+      (d.notes || []).forEach(function (n) { var e = txt('div', when(n.at) + ' by ' + n.by + ': ' + n.text, 'note'); nb.appendChild(e); });
+      var suspended = !!c.accessHold && c.customerEmail;
+      $('holdText').textContent = suspended ? 'Paid access is suspended for this account. The account, its files and its history are kept. Restoring access requires a reason, and it is recorded.' : 'No suspended access for this account.';
+      $('restoreBox').classList.toggle('hide', !suspended); $('rEmail').value = c.customerEmail || '';
+      $('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }).catch(function (e) { fail($('err'), e.message); });
+  }
+  $('btnBack').onclick = function () { $('detail').classList.add('hide'); };
+  $('btnPacket').onclick = function () { if (cur) window.open(API + '?id=' + encodeURIComponent(cur.id) + '&packet=1', '_blank', 'noopener'); };
+  $('btnNote').onclick = function () {
+    var t = $('noteText').value.trim(); if (!t || !cur) return fail($('noteMsg'), 'Write a note first.');
+    post({ action: 'note', id: cur.id, text: t }).then(function () { $('noteText').value = ''; ok($('noteMsg'), 'Saved.'); openCase(cur.id); }).catch(function (e) { fail($('noteMsg'), e.message); });
+  };
+  $('btnRestore').onclick = function () {
+    var r = $('rReason').value.trim(); if (r.length < 5) return fail($('restoreMsg'), 'Write the reason (at least 5 characters).');
+    if (!window.confirm('Restore paid access for this account now?')) return;
+    post({ action: 'restore', email: $('rEmail').value, reason: r }).then(function () { ok($('restoreMsg'), 'Access restored and recorded.'); openCase(cur.id); loadSummary(); }).catch(function (e) { fail($('restoreMsg'), e.message); });
+  };
+  $('fGo').onclick = function () { var p = []; if ($('fStatus').value) p.push('status=' + encodeURIComponent($('fStatus').value)); if ($('fRisk').value) p.push('risk=' + encodeURIComponent($('fRisk').value)); if ($('fQ').value) p.push('q=' + encodeURIComponent($('fQ').value)); get('?' + p.join('&')).then(function () { loadSummary(); }).catch(function (e) { fail($('err'), e.message); }); };
+  $('btnCust').onclick = function () {
+    var em = $('cEmail').value.trim(); var box = $('custBox'); box.textContent = '';
+    if (!em) return;
+    get('?customer=' + encodeURIComponent(em)).then(function (d) {
+      var c = d.customer; var tb = table(); box.appendChild(tb.t);
+      [['Account status', c.userStatus], ['Account created', when(c.accountCreated)], ['Lifetime payments', money(c.lifetimeTotal, c.currency)], ['Current subscription', c.currentSubscription ? c.currentSubscription.status + (c.currentSubscription.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : 'None'],
+       ['Payments', (c.payments || []).length + ' recorded'], ['Failed payment attempts', c.failedPayments], ['Refunds', (c.refunds || []).length], ['Disputes', (c.disputes || []).length],
+       ['Files downloaded', c.downloadCount], ['Last download', when(c.lastDownload)], ['Last premium activity', when(c.lastPremiumActivity)], ['Last sign-in', when(c.lastLogin)],
+       ['Terms accepted', (c.terms || []).length ? c.terms.map(function (t) { return 'Terms v' + t.termsVersion + ' on ' + when(t.at); }).join('; ') : 'Not recorded']
+      ].forEach(function (x) { kv(tb.b, x[0], x[1]); });
+    }).catch(function (e) { fail($('err'), e.message); });
+  };
+  $('btnSettings').onclick = function () {
+    var patch = { suspendDuringDispute: $('sSuspend').checked, restoreOnWin: $('sWin').value, burstFiles: +$('sBurstFiles').value, burstHours: +$('sBurstHours').value, rapidFiles: +$('sRapidFiles').value, rapidSeconds: +$('sRapidSeconds').value, retentionYears: +$('sRetention').value };
+    post({ action: 'settings', patch: patch, reason: 'Changed on the disputes page' }).then(function () { ok($('setMsg'), 'Saved. The change is in the audit trail.'); }).catch(function (e) { fail($('setMsg'), e.message); });
+  };
+  loadSummary();
+})();
+</script>
+</body>
+</html>

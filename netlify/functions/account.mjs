@@ -6,6 +6,9 @@ import * as usage from '../lib/usage.mjs';
 import * as S from '../lib/stripe.mjs';
 import * as alerts from '../lib/alerts.mjs';
 import * as RL from '../lib/ratelimit.mjs';
+import * as EV from '../lib/evidence.mjs';
+
+const ipOf = h => ((h || {})['x-nf-client-connection-ip'] || (h || {})['x-forwarded-for'] || '').split(',')[0].trim() || null;
 
 const tries = new Map();
 const json = (code, body, cookie) => ({ statusCode: code, cookie, body: JSON.stringify(body) });
@@ -248,7 +251,12 @@ async function handle(event) {
     await auth.clearResetRequest(em);
     return json(200, { email: em, temp });
   }
-  if (act === 'logout') { await auth.revokeSession((event.headers || {}).cookie); return json(200, { ok: true }, auth.clearCookie()); }
+  if (act === 'logout') {
+    const who = await auth.userFromCookie((event.headers || {}).cookie), sid = EV.sessionOf((event.headers || {}).cookie);
+    await auth.revokeSession((event.headers || {}).cookie);
+    if (who) EV.logActivity(who, 'logout', { session: sid, ip: ipOf(event.headers), ua: (event.headers || {})['user-agent'] || null }).catch(() => {});
+    return json(200, { ok: true }, auth.clearCookie());
+  }
 
   if (act === 'pfSave' || act === 'pfDelete') {
     if (!me) return json(401, { error: 'Please sign in first.' });
@@ -354,15 +362,17 @@ async function handle(event) {
     const lk = await RL.peek('login-fail:' + email, 10, 900e3); if (!lk.ok) return json(429, { error: 'Too many wrong passwords for this account. Try again in ' + Math.ceil(lk.retryAfterSec / 60) + ' minutes, or reset your password.' }); }
   const u = await auth.checkLogin(email, pw);
   if (u === 'revoked') return json(403, { error: 'This account has been deactivated. Please contact PricePocketAsset for more information.', deactivated: true });
-  if (!u) { await RL.hit('login-fail:' + email, 10, 900e3); return json(401, { error: 'Wrong email or password.' }); }
+  if (!u) { await RL.hit('login-fail:' + email, 10, 900e3); const existing = await auth.getUser(email); if (existing) EV.logActivity(existing, 'login_failed', { ip: ipOf(event.headers), ua: (event.headers || {})['user-agent'] || null, page: 'sign-in', result: 'failed' }).catch(() => {}); return json(401, { error: 'Wrong email or password.' }); }
   await RL.clear('login-fail:' + email);
   u.lastLogin = new Date().toISOString(); await auth.saveUser(u);
-  return json(200, { user: pub(u) }, await auth.sessionCookie(email));
+  const ck = await auth.sessionCookie(email);
+  EV.logActivity(u, 'login_success', { ip: ipOf(event.headers), ua: (event.headers || {})['user-agent'] || null, session: EV.sessionOf(ck), page: 'sign-in' }).catch(() => {});
+  return json(200, { user: pub(u) }, ck);
 }
 
 async function toEvent(req, context) {
   return { httpMethod: req.method, query: Object.fromEntries(new URL(req.url).searchParams), body: req.method === 'POST' ? await req.text() : null,
-    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '', 'user-agent': req.headers.get('user-agent') || '' } };
 }
 export default async (req, context) => {
   const r = await handle(await toEvent(req, context));

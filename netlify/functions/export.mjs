@@ -4,17 +4,20 @@ import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as X from '../lib/exports.mjs';
+import * as EV from '../lib/evidence.mjs';
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const nice = d => { const t = new Date(d + 'T00:00:00Z'); return t.toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }); };
 const rid = () => crypto.randomBytes(5).toString('hex');
 
+const evCtx = req => ({ ip: (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null, ua: req.headers.get('user-agent') || null, session: EV.sessionOf(req.headers.get('cookie') || '') });
 export default async (req) => {
   const me = await auth.userFromCookie(req.headers.get('cookie') || '');
   if (!me) return json(401, { error: 'Sign in to use property downloads.', needSignIn: true });
   const paid = auth.isPaid(me), url = new URL(req.url);
   if (req.method === 'GET') {
     const job = url.searchParams.get('file');
-    if (job) { if (!paid) return json(402, { error: 'Downloads are for Pro members.', needPaid: true }); const f = await X.getFile(me, job); if (!f) return json(404, { error: 'That file is no longer stored. Export the properties again (properties you already exported this week do not use more of your allowance).' }); return new Response(f.data, { status: 200, headers: { 'Content-Type': f.mime, 'Content-Disposition': 'attachment; filename="' + f.name.replace(/[^\w.\-]/g, '_') + '"', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' } }); }
+    if (job) { if (!paid) return json(402, { error: 'Downloads are for Pro members.', needPaid: true }); const f = await X.getFile(me, job); if (!f) return json(404, { error: 'That file is no longer stored. Export the properties again (properties you already exported this week do not use more of your allowance).' }); EV.logActivity(me, 'file_download', { ...evCtx(req), file: f.name, resource: 'property export', count: 1, page: 'downloads' }).catch(() => {});
+      return new Response(f.data, { status: 200, headers: { 'Content-Type': f.mime, 'Content-Disposition': 'attachment; filename="' + f.name.replace(/[^\w.\-]/g, '_') + '"', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' } }); }
     if (!paid) return json(200, { paid: false, owner: false, limit: X.WEEKLY_LIMIT });
     const u = await X.usage(me), c = await X.getCollections(me);
     return json(200, { paid: true, owner: !!me.owner, limit: X.WEEKLY_LIMIT, used: u.used, remaining: u.remaining, unlimited: u.unlimited, resets: u.resets, resetsText: nice(u.resets), periodStart: u.periodStart, history: await X.history(me), sel: c.sel, lists: c.lists, formats: X.FORMATS });
@@ -42,6 +45,7 @@ export default async (req) => {
     if (!r.ok) return json(429, { error: 'This would go over your weekly allowance. You have ' + r.remaining + ' of ' + X.WEEKLY_LIMIT + ' left. Your allowance resets on ' + nice(r.resets) + '.', limit: true, remaining: r.remaining, resets: r.resets, resetsText: nice(r.resets) });
     let f; try { f = X.build(fmt, found.map(x => x.x)); if (!f || !f.data.length) throw new Error('empty'); await X.saveFile(me, r.job, f, { fmt, n: found.length, credits: r.fresh, week: X.periodOf(me).end }); await X.complete(me, r); }
     catch (e) { await X.release(me, r); return json(500, { error: 'The file could not be made, so nothing was used from your allowance. Please try again.' }); }
+    EV.logActivity(me, 'export_created', { ...evCtx(req), detail: fmt, count: found.length, resource: 'property export', page: 'exports' }).catch(() => {});
     const u = await X.usage(me); return json(200, { ok: true, job: r.job, name: f.name, bytes: f.data.length, count: found.length, credits: r.fresh, remaining: u.remaining, used: u.used, resets: u.resets, resetsText: nice(u.resets), url: '/.netlify/functions/export?file=' + r.job });
   }
 
