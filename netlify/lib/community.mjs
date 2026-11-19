@@ -285,14 +285,27 @@ function sniff(buf) {
   if (buf.slice(0, 4).toString('latin1') === 'RIFF' && buf.slice(8, 12).toString('latin1') === 'WEBP') return 'image/webp';
   return '';
 }
+// Removes every metadata block (EXIF, XMP, comments, etc.) from a JPEG. Keeps only what is needed to show the picture.
+function stripJpeg(buf) {
+  const parts = [buf.slice(0, 2)]; let i = 2;
+  while (i + 4 <= buf.length) {
+    if (buf[i] !== 0xff) return null; const mk = buf[i + 1];
+    if (mk === 0xda) { parts.push(buf.slice(i)); return Buffer.concat(parts); }   // start of image data: keep the rest
+    const len = buf.readUInt16BE(i + 2); if (len < 2 || i + 2 + len > buf.length) return null;
+    const meta = (mk >= 0xe1 && mk <= 0xef) || mk === 0xfe;   // APP1..APP15 and comments (APP0 JFIF kept)
+    if (!meta) parts.push(buf.slice(i, i + 2 + len)); i += 2 + len;
+  }
+  return null;
+}
 export async function setPhoto(me, kind, data) {
   if (!['avatar', 'cover'].includes(kind)) return err(400, 'Unknown photo.');
   if (data === null || data === '') { await auth.kvPut(mediaKey(kind, me.uid), { removed: true }); const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = ''; await auth.kvPut(K.p(me.uid), p); return { ok: true }; }
   const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(data || '')); if (!m) return err(400, 'Choose a JPG, PNG or WebP picture.');
   const buf = Buffer.from(m[2], 'base64'); if (buf.length > MEDIA_MAX) return err(413, 'That picture is too large.'); if (buf.length < 200) return err(400, 'That picture looks empty.');
   const type = sniff(buf); if (!type) return err(400, 'That file is not a picture.');
-  if (buf.indexOf(Buffer.from('Exif\0\0', 'latin1')) !== -1) return err(400, 'That picture still has hidden camera data. Please try again.');
-  const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: m[2], v });
+  let out = buf; if (type === 'image/jpeg') { out = stripJpeg(buf); if (!out) return err(400, 'That picture could not be read. Please try another.'); }
+  if (out.indexOf(Buffer.from('Exif\0\0', 'latin1')) !== -1 || out.indexOf(Buffer.from('http://ns.adobe.com/xap', 'latin1')) !== -1) return err(400, 'That picture still has hidden camera data. Please try again.');
+  const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: out.toString('base64'), v });
   const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = v; await auth.kvPut(K.p(me.uid), p); return { ok: true, v };
 }
 export async function ownerRemovePhoto(uid, kind) { const p = await getByUid(uid); if (!p) return err(404, 'Member not found.'); return setPhoto(p, kind, null); }
