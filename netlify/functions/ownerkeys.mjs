@@ -15,6 +15,7 @@ import * as RC from '../lib/rentcast.mjs';
 import * as CEN from '../lib/census.mjs';
 import * as BLS from '../lib/bls.mjs';
 import * as CONG from '../lib/congress.mjs';
+import * as LIVE from '../lib/live.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -72,6 +73,7 @@ export default async function handler(req) {
     const bad = res.filter(x => /FAILED/.test(x));
     return json(200, bad.length === res.length ? { ok: false, error: res.join(' | ') } : { ok: true, nlr: true, text: res.join(' \u00b7 ') });
   }
+  if (b.test === 'livekit') { await KEYS.load(true); const r = await LIVE.selfTest(); return json(200, r.ok ? { ok: true, nlr: true, text: r.text } : r); }
   if (b.test === 'gov') {
     try { const [c, p] = await Promise.all([GOV.crime(32.84, -83.63), GOV.parks(32.84, -83.63)]); if (!c.ok && c.reason === 'nokey') return json(200, { ok: false, error: 'No key saved yet.' });
       return json(200, { ok: true, nlr: true, text: 'Test spot: Macon, GA. FBI: ' + (c.agency ? c.agency.name + ' ' + c.year + ' data found' : 'no answer') + '. Parks: ' + (p.ok && p.parks[0] ? p.parks[0].name + ' ' + p.parks[0].miles + ' mi' : 'no answer') + '.' }); }
