@@ -33,8 +33,12 @@ console.log(pass + ' passed');
 // ---- major events for the passive news line ----
 { const { major } = await import('../functions/hazards.mjs'); const now = Date.parse('2026-11-19T00:00:00Z');
   const e = (id, cat, title, mag, date, unit = 'acres') => ({ id, cat, catTitle: cat, title, mag, unit, date });
-  const m = major([e('1', 'wildfires', 'Wildfire Big &amp; Co, Lane, Oregon', 5000, '2026-11-17T00:00:00Z'), e('2', 'wildfires', 'Prescribed Fire X', 9000, '2026-11-18T00:00:00Z'), e('3', 'wildfires', 'Wildfire Small', 50, '2026-11-18T00:00:00Z'),
-    e('4', 'wildfires', 'Wildfire Old', 90000, '2026-07-01T00:00:00Z'), e('5', 'severeStorms', 'Tropical Storm A', 40, '2026-11-18T00:00:00Z', 'kts'), e('6', 'wildfires', 'Wildfire Bigger', 8000, '2026-11-16T00:00:00Z')], now);
-  ok(m.map(x => x.id).join() === '6,1,5', 'major: recent large wildfires (biggest first) and recent storms; prescribed burns, small and stale fires left out');
-  ok(m[1].name === 'Big & Co, Lane, Oregon', 'major: names are cleaned (prefix removed, entities decoded)'); }
+  const list = [e('1', 'wildfires', 'Wildfire Big &amp; Co, Lane, Oregon', 5000, '2026-11-17T00:00:00Z'), e('2', 'wildfires', 'Prescribed Fire X, Lane, Oregon', 9000, '2026-11-18T00:00:00Z'), e('3', 'wildfires', 'Wildfire Small, Lane, Oregon', 50, '2026-11-18T00:00:00Z'),
+    e('4', 'wildfires', 'Wildfire Old, Lane, Oregon', 90000, '2026-07-01T00:00:00Z'), e('5', 'severeStorms', 'Tropical Storm A', 40, '2026-11-18T00:00:00Z', 'kts'),
+    e('6', 'wildfires', 'Wildfire Mid, Pike, Mississippi', 300, '2026-11-10T00:00:00Z'), e('7', 'wildfires', 'Wildfire Mid2, Pike, Mississippi', 300, '2026-11-09T00:00:00Z'), e('8', 'wildfires', 'Wildfire Mid3, Pike, Mississippi', 300, '2026-11-08T00:00:00Z'),
+    e('9', 'wildfires', 'Wildfire Aug, Kern, California', 800, '2026-09-01T00:00:00Z'), e('10', 'wildfires', 'Wildfire Aug2, Kern, California', 200, '2026-09-01T00:00:00Z')];
+  const m = major(list, now);
+  ok(m.map(x => x.id).join() === '1,6,7,9,5', 'major: most recent first; prescribed burns, tiny fires (30 days: 100+ acres, older: 500+) and fires older than 90 days left out');
+  ok(m.filter(x => /Mississippi/.test(x.name) || x.id === '6' || x.id === '7').length === 2 && !m.some(x => x.id === '8'), 'no more than 2 fires per state, so one state cannot take over the line');
+  ok(m[0].name === 'Big & Co, Lane, Oregon', 'names are cleaned (prefix removed, entities decoded)'); }
 console.log('major ok');

@@ -16,7 +16,7 @@
     function line(e) {
       var when = ''; try { when = new Date(e.date).toLocaleDateString([], { month: 'short', day: 'numeric' }); } catch (x) {}
       var size = (e.cat === 'wildfires' && e.unit === 'acres' && e.mag) ? ' · ' + Math.round(e.mag).toLocaleString() + ' acres' : '';
-      return (e.catTitle || 'Event') + ' reported: ' + e.name + size + (when ? ' · ' + when : '');
+      return (e.catTitle || 'Event') + ': ' + e.name + size + (when ? ' · last report ' + when : '');
     }
     function show() { var e = list[n % list.length]; n++; ic.textContent = ICON[e.cat] || '⚠️'; tx.textContent = line(e); box.classList.add('on'); }
     function tick() { if (reduced) { show(); return; } box.classList.remove('on'); setTimeout(show, 450); }
