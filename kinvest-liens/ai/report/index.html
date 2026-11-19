@@ -22,7 +22,7 @@
   const api = '/.netlify/functions/aireport?county=' + encodeURIComponent(Q.get('county') || '') + '&parcel=' + encodeURIComponent(Q.get('parcel') || '');
   fetch(api, { credentials: 'same-origin' }).then(async r => {
     const d = await r.json().catch(() => ({})); root.textContent = '';
-    if (!r.ok) { root.append(mk('h1', '', r.status === 402 ? 'Pro members only' : 'Report unavailable'), mk('p', '', d.error || 'Please try again.')); const a = mk('a', 'btn', r.status === 401 ? 'Sign in' : 'See plans'); a.href = r.status === 401 ? '/login/?next=' + encodeURIComponent(location.pathname + location.search) : '/plans/'; root.appendChild(a); return; }
+    if (!r.ok) { root.append(mk('h1', '', r.status === 402 ? 'Pro members only' : 'Report unavailable'), mk('p', '', d.error || 'Please try again.')); const a = mk('a', 'btn', r.status === 401 ? 'Sign in' : 'See the Pro plan'); a.href = r.status === 401 ? '/login/?next=' + encodeURIComponent(location.pathname + location.search) : '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=Research%20reports'; root.appendChild(a); return; }
     const R = d.report; document.title = R.title + ' | PricePocketAsset';
     root.append(mk('h1', '', R.title), mk('p', 'small muted', 'Generated ' + R.generated), mk('p', 'disc', R.disclaimer));
     const bar = mk('div', 'bar'); const pb = mk('button', 'btn', 'Print or save as PDF'); pb.type = 'button'; pb.onclick = () => print();

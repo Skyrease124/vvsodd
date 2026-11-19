@@ -15,7 +15,7 @@
       lock.hidden = false; lock.textContent = '';
       const b = document.createElement('b'); b.textContent = '\uD83D\uDD12 Paid members only. '; lock.appendChild(b);
       lock.append(d.signedIn ? 'Your account is free, so the AI question box is locked. Paid members ($5.50 a week) can use it. ' : 'The AI question box is for paid members ($5.50 a week). ');
-      const a2 = document.createElement('a'); a2.href = d.signedIn ? '/account/' : '/login/?next=' + encodeURIComponent(location.pathname + location.search); a2.textContent = d.signedIn ? 'See my plan' : 'Sign in'; lock.appendChild(a2);
+      const a2 = document.createElement('a'); a2.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('The AI question box'); a2.textContent = 'See the Pro plan'; lock.appendChild(a2);
       $('askform').hidden = true; $('askchips').hidden = true;
     }
   }).catch(() => {});

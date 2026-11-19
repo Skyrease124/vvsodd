@@ -37,7 +37,7 @@
     if (!info.states[state]) state = 'FL'; if (!info.levels[level]) level = 1;
     if (!info.paid) {
       app.appendChild(mk('p', 'notice', info.signedIn ? 'Calculation drills are for Pro members. Here is a worked example so you can see how they work.' : 'Sign in as a Pro member to practice. Here is a worked example so you can see how the drills work.'));
-      const a = mk('a', 'btn', info.signedIn ? 'See Pro' : 'Sign in'); a.href = info.signedIn ? '/plans/' : '/login/?next=' + encodeURIComponent(location.pathname); app.appendChild(a); app.appendChild(await preview()); return;
+      const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Practice drills'); app.appendChild(a); app.appendChild(await preview()); return;
     }
     app.appendChild(picker()); const slot = mk('div'); slot.id = 'drslot'; app.appendChild(slot); const pg = progress(); pg.id = 'drprog'; app.appendChild(pg); next();
   }

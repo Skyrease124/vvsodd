@@ -6,7 +6,7 @@ if (typeof PaidGate === 'undefined') window.PaidGate = {
   me: null,
   user() { return this.me || (this.me = fetch('/.netlify/functions/account', {credentials: 'same-origin'}).then(r => r.ok ? r.json() : null).then(d => (d && d.user) || null).catch(() => null)); },
   async paid() { const u = await this.user(); return !!(u && u.paid); },
-  lock(name) { const d = document.createElement('div'); d.className = 'pglock'; d.setAttribute('role', 'note'); const t = document.createElement('span'); t.className = 'pgtag'; t.textContent = 'Pro'; const b = document.createElement('b'); b.textContent = name + ' is for PricePocketPro members.'; const a = document.createElement('a'); a.className = 'btn small'; a.href = '/account/'; a.textContent = 'See the Pro plan'; const p = document.createElement('p'); p.className = 'small'; p.appendChild(a); d.append(t, ' ', b, p); return d; }
+  lock(name) { const d = document.createElement('div'); d.className = 'pglock'; d.setAttribute('role', 'note'); const t = document.createElement('span'); t.className = 'pgtag'; t.textContent = 'Pro'; const b = document.createElement('b'); b.textContent = name + ' is for PricePocketPro members.'; const a = document.createElement('a'); a.className = 'btn small'; a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent(name); a.textContent = 'See the Pro plan'; const p = document.createElement('p'); p.className = 'small'; p.appendChild(a); d.append(t, ' ', b, p); return d; }
 };
 const AuctionUpdates = (() => {
   const U = UpcomingSales, mk = U.mk, link = U.link;

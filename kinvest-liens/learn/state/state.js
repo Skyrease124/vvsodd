@@ -50,7 +50,7 @@
     box.appendChild(mk('h2', '', '1. How ' + st.n + ' works')); box.appendChild(mk('p', '', SYS[st.sys] || '')); box.appendChild(mk('p', '', st.note));
     if (!paid) {
       const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 The rest of the ' + st.n + ' class is for members'), mk('p', '', 'Members get the full class for every state: returns and bidding, redemption and timeline, the step-by-step sale process with the law behind it, where to buy, the counties we track, and a quiz.'));
-      const a = mk('a', 'btn', signedIn ? 'Become a member ($5.50 a week)' : 'Sign in or create an account'); a.href = signedIn ? '/account/' : '/login/?next=' + encodeURIComponent(location.pathname + location.search); n.appendChild(a); box.appendChild(n); foot(box); return;
+      const a = mk('a', 'btn', 'See the Pro plan ($5.50 a week)'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('All course lessons'); n.appendChild(a); box.appendChild(n); foot(box); return;
     }
     box.appendChild(mk('h2', '', '2. How you earn here'));
     box.appendChild(mk('p', '', 'Return: ' + st.rate + '.')); box.appendChild(mk('p', '', BID[st.bid] || ''));

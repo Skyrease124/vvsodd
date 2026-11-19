@@ -8,6 +8,20 @@
     $('pw').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('msg').textContent = '';
   }
   let billing = null;
+  // Coming from the plan page (/plans/): ?plan=pro opens the subscribe terms after sign-in; ?next= returns the member to where they were. Only same-site paths are accepted.
+  const QS = new URLSearchParams(location.search), safe = p => /^\/(?!\/)[\w\-./?=&%#:+~]*$/.test(p || '') ? p : '';
+  const NEXT = safe(QS.get('next')), WANT_PRO = QS.get('plan') === 'pro';
+  if (NEXT) { try { sessionStorage.setItem('ppa_next', NEXT); } catch (e) {} }
+  const savedNext = () => { try { return safe(sessionStorage.getItem('ppa_next')); } catch (e) { return ''; } };
+  const openTerms = () => { $('subterms').hidden = false; $('subok').checked = false; $('subgo').disabled = true; $('subterms').scrollIntoView({behavior: 'smooth', block: 'nearest'}); };
+  let proDone = false;
+  function proFlow() {
+    const u = window.__ppUser; if (!WANT_PRO || !u || !billing || proDone) return; proDone = true;
+    const today = new Date().toISOString().slice(0, 10), paid = u.owner || u.paid || u.family || (u.paidThrough && u.paidThrough >= today), subOn = u.sub && ['active', 'trialing', 'past_due'].includes(u.sub.status) && !u.sub.cancelAtPeriodEnd;
+    if (paid || subOn) { $('planmsg').textContent = 'You already have PricePocketPro, so there is nothing to buy.'; return; }
+    if (!billing.configured) { $('planmsg').textContent = 'Membership checkout is not open yet. Please try again soon.'; return; }
+    openTerms();
+  }
   async function billingPost(action) { const r = await fetch('/.netlify/functions/billing', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action})}); return {ok: r.ok, d: await r.json()}; }
   async function go(action, btn) {
     btn.disabled = true; $('planmsg').textContent = 'One moment\u2026';
@@ -17,7 +31,7 @@
   }
   // Subscribing: show the terms first; checkout starts only after the member ticks the box (the server checks this again and records it).
   const POLICY_VERSION = '2026-11-18';
-  $('upgrade').addEventListener('click', () => { $('subterms').hidden = false; $('subok').checked = false; $('subgo').disabled = true; $('subterms').scrollIntoView({behavior: 'smooth', block: 'nearest'}); });
+  $('upgrade').addEventListener('click', openTerms);
   $('subok').addEventListener('change', () => { $('subgo').disabled = !$('subok').checked; });
   $('subcancel').addEventListener('click', () => { $('subterms').hidden = true; });
   $('subgo').addEventListener('click', async () => {
@@ -39,13 +53,14 @@
     else if (user.sub && user.sub.status === 'past_due') $('planmsg').textContent = 'Your last payment did not go through. Tap Manage subscription to update your card.';
     if (billing.mode === 'test') $('planmsg').textContent += ' (Test mode: no real money moves. Use card 4242 4242 4242 4242.)';
   }
-  fetch('/.netlify/functions/billing').then(r => r.json()).then(b => { billing = b; if (window.__ppUser) planButtons(window.__ppUser); }).catch(() => {});
+  fetch('/.netlify/functions/billing').then(r => r.json()).then(b => { billing = b; if (window.__ppUser) { planButtons(window.__ppUser); proFlow(); } }).catch(() => {});
   if (new URLSearchParams(location.search).get('paid') === '1') {
-    (async () => { $('planmsg').textContent = 'Payment received. Switching you on\u2026'; for (let i = 0; i < 4; i++) { const r = await billingPost('sync'); if (r.ok && r.d.paid) { location.replace('./'); return; } await new Promise(x => setTimeout(x, 2500)); } $('planmsg').textContent = 'Payment received. It can take a minute to show. Refresh this page in a moment.'; })();
+    (async () => { $('planmsg').textContent = 'Payment received. Switching you on\u2026'; for (let i = 0; i < 4; i++) { const r = await billingPost('sync'); if (r.ok && r.d.paid) { location.replace(savedNext() || './'); return; } await new Promise(x => setTimeout(x, 2500)); } $('planmsg').textContent = 'Payment received. It can take a minute to show. Refresh this page in a moment.'; })();
   }
+  if (QS.get('canceled') === '1') { const m = $('planmsg'); m.textContent = 'Checkout was canceled. You were not charged. '; const a = document.createElement('a'); a.href = '/plans/' + (savedNext() ? '?from=' + encodeURIComponent(savedNext()) : ''); a.textContent = 'Back to the plans'; m.appendChild(a); }
   function show(user) {
     window.__ppUser = user;
-    if (user) { const pro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) planButtons(user);
+    if (user) { const pro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) { planButtons(user); proFlow(); }
     $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
     { const pp = () => { if (window.PPPush) { window.PPPush.mount($('pushhost'), user); window.PPPush.sync(user); } }; if (window.PPPush) pp(); else window.addEventListener('load', pp, {once: true}); }
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
@@ -83,7 +98,7 @@
     e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
     const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: '', accessCode: mode === 'up' ? $('acode').value : ''});
     $('go').disabled = false;
-    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); } else $('msg').textContent = r.d.error || 'Something went wrong.';
+    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); if (NEXT && !WANT_PRO) { location.href = NEXT; return; } } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
   $('logout').addEventListener('click', async () => { if (window.PPPush) await window.PPPush.logout(); await post({action: 'logout'}); show(null); });
   fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });

@@ -13,7 +13,7 @@
   async function load() {
     clearInterval(timer); grid.textContent = ''; msg.textContent = 'Finding cameras…'; const [name, lat, lng] = PLACES[cur]; mapA.href = '/map/?cams=1&lat=' + lat + '&lng=' + lng;
     let r, d; try { r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat, lng, radius: 15, limit: 6 }), { credentials: 'same-origin' }); d = await r.json(); } catch (e) { msg.textContent = 'Cameras are temporarily unavailable. Please try again soon.'; return; }
-    if (r.status === 402 || r.status === 401) { msg.textContent = ''; const g = mk('p', 'hc-lock'); g.append(document.createTextNode('Live cameras are for Pro members. ')); const a = mk('a', '', d && d.signedIn ? 'See the Pro plan' : 'Sign in or see the Pro plan'); a.href = d && d.signedIn ? '/plans/' : '/account/'; g.appendChild(a); msg.appendChild(g); return; }
+    if (r.status === 402 || r.status === 401) { msg.textContent = ''; const g = mk('p', 'hc-lock'); g.append(document.createTextNode('Live cameras are for Pro members. ')); const a = mk('a', '', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Live cameras'); g.appendChild(a); msg.appendChild(g); return; }
     if (!r.ok || !d.ok) { msg.textContent = 'Cameras are temporarily unavailable. Please try again soon.'; return; }
     const cams = d.cameras.filter(c => c.image); if (!cams.length) { msg.textContent = 'No public cameras with a live picture were found near ' + name + ' right now.'; return; }
     msg.textContent = 'Near ' + name.split(',')[0] + ' \u00b7 pictures refresh about every minute \u00b7 swipe for more';

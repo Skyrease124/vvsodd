@@ -121,7 +121,7 @@
     let d; try { const r = await fetch(API + '?id=exam'); d = await r.json(); } catch (e) { box.appendChild(mk('p', '', 'Could not load the exam. Try again.')); return; }
     if (d.locked) {
       const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 For members'), mk('p', '', 'The final exam and certificate are part of membership ($5.50 a week).'));
-      const a = mk('a', 'btn', d.signedIn ? 'Become a member' : 'Sign in or create an account'); a.href = d.signedIn ? '/account/' : '/login/?next=/learn/?l=exam'; n.appendChild(a); box.appendChild(n); return;
+      const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent('/learn/?l=exam') + '&src=' + encodeURIComponent('The final exam'); n.appendChild(a); box.appendChild(n); return;
     }
     const ex = d.exam; box.appendChild(mk('p', 'lead', '20 questions from the whole course. You need ' + ex.pass + ' right to pass. You can retake it as often as you like.'));
     const f = mk('form', 'quiz');
@@ -187,7 +187,7 @@
     if (d.locked) {
       box.appendChild(mk('h1', '', d.title));
       const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 For members'), mk('p', '', 'Lessons 4 to 15 are part of membership ($5.50 a week), along with the AI, the screener and Land for sale.'));
-      const a = mk('a', 'btn', d.signedIn ? 'Become a member' : 'Sign in or create an account'); a.href = d.signedIn ? '/account/' : '/login/?next=' + encodeURIComponent('/learn/?l=' + id); n.appendChild(a); box.appendChild(n); return;
+      const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent('/learn/?l=' + id) + '&src=' + encodeURIComponent('All course lessons'); n.appendChild(a); box.appendChild(n); return;
     }
     if (!d.lesson) { box.appendChild(mk('p', '', d.error || 'Lesson not found.')); return; }
     const l = d.lesson, k = state.lessons.findIndex(x => x.id === l.id);

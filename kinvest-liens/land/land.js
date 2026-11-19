@@ -80,7 +80,7 @@
     const cb = mk('div', 'landinfo'); cb.appendChild(mk('h4', '', 'Contact the seller'));
     if (l.mine) cb.appendChild(mk('p', 'small', 'This is your listing. Manage it on Sell my land.'));
     else if (!me.signedIn) { const a = mk('a', 'btn', 'Sign in to contact the seller'); a.href = '/login/?next=' + encodeURIComponent('/land/?id=' + l.id); cb.appendChild(a); }
-    else if (!me.paid) { cb.appendChild(mk('p', 'small', 'Contacting sellers is for members ($5.50 a week).')); const a = mk('a', 'btn', 'Become a member'); a.href = '/account/'; cb.appendChild(a); }
+    else if (!me.paid) { cb.appendChild(mk('p', 'small', 'Contacting sellers is for members ($5.50 a week).')); const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Contacting sellers'); cb.appendChild(a); }
     else {
       const ta = mk('textarea'); ta.rows = 4; ta.maxLength = 1500; ta.placeholder = 'Hi, I am interested in your land. Is it still available?'; ta.setAttribute('aria-label', 'Message');
       const send = mk('button', 'btn', 'Send message'); send.type = 'button'; const st = mk('p', 'small'); st.setAttribute('role', 'status');

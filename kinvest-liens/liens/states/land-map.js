@@ -59,8 +59,8 @@ const PaidDownload = {
     const msg = document.createElement('span'); msg.className = 'small muted'; msg.setAttribute('role', 'status');
     b.addEventListener('click', async () => {
       const u = await this.status();
-      if (!u) { msg.innerHTML = ' <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a> to download. Downloads are for Pro members. <a href="/plans/">Compare Free vs Pro</a>'; return; }
-      if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members ($5.50 a week). <a href="/account/">See the Pro plan</a> \u00b7 <a href="/plans/">Compare Free vs Pro</a>'; return; }
+      if (!u) { msg.innerHTML = ' Downloads are for Pro members. <a href="' + ('/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Property downloads')) + '">See the Pro plan</a> \u00b7 <a href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Already a member? Sign in</a>'; return; }
+      if (!u.paid) { msg.innerHTML = ' Downloads are for Pro members ($5.50 a week). <a href="' + ('/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Property downloads')) + '">See the Pro plan</a>'; return; }
       // Pro members pick the properties they want (100 per week). Whole-county files are for the site owner only.
       if (!u.owner) { msg.innerHTML = ' Tick <b>Select</b> on the properties you want, then use <b>Download Selected</b> (100 per week). <a href="/downloads/">Download Center</a>'; return; }
       const blob = new Blob(['﻿' + this.csv(head, getRows())], {type: 'text/csv;charset=utf-8'});
