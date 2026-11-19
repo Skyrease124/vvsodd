@@ -56,7 +56,12 @@ export default async function handler(req, context) {
   if (act === 'createPost') {
     if (!paid) return json(402, { ok: false, error: 'Posting is for paid members.', upgrade: true });
     if (!(await RL.hit('post:' + user.email, +(process.env.POST_LIMIT_HOUR || 10), 3600e3)).ok) return json(429, { ok: false, error: 'You have posted a lot in the last hour. Please wait a bit.' });
-    return done(await C.createPost(me, b.text));
+    return done(await C.createPost(me, b.text, b.photos));
+  }
+  if (act === 'uploadPostPhoto') {
+    if (!paid) return json(402, { ok: false, error: 'Posting photos is for paid members.', upgrade: true });
+    if (!(await RL.hit('postphoto:' + user.email, +(process.env.POST_PHOTO_LIMIT_HOUR || 40), 3600e3)).ok) return json(429, { ok: false, error: 'You have added a lot of photos in the last hour. Please wait a bit.' });
+    return done(await C.uploadPostPhoto(me, b.data));
   }
   if (act === 'deletePost') return done(await C.deletePost(me, b.key, { owner: !!user.owner }));
   if (act === 'reportPost') { if (!(await RL.hit('report:' + user.email, 10, 3600e3)).ok) return json(429, { ok: false, error: 'You have sent several reports. Please wait before sending more.' }); return done(await C.reportPost(me, b.key, b.category, b.details)); }
