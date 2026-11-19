@@ -23,7 +23,7 @@ ok(r[2].link === '', 'non-https links are dropped');
 let calls = 0, down = false;
 globalThis.fetch = async u => { calls++; if (down) throw new Error('net'); return { ok: true, json: async () => data }; };
 _reset(); let v = await load(); await load();
-ok(v.ok && v.counts.wildfires === 2 && calls === 1, 'counts by category; second call served from the 15-minute cache');
+ok(v.ok && v.counts.wildfires === 2 && calls === 5, 'one request per category (5); counts by category'); const c5 = calls; await load(); ok(calls === c5, 'second call served from the 15-minute cache');
 _reset(); down = true; v = await load(); ok(v.ok === false && v.reason === 'lookup', 'outage reported as unavailable, never as "no hazards"');
 down = false; _reset(); await load(); down = true; ok((await load()).ok, 'cached data still served while cache is fresh');
 down = false; _reset();
