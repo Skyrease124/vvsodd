@@ -59,3 +59,4 @@
   from = "/u/:name"
   to = "/community/profile/?u=:name"
   status = 200
+  force = true
