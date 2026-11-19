@@ -89,4 +89,21 @@ ok(sent[sent.length - 1].url === 'https://www.pokemoncenter.com/queue-monitor-te
 const q1 = sent.length;
 r = await R.applyResult(await R.getProduct(qp.id), { status: 'limited_access' }, 'auto'); ok(sent.length === q1, 'line still open -> no repeat push');
 r = await R.applyResult(await R.getProduct(qp.id), { status: 'monitoring' }, 'auto'); ok(sent.length === q1, 'line closing sends nothing');
+// 9. Product images
+const fsIm = await import('node:fs');
+const bbHtml = fsIm.existsSync('/tmp/bb.html') ? fsIm.readFileSync('/tmp/bb.html', 'utf8') : null;
+ok(R.parseHtml('<meta name="twitter:image" content="https://cdn.example.com/a.jpg">').image === 'https://cdn.example.com/a.jpg', 'twitter:image is used when og:image is missing');
+ok(R.parseHtml('<meta property="og:image" content="https://cdn.example.com/og.jpg"><meta name="twitter:image" content="https://cdn.example.com/tw.jpg">').image === 'https://cdn.example.com/og.jpg', 'og:image comes before twitter:image');
+ok(R.parseHtml('<img imageSrcSet="https://img.example.com/p.jpg;maxHeight=1080?format=webp 1x">').image === 'https://img.example.com/p.jpg;maxHeight=1080?format=webp', 'product image set is used when no meta tags exist');
+ok(R.parseHtml('<meta property="og:image" content="http://insecure.example.com/x.jpg">').image === undefined, 'non-https images are refused');
+if (bbHtml) ok(R.parseHtml(bbHtml).image === 'https://pisces.bbystatic.com/image2/BestBuy_US/images/products/0a7fbcb9-cd3a-401d-8c6e-6f1facfe7c1a.jpg;maxHeight=1080;maxWidth=900?format=webp', 'the saved Best Buy page yields the real Prismatic ETB product image');
+{ const ip = (await R.createProduct('founder', { url: 'https://www.target.com/p/img-test-1', name: 'Image test (TEST FIXTURE)', category: 'pokemon', status: 'in_stock' })).product;
+  R._setFetch(async () => new Response('<meta property="og:image" content="https://cdn.example.com/found.jpg"><button>Add to Cart</button>', { status: 200 }));
+  const st0 = (await R.getProduct(ip.id)).status; const r1 = await R.refreshImage(ip.id);
+  ok(r1.found && r1.product.image === 'https://cdn.example.com/found.jpg' && r1.product.status === st0, 'refresh image saves the page image and does not change the stock status');
+  R._setFetch(async () => new Response('<html>no picture here</html>', { status: 200 }));
+  const r2 = await R.refreshImage(ip.id);
+  ok(!r2.found && r2.product.imageNote === 'Image not found' && r2.product.image === 'https://cdn.example.com/found.jpg', 'no image on the page -> "Image not found" flag; the saved image is not wiped by a failed read');
+  ok(R.card(r2.product).imageNote === '' && R.card({ ...r2.product, image: '' }).imageNote === 'Image not found', 'cards show the flag only when there is no image');
+  R._setFetch(async () => new Response('', { status: 503 })); }
 console.log('# pass ' + pass);

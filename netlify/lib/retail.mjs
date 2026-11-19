@@ -105,10 +105,14 @@ export function parseHtml(html) {
       const of = [].concat(o.offers || []).flatMap(x => x && x['@type'] === 'AggregateOffer' ? [].concat(x.offers || [x]) : [x]).filter(Boolean)[0];
       if (of) { const pr = parseFloat(of.price ?? of.lowPrice); if (isFinite(pr) && pr > 0) out.price = Math.round(pr * 100) / 100; out.schemaAvail = String(of.availability || ''); }
       if (o.releaseDate) out.releaseDate = String(o.releaseDate).slice(0, 10); }); }
+  const meta = key => { const m = html.match(new RegExp('<meta[^>]+(?:property|name)=["\']' + key + '["\'][^>]+content=["\']([^"\']+)', 'i')) || html.match(new RegExp('<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:property|name)=["\']' + key + '["\']', 'i')); return m ? m[1].replace(/&amp;/g, '&') : ''; };
   const og = p => { const m = html.match(new RegExp('<meta[^>]+property=["\']og:' + p + '["\'][^>]+content=["\']([^"\']+)', 'i')) || html.match(new RegExp('<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:' + p, 'i')); return m ? m[1] : ''; };
   if (!out.name) out.name = clean(og('title').replace(/&amp;/g, '&').replace(/&#39;/g, "'"), 160) || undefined;
-  if (!out.image) out.image = og('image') || undefined;
+  // Image candidates in order: JSON-LD (above), og:image, twitter:image, then the page's product image set.
+  if (!out.image) out.image = meta('og:image') || meta('twitter:image') || ((html.match(/imageSrcSet=["'](https:\/\/[^\s"']+)/i) || [])[1] || '').replace(/&amp;/g, '&') || undefined;
   if (out.image && !/^https:\/\//.test(out.image)) delete out.image;
+  // Best Buy's image server only serves a photo with its size settings; the bare file path does not load.
+  if (out.image && /^https:\/\/pisces\.bbystatic\.com\//.test(out.image) && !out.image.includes('?')) out.image = out.image.replace(/\.(jpe?g|png|webp)$/i, m => m + ';maxHeight=1080;maxWidth=900?format=webp');
   return out;
 }
 let fetchImpl = (...a) => fetch(...a);
@@ -143,7 +147,7 @@ export const getProduct = async id => /^[a-f0-9]{12}$/.test(String(id)) ? auth.k
 const num = v => { const n = typeof v === 'string' ? parseFloat(v.replace(/[$,]/g, '')) : +v; return isFinite(n) && n > 0 && n < 1e6 ? Math.round(n * 100) / 100 : null; };
 function fields(p, b) {
   if (b.name !== undefined) p.name = clean(b.name, 160) || p.name;
-  if (b.image !== undefined) p.image = /^https:\/\/[^\s"'<>]{4,500}$/.test(String(b.image)) ? String(b.image) : '';
+  if (b.image !== undefined) { p.image = /^https:\/\/[^\s"'<>]{4,500}$/.test(String(b.image)) ? String(b.image) : ''; p.imageSource = 'manual'; p.imageNote = p.image ? '' : 'Image not found'; }
   if (b.category !== undefined) { if (!CATEGORIES.includes(b.category)) throw new Error('Pick a category.'); p.category = b.category; }
   if (b.variant !== undefined) p.variant = clean(b.variant, 60);
   if (b.releaseDate !== undefined) p.releaseDate = /^\d{4}-\d{2}-\d{2}/.test(String(b.releaseDate)) ? String(b.releaseDate).slice(0, 16) : '';
@@ -179,7 +183,7 @@ export async function listProducts({ all } = {}) {
 export function card(p) {
   const fresh = p.confirmedAt && Date.now() - Date.parse(p.confirmedAt) < FRESH_MS;
   const status = AVAILABLE.has(p.status) && !fresh ? 'monitoring' : p.status;
-  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
+  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', imageNote: p.image ? '' : (p.imageNote || 'Image not found'), imageSource: p.imageSource || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
 }
 
 // ---- state change -> alerts. Called by the monitor (source 'auto') and by the owner (source 'owner') ----
@@ -327,6 +331,15 @@ export async function decide(owner, id, b) {
   return { ok: true, request: q };
 }
 
+// Re-reads only the product image. Stock status, watchers and alerts are not touched.
+export async function refreshImage(id) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  const r = await lookup(p.url); const img = r.ok && r.info && r.info.image;
+  if (img) { p.image = img; p.imageSource = 'page'; p.imageNote = ''; } else { p.imageNote = 'Image not found'; }
+  p.imageCheckedAt = now(); p.updated = now(); await auth.kvPut(KP(p.id), p);
+  return { ok: true, found: !!img, product: await getProduct(id) };
+}
+
 // ---- monitor: one check per product, faster near release, slower when a source keeps failing ----
 export function dueIn(p) {
   if (p.fails >= 3) return 6 * 3600e3;
@@ -339,7 +352,8 @@ export async function monitor({ limit = 25 } = {}) {
   for (const p of ps.slice(0, limit)) {
     const r = await lookup(p.url); res.checked++;
     if (!r.ok || !r.readable) { p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable'; if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; } await auth.kvPut(KP(p.id), p); if (p.fails === 3) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError }); continue; }
-    p.fails = 0; p.lastError = ''; const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
+    p.fails = 0; p.lastError = ''; if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
+    const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
     if (p.status !== before) res.changed++; res.alerts += sent.filter(x => !x.skipped).length;
   }
   return res;
