@@ -30,3 +30,11 @@ down = false; _reset();
 const res = await api(new Request('http://x/h'), {}); const j = await res.json(); ok(res.status === 200 && j.ok && j.events.length === 3 && /EONET/.test(j.source), 'endpoint answers with source label');
 ok((await api(new Request('http://x/h', { method: 'POST' }), {})).status === 405, 'GET only');
 console.log(pass + ' passed');
+// ---- major events for the passive news line ----
+{ const { major } = await import('../functions/hazards.mjs'); const now = Date.parse('2026-11-19T00:00:00Z');
+  const e = (id, cat, title, mag, date, unit = 'acres') => ({ id, cat, catTitle: cat, title, mag, unit, date });
+  const m = major([e('1', 'wildfires', 'Wildfire Big &amp; Co, Lane, Oregon', 5000, '2026-11-17T00:00:00Z'), e('2', 'wildfires', 'Prescribed Fire X', 9000, '2026-11-18T00:00:00Z'), e('3', 'wildfires', 'Wildfire Small', 50, '2026-11-18T00:00:00Z'),
+    e('4', 'wildfires', 'Wildfire Old', 90000, '2026-07-01T00:00:00Z'), e('5', 'severeStorms', 'Tropical Storm A', 40, '2026-11-18T00:00:00Z', 'kts'), e('6', 'wildfires', 'Wildfire Bigger', 8000, '2026-11-16T00:00:00Z')], now);
+  ok(m.map(x => x.id).join() === '6,1,5', 'major: recent large wildfires (biggest first) and recent storms; prescribed burns, small and stale fires left out');
+  ok(m[1].name === 'Big & Co, Lane, Oregon', 'major: names are cleaned (prefix removed, entities decoded)'); }
+console.log('major ok');
