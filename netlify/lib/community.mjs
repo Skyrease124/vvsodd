@@ -27,6 +27,7 @@ const K = { p: u => 'cp_' + u, pe: e => 'cpe_' + sha(e), pu: n => 'cpu_' + n, f:
 const idOk = s => /^[a-f0-9]{16}$/.test(String(s));
 const err = (status, error) => ({ ok: false, status, error });
 
+const pingOwner = (t, b, k) => { import('./retail.mjs').then(R => R.notifyOwner(t, b, '/community/', k)).catch(() => {}); };
 // ---- profiles --------------------------------------------------------------------------------------------------
 export async function getByUid(uid) { return idOk(uid) ? auth.kvGet(K.p(uid)) : null; }
 export async function getByUsername(name) { const m = await auth.kvGet(K.pu(String(name || '').toLowerCase())); return m && m.uid ? getByUid(m.uid) : null; }
@@ -150,7 +151,7 @@ export async function unblock(me, targetUid) { if (!(await auth.kvGet(K.b(me.uid
 export async function report(me, targetUid, category, details) {
   const t = await getByUid(targetUid); if (!t) return err(404, 'Member not found.'); if (t.uid === me.uid) return err(400, 'You cannot report yourself.');
   if (!REPORT_CATEGORIES.includes(category)) return err(400, 'Pick a reason for the report.');
-  const id = rid(8); await auth.kvPut('crp_' + id, { id, by: me.uid, target: t.uid, category, details: clean(details, 500), at: now(), status: 'open' }); return { ok: true };
+  const id = rid(8); await auth.kvPut('crp_' + id, { id, by: me.uid, target: t.uid, category, details: clean(details, 500), at: now(), status: 'open' }); pingOwner('New report', category + ' · @' + t.username, 'rep' + id); return { ok: true };
 }
 export async function listReports() { const out = []; for (const k of (await auth.kvList('crp_')).slice(0, 200)) { const r = await auth.kvGet(k); if (!r) continue; const t = await getByUid(r.target), b = await getByUid(r.by); out.push(Object.assign({}, r, { targetName: t ? t.username : '?', byName: b ? b.username : '?' })); } return out.sort((a, b) => (a.at < b.at ? 1 : -1)); }
 
@@ -271,7 +272,7 @@ export async function listPosts(viewer, { uid, limit = 30 } = {}) {
 export async function reportPost(me, key, category, details) {
   const p = await findPost(key); if (!p) return err(404, 'Post not found.'); if (p.uid === me.uid) return err(400, 'You cannot report your own post.');
   if (!REPORT_CATEGORIES.includes(category)) return err(400, 'Pick a reason for the report.');
-  const id = rid(8); await auth.kvPut('crp_' + id, { id, by: me.uid, target: p.uid, post: key, postText: p.text.slice(0, 300), category, details: clean(details, 500), at: now(), status: 'open' }); return { ok: true };
+  const id = rid(8); pingOwner('New post report', category, 'rep' + id); await auth.kvPut('crp_' + id, { id, by: me.uid, target: p.uid, post: key, postText: p.text.slice(0, 300), category, details: clean(details, 500), at: now(), status: 'open' }); return { ok: true };
 }
 
 // ---- profile photo and background photo ------------------------------------------------------------------------

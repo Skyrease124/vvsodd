@@ -63,6 +63,8 @@
       const lcm = document.createElement('a'); lcm.href = '/community/'; lcm.textContent = 'Community';
       const lpf = document.createElement('a'); lpf.href = '/community/profile/'; lpf.textContent = 'Profile';
       const lcam = document.createElement('a'); lcam.href = '/cams/'; lcam.textContent = 'Live Cams';
+      const lrt = document.createElement('a'); lrt.href = '/retail/'; lrt.textContent = 'Retail Alerts';
+      const lort = document.createElement('a'); lort.href = '/owner/retail/'; lort.textContent = 'Retail Alerts (owner)';
       const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/map/?ai=1'; aiLink.textContent = 'Parcel Map + AI'; }
       let ms = null;
@@ -77,8 +79,8 @@
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
       const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
-      p.append(who, grp(aiLink || (() => { const x = document.createElement('a'); x.href = '/map/'; x.textContent = 'Parcel Map + AI'; return x; })(), lcam, lcm, lpf, l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2), grp(l6, l7, ldon)); if (ms) p.append(grp(ms));
-      if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lk, lo, l3, l5)); }
+      p.append(who, grp(aiLink || (() => { const x = document.createElement('a'); x.href = '/map/'; x.textContent = 'Parcel Map + AI'; return x; })(), lcam, lrt, lcm, lpf, l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2), grp(l6, l7, ldon)); if (ms) p.append(grp(ms));
+      if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lort, lk, lo, l3, l5)); }
       p.append(grp(lp), grp(out)); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });

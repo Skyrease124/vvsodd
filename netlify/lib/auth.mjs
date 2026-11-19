@@ -28,6 +28,10 @@ export async function kvList(prefix) {
     return out;
   } catch (e) { return []; }
 }
+export async function kvDel(k) {
+  if (process.env.USERS_DIR) { try { fs.unlinkSync(dirFile(k)); } catch (e) { /* gone */ } return; }
+  try { await store().delete(k); } catch (e) { /* gone */ }
+}
 export const kvGet = get;
 export const kvPut = put;
 export const normEmail = e => String(e || '').trim().toLowerCase();
