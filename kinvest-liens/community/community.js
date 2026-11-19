@@ -203,7 +203,7 @@
     const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers'], [P.stats.following, 'Following'], [P.stats.posts, 'Posts']].forEach(([n, l]) => { const d = mk('div'); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); st.appendChild(d); });
     const act = mk('div', 'cm-act'); side.append(st, act); head.append(id, side); root.appendChild(head);
     const refresh = () => location.reload();
-    if (R.self) { const pb = mk('button', 'btn2 post', '＋ Post'); pb.type = 'button'; pb.onclick = () => composer(x.j.paid, () => show('posts')); act.appendChild(pb); const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
+    if (R.self) { const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
     else {
       if (R.system) { const s = mk('span', 'btn2 sys', '👑 Founder Connection'); s.setAttribute('role', 'status'); s.title = 'Official PricePocketAsset Account. Connected since you joined PricePocketAsset.'; act.appendChild(s); }
       else { const f = mk('button', 'btn2 ' + (R.following ? '' : 'primary'), R.following ? 'Following' : 'Follow'); f.type = 'button'; if (!R.following && !R.canFollow) { f.disabled = true; f.textContent = 'Not accepting followers'; }
@@ -304,12 +304,12 @@
     if (!me.paid) { c.append(mk('p', 'muted', 'Changing your profile photo and background photo is part of the paid plan.')); const a = mk('a', 'btn2 primary', 'See plans'); a.href = '/plans/'; c.append(a); return c; }
     const prev = mk('div', 'ph-prev'), cov = mk('div', 'ph-cover cv-' + (me.cover || 'forest')); if (me.coverPhoto) cov.style.backgroundImage = 'url("' + me.coverPhoto + '")'; const av = avatar(me, 'ph-av'); prev.append(cov, av); c.append(prev);
     const msg = mk('p', 'msg'); msg.setAttribute('role', 'status');
-    const pick = kind => { const f = mk('input'); f.type = 'file'; f.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif'; f.onchange = async () => { const file = f.files && f.files[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) { msg.className = 'msg bad'; msg.textContent = 'Please choose a picture under 5 MB.'; return; } const d = await cropSheet(file, kind); if (!d) return; msg.className = 'msg'; msg.textContent = 'Saving…'; const r = await post({ action: 'setPhoto', kind, data: d }); msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { if (kind === 'avatar') { av.className = 'ph-av ph'; av.textContent = ''; const i = mk('img'); i.src = d; i.alt = ''; av.append(i); } else cov.style.backgroundImage = 'url("' + d + '")'; } }; f.click(); };
+    const pick = kind => { const f = mk('input'); f.type = 'file'; f.hidden = true; document.body.appendChild(f); setTimeout(() => f.remove(), 600000); f.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif'; f.onchange = async () => { const file = f.files && f.files[0]; if (!file) return; if (file.size > 30 * 1024 * 1024) { msg.className = 'msg bad'; msg.textContent = 'Please choose a picture under 30 MB.'; return; } const d = await cropSheet(file, kind); if (!d) return; msg.className = 'msg'; msg.textContent = 'Saving…'; const r = await post({ action: 'setPhoto', kind, data: d }); msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { if (kind === 'avatar') { av.className = 'ph-av ph'; av.textContent = ''; const i = mk('img'); i.src = d; i.alt = ''; av.append(i); } else cov.style.backgroundImage = 'url("' + d + '")'; } }; f.click(); };
     const rm = async kind => { const r = await post({ action: 'setPhoto', kind, data: null }); if (r.s === 200) location.reload(); };
     const row = mk('div', 'ph-row'); [['Change photo', () => pick('avatar')], ['Change background', () => pick('cover')]].forEach(([l, fn]) => { const b = mk('button', 'btn2 primary', l); b.type = 'button'; b.onclick = fn; row.append(b); });
     if (me.photo) { const b = mk('button', 'btn2', 'Remove photo'); b.type = 'button'; b.onclick = () => rm('avatar'); row.append(b); }
     if (me.coverPhoto) { const b = mk('button', 'btn2', 'Remove background'); b.type = 'button'; b.onclick = () => rm('cover'); row.append(b); }
-    c.append(row, msg, mk('p', 'muted small', 'JPG, PNG, WebP or HEIC, up to 5 MB. Pictures are resized on your phone and hidden location data is removed before upload.')); return c;
+    c.append(row, msg, mk('p', 'muted small', 'JPG, PNG, WebP or HEIC. Pictures are resized on your phone and hidden location data is removed before upload.')); return c;
   }
 
   // ---- SETTINGS ----
