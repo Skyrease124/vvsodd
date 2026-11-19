@@ -2,7 +2,7 @@
 // Not clickable on purpose. Hidden when there is nothing recent to report or the source is unavailable (never claims "no hazards").
 (function () {
   'use strict';
-  var host = document.getElementById('pmTop') ? { el: document.getElementById('pmTop'), cls: ' hz-map' } : (document.querySelector('.dwrap .rhead') ? { el: document.querySelector('.dwrap .rhead'), cls: ' hz-home', before: true } : null);
+  var host = document.getElementById('pmRH') ? { el: document.getElementById('pmRH'), cls: ' hz-sheet' } : (document.querySelector('.dwrap .rhead') ? { el: document.querySelector('.dwrap .rhead'), cls: ' hz-home', before: true } : null);
   if (!host) return;
   var ICON = { wildfires: '🔥', floods: '🌊', severeStorms: '🌀', volcanoes: '🌋', landslides: '⛰️' };
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
