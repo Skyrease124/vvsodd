@@ -33,18 +33,41 @@
       document.addEventListener('keydown', key); row.append(no, yes); sh.append(row); ov.append(sh); document.body.append(ov); requestAnimationFrame(() => { ov.classList.add('on'); const f = sh.querySelector('input,textarea,select'); if (f) f.focus({ preventScroll: true }); });
     });
   }
+  // ---- the blue check ----
+  // Founder: a 3D-style blue seal with a glossy highlight, a slow light sweep and a gentle float. Awarded (verified) members get the same seal, still and simpler.
+  let vbN = 0;
+  function vbadge(kind, px) {
+    const id = 'vb' + (++vbN), ns = 'http://www.w3.org/2000/svg', n = 12, pts = [];
+    for (let i = 0; i < n * 2; i++) { const a = Math.PI * i / n - Math.PI / 2, r = i % 2 ? 25.6 : 29.2; pts.push((32 + r * Math.cos(a)).toFixed(2) + ',' + (32 + r * Math.sin(a)).toFixed(2)); }
+    const s = document.createElementNS(ns, 'svg'); s.setAttribute('viewBox', '0 0 64 64'); s.setAttribute('width', px); s.setAttribute('height', px); s.setAttribute('role', 'img'); s.setAttribute('aria-label', kind === 'founder' ? 'Verified: official PricePocketAsset account' : 'Verified account'); s.setAttribute('class', 'vb' + (kind === 'founder' ? ' f' : ''));
+    s.innerHTML = '<defs>'
+      + '<linearGradient id="' + id + 'a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd6ff"/><stop offset=".45" stop-color="#1f86ff"/><stop offset="1" stop-color="#0a3ea8"/></linearGradient>'
+      + '<linearGradient id="' + id + 'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8f6ff"/><stop offset=".5" stop-color="#5aa9ff"/><stop offset="1" stop-color="#0a3a96"/></linearGradient>'
+      + '<radialGradient id="' + id + 'c" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#6cc4ff"/><stop offset=".55" stop-color="#1569e6"/><stop offset="1" stop-color="#0a3a9a"/></radialGradient>'
+      + '<linearGradient id="' + id + 'g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+      + '<linearGradient id="' + id + 's" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>'
+      + '<clipPath id="' + id + 'k"><polygon points="' + pts.join(' ') + '"/></clipPath></defs>'
+      + '<polygon points="' + pts.join(' ') + '" fill="url(#' + id + 'r)" stroke="url(#' + id + 'r)" stroke-width="4" stroke-linejoin="round"/>'
+      + '<polygon points="' + pts.join(' ') + '" fill="url(#' + id + 'a)" stroke="url(#' + id + 'a)" stroke-width="2.2" stroke-linejoin="round" transform="translate(32 32) scale(.93) translate(-32 -32)"/>'
+      + '<circle cx="32" cy="32" r="19.5" fill="url(#' + id + 'c)" stroke="#fff" stroke-opacity=".55" stroke-width="1.4"/>'
+      + '<path d="M21.5 33.5l7.6 7.6 14.4-16.6" fill="none" stroke="#04256e" stroke-opacity=".45" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 2.2)"/>'
+      + '<path d="M21.5 33.5l7.6 7.6 14.4-16.6" fill="none" stroke="#fff" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"/>'
+      + '<ellipse cx="25" cy="17.5" rx="13" ry="6.4" fill="url(#' + id + 'g)" transform="rotate(-24 25 17.5)" opacity=".8"/>'
+      + (kind === 'founder' ? '<g clip-path="url(#' + id + 'k)"><rect class="sweep" x="-28" y="-6" width="22" height="76" fill="url(#' + id + 's)" transform="rotate(20 32 32)"/></g>' : '');
+    return s;
+  }
   // ---- shared pieces ----
   function avatar(p, cls) {
     const a = mk('div', cls + (p.founder ? ' f' : ''));
     if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; a.appendChild(i); } else a.textContent = initials(p.name);
     return a;
   }
-  function badgePill(p) { const w = []; if (p.founder) w.push(mk('span', 'pill founder', '👑 Founder / Owner')); else if (p.verified) w.push(mk('span', 'pill ver', '✓ Verified')); return w; }
+  function badgePill(p) { const w = []; if (p.founder) w.push(mk('span', 'pill founder', '👑 Founder / Owner')); return w; }
   function personRow(p, o) {
     const r = mk('div', 'person' + (p.system ? ' sys' : '')), av = mk('div', 'mini' + (p.founder ? ' f' : '')); if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; av.appendChild(i); } else av.textContent = initials(p.name);
     const g = mk('div', 'grow'), a = mk('a', 'nm', p.name); a.href = '/community/profile/?u=' + encodeURIComponent(p.username);
     const sub = mk('div', 'sub', p.system ? '👑 Founder Connection' : '@' + p.username + (p.role ? ' · ' + p.role : ''));
-    g.append(a, sub); if (p.system) g.append(mk('div', 'sub', 'Official PricePocketAsset account · connected since you joined.')); r.append(av, g); if (!p.system) badgePill(p).forEach(x => r.appendChild(x));
+    if (p.verified || p.founder) { const w = mk('div', 'nmrow'); w.append(a, vbadge(p.founder ? 'founder' : 'verified', 18)); g.append(w, sub); } else g.append(a, sub); if (p.system) g.append(mk('div', 'sub', 'Official PricePocketAsset account · connected since you joined.')); r.append(av, g); if (!p.system) badgePill(p).forEach(x => r.appendChild(x));
     if (o && o.follow && !p.founder && !p.self) { const b = mk('button', 'btn2 ' + (p.following ? '' : 'outline'), p.following ? 'Following' : 'Follow'); b.type = 'button'; b.onclick = async () => { b.disabled = true; const x = await post({ action: p.following ? 'unfollow' : 'follow', uid: p.uid }); b.disabled = false; if (x.s === 200) { p.following = !p.following; b.textContent = p.following ? 'Following' : 'Follow'; b.className = 'btn2 ' + (p.following ? '' : 'outline'); } else alert(x.j.error || 'Could not do that.'); }; r.appendChild(b); }
     return r;
   }
@@ -76,6 +99,9 @@
       const t = await get({ u: v.username }); if (t.s !== 200) { msg.className = 'msg bad'; msg.textContent = 'No member with that username.'; return; } const b = { action: 'ownerAward', username: v.username }; if (v.verified) b.verified = v.verified === 'yes'; if (v.award) b.awards = [v.award]; const x = await post(b); msg.className = 'msg ' + (x.s === 200 ? 'ok' : 'bad'); msg.textContent = x.s === 200 ? 'Saved.' : (x.j.error || 'Failed.'); };
     c.append(bf, aw, msg);
     const rp = (await get({ reports: 1 })).j.reports || []; c.append(mk('h4', '', 'Reports (' + rp.filter(x => x.status === 'open').length + ' open)')); rp.slice(0, 8).forEach(x => { const d = mk('div', 'person'); const g = mk('div', 'grow'); g.append(mk('b', '', x.category + ' · @' + x.targetName), mk('div', 'sub', 'from @' + x.byName + ' · ' + x.at.slice(0, 10) + (x.details ? ' · ' + x.details : ''))); d.append(g); if (x.status === 'open') { const cl = mk('button', 'btn2', 'Close'); cl.type = 'button'; cl.onclick = async () => { await post({ action: 'ownerCloseReport', id: x.id }); d.remove(); }; d.append(cl); } c.append(d); });
+    const vr = (await get({ verifyRequests: 1 })).j.requests || []; c.append(mk('h4', '', 'Verification requests (' + vr.length + ')'));
+    vr.forEach(x => { const d = mk('div', 'person'), g = mk('div', 'grow'); g.append(mk('b', '', x.name + ' (@' + x.username + ')'), mk('div', 'sub', Number(x.followers || 0).toLocaleString('en-US') + ' followers' + (x.note ? ' \u00B7 ' + x.note : ''))); d.append(g);
+      [['Approve', true], ['Decline', false]].forEach(([l, a]) => { const b = mk('button', 'btn2' + (a ? ' primary' : ''), l); b.type = 'button'; b.onclick = async () => { b.disabled = true; await post({ action: 'ownerVerifyDecision', username: x.username, approve: a }); d.remove(); }; d.append(b); }); c.append(d); });
     col.append(c);
   }
 
@@ -88,8 +114,8 @@
     if (x.j.blockedByMe) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'You blocked ' + x.j.profile.name), mk('p', 'muted', 'You will not see each other’s activity or be able to follow or message each other.')); const b = mk('button', 'btn2 primary', 'Unblock'); b.type = 'button'; b.onclick = async () => { await post({ action: 'unblock', uid: x.j.profile.uid }); location.reload(); }; c.append(b); root.append(c); return; }
     const P = x.j.profile, R = x.j.rel; document.title = P.name + ' (@' + P.username + ') | PricePocketAsset Community'; root.textContent = '';
     const cover = mk('div', 'cm-cover cv-' + (P.cover || 'forest')); cover.setAttribute('role', 'img'); cover.setAttribute('aria-label', 'Profile cover'); root.appendChild(cover);
-    const head = mk('div', 'cm-head'); head.append(avatar(P, 'cm-av')); if (P.verified) { const t = mk('span', 'vtick', '✓'); head.firstChild.appendChild(t); }
-    const id = mk('div', 'cm-id'), nm = mk('div', 'cm-name'); nm.append(mk('h1', '', P.name)); badgePill(P).forEach(b => nm.appendChild(b)); id.append(nm, mk('div', 'cm-user', '@' + P.username));
+    const head = mk('div', 'cm-head'); head.append(avatar(P, 'cm-av')); if (P.verified || P.founder) { const t = mk('span', 'vtick'); t.appendChild(vbadge(P.founder ? 'founder' : 'verified', 38)); head.firstChild.appendChild(t); }
+    const id = mk('div', 'cm-id'), nm = mk('div', 'cm-name'); nm.append(mk('h1', '', P.name)); if (P.verified || P.founder) nm.append(vbadge(P.founder ? 'founder' : 'verified', P.founder ? 34 : 28)); badgePill(P).forEach(b => nm.appendChild(b)); id.append(nm, mk('div', 'cm-user', '@' + P.username));
     const meta = mk('div', 'cm-meta'); if (P.role) meta.append(mk('span', '', P.role)); if (P.location) meta.append(mk('span', '', '📍 ' + P.location)); if (P.joined) meta.append(mk('span', '', 'Member since ' + month(P.joined))); id.append(meta);
     if (P.bio) id.append(mk('p', 'cm-bio', P.bio)); if ((P.interests || []).length) { const ch = mk('div', 'chips'); P.interests.forEach(i => ch.append(mk('span', 'chip', i))); id.append(ch); }
     const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers'], [P.stats.following, 'Following'], [P.stats.posts, 'Posts']].forEach(([n, l]) => { const d = mk('div'); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); st.appendChild(d); });
@@ -118,7 +144,7 @@
     T.forEach(([k, l]) => { const b = mk('button', '', l); b.type = 'button'; b.dataset.k = k; b.setAttribute('role', 'tab'); b.onclick = () => show(k); tabs.appendChild(b); });
     root.append(tabs, pane); const first = q.get('tab'); show(T.some(t => t[0] === first) ? first : 'about');
   }
-  function badgeGrid(P) { const g = mk('div', 'badges'); (P.badges || []).forEach(b => { const d = mk('div', 'badge b-' + b.key), i = mk('i', '', ICON[b.key] || '★'); const t = mk('div'); t.append(mk('b', '', b.label), mk('span', '', b.desc)); d.append(i, t); g.appendChild(d); }); if (!(P.badges || []).length) g.appendChild(mk('div', 'empty', 'No badges yet.')); return g; }
+  function badgeGrid(P) { const g = mk('div', 'badges'); (P.badges || []).forEach(b => { const d = mk('div', 'badge b-' + b.key), i = mk('i', '', b.key === 'verified' ? '' : (ICON[b.key] || '★')); if (b.key === 'verified') i.appendChild(vbadge('verified', 30)); const t = mk('div'); t.append(mk('b', '', b.label), mk('span', '', b.desc)); d.append(i, t); g.appendChild(d); }); if (!(P.badges || []).length) g.appendChild(mk('div', 'empty', 'No badges yet.')); return g; }
   async function about(pane, P, R) {
     const g = mk('div', 'grid'), l = mk('div', 'col'), r = mk('div', 'col'); g.append(l, r); pane.appendChild(g);
     const c = mk('div', 'card'); c.append(mk('h3', '', 'About me')); const dl = mk('dl', 'rows');
@@ -149,8 +175,18 @@
     if (!R.self) { const m = await get({ u: P.username, mutual: 1 }); const rows = m.j.rows || []; if (rows.length) { const c = mk('div', 'card'); c.append(mk('h3', '', 'Mutual connections (' + rows.length + ')')); const list = mk('div', 'people'); rows.forEach(p => list.appendChild(personRow(p, { follow: true }))); c.append(list); r.prepend(c); } }
     const gc = mk('div', 'card'); gc.append(mk('h3', '', 'Groups'), mk('div', 'empty', 'Community groups are coming soon.')); r.appendChild(gc);
   }
-  async function reputation(pane, P) {
+  async function reputation(pane, P, R) {
     const c = mk('div', 'card'); c.append(mk('h3', '', 'Reputation & badges'), badgeGrid(P), mk('p', 'muted small', 'Reputation is about trust and helpfulness. Follower count never decides it. Verified and contribution badges are given by PricePocketAsset.')); pane.appendChild(c);
+    if (R && R.self) {
+      const m = (await get({ me: 1 })).j.me, v = (m && m.verify) || {}; const vc = mk('div', 'card'); vc.append(mk('h3', '', 'Verification (blue check)'));
+      if (v.verified) vc.append(mk('p', '', 'Your account is verified.'));
+      else {
+        vc.append(mk('p', 'muted', 'The blue check is chosen by PricePocketAsset. Right now only the official account has it. Members can ask for it once they have ' + Number(v.min || 1000).toLocaleString('en-US') + ' followers and a complete profile. You have ' + Number(v.followers || 0).toLocaleString('en-US') + '.'));
+        if (v.requested) vc.append(mk('p', 'msg ok', 'Your request is with PricePocketAsset.'));
+        else { const b = mk('button', 'btn2 primary', 'Request verification'); b.type = 'button'; b.disabled = !v.canRequest; if (!v.canRequest) b.title = v.complete ? 'Not enough followers yet' : 'Complete your profile first'; b.onclick = async () => { const f = await sheet({ title: 'Request verification', text: 'Tell us why you should be verified (optional).', fields: [{ key: 'note', type: 'textarea', label: 'Note', max: 300 }], confirm: 'Send request' }); if (!f) return; const r = await post({ action: 'requestVerify', note: f.note }); if (r.s === 200) { pane.textContent = ''; reputation(pane, P, R); } else alert(r.j.error || 'Could not send the request.'); }; vc.append(b); }
+      }
+      pane.appendChild(vc);
+    }
   }
 
   // ---- SETTINGS ----

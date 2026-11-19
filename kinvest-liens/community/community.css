@@ -20,7 +20,7 @@
 .cm-av{width:116px;height:116px;flex:none;border-radius:50%;margin-top:-58px;border:4px solid #fff;background:linear-gradient(145deg,#34c759,#0b6e4f);color:#fff;font-size:2.4rem;font-weight:700;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.18);position:relative;overflow:visible}
 .cm-av.f{background:#0b0f14;border-color:var(--gold);box-shadow:0 0 0 3px #fff,0 8px 24px rgba(201,154,46,.35)}
 .cm-av.f img{width:76%;height:auto}
-.cm-av .vtick{position:absolute;right:2px;bottom:6px;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;border:3px solid #fff;font-size:15px;line-height:1;font-weight:800}
+.cm-av .vtick{position:absolute;right:-6px;bottom:-2px;width:38px;height:38px;display:block;line-height:0}
 .cm-id{flex:1;min-width:0;padding:14px 0 6px}
 .cm-name{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.cm-name h1{font-size:1.75rem}
 .cm-user{color:var(--mute);font-size:.95rem;margin-top:2px}
@@ -95,3 +95,14 @@
 
 .cm .tabs{flex-wrap:nowrap}.cm .tabs button{flex:none}
 .cm-sheet .radio label{display:flex!important;flex-direction:row!important;align-items:center;justify-content:flex-start;text-align:left;gap:10px}.cm-sheet .radio input{width:auto!important;margin:0;flex:none}
+
+/* the blue check: 3D-style seal. Founder's is animated; awarded members get the same seal, still. */
+.vb{display:inline-block;vertical-align:middle;flex:none;filter:drop-shadow(0 2px 2.5px rgba(8,52,150,.5));transform-origin:50% 55%;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.vb.f{filter:drop-shadow(0 3px 4px rgba(8,52,150,.55)) drop-shadow(0 0 7px rgba(56,150,255,.45));animation:vbfloat 3.4s ease-in-out infinite,vbglow 2.8s ease-in-out infinite}
+.vb.f:hover{animation-play-state:paused;transform:perspective(220px) rotateY(26deg) rotateX(-10deg) scale(1.12)}
+.vb .sweep{animation:vbsweep 3.8s ease-in-out infinite}
+@keyframes vbfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1.5px) rotate(-1.2deg)}}
+@keyframes vbglow{0%,100%{filter:drop-shadow(0 3px 4px rgba(8,52,150,.55)) drop-shadow(0 0 5px rgba(56,150,255,.35))}50%{filter:drop-shadow(0 3px 4px rgba(8,52,150,.55)) drop-shadow(0 0 11px rgba(90,180,255,.8))}}
+@keyframes vbsweep{0%,45%{transform:translateX(0) rotate(20deg)}100%{transform:translateX(96px) rotate(20deg)}}
+.cm-name .vb{margin-left:-2px}.nmrow{display:flex;align-items:center;gap:6px}.badge i .vb{display:block}
+@media(prefers-reduced-motion:reduce){.vb,.vb.f,.vb .sweep{animation:none!important;transition:none}.vb.f:hover{transform:none}}
