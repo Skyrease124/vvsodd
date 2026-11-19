@@ -13,8 +13,21 @@ globalThis.fetch = async (u, o) => { u = String(u);
   if (u.includes('FL511')) { if (flDown) throw new Error('net'); return { ok: true, json: async () => ({ features: flFeats }) }; }
   if (u.includes('cwwp2.dot.ca.gov')) { if (caDown) return { ok: false, status: 500 }; return { ok: true, json: async () => ({ data: [] }) }; }
   if (u.includes('az511.com/api/v2/get/cameras') || u.includes('511ga.org/api/v2/get/cameras')) { azCalls++; return { ok: true, json: async () => [{ Id: 2056, Roadway: 'I-10', Direction: 'Unknown', Latitude: 32.88, Longitude: -111.75, Location: 'TEST FIXTURE I-10 @ MP 200', Views: [{ Id: 960, Url: 'https://az511.com/map/Cctv/960', Status: 'Enabled', Description: 'TEST FIXTURE I-10 EB 200' }, { Id: 961, Url: 'https://az511.com/map/Cctv/961', Status: 'Disabled', Description: 'off' }] }, { Id: 9, Latitude: 0, Longitude: 0, Views: [{ Id: 1, Url: 'https://az511.com/map/Cctv/1', Status: 'Enabled' }] }] }; }
+  if (u.includes('data.austintexas.gov')) { atxCalls++; if (atxDown) return { ok: false, status: 500 }; return { ok: true, json: async () => [
+    { camera_id: '1', location_name: '  TEST FIXTURE  830 BLK W RUNDBERG LN ', primary_st: ' RUNDBERG LN', location: { type: 'Point', coordinates: [-97.698158, 30.363686] }, screenshot_address: 'https://cctv.austinmobility.io/image/1.jpg', modified_date: '2023-07-18T20:45:00.000Z' },
+    { camera_id: '2', location_name: 'TEST FIXTURE no image', location: { type: 'Point', coordinates: [-97.70, 30.36] }, screenshot_address: '' },
+    { camera_id: '3', location_name: 'TEST FIXTURE bad coords', location: { type: 'Point', coordinates: [0, 0] }, screenshot_address: 'https://cctv.austinmobility.io/image/3.jpg' },
+    { camera_id: '4', location_name: 'TEST FIXTURE http only', location: { type: 'Point', coordinates: [-97.71, 30.37] }, screenshot_address: 'http://cctv.austinmobility.io/image/4.jpg' },
+    { camera_id: '5', location_name: 'TEST FIXTURE far', location: { type: 'Point', coordinates: [-97.35, 30.75] }, screenshot_address: 'https://cctv.austinmobility.io/image/5.jpg' }] }; }
   throw new Error('unexpected ' + u); };
+let atxCalls = 0, atxDown = false;
 let azCalls = 0;
+// ---- Austin (City open data) ----
+{ _reset(); let a = await nearby(30.3637, -97.698, 10, 5);
+  ok(a.cameras.length === 1 && a.cameras[0].id === '1' && a.cameras[0].src === 'atx' && a.cameras[0].name === 'TEST FIXTURE 830 BLK W RUNDBERG LN' && a.cameras[0].kind === 'snapshot' && a.cameras[0].image === 'https://cctv.austinmobility.io/image/1.jpg', 'Austin: only the valid camera in range (far one excluded), names cleaned, snapshot with the city image link');
+  ok(!a.cameras.some(c => c.id === '2' || c.id === '3' || c.id === '4'), 'Austin: records without an https image or with bad coordinates are dropped');
+  ok(/City of Austin/.test(a.cameras[0].operator) && /Directory record 2023-07-18/.test(a.cameras[0].sourceMeta) && /data\.austintexas\.gov/.test(a.cameras[0].viewer) && a.providers.find(p => p.id === 'atx').status === 'ok', 'Austin: source credited, record date shown, provider live');
+  _reset(); atxDown = true; a = await nearby(30.3637, -97.698, 10, 5); ok(a.cameras.length === 0 && a.providers.find(p => p.id === 'atx').status === 'unavailable', 'Austin outage: reported as unavailable, never as "no cameras"'); atxDown = false; _reset(); }
 // Jacksonville-ish parcel near the GA line
 flFeats = [fl('1', 30.70, -81.60), fl('2', 30.75, -81.60), fl('1', 30.70, -81.60), fl('3', 30.70, -81.50), fl('4', 0, 0), fl('5', 30.71, -81.60, ''), fl('6', 31.5, -81.6)];
 let r = await nearby(30.69, -81.60, 10, 5);
