@@ -3,6 +3,8 @@
   'use strict';
   const about = document.querySelector('#about .narrow'); if (!about || document.getElementById('a2hsCard')) return;
   const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); // installed: the card still shows, as a confirmation, with the steps tucked away for sharing
+  if (standalone) { try { localStorage.setItem('ppa_installed', '1'); } catch (e) {} return; }   // installed: nothing to show
+  try { if (localStorage.getItem('ppa_installed') === '1') return; } catch (e) {}   // same browser already seen running installed
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const ico = {
     share: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>',
