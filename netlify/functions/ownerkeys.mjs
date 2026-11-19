@@ -14,6 +14,7 @@ import * as GM from '../lib/gmaps.mjs';
 import * as RC from '../lib/rentcast.mjs';
 import * as CEN from '../lib/census.mjs';
 import * as BLS from '../lib/bls.mjs';
+import * as CONG from '../lib/congress.mjs';
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const UA = 'PricePocketAsset parcel research site (https://pricepocketasset.com)';
 export default async function handler(req) {
@@ -35,6 +36,11 @@ export default async function handler(req) {
       if (r.status >= 500) return json(200, { ok: false, error: 'OneSignal had a problem (' + r.status + '). Try again.' });
       return json(200, { ok: true, nlr: true, text: 'The key ' + source + ' was accepted (' + scheme + ' style) for app ' + OSAPP.slice(0, 8) + '\u2026. No notification was sent (' + (d.id ? 'sent' : 'no recipients, as expected') + ').' + (r.ok ? '' : ' Note: ' + msg) });
     } catch (e) { return json(200, { ok: false, error: 'No answer from OneSignal.' }); }
+  }
+  if (b.test === 'congress') {
+    try { CONG._reset(); const r = await CONG.forState('FL'); if (!r.ok) return json(200, { ok: false, error: r.reason === 'nokey' ? 'No key saved yet.' : 'No answer from Congress.gov.' });
+      const s = r.members.filter(x => x.chamber === 'Senate'); return json(200, { ok: true, nlr: true, text: 'Florida: ' + r.members.length + ' current members. Senators: ' + (s.map(x => x.name + ' (' + x.party + ')').join(', ') || 'none listed') + '.' }); }
+    catch (e) { return json(200, { ok: false, error: String(e.message || e).slice(0, 200) }); }
   }
   if (b.test === 'bls') {
     try { const r = await BLS.jobsFor('13', '021'); if (!r.ok) return json(200, { ok: false, error: r.reason === 'nokey' ? 'No key saved yet.' : 'No answer.' });

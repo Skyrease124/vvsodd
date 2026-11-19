@@ -28,7 +28,7 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-  const TEST = {GA511_KEY: 'ga', AZ511_KEY: 'az', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', ONESIGNAL_REST_API_KEY: 'onesignal'};
+  const TEST = {GA511_KEY: 'ga', AZ511_KEY: 'az', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', CONGRESS_API_KEY: 'congress', ONESIGNAL_REST_API_KEY: 'onesignal'};
   async function api(body) { const r = await fetch('/.netlify/functions/ownerkeys', body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {}); return r.json().catch(() => ({ok: false, error: 'No answer.'})); }
   function draw(d) {
     const box = $('list'); box.textContent = '';
@@ -42,7 +42,7 @@
       save.onclick = async () => { if (!inp.value.trim()) return; save.disabled = true; const r = await api({name: k.name, value: inp.value}); inp.value = ''; save.disabled = false; if (!r.ok) { out.textContent = r.error; out.className = 'bad'; } else draw(r); };
       test.onclick = async () => { out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name]});
         if (!r.ok) { out.className = 'bad'; out.textContent = 'Test failed: ' + (r.error || 'unknown'); return; }
-        if (r.nlr) { out.className = 'good'; out.textContent = ({WEATHERAPI_KEY: 'WeatherAPI', DATAGOV_KEY: 'api.data.gov', GOOGLE_VISION_KEY: 'Google', RENTCAST_KEY: 'RentCast', CENSUS_KEY: 'Census', BLS_KEY: 'BLS', ONESIGNAL_REST_API_KEY: 'OneSignal'}[k.name] || 'NLR') + ' answered: key works. ' + r.text; return; }
+        if (r.nlr) { out.className = 'good'; out.textContent = ({WEATHERAPI_KEY: 'WeatherAPI', DATAGOV_KEY: 'api.data.gov', GOOGLE_VISION_KEY: 'Google', RENTCAST_KEY: 'RentCast', CENSUS_KEY: 'Census', BLS_KEY: 'BLS', CONGRESS_API_KEY: 'Congress.gov', ONESIGNAL_REST_API_KEY: 'OneSignal'}[k.name] || 'NLR') + ' answered: key works. ' + r.text; return; }
         if (r.firms) { out.className = 'good'; out.textContent = 'NASA FIRMS answered: key works. ' + r.fires + ' fire detection(s) in the last 2 days within 50 miles of a test spot in central California' + (r.partial ? ' (one satellite feed did not answer)' : '') + '.'; return; }
         out.className = r.image.ok ? 'good' : 'bad'; out.textContent = r.provider + ': ' + r.cameras + ' cameras\nSample: ' + r.sample.name + (r.sample.road ? ' (' + r.sample.road + ')' : '') + '\nPicture: ' + (r.image.ok ? 'loads OK' : 'did not load') ;
         if (r.image.ok) { const im = mk('img'); im.src = r.sample.image; im.alt = r.sample.name; im.style.cssText = 'width:100%;border-radius:10px;margin-top:8px'; out.after(im); } };
