@@ -14,12 +14,19 @@
     '.pp-who b{display:block;font-size:15px;font-weight:600;color:#1d1d1f;word-break:break-all;line-height:1.25}.pp-who small{display:block;font-size:13px;color:#6e6e73;margin-top:2px}' +
     '@media(prefers-color-scheme:dark){.pp-panel{background:rgba(38,38,42,.82);color:#f5f5f7;border-color:rgba(255,255,255,.14)}.pp-grp{background:rgba(255,255,255,.08)}.pp-panel a,.pp-panel button,.pp-who b{color:#f5f5f7}.pp-grp>*+*{box-shadow:0 -.5px 0 rgba(255,255,255,.14)}.pp-panel .pp-out{color:#ff6961}.pp-who small,.pp-panel .pp-ownlab{color:#a1a1a6}.pp-panel a:hover,.pp-panel button:hover{background:rgba(47,191,140,.16)}}' +
     '@media(prefers-reduced-motion:reduce){.pp-panel{animation:none}}' +
+    'header .pp-panel a,header .pp-panel button{color:#1d1d1f!important}header .pp-panel .pp-out{color:#d70015!important}@media(prefers-color-scheme:dark){header .pp-panel a,header .pp-panel button{color:#f5f5f7!important}header .pp-panel .pp-out{color:#ff6961!important}}.nav .pp-panel a,.nav nav .pp-panel a:not(.btn){display:flex!important}.pp-panel a::after{position:static;height:auto;background:none;transform:none}' +
+    '.pp-back{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;margin-right:6px;border:0;border-radius:20px;background:rgba(127,127,127,.14);color:inherit;font-size:24px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
     '.pp-signin{margin-right:8px;background:transparent!important;border:2px solid currentColor;color:inherit!important}.dnav .pp-signin{color:#e6ecf7!important;border-color:#e6ecf7}' +
     '.dnav .pp-signin,.dnav .dbtn{padding:9px 16px}.pp-signin,.pp-menu>a,.dnav .dbtn{white-space:nowrap}' +
     '@media(max-width:520px){.dnav-in{gap:8px!important}.dnav .dlogo small{display:none}.dnav .dlogo svg{width:34px;height:28px}.dnav .dlogo b{font-size:18px}.dnav .pp-signin,.dnav .dbtn{padding:8px 11px;font-size:14px}.pp-signin{margin-right:4px}.nav .btn.small{padding:8px 11px;font-size:14px;white-space:nowrap}}';
   document.head.appendChild(css);
 
   const header = document.querySelector('header');
+  // Back button on every page except the home page (the Home Screen app has no browser back button).
+  if (header && location.pathname !== '/' && !header.querySelector('.pp-back')) {
+    const logo = header.querySelector('.logo, a.logo'); const bk = document.createElement('button'); bk.type = 'button'; bk.className = 'pp-back'; bk.setAttribute('aria-label', 'Back'); bk.textContent = '\u2039';
+    bk.addEventListener('click', () => { let same = false; try { same = !!document.referrer && new URL(document.referrer).origin === location.origin; } catch (e) { /* none */ } if (same && history.length > 1) history.back(); else location.href = '/'; });
+    if (logo && logo.parentNode) logo.parentNode.insertBefore(bk, logo); }
   const cta = document.querySelector('header .dbtn[href="#contact"], header a.btn.small[href$="#contact"], header .dbtn[href="/account/?mode=up"], header a.btn.small[href="/account/?mode=up"]');
   // Push: load push.js only when this device already turned notifications on (or on the account page). Never asks for permission.
   function ppPushLoad() { return new Promise(res => { if (window.PPPush) return res(window.PPPush); const s = document.createElement('script'); s.src = '/push.js'; s.onload = () => res(window.PPPush); s.onerror = () => res(null); document.head.appendChild(s); }); }
