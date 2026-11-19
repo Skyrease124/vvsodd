@@ -1703,3 +1703,6 @@ body.loginpg #msg:empty{display:none}
 .hztick.hz-home{margin:0 0 12px;width:fit-content}
 .hztick.hz-map{position:absolute;z-index:5;left:12px;right:76px;top:84px;max-width:none;width:auto;border-radius:18px}.hztick.hz-map .hz-tx{white-space:normal;overflow:visible;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}@media(min-width:900px){.hztick.hz-map{right:auto;max-width:520px}}
 @media (prefers-reduced-motion:reduce){.hztick{transition:none}}
+
+/* map: the hazard line sits inside the bottom panel (under the tabs), so it never covers the map */
+.hztick.hz-sheet{position:static;margin:2px 12px 8px;width:auto;max-width:none;border-radius:14px;padding:8px 12px;font-size:.78rem;background:rgba(255,255,255,.06);-webkit-backdrop-filter:none;backdrop-filter:none}.hztick.hz-sheet .hz-tx{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
