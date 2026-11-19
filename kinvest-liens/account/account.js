@@ -98,7 +98,7 @@
     e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
     const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: '', accessCode: mode === 'up' ? $('acode').value : ''});
     $('go').disabled = false;
-    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); if (NEXT && !WANT_PRO) { location.href = NEXT; return; } } else $('msg').textContent = r.d.error || 'Something went wrong.';
+    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); if (mode === 'up' && !WANT_PRO) { location.href = '/community/welcome/?next=' + encodeURIComponent(NEXT || '/map/'); return; } if (NEXT && !WANT_PRO) { location.href = NEXT; return; } } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
   $('logout').addEventListener('click', async () => { if (window.PPPush) await window.PPPush.logout(); await post({action: 'logout'}); show(null); });
   fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
