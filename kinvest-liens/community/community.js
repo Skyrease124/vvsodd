@@ -179,7 +179,7 @@
         mw.appendChild(m); setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0); };
     }
     // tabs
-    if (!R.system || R.self) root.appendChild(liveBlock(P, R, head, act));
+    root.appendChild(liveBlock(P, R, head, act));
     const tabs = mk('div', 'tabs'); tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Profile sections'); const pane = mk('div', 'pane'); pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-live', 'polite');
     const T = [['about', 'About'], ['activity', 'Activity'], ['collections', 'Collections'], ['community', 'Community'], ['reputation', 'Reputation']];
     const show = async k => { tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); pane.textContent = ''; history.replaceState(null, '', '?u=' + P.username + (k === 'about' ? '' : '&tab=' + k)); await ({ about, activity, collections, community, reputation }[k])(pane, P, R, x.j); };
