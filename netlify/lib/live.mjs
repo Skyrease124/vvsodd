@@ -122,3 +122,10 @@ export async function webhook(body, authHeader) {
   }
   return { ok: true, ignored: ev.event };
 }
+
+// Owner "Test it": asks LiveKit Cloud for the room list using the saved URL/key/secret. Never returns the secret.
+export async function selfTest() {
+  if (!configured()) return { ok: false, error: 'Save all three LiveKit boxes first (URL, API key, API secret).' };
+  try { const r = await rooms().listRooms(); return { ok: true, text: 'LiveKit answered: URL, API key and secret all work. Rooms open right now: ' + r.length + '.' }; }
+  catch (e) { return { ok: false, error: 'LiveKit did not accept these settings (' + String((e && e.message) || e).replace(/[A-Za-z0-9_\-]{24,}/g, '…').slice(0, 120) + '). Check the URL, key and secret match.' }; }
+}
