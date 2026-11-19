@@ -220,3 +220,8 @@
 .cm-act .btn2.icon{width:40px;min-width:40px;padding:0}
 @media(max-width:520px){.cm-act{flex-wrap:nowrap}.cm-act .btn2{flex:1 1 0;min-width:0;padding:0 10px;font-size:.9rem;white-space:nowrap}.cm-act .btn2.icon{flex:0 0 40px}}
 @media(prefers-reduced-motion:reduce){.btn2,.btn2:active{transition:none;transform:none}}
+/* social & website links on About */
+.soc-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.soc-pill{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;background:var(--fill);color:var(--ink);font-weight:600;font-size:.9rem;text-decoration:none;box-shadow:0 0 0 .5px var(--line)}
+.soc-pill:active{transform:scale(.96)}
+.soc-x{border:0;width:24px;height:24px;margin-left:-6px;border-radius:50%;background:transparent;color:var(--mute);font-size:1.1rem;line-height:1;align-self:center}

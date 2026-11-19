@@ -107,4 +107,21 @@ const b1 = await C.backfill(); const keysAfter = (await auth.kvList('cs_')).leng
 ok(b1.newProfiles === 1 && keysAfter === 4 && (await call(L, { u: (await me(L)).username, list: 'following' })).j.rows[0].system, 'backfill gives the legacy member a profile and the Founder connection');
 const b2 = await C.backfill(); ok(b2.newProfiles === 0 && b2.newConnections === 0 && (await auth.kvList('cs_')).length === keysAfter && (await me(F)).stats.followers === ff, 'backfill is idempotent: a second run creates nothing and does not change counts');
 ok((await call(A, { action: 'ownerBackfill' })).s === 403 && (await call(F, { action: 'ownerBackfill' })).s === 200, 'only the owner can run the backfill');
+// social links
+{ const sx = (await import('../lib/community.mjs')).cleanSocial;
+  ok(sx('x', 'https://x.com/sample_investor').ok && sx('x', 'https://www.twitter.com/sample').ok, 'X and Twitter links accepted');
+  ok(!sx('x', 'https://evil.example.com/x').ok && !sx('instagram', 'https://x.com/a').ok, 'a link must point to its own platform');
+  ok(!sx('website', 'http://example.com').ok && !sx('website', 'javascript:alert(1)').ok && !sx('website', 'https://user:pw@example.com').ok, 'http, javascript: and login-in-link are refused');
+  ok(sx('website', 'https://example.com/page').ok && sx('website', '').value === '', 'any secure website is accepted; empty clears');
+  ok(!sx('youtube', 'https://youtube.com.evil.example/x').ok, 'look-alike domains are refused');
+  let r = await call(A, { action: 'saveProfile', social: { x: 'https://evil.example.com/x' } }); ok(r.s === 400, 'server refuses a bad social link');
+  r = await call(A, { action: 'saveProfile', social: { x: 'https://x.com/ann_t', website: 'https://ann.example.com' } }); ok(r.s === 200, 'member saves social links (free members too)');
+  const mA = (await call(A, { me: 1 })).j.me; let v = (await call(F, { u: mA.username })).j.profile; ok(v.social.x === 'https://x.com/ann_t' && v.social.website === 'https://ann.example.com/', 'other members see the links');
+  await call(A, { action: 'saveProfile', privacy: { showSocial: false } });
+  v = (await call(F, { u: mA.username })).j.profile; ok(!v.social || Object.keys(v.social).length === 0, 'hidden social links are not sent to other members');
+  v = (await call(A, { u: mA.username })).j.profile; ok(v.social.x === 'https://x.com/ann_t', 'the member still sees their own links');
+  await call(A, { action: 'saveProfile', privacy: { showSocial: true } });
+  r = await call(F, { action: 'ownerRemoveSocial', username: mA.username, key: 'x' }); ok(r.s === 200 && (await call(F, { u: mA.username })).j.profile.social.x === undefined, 'owner removes a link');
+  r = await call(A, { action: 'ownerRemoveSocial', username: mA.username, key: 'x' }); ok(r.s === 403, "members cannot remove others' links");
+  ok((await auth.kvGet('soclog'))[0].key === 'x', 'owner removal is logged'); }
 console.log(pass + ' passed');
