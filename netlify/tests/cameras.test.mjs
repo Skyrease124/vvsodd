@@ -22,6 +22,9 @@ globalThis.fetch = async (u, o) => { u = String(u);
   throw new Error('unexpected ' + u); };
 let atxCalls = 0, atxDown = false;
 let azCalls = 0;
+// ---- Texas viewer-only providers: official links, no invented feed ----
+{ _reset(); const h = await nearby(29.7604, -95.3698, 10, 5), pr = id => h.providers.find(p => p.id === id);
+  ok(h.cameras.length === 0 && pr('hou') && pr('hou').status === 'viewer' && /houstontranstar\.org/.test(pr('hou').viewer) && pr('tx') && pr('tx').status === 'viewer' && /drivetexas\.org/.test(pr('tx').viewer), 'Houston: official TranStar and DriveTexas viewers offered; no cameras are made up'); }
 // ---- Austin (City open data) ----
 { _reset(); let a = await nearby(30.3637, -97.698, 10, 5);
   ok(a.cameras.length === 1 && a.cameras[0].id === '1' && a.cameras[0].src === 'atx' && a.cameras[0].name === 'TEST FIXTURE 830 BLK W RUNDBERG LN' && a.cameras[0].kind === 'snapshot' && a.cameras[0].image === 'https://cctv.austinmobility.io/image/1.jpg', 'Austin: only the valid camera in range (far one excluded), names cleaned, snapshot with the city image link');
