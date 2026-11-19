@@ -81,6 +81,7 @@ export default async function handler(req, context) {
     if (!(await RL.hit('photo:' + user.email, 20, 3600e3)).ok) return json(429, { ok: false, error: 'Too many photo changes. Please wait a bit.' });
     return done(await C.setPhoto(me, b.kind, b.data));
   }
+  if (act === 'ownerRemoveSocial') { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); const t = await C.getByUsername(b.username); if (!t) return json(404, { ok: false, error: 'Member not found.' }); return done(await C.ownerRemoveSocial(me, t.uid, b.key)); }
   if (act === 'ownerRemovePhoto') { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); const t = await C.getByUsername(b.username); if (!t) return json(404, { ok: false, error: 'Member not found.' }); return done(await C.ownerRemovePhoto(t.uid, b.kind)); }
   if (act === 'requestVerify') return done(await C.requestVerify(me, b.note));
   if (act === 'saveCollection') return done(await C.saveCollection(me, b));

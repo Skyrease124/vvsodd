@@ -94,7 +94,8 @@ export async function badgesFor(p) {
 export async function isVisible(p) { if (!p) return false; const u = await auth.getUser(p.email); return !!u && !u.revoked; }
 export async function publicView(p, viewerUid) {
   const me = viewerUid === p.uid, pr = p.privacy || {}, f = await isFounderProfile(p);
-  return { uid: p.uid, username: p.username, name: p.name, role: p.role, experience: p.experience, bio: p.bio, interests: p.interests || [], cover: p.cover, photo: photoUrl(p, 'avatar'), coverPhoto: photoUrl(p, 'cover'), founder: f, verified: !!(p.verified || f),
+  const soc = (me || pr.showSocial !== false) ? Object.fromEntries(Object.entries(p.social || {}).filter(([k, v]) => SOCIAL[k] !== undefined && v)) : {};
+  return { uid: p.uid, username: p.username, name: p.name, role: p.role, experience: p.experience, bio: p.bio, interests: p.interests || [], social: soc, showSocial: pr.showSocial !== false, cover: p.cover, photo: photoUrl(p, 'avatar'), coverPhoto: photoUrl(p, 'cover'), founder: f, verified: !!(p.verified || f),
     location: (me || pr.showLocation) && (p.city || p.state) ? [p.city, p.state].filter(Boolean).join(', ') : '', joined: String(p.created || '').slice(0, 7), pinned: f ? p.pinned || '' : '',
     badges: await badgesFor(p), stats: { followers: (p.stats || {}).followers || 0, following: ((p.stats || {}).following || 0) + (f ? 0 : 1), posts: Math.max(0, (p.stats || {}).posts || 0) }, activityHidden: !me && pr.showActivity === false };
 }
@@ -173,6 +174,18 @@ export async function listReports() { const out = []; for (const k of (await aut
 
 // ---- profile editing -------------------------------------------------------------------------------------------
 const USERNAME = /^[a-z][a-z0-9_]{2,19}$/;
+// ---- social links: https only, each one must point to its own platform. Empty clears it. ----
+export const SOCIAL = { website: null, x: /^(x|twitter)\.com$/, instagram: /^instagram\.com$/, youtube: /^(youtube\.com|youtu\.be)$/, tiktok: /^tiktok\.com$/, facebook: /^(facebook\.com|fb\.com)$/, linkedin: /^linkedin\.com$/ };
+export const SOCIAL_LABEL = { website: 'Website', x: 'X', instagram: 'Instagram', youtube: 'YouTube', tiktok: 'TikTok', facebook: 'Facebook', linkedin: 'LinkedIn' };
+export function cleanSocial(key, raw) {
+  const t = String(raw == null ? '' : raw).trim(); if (!t) return { ok: true, value: '' };
+  if (t.length > 200) return { ok: false, error: SOCIAL_LABEL[key] + ' link is too long.' };
+  let u; try { u = new URL(t); } catch (e) { return { ok: false, error: SOCIAL_LABEL[key] + ' must be a full link starting with https://' }; }
+  const host = u.hostname.toLowerCase().replace(/^(www|m)\./, '');
+  if (u.protocol !== 'https:' || u.username || u.password || u.port) return { ok: false, error: SOCIAL_LABEL[key] + ' must be a secure https link with no login details.' };
+  if (key === 'website' ? !/\.[a-z]{2,}$/.test(host) : !SOCIAL[key].test(host)) return { ok: false, error: 'That is not a ' + SOCIAL_LABEL[key] + ' link.' };
+  return { ok: true, value: u.toString().slice(0, 200) };
+}
 export async function saveProfile(p, b, { founder }) {
   const next = JSON.parse(JSON.stringify(p));
   if (b.username !== undefined) {
@@ -192,9 +205,15 @@ export async function saveProfile(p, b, { founder }) {
   if (b.city !== undefined) next.city = clean(b.city, 40); if (b.state !== undefined) next.state = clean(b.state, 2).toUpperCase();
   if (b.cover !== undefined) { if (!COLORS.includes(b.cover)) return err(400, 'Pick a cover from the list.'); next.cover = b.cover; }
   if (b.pinned !== undefined) { if (!founder) return err(403, 'Only the Founder account can pin a Founder message.'); next.pinned = clean(b.pinned, 600); }
+  if (b.social !== undefined) {
+    if (!b.social || typeof b.social !== 'object' || Array.isArray(b.social)) return err(400, 'Social links could not be read.');
+    const soc = Object.assign({}, p.social || {});
+    for (const k of Object.keys(SOCIAL)) if (b.social[k] !== undefined) { const r = cleanSocial(k, b.social[k]); if (!r.ok) return err(400, r.error); soc[k] = r.value; }
+    next.social = soc;
+  }
   const pv = b.privacy; if (pv) {
     const en = (k, vals) => { if (pv[k] !== undefined) { if (!vals.includes(pv[k])) return false; next.privacy[k] = pv[k]; } return true; };
-    for (const k of ['showLocation', 'showActivity', 'discoverable', 'showProBadge', 'allowRequests']) if (pv[k] !== undefined) next.privacy[k] = !!pv[k];
+    for (const k of ['showLocation', 'showActivity', 'discoverable', 'showProBadge', 'allowRequests', 'showSocial']) if (pv[k] !== undefined) next.privacy[k] = !!pv[k];
     if (!en('whoCanFollow', ['everyone', 'nobody']) || !en('whoCanMessage', ['everyone', 'following', 'followers', 'mutual', 'nobody']) || !en('collectionsDefault', ['public', 'private'])) return err(400, 'That privacy choice is not valid.');
   }
   const nt = b.notif; if (nt) {
@@ -388,6 +407,12 @@ export async function setPhoto(me, kind, data) {
   const img = checkImage(data); if (!img.ok) return img; const { type, out } = img;
   const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: out.toString('base64'), v });
   const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = v; await auth.kvPut(K.p(me.uid), p); return { ok: true, v };
+}
+export async function ownerRemoveSocial(owner, uid, key) {
+  if (!SOCIAL[key] && key !== 'website') return err(400, 'Unknown link.');
+  const p = await getByUid(uid); if (!p) return err(404, 'Member not found.');
+  const old = (p.social || {})[key] || ''; p.social = Object.assign({}, p.social || {}, { [key]: '' }); await auth.kvPut(K.p(uid), p);
+  const log = (await auth.kvGet('soclog')) || []; log.unshift({ at: now(), by: owner.uid, uid, key, was: old.slice(0, 200) }); await auth.kvPut('soclog', log.slice(0, 500)); return { ok: true };
 }
 export async function ownerRemovePhoto(uid, kind) { const p = await getByUid(uid); if (!p) return err(404, 'Member not found.'); return setPhoto(p, kind, null); }
 export const photoUrl = (p, kind) => { const v = kind === 'avatar' ? p.photo : p.coverPhoto; return v ? `/.netlify/functions/media?k=${kind}&u=${p.uid}&v=${v}` : ''; };
