@@ -51,3 +51,6 @@
 @media(prefers-color-scheme:dark){.rt,.rt-ov{--ink:#f5f5f7;--mute:#98989d;--line:rgba(255,255,255,.1);--fill:#1c1c1e;--card:#1c1c1e}.rt-card,.rt-box,.rt-empty,.rt-al{box-shadow:0 0 0 .5px var(--line)}.rt-img{background-color:#2c2c2e}.rt-sheet{background:#1c1c1e;color:#f5f5f7}.rt-sheet .rt-form input,.rt-sheet .rt-form select,.rt-sheet .rt-form textarea{background:#2c2c2e;color:#f5f5f7}.rt-btn.buy{background:#fff;color:#000}.rt-seg button[aria-selected=true]{background:#3a3a3c}.rt-sw i{background:#39393d}}
 
 .rt h1,.rt h2,.rt h3,.rt-sheet h3{color:var(--ink)!important;display:block!important}.rt-ov *{box-sizing:border-box}.rt-ov button{font:inherit;cursor:pointer}
+
+.rt-pill.out_of_stock,.rt-pill.sold_out{background:#3a3a3c;color:#fff}.rt-pill.invite_only{background:linear-gradient(135deg,#7c5cf0,#4f2fd0);color:#fff}.rt-pill.preorder{background:#0a84ff;color:#fff}.rt-pill.coming_soon{background:#5e5ce6;color:#fff}.rt-pill.waitlist{background:#bf5af2;color:#fff}.rt-pill.limited_access{background:#ff375f;color:#fff}.rt-pill.unknown{background:#e5e5ea;color:#3a3a3c}
+.rt-why{font-size:.8rem;color:var(--mute);margin:2px 0 4px;line-height:1.35}

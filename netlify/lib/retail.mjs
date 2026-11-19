@@ -30,7 +30,9 @@ export const RETAILERS = {
 export const CATEGORIES = ['pokemon', 'sneakers', 'electronics', 'gaming', 'collectibles'];
 export const CAT_LABEL = { pokemon: 'Pokémon', sneakers: 'Sneakers', electronics: 'Electronics', gaming: 'Gaming', collectibles: 'Collectibles' };
 export const TYPES = ['release', 'restock', 'price'];
-export const STATUSES = ['upcoming', 'monitoring', 'in_stock', 'low_stock', 'sold_out', 'disabled'];
+export const STATUSES = ['upcoming', 'monitoring', 'in_stock', 'low_stock', 'sold_out', 'disabled', 'out_of_stock', 'invite_only', 'preorder', 'coming_soon', 'waitlist', 'limited_access', 'unknown'];
+// Stock states shown to people. Price alone never means in_stock. 'sold_out' is kept for older records (same as out_of_stock).
+export const STOCK_LABEL = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', out_of_stock: 'OUT OF STOCK', sold_out: 'OUT OF STOCK', invite_only: 'Invite Only', preorder: 'Preorder', coming_soon: 'Coming Soon', waitlist: 'Waitlist', limited_access: 'Limited Access', unknown: 'Unknown', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
 const AVAILABLE = new Set(['in_stock', 'low_stock']);
 const COOLDOWN_MS = () => +(process.env.RETAIL_COOLDOWN_MIN || 360) * 60e3;   // same alert type, same product: at most every 6 hours
 const FRESH_MS = 3 * 3600e3;   // "In Stock Now" only shows results confirmed in the last 3 hours
@@ -47,15 +49,57 @@ export function checkUrl(raw) {
 }
 export const safeLink = raw => { const c = checkUrl(raw); return c ? c.url : ''; };
 
-// ---- reading a product page (schema.org Product data, then Open Graph). Never guesses: missing stays missing ----
-const AVAIL_MAP = [[/InStock|InStoreOnly|OnlineOnly/i, 'in_stock'], [/LimitedAvailability/i, 'low_stock'], [/OutOfStock|SoldOut|Discontinued/i, 'sold_out'], [/PreOrder|PreSale|BackOrder/i, 'upcoming']];
+// ---- reading a product page. A price alone never means in stock. ----
+// Stock is only IN_STOCK when the page has an ENABLED purchase control (Add to Cart, Buy Now, Ship It, Add for Shipping...).
+// Restriction text (invite, lottery, exclusive event, waitlist, waiting room, coming soon) always wins over everything else.
+const RESTRICT = [
+  { status: 'invite_only', label: 'Exclusive sales event', why: 'invitation required', re: /exclusive sales event/i },
+  { status: 'invite_only', label: 'Invite requested', why: 'invitation required', re: /you[’']ve requested an invite|request(ed)? an invite/i },
+  { status: 'invite_only', label: 'Invitation required', why: 'invitation required', re: /invitation required|you[’']ll receive an invitation|if you[’']re selected (to participate)?/i },
+  { status: 'invite_only', label: 'Lottery', why: 'lottery entry required', re: /\blottery\b|enter (the|our) drawing/i },
+  { status: 'waitlist', label: 'Waitlist', why: 'waitlist, not for sale yet', re: /join (the )?waitlist|you[’']re on (the )?waitlist/i },
+  { status: 'limited_access', label: 'Waiting room', why: 'waiting room or queue', re: /waiting room|you (are|[’']re) in (the )?line/i },
+  { status: 'coming_soon', label: 'Coming soon', why: 'not released yet', re: /coming soon/i },
+];
+const BUY = /add to cart|add to bag|buy now|ship it|add for shipping|add to order/i;
+const PREORDER_BTN = /pre-?order/i;
+const SOLD = /sold out|out of stock|currently unavailable|unavailable for (shipping|pickup|pick-up|pick up|delivery)|not available for (shipping|pickup|pick-up|delivery)|sold out online/i;
+const stripHtml = h => h.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/&#39;|&rsquo;/gi, '’').replace(/\s+/g, ' ').trim();
+// Every button, link or input on the page with its label and whether it is disabled.
+export function controls(html) {
+  const out = [];
+  for (const m of html.matchAll(/<(button|a)\b([^>]*)>([\s\S]{0,400}?)<\/\1>/gi)) out.push({ label: stripHtml(m[3]), disabled: isDisabled(m[2]) });
+  for (const m of html.matchAll(/<input\b([^>]*)>/gi)) { const v = (m[1].match(/value=["']([^"']*)/i) || [])[1] || ''; out.push({ label: v, disabled: isDisabled(m[1]) }); }
+  return out.filter(c => c.label && (BUY.test(c.label) || PREORDER_BTN.test(c.label)));
+}
+function isDisabled(attrs) { return /\bdisabled\b|aria-disabled=["']true["']/i.test(attrs) || /class=["'][^"']*\bdisabled\b/i.test(attrs); }
+// Decides the stock state and writes the reason in plain words. Returns {status, reason, matched}.
+export function classifyStock({ html = '', schemaAvail = '', retailer = '', price = null }) {
+  const store = (RETAILERS[retailer] || { name: 'Retailer' }).name, text = stripHtml(html), ctrls = controls(html);
+  const hit = RESTRICT.filter(r => r.re.test(text));
+  if (hit.length) return { status: hit[0].status, reason: store + ' ' + hit[0].label + ' — ' + hit[0].why, matched: hit.map(h => h.label) };
+  const enabled = ctrls.filter(c => !c.disabled);
+  const enabledPre = enabled.filter(c => PREORDER_BTN.test(c.label));
+  if (enabledPre.length) return { status: 'preorder', reason: store + ' enabled "' + enabledPre[0].label + '" button — preorder', matched: [enabledPre[0].label] };
+  const enabledBuy = enabled.filter(c => BUY.test(c.label));
+  const noWay = /(unavailable|not available) for (shipping|pickup|pick-up|pick up|delivery)/i.exec(text);   // no way to buy this way, whatever the button says
+  if (noWay) return { status: 'out_of_stock', reason: store + ' page says "' + noWay[0] + '"', matched: [noWay[0]] };
+  const sold = SOLD.exec(text), schemaOut = /OutOfStock|SoldOut|Discontinued/i.test(schemaAvail);
+  if (enabledBuy.length && sold) return { status: 'unknown', reason: store + ' shows an enabled "' + enabledBuy[0].label + '" button but also says "' + sold[0] + '" — conflicting, confirm on the store', matched: [] };
+  if (enabledBuy.length) return { status: 'in_stock', reason: store + ' enabled "' + enabledBuy[0].label + '" button found', matched: [enabledBuy[0].label] };
+  if (sold) return { status: 'out_of_stock', reason: store + ' page says "' + sold[0] + '"', matched: [sold[0]] };
+  const dis = ctrls.filter(c => c.disabled && BUY.test(c.label));
+  if (dis.length) return { status: 'out_of_stock', reason: store + ' "' + dis[0].label + '" button is disabled', matched: [dis[0].label] };
+  if (schemaOut) return { status: 'out_of_stock', reason: store + ' listing data says out of stock', matched: [] };
+  return { status: 'unknown', reason: (price != null ? 'Price found ($' + Number(price).toFixed(2) + ') but no enabled purchase button — a price alone does not mean in stock' : 'No enabled purchase button or stock status found on the page'), matched: [] };
+}
 export function parseHtml(html) {
   const out = {}; const lds = [...html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)].map(m => m[1]);
   const walk = (o, f) => { if (!o || typeof o !== 'object') return; if (Array.isArray(o)) return o.forEach(x => walk(x, f)); f(o); Object.values(o).forEach(x => walk(x, f)); };
   for (const t of lds) { let j; try { j = JSON.parse(t.trim()); } catch (e) { continue; }
     walk(j, o => { const ty = [].concat(o['@type'] || []); if (!ty.includes('Product') || out.name) return; out.name = clean(o.name, 160); const im = [].concat(o.image || [])[0]; out.image = typeof im === 'string' ? im : im && im.url;
       const of = [].concat(o.offers || []).flatMap(x => x && x['@type'] === 'AggregateOffer' ? [].concat(x.offers || [x]) : [x]).filter(Boolean)[0];
-      if (of) { const pr = parseFloat(of.price ?? of.lowPrice); if (isFinite(pr) && pr > 0) out.price = Math.round(pr * 100) / 100; const av = String(of.availability || ''); for (const [re, s] of AVAIL_MAP) if (re.test(av)) { out.status = s; break; } }
+      if (of) { const pr = parseFloat(of.price ?? of.lowPrice); if (isFinite(pr) && pr > 0) out.price = Math.round(pr * 100) / 100; out.schemaAvail = String(of.availability || ''); }
       if (o.releaseDate) out.releaseDate = String(o.releaseDate).slice(0, 10); }); }
   const og = p => { const m = html.match(new RegExp('<meta[^>]+property=["\']og:' + p + '["\'][^>]+content=["\']([^"\']+)', 'i')) || html.match(new RegExp('<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:' + p, 'i')); return m ? m[1] : ''; };
   if (!out.name) out.name = clean(og('title').replace(/&amp;/g, '&').replace(/&#39;/g, "'"), 160) || undefined;
@@ -65,25 +109,28 @@ export function parseHtml(html) {
 }
 let fetchImpl = (...a) => fetch(...a);
 export const _setFetch = f => { fetchImpl = f; };
+// Best Buy's API gives name and price only. It does not say whether the item can be bought, so stock still comes from the page.
 async function bestBuy(url) {
   await KEYS.load(); const key = KEYS.keyOf('BESTBUY_API_KEY'); const sku = (url.match(/skuId=(\d{5,9})/) || url.match(/\/(\d{6,9})\.p/) || [])[1];
   if (!key || !sku) return null;
-  const r = await fetchImpl(`https://api.bestbuy.com/v1/products/${sku}.json?show=name,image,salePrice,onlineAvailability,releaseDate&apiKey=${encodeURIComponent(key)}`, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(8000) });
+  const r = await fetchImpl(`https://api.bestbuy.com/v1/products/${sku}.json?show=name,image,salePrice,releaseDate&apiKey=${encodeURIComponent(key)}`, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(8000) });
   if (!r.ok) throw new Error('Best Buy answered ' + r.status);
-  const d = await r.json(); return { name: clean(d.name, 160), image: d.image, price: +d.salePrice || undefined, status: d.onlineAvailability ? 'in_stock' : 'sold_out', releaseDate: d.releaseDate || undefined };
+  const d = await r.json(); return { name: clean(d.name, 160), image: d.image, price: +d.salePrice || undefined, releaseDate: d.releaseDate || undefined };
 }
-// {ok, info:{name,image,price,status,releaseDate}, readable, note}. readable = stock status found, so automatic checks can run.
+// {ok, info:{name,image,price,status,reason,releaseDate}, readable, note}. readable = a real state was found (not UNKNOWN), so automatic checks can run.
 export async function lookup(url) {
   const c = checkUrl(url); if (!c) return err(400, 'Paste a https link from a supported store.');
   const store = RETAILERS[c.retailer].name;
-  if (RETAILERS[c.retailer].noFetch) return { ok: true, info: {}, readable: false, note: store + ' does not allow automatic checks. You confirm stock yourself.' };
+  if (RETAILERS[c.retailer].noFetch) return { ok: true, info: { status: 'unknown', reason: store + ' does not allow automatic checks. You confirm stock yourself.' }, readable: false, note: store + ' does not allow automatic checks. You confirm stock yourself.' };
   try {
-    let info = c.retailer === 'bestbuy' ? await bestBuy(c.url) : null;
-    if (!info) { const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(9000) });
-      if (!r.ok) return { ok: true, info: {}, readable: false, note: store + ' answered ' + r.status + '. Fill in the details yourself; stock is owner-confirmed.' };
-      info = parseHtml((await r.text()).slice(0, 3e6)); }
-    return { ok: true, info, readable: !!info.status, note: info.status ? 'Stock status found on the page. Automatic checks can run.' : 'The page loaded, but stock status is not readable. Stock is owner-confirmed.' };
-  } catch (e) { return { ok: true, info: {}, readable: false, note: 'Could not read the page (' + String(e.message || e).slice(0, 60) + '). Fill in the details yourself.' }; }
+    const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(9000) });
+    if (!r.ok) return { ok: true, info: { status: 'unknown', reason: store + ' answered ' + r.status }, readable: false, note: store + ' answered ' + r.status + '. Fill in the details yourself; stock is owner-confirmed.' };
+    const html = (await r.text()).slice(0, 3e6); const info = parseHtml(html);
+    if (c.retailer === 'bestbuy') { try { const a = await bestBuy(c.url); if (a) { info.name = a.name || info.name; if (a.price) info.price = a.price; if (a.releaseDate) info.releaseDate = a.releaseDate; } } catch (e) { /* the page still decides stock */ } }
+    const k = classifyStock({ html, schemaAvail: info.schemaAvail || '', retailer: c.retailer, price: info.price ?? null });
+    info.status = k.status; info.reason = k.reason; info.matched = k.matched; delete info.schemaAvail;
+    return { ok: true, info, readable: k.status !== 'unknown', note: k.reason };
+  } catch (e) { return { ok: true, info: { status: 'unknown', reason: 'Could not read the page' }, readable: false, note: 'Could not read the page (' + String(e.message || e).slice(0, 60) + '). Fill in the details yourself.' }; }
 }
 
 // ---- products ----
@@ -103,7 +150,7 @@ export async function createProduct(owner, b) {
   const c = checkUrl(b.url); if (!c) return err(400, 'Paste a https link from a supported store.');
   const dupe = await auth.kvGet(KU(c.url)); if (dupe && dupe.id && await getProduct(dupe.id)) return err(409, 'That product is already in the catalog.', { id: dupe.id });
   const p = { id: rid(6), url: c.url, retailer: c.retailer, name: '', image: '', category: '', variant: '', releaseDate: '', price: null, prevPrice: null, priceManual: null, status: 'monitoring', prevStatus: '', auto: false, active: true,
-    checkedAt: '', stockChangeAt: '', confirmedAt: '', lastAlert: {}, fails: 0, createdBy: owner, created: now(), updated: now(), watchers: 0 };
+    checkedAt: '', stockChangeAt: '', confirmedAt: '', statusReason: 'Added by the owner', lastAlert: {}, fails: 0, createdBy: owner, created: now(), updated: now(), watchers: 0 };
   try { fields(p, b); } catch (e) { return err(400, e.message); }
   if (!p.name) return err(400, 'Add a product name.'); if (!p.category) return err(400, 'Pick a category.');
   if (STATUSES.includes(b.status)) p.status = b.status;
@@ -117,7 +164,7 @@ export async function updateProduct(id, b) {
   if (b.active !== undefined) p.active = !!b.active;
   p.updated = now(); await auth.kvPut(KP(p.id), p);
   const st = STATUSES.includes(b.status) ? b.status : p.status, pr = p.priceManual != null ? p.priceManual : p.price;
-  const sent = (st !== p.status || pr !== p.price || (b.status && AVAILABLE.has(b.status))) ? await applyResult(p, { status: st, price: pr }, 'owner') : [];
+  const sent = (st !== p.status || pr !== p.price || (b.status && AVAILABLE.has(b.status))) ? await applyResult(p, { status: st, price: pr, reason: 'Set by the owner' }, 'owner') : [];
   return { ok: true, product: await getProduct(id), sent };
 }
 export async function listProducts({ all } = {}) {
@@ -128,7 +175,7 @@ export async function listProducts({ all } = {}) {
 export function card(p) {
   const fresh = p.confirmedAt && Date.now() - Date.parse(p.confirmedAt) < FRESH_MS;
   const status = AVAILABLE.has(p.status) && !fresh ? 'monitoring' : p.status;
-  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, image: p.image, price: p.price, prevPrice: p.prevPrice, status, category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
+  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
 }
 
 // ---- state change -> alerts. Called by the monitor (source 'auto') and by the owner (source 'owner') ----
@@ -136,6 +183,7 @@ export async function applyResult(p, r, source) {
   const t = now(), prevStatus = p.status, prevPrice = p.price;
   const nextStatus = STATUSES.includes(r.status) ? r.status : prevStatus, nextPrice = r.price != null ? num(r.price) : prevPrice;
   p.checkedAt = t; if (AVAILABLE.has(nextStatus)) p.confirmedAt = t;
+  if (r.reason) p.statusReason = clean(r.reason, 240);
   const events = [];
   if (nextStatus !== prevStatus) {
     p.prevStatus = prevStatus; p.status = nextStatus; p.stockChangeAt = t;
@@ -153,6 +201,7 @@ export async function applyResult(p, r, source) {
 const EMOJI = { pokemon: '🔥', sneakers: '👟', electronics: '⚡', gaming: '🎮', collectibles: '⭐' };
 export function message(p, kind) {
   const store = RETAILERS[p.retailer].name, cat = CAT_LABEL[p.category] || 'Retail', price = p.price != null ? ' $' + p.price.toFixed(2) + '.' : '';
+  if (kind === 'restock' && p.prevStatus === 'invite_only') return { title: '🎟️ Invite Live', body: p.name + ' is now available to buy at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'release') return { title: (EMOJI[p.category] || '🛍️') + ' ' + cat + ' Release Live', body: p.name + ' is live at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'price') return { title: '💸 Price Drop', body: p.name + ' dropped to $' + p.price.toFixed(2) + ' at ' + store + (p.prevPrice != null ? ' (was $' + p.prevPrice.toFixed(2) + ')' : '') + '. Tap to shop.' };
   return { title: (EMOJI[p.category] || '🛍️') + ' ' + cat + ' Restock', body: p.name + ' is back in stock at ' + store + '.' + price + ' Tap to buy.' };
@@ -284,7 +333,7 @@ export async function monitor({ limit = 25 } = {}) {
   for (const p of ps.slice(0, limit)) {
     const r = await lookup(p.url); res.checked++;
     if (!r.ok || !r.readable) { p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable'; if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; } await auth.kvPut(KP(p.id), p); if (p.fails === 3) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError }); continue; }
-    p.fails = 0; p.lastError = ''; const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price }, 'auto');
+    p.fails = 0; p.lastError = ''; const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
     if (p.status !== before) res.changed++; res.alerts += sent.filter(x => !x.skipped).length;
   }
   return res;
