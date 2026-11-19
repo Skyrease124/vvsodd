@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>PricePocket Live | PricePocketAsset</title>
+<meta name="theme-color" content="#050505">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="/live/live.css">
+</head>
+<body>
+<div class="lv" id="lv" data-state="connecting">
+  <header class="lv-top">
+    <div class="lv-host"><div class="lv-ava" id="hostAva" aria-hidden="true"></div><div class="lv-ht"><b id="hostName">PricePocket Live</b><span id="liveTitle"></span></div></div>
+    <div class="lv-badges"><span class="lv-live" id="liveBadge" hidden><i></i>LIVE</span><span class="lv-count" id="count" hidden></span></div>
+  </header>
+  <main class="lv-stage" id="stage" aria-label="Live video"></main>
+  <div class="lv-banner" id="banner" role="status" aria-live="polite"></div>
+  <aside class="lv-panel" id="panel" hidden aria-label="People in this live"><div class="lv-ph"><b>People</b><button type="button" class="lv-x" id="closePanel" aria-label="Close list">&times;</button></div><ul id="people"></ul></aside>
+  <footer class="lv-bar" id="bar" hidden>
+    <button type="button" class="lv-btn" id="mic" aria-pressed="true"><span class="ic" aria-hidden="true"></span><span class="tx">Mic</span></button>
+    <button type="button" class="lv-btn" id="cam" aria-pressed="true"><span class="ic" aria-hidden="true"></span><span class="tx">Camera</span></button>
+    <button type="button" class="lv-btn" id="flip" hidden><span class="ic" aria-hidden="true"></span><span class="tx">Flip</span></button>
+    <button type="button" class="lv-btn" id="ppl"><span class="ic" aria-hidden="true"></span><span class="tx">People</span></button>
+    <button type="button" class="lv-btn leave" id="leave"><span class="ic" aria-hidden="true"></span><span class="tx">Leave</span></button>
+    <button type="button" class="lv-btn end" id="endLive" hidden><span class="ic" aria-hidden="true"></span><span class="tx">End live</span></button>
+  </footer>
+  <div class="lv-screen" id="screen" hidden><div class="lv-card" id="screenCard"></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.17.3/dist/livekit-client.umd.js"></script>
+<script src="/live/live.js"></script>
+</body>
+</html>

@@ -105,6 +105,47 @@
     col.append(c);
   }
 
+  // ---- PricePocket Live on the profile (the only place the LIVE indicator appears) ----
+  var LIVE_API = '/.netlify/functions/live';
+  async function liveGet(q) { try { var r = await fetch(LIVE_API + '?' + q, { credentials: 'same-origin' }); return { s: r.status, j: await r.json().catch(function () { return {}; }) }; } catch (e) { return { s: 0, j: {} }; } }
+  async function livePost(o) { try { var r = await fetch(LIVE_API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }); return { s: r.status, j: await r.json().catch(function () { return {}; }) }; } catch (e) { return { s: 0, j: { error: 'Could not reach PricePocketAsset. Check your connection.' } }; } }
+  function goLiveSheet(P, current) {
+    var ov = mk('div', 'cm-ov'), sh = mk('div', 'cm-sheet'); sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-label', 'Go live');
+    sh.append(mk('h3', '', 'Go live'), mk('p', '', 'Start a public live video. Anyone signed in to PricePocketAsset can join from your profile. Your camera and microphone turn on when you start.'));
+    var f = mk('div', 'form'), l1 = mk('label', '', 'Live title'), ti = mk('input'); ti.type = 'text'; ti.maxLength = 80; ti.placeholder = 'Florida Tax Deed Q&A'; ti.setAttribute('autocomplete', 'off'); l1.appendChild(ti);
+    var l2 = mk('label', '', 'Who can watch'), vs = mk('select'); var o1 = mk('option', '', 'Public'); o1.value = 'public'; var o2 = mk('option', '', 'Subscribers Only \u2014 Coming Soon'); o2.value = 'subscribers'; o2.disabled = true; vs.append(o1, o2); l2.appendChild(vs); f.append(l1, l2); sh.appendChild(f);
+    var msg = mk('p', 'msg bad'); msg.setAttribute('role', 'alert'); sh.appendChild(msg);
+    var row = mk('div', 'row'), no = mk('button', 'btn2', 'Cancel'), go = mk('button', 'btn2 solid danger', 'Start live'); no.type = go.type = 'button'; row.append(no, go); sh.appendChild(row);
+    var done = function () { ov.classList.remove('on'); setTimeout(function () { ov.remove(); }, 180); };
+    no.onclick = done; ov.onclick = function (e) { if (e.target === ov) done(); };
+    go.onclick = async function () {
+      msg.textContent = ''; var title = ti.value.trim(); if (title.length < 3) { msg.textContent = 'Give your live a title (at least 3 characters).'; ti.focus(); return; }
+      go.disabled = true; go.textContent = 'Checking camera\u2026';
+      // ask for camera and microphone FIRST so a denial never leaves a live running with nobody in it
+      try { var st = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); st.getTracks().forEach(function (t) { t.stop(); }); }
+      catch (e) { go.disabled = false; go.textContent = 'Start live'; msg.textContent = (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) ? 'Camera access is required to go live. Open your browser settings and allow camera and microphone access for PricePocketAsset, then try again.' : (!navigator.mediaDevices ? 'This browser cannot use the camera. Try Safari or Chrome.' : 'We could not open your camera or microphone. Check that nothing else is using them.'); return; }
+      go.textContent = 'Starting\u2026'; var r = await livePost({ action: 'start', title: title, visibility: 'public' });
+      if (r.s === 200 && r.j.session) { location.href = '/live/?s=' + r.j.session.id; return; }
+      go.disabled = false; go.textContent = 'Start live'; msg.textContent = r.j.error || 'Could not start the live. Please try again.';
+    };
+    document.body.appendChild(ov); ov.appendChild(sh); requestAnimationFrame(function () { ov.classList.add('on'); ti.focus({ preventScroll: true }); });
+  }
+  // The red ring, LIVE NOW card and JOIN LIVE button. Refreshes by itself while the profile is open.
+  function liveBlock(P, R, head, act) {
+    var box = mk('section', 'lvbox'); box.hidden = true; var av = head.querySelector('.cm-av'), goBtn = null, cur = null;
+    if (R.self) { goBtn = mk('button', 'btn2 live', '\u25CF Go live'); goBtn.type = 'button'; goBtn.onclick = function () { cur ? (location.href = '/live/?s=' + cur.id) : goLiveSheet(P); }; act.prepend(goBtn); }
+    function paint(live) {
+      cur = live; if (av) av.classList.toggle('live', !!live); box.hidden = !live; box.textContent = '';
+      if (goBtn) goBtn.textContent = live ? '\u25CF Return to your live' : '\u25CF Go live';
+      if (!live) return;
+      var l = mk('div', 'lvl'); l.append(mk('span', 'lvtag', '\u25CF LIVE NOW'), mk('b', 'lvt', live.title)); var w = live.viewers != null ? live.viewers + ' watching' : ''; if (w) l.appendChild(mk('span', 'lvw', w)); box.appendChild(l);
+      var b = mk('a', 'btn2 live', R.self ? 'Return to live' : 'Join live'); b.href = '/live/?s=' + live.id; box.appendChild(b);
+    }
+    var timer = null; async function tick() { var r = await liveGet('u=' + encodeURIComponent(P.username)); if (r.s === 200) paint(r.j.live || null); }
+    tick(); timer = setInterval(function () { if (!document.hidden) { if (!document.body.contains(box)) { clearInterval(timer); return; } tick(); } }, 8000);
+    return box;
+  }
+
   // ---- PROFILE ----
   async function profile() {
     const root = $('root'), q = new URLSearchParams(location.search); let name = q.get('u');
@@ -138,6 +179,7 @@
         mw.appendChild(m); setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0); };
     }
     // tabs
+    if (!R.system) root.appendChild(liveBlock(P, R, head, act));
     const tabs = mk('div', 'tabs'); tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Profile sections'); const pane = mk('div', 'pane'); pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-live', 'polite');
     const T = [['about', 'About'], ['activity', 'Activity'], ['collections', 'Collections'], ['community', 'Community'], ['reputation', 'Reputation']];
     const show = async k => { tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); pane.textContent = ''; history.replaceState(null, '', '?u=' + P.username + (k === 'about' ? '' : '&tab=' + k)); await ({ about, activity, collections, community, reputation }[k])(pane, P, R, x.j); };

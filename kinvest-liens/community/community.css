@@ -106,3 +106,14 @@
 @keyframes vbsweep{0%,45%{transform:translateX(0) rotate(20deg)}100%{transform:translateX(96px) rotate(20deg)}}
 .cm-name .vb{margin-left:-2px}.nmrow{display:flex;align-items:center;gap:6px}.badge i .vb{display:block}
 @media(prefers-reduced-motion:reduce){.vb,.vb.f,.vb .sweep{animation:none!important;transition:none}.vb.f:hover{transform:none}}
+
+/* PricePocket Live on the profile: red ring, LIVE NOW card, Go live button */
+.cm-av.live{box-shadow:0 0 0 4px #ff2d2d,0 0 26px rgba(255,45,45,.8);animation:lvring 1.8s ease-in-out infinite}
+@keyframes lvring{0%,100%{box-shadow:0 0 0 4px #ff2d2d,0 0 18px rgba(255,45,45,.6)}50%{box-shadow:0 0 0 4px #ff4d4d,0 0 34px rgba(255,45,45,.95)}}
+.lvbox{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:16px 0 0;padding:14px 16px;border-radius:20px;background:linear-gradient(135deg,rgba(255,45,45,.12),rgba(255,45,45,.04));box-shadow:inset 0 0 0 1.5px rgba(255,45,45,.55)}
+.lvbox[hidden]{display:none}
+.lvl{display:flex;flex-direction:column;gap:3px;min-width:0}.lvtag{font-size:.74rem;font-weight:800;letter-spacing:.1em;color:#ff4d4d}.lvt{font-size:1.1rem;letter-spacing:-.01em}.lvw{font-size:.85rem;color:var(--mute)}
+.btn2.live{background:#ff2d2d;color:#fff!important;box-shadow:0 8px 24px rgba(255,45,45,.35)}.btn2.live:hover{background:#e01f1f}
+.cm a.btn2.live{color:#fff}
+@media(max-width:860px){.lvbox .btn2{flex:1;justify-content:center}}
+@media(prefers-reduced-motion:reduce){.cm-av.live{animation:none}}
