@@ -92,14 +92,23 @@ export async function publicView(p, viewerUid) {
     location: (me || pr.showLocation) && (p.city || p.state) ? [p.city, p.state].filter(Boolean).join(', ') : '', joined: String(p.created || '').slice(0, 7), pinned: f ? p.pinned || '' : '',
     badges: await badgesFor(p), stats: { followers: (p.stats || {}).followers || 0, following: ((p.stats || {}).following || 0) + (f ? 0 : 1), posts: Math.max(0, (p.stats || {}).posts || 0) }, activityHidden: !me && pr.showActivity === false };
 }
+// Who may message whom. 'followers' = people who follow me; 'following' = people I follow; 'mutual' = both.
+// direct: lands in the inbox. request: lands in Message Requests (if the person allows requests). Blocks always win.
+export function messageRule(pr, { self, blocked, following, followedBy }) {
+  if (self) return { ok: false, reason: 'self' }; if (blocked) return { ok: false, reason: 'blocked' };
+  const w = (pr || {}).whoCanMessage || 'followers';
+  const direct = w === 'everyone' || (w === 'followers' && following) || (w === 'following' && followedBy) || (w === 'mutual' && following && followedBy);
+  if (direct) return { ok: true, mode: 'direct', reason: '' };
+  if (w !== 'nobody' && (pr || {}).allowRequests !== false) return { ok: true, mode: 'request', reason: '' };
+  return { ok: false, reason: 'privacy' };
+}
 export async function relation(viewer, target) {
   const f = await founderUid(), tF = target.uid === f, self = viewer.uid === target.uid;
   const [fo, fb, bl, bb] = await Promise.all([auth.kvGet(K.f(viewer.uid, target.uid)), auth.kvGet(K.f(target.uid, viewer.uid)), auth.kvGet(K.b(viewer.uid, target.uid)), auth.kvGet(K.b(target.uid, viewer.uid))]);
   const pr = target.privacy || {};
   const rel = { self, system: tF, following: !!fo, followedBy: !!fb, blocked: !!bl, blockedBy: !!bb, canFollow: !self && !tF && !bl && !bb && pr.whoCanFollow !== 'nobody', canBlock: !self && !tF, canMessage: { ok: false, reason: '' } };
-  if (self) rel.canMessage.reason = 'self'; else if (tF) rel.canMessage.reason = 'system'; else if (bl || bb) rel.canMessage.reason = 'blocked';
-  else { const w = pr.whoCanMessage || 'followers'; rel.canMessage = w === 'everyone' || (w === 'followers' && rel.following) || (w === 'following' && rel.followedBy) ? { ok: true, reason: '' } : { ok: false, reason: 'privacy' }; }
-  rel.messagingLive = false;   // direct messages are not built yet: the button is shown when privacy allows, and says "coming soon"
+  rel.canMessage = messageRule(pr, { self, blocked: !!(bl || bb), following: rel.following, followedBy: rel.followedBy });
+  rel.messagingLive = true;
   return rel;
 }
 
@@ -178,14 +187,14 @@ export async function saveProfile(p, b, { founder }) {
   if (b.pinned !== undefined) { if (!founder) return err(403, 'Only the Founder account can pin a Founder message.'); next.pinned = clean(b.pinned, 600); }
   const pv = b.privacy; if (pv) {
     const en = (k, vals) => { if (pv[k] !== undefined) { if (!vals.includes(pv[k])) return false; next.privacy[k] = pv[k]; } return true; };
-    for (const k of ['showLocation', 'showActivity', 'discoverable', 'showProBadge']) if (pv[k] !== undefined) next.privacy[k] = !!pv[k];
-    if (!en('whoCanFollow', ['everyone', 'nobody']) || !en('whoCanMessage', ['everyone', 'following', 'followers', 'nobody']) || !en('collectionsDefault', ['public', 'private'])) return err(400, 'That privacy choice is not valid.');
+    for (const k of ['showLocation', 'showActivity', 'discoverable', 'showProBadge', 'allowRequests']) if (pv[k] !== undefined) next.privacy[k] = !!pv[k];
+    if (!en('whoCanFollow', ['everyone', 'nobody']) || !en('whoCanMessage', ['everyone', 'following', 'followers', 'mutual', 'nobody']) || !en('collectionsDefault', ['public', 'private'])) return err(400, 'That privacy choice is not valid.');
   }
   const nt = b.notif; if (nt) {
     // Founder posts and announcements can be MUTED (notifications only). Muting never touches the connection itself.
     for (const k of ['founderPosts', 'founderAnnouncements']) if (nt[k] !== undefined) { if (!['on', 'muted'].includes(nt[k])) return err(400, 'That notification choice is not valid.'); next.notif[k] = nt[k]; }
     if (nt.frequency !== undefined) { if (!['instant', 'daily', 'weekly'].includes(nt.frequency)) return err(400, 'That notification choice is not valid.'); next.notif.frequency = nt.frequency; }
-    for (const k of ['follows', 'messages']) if (nt[k] !== undefined) next.notif[k] = !!nt[k];
+    for (const k of ['follows', 'messages', 'msgPreview']) if (nt[k] !== undefined) next.notif[k] = !!nt[k];
   }
   await auth.kvPut(K.p(p.uid), next); return { ok: true, profile: next };
 }

@@ -124,7 +124,7 @@
   }
   async function rejoin() { try { if (room) { room.removeAllListeners(); } } catch (e) {} room = null; tiles = {}; $('stage').textContent = ''; connect(); }
   function paintHeader() {
-    var h = info && info.host; $('hostName').textContent = h ? h.name : 'PricePocket Live'; $('liveTitle').textContent = info ? info.title : '';
+    var h = info && info.host; $('hostName').textContent = h ? h.name : 'PricePocket Live'; var hb = document.querySelector('.lv-host'); if (hb && h && h.username && role !== 'host') { hb.style.cursor = 'pointer'; hb.setAttribute('role', 'link'); hb.setAttribute('tabindex', '0'); hb.title = 'Open profile (Follow, Message)'; hb.onclick = function () { window.open('/community/profile/?u=' + encodeURIComponent(h.username), '_blank', 'noopener'); }; } $('liveTitle').textContent = info ? info.title : '';
     var a = $('hostAva'); a.textContent = ''; if (h && h.founder) a.classList.add('f'); else a.textContent = initials(h && h.name); document.title = (info ? info.title + ' | ' : '') + 'PricePocket Live';
   }
   function startPoll() { stopPoll(); poll = setInterval(async function () { var r = await api('?s=' + sid); if (r.s === 200 && r.j.session && !r.j.session.is_live) endedScreen(); }, 8000); }
