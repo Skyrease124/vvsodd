@@ -70,7 +70,20 @@
     const sub = mk('div', 'sub', p.system ? '👑 Founder Connection' : '@' + p.username + (p.role ? ' · ' + p.role : ''));
     if (p.verified || p.founder) { const w = mk('div', 'nmrow'); w.append(a, vbadge(p.founder ? 'founder' : 'verified', 18)); g.append(w, sub); } else g.append(a, sub); if (p.system) g.append(mk('div', 'sub', 'Official PricePocketAsset account · connected since you joined.')); r.append(av, g); if (!p.system) badgePill(p).forEach(x => r.appendChild(x));
     if (o && o.follow && !p.founder && !p.self) { const b = mk('button', 'btn2 ' + (p.following ? '' : 'outline'), p.following ? 'Following' : 'Follow'); b.type = 'button'; b.onclick = async () => { b.disabled = true; const x = await post({ action: p.following ? 'unfollow' : 'follow', uid: p.uid }); b.disabled = false; if (x.s === 200) { p.following = !p.following; b.textContent = p.following ? 'Following' : 'Follow'; b.className = 'btn2 ' + (p.following ? '' : 'outline'); } else alert(x.j.error || 'Could not do that.'); }; r.appendChild(b); }
+    if (o && o.message && p.canMessage && !p.self) { const ms = mk('a', 'btn2 msg', '\u2709 Message'); ms.href = '/messages/?to=' + encodeURIComponent(p.username); ms.setAttribute('aria-label', 'Message ' + p.name); r.appendChild(ms); }
     return r;
+  }
+  // Followers / Following list in a sheet, with Follow and Message next to each name
+  async function peopleSheet(P, kind) {
+    const ov = mk('div', 'cm-ov'), sh = mk('div', 'cm-sheet ppl'); sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
+    const top = mk('div', 'ppl-top'), x = mk('button', 'cp-x', 'Done'); x.type = 'button'; top.append(mk('h3', '', kind === 'followers' ? 'Followers' : 'Following'), x); sh.append(top);
+    const list = mk('div', 'people'); list.append(mk('div', 'muted small', 'Loading\u2026')); sh.append(list);
+    const close = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); }; x.onclick = close; ov.onclick = e => { if (e.target === ov) close(); };
+    ov.append(sh); document.body.append(ov); requestAnimationFrame(() => ov.classList.add('on'));
+    const r = await get({ u: P.username, list: kind }); const rows = r.j.rows || []; list.textContent = '';
+    rows.forEach(p => list.append(personRow(p, { follow: true, message: true })));
+    if (kind === 'followers' && P.founder && r.j.systemCount) list.append(mk('div', 'empty', Number(r.j.systemCount).toLocaleString('en-US') + ' members are connected to the Founder.'));
+    if (!rows.length && !(kind === 'followers' && P.founder)) list.append(mk('div', 'empty', kind === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'));
   }
   function needSignin(root) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'Sign in to join the community'), mk('p', 'muted', 'The PricePocketAsset community is for members. Sign in or create a free account to see profiles.')); const a = mk('a', 'btn2 primary', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); c.append(a); root.appendChild(c); }
 
@@ -270,7 +283,7 @@
     const id = mk('div', 'cm-id'), nm = mk('div', 'cm-name'); nm.append(mk('h1', '', P.name)); if (P.verified || P.founder) nm.append(vbadge(P.founder ? 'founder' : 'verified', P.founder ? 34 : 28)); badgePill(P).forEach(b => nm.appendChild(b)); id.append(nm, mk('div', 'cm-user', '@' + P.username));
     const meta = mk('div', 'cm-meta'); if (P.role) meta.append(mk('span', '', P.role)); if (P.location) meta.append(mk('span', '', '📍 ' + P.location)); if (P.joined) meta.append(mk('span', '', 'Member since ' + month(P.joined))); id.append(meta);
     if (P.bio) id.append(mk('p', 'cm-bio', P.bio)); if ((P.interests || []).length) { const ch = mk('div', 'chips'); P.interests.forEach(i => ch.append(mk('span', 'chip', i))); id.append(ch); }
-    const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers'], [P.stats.following, 'Following'], [P.stats.posts, 'Posts']].forEach(([n, l]) => { const d = mk('div'); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); st.appendChild(d); });
+    const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers', 'followers'], [P.stats.following, 'Following', 'following'], [P.stats.posts, 'Posts', 'posts']].forEach(([n, l, k]) => { const d = mk('button', 'cm-stat'); d.type = 'button'; d.setAttribute('aria-label', l + ': ' + n); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); d.onclick = () => k === 'posts' ? (window.__cmShow && window.__cmShow('posts')) : peopleSheet(P, k); st.appendChild(d); });
     const act = mk('div', 'cm-act'); side.append(st, act); head.append(id, side); root.appendChild(head);
     const refresh = () => location.reload();
     if (R.self) { const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
@@ -294,6 +307,7 @@
     const T = [['posts', 'Posts'], ['about', 'About'], ['collections', 'Collections'], ['community', 'Community'], ['reputation', 'Reputation']];
     const show = async k => { tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); pane.textContent = ''; history.replaceState(null, '', '?u=' + P.username + (k === 'posts' ? '' : '&tab=' + k)); await ({ posts: postsTab, about, activity, collections, community, reputation }[k])(pane, P, R, x.j); };
     T.forEach(([k, l]) => { const b = mk('button', '', l); b.type = 'button'; b.dataset.k = k; b.setAttribute('role', 'tab'); b.onclick = () => show(k); tabs.appendChild(b); });
+    window.__cmShow = k => { show(k); tabs.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
     root.append(tabs, pane); const first = q.get('tab'); show(T.some(t => t[0] === first) ? first : 'posts');
   }
   function badgeGrid(P) { const g = mk('div', 'badges'); (P.badges || []).forEach(b => { const d = mk('div', 'badge b-' + b.key), i = mk('i', '', b.key === 'verified' ? '' : (ICON[b.key] || '★')); if (b.key === 'verified') i.appendChild(vbadge('verified', 30)); const t = mk('div'); t.append(mk('b', '', b.label), mk('span', '', b.desc)); d.append(i, t); g.appendChild(d); }); if (!(P.badges || []).length) g.appendChild(mk('div', 'empty', 'No badges yet.')); return g; }

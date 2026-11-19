@@ -200,3 +200,12 @@
 .wl-av{position:relative;height:96px;margin:14px 0}.wl-av .ph-av{left:0;bottom:0}
 .wl-row{display:flex;gap:10px;margin-top:8px}.wl-row .btn2{flex:1;justify-content:center;min-height:52px;text-decoration:none}
 .wl-row .btn2{white-space:nowrap;padding:0 12px}
+/* clickable stats + people sheet */
+.cm-stat{border:0;background:none;font:inherit;color:inherit;flex:1;text-align:center;cursor:pointer;padding:4px 0;border-radius:14px;-webkit-tap-highlight-color:transparent}.cm-stat:active{background:rgba(0,0,0,.05)}
+.cm-stats .cm-stat+.cm-stat{border-left:.5px solid var(--line);border-radius:0}.cm-stat b{display:block;font-size:1.3rem;font-weight:700}.cm-stat span{font-size:.78rem;color:var(--mute)}
+.cm-sheet.ppl{max-height:85dvh;overflow:auto}.ppl-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.ppl-top h3{margin:0}
+.person .btn2.msg{min-height:38px;padding:0 12px;font-size:.88rem;background:var(--fill);color:var(--ink);text-decoration:none;white-space:nowrap}.person .btn2{white-space:nowrap}
+.person{flex-wrap:wrap}
+.ppl .person{flex-wrap:wrap;gap:10px}.ppl .person .grow{flex:1 1 calc(100% - 60px);min-width:0}.ppl .person>.btn2{flex:1;justify-content:center;min-height:40px}.ppl .person .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppl .people{display:grid;gap:8px;min-width:0}.ppl .person{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}.ppl .person .grow>*{min-width:0;overflow:hidden;text-overflow:ellipsis}.ppl .person .grow .sub{white-space:normal}
+.ppl .person>.btn2{background:var(--card);box-shadow:0 0 0 .5px var(--line)}.ppl .person>.btn2.outline{background:var(--brand);color:#fff}
