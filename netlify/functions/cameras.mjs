@@ -73,6 +73,20 @@ export const PROVIDERS = {
       if (!okCount) throw new Error('no Caltrans district answered');
       out.partial = okCount < 12; return out;
     } },
+  atx: { name: 'City of Austin Transportation & Public Works (traffic cameras)', state: 'TX', bbox: [-98.2, 29.9, -97.3, 30.8], viewer: 'https://data.austintexas.gov/d/b4k4-adkb',
+    // Open-data directory (Socrata, no key). Only cameras the city marks TURNED_ON; each has its own public snapshot URL.
+    async load() {
+      const d = await getJson('https://data.austintexas.gov/resource/b4k4-adkb.json?' + new URLSearchParams({ '$where': "camera_status='TURNED_ON'", '$select': 'camera_id,location_name,primary_st,cross_st,location,screenshot_address,modified_date', '$limit': '2000' }), 12000);
+      if (!Array.isArray(d)) throw new Error('bad Austin answer');
+      const out = [];
+      for (const x of d) { const co = x.location && x.location.coordinates, lng = co ? num(co[0]) : null, lat = co ? num(co[1]) : null, img = https(x.screenshot_address);
+        if (!validLL(lat, lng) || !img || x.camera_id == null) continue;
+        const name = String(x.location_name || '').replace(/\s+/g, ' ').trim() || 'Austin camera ' + x.camera_id;
+        out.push({ src: 'atx', id: String(x.camera_id), name, road: String(x.primary_st || '').trim(), direction: '', lat, lng, kind: 'snapshot', type: 'Traffic camera', image: img, video: '', viewer: 'https://data.austintexas.gov/d/b4k4-adkb',
+          operator: 'City of Austin Transportation & Public Works', sourceMeta: x.modified_date ? 'Directory record ' + String(x.modified_date).slice(0, 10) : '' }); }
+      if (!out.length) throw new Error('Austin returned no cameras');
+      return out;
+    } },
   fmy: { name: 'Visit Fort Myers official webcams (Lee County VCB)', state: 'FL', bbox: [-82.4, 26.2, -81.6, 26.9], viewer: 'https://www.visitfortmyers.com/webcams',
     async load() { return BEACH_CAMS; } },
   // Key-based feeds: switched on only when the key is set on the server AND a real record has been verified (see VERIFIED below).
