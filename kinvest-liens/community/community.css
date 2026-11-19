@@ -181,3 +181,17 @@
 .pv-f{flex:0 0 100%;scroll-snap-align:center;display:grid;place-items:center}.pv-f img{max-width:100%;max-height:100dvh;object-fit:contain}
 .pv-x{position:absolute;top:calc(12px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:1.6rem}
 .pv-n{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#ddd;font-size:.85rem}
+/* like / comment / share */
+.p-cl{display:flex;justify-content:flex-start;margin:10px 0 0}.p-cnt{border:0;background:none;color:var(--mute);font-size:.88rem;padding:4px 0;min-height:32px}
+.p-bar{display:flex;border-top:.5px solid var(--line);margin:8px -6px 0;padding-top:4px}
+.p-act{flex:1;border:0;background:none;min-height:44px;border-radius:12px;font-weight:600;color:var(--mute);font-size:.95rem}.p-act:active{background:var(--fill)}
+.p-act.on{color:#ff2d55}
+.pcard .p-ph+div .p-cl{margin-top:22px}
+.p-cmts{border-top:.5px solid var(--line);margin:6px -16px -16px;padding:12px 16px 16px;background:var(--fill);border-radius:0 0 22px 22px}
+.p-clist{display:grid;gap:10px;margin-bottom:10px}.p-c{display:flex;gap:8px}.p-c .mini{width:32px!important;height:32px!important;font-size:.72rem}
+.p-cb{background:var(--card);border-radius:16px;padding:8px 12px;display:inline-block;max-width:100%}.p-ch{display:flex;align-items:center;gap:4px}.p-ch .nm{font-weight:700;font-size:.88rem;color:var(--ink);text-decoration:none}
+.p-ct{font-size:.95rem;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:2px}.p-cm{font-size:.76rem;color:var(--mute);margin:3px 0 0 10px;display:flex;gap:10px}.p-cm button{border:0;background:none;color:var(--mute);font-weight:600;padding:0;min-height:24px}
+.p-cform{display:flex;gap:8px;align-items:flex-end}.p-cform textarea{flex:1;border:0;border-radius:18px;padding:10px 14px;font:inherit;font-size:16px;resize:none;background:var(--card);color:var(--ink);min-height:42px}
+.p-csend{border:0;border-radius:999px;background:var(--brand);color:#fff;font-weight:700;min-height:42px;padding:0 16px}.p-csend[disabled]{opacity:.4}
+.p-cup{font-size:.9rem}
+.p-c .mini{border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;color:#fff;font-weight:700;background:linear-gradient(145deg,#34c759,#0b6e4f)}.p-c .mini.f{background:#0b0f14;border:1.5px solid var(--gold)}.p-c .mini.f img{width:72%;height:auto}.p-c .mini.ph img{width:100%;height:100%;object-fit:cover}

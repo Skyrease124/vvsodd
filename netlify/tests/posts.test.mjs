@@ -61,4 +61,26 @@ r = await call(P, { action: 'setPhoto', kind: 'cover', data: null }); ok(r.s ===
   const img = await media(new Request('http://x' + pst.photos[0], { headers: { cookie: A } })); const bb = Buffer.from(await img.arrayBuffer()); ok(img.status === 200 && bb.indexOf(Buffer.from('GPS')) === -1, 'photo served without hidden location data');
   ok((await media(new Request('http://x' + pst.photos[0]))).status === 401, 'post photos need sign-in');
   await call(F, { action: 'deletePost', key: pst.key }); ok((await media(new Request('http://x' + pst.photos[0], { headers: { cookie: A } }))).status === 404, 'deleting the post removes its photos'); }
+// likes, comments, share
+{ process.env.POST_LIMIT_HOUR = '1000'; const pu = await auth.getUser('pat@example.com'); pu.push = { enabled: true, subscribed: true }; await auth.saveUser(pu);
+  const sent = []; const of = globalThis.fetch; process.env.ONESIGNAL_REST_API_KEY = 'os_v2_app_x'; globalThis.fetch = async (u, o) => { if (String(u).includes('onesignal')) { sent.push(JSON.parse(o.body)); return new Response('{"id":"n"}', { status: 200 }); } return of(u, o); };
+  const x0 = await call(P, { action: 'createPost', text: 'Sample post for likes (TEST FIXTURE)' }); const key = mp.uid + '_' + x0.j.post.id;
+  let x = await call(A, { action: 'like', key }); ok(x.s === 200 && x.j.likes === 1 && x.j.liked, 'free member can like');
+  x = await call(A, { action: 'like', key }); ok(x.j.likes === 1, 'liking twice counts once');
+  await call(F, { action: 'like', key }); ok((await call(A, { post: key })).j.post.likes === 2, 'like count');
+  ok(sent.filter(s => /liked your post/.test(s.contents.en)).length === 1, 'likes are combined: one push per post per hour');
+  x = await call(A, { action: 'unlike', key }); ok(x.j.likes === 1 && !x.j.liked, 'unlike');
+  ok((await call(P, { likers: key })).j.rows.some(r => r.username === 'pricepocketasset'), 'see who liked');
+  x = await call(A, { action: 'comment', key, text: 'hi' }); ok(x.s === 402, 'free members cannot comment (server refuses)');
+  sent.length = 0; x = await call(F, { action: 'comment', key, text: 'Great <b>post</b>' }); ok(x.s === 200 && !/[<>]/.test(x.j.comment.text) && x.j.comments === 1, 'paid member comments; HTML removed');
+  ok(sent.length === 1 && /commented/.test(sent[0].headings.en) && sent[0].url.endsWith('/community/post/?k=' + key), 'author gets a comment push that opens the post');
+  x = await call(F, { action: 'comment', key, text: 'Great <b>post</b>' }); ok(x.s === 429, 'repeated comment refused');
+  const cl = await call(A, { comments: key }); ok(cl.j.rows.length === 1 && !cl.j.rows[0].canDelete, 'free members read comments');
+  const ck = cl.j.rows[0].key; x = await call(A, { action: 'deleteComment', key: ck }); ok(x.s === 403, 'others cannot delete a comment');
+  x = await call(A, { action: 'reportComment', key: ck, category: 'Spam' }); ok(x.s === 200 && (await call(F, { reports: 1 })).j.reports.some(r => r.comment === ck), 'comment report reaches the owner queue');
+  x = await call(P, { action: 'deleteComment', key: ck }); ok(x.s === 200 && (await call(A, { post: key })).j.post.comments === 0, 'post author can delete comments on their post');
+  await call(P, { action: 'saveProfile', notif: { social: false } }); sent.length = 0; await call(F, { action: 'comment', key, text: 'another' }); ok(sent.length === 0, 'likes and comments notifications can be turned off');
+  await call(A, { action: 'block', uid: mp.uid }); ok((await call(A, { post: key })).s === 404 && (await call(A, { action: 'like', key })).s === 404, 'blocked: cannot see or like');
+  await call(A, { action: 'unblock', uid: mp.uid }); ok((await call(A, { post: 'bad' })).s === 404, 'bad post link gives not available');
+  globalThis.fetch = of; }
 console.log('# pass ' + pass);
