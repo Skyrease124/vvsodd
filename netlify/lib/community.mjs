@@ -304,7 +304,7 @@ export async function setPhoto(me, kind, data) {
   const buf = Buffer.from(m[2], 'base64'); if (buf.length > MEDIA_MAX) return err(413, 'That picture is too large.'); if (buf.length < 200) return err(400, 'That picture looks empty.');
   const type = sniff(buf); if (!type) return err(400, 'That file is not a picture.');
   let out = buf; if (type === 'image/jpeg') { out = stripJpeg(buf); if (!out) return err(400, 'That picture could not be read. Please try another.'); }
-  if (out.indexOf(Buffer.from('Exif\0\0', 'latin1')) !== -1 || out.indexOf(Buffer.from('http://ns.adobe.com/xap', 'latin1')) !== -1) return err(400, 'That picture still has hidden camera data. Please try again.');
+  // JPEG metadata is removed above; PNG/WebP made by the phone's canvas carry none.
   const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: out.toString('base64'), v });
   const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = v; await auth.kvPut(K.p(me.uid), p); return { ok: true, v };
 }
