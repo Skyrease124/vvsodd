@@ -91,4 +91,14 @@ r = await call(P, { action: 'setPhoto', kind: 'cover', data: null }); ok(r.s ===
   await call(A, { action: 'follow', uid: mp.uid }); x = await nc(P); ok(x.j.items[0].kind === 'follow' && /started following you/.test(x.j.items[0].text), 'new follower shows in the bell');
   await nf(new Request('http://x/n', { method: 'POST', headers: { cookie: P } })); ok((await nc(P)).j.items.every(i => i.read), 'opening the bell marks everything read');
   ok(!(await nc(A)).j.items.some(i => /Sample post for likes/.test(i.text)), 'others never see my notifications'); }
+// new sign-up -> owner bell + private push (never the member)
+{ const OSLib = await import('../lib/onesignal.mjs'); const OSL_ext = e => OSLib.externalId(e); const acct = (await import('../functions/account.mjs')).default; const nf = (await import('../functions/notifications.mjs')).default;
+  const fu = await auth.getUser('founder@example.com'); fu.push = { enabled: true, subscribed: true }; await auth.saveUser(fu);
+  const sent2 = []; const of2 = globalThis.fetch; process.env.ONESIGNAL_REST_API_KEY = 'os_v2_app_x'; globalThis.fetch = async (u, o) => { if (String(u).includes('onesignal')) { sent2.push(JSON.parse(o.body)); return new Response('{"id":"n"}', { status: 200 }); } return of2(u, o); };
+  const r = await acct(new Request('http://x/a', { method: 'POST', body: JSON.stringify({ action: 'signup', email: 'friend@example.com', password: 'password123' }), headers: { 'x-nf-client-connection-ip': '9.9.9.9' } }), {}); ok(r.status === 200, 'sign-up still works');
+  await new Promise(res => setTimeout(res, 100));
+  const fb = await (await nf(new Request('http://x/n', { headers: { cookie: F } }))).json(); ok(fb.items.some(i => i.kind === 'signup' && /joined PricePocketAsset/.test(i.text)), 'owner bell shows the new member');
+  ok(sent2.some(p => /New member joined/.test(p.headings.en) && p.include_aliases.external_id[0] === OSL_ext('founder@example.com')), 'owner gets a private push for the new member');
+  ok(!sent2.some(p => p.include_aliases && p.include_aliases.external_id[0] !== OSL_ext('founder@example.com')), 'nobody else is notified');
+  globalThis.fetch = of2; }
 console.log('# pass ' + pass);
