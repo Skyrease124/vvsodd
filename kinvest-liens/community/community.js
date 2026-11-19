@@ -82,7 +82,7 @@
     ov.append(sh); document.body.append(ov); requestAnimationFrame(() => ov.classList.add('on'));
     const r = await get({ u: P.username, list: kind }); const rows = r.j.rows || []; list.textContent = '';
     rows.forEach(p => list.append(personRow(p, { follow: true, message: true })));
-    if (kind === 'followers' && P.founder && r.j.systemCount) list.append(mk('div', 'empty', Number(r.j.systemCount).toLocaleString('en-US') + ' members are connected to the Founder.'));
+    
     if (!rows.length && !(kind === 'followers' && P.founder)) list.append(mk('div', 'empty', kind === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'));
   }
   function needSignin(root) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'Sign in to join the community'), mk('p', 'muted', 'The PricePocketAsset community is for members. Sign in or create a free account to see profiles.')); const a = mk('a', 'btn2 primary', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); c.append(a); root.appendChild(c); }

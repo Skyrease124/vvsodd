@@ -142,9 +142,9 @@ async function removeEdge(a, b) {
 // A deleted key is stored as null and filtered out of every list (the blob store has no delete in this helper).
 async function edges(prefix, cap = 500) { const ks = (await auth.kvList(prefix)).slice(0, cap); const out = []; for (const k of ks) { const v = await auth.kvGet(k); if (v) out.push(k.slice(prefix.length)); } return out; }
 export async function listFollows(target, kind, viewer, { limit = 50, offset = 0 } = {}) {
-  const ids = await edges(kind === 'followers' ? `cr_${target.uid}_` : `cf_${target.uid}_`), f = await founderUid(), rows = [];
+  const ids = [...await edges(kind === 'followers' ? `cr_${target.uid}_` : `cf_${target.uid}_`)], f = await founderUid(), rows = [];
   if (kind === 'following' && f && target.uid !== f && await auth.kvGet(K.s(target.uid))) { const fp = await getByUid(f); if (fp) rows.push(Object.assign(await miniView(fp, viewer), { system: true, since: ((await auth.kvGet(K.s(target.uid))) || {}).since })); }   // Founder stays at the top
-  if (kind === 'followers' && f && target.uid === f) { /* the Founder's followers are the system connections: counted, not listed one by one */ }
+  if (kind === 'followers' && f && target.uid === f) { for (const k of (await auth.kvList('cs_')).slice(0, 500)) { const id = k.slice(3); if (id !== f && !ids.includes(id)) ids.push(id); } }   // the Founder's followers: every member connected to the Founder
   const mine = new Set(); for (const id of ids.slice(offset, offset + limit)) { const p = await getByUid(id); if (!p || !(await isVisible(p))) continue; if (await auth.kvGet(K.b(viewer.uid, id)) || await auth.kvGet(K.b(id, viewer.uid))) continue; rows.push(await miniView(p, viewer.uid, mine)); }
   for (const r of rows) { if (r.uid === viewer.uid) { r.self = true; r.canMessage = false; continue; } const tp = await getByUid(r.uid); const [fo, fb] = await Promise.all([auth.kvGet(K.f(viewer.uid, r.uid)), auth.kvGet(K.f(r.uid, viewer.uid))]); r.canMessage = messageRule(tp && tp.privacy, { self: false, blocked: false, following: !!fo, followedBy: !!fb }).ok; }
   return { rows, total: ids.length + (kind === 'following' && rows.some(r => r.system) ? 1 : 0), systemCount: kind === 'followers' && f && target.uid === f ? ((target.stats || {}).followers || 0) : undefined };
