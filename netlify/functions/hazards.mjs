@@ -14,11 +14,14 @@ const inUS = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && lat >
 const centroid = ring => { let x = 0, y = 0, n = 0; for (const p of ring) { if (Array.isArray(p) && p.length >= 2) { x += p[0]; y += p[1]; n++; } } return n ? [x / n, y / n] : null; };
 const point = g => { if (!g || !g.coordinates) return null; if (g.type === 'Point') return g.coordinates; if (g.type === 'Polygon') return centroid(g.coordinates[0] || []); return null; };
 const decode = s => String(s).replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-// "Major" = what a news line would report: recent, large wildfires (not prescribed burns), plus any open storm, flood or volcano event.
+// "Major" = what a news line would report: large wildfires (not prescribed burns) with a recent source report, spread across states, plus any recent storm, flood or volcano event.
+// Most "open" fires in the feed are old season fires nobody has closed, so the window is 90 days, the most recent first, and the line always shows the date of the last report.
 export function major(events, now = Date.now()) {
   const age = e => { const t = Date.parse(e.date); return Number.isFinite(t) ? (now - t) / 864e5 : 999; };
-  const fires = events.filter(e => e.cat === 'wildfires' && !/prescribed|\brx\b/i.test(e.title) && e.unit === 'acres' && e.mag >= 1000 && age(e) <= 14).sort((a, b) => b.mag - a.mag).slice(0, 8);
-  const rest = events.filter(e => e.cat !== 'wildfires' && age(e) <= 14).slice(0, 6);
+  const stateOf = e => String(e.title).split(',').pop().trim().toLowerCase();
+  const pool = events.filter(e => e.cat === 'wildfires' && !/prescribed|\brx\b/i.test(e.title) && e.unit === 'acres' && e.mag >= (age(e) <= 30 ? 100 : 500) && age(e) <= 90).sort((a, b) => age(a) - age(b) || b.mag - a.mag);
+  const per = {}, fires = []; for (const e of pool) { const s = stateOf(e); if ((per[s] || 0) >= 2) continue; per[s] = (per[s] || 0) + 1; fires.push(e); if (fires.length >= 14) break; }
+  const rest = events.filter(e => e.cat !== 'wildfires' && age(e) <= 30).slice(0, 6);
   return fires.concat(rest).map(e => ({ id: e.id, cat: e.cat, catTitle: e.catTitle, name: decode(e.title).replace(/^(Wildfire|Incident Complex|Prescribed Fire)\s+/i, '').slice(0, 80), mag: e.mag, unit: e.unit, date: e.date }));
 }
 const https = u => (typeof u === 'string' && /^https:\/\//.test(u)) ? u : '';
