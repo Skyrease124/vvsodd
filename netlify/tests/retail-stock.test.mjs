@@ -77,6 +77,6 @@ ok(R.STATUSES.every(s => ['upcoming','monitoring','in_stock','low_stock','sold_o
 // 7. Regression: the live Best Buy page keeps its invite state in page data (script JSON), not visible text.
 const LIVE_DATA = `<html><head>${LD('https://schema.org/InStock')}</head><body><button>Add to Cart</button><script>window.__DATA={\"header\":\"Exclusive sales event\",\"registeredEventTitle\":\"You've requested an invite\",\"registeredEventMessage\":\"If you’re selected to participate in this event, you’ll receive an invitation with event details.\"}</script></body></html>`;
 ok(cls(LIVE_DATA).status === 'invite_only' && /Exclusive sales event/.test(cls(LIVE_DATA).reason), 'invite state inside page data wins over an enabled Add to Cart (live Best Buy case)');
-const REVIEW = `<html><body><div>Great set. A winning lottery ticket would have been nice.</div><button>Add to Cart</button><div>$49.99</div></body></html>`;
+const REVIEW = `<html><body><script>{"reviewBody":"A winning lottery ticket would have been nice."}</script><button>Add to Cart</button><div>$49.99</div></body></html>`;
 ok(cls(REVIEW).status === 'in_stock', 'a customer review mentioning a lottery does not block a real Add to Cart');
 console.log('# pass ' + pass);
