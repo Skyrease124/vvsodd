@@ -340,7 +340,10 @@ async function handle(event) {
     const u = await auth.createUser(email, pw, owner);
     if (!u) return json(409, { error: 'That email already has an account. Please sign in.' });
     if (hasCode && (await auth.redeemCode(b.accessCode, email)) === 'ok') { u.family = true; await auth.saveUser(u); }
-    try { await Community.ensureProfile(u); } catch (e) { /* the community profile is created on first visit if this fails; a signup never fails because of it */ }
+    let newProf = null; try { newProf = await Community.ensureProfile(u); } catch (e) { /* the community profile is created on first visit if this fails; a signup never fails because of it */ }
+    // Owner-only: a bell item and a private phone push for the new member. Neither can ever block or fail a signup.
+    try { if (!u.owner && newProf) { const fu = await Community.founderUid(); const N = await import('../lib/notify.mjs'); const R = await import('../lib/retail.mjs');
+      await Promise.race([Promise.all([fu ? N.add(fu, { kind: 'signup', actor: newProf.uid, text: 'joined PricePocketAsset (@' + newProf.username + ').', path: '/community/profile/?u=' + newProf.username }) : null, R.notifyOwner('👋 New member joined', '@' + newProf.username + ' just signed up.', '/community/profile/?u=' + newProf.username, 'signup' + newProf.uid)]), new Promise(r => setTimeout(r, 4000))]); } } catch (e) { /* never affects signup */ }
     await Promise.race([alerts.notifySignup(u, u.family ? 'with a family access code' : ''), new Promise(r => setTimeout(r, 4000))]);   // an alert never blocks or fails a signup
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
