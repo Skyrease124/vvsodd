@@ -4,7 +4,7 @@
 // LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET come from Netlify environment variables and never reach the browser.
 // Permissions are decided here, from the signed-in account, never from anything the browser sends.
 import crypto from 'node:crypto';
-import { AccessToken, RoomServiceClient } from 'livekit-server-sdk';
+import { AccessToken, RoomServiceClient, WebhookReceiver } from 'livekit-server-sdk';
 import * as auth from './auth.mjs';
 import * as C from './community.mjs';
 
@@ -51,7 +51,7 @@ export async function start(me, b) {
   if (existing) return { ok: true, already: true, session: pub(existing, me) };   // never two active lives for one host
   const s = { id: rid(8), host: me.uid, room: 'ppl-' + rid(10), title, visibility: 'public', is_live: true, started_at: now(), ended_at: null, created_at: now() };
   try { await rooms().createRoom({ name: s.room, emptyTimeout: 300, maxParticipants: 50 }); } catch (e) { return err(502, 'Could not start the live room. Please try again in a moment.'); }
-  await auth.kvPut('ls_' + s.id, s); await auth.kvPut('la_' + me.uid, { id: s.id });
+  await auth.kvPut('ls_' + s.id, s); await auth.kvPut('la_' + me.uid, { id: s.id }); await auth.kvPut('lr_' + s.room, { id: s.id });
   return { ok: true, session: pub(s, me) };
 }
 
@@ -106,3 +106,14 @@ export async function remove(me, id, identity) {
   return { ok: true };
 }
 export async function wasRemoved(id, uid) { return !!(await auth.kvGet(`lk_${id}_${uid}`)); }
+
+// ---- LiveKit webhook: when LiveKit closes a room by itself (everyone left, host's phone died), the database must stop saying "live" ----
+export async function webhook(body, authHeader) {
+  if (!configured()) return err(503, SETUP_MESSAGE, { setup: true });
+  let ev; try { ev = await new WebhookReceiver(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET).receive(body, authHeader); } catch (e) { return err(401, 'Bad signature.'); }
+  if (ev.event === 'room_finished' && ev.room && ev.room.name) {
+    const m = await auth.kvGet('lr_' + ev.room.name); const s = m && m.id ? await sGet(m.id) : null;
+    if (s && s.is_live) { s.is_live = false; s.ended_at = now(); await auth.kvPut('ls_' + s.id, s); await auth.kvPut('la_' + s.host, null); return { ok: true, closed: s.id }; }
+  }
+  return { ok: true, ignored: ev.event };
+}
