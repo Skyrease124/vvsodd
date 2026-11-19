@@ -6,6 +6,7 @@
 import crypto from 'node:crypto';
 import { AccessToken, RoomServiceClient, WebhookReceiver } from 'livekit-server-sdk';
 import * as auth from './auth.mjs';
+import * as KEYS from './apikeys.mjs';
 import * as C from './community.mjs';
 
 export const TOKEN_TTL = '15m';
@@ -14,14 +15,18 @@ const rid = n => crypto.randomBytes(n).toString('hex');
 const now = () => new Date().toISOString();
 const clean = (s, max) => String(s == null ? '' : s).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 const err = (status, error, extra) => Object.assign({ ok: false, status, error }, extra || {});
-export const configured = () => !!(process.env.LIVEKIT_URL && process.env.LIVEKIT_API_KEY && process.env.LIVEKIT_API_SECRET);
-export const SETUP_MESSAGE = 'PricePocket Live is not switched on yet. The owner needs to add LIVEKIT_URL, LIVEKIT_API_KEY and LIVEKIT_API_SECRET in Netlify (Site configuration, Environment variables).';
-const httpUrl = () => String(process.env.LIVEKIT_URL || '').replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
+// The three settings come from Netlify environment variables OR from the owner's key box (/owner/keys/, stored on the server). A Netlify variable wins if both exist.
+const K = n => KEYS.keyOf(n);
+export const loadKeys = () => KEYS.load();
+export const configured = () => !!(K('LIVEKIT_URL') && K('LIVEKIT_API_KEY') && K('LIVEKIT_API_SECRET'));
+export const SETUP_MESSAGE = 'PricePocket Live is not switched on yet. The owner needs to add LIVEKIT_URL, LIVEKIT_API_KEY and LIVEKIT_API_SECRET on the Owner keys page (or in Netlify environment variables).';
+const httpUrl = () => String(K('LIVEKIT_URL') || '').replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
 
 // The room service is injectable so tests never touch the network.
 let svc = null;
-export const _setRoomService = s => { svc = s; };
-const rooms = () => svc || (svc = new RoomServiceClient(httpUrl(), process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET));
+export const _setRoomService = s => { svc = s; svcSig = ''; };
+let svcSig = '';
+const rooms = () => { if (svc && !svcSig) return svc; const sig = httpUrl() + K('LIVEKIT_API_KEY') + K('LIVEKIT_API_SECRET'); if (svcSig !== sig) { svc = new RoomServiceClient(httpUrl(), K('LIVEKIT_API_KEY'), K('LIVEKIT_API_SECRET')); svcSig = sig; } return svc; };
 
 // What each role may do in a room. Subscriber-only rooms, viewer-only mode, raise-hand and co-hosts will be new roles here later.
 export function grantsFor(role, room) {
@@ -66,10 +71,10 @@ export async function token(me, id) {
   if (!isHost && (await wasRemoved(s.id, me.uid))) return err(403, 'You were removed from this live.');
   if (s.visibility !== 'public') return err(403, 'This live is not open to you.');   // later: subscriber-only checks go here
   const role = isHost ? 'host' : 'guest';
-  const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, { identity: me.uid, name: me.name, ttl: TOKEN_TTL,
+  const at = new AccessToken(K('LIVEKIT_API_KEY'), K('LIVEKIT_API_SECRET'), { identity: me.uid, name: me.name, ttl: TOKEN_TTL,
     metadata: JSON.stringify({ role, username: me.username, name: me.name, founder: !!me.founder }) });
   at.addGrant(grantsFor(role, s.room));
-  return { ok: true, token: await at.toJwt(), url: process.env.LIVEKIT_URL, role, session: pub(s, host), me: { uid: me.uid, username: me.username, name: me.name } };
+  return { ok: true, token: await at.toJwt(), url: K('LIVEKIT_URL'), role, session: pub(s, host), me: { uid: me.uid, username: me.username, name: me.name } };
 }
 
 // ---- status (profile page + room polling) ----
@@ -110,7 +115,7 @@ export async function wasRemoved(id, uid) { return !!(await auth.kvGet(`lk_${id}
 // ---- LiveKit webhook: when LiveKit closes a room by itself (everyone left, host's phone died), the database must stop saying "live" ----
 export async function webhook(body, authHeader) {
   if (!configured()) return err(503, SETUP_MESSAGE, { setup: true });
-  let ev; try { ev = await new WebhookReceiver(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET).receive(body, authHeader); } catch (e) { return err(401, 'Bad signature.'); }
+  let ev; try { ev = await new WebhookReceiver(K('LIVEKIT_API_KEY'), K('LIVEKIT_API_SECRET')).receive(body, authHeader); } catch (e) { return err(401, 'Bad signature.'); }
   if (ev.event === 'room_finished' && ev.room && ev.room.name) {
     const m = await auth.kvGet('lr_' + ev.room.name); const s = m && m.id ? await sGet(m.id) : null;
     if (s && s.is_live) { s.is_live = false; s.ended_at = now(); await auth.kvPut('ls_' + s.id, s); await auth.kvPut('la_' + s.host, null); return { ok: true, closed: s.id }; }
