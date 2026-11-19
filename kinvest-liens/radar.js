@@ -161,7 +161,11 @@ window.TaxRadarOn = true;
   // ---- Find my deal (Opportunities)
   let fOpen = !!saved.fOpen;
   function renderFilters() {
-    const f = $('rfilters'); f.textContent = ''; f.hidden = S.tab !== 'opp'; if (S.tab !== 'opp') return;
+    // "Find my deal" is removed from the page. Make sure no old saved choice keeps filtering the map invisibly.
+    S.vac = false; S.types = new Set(['county-held', 'lien-sale', 'deed', 'state-held']); S.budget = null;
+    const f = $('rfilters'); f.textContent = ''; f.hidden = true; return;
+    // (previous panel code below is unreachable on purpose and kept only until it is deleted in a cleanup)
+    f.hidden = S.tab !== 'opp'; if (S.tab !== 'opp') return;
     const head = mk('div', 'rf-head'); const tg = mk('button', 'rf-toggle'); tg.type = 'button'; tg.setAttribute('aria-expanded', String(fOpen));
     tg.append(mk('b', '', 'Find my deal'), mk('span', 'rf-sum', ' ' + (filtersOn() ? 'filters on' : 'filter by type, sale and budget')), mk('span', 'rf-car', fOpen ? ' \u25B4' : ' \u25BE'));
     tg.addEventListener('click', () => { fOpen = !fOpen; persist(); renderFilters(); renderFilterStatus(lastStat); }); head.appendChild(tg); f.appendChild(head);
