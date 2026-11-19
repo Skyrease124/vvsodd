@@ -100,7 +100,7 @@
   function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || fitPad(), maxZoom: 17.5, duration: REDUCED ? 0 : 1100, easing: t => 1 - Math.pow(1 - t, 3) }); }
 
   // ---------- top bar and filters ----------
-  const ICON = { layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
+  const ICON = { haz: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/></svg>', layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
   function iconBtn(svg, label, fn, cls) { const b = mk('button', 'pm-ib ' + (cls || '')); b.type = 'button'; b.innerHTML = svg; b.setAttribute('aria-label', label); b.title = label; b.addEventListener('click', fn); return b; }
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
@@ -113,7 +113,7 @@
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
     const lay = iconBtn(ICON.layers, 'Map type', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => openAi(), 'pm-aib');
-    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); stack.append(lay, fb, camb, aib, seg);
+    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, camb, hzb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     t.append(pill, stack, area); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
@@ -338,6 +338,43 @@
   }
   function aiAgain() { const b = mk('button', 'pm-btn', 'Ask something else'); b.type = 'button'; b.style.margin = '6px 0 12px'; b.addEventListener('click', () => { aiEls.out.textContent = ''; aiEls.tryH.hidden = false; aiEls.grid.hidden = false; aiEls.i.value = ''; setStateHl([]); if (mapReady) map.getSource('near').setData(empty); aiEls.i.focus(); }); aiEls.out.appendChild(b); }
 
+    // ---------- Active hazards: open wildfire / flood / storm / volcano / landslide events from NASA EONET via /hazards. An information layer, not a parcel risk score. ----------
+  const HZ = { wildfires: ['Wildfire', '#ef4444'], floods: ['Flood', '#3b82f6'], severeStorms: ['Storm', '#a855f7'], volcanoes: ['Volcano', '#f97316'], landslides: ['Landslide', '#a16207'] };
+  let hzOn = false, hzData = null;
+  function hzOff() { hzOn = false; const p = $('pmHz'); if (p) p.hidden = true; const b = $('pmHzBtn'); if (b) b.classList.remove('on'); if (mapReady && map.getLayer('hz-c')) map.setLayoutProperty('hz-c', 'visibility', 'none'); if (hzPop) { hzPop.remove(); hzPop = null; } }
+  let hzPop = null;
+  function toggleHaz() { if (hzOn) return hzOff(); openHaz(); }
+  function hzEnsure() {
+    if (map.getSource('hz')) return;
+    map.addSource('hz', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    const col = ['match', ['get', 'cat']]; Object.keys(HZ).forEach(k => col.push(k, HZ[k][1])); col.push('#ef4444');
+    map.addLayer({ id: 'hz-c', type: 'circle', source: 'hz', paint: { 'circle-color': col, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 6, 9, 9, 13, 11], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 2, 'circle-opacity': 0.92 } });
+    map.on('click', 'hz-c', e => { const f = e.features && e.features[0]; if (!f) return; const q = f.properties, h = mk('div'); h.style.cssText = 'color:#0b1220;font:14px/1.4 system-ui;max-width:220px';
+      h.appendChild(mk('b', '', q.title)); h.appendChild(mk('div', '', (HZ[q.cat] ? HZ[q.cat][0] : 'Event') + (q.date ? ' · reported ' + String(q.date).slice(0, 10) : '')));
+      h.appendChild(mk('div', '', 'Source: ' + q.source)); if (q.link && /^https:\/\//.test(q.link)) { const a = mk('a', '', 'Open source report'); a.href = q.link; a.target = '_blank'; a.rel = 'noopener'; h.appendChild(a); }
+      h.appendChild(mk('div', '', 'Event location only. Not a risk score for any parcel.')).style.cssText = 'font-size:12px;color:#475569;margin-top:4px';
+      if (hzPop) hzPop.remove(); hzPop = new maplibregl.Popup({ offset: 12, closeButton: true }).setLngLat(f.geometry.coordinates).setDOMContent(h).addTo(map); });
+    map.on('mouseenter', 'hz-c', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'hz-c', () => { map.getCanvas().style.cursor = ''; });
+  }
+  async function openHaz() {
+    let p = $('pmHz'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmHz'; p.setAttribute('aria-label', 'Active hazards'); $('pmTop').parentNode.appendChild(p); }
+    hzOn = true; $('pmHzBtn').classList.add('on'); p.hidden = false; const cp = $('pmCam'); if (cp) cp.hidden = true; if (typeof camOff === 'function' && camsOn) camOff(); $('pmPop').hidden = true; if (isMobile()) setSnap('peek');
+    p.textContent = ''; const hd = mk('div', 'hd'), x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close hazards'); x.addEventListener('click', hzOff); hd.append(mk('b', '', 'Active hazards'), x); p.appendChild(hd);
+    if (!mapReady) { p.appendChild(mk('p', 'note', 'The map is still loading.')); return; }
+    const st = mk('p', 'note', 'Checking current reports…'); p.appendChild(st);
+    if (!hzData) { try { const r = await fetch('/.netlify/functions/hazards', { credentials: 'same-origin' }); hzData = await r.json(); } catch (e) { hzData = null; } }
+    st.remove(); if (!hzOn) return;
+    if (!hzData || hzData.ok !== true) { p.appendChild(mk('p', 'pm-flag warn', 'Hazard reports are unavailable right now. That does not mean there are none. Try again in a few minutes.')); const b = mk('button', 'pm-btn', 'Try again'); b.type = 'button'; b.addEventListener('click', () => { hzData = null; openHaz(); }); p.appendChild(b); return; }
+    hzEnsure(); map.setLayoutProperty('hz-c', 'visibility', 'visible');
+    map.getSource('hz').setData({ type: 'FeatureCollection', features: hzData.events.map(e => ({ type: 'Feature', properties: { title: e.title, cat: e.cat, date: e.date, link: e.link, source: e.source }, geometry: { type: 'Point', coordinates: [e.lng, e.lat] } })) });
+    const lg = mk('div'); lg.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';
+    Object.keys(HZ).forEach(k => { const n = hzData.counts[k] || 0, c = mk('span', '', ''); c.style.cssText = 'display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.82rem'; const d = mk('i'); d.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' + HZ[k][1]; c.append(d, document.createTextNode(HZ[k][0] + ' · ' + n)); lg.appendChild(c); }); p.appendChild(lg);
+    if (!hzData.events.length) p.appendChild(mk('p', 'note', 'No open events in the U.S. in the latest report.'));
+    p.appendChild(mk('p', 'note', 'Open events reported in the U.S. by public agencies, via NASA EONET. Tap a dot for the source. Dots show where an event was reported, not which parcels are affected. This is not a risk score. Check the county and the official agency before you bid.'));
+    p.appendChild(mk('p', 'note', 'Updated ' + new Date(hzData.checked).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) + (hzData.stale ? ' (older report; the source is not answering)' : '')));
+    if (hzData.events.length) { const xs = hzData.events.map(e => e.lng), ys = hzData.events.map(e => e.lat); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: fitPad(), maxZoom: 8, duration: REDUCED ? 0 : 800 }); }
+  }
+
     // ---------- Live cameras (Pro): official public camera feeds near the map or a parcel. Uses the site's existing /cameras service; nothing is guessed. ----------
   let camsOn = false, camMk = [], camTimer = null, camHls = null, camLast = null, camSel = null, camCtl = null, camMove = null;
   const CAM_HLS = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js';
@@ -349,7 +386,7 @@
   function toggleCams() { if (camsOn) return camOff(); openCams(null, null, false); }
   function camMoved() { if (!camsOn) return; clearTimeout(camMove); camMove = setTimeout(() => { if (!camLast || !mapReady) return; const c = map.getCenter(); if (camHav(c.lat, c.lng, camLast.lat, camLast.lng) > Math.max(2, camLast.radius / 3)) openCams(null, null, true); }, 900); }
   async function openCams(center, radius, keep) {
-    const p = camPanel(); camsOn = true; $('pmCamBtn').classList.add('on'); p.hidden = false; $('pmPop').hidden = true; const ai = $('pmAi'); if (ai) ai.hidden = true; if (isMobile()) setSnap('peek');
+    if (hzOn) hzOff(); const p = camPanel(); camsOn = true; $('pmCamBtn').classList.add('on'); p.hidden = false; $('pmPop').hidden = true; const ai = $('pmAi'); if (ai) ai.hidden = true; if (isMobile()) setSnap('peek');
     p.textContent = ''; const hd = mk('div', 'hd'), x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close cameras'); x.addEventListener('click', camOff); hd.append(mk('b', '', 'Live cameras'), x); p.appendChild(hd);
     if (!signedIn || !paid) { const g = mk('p', 'pm-flag warn'); g.append(document.createTextNode(signedIn ? 'Live cameras are for Pro members. ' : 'Sign in to see live cameras. ')); const a = mk('a', '', signedIn ? 'See the Pro plan' : 'Sign in'); a.href = signedIn ? '/account/' : '/login/?next=/map/%3Fcams%3D1'; a.style.color = '#fde68a'; g.appendChild(a); p.appendChild(g); return; }
     if (!mapReady) { p.appendChild(mk('p', 'note', 'The map is still loading.')); return; }
