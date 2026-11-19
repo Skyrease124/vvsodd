@@ -1,0 +1,21 @@
+// Run: node netlify/tests/congress.test.mjs   (mocked Library of Congress answers; TEST FIXTURE data)
+import assert from 'node:assert/strict';
+import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
+process.env.USERS_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-')); process.env.CONGRESS_API_KEY = 'TESTKEY';
+const { default: api } = await import('../functions/congress.mjs'); const C = await import('../lib/congress.mjs');
+let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
+const mem = (id, name, p, ch, district) => ({ bioguideId: id, name, partyName: p, state: 'Testland', district, terms: { item: [{ chamber: ch === 'S' ? 'Senate' : 'House of Representatives', startYear: 2021 }] } });
+let calls = 0, down = false, seenKey = '';
+globalThis.fetch = async (u, o) => { calls++; seenKey = o && o.headers && o.headers['X-Api-Key']; if (down) return { ok: false, status: 500 };
+  return { ok: true, json: async () => ({ members: [mem('H2', 'Doe, Jane', 'Republican', 'H', 5), mem('S1', 'Roe, Richard Q.', 'Democratic', 'S'), mem('H1', 'Poe, Sam', 'Independent', 'H', 2), mem('S2', 'Moe, Ann', 'Republican', 'S'), { bioguideId: 'X', name: 'No Chamber' }] }) }; };
+const call = async q => { const r = await api(new Request('http://x/c?' + q), {}); return { s: r.status, j: await r.json() }; };
+let r = await call('state=fl'); ok(r.s === 200 && r.j.ok && r.j.members.map(m => m.id).join() === 'S2,S1,H1,H2', 'senators first, then House by district; entries without a chamber dropped');
+ok(r.j.members[1].name === 'Richard Q. Roe' && r.j.members[1].party === 'D' && r.j.members[2].district === '2', 'name flipped to first-last, party letter, district kept for House only');
+ok(r.j.members[0].link === 'https://bioguide.congress.gov/search/bioguide/S2' && seenKey === 'TESTKEY', 'official biography link; key sent only to the source in a header');
+ok(!JSON.stringify(r.j).includes('TESTKEY'), 'key never returned to the browser');
+await call('state=FL'); ok(calls === 1, 'cached 12 hours: second request makes no source call');
+ok((await call('state=ZZ')).s === 400 && (await call('state=')).s === 400, 'bad state rejected without a source call');
+C._reset(); down = true; r = await call('state=FL'); ok(r.j.ok === false && r.j.reason === 'lookup', 'outage reported as unavailable (card shows nothing rather than guessing)');
+delete process.env.CONGRESS_API_KEY; const KEYS = await import('../lib/apikeys.mjs'); C._reset(); down = false; r = await call('state=FL'); ok(r.j.ok === false && r.j.reason === 'nokey', 'no key saved: clean "nokey", no source call');
+ok((await api(new Request('http://x/c?state=FL', { method: 'POST' }), {})).status === 405, 'GET only');
+console.log(pass + ' passed');
