@@ -106,4 +106,27 @@ if (bbHtml) ok(R.parseHtml(bbHtml).image === 'https://pisces.bbystatic.com/image
   ok(!r2.found && r2.product.imageNote === 'Image not found' && r2.product.image === 'https://cdn.example.com/found.jpg', 'no image on the page -> "Image not found" flag; the saved image is not wiped by a failed read');
   ok(R.card(r2.product).imageNote === '' && R.card({ ...r2.product, image: '' }).imageNote === 'Image not found', 'cards show the flag only when there is no image');
   R._setFetch(async () => new Response('', { status: 503 })); }
+// 10. Amazon links: short links resolve by redirect only, one product per ASIN, affiliate kept separately
+const hops = {
+  'https://a.co/d/abc123': { status: 301, location: 'https://www.amazon.com/Sample-Item/dp/B0ABCDE123/ref=sr_1?tag=ppa-20&keywords=x' },
+  'https://amzn.to/xyz789': { status: 302, location: 'https://www.amazon.com/gp/product/B0ABCDE123?psc=1' },
+  'https://link.amazon/q1': { status: 301, location: 'https://www.amazon.co.uk/dp/B0ZZZZZZZZ' },
+  'https://a.co/loop': { status: 301, location: 'https://evil.example.com/steal' },
+};
+const calls = []; R._setFetch(async (u, o) => { calls.push(String(u)); const h = hops[String(u)]; if (h) return new Response(null, { status: h.status, headers: { location: h.location } }); return new Response('<html>page</html>', { status: 200 }); });
+const a1 = await R.createProduct('founder', { url: 'https://a.co/d/abc123', name: 'Sample Amazon item (TEST FIXTURE)', category: 'electronics', affiliateUrl: 'https://a.co/d/abc123' });
+ok(a1.ok && a1.product.url === 'https://www.amazon.com/dp/B0ABCDE123' && a1.product.asin === 'B0ABCDE123', 'a.co link resolves to the canonical Amazon product URL and saves the ASIN');
+ok(a1.product.affiliateUrl === 'https://a.co/d/abc123' && R.card(a1.product).buyUrl === 'https://a.co/d/abc123', 'the affiliate link is kept separately and the Buy button uses it');
+ok(a1.product.url === 'https://www.amazon.com/dp/B0ABCDE123' && R.card(a1.product).url === 'https://www.amazon.com/dp/B0ABCDE123', 'monitoring uses the canonical link, not the affiliate link');
+ok(calls.length === 1 && calls[0] === 'https://a.co/d/abc123', 'only the short link itself is requested: the product page is never read');
+const a2 = await R.createProduct('founder', { url: 'https://amzn.to/xyz789', name: 'Same item (TEST FIXTURE)', category: 'electronics' });
+ok(a2.status === 409 && a2.id === a1.product.id, 'a different Amazon link to the same ASIN is not a second product (dedupe by ASIN)');
+const a3 = await R.createProduct('founder', { url: 'https://www.amazon.com/Item/dp/B0ABCDE123?tag=zz-20', name: 'Same item again', category: 'electronics' });
+ok(a3.status === 409 && a3.id === a1.product.id, 'a full Amazon link with a tag to the same ASIN is also deduplicated');
+const a4 = await R.createProduct('founder', { url: 'https://link.amazon/q1', name: 'UK item', category: 'electronics' });
+ok(!a4.ok && /Amazon\.com/.test(a4.error), 'an Amazon link that leads to amazon.co.uk is refused with a clear message');
+const a5 = await R.createProduct('founder', { url: 'https://a.co/loop', name: 'Bad redirect', category: 'electronics' });
+ok(!a5.ok && /does not lead to Amazon/.test(a5.error), 'a short link that redirects off Amazon is refused');
+ok(R.checkUrl('https://a.co/d/abc123').retailer === 'amazon' && R.checkUrl('https://amzn.to/x').short === true && R.checkUrl('https://evil.com/a.co') === null, 'short links are accepted as Amazon; look-alike domains are not');
+ok(R.safeAffiliate('https://evil.example.com/?tag=x') === '' && R.safeAffiliate('http://www.amazon.com/dp/B0ABCDE123') === '', 'affiliate field only accepts https Amazon links');
 console.log('# pass ' + pass);

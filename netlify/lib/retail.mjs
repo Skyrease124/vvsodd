@@ -22,7 +22,7 @@ export const RETAILERS = {
   nike: { name: 'Nike', hosts: ['nike.com'] },
   target: { name: 'Target', hosts: ['target.com'] },
   walmart: { name: 'Walmart', hosts: ['walmart.com'] },
-  amazon: { name: 'Amazon', hosts: ['amazon.com'], noFetch: true },
+  amazon: { name: 'Amazon', hosts: ['amazon.com', 'a.co', 'amzn.to', 'link.amazon'], noFetch: true },
   bestbuy: { name: 'Best Buy', hosts: ['bestbuy.com'] },
   pokemoncenter: { name: 'Pokémon Center', hosts: ['pokemoncenter.com'] },
   gamestop: { name: 'GameStop', hosts: ['gamestop.com'] },
@@ -45,7 +45,8 @@ export function checkUrl(raw) {
   const key = Object.keys(RETAILERS).find(k => RETAILERS[k].hosts.some(h => host === h || host.endsWith('.' + h)));
   if (!key) return null;
   for (const p of [...u.searchParams.keys()]) if (/^(utm_|fbclid|gclid|ref|tag|cid|irgwc|clickid|affiliate)/i.test(p)) u.searchParams.delete(p);
-  u.hash = ''; return { url: u.toString().slice(0, 600), retailer: key };
+  u.hash = ''; const short = key === 'amazon' && /^(a\.co|amzn\.to|link\.amazon)$|\.link\.amazon$/.test(host);
+  return { url: u.toString().slice(0, 600), retailer: key, short };
 }
 export const safeLink = raw => { const c = checkUrl(raw); return c ? c.url : ''; };
 
@@ -150,14 +151,49 @@ function fields(p, b) {
   if (b.image !== undefined) { p.image = /^https:\/\/[^\s"'<>]{4,500}$/.test(String(b.image)) ? String(b.image) : ''; p.imageSource = 'manual'; p.imageNote = p.image ? '' : 'Image not found'; }
   if (b.category !== undefined) { if (!CATEGORIES.includes(b.category)) throw new Error('Pick a category.'); p.category = b.category; }
   if (b.variant !== undefined) p.variant = clean(b.variant, 60);
+  if (b.affiliateUrl !== undefined) p.affiliateUrl = safeAffiliate(b.affiliateUrl);
   if (b.releaseDate !== undefined) p.releaseDate = /^\d{4}-\d{2}-\d{2}/.test(String(b.releaseDate)) ? String(b.releaseDate).slice(0, 16) : '';
   if (b.price !== undefined) { const blank = b.price === '' || b.price === null; const n = blank ? null : num(b.price); if (!blank && n === null) throw new Error('Price must be a number.'); p.priceManual = n; }
   if (b.auto !== undefined) p.auto = !!b.auto && !RETAILERS[p.retailer].noFetch;
 }
+// ---- Amazon links. Short links (a.co, amzn.to, link.amazon) are resolved by following their redirects only.
+// The product page itself is NOT read: Amazon's terms do not allow automated page reading, so title, image and price are entered by the owner.
+const AMZ_HOST = /(^|\.)(amazon\.[a-z.]+|a\.co|amzn\.to|link\.amazon)$/;   // any Amazon domain while following redirects; only amazon.com is accepted at the end
+export const asinOf = raw => { let u; try { u = new URL(raw); } catch (e) { return ''; } const m = u.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d|d)\/([A-Z0-9]{10})(?=[\/?#]|$)/i); return m ? m[1].toUpperCase() : ''; };
+export const canonicalAmazon = asin => 'https://www.amazon.com/dp/' + asin;
+// Keeps an Associates / affiliate link exactly as pasted, but only if it is an https Amazon link.
+export function safeAffiliate(raw) { const t = String(raw || '').trim(); if (!t) return ''; let u; try { u = new URL(t); } catch (e) { return ''; } return u.protocol === 'https:' && !u.username && AMZ_HOST.test(u.hostname.toLowerCase()) ? u.toString().slice(0, 600) : ''; }
+export async function resolveAmazon(raw) {
+  let u; try { u = new URL(raw); } catch (e) { return { ok: false, error: 'Bad Amazon link.' }; }
+  for (let hop = 0; hop < 6; hop++) {
+    if (!AMZ_HOST.test(u.hostname.toLowerCase())) return { ok: false, error: 'That short link does not lead to Amazon.' };
+    const r = await fetchImpl(u.toString(), { method: 'GET', redirect: 'manual', headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(8000) });
+    try { await r.body?.cancel(); } catch (e) { /* body not needed */ }
+    if (r.status >= 300 && r.status < 400) {
+      const loc = r.headers.get('location'); if (!loc) return { ok: false, error: 'Amazon short link did not redirect.' };
+      u = new URL(loc, u); if (u.protocol !== 'https:') return { ok: false, error: 'Refused a non-secure redirect.' };
+      // The redirect address already names the product: stop here, without requesting the product page itself.
+      if (AMZ_HOST.test(u.hostname.toLowerCase()) && asinOf(u.toString())) break;
+      continue;
+    }
+    if (r.status >= 400) return { ok: false, error: 'Amazon answered ' + r.status + ' for that link.' };
+    break;
+  }
+  if (!/(^|\.)amazon\.com$/.test(u.hostname.toLowerCase())) return { ok: false, error: 'Only Amazon.com product links are supported right now.' };
+  const asin = asinOf(u.toString()); if (!asin) return { ok: false, error: 'That Amazon link does not point to a single product (no ASIN found).' };
+  return { ok: true, asin, final: u.toString() };
+}
 export async function createProduct(owner, b) {
-  const c = checkUrl(b.url); if (!c) return err(400, 'Paste a https link from a supported store.');
-  const dupe = await auth.kvGet(KU(c.url)); if (dupe && dupe.id && await getProduct(dupe.id)) return err(409, 'That product is already in the catalog.', { id: dupe.id });
-  const p = { id: rid(6), url: c.url, retailer: c.retailer, name: '', image: '', category: '', variant: '', releaseDate: '', price: null, prevPrice: null, priceManual: null, status: 'monitoring', prevStatus: '', auto: false, active: true,
+  let c = checkUrl(b.url); if (!c) return err(400, 'Paste a https link from a supported store.');
+  let affiliate = safeAffiliate(b.affiliateUrl), asin = '';
+  if (c.retailer === 'amazon') {
+    const raw = String(b.url).trim();
+    if (c.short) { const rs = await resolveAmazon(raw); if (!rs.ok) return err(400, rs.error); asin = rs.asin; if (!affiliate) affiliate = safeAffiliate(raw); }
+    else { asin = asinOf(c.url); if (!asin) return err(400, 'Paste a link to one Amazon product (one with /dp/ and an ASIN).'); if (!affiliate && /[?&]tag=/i.test(raw)) affiliate = safeAffiliate(raw); }
+    c = { url: canonicalAmazon(asin), retailer: 'amazon' };   // one canonical link per ASIN: every Amazon link to the item is the same product
+  }
+  const dupe = await auth.kvGet(KU(c.url)); if (dupe && dupe.id && await getProduct(dupe.id)) { if (affiliate) { const ex = await getProduct(dupe.id); if (ex && !ex.affiliateUrl) { ex.affiliateUrl = affiliate; await auth.kvPut(KP(ex.id), ex); } } return err(409, 'That product is already in the catalog.', { id: dupe.id }); }
+  const p = { id: rid(6), url: c.url, asin, affiliateUrl: affiliate, retailer: c.retailer, name: '', image: '', category: '', variant: '', releaseDate: '', price: null, prevPrice: null, priceManual: null, status: 'monitoring', prevStatus: '', auto: false, active: true,
     checkedAt: '', stockChangeAt: '', confirmedAt: '', statusReason: 'Added by the owner', lastAlert: {}, fails: 0, createdBy: owner, created: now(), updated: now(), watchers: 0 };
   try { fields(p, b); } catch (e) { return err(400, e.message); }
   if (!p.name) return err(400, 'Add a product name.'); if (!p.category) return err(400, 'Pick a category.');
@@ -183,7 +219,7 @@ export async function listProducts({ all } = {}) {
 export function card(p) {
   const fresh = p.confirmedAt && Date.now() - Date.parse(p.confirmedAt) < FRESH_MS;
   const status = AVAILABLE.has(p.status) && !fresh ? 'monitoring' : p.status;
-  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', imageNote: p.image ? '' : (p.imageNote || 'Image not found'), imageSource: p.imageSource || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
+  return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, buyUrl: p.affiliateUrl || p.url, asin: p.asin || '', image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', imageNote: p.image ? '' : (p.imageNote || 'Image not found'), imageSource: p.imageSource || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
 }
 
 // ---- state change -> alerts. Called by the monitor (source 'auto') and by the owner (source 'owner') ----

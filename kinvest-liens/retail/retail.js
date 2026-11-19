@@ -50,7 +50,7 @@
     row.append(w);
     // Every card has a button that opens the exact store page. Only a verified in-stock product says "Buy Now".
     { const act = { in_stock: ['Buy Now', 'buy'], low_stock: ['Buy Now', 'buy'], invite_only: ['Request Invite', 'gold'], limited_access: ['Get in Line', 'gold'], waitlist: ['Join Waitlist', 'gold'], preorder: ['Pre-order', 'buy'], upcoming: ['View', 'buy'] }[p.status] || ['View at ' + p.retailerName, 'outline'];
-      const a = mk('a', 'rt-btn ' + act[1], act[0]); a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; row.append(a); }
+      const a = mk('a', 'rt-btn ' + act[1], act[0]); a.href = p.buyUrl || p.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; row.append(a); }
     b.append(row); c.append(b); return c;
   }
   function upsell() { return sheet((sh, close) => { sh.append(mk('h3', '', 'Product alerts are for Pro members'), mk('p', 'rt-muted', 'Upgrade to watch products, set a maximum price and request alerts. Everyone can still browse In Stock Now and Upcoming Drops.')); const r = mk('div', 'rt-row'), n = mk('button', 'rt-btn', 'Not now'), y = mk('a', 'rt-btn gold', 'See plans'); n.type = 'button'; y.href = '/plans/'; n.onclick = () => close(false); r.append(n, y); sh.append(r); }); }
@@ -86,6 +86,7 @@
       cur = k; seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); history.replaceState(null, '', '/retail/' + (k === 'stock' ? '' : '?tab=' + k)); pane.textContent = '';
       const mine = ctx.paid ? (await get({ mine: 1 })).j.watches || [] : []; ctx.watched = new Set(mine.map(w => w.id)); ctx.watchMap = Object.fromEntries(mine.map(w => [w.id, w.watch]));
       const feed = (await get({ feed: 1 })).j;
+      pane.append(mk('p', 'rt-muted rt-small', 'Some Buy links are affiliate links. PricePocketAsset may earn a commission on purchases made through them, at no extra cost to you.'));
       const grid = list => { const g = mk('div', 'rt-grid'); list.forEach(p => g.append(productCard(p, ctx))); return g; };
       if (k === 'stock') { pane.append(feed.inStock.length ? grid(feed.inStock) : mk('div', 'rt-empty', 'Nothing is confirmed in stock right now. Watch a product and we will tell you when it is.')); if (feed.other.length) { pane.append(mk('h2', '', 'Watching for restocks')); pane.append(grid(feed.other)); } }
       if (k === 'upcoming') pane.append(feed.upcoming.length ? grid(feed.upcoming) : mk('div', 'rt-empty', 'No upcoming drops yet.'));
@@ -136,10 +137,11 @@
     const note = mk('p', 'rt-muted rt-small'), amsg = mk('p', 'rt-msg');
     const f = mk('div', 'rt-form'); const two = (a, b) => { const d = mk('div', 'rt-two'); d.append(a, b); return d; };
     const urow = mk('div', 'rt-row'); urow.style.paddingTop = '0'; urow.append(url, look); url.style.flex = '3';
-    f.append(field('Product link', urow), note, field('Name', name), two(field('Category', cat), field('Status', st)), two(field('Price', price), field('Release date', rel)), field('Variant', vr), field('Image', img), autoRow);
+    const aff = input('', 'Associates / affiliate link (optional)', 'url');
+    f.append(field('Product link', urow), field('Affiliate link (optional)', aff), note, field('Name', name), two(field('Category', cat), field('Status', st)), two(field('Price', price), field('Release date', rel)), field('Variant', vr), field('Image', img), autoRow);
     look.onclick = async () => { look.disabled = true; note.textContent = 'Reading…'; const r = await get({ lookup: url.value }); look.disabled = false; if (r.s !== 200) { note.textContent = r.j.error || 'Could not read.'; return; } const i = r.j.info || {}; if (i.name) name.value = i.name; if (i.image) img.value = i.image; if (i.price != null) price.value = i.price; if (i.status) st.value = i.status; if (i.releaseDate) rel.value = i.releaseDate.slice(0, 16); auto.disabled = !r.j.readable; auto.checked = !!r.j.readable; note.textContent = r.j.note || ''; };
     const create = mk('button', 'rt-btn gold', 'Add product'); create.type = 'button';
-    create.onclick = async () => { create.disabled = true; const r = await post({ action: 'create', url: url.value, name: name.value, image: img.value, price: price.value, category: cat.value, status: st.value, releaseDate: rel.value, variant: vr.value, auto: auto.checked }); create.disabled = false; amsg.className = 'rt-msg ' + (r.s === 200 ? 'ok' : 'bad'); amsg.textContent = r.s === 200 ? 'Added.' : (r.j.error || 'Could not add.'); if (r.s === 200) setTimeout(() => location.reload(), 600); };
+    create.onclick = async () => { create.disabled = true; const r = await post({ action: 'create', url: url.value, affiliateUrl: aff.value, name: name.value, image: img.value, price: price.value, category: cat.value, status: st.value, releaseDate: rel.value, variant: vr.value, auto: auto.checked }); create.disabled = false; amsg.className = 'rt-msg ' + (r.s === 200 ? 'ok' : 'bad'); amsg.textContent = r.s === 200 ? 'Added.' : (r.j.error || 'Could not add.'); if (r.s === 200) setTimeout(() => location.reload(), 600); };
     add.append(f, amsg, create); root.append(add);
     // catalog
     root.append(mk('h2', '', 'Catalog (' + x.j.products.length + ')')); const list = mk('div', 'rt-adm'); root.append(list);
