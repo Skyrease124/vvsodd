@@ -56,6 +56,30 @@ const UpcomingSales = (() => {
     const e = mk('div', 'small uscount', cd + local); e.dataset.at = at.getTime(); e.dataset.local = local; return e;
   }
 
+  // Cape Coral city records (City of Cape Coral GIS Ownership layer, built by tools/capecoral/build.mjs). Shown only for Lee parcels the city layer matched by parcel ID.
+  let capeData = null;
+  const capeLoad = () => capeData || (capeData = fetch('/liens/states/capecoral-facts.json').then(r => r.ok ? r.json() : null).catch(() => null));
+  function capeBlock(l) {
+    const box = mk('div', 'small capebox'); box.hidden = true;
+    capeLoad().then(d => {
+      const f = d && d.facts && d.facts[String(l.parcel || '').replace(/[-.\s]/g, '').toUpperCase()]; if (!f) return;
+      const rows = [];
+      if (f.zoning || f.flu) rows.push(['Zoning / future land use', [f.zoning, f.flu].filter(Boolean).join(' / ')]);
+      if (f.acres != null) rows.push(['Size', f.acres + ' acres']);
+      if (f.water || f.sewer) rows.push(['City water / sewer available', 'Water: ' + (f.water || 'not stated') + ' \u00B7 Sewer: ' + (f.sewer || 'not stated')]);
+      if (f.canal) rows.push(['Canal', f.canal]);
+      if (f.owl || f.turtle) rows.push(['Wildlife zones on city map', [f.owl ? 'Owl zone' : '', f.turtle ? 'Turtle zone' : ''].filter(Boolean).join(', ')]);
+      if (f.assessed != null) rows.push(['Assessed value', money(f.assessed).replace('.00', '') + (f.land != null || f.bldg != null ? ' (land ' + money(f.land || 0).replace('.00', '') + ', building ' + money(f.bldg || 0).replace('.00', '') + ')' : '')]);
+      if (f.saleDate) rows.push(['Last recorded sale', new Date(f.saleDate + 'T12:00:00Z').toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}) + (f.saleAmt ? ' for ' + money(f.saleAmt).replace('.00', '') : '')]);
+      if (!rows.length) return;
+      box.appendChild(mk('b', '', 'Cape Coral city records')); rows.forEach(r => { const row = mk('div'); row.append(mk('span', 'muted', r[0] + ': '), document.createTextNode(r[1])); box.appendChild(row); });
+      const n = mk('div', 'small muted'); n.append('Source: ', link(d.source.name, d.source.url), ', checked ' + d.source.checked + '. City records can be out of date: verify water, sewer, zoning and any wildlife limits with the City of Cape Coral and the county before you bid.');
+      if (f.leepa) { n.append(' \u00B7 '); n.append(link('Lee County Property Appraiser record', f.leepa)); }
+      box.appendChild(n); box.hidden = false;
+    });
+    return box;
+  }
+
   function card(l) {
     const d = mk('div', 'usitem us-' + l.type + ' st-' + l.status);
     const eff = effective(l);
@@ -74,6 +98,7 @@ const UpcomingSales = (() => {
     if (l.legal) d.appendChild(mk('div', 'small muted', 'Legal: ' + l.legal));
     if (l.assessed != null) d.appendChild(mk('div', 'small muted', 'Assessed value (property appraiser): ' + money(l.assessed).replace('.00', '') + (l.homestead ? ' · homestead' : '')));
     if (l.alsoListed) d.appendChild(mk('div', 'small muted', 'Same parcel is also listed as: ' + l.alsoListed.map(t => TYPES[t]).join(', ')));
+    if (l.county === 'Lee' && (l.state || 'FL') === 'FL') d.appendChild(capeBlock(l));
     const lk = mk('div', 'small uslinks');
     if (l.auctionUrl) lk.append(link('Official auction site', l.auctionUrl), ' · ');
     lk.append(link(l.type === 'otc' ? 'Official county list' : 'Official source', l.sourceUrl || l.officialPage));
