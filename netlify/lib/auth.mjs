@@ -173,6 +173,7 @@ export function isPaid(u) {
   if (!u) return false;
   if (u.owner) return true;
   if (u.family) return true; // free family access, given with an access code
+  if (u.disputeHold) return false; // paid access funded by a disputed payment is suspended while the dispute is open (Admin setting; the account and its history are kept)
   return !!u.paidThrough && u.paidThrough >= new Date().toISOString().slice(0, 10);
 }
 

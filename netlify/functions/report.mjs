@@ -3,6 +3,7 @@
 //   POST {action:'estateSet', county, parcel, caseNumber, documentTitle, sourceUrl}   (site owner only: reviewer confirmation)
 //   POST {action:'estateRemove', county, parcel}                                       (site owner only)
 import * as auth from '../lib/auth.mjs';
+import * as EV from '../lib/evidence.mjs';
 import * as R from '../lib/report.mjs';
 
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': code === 200 ? 'public, max-age=300' : 'no-store' } });
@@ -37,5 +38,6 @@ export default async function handler(req, context) {
   const out = JSON.parse(JSON.stringify(rep.v));
   const id = out.id, link = id ? (await links())[estateKey(county, id)] : null;
   if (link && out.ownership) { out.ownership.status = 'estate_linked'; out.ownership.label = 'Estate record linked'; out.ownership.estate = link; out.ownership.why = 'A reviewer confirmed that this official document connects the estate to this exact property. It does not by itself say who can sign for the property today.'; }
+  { const who = await auth.userFromCookie(req.headers.get('cookie') || ''); if (who) EV.logActivity(who, 'report_generated', { resource: county + ' ' + parcel, ip, ua: req.headers.get('user-agent') || null, session: EV.sessionOf(req.headers.get('cookie') || ''), page: 'property report' }).catch(() => {}); }
   return json(200, out);
 }

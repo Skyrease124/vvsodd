@@ -4,6 +4,7 @@ import * as auth from '../lib/auth.mjs';
 import * as S from '../lib/stripe.mjs';
 import * as P from '../lib/policy.mjs';
 import * as RL from '../lib/ratelimit.mjs';
+import * as EV from '../lib/evidence.mjs';
 
 const json = (code, body) => ({ statusCode: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) });
 const tries = new Map();
@@ -31,6 +32,7 @@ async function handle(event) {
       if (!(b.consent && b.consent.terms === true && b.consent.recurring === true && b.consent.version === P.POLICY_VERSION)) return json(400, { error: 'Please tick the box to accept the terms and authorize weekly billing before you continue.', needConsent: true, version: P.POLICY_VERSION });
       if (!(await RL.hit('checkout:' + me.email, 8, 3600e3)).ok) return json(429, { error: 'Too many checkout attempts. Please wait a while or contact billing support.' });
       const rec = P.consentRecord('subscription', { terms: true, recurring: true, priceCents: P.PLAN.cents, interval: P.PLAN.interval }); P.addConsent(me, rec); await auth.saveUser(me);
+      await EV.recordTerms(me, { ip, ua: (event.headers || {})['user-agent'] || null, kind: 'subscription' }).catch(() => {});
       const price = await S.findPriceId(stripe);
       if (!price) return json(503, { error: 'The membership plan is not set up yet.' });
       const customer = await S.ensureCustomer(stripe, me);
@@ -74,7 +76,7 @@ async function handle(event) {
 
 async function toEvent(req, context) {
   return { httpMethod: req.method, body: req.method === 'POST' ? await req.text() : null,
-    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '' } };
+    headers: { cookie: req.headers.get('cookie') || '', 'x-nf-client-connection-ip': req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || '', 'x-forwarded-for': req.headers.get('x-forwarded-for') || '', 'user-agent': req.headers.get('user-agent') || '' } };
 }
 export default async (req, context) => {
   const r = await handle(await toEvent(req, context));
