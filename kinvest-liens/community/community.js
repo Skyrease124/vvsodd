@@ -412,5 +412,20 @@
       if (pin && pin.value.trim()) b.pinned = pin.value; const r = await post(b); save.disabled = false; msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { back.href = '/community/profile/?u=' + b.username; msg.scrollIntoView({ block: 'nearest' }); } };
     form.append(photoCard(me), c1, c2, c3, c4); root.append(form, msg, save); if (location.hash) { const t = $(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   }
-  const page = document.body.dataset.page; ({ hub, profile, settings, post: postPage }[page] || (() => {}))();
+  // ---- WELCOME (shown once, right after sign-up) ----
+  async function welcome() {
+    const root = $('root'), raw = new URLSearchParams(location.search).get('next') || '/map/', next = /^\/(?!\/)[A-Za-z0-9/_\-?=&.%#]*$/.test(raw) ? raw : '/map/';
+    const m = await get({ me: 1 }); if (m.s === 401) return needSignin(root); const me = m.j.me, o = (await get({ options: 1 })).j; root.textContent = '';
+    const card = mk('div', 'card wl'); card.append(mk('h1', '', 'Set up your profile'), mk('p', 'muted', 'This is how other investors see you in the Community. You can change it any time.'));
+    if (me.paid) card.append(photoCard(me)); else { const ph = mk('div', 'wl-av'); ph.append(avatar(me, 'ph-av')); card.append(ph); }
+    const f = mk('div', 'form'), fld = (l, el) => { const x = mk('label', '', l); x.append(el); return x; }, inp = (v, max, ph) => { const i = mk('input'); i.type = 'text'; i.maxLength = max; i.value = v || ''; if (ph) i.placeholder = ph; return i; };
+    const name = inp(me.name === 'New member' ? '' : me.name, 40, 'Your name'), user = inp(me.username, 20), sel = (opts, v, blank) => { const s2 = mk('select'); const b = mk('option', '', blank); b.value = ''; s2.append(b); opts.forEach(x => { const op = mk('option', '', x); op.value = x; s2.append(op); }); s2.value = v || ''; return s2; };
+    const role = sel(o.roles, me.role, 'Choose a role'), exp = sel(o.experience, me.experience, 'Choose a level');
+    const chips = mk('div', 'chips'), chosen = new Set(me.interests || []); o.interests.forEach(i => { const b = mk('button', 'chip', i); b.type = 'button'; const paint = () => { b.classList.toggle('on', chosen.has(i)); b.setAttribute('aria-pressed', String(chosen.has(i))); }; paint(); b.onclick = () => { chosen.has(i) ? chosen.delete(i) : chosen.add(i); paint(); }; chips.append(b); });
+    f.append(fld('Display name', name), fld('Username', user), fld('Role', role), fld('Experience', exp), fld('Interests', chips)); card.append(f);
+    const msg = mk('p', 'msg'); msg.setAttribute('role', 'status'); const row = mk('div', 'wl-row'), skip = mk('a', 'btn2', 'Skip for now'), save = mk('button', 'btn2 primary', 'Save and continue'); skip.href = next; save.type = 'button';
+    save.onclick = async () => { save.disabled = true; msg.className = 'msg'; msg.textContent = 'Saving…'; const b = { action: 'saveProfile', username: user.value.trim().toLowerCase(), role: role.value, experience: exp.value, interests: [...chosen] }; if (name.value.trim()) b.name = name.value.trim(); const r = await post(b); save.disabled = false; if (r.s === 200) location.href = next; else { msg.className = 'msg bad'; msg.textContent = r.j.error || 'Could not save.'; } };
+    row.append(skip, save); card.append(msg, row); root.append(card);
+  }
+  const page = document.body.dataset.page; ({ hub, profile, settings, post: postPage, welcome }[page] || (() => {}))();
 })();
