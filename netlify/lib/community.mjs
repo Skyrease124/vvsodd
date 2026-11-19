@@ -28,6 +28,11 @@ const idOk = s => /^[a-f0-9]{16}$/.test(String(s));
 const err = (status, error) => ({ ok: false, status, error });
 
 const bell = (uid, o) => import('./notify.mjs').then(N => N.add(uid, o)).catch(() => {});
+async function followPush(t, me) {
+  if ((t.notif || {}).follows === false) return; const u = await auth.getUser(t.email); if (!u || u.revoked) return;
+  const { prefsOf } = await import('./pushjobs.mjs'); const pp = prefsOf(u); if (!pp.enabled || !pp.subscribed) return;
+  const OS = await import('./onesignal.mjs'); return OS.send({ email: t.email, title: '👤 New follower', body: me.name + ' started following you.', path: '/community/profile/?u=' + me.username, key: 'follow:' + me.uid + ':' + new Date().toISOString().slice(0, 10), topic: 'follows', retail: true });
+}
 const pingOwner = (t, b, k) => { import('./retail.mjs').then(R => R.notifyOwner(t, b, '/community/', k)).catch(() => {}); };
 // ---- profiles --------------------------------------------------------------------------------------------------
 export async function getByUid(uid) { return idOk(uid) ? auth.kvGet(K.p(uid)) : null; }
@@ -122,7 +127,7 @@ export async function follow(me, targetUid) {
   if ((t.privacy || {}).whoCanFollow === 'nobody') return err(403, 'This member is not accepting new followers.');
   if (rel.following) return { ok: true, already: true };
   await auth.kvPut(K.f(me.uid, t.uid), { at: now() }); await auth.kvPut(K.r(t.uid, me.uid), { at: now() });
-  await bump(me.uid, 'following', 1); await bump(t.uid, 'followers', 1); bell(t.uid, { kind: 'follow', actor: me.uid, text: 'started following you.', path: '/community/profile/?u=' + me.username }); return { ok: true };
+  await bump(me.uid, 'following', 1); await bump(t.uid, 'followers', 1); bell(t.uid, { kind: 'follow', actor: me.uid, text: 'started following you.', path: '/community/profile/?u=' + me.username }); await followPush(t, me).catch(() => {}); return { ok: true };
 }
 export async function unfollow(me, targetUid) {
   const t = await getByUid(targetUid); if (!t) return err(404, 'Member not found.');
