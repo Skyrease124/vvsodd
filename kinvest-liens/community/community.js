@@ -186,7 +186,59 @@
       mw.appendChild(m); setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0); };
     c.append(hd); if (p.text) c.append(mk('p', 'p-tx', p.text));
     if ((p.photos || []).length) { const g = mk('div', 'p-ph n' + p.photos.length); p.photos.forEach((u, i) => { const b = mk('button', 'p-im'); b.type = 'button'; b.setAttribute('aria-label', 'Open photo ' + (i + 1)); const im = mk('img'); im.src = u; im.alt = ''; im.loading = 'lazy'; b.append(im); b.onclick = () => viewer(p.photos, i); g.append(b); }); c.append(g); }
-    return c;
+    c.append(actionBar(p, c)); return c;
+  }
+  // ---- like / comment / share ----
+  const HEART = '\u2665', BUBBLE = '\ud83d\udcac', SHARE = '\u2197';
+  function actionBar(p, card) {
+    const bar = mk('div', 'p-bar'), lk = mk('button', 'p-act' + (p.liked ? ' on' : '')), cm = mk('button', 'p-act'), sh = mk('button', 'p-act'), cnt = mk('button', 'p-cnt');
+    lk.type = cm.type = sh.type = cnt.type = 'button';
+    const paintL = () => { lk.textContent = HEART + ' Like'; lk.classList.toggle('on', !!p.liked); lk.setAttribute('aria-pressed', String(!!p.liked)); cnt.textContent = p.likes ? HEART + ' ' + p.likes : ''; cnt.hidden = !p.likes; };
+    const paintC = () => { cm.textContent = BUBBLE + ' ' + (p.comments ? p.comments : 'Comment'); };
+    sh.textContent = SHARE + ' Share'; paintL(); paintC();
+    lk.onclick = async () => { const on = !p.liked; p.liked = on; p.likes = Math.max(0, (p.likes || 0) + (on ? 1 : -1)); paintL(); const r = await post({ action: on ? 'like' : 'unlike', key: p.key }); if (r.s === 200) { p.likes = r.j.likes; p.liked = r.j.liked; } else { p.liked = !on; p.likes += on ? -1 : 1; } paintL(); };
+    cnt.onclick = async () => { const x = await get({ likers: p.key }); const ov = mk('div', 'cm-ov'), shh = mk('div', 'cm-sheet'); shh.append(mk('h3', '', 'Liked by')); const list = mk('div', 'people'); (x.j.rows || []).forEach(r => list.append(personRow(r))); shh.append(list); const ok2 = mk('button', 'btn2', 'Close'); ok2.type = 'button'; ok2.style.marginTop = '12px'; ok2.onclick = () => ov.remove(); shh.append(ok2); ov.onclick = e => { if (e.target === ov) ov.remove(); }; ov.append(shh); document.body.append(ov); requestAnimationFrame(() => ov.classList.add('on')); };
+    let panel = null;
+    cm.onclick = async () => { if (panel) { panel.remove(); panel = null; return; } panel = mk('div', 'p-cmts'); card.append(panel); await commentsPanel(p, panel, paintC); };
+    sh.onclick = () => shareSheet(p);
+    const left = mk('div', 'p-cl'); left.append(cnt); bar.append(lk, cm, sh); const wrap = mk('div'); wrap.append(left, bar); return wrap;
+  }
+  async function commentsPanel(p, host, paintC) {
+    const list = mk('div', 'p-clist'); host.append(list);
+    const load = async () => { const x = await get({ comments: p.key }); list.textContent = ''; (x.j.rows || []).forEach(c => list.append(commentRow(c, p, paintC, load))); if (!(x.j.rows || []).length) list.append(mk('div', 'muted small', 'No comments yet.')); };
+    await load();
+    const me = window.__cmMe || (window.__cmMe = (await get({ me: 1 })).j.me || {});
+    if (!me.paid) { const n = mk('div', 'p-cup'); n.append(mk('span', 'muted small', 'Commenting is for paid members. ')); const a = mk('a', '', 'See plans'); a.href = '/plans/'; n.append(a); host.append(n); return; }
+    const f = mk('div', 'p-cform'), ta = mk('textarea'), go = mk('button', 'p-csend', 'Post'); ta.maxLength = 500; ta.rows = 1; ta.placeholder = 'Write a comment…'; ta.setAttribute('aria-label', 'Write a comment'); go.type = 'button'; go.disabled = true;
+    ta.oninput = () => { go.disabled = !ta.value.trim(); ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; };
+    go.onclick = async () => { go.disabled = true; const r = await post({ action: 'comment', key: p.key, text: ta.value }); if (r.s === 200) { ta.value = ''; p.comments = r.j.comments; paintC(); await load(); } else alert(r.j.error || 'Could not post.'); ta.oninput(); };
+    f.append(ta, go); host.append(f); ta.focus();
+  }
+  function commentRow(c, p, paintC, reload) {
+    const r = mk('div', 'p-c'), b = mk('div', 'p-cb'), nm = mk('a', 'nm', c.author.name); nm.href = '/community/profile/?u=' + encodeURIComponent(c.author.username);
+    const hd = mk('div', 'p-ch'); hd.append(nm); if (c.author.verified || c.author.founder) hd.append(vbadge(c.author.founder ? 'founder' : 'verified', 13)); b.append(hd, mk('div', 'p-ct', c.text));
+    const meta = mk('div', 'p-cm', ago(c.at));
+    if (c.canDelete) { const d = mk('button', '', 'Delete'); d.type = 'button'; d.onclick = async () => { if (!(await sheet({ title: 'Delete this comment?', confirm: 'Delete', danger: true }))) return; const x = await post({ action: 'deleteComment', key: c.key }); if (x.s === 200) { p.comments = Math.max(0, (p.comments || 1) - 1); paintC(); reload(); } }; meta.append(d); }
+    if (!c.mine) { const rp = mk('button', '', 'Report'); rp.type = 'button'; rp.onclick = async () => { const o = await get({ options: 1 }); const v = await sheet({ title: 'Report this comment', text: 'Reports are private and reviewed by PricePocketAsset.', fields: [{ key: 'category', type: 'radio', label: 'Reason', options: o.j.reportCategories }], confirm: 'Send report' }); if (!v) return; const x = await post({ action: 'reportComment', key: c.key, category: v.category }); sheet({ title: x.s === 200 ? 'Report sent' : 'Could not send', text: x.s === 200 ? 'Thank you.' : (x.j.error || ''), confirm: 'OK' }); }; meta.append(rp); }
+    r.append(avatar(c.author, 'mini'), (() => { const w = mk('div', 'grow'); w.append(b, meta); return w; })()); return r;
+  }
+  function shareSheet(p) {
+    const url = location.origin + '/community/post/?k=' + p.key, ov = mk('div', 'cm-ov'), sh = mk('div', 'cm-sheet'); sh.append(mk('h3', '', 'Share post'), mk('p', 'muted small', 'Only signed-in PricePocketAsset members can open the link.'));
+    const msg = mk('p', 'msg'); const opt = (l, fn) => { const b = mk('button', 'btn2', l); b.type = 'button'; b.style.cssText = 'width:100%;justify-content:center;margin-bottom:8px'; b.onclick = fn; sh.append(b); };
+    const close = () => ov.remove();
+    opt('\ud83d\udd17 Copy link', async () => { try { await navigator.clipboard.writeText(url); msg.className = 'msg ok'; msg.textContent = 'Link copied.'; } catch (e) { msg.textContent = url; } });
+    if (navigator.share) opt('\u2197 Share…', async () => { try { await navigator.share({ title: 'PricePocketAsset post', url }); close(); } catch (e) { /* cancelled */ } });
+    opt('\u2709 Send in Messages', async () => { const v = await sheet({ title: 'Send to', fields: [{ key: 'u', label: 'Username', placeholder: 'member username' }], confirm: 'Next' }); if (v && v.u) location.href = '/messages/?to=' + encodeURIComponent(v.u.replace(/^@/, '')) + '&text=' + encodeURIComponent(url); });
+    const c = mk('button', 'btn2', 'Close'); c.type = 'button'; c.style.cssText = 'width:100%;justify-content:center'; c.onclick = close; sh.append(msg, c);
+    ov.onclick = e => { if (e.target === ov) close(); }; ov.append(sh); document.body.append(ov); requestAnimationFrame(() => ov.classList.add('on'));
+  }
+  // ---- single post page (shared links) ----
+  async function postPage() {
+    const root = $('root'), k = new URLSearchParams(location.search).get('k') || ''; const x = await get({ post: k }); if (x.s === 401) return needSignin(root);
+    root.textContent = ''; const back = mk('a', 'btn2', '\u2039 Community'); back.href = '/community/'; back.style.margin = '14px 0'; root.append(back);
+    if (x.s !== 200) { root.append(mk('div', 'empty', 'This post is not available.')); return; }
+    const me = (await get({ me: 1 })).j.me || {}; const card = postCard(x.j.post, me.owner); root.append(card);
+    const cm = card.querySelectorAll('.p-act')[1]; if (cm) cm.click();
   }
   // full-screen photo viewer: swipe between photos, tap outside or × to close
   function viewer(urls, start) {
@@ -353,12 +405,12 @@
     const sels = mk('div', 'form'); sels.style.marginTop = '12px'; const [tReq, allowReq] = tog('Allow message requests', 'People outside your choice above can send a request you can accept or decline.', pv.allowRequests !== false); window.__allowReq = allowReq; sels.append(field('Who can follow me', wf), field('Who can message me', wm), field('New collections start as', cd)); c3.append(t1, t2, t3, t4, sels, tReq);
     // notifications
     const nt = me.notif, c4 = card('Notifications', 'notifications'); const [n1, fp] = tog('Founder posts', 'Turn off to mute posts from the Founder. The Founder connection stays.', nt.founderPosts !== 'muted'), [n2, fa] = tog('Founder announcements', 'Turn off to mute official announcements.', nt.founderAnnouncements !== 'muted'), [n3, nf] = tog('New followers', 'Tell me when someone follows me.', nt.follows !== false), [n4, nm] = tog('Message notifications', 'Push me when I get a private message.', nt.messages !== false);
-    const fq = sel([['instant', 'As they happen'], ['daily', 'Daily summary'], ['weekly', 'Weekly summary']], nt.frequency); const fqW = mk('div', 'form'); fqW.style.marginTop = '12px'; fqW.append(field('How often', fq)); const [n5, mpv] = tog('Show message preview', 'Off: notifications only say "You have a new private message."', nt.msgPreview !== false); c4.append(n1, n2, n3, n4, n5, fqW, mk('p', 'muted small', 'Everyone is connected to the official PricePocketAsset account for life. You can mute it here, but you cannot remove the connection.'));
+    const fq = sel([['instant', 'As they happen'], ['daily', 'Daily summary'], ['weekly', 'Weekly summary']], nt.frequency); const fqW = mk('div', 'form'); fqW.style.marginTop = '12px'; fqW.append(field('How often', fq)); const [n6, soc] = tog('Likes and comments', 'Push me when someone likes or comments on my posts.', nt.social !== false); const [n5, mpv] = tog('Show message preview', 'Off: notifications only say "You have a new private message."', nt.msgPreview !== false); c4.append(n1, n2, n3, n4, n5, n6, fqW, mk('p', 'muted small', 'Everyone is connected to the official PricePocketAsset account for life. You can mute it here, but you cannot remove the connection.'));
     const save = mk('button', 'btn2 primary', 'Save changes'); save.type = 'button'; save.style.cssText = 'width:100%;justify-content:center;min-height:52px'; 
     save.onclick = async () => { save.disabled = true; msg.className = 'msg'; msg.textContent = 'Saving…';
-      const b = { action: 'saveProfile', name: name.value, username: user.value.toLowerCase(), role: role.value, experience: exp.value, bio: bio.value, city: city.value, state: stt.value, cover, interests: [...chosen], privacy: { showLocation: showLoc.checked, showActivity: showAct.checked, discoverable: disc.checked, showProBadge: proB.checked, whoCanFollow: wf.value, whoCanMessage: wm.value, allowRequests: window.__allowReq.checked, collectionsDefault: cd.value }, notif: { founderPosts: fp.checked ? 'on' : 'muted', founderAnnouncements: fa.checked ? 'on' : 'muted', follows: nf.checked, messages: nm.checked, msgPreview: mpv.checked, frequency: fq.value } };
+      const b = { action: 'saveProfile', name: name.value, username: user.value.toLowerCase(), role: role.value, experience: exp.value, bio: bio.value, city: city.value, state: stt.value, cover, interests: [...chosen], privacy: { showLocation: showLoc.checked, showActivity: showAct.checked, discoverable: disc.checked, showProBadge: proB.checked, whoCanFollow: wf.value, whoCanMessage: wm.value, allowRequests: window.__allowReq.checked, collectionsDefault: cd.value }, notif: { founderPosts: fp.checked ? 'on' : 'muted', founderAnnouncements: fa.checked ? 'on' : 'muted', follows: nf.checked, messages: nm.checked, msgPreview: mpv.checked, social: soc.checked, frequency: fq.value } };
       if (pin && pin.value.trim()) b.pinned = pin.value; const r = await post(b); save.disabled = false; msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { back.href = '/community/profile/?u=' + b.username; msg.scrollIntoView({ block: 'nearest' }); } };
     form.append(photoCard(me), c1, c2, c3, c4); root.append(form, msg, save); if (location.hash) { const t = $(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   }
-  const page = document.body.dataset.page; ({ hub, profile, settings }[page] || (() => {}))();
+  const page = document.body.dataset.page; ({ hub, profile, settings, post: postPage }[page] || (() => {}))();
 })();

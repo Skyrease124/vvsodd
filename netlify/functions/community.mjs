@@ -18,6 +18,7 @@ export default async function handler(req, context) {
   const founder = await C.isFounderProfile(me);
   const u = new URL(req.url), q = u.searchParams;
   const paid = auth.isPaid(user);
+  const done = r => (r.ok === false ? fail(r) : json(200, r));
 
   if (req.method === 'GET') {
     if (q.get('options')) return json(200, { ok: true, roles: C.ROLES, experience: C.EXPERIENCE, interests: C.INTERESTS, reportCategories: C.REPORT_CATEGORIES, awards: Object.fromEntries(Object.entries(C.AWARDABLE).map(([k, v]) => [k, v[0]])) });
@@ -26,6 +27,9 @@ export default async function handler(req, context) {
     if (q.get('suggest')) return json(200, Object.assign({ ok: true }, await C.suggestions(me)));
     if (q.get('verifyRequests')) { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); return json(200, { ok: true, requests: await C.listVerifyRequests() }); }
     if (q.get('reports')) { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); return json(200, { ok: true, reports: await C.listReports() }); }
+    if (q.get('post')) return done(await C.getPost(me, q.get('post')));
+    if (q.get('comments')) return done(await C.listComments(me, q.get('comments'), { owner: !!user.owner }));
+    if (q.get('likers')) return done(await C.likers(me, q.get('likers')));
     if (q.get('feed')) return json(200, Object.assign({ ok: true, canPost: paid }, await C.listPosts(me, { limit: 40 })));
     const name = q.get('u');
     if (name) {
@@ -46,7 +50,6 @@ export default async function handler(req, context) {
 
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
   const act = String(b.action || '');
-  const done = r => (r.ok === false ? fail(r) : json(200, r));
   if (act === 'saveProfile') return done(await C.saveProfile(me, b, { founder }));
   if (act === 'follow') return done(await C.follow(me, b.uid));
   if (act === 'unfollow') return done(await C.unfollow(me, b.uid));
@@ -63,6 +66,14 @@ export default async function handler(req, context) {
     if (!(await RL.hit('postphoto:' + user.email, +(process.env.POST_PHOTO_LIMIT_HOUR || 40), 3600e3)).ok) return json(429, { ok: false, error: 'You have added a lot of photos in the last hour. Please wait a bit.' });
     return done(await C.uploadPostPhoto(me, b.data));
   }
+  if (act === 'like' || act === 'unlike') { if (!(await RL.hit('like:' + user.email, 120, 3600e3)).ok) return json(429, { ok: false, error: 'Please slow down.' }); return done(await C.like(me, b.key, act === 'like')); }
+  if (act === 'comment') {
+    if (!paid) return json(402, { ok: false, error: 'Commenting is for paid members.', upgrade: true });
+    if (!(await RL.hit('cmt:' + user.email, +(process.env.COMMENT_LIMIT_HOUR || 20), 3600e3)).ok) return json(429, { ok: false, error: 'You have commented a lot in the last hour. Please wait a bit.' });
+    return done(await C.addComment(me, b.key, b.text));
+  }
+  if (act === 'deleteComment') return done(await C.deleteComment(me, b.key, { owner: !!user.owner }));
+  if (act === 'reportComment') { if (!(await RL.hit('report:' + user.email, 10, 3600e3)).ok) return json(429, { ok: false, error: 'You have sent several reports. Please wait before sending more.' }); return done(await C.reportComment(me, b.key, b.category, b.details)); }
   if (act === 'deletePost') return done(await C.deletePost(me, b.key, { owner: !!user.owner }));
   if (act === 'reportPost') { if (!(await RL.hit('report:' + user.email, 10, 3600e3)).ok) return json(429, { ok: false, error: 'You have sent several reports. Please wait before sending more.' }); return done(await C.reportPost(me, b.key, b.category, b.details)); }
   if (act === 'setPhoto') {

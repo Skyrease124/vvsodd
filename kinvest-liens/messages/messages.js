@@ -103,6 +103,7 @@
     if (window.visualViewport) { const vv = () => { if (innerWidth < 760) wrap.style.height = visualViewport.height + 'px'; list.scrollTop = list.scrollHeight; }; visualViewport.addEventListener('resize', vv); }
     document.addEventListener('visibilitychange', () => { if (!document.hidden && document.body.contains(wrap)) { stop(); refresh(); } });
     if (info && !info.exists) { canSend = info.canSend; paintState(); if (canSend) ta.focus(); }
+    { const pre = new URLSearchParams(location.search).get('text'); if (pre && /^https:\/\/[^\s]{1,300}$/.test(pre)) { ta.value = pre; fit(); } }
     if (cid && (!info || info.exists)) refresh(true); else timer = null;
   }
 

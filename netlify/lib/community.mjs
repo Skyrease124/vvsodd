@@ -194,7 +194,7 @@ export async function saveProfile(p, b, { founder }) {
     // Founder posts and announcements can be MUTED (notifications only). Muting never touches the connection itself.
     for (const k of ['founderPosts', 'founderAnnouncements']) if (nt[k] !== undefined) { if (!['on', 'muted'].includes(nt[k])) return err(400, 'That notification choice is not valid.'); next.notif[k] = nt[k]; }
     if (nt.frequency !== undefined) { if (!['instant', 'daily', 'weekly'].includes(nt.frequency)) return err(400, 'That notification choice is not valid.'); next.notif.frequency = nt.frequency; }
-    for (const k of ['follows', 'messages', 'msgPreview']) if (nt[k] !== undefined) next.notif[k] = !!nt[k];
+    for (const k of ['follows', 'messages', 'msgPreview', 'social']) if (nt[k] !== undefined) next.notif[k] = !!nt[k];
   }
   await auth.kvPut(K.p(p.uid), next); return { ok: true, profile: next };
 }
@@ -274,13 +274,61 @@ export async function deletePost(me, key, { owner } = {}) {
 }
 async function postView(p, viewer, cache) {
   let a = cache[p.uid]; if (a === undefined) { const prof = await getByUid(p.uid); a = cache[p.uid] = prof && await isVisible(prof) && !(await auth.kvGet(K.b(viewer.uid, p.uid))) && !(await auth.kvGet(K.b(p.uid, viewer.uid))) ? await miniView(prof, viewer.uid) : null; }
-  if (!a) return null; return { key: postKey(p), text: p.text, photos: (p.photos || []).map(ph => postPhotoUrl(p.uid, ph)), at: p.at, mine: p.uid === viewer.uid, author: a };
+  if (!a) return null; return { key: postKey(p), text: p.text, photos: (p.photos || []).map(ph => postPhotoUrl(p.uid, ph)), at: p.at, mine: p.uid === viewer.uid, author: a, likes: p.likes || 0, comments: p.comments || 0, liked: !!(await auth.kvGet(KL(postKey(p), viewer.uid))) };
 }
 export async function listPosts(viewer, { uid, limit = 30 } = {}) {
   const keys = (await auth.kvList(uid ? 'cpo_' + uid + '_' : 'cpo_')).sort((a, b) => (a.slice(21) < b.slice(21) ? -1 : 1)).slice(0, 400);
   const out = [], cache = {};
   for (const k of keys) { if (out.length >= limit) break; const p = await auth.kvGet(k); if (!p || p.deleted) continue; const v = await postView(p, viewer, cache); if (v) out.push(v); }
   return { rows: out };
+}
+// ---- likes, comments, share --------------------------------------------------------------------------------------
+const KL = (pk, uid) => `cpl_${pk}_${uid}`, KC = (pk, id) => `cpc_${pk}_${id}`;
+const cleanComment = s => String(s == null ? '' : s).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, 500);
+async function canSee(viewer, uid) { return !((await auth.kvGet(K.b(viewer.uid, uid))) || (await auth.kvGet(K.b(uid, viewer.uid)))); }
+async function visiblePost(viewer, key) { const p = await findPost(key); if (!p) return null; const a = await getByUid(p.uid); if (!a || !(await isVisible(a)) || !(await canSee(viewer, p.uid))) return null; return p; }
+async function savePostCount(p, field, d) { const fresh = await auth.kvGet(KP(p.uid, p.id)); if (!fresh || fresh.deleted) return; fresh[field] = Math.max(0, (fresh[field] || 0) + d); await auth.kvPut(KP(p.uid, p.id), fresh); return fresh[field]; }
+export async function getPost(viewer, key) { const p = await visiblePost(viewer, key); if (!p) return err(404, 'This post is not available.'); return { ok: true, post: await postView(p, viewer, {}) }; }
+export async function like(me, key, on) {
+  const p = await visiblePost(me, key); if (!p) return err(404, 'This post is not available.'); const k = KL(key, me.uid), had = await auth.kvGet(k);
+  if (on && !had) { await auth.kvPut(k, { at: now() }); const n = await savePostCount(p, 'likes', 1); if (p.uid !== me.uid) socialPush(p, 'like', me, n).catch(() => {}); return { ok: true, liked: true, likes: n }; }
+  if (!on && had) { await auth.kvDel(k); return { ok: true, liked: false, likes: await savePostCount(p, 'likes', -1) }; }
+  return { ok: true, liked: !!had, likes: p.likes || 0 };
+}
+export async function likers(viewer, key) { const p = await visiblePost(viewer, key); if (!p) return err(404, 'This post is not available.'); const rows = []; for (const k of (await auth.kvList('cpl_' + key + '_')).slice(0, 200)) { const pr = await getByUid(k.slice(4 + key.length + 1)); if (pr && await isVisible(pr) && await canSee(viewer, pr.uid)) rows.push(await miniView(pr, viewer.uid)); } return { ok: true, rows }; }
+export async function addComment(me, key, text) {
+  const t = cleanComment(text); if (!t) return err(400, 'Write a comment first.'); const p = await visiblePost(me, key); if (!p) return err(404, 'This post is not available.');
+  const lastK = 'cpclast_' + me.uid, last = await auth.kvGet(lastK); if (last && last.t === t && Date.now() - Date.parse(last.at) < 600e3) return err(429, 'You just posted that comment.');
+  const id = String(Date.now()).padStart(13, '0') + rid(3), c = { id, uid: me.uid, text: t, at: now() };
+  await auth.kvPut(KC(key, id), c); await auth.kvPut(lastK, { t, at: c.at }); const n = await savePostCount(p, 'comments', 1);
+  if (p.uid !== me.uid) await socialPush(p, 'comment', me, n, t).catch(() => {});
+  return { ok: true, comment: Object.assign({ key: key + '_' + id, mine: true, canDelete: true, author: await miniView(me, me.uid) }, { text: t, at: c.at }), comments: n };
+}
+export async function listComments(viewer, key, { owner } = {}) {
+  const p = await visiblePost(viewer, key); if (!p) return err(404, 'This post is not available.'); const rows = [], cache = {};
+  for (const k of (await auth.kvList('cpc_' + key + '_')).sort().slice(-300)) { const c = await auth.kvGet(k); if (!c || c.deleted) continue;
+    let a = cache[c.uid]; if (a === undefined) { const pr = await getByUid(c.uid); a = cache[c.uid] = pr && await isVisible(pr) && await canSee(viewer, c.uid) ? await miniView(pr, viewer.uid) : null; } if (!a) continue;
+    rows.push({ key: key + '_' + c.id, text: c.text, at: c.at, mine: c.uid === viewer.uid, canDelete: c.uid === viewer.uid || p.uid === viewer.uid || !!owner, author: a }); }
+  return { ok: true, rows };
+}
+const splitC = ck => { const m = /^(\w{16}_\d{13}[a-f0-9]{6})_(\d{13}[a-f0-9]{6})$/.exec(String(ck)); return m ? { pk: m[1], id: m[2] } : null; };
+export async function deleteComment(me, ck, { owner } = {}) {
+  const s2 = splitC(ck); if (!s2) return err(404, 'Comment not found.'); const c = await auth.kvGet(KC(s2.pk, s2.id)); if (!c || c.deleted) return err(404, 'Comment not found.');
+  const p = await findPost(s2.pk); if (c.uid !== me.uid && !(p && p.uid === me.uid) && !owner) return err(403, 'You cannot delete this comment.');
+  await auth.kvPut(KC(s2.pk, s2.id), { deleted: true, at: now(), by: me.uid }); if (p) await savePostCount(p, 'comments', -1); return { ok: true };
+}
+export async function reportComment(me, ck, category, details) {
+  const s2 = splitC(ck); if (!s2) return err(404, 'Comment not found.'); const c = await auth.kvGet(KC(s2.pk, s2.id)); if (!c || c.deleted) return err(404, 'Comment not found.'); if (c.uid === me.uid) return err(400, 'You cannot report your own comment.');
+  if (!REPORT_CATEGORIES.includes(category)) return err(400, 'Pick a reason for the report.');
+  const id = rid(8); pingOwner('New comment report', category, 'rep' + id); await auth.kvPut('crp_' + id, { id, by: me.uid, target: c.uid, comment: ck, postText: 'Comment: ' + c.text.slice(0, 300), category, details: clean(details, 500), at: now(), status: 'open' }); return { ok: true };
+}
+// Pushes to the post author. Likes are combined: at most one like push per post per hour.
+async function socialPush(p, kind, from, n, text) {
+  const a = await getByUid(p.uid); if (!a || (a.notif || {}).social === false) return; const u = await auth.getUser(a.email); if (!u || u.revoked) return;
+  const { prefsOf } = await import('./pushjobs.mjs'); const pp = prefsOf(u); if (!pp.enabled || !pp.subscribed) return;
+  const OS = await import('./onesignal.mjs'); const path = '/community/post/?k=' + postKey(p);
+  if (kind === 'like') return OS.send({ email: a.email, title: '♥ New likes', body: from.name + (n > 1 ? ' and ' + (n - 1) + (n === 2 ? ' other' : ' others') : '') + ' liked your post.', path, key: 'like:' + postKey(p) + ':' + new Date().toISOString().slice(0, 13), topic: 'likes-' + p.id, retail: true });
+  return OS.send({ email: a.email, title: '💬 ' + from.name + ' commented', body: '“' + text.slice(0, 120) + (text.length > 120 ? '…' : '') + '”', path, key: 'cmt:' + p.id + ':' + n + ':' + from.uid, topic: 'cmt-' + p.id, retail: true });
 }
 export async function reportPost(me, key, category, details) {
   const p = await findPost(key); if (!p) return err(404, 'Post not found.'); if (p.uid === me.uid) return err(400, 'You cannot report your own post.');
