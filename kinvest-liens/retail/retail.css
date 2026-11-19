@@ -54,3 +54,4 @@
 
 .rt-pill.out_of_stock,.rt-pill.sold_out{background:#3a3a3c;color:#fff}.rt-pill.invite_only{background:linear-gradient(135deg,#7c5cf0,#4f2fd0);color:#fff}.rt-pill.preorder{background:#0a84ff;color:#fff}.rt-pill.coming_soon{background:#5e5ce6;color:#fff}.rt-pill.waitlist{background:#bf5af2;color:#fff}.rt-pill.limited_access{background:#ff375f;color:#fff}.rt-pill.unknown{background:#e5e5ea;color:#3a3a3c}
 .rt-why{font-size:.8rem;color:var(--mute);margin:2px 0 4px;line-height:1.35}
+.rt-btn.outline{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line);color:var(--ink)}

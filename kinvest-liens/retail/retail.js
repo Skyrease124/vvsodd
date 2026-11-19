@@ -6,7 +6,7 @@
   const get = async q => { try { const r = await fetch(API + '?' + new URLSearchParams(q), { credentials: 'same-origin' }); return { s: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { s: 0, j: { error: 'Could not reach PricePocketAsset.' } }; } };
   const post = async o => { try { const r = await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }); return { s: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { s: 0, j: { error: 'Could not reach PricePocketAsset.' } }; } };
   const STATUS = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', sold_out: 'OUT OF STOCK', out_of_stock: 'OUT OF STOCK', invite_only: 'Invite Only', preorder: 'Preorder', coming_soon: 'Coming Soon', waitlist: 'Waitlist', limited_access: 'Limited Access', unknown: 'Unknown', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
-  const STOCK_OPTS = [['upcoming', 'Upcoming'], ['monitoring', 'Monitoring'], ['in_stock', 'In stock'], ['low_stock', 'Low stock'], ['out_of_stock', 'Out of stock'], ['invite_only', 'Invite only'], ['preorder', 'Preorder'], ['coming_soon', 'Coming soon'], ['waitlist', 'Waitlist'], ['limited_access', 'Limited access'], ['unknown', 'Unknown']];
+  const STOCK_OPTS = [['upcoming', 'Upcoming'], ['monitoring', 'Monitoring'], ['in_stock', 'In stock'], ['low_stock', 'Low stock'], ['out_of_stock', 'Out of stock'], ['invite_only', 'Invite only'], ['preorder', 'Preorder'], ['coming_soon', 'Coming soon'], ['waitlist', 'Waitlist'], ['limited_access', 'Limited access (queue open)'], ['unknown', 'Unknown']];
   const ICON = { pokemon: '🔥', sneakers: '👟', electronics: '⚡', gaming: '🎮', collectibles: '⭐' };
   const money = n => n == null ? '' : '$' + Number(n).toFixed(2);
   const ago = iso => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
@@ -39,7 +39,9 @@
     const row = mk('div', 'rt-row'), w = mk('button', 'rt-btn' + (ctx.watched.has(p.id) ? ' on' : ''), ctx.watched.has(p.id) ? '✓ Watching' : (p.status === 'upcoming' ? 'Watch This' : 'Alert Me')); w.type = 'button';
     w.onclick = () => watchSheet(p, ctx).then(ch => { if (ch) ctx.reload(); });
     row.append(w);
-    if (p.status === 'in_stock' || p.status === 'low_stock' || p.status === 'upcoming') { const a = mk('a', 'rt-btn buy', p.status === 'upcoming' ? 'View' : 'Buy Now'); a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; row.append(a); }
+    // Every card has a button that opens the exact store page. Only a verified in-stock product says "Buy Now".
+    { const act = { in_stock: ['Buy Now', 'buy'], low_stock: ['Buy Now', 'buy'], invite_only: ['Request Invite', 'gold'], limited_access: ['Get in Line', 'gold'], waitlist: ['Join Waitlist', 'gold'], preorder: ['Pre-order', 'buy'], upcoming: ['View', 'buy'] }[p.status] || ['View at ' + p.retailerName, 'outline'];
+      const a = mk('a', 'rt-btn ' + act[1], act[0]); a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; row.append(a); }
     b.append(row); c.append(b); return c;
   }
   function upsell() { return sheet((sh, close) => { sh.append(mk('h3', '', 'Product alerts are for Pro members'), mk('p', 'rt-muted', 'Upgrade to watch products, set a maximum price and request alerts. Everyone can still browse In Stock Now and Upcoming Drops.')); const r = mk('div', 'rt-row'), n = mk('button', 'rt-btn', 'Not now'), y = mk('a', 'rt-btn gold', 'See plans'); n.type = 'button'; y.href = '/plans/'; n.onclick = () => close(false); r.append(n, y); sh.append(r); }); }

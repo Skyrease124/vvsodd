@@ -56,7 +56,8 @@ const RESTRICT = [
   { status: 'invite_only', label: 'Exclusive sales event', why: 'invitation required', re: /exclusive sales event/i },
   { status: 'invite_only', label: 'Invite requested', why: 'invitation required', re: /you[’']ve requested an invite|request(ed)? an invite/i },
   { status: 'invite_only', label: 'Invitation required', why: 'invitation required', re: /invitation required|you[’']ll receive an invitation|if you[’']re selected (to participate)?/i },
-  { status: 'invite_only', label: 'Lottery', why: 'lottery entry required', re: /\blottery\b|enter (the|our) drawing/i },
+  { status: 'invite_only', label: 'Invite available by request', why: 'invitation required', re: /ask for an invite|available by invitation|request an invite/i },
+  { status: 'invite_only', label: 'Lottery', why: 'lottery entry required', re: /\blottery\b|enter (the|our) drawing/i, visibleOnly: true },
   { status: 'waitlist', label: 'Waitlist', why: 'waitlist, not for sale yet', re: /join (the )?waitlist|you[’']re on (the )?waitlist/i },
   { status: 'limited_access', label: 'Waiting room', why: 'waiting room or queue', re: /waiting room|you (are|[’']re) in (the )?line/i },
   { status: 'coming_soon', label: 'Coming soon', why: 'not released yet', re: /coming soon/i },
@@ -76,7 +77,10 @@ function isDisabled(attrs) { return /\bdisabled\b|aria-disabled=["']true["']/i.t
 // Decides the stock state and writes the reason in plain words. Returns {status, reason, matched}.
 export function classifyStock({ html = '', schemaAvail = '', retailer = '', price = null }) {
   const store = (RETAILERS[retailer] || { name: 'Retailer' }).name, text = stripHtml(html), ctrls = controls(html);
-  const hit = RESTRICT.filter(r => r.re.test(text));
+  // Restriction wording is looked for in the page data too (many stores put the invite state inside script data, not visible text).
+  const data = html.replace(/\\"/g, '"').replace(/\\u0027/gi, "'").replace(/\\u2019/gi, '’').replace(/<[^>]+>/g, ' ');
+  const vis = stripHtml(html);   // visible text only: customer reviews are never treated as the page's own state
+  const hit = RESTRICT.filter(r => r.re.test(r.visibleOnly ? vis : data));
   if (hit.length) return { status: hit[0].status, reason: store + ' ' + hit[0].label + ' — ' + hit[0].why, matched: hit.map(h => h.label) };
   const enabled = ctrls.filter(c => !c.disabled);
   const enabledPre = enabled.filter(c => PREORDER_BTN.test(c.label));
@@ -188,6 +192,7 @@ export async function applyResult(p, r, source) {
   if (nextStatus !== prevStatus) {
     p.prevStatus = prevStatus; p.status = nextStatus; p.stockChangeAt = t;
     if (AVAILABLE.has(nextStatus) && !AVAILABLE.has(prevStatus)) events.push(prevStatus === 'upcoming' ? 'release' : 'restock');
+    if (nextStatus === 'limited_access') events.push('queue');   // the line / waiting room just opened: "Get in line"
     const h = (await auth.kvGet('rih_' + p.id)) || []; h.unshift({ at: t, from: prevStatus, to: nextStatus, price: nextPrice, source }); await auth.kvPut('rih_' + p.id, h.slice(0, 60));
   }
   if (nextPrice != null && nextPrice !== prevPrice) { p.prevPrice = prevPrice; p.price = nextPrice; if (prevPrice != null && nextPrice < prevPrice && AVAILABLE.has(p.status)) events.push('price'); }
@@ -201,6 +206,7 @@ export async function applyResult(p, r, source) {
 const EMOJI = { pokemon: '🔥', sneakers: '👟', electronics: '⚡', gaming: '🎮', collectibles: '⭐' };
 export function message(p, kind) {
   const store = RETAILERS[p.retailer].name, cat = CAT_LABEL[p.category] || 'Retail', price = p.price != null ? ' $' + p.price.toFixed(2) + '.' : '';
+  if (kind === 'queue') return { title: '🚦 Get in line', body: p.name + ' — the line is open at ' + store + '. Tap to get in line.' };
   if (kind === 'restock' && p.prevStatus === 'invite_only') return { title: '🎟️ Invite Live', body: p.name + ' is now available to buy at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'release') return { title: (EMOJI[p.category] || '🛍️') + ' ' + cat + ' Release Live', body: p.name + ' is live at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'price') return { title: '💸 Price Drop', body: p.name + ' dropped to $' + p.price.toFixed(2) + ' at ' + store + (p.prevPrice != null ? ' (was $' + p.prevPrice.toFixed(2) + ')' : '') + '. Tap to shop.' };
@@ -214,10 +220,10 @@ export function prefMatch(pr, category, retailer, kind) {
 export async function recipients(p, kind) {
   const set = new Map();
   for (const k of await auth.kvList('rwp_' + p.id + '_')) { const uid = k.slice(4 + p.id.length + 1); const w = await auth.kvGet('rw_' + uid + '_' + p.id); if (!w) continue;
-    const want = kind === 'release' ? w.release : kind === 'restock' ? w.inStock : w.priceDrop; if (!want) continue;
+    const want = kind === 'release' ? w.release : kind === 'restock' ? w.inStock : kind === 'queue' ? (w.inStock || w.release) : w.priceDrop; if (!want) continue;
     if (w.maxPrice != null && (p.price == null || p.price > w.maxPrice)) continue;   // no price, no price-qualified alert
     set.set(uid, 'watch'); }
-  for (const k of await auth.kvList('rpref_')) { const uid = k.slice(6); if (set.has(uid)) continue; if (prefMatch(await auth.kvGet(k), p.category, p.retailer, kind)) set.set(uid, 'prefs'); }
+  for (const k of await auth.kvList('rpref_')) { const uid = k.slice(6); if (set.has(uid)) continue; if (prefMatch(await auth.kvGet(k), p.category, p.retailer, kind === 'queue' ? 'restock' : kind)) set.set(uid, 'prefs'); }
   return set;
 }
 async function emailOf(uid) { const p = await auth.kvGet('cp_' + uid); return p && p.email; }
