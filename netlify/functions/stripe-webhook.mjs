@@ -8,6 +8,8 @@ async function flag(user, type, ref) {
   await saveUser(user);
 }
 
+// Private owner pushes (never to members). Failures here never affect billing.
+const ownerPing = (t, b, k) => import('../lib/retail.mjs').then(R => R.notifyOwner(t, b, '/members/', k)).catch(() => {});
 export async function process_(stripe, event) {
   const o = event.data.object;
   switch (event.type) {
@@ -15,6 +17,7 @@ export async function process_(stripe, event) {
       if (o.mode !== 'subscription' || !o.customer) break;
       const u = await S.userForCustomer(o.customer); if (!u) break;
       if (o.subscription) await S.applySubscription(u, await stripe.subscriptions.retrieve(typeof o.subscription === 'string' ? o.subscription : o.subscription.id));
+      await ownerPing('New Pro member', 'A member just started a Pro subscription.', 'pro' + event.id);
       break;
     }
     case 'customer.subscription.created':
@@ -30,6 +33,7 @@ export async function process_(stripe, event) {
       const u = cust && await S.userForCustomer(cust); if (!u) break;
       const sid = subIdOf(o);
       if (sid) await S.applySubscription(u, await stripe.subscriptions.retrieve(typeof sid === 'string' ? sid : sid.id));
+      await ownerPing(event.type === 'invoice.paid' ? 'Payment received' : 'Payment failed', event.type === 'invoice.paid' ? 'A Pro payment went through.' : 'A Pro payment failed. Stripe will retry.', 'inv' + event.id);
       if (event.type === 'invoice.payment_failed') await flag(u, 'payment_failed', o.id);
       else if (u.billingAlert && u.billingAlert.type === 'payment_failed') { delete u.billingAlert; await saveUser(u); }
       break;

@@ -50,14 +50,28 @@ export async function postAny(payload, signal) {
 }
 // send({email, title, body, path, key, topic}) -> {ok, skipped?, error?, id?}
 // key: a stable unique key for this notification (event id etc.). The same key is never sent to the same member twice.
-export async function send({ email, title, body, path = '/account/', key, topic, dry }) {
+// Retail pushes may open a store page. The caller passes link only after lib/retail.mjs checked it against the store allowlist;
+// this re-checks the host so nothing else can ever be used as a push destination.
+const RETAIL_HOSTS = ['nike.com', 'target.com', 'walmart.com', 'amazon.com', 'bestbuy.com', 'pokemoncenter.com', 'gamestop.com'];
+export function retailLink(link) { try { const u = new URL(link); const h = u.hostname.toLowerCase(); return u.protocol === 'https:' && RETAIL_HOSTS.some(x => h === x || h.endsWith('.' + x)) ? u.toString() : ''; } catch (e) { return ''; } }
+const target = (link, path) => retailLink(link) || (/^\/(?!\/)/.test(path || '') ? SITE + path : SITE + '/');
+// Send to every subscribed device (owner's "Send to Everyone"). One API call; idempotency key stops double sends.
+export async function sendSegment({ title, body, link, path, key, priority, image }) {
+  if (!(await configured())) return { ok: false, error: 'OneSignal key is not set' };
+  const payload = { app_id: APP_ID, target_channel: 'push', included_segments: ['Total Subscriptions'], headings: { en: String(title).slice(0, 80) }, contents: { en: String(body).slice(0, 240) }, url: target(link, path), idempotency_key: uuidOf('seg|' + key), web_push_topic: 'retail-broadcast' };
+  if (priority === 'high') payload.priority = 10; if (image) payload.chrome_web_image = image;
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
+  try { const { r } = await postAny(payload, c.signal); if (!r) return { ok: false, error: 'OneSignal key is not set' }; let d = {}; try { d = await r.json(); } catch (e) { /* */ } return r.ok && d.id ? { ok: true, id: d.id } : { ok: false, error: ('HTTP ' + r.status + ' ' + JSON.stringify(d.errors || '')).slice(0, 200) }; }
+  catch (e) { return { ok: false, error: 'network' }; } finally { clearTimeout(t); }
+}
+export async function send({ email, title, body, path = '/account/', key, topic, dry, link, retail }) {
   if (!email || !key) return { ok: false, error: 'missing email or key' };
-  if (!safeText(title) || !safeText(body)) return { ok: false, error: 'blocked: wording makes an availability claim' };
+  if (!retail && (!safeText(title) || !safeText(body))) return { ok: false, error: 'blocked: wording makes an availability claim' };
   const log = (await kvGet(logKey(email))) || { keys: [] };
   if (log.keys.includes(key)) return { ok: true, skipped: 'duplicate' };
   if (!(await configured())) return { ok: false, error: 'OneSignal key is not set' };
   if (dry) return { ok: true, dry: true };
-  const payload = { app_id: APP_ID, target_channel: 'push', include_aliases: { external_id: [externalId(email)] }, headings: { en: String(title).slice(0, 80) }, contents: { en: String(body).slice(0, 240) }, url: SITE + path, idempotency_key: uuidOf(email + '|' + key), ttl: 86400 };
+  const payload = { app_id: APP_ID, target_channel: 'push', include_aliases: { external_id: [externalId(email)] }, headings: { en: String(title).slice(0, 80) }, contents: { en: String(body).slice(0, 240) }, url: target(link, path), idempotency_key: uuidOf(email + '|' + key), ttl: 86400 };
   if (topic) payload.web_push_topic = String(topic).slice(0, 60);
   const c = new AbortController(), t = setTimeout(() => c.abort(), 10000);
   try {
