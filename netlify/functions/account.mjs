@@ -65,7 +65,7 @@ async function handle(event) {
       const list = [];
       for (const k of keys.slice(0, 2000)) {
         const u = await auth.kvGet(k); if (!u || !u.email) continue;
-        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, family: !!u.family, paidThrough: u.paidThrough || '', note: u.note || '', sub: u.sub ? u.sub.status + (u.sub.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : '', alert: u.billingAlert ? u.billingAlert.type : '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length });
+        list.push({ email: u.email, created: u.created || '', lastLogin: u.lastLogin || '', owner: !!(auth.markOwner(u).owner), revoked: !!u.revoked, family: !!u.family, paidThrough: u.paidThrough || '', note: u.note || '', sub: u.sub ? u.sub.status + (u.sub.cancelAtPeriodEnd ? ' (cancels at period end)' : '') : '', alert: u.billingAlert ? u.billingAlert.type : '', saved: (u.saved || []).length, portfolio: (u.portfolio || []).length, strikes: (u.strikes || []).map(s => ({ id: s.id, at: s.at, reason: s.reason })), revokeReason: u.revoked ? (u.revokeReason || '') : '', revokedAt: u.revoked ? (u.revokedAt || '') : '' });
       }
       list.sort((a, b) => (b.created > a.created ? 1 : -1));
       return json(200, { members: list });
@@ -103,7 +103,22 @@ async function handle(event) {
     if (typeof b.revoked === 'boolean') {
       if (b.revoked && (u.owner || em === me.email)) return json(400, { error: 'You cannot turn off the owner account.' });
       u.revoked = b.revoked; u.revokedAt = b.revoked ? new Date().toISOString() : undefined;
+      u.revokeReason = b.revoked ? String(b.reason || '').slice(0, 300) : undefined;   // private: only the owner sees it
+      u.modLog = (u.modLog || []).concat({ at: new Date().toISOString(), what: b.revoked ? 'deactivated' : 'reactivated', reason: String(b.reason || '').slice(0, 300), by: me.email }).slice(-50);
       if (b.revoked) u.pwChanged = Date.now(); // ends any sign-in that is already open
+    }
+    // Strikes: a private record of rule violations. They never deactivate anyone by themselves; the owner decides.
+    if (b.strike !== undefined || b.removeStrike !== undefined) {
+      if (u.owner || em === me.email) return json(400, { error: 'Strikes cannot be added to the owner account.' });
+      if (b.strike !== undefined) {
+        const reason = String((b.strike && b.strike.reason) || '').trim().slice(0, 200); if (!reason) return json(400, { error: 'Write what the strike is for.' });
+        if ((u.strikes || []).length >= 20) return json(400, { error: 'This account already has 20 strikes.' });
+        const s = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), at: new Date().toISOString(), reason, by: me.email };
+        u.strikes = (u.strikes || []).concat(s); u.modLog = (u.modLog || []).concat({ at: s.at, what: 'strike added', reason, by: me.email }).slice(-50);
+      } else {
+        const had = (u.strikes || []).find(s => s.id === String(b.removeStrike)); if (!had) return json(404, { error: 'That strike was not found.' });
+        u.strikes = u.strikes.filter(s => s.id !== had.id); u.modLog = (u.modLog || []).concat({ at: new Date().toISOString(), what: 'strike removed', reason: had.reason, by: me.email }).slice(-50);
+      }
     }
     if (b.paidThrough !== undefined) {
       const pt = String(b.paidThrough || '');
@@ -333,7 +348,7 @@ async function handle(event) {
   { const ipl = await RL.hit('login-ip:' + ip, 40, 600e3); if (!ipl.ok) return json(429, { error: 'Too many tries. Please wait ' + Math.ceil(ipl.retryAfterSec / 60) + ' minutes.' });
     const lk = await RL.peek('login-fail:' + email, 10, 900e3); if (!lk.ok) return json(429, { error: 'Too many wrong passwords for this account. Try again in ' + Math.ceil(lk.retryAfterSec / 60) + ' minutes, or reset your password.' }); }
   const u = await auth.checkLogin(email, pw);
-  if (u === 'revoked') return json(403, { error: 'This account has been turned off. Contact the site owner.' });
+  if (u === 'revoked') return json(403, { error: 'This account has been deactivated. Please contact PricePocketAsset for more information.', deactivated: true });
   if (!u) { await RL.hit('login-fail:' + email, 10, 900e3); return json(401, { error: 'Wrong email or password.' }); }
   await RL.clear('login-fail:' + email);
   u.lastLogin = new Date().toISOString(); await auth.saveUser(u);

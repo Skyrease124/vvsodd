@@ -76,8 +76,9 @@ export async function checkLogin(email, password) {
   const u = await get(userKey(email));
   const salt = u ? u.salt : 'x'.repeat(32);
   const h = Buffer.from(await hashPw(password, salt), 'hex'), want = Buffer.from(u ? u.hash : '0'.repeat(128), 'hex');
-  if (u && u.revoked) return 'revoked';
-  return u && crypto.timingSafeEqual(h, want) ? u : null;
+  const good = !!u && h.length === want.length && crypto.timingSafeEqual(h, want);
+  if (good && u.revoked) return 'revoked';   // only someone who knows the password learns the account is deactivated
+  return good ? u : null;
 }
 export async function sessionCookie(email) {
   const tok = await sign({ e: email, iat: Date.now(), exp: Date.now() + DAYS * 864e5, sid: crypto.randomBytes(9).toString('base64url') });
