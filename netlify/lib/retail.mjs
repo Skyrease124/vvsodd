@@ -56,7 +56,8 @@ const RESTRICT = [
   { status: 'invite_only', label: 'Exclusive sales event', why: 'invitation required', re: /exclusive sales event/i },
   { status: 'invite_only', label: 'Invite requested', why: 'invitation required', re: /you[’']ve requested an invite|request(ed)? an invite/i },
   { status: 'invite_only', label: 'Invitation required', why: 'invitation required', re: /invitation required|you[’']ll receive an invitation|if you[’']re selected (to participate)?/i },
-  { status: 'invite_only', label: 'Lottery', why: 'lottery entry required', re: /\blottery\b|enter (the|our) drawing/i },
+  { status: 'invite_only', label: 'Invite available by request', why: 'invitation required', re: /ask for an invite|available by invitation|request an invite/i },
+  { status: 'invite_only', label: 'Lottery', why: 'lottery entry required', re: /\blottery\b|enter (the|our) drawing/i, visibleOnly: true },
   { status: 'waitlist', label: 'Waitlist', why: 'waitlist, not for sale yet', re: /join (the )?waitlist|you[’']re on (the )?waitlist/i },
   { status: 'limited_access', label: 'Waiting room', why: 'waiting room or queue', re: /waiting room|you (are|[’']re) in (the )?line/i },
   { status: 'coming_soon', label: 'Coming soon', why: 'not released yet', re: /coming soon/i },
@@ -76,7 +77,10 @@ function isDisabled(attrs) { return /\bdisabled\b|aria-disabled=["']true["']/i.t
 // Decides the stock state and writes the reason in plain words. Returns {status, reason, matched}.
 export function classifyStock({ html = '', schemaAvail = '', retailer = '', price = null }) {
   const store = (RETAILERS[retailer] || { name: 'Retailer' }).name, text = stripHtml(html), ctrls = controls(html);
-  const hit = RESTRICT.filter(r => r.re.test(text));
+  // Restriction wording is looked for in the page data too (many stores put the invite state inside script data, not visible text).
+  const data = html.replace(/\\"/g, '"').replace(/\\u0027/gi, "'").replace(/\\u2019/gi, '’').replace(/<[^>]+>/g, ' ');
+  const vis = stripHtml(html);   // visible text only: customer reviews are never treated as the page's own state
+  const hit = RESTRICT.filter(r => r.re.test(r.visibleOnly ? vis : data));
   if (hit.length) return { status: hit[0].status, reason: store + ' ' + hit[0].label + ' — ' + hit[0].why, matched: hit.map(h => h.label) };
   const enabled = ctrls.filter(c => !c.disabled);
   const enabledPre = enabled.filter(c => PREORDER_BTN.test(c.label));
