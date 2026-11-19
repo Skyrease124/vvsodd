@@ -4,7 +4,7 @@
 import { hit } from '../lib/ratelimit.mjs';
 
 const UA = 'PricePocketAsset research (https://pricepocketasset.com)';
-const URL_ = 'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=500&category=wildfires,floods,severeStorms,volcanoes,landslides';
+const URL_ = c => 'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&limit=500&category=' + c;
 const TTL = 15 * 60e3, FAIL_TTL = 60e3;
 const CATS = { wildfires: 'Wildfire', floods: 'Flood', severeStorms: 'Storm', volcanoes: 'Volcano', landslides: 'Landslide' };
 const json = (c, b) => new Response(JSON.stringify(b), { status: c, headers: { 'Content-Type': 'application/json', 'Cache-Control': c === 200 ? 'public, max-age=300' : 'no-store' } });
@@ -30,8 +30,11 @@ export async function load() {
   if (cache && Date.now() < cache.until) return cache.v;
   const c = new AbortController(), t = setTimeout(() => c.abort(), 9000);
   try {
-    const r = await fetch(URL_, { headers: { 'User-Agent': UA }, signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status);
-    const events = parse(await r.json()), counts = {}; events.forEach(x => { counts[x.cat] = (counts[x.cat] || 0) + 1; });
+    // one request per category so a long wildfire list can never push floods/storms out of the result
+    const rs = await Promise.allSettled(Object.keys(CATS).map(async k => { const r = await fetch(URL_(k), { headers: { 'User-Agent': UA }, signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return parse(await r.json()); }));
+    if (rs.every(x => x.status === 'rejected')) throw new Error('all categories failed');
+    const seen = new Set(), events = []; for (const x of rs) if (x.status === 'fulfilled') for (const e of x.value) if (!seen.has(e.id)) { seen.add(e.id); events.push(e); }
+    const counts = {}; events.forEach(x => { counts[x.cat] = (counts[x.cat] || 0) + 1; });
     const v = { ok: true, events, counts, checked: new Date().toISOString(), source: 'NASA EONET (open events reported by NIFC, NWS, USGS and other agencies)' };
     cache = { v, until: Date.now() + TTL }; return v;
   } catch (e) { const v = { ok: false, reason: 'lookup' }; if (cache && cache.v.ok) return Object.assign({}, cache.v, { stale: true }); cache = { v, until: Date.now() + FAIL_TTL }; return v; }
