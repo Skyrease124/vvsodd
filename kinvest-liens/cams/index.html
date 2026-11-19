@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Live Cams | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PricePocket">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/cams/cams.css">
+</head>
+<body class="aibody">
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
+    <nav aria-label="Main"><a href="/">Home</a><a href="/map/">Map</a><a href="/cams/">Live Cams</a><a href="/account/">Account</a></nav>
+  </div>
+</header>
+<main class="lc" id="main">
+  <header class="lc-top">
+    <p class="lc-eye">Pro</p>
+    <h1>Live Cams</h1>
+    <p class="lc-sub">Official public cameras from state transportation departments, city traffic offices and tourism boards. Pick a state, pick a city, and tap any camera to watch it big. They show conditions at the camera, not at any property.</p>
+  </header>
+  <div class="lc-ctl">
+    <div class="lc-seg" id="states" role="tablist" aria-label="State"></div>
+    <div class="lc-chips" id="cities" role="group" aria-label="City"></div>
+  </div>
+  <p class="lc-msg" id="msg" role="status" aria-live="polite">Loading cameras&hellip;</p>
+  <section class="lc-stage" id="stage" hidden aria-label="Selected camera">
+    <div class="lc-view" id="view"></div>
+    <div class="lc-meta"><div><h2 id="cname"></h2><p id="cinfo"></p></div><div class="lc-act"><button type="button" class="lc-btn" id="prev" aria-label="Previous camera">&lsaquo;</button><button type="button" class="lc-btn" id="next" aria-label="Next camera">&rsaquo;</button><a class="lc-btn wide" id="onmap" href="/map/">Open on the map</a></div></div>
+    <p class="lc-upd" id="upd" role="status"></p>
+  </section>
+  <section class="lc-grid" id="grid" aria-label="Cameras near the city"></section>
+  <p class="lc-fine">Pictures from state, city and tourism feeds. Update times and availability vary. Where a state has no free public camera feed we do not show cameras for it.</p>
+</main>
+<script src="/cams/cams.js"></script>
+<script src="/auth-nav.js"></script>
+</body>
+</html>
