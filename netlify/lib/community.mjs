@@ -87,9 +87,9 @@ export async function badgesFor(p) {
 export async function isVisible(p) { if (!p) return false; const u = await auth.getUser(p.email); return !!u && !u.revoked; }
 export async function publicView(p, viewerUid) {
   const me = viewerUid === p.uid, pr = p.privacy || {}, f = await isFounderProfile(p);
-  return { uid: p.uid, username: p.username, name: p.name, role: p.role, experience: p.experience, bio: p.bio, interests: p.interests || [], cover: p.cover, founder: f, verified: !!(p.verified || f),
+  return { uid: p.uid, username: p.username, name: p.name, role: p.role, experience: p.experience, bio: p.bio, interests: p.interests || [], cover: p.cover, photo: photoUrl(p, 'avatar'), coverPhoto: photoUrl(p, 'cover'), founder: f, verified: !!(p.verified || f),
     location: (me || pr.showLocation) && (p.city || p.state) ? [p.city, p.state].filter(Boolean).join(', ') : '', joined: String(p.created || '').slice(0, 7), pinned: f ? p.pinned || '' : '',
-    badges: await badgesFor(p), stats: { followers: (p.stats || {}).followers || 0, following: ((p.stats || {}).following || 0) + (f ? 0 : 1), posts: 0 }, activityHidden: !me && pr.showActivity === false };
+    badges: await badgesFor(p), stats: { followers: (p.stats || {}).followers || 0, following: ((p.stats || {}).following || 0) + (f ? 0 : 1), posts: Math.max(0, (p.stats || {}).posts || 0) }, activityHidden: !me && pr.showActivity === false };
 }
 export async function relation(viewer, target) {
   const f = await founderUid(), tF = target.uid === f, self = viewer.uid === target.uid;
@@ -137,7 +137,7 @@ export async function mutual(target, viewer) {
   const [a, b] = await Promise.all([edges(`cf_${viewer.uid}_`), edges(`cf_${target.uid}_`)]), both = a.filter(x => b.includes(x)).slice(0, 12), rows = [];
   for (const id of both) { const p = await getByUid(id); if (p && await isVisible(p)) rows.push(await miniView(p, viewer.uid)); } return { rows };
 }
-export async function miniView(p, viewerUid) { const f = await isFounderProfile(p); return { uid: p.uid, username: p.username, name: p.name, role: p.role, founder: f, verified: !!(p.verified || f), cover: p.cover, following: viewerUid ? !!(await auth.kvGet(K.f(viewerUid, p.uid))) : false }; }
+export async function miniView(p, viewerUid) { const f = await isFounderProfile(p); return { uid: p.uid, username: p.username, name: p.name, role: p.role, founder: f, verified: !!(p.verified || f), cover: p.cover, photo: photoUrl(p, 'avatar'), following: viewerUid ? !!(await auth.kvGet(K.f(viewerUid, p.uid))) : false }; }
 
 // ---- blocks and reports ------------------------------------------------------------------------------------------
 export async function block(me, targetUid) {
@@ -241,3 +241,59 @@ export async function suggestions(viewer, limit = 8) {
   for (const k of keys) { const p = await auth.kvGet(k); if (!p || p.uid === viewer.uid || p.uid === f || fol.has(p.uid) || (p.privacy || {}).discoverable === false || !p.name || p.name === 'New member' || !(await isVisible(p))) continue; if (await auth.kvGet(K.b(p.uid, viewer.uid)) || await auth.kvGet(K.b(viewer.uid, p.uid))) continue; rows.push(await miniView(p, viewer.uid)); if (rows.length >= limit) break; }
   return { rows };
 }
+
+// ---- posts -----------------------------------------------------------------------------------------------------
+// Text-only posts. Paid members write; every signed-in member reads. Links stay plain text (never turned into links).
+export const POST_MAX = 1000;
+const cleanPost = s => String(s == null ? '' : s).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, POST_MAX);
+const KP = (uid, id) => `cpo_${uid}_${id}`;
+export async function createPost(me, text) {
+  const t = cleanPost(text); if (!t) return err(400, 'Write something first.');
+  const id = (9999999999999 - Date.now()).toString().padStart(13, '0') + rid(3);   // newest sorts first
+  const p = { id, uid: me.uid, text: t, at: now() }; await auth.kvPut(KP(me.uid, id), p); await bump(me.uid, 'posts', 1); return { ok: true, post: p };
+}
+async function findPost(id) { const m = /^(\w{16})_(\d{13}[a-f0-9]{6})$/.exec(String(id)); if (!m) return null; const p = await auth.kvGet(KP(m[1], m[2])); return p && !p.deleted ? p : null; }
+export const postKey = p => p.uid + '_' + p.id;
+export async function deletePost(me, key, { owner } = {}) {
+  const p = await findPost(key); if (!p) return err(404, 'Post not found.'); if (p.uid !== me.uid && !owner) return err(403, 'You can only delete your own posts.');
+  await auth.kvPut(KP(p.uid, p.id), { deleted: true, at: now() }); await bump(p.uid, 'posts', -1); return { ok: true };
+}
+async function postView(p, viewer, cache) {
+  let a = cache[p.uid]; if (a === undefined) { const prof = await getByUid(p.uid); a = cache[p.uid] = prof && await isVisible(prof) && !(await auth.kvGet(K.b(viewer.uid, p.uid))) && !(await auth.kvGet(K.b(p.uid, viewer.uid))) ? await miniView(prof, viewer.uid) : null; }
+  if (!a) return null; return { key: postKey(p), text: p.text, at: p.at, mine: p.uid === viewer.uid, author: a };
+}
+export async function listPosts(viewer, { uid, limit = 30 } = {}) {
+  const keys = (await auth.kvList(uid ? 'cpo_' + uid + '_' : 'cpo_')).sort((a, b) => (a.slice(21) < b.slice(21) ? -1 : 1)).slice(0, 400);
+  const out = [], cache = {};
+  for (const k of keys) { if (out.length >= limit) break; const p = await auth.kvGet(k); if (!p || p.deleted) continue; const v = await postView(p, viewer, cache); if (v) out.push(v); }
+  return { rows: out };
+}
+export async function reportPost(me, key, category, details) {
+  const p = await findPost(key); if (!p) return err(404, 'Post not found.'); if (p.uid === me.uid) return err(400, 'You cannot report your own post.');
+  if (!REPORT_CATEGORIES.includes(category)) return err(400, 'Pick a reason for the report.');
+  const id = rid(8); await auth.kvPut('crp_' + id, { id, by: me.uid, target: p.uid, post: key, postText: p.text.slice(0, 300), category, details: clean(details, 500), at: now(), status: 'open' }); return { ok: true };
+}
+
+// ---- profile photo and background photo ------------------------------------------------------------------------
+// The phone resizes and re-encodes the picture first (that also drops hidden location data). The server only accepts
+// small JPEG/PNG/WebP files, refuses any that still carry EXIF data, and stores them in our own site storage.
+const MEDIA_MAX = 1.5 * 1024 * 1024;
+export const mediaKey = (kind, uid) => `cm_${kind}_${uid}`;
+function sniff(buf) {
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  if (buf.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
+  if (buf.slice(0, 4).toString('latin1') === 'RIFF' && buf.slice(8, 12).toString('latin1') === 'WEBP') return 'image/webp';
+  return '';
+}
+export async function setPhoto(me, kind, data) {
+  if (!['avatar', 'cover'].includes(kind)) return err(400, 'Unknown photo.');
+  if (data === null || data === '') { await auth.kvPut(mediaKey(kind, me.uid), { removed: true }); const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = ''; await auth.kvPut(K.p(me.uid), p); return { ok: true }; }
+  const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(data || '')); if (!m) return err(400, 'Choose a JPG, PNG or WebP picture.');
+  const buf = Buffer.from(m[2], 'base64'); if (buf.length > MEDIA_MAX) return err(413, 'That picture is too large.'); if (buf.length < 200) return err(400, 'That picture looks empty.');
+  const type = sniff(buf); if (!type) return err(400, 'That file is not a picture.');
+  if (buf.indexOf(Buffer.from('Exif\0\0', 'latin1')) !== -1) return err(400, 'That picture still has hidden camera data. Please try again.');
+  const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: m[2], v });
+  const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = v; await auth.kvPut(K.p(me.uid), p); return { ok: true, v };
+}
+export async function ownerRemovePhoto(uid, kind) { const p = await getByUid(uid); if (!p) return err(404, 'Member not found.'); return setPhoto(p, kind, null); }
+export const photoUrl = (p, kind) => { const v = kind === 'avatar' ? p.photo : p.coverPhoto; return v ? `/.netlify/functions/media?k=${kind}&u=${p.uid}&v=${v}` : ''; };
