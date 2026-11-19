@@ -257,20 +257,24 @@ export async function suggestions(viewer, limit = 8) {
 export const POST_MAX = 1000;
 const cleanPost = s => String(s == null ? '' : s).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f<>]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, POST_MAX);
 const KP = (uid, id) => `cpo_${uid}_${id}`;
-export async function createPost(me, text) {
-  const t = cleanPost(text); if (!t) return err(400, 'Write something first.');
+export async function createPost(me, text, photos) {
+  const t = cleanPost(text); const ids = [...new Set([].concat(photos || []).map(String))];
+  if (ids.length > 4) return err(400, 'Up to 4 photos per post.'); if (!t && !ids.length) return err(400, 'Write something or add a photo first.');
   const id = (9999999999999 - Date.now()).toString().padStart(13, '0') + rid(3);   // newest sorts first
-  const p = { id, uid: me.uid, text: t, at: now() }; await auth.kvPut(KP(me.uid, id), p); await bump(me.uid, 'posts', 1); return { ok: true, post: p };
+  for (const ph of ids) { if (!/^[a-f0-9]{16}$/.test(ph)) return err(400, 'Photo not found.'); const m = await auth.kvGet(postPhotoKey(me.uid, ph)); if (!m || m.removed || m.post) return err(400, 'Photo not found. Please add it again.'); }
+  for (const ph of ids) { const m = await auth.kvGet(postPhotoKey(me.uid, ph)); m.post = id; await auth.kvPut(postPhotoKey(me.uid, ph), m); }
+  const p = { id, uid: me.uid, text: t, photos: ids, at: now() }; await auth.kvPut(KP(me.uid, id), p); await bump(me.uid, 'posts', 1); return { ok: true, post: p };
 }
 async function findPost(id) { const m = /^(\w{16})_(\d{13}[a-f0-9]{6})$/.exec(String(id)); if (!m) return null; const p = await auth.kvGet(KP(m[1], m[2])); return p && !p.deleted ? p : null; }
 export const postKey = p => p.uid + '_' + p.id;
 export async function deletePost(me, key, { owner } = {}) {
   const p = await findPost(key); if (!p) return err(404, 'Post not found.'); if (p.uid !== me.uid && !owner) return err(403, 'You can only delete your own posts.');
+  for (const ph of p.photos || []) await auth.kvPut(postPhotoKey(p.uid, ph), { removed: true });
   await auth.kvPut(KP(p.uid, p.id), { deleted: true, at: now() }); await bump(p.uid, 'posts', -1); return { ok: true };
 }
 async function postView(p, viewer, cache) {
   let a = cache[p.uid]; if (a === undefined) { const prof = await getByUid(p.uid); a = cache[p.uid] = prof && await isVisible(prof) && !(await auth.kvGet(K.b(viewer.uid, p.uid))) && !(await auth.kvGet(K.b(p.uid, viewer.uid))) ? await miniView(prof, viewer.uid) : null; }
-  if (!a) return null; return { key: postKey(p), text: p.text, at: p.at, mine: p.uid === viewer.uid, author: a };
+  if (!a) return null; return { key: postKey(p), text: p.text, photos: (p.photos || []).map(ph => postPhotoUrl(p.uid, ph)), at: p.at, mine: p.uid === viewer.uid, author: a };
 }
 export async function listPosts(viewer, { uid, limit = 30 } = {}) {
   const keys = (await auth.kvList(uid ? 'cpo_' + uid + '_' : 'cpo_')).sort((a, b) => (a.slice(21) < b.slice(21) ? -1 : 1)).slice(0, 400);
@@ -307,14 +311,25 @@ function stripJpeg(buf) {
   }
   return null;
 }
-export async function setPhoto(me, kind, data) {
-  if (!['avatar', 'cover'].includes(kind)) return err(400, 'Unknown photo.');
-  if (data === null || data === '') { await auth.kvPut(mediaKey(kind, me.uid), { removed: true }); const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = ''; await auth.kvPut(K.p(me.uid), p); return { ok: true }; }
+// Validates a picture sent as a data URL: real JPEG/PNG/WebP bytes, size cap, JPEG metadata (EXIF/GPS) removed.
+export function checkImage(data) {
   const m = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(data || '')); if (!m) return err(400, 'Choose a JPG, PNG or WebP picture.');
   const buf = Buffer.from(m[2], 'base64'); if (buf.length > MEDIA_MAX) return err(413, 'That picture is too large.'); if (buf.length < 200) return err(400, 'That picture looks empty.');
   const type = sniff(buf); if (!type) return err(400, 'That file is not a picture.');
   let out = buf; if (type === 'image/jpeg') { out = stripJpeg(buf); if (!out) return err(400, 'That picture could not be read. Please try another.'); }
-  // JPEG metadata is removed above; PNG/WebP made by the phone's canvas carry none.
+  return { ok: true, type, out };   // PNG/WebP made by the phone's canvas carry no metadata
+}
+// Post photos are uploaded one at a time (each request stays small), then attached when the post is created.
+export const postPhotoKey = (uid, pid) => `cpm_${uid}_${pid}`;
+export async function uploadPostPhoto(me, data) {
+  const img = checkImage(data); if (!img.ok) return img; const pid = rid(8);
+  await auth.kvPut(postPhotoKey(me.uid, pid), { type: img.type, b64: img.out.toString('base64'), owner: me.uid, at: now(), post: '' }); return { ok: true, id: pid };
+}
+export const postPhotoUrl = (uid, pid) => `/.netlify/functions/media?k=post&u=${uid}&p=${pid}`;
+export async function setPhoto(me, kind, data) {
+  if (!['avatar', 'cover'].includes(kind)) return err(400, 'Unknown photo.');
+  if (data === null || data === '') { await auth.kvPut(mediaKey(kind, me.uid), { removed: true }); const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = ''; await auth.kvPut(K.p(me.uid), p); return { ok: true }; }
+  const img = checkImage(data); if (!img.ok) return img; const { type, out } = img;
   const v = Date.now().toString(36); await auth.kvPut(mediaKey(kind, me.uid), { type, b64: out.toString('base64'), v });
   const p = await getByUid(me.uid); p[kind === 'avatar' ? 'photo' : 'coverPhoto'] = v; await auth.kvPut(K.p(me.uid), p); return { ok: true, v };
 }

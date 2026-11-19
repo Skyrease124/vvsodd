@@ -46,4 +46,19 @@ m = await media(new Request('http://x' + prof.photo)); ok(m.status === 401, 'pho
 r = await call(A, { action: 'ownerRemovePhoto', username: mp.username, kind: 'avatar' }); ok(r.s === 403, 'only the owner can remove someone else\'s photo');
 r = await call(F, { action: 'ownerRemovePhoto', username: mp.username, kind: 'avatar' }); ok(r.s === 200 && !(await call(A, { u: mp.username })).j.profile.photo, 'owner removes a photo');
 r = await call(P, { action: 'setPhoto', kind: 'cover', data: null }); ok(r.s === 200 && !(await call(A, { u: mp.username })).j.profile.coverPhoto, 'member removes own background photo');
+// post photos
+{ const jp = 'data:image/jpeg;base64,' + Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe1, 0, 12]), Buffer.from('Exif\0\0GPS!', 'latin1'), Buffer.from([0xff, 0xdb, 0, 4, 1, 1, 0xff, 0xda]), Buffer.alloc(400, 7)]).toString('base64');
+  let x = await call(A, { action: 'uploadPostPhoto', data: jp }); ok(x.s === 402, 'free members cannot upload post photos');
+  process.env.POST_LIMIT_HOUR = '100';
+  const ids = []; for (let i = 0; i < 5; i++) { x = await call(P, { action: 'uploadPostPhoto', data: jp }); ids.push(x.j.id); } ok(ids.every(i => /^[a-f0-9]{16}$/.test(i)), 'paid member uploads photos');
+  x = await call(P, { action: 'uploadPostPhoto', data: 'data:image/png;base64,' + Buffer.from('<svg onload=alert(1)>' + 'x'.repeat(300)).toString('base64') }); ok(x.s === 400, 'fake picture refused');
+  x = await call(P, { action: 'createPost', text: '', photos: ids }); ok(x.s === 400 && /Up to 4/.test(x.j.error), 'max 4 photos per post');
+  const pre = await media(new Request('http://x/m?k=post&u=' + mp.uid + '&p=' + ids[0], { headers: { cookie: A } })); ok(pre.status === 404, 'a photo not yet in a post is not served');
+  x = await call(A, { action: 'createPost', text: 'steal', photos: [ids[0]] }); ok(x.s === 402, 'others cannot use your photos');
+  x = await call(P, { action: 'createPost', text: '', photos: ids.slice(0, 3) }); ok(x.s === 200 && x.j.post.photos.length === 3, 'photo-only post with 3 photos');
+  x = await call(P, { action: 'createPost', text: 'again', photos: [ids[0]] }); ok(x.s === 400, 'a photo can only be used in one post');
+  const fd = await call(A, { feed: 1 }); const pst = fd.j.rows.find(r => r.photos && r.photos.length === 3); ok(pst && pst.photos[0].startsWith('/.netlify/functions/media?k=post&u='), 'feed shows the photos');
+  const img = await media(new Request('http://x' + pst.photos[0], { headers: { cookie: A } })); const bb = Buffer.from(await img.arrayBuffer()); ok(img.status === 200 && bb.indexOf(Buffer.from('GPS')) === -1, 'photo served without hidden location data');
+  ok((await media(new Request('http://x' + pst.photos[0]))).status === 401, 'post photos need sign-in');
+  await call(F, { action: 'deletePost', key: pst.key }); ok((await media(new Request('http://x' + pst.photos[0], { headers: { cookie: A } }))).status === 404, 'deleting the post removes its photos'); }
 console.log('# pass ' + pass);

@@ -159,11 +159,19 @@
     const top = mk('div', 'cp-top'), no = mk('button', 'cp-x', 'Cancel'), ttl = mk('b', '', 'New post'), go = mk('button', 'cp-go', 'Post'); no.type = go.type = 'button'; go.disabled = true; top.append(no, ttl, go);
     const ta = mk('textarea'); ta.maxLength = 1000; ta.placeholder = 'Share an update, a question or a tip…'; ta.setAttribute('aria-label', 'Post text');
     const foot = mk('div', 'cp-foot'), cnt = mk('span', '', '0 / 1,000'), msg = mk('span', 'cp-msg'); msg.setAttribute('role', 'status'); foot.append(msg, cnt);
-    sh.append(top, ta, foot, mk('p', 'muted small', 'Posts are public to all members. Links show as plain text. Verify before you bid. Nothing here is investment advice.'));
+    // photos: up to 4, shrunk on the phone (max 1600 px) and uploaded one at a time
+    const photos = [], strip = mk('div', 'cp-photos'), addB = mk('button', 'cp-add', '📷 Photo'); addB.type = 'button'; addB.setAttribute('aria-label', 'Add photos');
+    const shrink = file => new Promise((res, rej) => { const u = URL.createObjectURL(file), im = new Image(); im.onload = () => { const k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); let q = 0.85, d = c.toDataURL('image/jpeg', q); while (d.length > 1.9e6 && q > 0.4) { q -= 0.1; d = c.toDataURL('image/jpeg', q); } res(d); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('bad')); }; im.src = u; });
+    const paintPh = () => { strip.textContent = ''; photos.forEach((ph, i) => { const t = mk('div', 'cp-th' + (ph.id ? '' : ' up')); t.style.backgroundImage = 'url("' + ph.data + '")'; const x = mk('button', 'cp-rm', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove photo'); x.onclick = () => { photos.splice(i, 1); paintPh(); }; t.append(x); strip.append(t); }); addB.hidden = photos.length >= 4; go.disabled = (!ta.value.trim() && !photos.length) || photos.some(p => !p.id); };
+    addB.onclick = () => { const f = mk('input'); f.type = 'file'; f.accept = 'image/*'; f.multiple = true; f.hidden = true; document.body.append(f); setTimeout(() => f.remove(), 600000);
+      f.onchange = async () => { const files = [...(f.files || [])].slice(0, 4 - photos.length); for (const file of files) { let d; try { d = await shrink(file); } catch (e) { msg.textContent = 'One photo could not be opened.'; continue; } const ph = { data: d, id: '' }; photos.push(ph); paintPh();
+        const r = await post({ action: 'uploadPostPhoto', data: d }); if (r.s === 200) ph.id = r.j.id; else { photos.splice(photos.indexOf(ph), 1); msg.textContent = r.j.error || 'Photo upload failed.'; if (r.j.upgrade) { close(); return upsell('Posting is for paid members', r.j.error); } } paintPh(); } }; f.click(); };
+    foot.prepend(addB);
+    sh.append(top, ta, strip, foot, mk('p', 'muted small', 'Posts are public to all members. Links show as plain text. Verify before you bid. Nothing here is investment advice.'));
     const close = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
-    ta.oninput = () => { const n = ta.value.length; cnt.textContent = n.toLocaleString('en-US') + ' / 1,000'; go.disabled = !ta.value.trim(); };
+    ta.oninput = () => { const n = ta.value.length; cnt.textContent = n.toLocaleString('en-US') + ' / 1,000'; go.disabled = (!ta.value.trim() && !photos.length) || photos.some(p => !p.id); };
     no.onclick = close; ov.onclick = e => { if (e.target === ov) close(); };
-    go.onclick = async () => { go.disabled = true; msg.textContent = 'Posting…'; const r = await post({ action: 'createPost', text: ta.value }); if (r.s === 200) { close(); after && after(); } else { go.disabled = false; msg.textContent = r.j.error || 'Could not post.'; if (r.j.upgrade) { close(); upsell('Posting is for paid members', r.j.error); } } };
+    go.onclick = async () => { go.disabled = true; msg.textContent = 'Posting…'; const r = await post({ action: 'createPost', text: ta.value, photos: photos.map(p => p.id) }); if (r.s === 200) { close(); after && after(); } else { go.disabled = false; msg.textContent = r.j.error || 'Could not post.'; if (r.j.upgrade) { close(); upsell('Posting is for paid members', r.j.error); } } };
     ov.append(sh); document.body.append(ov); requestAnimationFrame(() => { ov.classList.add('on'); ta.focus(); });
   }
   function postCard(p, owner, onGone) {
@@ -176,7 +184,17 @@
       if (p.mine || owner) it('Delete post', 'danger', async () => { if (!(await sheet({ title: 'Delete this post?', text: 'This cannot be undone.', confirm: 'Delete', danger: true }))) return; const r = await post({ action: 'deletePost', key: p.key }); if (r.s === 200) { c.remove(); onGone && onGone(); } else alert(r.j.error || 'Could not delete.'); });
       if (!p.mine) it('Report post', 'danger', async () => { const o = await get({ options: 1 }); const v = await sheet({ title: 'Report this post', text: 'Reports are private and reviewed by PricePocketAsset.', fields: [{ key: 'category', type: 'radio', label: 'Reason', options: o.j.reportCategories }, { key: 'details', type: 'textarea', label: 'Details (optional)', max: 500 }], confirm: 'Send report' }); if (!v) return; const r = await post({ action: 'reportPost', key: p.key, category: v.category, details: v.details }); sheet({ title: r.s === 200 ? 'Report sent' : 'Could not send', text: r.s === 200 ? 'Thank you. PricePocketAsset will review it.' : (r.j.error || ''), confirm: 'OK' }); });
       mw.appendChild(m); setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0); };
-    c.append(hd, mk('p', 'p-tx', p.text)); return c;
+    c.append(hd); if (p.text) c.append(mk('p', 'p-tx', p.text));
+    if ((p.photos || []).length) { const g = mk('div', 'p-ph n' + p.photos.length); p.photos.forEach((u, i) => { const b = mk('button', 'p-im'); b.type = 'button'; b.setAttribute('aria-label', 'Open photo ' + (i + 1)); const im = mk('img'); im.src = u; im.alt = ''; im.loading = 'lazy'; b.append(im); b.onclick = () => viewer(p.photos, i); g.append(b); }); c.append(g); }
+    return c;
+  }
+  // full-screen photo viewer: swipe between photos, tap outside or × to close
+  function viewer(urls, start) {
+    const ov = mk('div', 'pv'), x = mk('button', 'pv-x', '×'), track = mk('div', 'pv-t'); x.type = 'button'; x.setAttribute('aria-label', 'Close');
+    urls.forEach(u => { const f = mk('div', 'pv-f'), im = mk('img'); im.src = u; im.alt = ''; f.append(im); track.append(f); });
+    const close = () => { ov.remove(); document.removeEventListener('keydown', key); }, key = e => { if (e.key === 'Escape') close(); };
+    x.onclick = close; ov.onclick = e => { if (e.target === ov || e.target.classList.contains('pv-f')) close(); }; document.addEventListener('keydown', key);
+    ov.append(track, x); if (urls.length > 1) ov.append(mk('div', 'pv-n', urls.length + ' photos · swipe')); document.body.append(ov); requestAnimationFrame(() => { track.scrollLeft = start * track.clientWidth; });
   }
   async function postList(host, q, owner, emptyText) {
     const x = await get(q); const rows = x.j.rows || []; const list = mk('div', 'plist'); host.append(list);
