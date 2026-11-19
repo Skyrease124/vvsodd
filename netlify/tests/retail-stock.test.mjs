@@ -79,4 +79,14 @@ const LIVE_DATA = `<html><head>${LD('https://schema.org/InStock')}</head><body><
 ok(cls(LIVE_DATA).status === 'invite_only' && /Exclusive sales event/.test(cls(LIVE_DATA).reason), 'invite state inside page data wins over an enabled Add to Cart (live Best Buy case)');
 const REVIEW = `<html><body><script>{"reviewBody":"A winning lottery ticket would have been nice."}</script><button>Add to Cart</button><div>$49.99</div></body></html>`;
 ok(cls(REVIEW).status === 'in_stock', 'a customer review mentioning a lottery does not block a real Add to Cart');
+// 8. Queue / line opening: "Get in line" push once, to watchers
+const qp = (await R.createProduct('founder', { url: 'https://www.pokemoncenter.com/queue-monitor-test', name: 'Pokémon Center Queue Monitor (TEST FIXTURE)', category: 'pokemon', status: 'monitoring' })).product;
+await R.watch(w.uid, qp.id, { inStock: true });
+const q0 = sent.length;
+r = await R.applyResult(await R.getProduct(qp.id), { status: 'limited_access', reason: 'Pokémon Center waiting room or queue' }, 'owner');
+ok(r.some(x => x.kind === 'queue' && x.recipients === 1) && sent.length === q0 + 1 && /Get in line/.test(sent[sent.length - 1].headings.en), 'line opens -> watcher gets a "🚦 Get in line" push');
+ok(sent[sent.length - 1].url === 'https://www.pokemoncenter.com/queue-monitor-test', 'tapping it opens the exact store page');
+const q1 = sent.length;
+r = await R.applyResult(await R.getProduct(qp.id), { status: 'limited_access' }, 'auto'); ok(sent.length === q1, 'line still open -> no repeat push');
+r = await R.applyResult(await R.getProduct(qp.id), { status: 'monitoring' }, 'auto'); ok(sent.length === q1, 'line closing sends nothing');
 console.log('# pass ' + pass);

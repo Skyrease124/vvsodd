@@ -192,6 +192,7 @@ export async function applyResult(p, r, source) {
   if (nextStatus !== prevStatus) {
     p.prevStatus = prevStatus; p.status = nextStatus; p.stockChangeAt = t;
     if (AVAILABLE.has(nextStatus) && !AVAILABLE.has(prevStatus)) events.push(prevStatus === 'upcoming' ? 'release' : 'restock');
+    if (nextStatus === 'limited_access') events.push('queue');   // the line / waiting room just opened: "Get in line"
     const h = (await auth.kvGet('rih_' + p.id)) || []; h.unshift({ at: t, from: prevStatus, to: nextStatus, price: nextPrice, source }); await auth.kvPut('rih_' + p.id, h.slice(0, 60));
   }
   if (nextPrice != null && nextPrice !== prevPrice) { p.prevPrice = prevPrice; p.price = nextPrice; if (prevPrice != null && nextPrice < prevPrice && AVAILABLE.has(p.status)) events.push('price'); }
@@ -205,6 +206,7 @@ export async function applyResult(p, r, source) {
 const EMOJI = { pokemon: '🔥', sneakers: '👟', electronics: '⚡', gaming: '🎮', collectibles: '⭐' };
 export function message(p, kind) {
   const store = RETAILERS[p.retailer].name, cat = CAT_LABEL[p.category] || 'Retail', price = p.price != null ? ' $' + p.price.toFixed(2) + '.' : '';
+  if (kind === 'queue') return { title: '🚦 Get in line', body: p.name + ' — the line is open at ' + store + '. Tap to get in line.' };
   if (kind === 'restock' && p.prevStatus === 'invite_only') return { title: '🎟️ Invite Live', body: p.name + ' is now available to buy at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'release') return { title: (EMOJI[p.category] || '🛍️') + ' ' + cat + ' Release Live', body: p.name + ' is live at ' + store + '.' + price + ' Tap to shop.' };
   if (kind === 'price') return { title: '💸 Price Drop', body: p.name + ' dropped to $' + p.price.toFixed(2) + ' at ' + store + (p.prevPrice != null ? ' (was $' + p.prevPrice.toFixed(2) + ')' : '') + '. Tap to shop.' };
@@ -218,10 +220,10 @@ export function prefMatch(pr, category, retailer, kind) {
 export async function recipients(p, kind) {
   const set = new Map();
   for (const k of await auth.kvList('rwp_' + p.id + '_')) { const uid = k.slice(4 + p.id.length + 1); const w = await auth.kvGet('rw_' + uid + '_' + p.id); if (!w) continue;
-    const want = kind === 'release' ? w.release : kind === 'restock' ? w.inStock : w.priceDrop; if (!want) continue;
+    const want = kind === 'release' ? w.release : kind === 'restock' ? w.inStock : kind === 'queue' ? (w.inStock || w.release) : w.priceDrop; if (!want) continue;
     if (w.maxPrice != null && (p.price == null || p.price > w.maxPrice)) continue;   // no price, no price-qualified alert
     set.set(uid, 'watch'); }
-  for (const k of await auth.kvList('rpref_')) { const uid = k.slice(6); if (set.has(uid)) continue; if (prefMatch(await auth.kvGet(k), p.category, p.retailer, kind)) set.set(uid, 'prefs'); }
+  for (const k of await auth.kvList('rpref_')) { const uid = k.slice(6); if (set.has(uid)) continue; if (prefMatch(await auth.kvGet(k), p.category, p.retailer, kind === 'queue' ? 'restock' : kind)) set.set(uid, 'prefs'); }
   return set;
 }
 async function emailOf(uid) { const p = await auth.kvGet('cp_' + uid); return p && p.email; }
