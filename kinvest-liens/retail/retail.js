@@ -27,9 +27,18 @@
   const select = (opts, v) => { const s = mk('select'); opts.forEach(([k, l]) => { const o = mk('option', '', l); o.value = k; s.append(o); }); if (v != null) s.value = v; return s; };
   const toggle = (title, sub, on) => { const d = mk('div', 'rt-tog'), t = mk('div'); t.append(mk('b', '', title)); if (sub) t.append(mk('div', 'rt-muted rt-small', sub)); const w = mk('label', 'rt-sw'), i = mk('input'); i.type = 'checkbox'; i.checked = !!on; i.setAttribute('aria-label', title); w.append(i, mk('i')); d.append(t, w); return [d, i]; };
 
+  // A clean PricePocket text card, used when there is no usable product image. Never a blank black box.
+  function fallbackFace(p) { const f = mk('div', 'rt-fb'); f.append(mk('div', 'rt-fb-s', (ICON[p.category] || '') + ' ' + (p.retailerName || p.retailer || '')), mk('div', 'rt-fb-n', p.name || 'Product'), mk('div', 'rt-fb-p', 'PRICEPOCKET')); return f; }
+  // Puts the product photo into a box (lazy, cropped with object-fit). Falls back to the text card if it is missing or fails to load.
+  function imageInto(box, p, cls) {
+    if (!p.image) { box.classList.add('none'); box.append(fallbackFace(p)); return; }
+    const i = mk('img'); i.alt = p.name || ''; i.loading = 'lazy'; i.decoding = 'async'; i.referrerPolicy = 'no-referrer'; if (cls) i.className = cls;
+    i.onerror = () => { i.remove(); box.classList.add('none'); box.append(fallbackFace(p)); };
+    i.src = p.image; box.append(i);
+  }
   function productCard(p, ctx) {
-    const c = mk('article', 'rt-card'), im = mk('div', 'rt-img' + (p.image ? '' : ' none'));
-    if (p.image) im.style.backgroundImage = 'url("' + p.image.replace(/"/g, '%22') + '")'; else im.textContent = ICON[p.category] || '🛍️';
+    const c = mk('article', 'rt-card'), im = mk('div', 'rt-img');
+    imageInto(im, p, 'rt-card-img');
     im.append(mk('span', 'rt-pill ' + p.status, STATUS[p.status] || p.status)); c.append(im);
     const b = mk('div', 'rt-body'); b.append(mk('div', 'rt-store', p.retailerName + (ctx.cats[p.category] ? ' · ' + ctx.cats[p.category] : '')), mk('div', 'rt-name', p.name));
     if (p.price != null) { const pr = mk('div', 'rt-price', money(p.price)); if (p.prevPrice != null && p.prevPrice > p.price) pr.append(mk('s', '', money(p.prevPrice))); b.append(pr); }
@@ -135,15 +144,17 @@
     // catalog
     root.append(mk('h2', '', 'Catalog (' + x.j.products.length + ')')); const list = mk('div', 'rt-adm'); root.append(list);
     if (!x.j.products.length) list.append(mk('div', 'rt-empty', 'No products yet.'));
-    x.j.products.forEach(p => { const d = mk('div', 'rt-ap'), th = mk('div', 'th'); if (p.image) th.style.backgroundImage = 'url("' + p.image.replace(/"/g, '%22') + '")'; const g = mk('div');
+    x.j.products.forEach(p => { const d = mk('div', 'rt-ap'), th = mk('div', 'th'); if (p.image) { const ti = mk('img'); ti.alt = ''; ti.loading = 'lazy'; ti.referrerPolicy = 'no-referrer'; ti.src = p.image; ti.onerror = () => { ti.remove(); th.classList.add('miss'); th.textContent = 'No image'; }; th.append(ti); } else { th.classList.add('miss'); th.textContent = 'Image not found'; } const g = mk('div');
       g.append(mk('b', '', p.name), mk('div', 'rt-meta', p.retailerName + ' · ' + (meta.categories[p.category] || '') + ' · ' + (STATUS[p.rawStatus] || p.rawStatus) + (p.price != null ? ' · ' + money(p.price) : '') + ' · ' + p.watchers + ' watching · ' + (p.auto ? 'auto' : 'owner-confirmed') + (p.active ? '' : ' · OFF')));
-      g.append(mk('div', 'rt-why', 'Status: ' + (STATUS[p.rawStatus] || p.rawStatus) + (p.statusReason ? ' — ' + p.statusReason : ''))); if (p.lastError) g.append(mk('div', 'rt-err', 'Last check failed: ' + p.lastError));
+      g.append(mk('div', 'rt-why', 'Status: ' + (STATUS[p.rawStatus] || p.rawStatus) + (p.statusReason ? ' — ' + p.statusReason : ''))); if (!p.image) g.append(mk('div', 'rt-err', 'Image not found. Paste an image link in Edit, or tap Refresh image.'));
+      if (p.lastError) g.append(mk('div', 'rt-err', 'Last check failed: ' + p.lastError));
       const acts = mk('div', 'acts'), sel = select([['', 'Set status…']].concat(STOCK_OPTS, [['disabled', 'Disabled']]));
       sel.onchange = async () => { if (!sel.value) return; if ((sel.value === 'in_stock' || sel.value === 'low_stock') && !(await confirmSheet('Mark as ' + STATUS[sel.value].toLowerCase() + '?', 'If it was not in stock before, matching members get a push now. Only do this after you checked the store page.', 'Confirm'))) { sel.value = ''; return; } const r = await post({ action: 'update', id: p.id, status: sel.value }); const s = (r.j.sent || [])[0]; toast(r.s === 200 ? (s ? (s.skipped ? 'Saved. Alert held back (cooldown).' : 'Saved. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : 'Saved.') : (r.j.error || 'Error')); setTimeout(() => location.reload(), 900); };
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
+      const ri = mk('button', '', 'Refresh image'); ri.type = 'button'; ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id }); ri.textContent = r.s === 200 ? (r.j.found ? 'Image saved' : 'Image not found') : 'Could not read'; setTimeout(() => location.reload(), 900); };
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };
       const op = mk('a', '', 'Open'); op.href = p.url; op.target = '_blank'; op.rel = 'noopener noreferrer'; op.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:.85rem;color:inherit;text-decoration:none';
-      acts.append(sel, ed, on, op); g.append(acts); d.append(th, g); list.append(d); });
+      acts.append(sel, ed, ri, on, op); g.append(acts); d.append(th, g); list.append(d); });
     // requests
     const rq = mk('div'); rq.id = 'requests'; rq.append(mk('h2', '', 'Product requests (' + x.j.requests.length + ')')); root.append(rq);
     if (!x.j.requests.length) rq.append(mk('div', 'rt-empty', 'No requests waiting.'));
