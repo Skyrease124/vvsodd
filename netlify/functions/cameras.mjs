@@ -94,6 +94,8 @@ export const PROVIDERS = {
   ga: { name: '511GA (Georgia DOT)', state: 'GA', bbox: [-85.7, 30.3, -80.8, 35.1], viewer: 'https://511ga.org/cctv', keyEnv: 'GA511_KEY', keyed: ibi511('https://511ga.org', 'ga', '511GA / Georgia DOT', 'https://511ga.org/cctv') },
   ny: { name: '511NY (New York State DOT)', state: 'NY', bbox: [-79.8, 40.4, -71.8, 45.1], viewer: 'https://511ny.org/cctv', keyEnv: 'NY511_KEY' },   // adapter not built: different API, developer access pending
   // Viewer-only states: official viewer link, no integrated feed.
+  hou: { name: 'Houston TranStar (Houston-area transportation partners)', state: 'TX', bbox: [-96.2, 29.2, -94.6, 30.5], viewer: 'https://traffic.houstontranstar.org/' },
+  tx: { name: 'DriveTexas (Texas DOT: Dallas, Fort Worth, San Antonio, El Paso and statewide)', state: 'TX', bbox: [-106.7, 25.8, -93.5, 36.6], viewer: 'https://drivetexas.org/' },
   tn: { name: 'TDOT SmartWay (Tennessee DOT)', state: 'TN', bbox: [-90.4, 34.9, -81.6, 36.7], viewer: 'https://smartway.tn.gov/' },
   mi: { name: 'Mi Drive (Michigan DOT)', state: 'MI', bbox: [-90.5, 41.6, -82.1, 48.4], viewer: 'https://www.michigan.gov/drive' },
   al: { name: 'ALGO Traffic (Alabama DOT)', state: 'AL', bbox: [-88.5, 30.1, -84.8, 35.1], viewer: 'https://algotraffic.com/Cameras' },
