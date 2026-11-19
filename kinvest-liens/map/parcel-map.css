@@ -175,3 +175,16 @@
 .pm-cammk{width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:#0891b2;color:#fff;font:700 12px system-ui;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.5)}.pm-cammk.on{background:#facc15;color:#1f1300;transform:scale(1.2)}
 .pm-ib.on{background:#fff;color:#0b1220}
 @media(max-width:979px){.pm-cam{position:fixed;z-index:46;left:0;right:0;bottom:var(--ppabh,0px);top:auto;width:auto;max-height:46dvh;border-radius:26px 26px 0 0;border-width:.5px 0 0;padding-bottom:calc(14px + env(safe-area-inset-bottom))}}
+
+/* Explore tools inside the parcel card's More sheet: compact tiles, scrolls inside the sheet */
+.pm-explore{margin:2px 0 10px;padding-bottom:6px;border-bottom:.5px solid rgba(255,255,255,.1)}
+.pm-explore h4{margin:4px 2px 6px;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute,#9aa6bd);font-weight:600}
+.pm-explore .cambar.toolgrid{grid-template-columns:repeat(4,1fr);gap:6px;margin:6px 0 4px}
+.pm-explore .toolgrid .tool{min-height:62px;padding:8px 2px 6px;border-radius:14px}
+.pm-explore .toolgrid .ti{font-size:19px}.pm-explore .toolgrid .tl{font-size:.7rem}
+.pm-explore .campanel,.pm-explore .firepanel,.pm-explore .enpanel,.pm-explore .wxpanel,.pm-explore .govpanel{margin:8px 0;padding:12px;border-radius:16px;background:rgba(255,255,255,.05);font-size:.88rem;line-height:1.45}
+.pm-explore img{max-width:100%}
+.pm-pop .more{max-height:46dvh;overflow:auto;-webkit-overflow-scrolling:touch}
+.pm-pop .more .mi{padding:12px 16px!important;font-size:.95rem!important;min-height:0!important}.pm-pop .more .pm-explore{padding:8px 8px 6px}.pm-pop .more .pm-explore+.mi,.pm-pop .more .pm-explore~.mi{border-top:.5px solid rgba(255,255,255,.08)}
+.pm-pop .more{max-height:50dvh}
+.pm-pop .pm-explore .cambar.toolgrid{grid-template-columns:repeat(4,1fr)!important;gap:6px!important}.pm-pop .pm-explore .cambar.toolgrid .tool.btn{min-height:56px!important;padding:6px 2px 5px!important;gap:2px!important}.pm-pop .pm-explore .toolgrid .ti{font-size:18px!important}.pm-pop .pm-explore .toolgrid .tl{font-size:.66rem!important;white-space:nowrap}

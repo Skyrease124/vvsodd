@@ -219,6 +219,25 @@
   const hoaText = v => !v ? 'Not on file' : v === 'unknown' ? 'Not confirmed' : v;
   const tile = (k, v, s) => { const t = mk('div', 't'); t.append(mk('span', 'k', k), mk('b', '', v == null || v === '' ? '—' : String(v))); if (s) t.appendChild(mk('span', 's', s)); return t; };
   function group(title, open, fill) { const g = mk('details', 'grp'); if (open) g.open = true; const s = mk('summary'); s.append(mk('span', '', title), mk('i', 'chev')); g.appendChild(s); const dl = mk('dl'); fill(dl, g); g.appendChild(dl); return g; }
+  // ---------- Explore (same tools as the parcel page: Photo, Street View, Cameras, Weather, Fires, Crime, Record, Neighborhood, Jobs, Road, Places, Energy, Parks) ----------
+  // The tool code lives in /liens/states/lien-ui.js (shared with the parcel page). It loads only when someone opens "Explore", and the map calls below are no-ops
+  // because that code was written for a Leaflet map; everything else (results, Pro lock, notes) is identical to the parcel page.
+  let lienUi = null;
+  const loadLienUi = () => lienUi || (lienUi = new Promise((ok, no) => { window.Map3D = window.Map3D || {}; const s = document.createElement('script'); s.src = '/liens/states/lien-ui.js'; s.onload = () => (typeof CameraData !== 'undefined' ? ok() : no()); s.onerror = no; document.head.appendChild(s); }));
+  const nop = new Proxy(function () {}, { get: (t, k) => k === 'then' ? undefined : nop, apply: () => nop });
+  function buildExplore(r, host) {
+    const wrap = mk('div', 'pm-explore'), anchor = mk('div'); wrap.append(mk('h4', '', 'Explore this parcel'), anchor, mk('p', 'note', 'Loading tools…')); host.prepend(wrap);
+    loadLienUi().then(() => {
+      wrap.querySelector('.note').remove();
+      const L = { layerGroup: () => nop, circleMarker: () => nop, marker: () => nop, polyline: () => nop, latLngBounds: () => nop }, M = { hasLayer: () => false, removeLayer() {}, fitBounds() {} };
+      CameraData.mapAttach(L, M, anchor, () => ({ lat: r.cx[1], lng: r.cx[0] }), null);
+      // when a tool opens its result under the grid, bring it into view inside the sheet (and again once it has loaded)
+      const show = () => { const pn = [...wrap.querySelectorAll('.campanel,.firepanel,.enpanel,.wxpanel,.govpanel')].find(x => !x.hidden); if (pn) pn.scrollIntoView({ block: 'nearest', behavior: REDUCED ? 'auto' : 'smooth' }); };
+      wrap.addEventListener('click', e => { if (e.target.closest('.tool')) { setTimeout(show, 300); setTimeout(show, 1600); } });
+      // Cameras: use the map's own camera view (markers on the map) instead of a second copy inside the card
+      setTimeout(() => { const old = wrap.querySelector('.cambar .tool[aria-label^="Nearby Cameras"]'); if (old) { const nb = old.cloneNode(true); old.replaceWith(nb); nb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); } }, 400);
+    }).catch(() => { const n = wrap.querySelector('.note'); if (n) n.textContent = 'Tools could not load. Check your connection and try again.'; });
+  }
   function popup(r) {
     const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
     const hd = mk('div', 'hd'), ttl = mk('div', 't'); ttl.append(mk('b', r.a ? '' : 'idt', r.a || r.p), mk('span', '', (r.a ? '' : 'Parcel ID · ') + d.county + ', ' + d.state + (r.a ? ' · ' + r.p : ''))); const x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closePop); hd.append(ttl, x); p.appendChild(hd);
@@ -248,9 +267,8 @@
     if (d.gis) more.appendChild(li('View official county GIS', d.gis.url, true));
     if (d.report) more.appendChild(li('Download parcel PDF' + (paid ? '' : ' (Pro)'), '/ai/report/?county=' + encodeURIComponent(d.county) + '&parcel=' + encodeURIComponent(r.p), true));
     more.appendChild(li('Add to my portfolio', '/portfolio/?add=1&state=' + d.state + '&county=' + encodeURIComponent(d.county.replace(/ County$/, '')) + '&parcel=' + encodeURIComponent(r.p) + (r.amt != null ? '&paid=' + r.amt : '')));
-    if (r.cx) { const cb = li('Live cameras near here'); cb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); more.appendChild(cb); }
     const nb = li('View nearby properties'); nb.addEventListener('click', () => { showNear(r, 1); }); more.appendChild(nb);
-    const mb = ab('More', '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>', () => { more.hidden = !more.hidden; mb.classList.toggle('on', !more.hidden); });
+    const mb = ab('More', '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>', () => { more.hidden = !more.hidden; mb.classList.toggle('on', !more.hidden); if (!more.hidden && r.cx && !more.querySelector('.pm-explore')) buildExplore(r, more); });
     bar.append(sp, ai, det, mb); p.append(more, bar); p.hidden = false;
     { const hdr = p.querySelector('.hd'); let y0 = null; hdr.addEventListener('pointerdown', e => { if (isMobile() && !e.target.closest('button')) { y0 = e.clientY; try { hdr.setPointerCapture(e.pointerId); } catch (x) {} p.style.transition = 'none'; } }); hdr.addEventListener('pointermove', e => { if (y0 != null) p.style.transform = 'translateY(' + Math.max(0, e.clientY - y0) + 'px)'; }); const up = e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; p.style.transition = ''; p.style.transform = ''; if (dy > 90) closePop(); }; hdr.addEventListener('pointerup', up); hdr.addEventListener('pointercancel', up); }
   }
