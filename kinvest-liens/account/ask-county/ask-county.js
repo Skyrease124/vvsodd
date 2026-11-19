@@ -5,7 +5,7 @@
   const q = new URLSearchParams(location.search);
   const say = (el, t, ok) => { el.textContent = t; el.style.color = ok === false ? '#fca5a5' : ''; };
   let st; try { const r = await fetch(API + '?act=status'); st = await r.json(); if (r.status === 401) { $('ac-msg').innerHTML = '<p class="notice">Sign in to use Ask the County.</p><p><a class="btn" href="/login/?next=' + encodeURIComponent(location.pathname + location.search) + '">Sign in</a></p>'; return; } } catch (e) { say($('ac-msg'), 'Could not reach the server.', false); return; }
-  if (!st.paid) { $('ac-msg').innerHTML = '<p class="notice">Ask the County is part of the Pro plan.</p><p><a class="btn" href="/account/">See the Pro plan</a></p>'; return; }
+  if (!st.paid) { $('ac-msg').innerHTML = '<p class="notice">Ask the County is part of the Pro plan.</p><p><a class="btn" href="/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=Ask%20the%20County">See the Pro plan</a></p>'; return; }
   $('ac-app').hidden = false;
   const g = q.get('gmail'); if (g) say($('ac-msg'), {connected: 'Gmail connected.', mismatch: 'That Gmail does not match your signup email (' + st.email + '). Connect the Gmail account for ' + st.email + '.', failed: 'Gmail connection did not finish. Please try again.', noscope: 'Please allow "Send email on your behalf" so we can send your request.', off: 'Gmail sending is not set up yet.'}[g] || '', g === 'connected');
   function gmailBox() {

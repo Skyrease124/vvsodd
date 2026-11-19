@@ -24,7 +24,7 @@
   function gate(s) {
     $('dlApp').hidden = true; const g = $('dlGate'); g.hidden = false; g.textContent = '';
     if (!s) g.append(link('Sign in', '/login/?next=/downloads/'), document.createTextNode(' to see your Download Center.'));
-    else g.append(document.createTextNode('Property downloads are a Pro feature. '), link('See the Pro plan', '/account/'), document.createTextNode(' · '), link('Compare Free vs Pro', '/plans/'));
+    else g.append(document.createTextNode('Property downloads are a Pro feature. '), link('See the Pro plan', '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Property downloads')), document.createTextNode(' · '), link('Compare Free vs Pro', '/plans/'));
   }
   function lists() {
     const h = $('dlLists'); h.textContent = ''; const L = S.lists || [];

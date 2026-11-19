@@ -36,7 +36,7 @@
       const lock = mk('p', 'ys-lock');
       lock.append(mk('b', '', '🔒 Members only. '));
       lock.append(signedIn ? 'Your account is free, so the AI is locked. Pro members ($5.50 a week) can use it. ' : 'The AI question box is for Pro members ($5.50 a week). ');
-      const a = mk('a', '', signedIn ? 'See my plan' : 'Sign in or create an account'); a.href = signedIn ? '/account/' : '/login/?next=' + encodeURIComponent(location.pathname);
+      const a = mk('a', '', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('The AI question box');
       lock.appendChild(a); aiHost.appendChild(lock); return;
     }
     const form = mk('form', 'ys-form'), inp = mk('input'); inp.type = 'text'; inp.maxLength = 300; inp.placeholder = 'e.g. How long does the owner have to redeem?'; inp.setAttribute('aria-label', 'Your question');

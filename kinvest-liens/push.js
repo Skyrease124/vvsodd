@@ -51,7 +51,7 @@
     const card = mk('div', 'salebox pushbox'); card.appendChild(mk('h3', '', 'Notifications'));
     host.appendChild(card);
     const paid = !!(user && (user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10))));
-    if (!paid) { card.append(mk('p', 'small muted', 'Push notifications are a Pro feature: alerts for new lists, upcoming sales, watchlist changes and your deadlines.'), Object.assign(mk('a', 'btn ghost', 'See Pro'), { href: '/plans/' })); return; }
+    if (!paid) { card.append(mk('p', 'small muted', 'Push notifications are a Pro feature: alerts for new lists, upcoming sales, watchlist changes and your deadlines.'), Object.assign(mk('a', 'btn ghost', 'See the Pro plan'), { href: '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Push notifications') })); return; }
     const status = mk('p', '', 'Checking…'), msg = mk('p', 'small', ''); msg.setAttribute('role', 'status'); msg.setAttribute('aria-live', 'polite');
     const btns = mk('p', 'pushbtns'), en = mk('button', 'btn', 'Enable notifications'), off = mk('button', 'btn ghost', 'Turn off on this device'), test = mk('button', 'btn ghost', 'Send a test notification');
     [en, off, test].forEach(b => { b.type = 'button'; }); btns.append(en, off, test);

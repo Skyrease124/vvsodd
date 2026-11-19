@@ -40,7 +40,7 @@
   }
   function search() {
     const box = mk('section', 'dqsearch'); box.appendChild(mk('h2', '', 'Search parcels'));
-    if (!me.paid) { box.appendChild(mk('p', '', 'Searching parcels by address, parcel id, amount and years behind is for Pro members.')); const a = mk('a', 'btn', me.signedIn ? 'See Pro' : 'Sign in'); a.href = me.signedIn ? '/plans/' : '/login/?next=' + encodeURIComponent(location.pathname); box.appendChild(a); return box; }
+    if (!me.paid) { box.appendChild(mk('p', '', 'Searching parcels by address, parcel id, amount and years behind is for Pro members.')); const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Parcel search'); box.appendChild(a); return box; }
     const f = mk('form', 'dqform'); f.setAttribute('role', 'search'); const fld = (l, el) => { const lab = mk('label', '', l); lab.appendChild(el); return lab; };
     const q = mk('input'); q.type = 'search'; q.placeholder = 'Street, subdivision or parcel id'; q.autocomplete = 'off';
     const sel = (opts) => { const s = mk('select'); opts.forEach(([v, t]) => { const o = mk('option', '', t); o.value = v; s.appendChild(o); }); return s; };

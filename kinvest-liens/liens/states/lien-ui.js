@@ -1189,7 +1189,8 @@ const PaidGate = {
     const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
     const d = mk('div', 'pglock'); d.setAttribute('role', 'note'); d.append(mk('span', 'pgtag', 'Pro'), ' ', mk('b', '', name + ' is for PricePocketPro members.')); d.appendChild(mk('p', 'small', 'PricePocketPro is $5.50 a week. Lists, maps and official sources stay free.'));
     const row = mk('p', 'small'); d.appendChild(row);
-    this.user().then(u => { if (!u) { const a = mk('a', 'btn small', 'Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); row.append(a, ' '); } const cmp = mk('a', 'small', 'Compare Free vs Pro'); cmp.href = '/plans/'; const b = mk('a', u ? 'btn small' : 'btn small ghost', 'See the Pro plan'); b.href = '/account/'; row.appendChild(b); row.append(' ', cmp); });
+    const href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent(name);
+    this.user().then(u => { const b = mk('a', 'btn small', 'See the Pro plan'); b.href = href; row.appendChild(b); if (!u) { const a = mk('a', 'small', 'Already a member? Sign in'); a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); row.append(' ', a); } });
     return d;
   }
 };

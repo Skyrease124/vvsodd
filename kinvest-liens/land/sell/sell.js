@@ -15,7 +15,7 @@
     if (q.get('id_return')) { step('Checking your ID…', 'One moment.'); const r = await post({action: 'idCheck'}); history.replaceState(null, '', location.pathname); $('steps').textContent = ''; if (r.ok && !r.d.idVerified) step('ID check: ' + (r.d.status === 'processing' ? 'still processing' : 'not finished'), r.d.status === 'processing' ? 'Stripe is still checking your ID. This usually takes a minute or two. Refresh this page soon.' : 'Your ID check was not completed' + (r.d.error ? ' (' + r.d.error.replace(/_/g, ' ') + ')' : '') + '. You can try again below.'); }
     let d; const r = await fetch(API + '?mine=1'); d = await r.json();
     if (r.status === 401) { const a = mk('a', 'btn', 'Sign in'); a.href = '/login/?next=/land/sell/'; step('Sign in first', 'You need an account to sell land.', a); return; }
-    if (!d.paid) { const a = mk('a', 'btn', 'Become a member ($5.50 a week)'); a.href = '/account/'; step('Members only', 'Posting land is for members. Membership also unlocks the AI and the screener.', a); return; }
+    if (!d.paid) { const a = mk('a', 'btn', 'See the Pro plan ($5.50 a week)'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Selling your land'); step('Members only', 'Posting land is for members. Membership also unlocks the AI and the screener.', a); return; }
     if (!d.idVerified && !d.owner) {
       const b = mk('button', 'btn', 'Verify my ID'); b.type = 'button';
       const box = step('Verify your ID (one time)', 'To keep scammers out, every seller verifies a photo ID with a quick selfie. It is done by Stripe, our payment company. We only keep the result (verified or not), never your ID photos.', b);

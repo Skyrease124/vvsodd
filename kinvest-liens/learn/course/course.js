@@ -59,7 +59,7 @@
   const allLessons = () => C.modules.flatMap(m => m.lessons.map(l => Object.assign({m}, l)));
   function lockBox(title, signedIn, next) {
     const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 ' + title), mk('p', '', 'Module 1 is free. The rest of the course, the quizzes and the Bid or Pass exercise are part of membership ($5.50 a week).'));
-    const a = mk('a', 'btn', signedIn ? 'Become a member' : 'Sign in or create an account'); a.href = signedIn ? '/account/' : '/login/?next=' + encodeURIComponent(next || location.pathname + location.search); n.appendChild(a); return n;
+    const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(next || location.pathname + location.search) + '&src=' + encodeURIComponent('All course lessons'); n.appendChild(a); return n;
   }
   function home() {
     app.textContent = '';

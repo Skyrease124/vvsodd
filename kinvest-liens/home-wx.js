@@ -11,7 +11,7 @@
     const q = new URLSearchParams({mode: 'me'}); if (exact) { q.set('lat', exact[0].toFixed(3)); q.set('lng', exact[1].toFixed(3)); }
     let d = null; try { const r = await fetch('/.netlify/functions/wxnow?' + q, {credentials: 'same-origin'}); if (r.status === 401) { host.hidden = true; return; }
       if (r.status === 402) { const j = await r.json().catch(() => ({})); host.hidden = false; host.textContent = ''; const t = mk('div', 'wxhome wxlock wxin'); t.append(mk('b', '', '\u26c5 Live local weather'), mk('span', '', ' is for PricePocketPro members.'));
-        if (j.signedIn) { const a = mk('a', 'wxloc', 'Upgrade \u2192'); a.href = '/account/'; t.append(' ', a); t.appendChild(mk('div', 'small', 'Weather, air quality and alerts where you are, plus weather, fires, energy and cameras on every lot.')); host.appendChild(t); } else host.hidden = true; return; } d = await r.json(); } catch (e) { d = null; }
+        if (j.signedIn) { const a = mk('a', 'wxloc', 'See the Pro plan \u2192'); a.href = '/plans/?src=Weather%20where%20you%20are'; t.append(' ', a); t.appendChild(mk('div', 'small', 'Weather, air quality and alerts where you are, plus weather, fires, energy and cameras on every lot.')); host.appendChild(t); } else host.hidden = true; return; } d = await r.json(); } catch (e) { d = null; }
     host.hidden = false; host.textContent = '';
     if (!d || !d.ok) { if (d && d.reason === 'nokey') { host.hidden = true; return; } host.appendChild(mk('p', 'small muted', d && d.reason === 'nolocation' ? 'Weather: we couldn\u2019t tell your area from your connection.' : 'Weather temporarily unavailable.')); host.appendChild(btn()); return; }
     const p = mk('div', 'wxhome wxin m-' + mood(d.now.text)); host.appendChild(p);
