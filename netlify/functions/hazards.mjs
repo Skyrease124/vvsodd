@@ -13,6 +13,14 @@ export const _reset = () => { cache = null; };
 const inUS = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && lat >= 17 && lat <= 72 && lng >= -180 && lng <= -64;
 const centroid = ring => { let x = 0, y = 0, n = 0; for (const p of ring) { if (Array.isArray(p) && p.length >= 2) { x += p[0]; y += p[1]; n++; } } return n ? [x / n, y / n] : null; };
 const point = g => { if (!g || !g.coordinates) return null; if (g.type === 'Point') return g.coordinates; if (g.type === 'Polygon') return centroid(g.coordinates[0] || []); return null; };
+const decode = s => String(s).replace(/&amp;/g, '&').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+// "Major" = what a news line would report: recent, large wildfires (not prescribed burns), plus any open storm, flood or volcano event.
+export function major(events, now = Date.now()) {
+  const age = e => { const t = Date.parse(e.date); return Number.isFinite(t) ? (now - t) / 864e5 : 999; };
+  const fires = events.filter(e => e.cat === 'wildfires' && !/prescribed|\brx\b/i.test(e.title) && e.unit === 'acres' && e.mag >= 1000 && age(e) <= 14).sort((a, b) => b.mag - a.mag).slice(0, 8);
+  const rest = events.filter(e => e.cat !== 'wildfires' && age(e) <= 14).slice(0, 6);
+  return fires.concat(rest).map(e => ({ id: e.id, cat: e.cat, catTitle: e.catTitle, name: decode(e.title).replace(/^(Wildfire|Incident Complex|Prescribed Fire)\s+/i, '').slice(0, 80), mag: e.mag, unit: e.unit, date: e.date }));
+}
 const https = u => (typeof u === 'string' && /^https:\/\//.test(u)) ? u : '';
 
 export function parse(d) {
@@ -22,7 +30,7 @@ export function parse(d) {
     const gs = Array.isArray(e.geometry) ? e.geometry : []; const g = gs[gs.length - 1]; const pt = point(g); if (!pt) continue;
     const lng = Number(pt[0]), lat = Number(pt[1]); if (!inUS(lat, lng)) continue;
     const src = Array.isArray(e.sources) && e.sources[0] ? e.sources[0] : {};
-    out.push({ id: String(e.id), title: String(e.title || CATS[cat]).slice(0, 120), cat, catTitle: CATS[cat], lat: +lat.toFixed(4), lng: +lng.toFixed(4), date: g.date || '', link: https(src.url) || https(e.link), source: String(src.id || 'EONET').slice(0, 20) });
+    out.push({ id: String(e.id), title: String(e.title || CATS[cat]).slice(0, 120), cat, catTitle: CATS[cat], lat: +lat.toFixed(4), lng: +lng.toFixed(4), date: g.date || '', link: https(src.url) || https(e.link), source: String(src.id || 'EONET').slice(0, 20), mag: Number.isFinite(Number(g.magnitudeValue)) ? Number(g.magnitudeValue) : null, unit: String(g.magnitudeUnit || '').slice(0, 10) });
   }
   return out;
 }
@@ -35,7 +43,7 @@ export async function load() {
     if (rs.every(x => x.status === 'rejected')) throw new Error('all categories failed');
     const seen = new Set(), events = []; for (const x of rs) if (x.status === 'fulfilled') for (const e of x.value) if (!seen.has(e.id)) { seen.add(e.id); events.push(e); }
     const counts = {}; events.forEach(x => { counts[x.cat] = (counts[x.cat] || 0) + 1; });
-    const v = { ok: true, events, counts, checked: new Date().toISOString(), source: 'NASA EONET (open events reported by NIFC, NWS, USGS and other agencies)' };
+    const v = { ok: true, events, counts, major: major(events), checked: new Date().toISOString(), source: 'NASA EONET (open events reported by NIFC, NWS, USGS and other agencies)' };
     cache = { v, until: Date.now() + TTL }; return v;
   } catch (e) { const v = { ok: false, reason: 'lookup' }; if (cache && cache.v.ok) return Object.assign({}, cache.v, { stale: true }); cache = { v, until: Date.now() + FAIL_TTL }; return v; }
   finally { clearTimeout(t); }
@@ -44,5 +52,7 @@ export default async function handler(req, context) {
   if (req.method !== 'GET') return json(405, { ok: false });
   const ip = req.headers.get('x-nf-client-connection-ip') || (context && context.ip) || 'x';
   if (!(await hit('hazards:' + ip, 40, 60e3)).ok) return json(429, { ok: false, error: 'Too many requests.' });
-  const v = await load(); return json(200, v);
+  const v = await load();
+  if (new URL(req.url).searchParams.get('major') === '1') return json(200, v.ok ? { ok: true, major: v.major || [], checked: v.checked, source: v.source } : v);  // small payload for the passive news line
+  return json(200, v);
 }
