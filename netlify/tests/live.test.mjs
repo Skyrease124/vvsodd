@@ -61,6 +61,16 @@ r = await call(O, { token: sid }); ok(r.s === 410 && r.j.ended === true, 'nobody
 r = await call(O, { s: sid }); ok(r.j.session.is_live === false && r.j.session.ended_at, 'the session record keeps is_live=false and ended_at');
 ok((await call(H, { action: 'end', id: sid })).j.already === true, 'ending twice is harmless');
 r = await call(H, { action: 'start', title: 'Round two' }); ok(r.s === 200 && !r.j.already && r.j.session.id !== sid && calls.create.length === 2, 'after ending, the host can start a new live');
+// ---- LiveKit webhook: signed, closes a room that LiveKit ended on its own
+{ const { AccessToken } = await import('livekit-server-sdk'); const wh = (await import('../functions/livekit-webhook.mjs')).default; const cryptoMod = await import('node:crypto');
+  const s2 = (await call(G, { action: 'start', title: 'Guest live' })).j.session, room2 = calls.create[calls.create.length - 1].name;
+  const body = JSON.stringify({ event: 'room_finished', room: { name: room2 }, id: 'EV_1', createdAt: Math.floor(Date.now() / 1000) });
+  const sign = b => { const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET); at.sha256 = cryptoMod.createHash('sha256').update(b).digest('base64'); return at.toJwt(); };
+  const hit = async (b, auth_) => (await wh(new Request('http://x/w', { method: 'POST', body: b, headers: { authorization: auth_ } }), {})).status;
+  ok(await hit(body, 'bogus') === 401 && (await call(O, { token: s2.id })).s === 200, 'webhook without a valid LiveKit signature is refused and changes nothing');
+  ok(await hit(body.replace('EV_1', 'EV_2'), await sign(body)) === 401, 'a signature for a different body is refused');
+  ok(await hit(body, await sign(body)) === 200 && (await call(O, { token: s2.id })).s === 410 && (await call(O, { u: gp.username })).j.live === null, 'a signed room_finished marks the live ended (host closed the app): profile stops showing LIVE');
+  ok(await hit(JSON.stringify({ event: 'participant_joined', room: { name: 'x' } }), await sign(JSON.stringify({ event: 'participant_joined', room: { name: 'x' } }))) === 200, 'other event types are accepted and ignored'); }
 // ---- deactivated hosts disappear
 const hu = await auth.getUser('hostie@example.com'); hu.revoked = true; await auth.saveUser(hu);
 ok((await call(G, { u: hp.username })).j.live === null, 'a deactivated host never shows as live');
