@@ -20,7 +20,7 @@
   document.head.appendChild(css);
 
   const header = document.querySelector('header');
-  const cta = document.querySelector('header .dbtn[href="#contact"], header a.btn.small[href$="#contact"]');
+  const cta = document.querySelector('header .dbtn[href="#contact"], header a.btn.small[href$="#contact"], header .dbtn[href="/account/?mode=up"], header a.btn.small[href="/account/?mode=up"]');
   // Push: load push.js only when this device already turned notifications on (or on the account page). Never asks for permission.
   function ppPushLoad() { return new Promise(res => { if (window.PPPush) return res(window.PPPush); const s = document.createElement('script'); s.src = '/push.js'; s.onload = () => res(window.PPPush); s.onerror = () => res(null); document.head.appendChild(s); }); }
   function ppDevice() { try { return localStorage.getItem('ppPushDevice') === '1'; } catch (e) { return false; } }
