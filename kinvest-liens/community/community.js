@@ -59,12 +59,13 @@
   // ---- shared pieces ----
   function avatar(p, cls) {
     const a = mk('div', cls + (p.founder ? ' f' : ''));
-    if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; a.appendChild(i); } else a.textContent = initials(p.name);
+    if (p.photo) { a.classList.add('ph'); const i = mk('img'); i.src = p.photo; i.alt = ''; i.loading = 'lazy'; a.appendChild(i); }
+    else if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; a.appendChild(i); } else a.textContent = initials(p.name);
     return a;
   }
   function badgePill(p) { const w = []; if (p.founder) w.push(mk('span', 'pill founder', '👑 Founder / Owner')); return w; }
   function personRow(p, o) {
-    const r = mk('div', 'person' + (p.system ? ' sys' : '')), av = mk('div', 'mini' + (p.founder ? ' f' : '')); if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; av.appendChild(i); } else av.textContent = initials(p.name);
+    const r = mk('div', 'person' + (p.system ? ' sys' : '')), av = avatar(p, 'mini');
     const g = mk('div', 'grow'), a = mk('a', 'nm', p.name); a.href = '/community/profile/?u=' + encodeURIComponent(p.username);
     const sub = mk('div', 'sub', p.system ? '👑 Founder Connection' : '@' + p.username + (p.role ? ' · ' + p.role : ''));
     if (p.verified || p.founder) { const w = mk('div', 'nmrow'); w.append(a, vbadge(p.founder ? 'founder' : 'verified', 18)); g.append(w, sub); } else g.append(a, sub); if (p.system) g.append(mk('div', 'sub', 'Official PricePocketAsset account · connected since you joined.')); r.append(av, g); if (!p.system) badgePill(p).forEach(x => r.appendChild(x));
@@ -88,6 +89,8 @@
     const ed = mk('a', 'btn2 primary', incomplete ? 'Set up your profile' : 'Edit profile'); ed.href = '/community/settings/'; ed.style.marginTop = '10px'; mine.append(ed); l.append(mine);
     const fo = mk('div', 'card'); fo.append(mk('h3', '', 'Official'));
     const fl = (await get({ u: me.username, list: 'following' })).j.rows || []; const sys = fl.find(x => x.system); if (sys) fo.append(personRow(sys)); else if (me.founder) fo.append(mk('p', 'muted', 'You are the Founder. Every member is connected to you automatically.')); l.append(fo);
+    const fc = mk('div', 'feed'); const nb = mk('button', 'cp-prompt'); nb.type = 'button'; nb.append(avatar(me, 'mini'), mk('span', '', 'Share something with the community…')); fc.append(mk('h2', 'feed-h', 'Latest posts'), nb); root.insertBefore(fc, grid);
+    const loadFeed = async () => { fc.querySelectorAll('.plist').forEach(x => x.remove()); await postList(fc, { feed: 1 }, me.owner, 'No posts yet. Be the first to share something.'); }; nb.onclick = () => composer(me.paid, loadFeed); loadFeed();
     const sg = mk('div', 'card'); sg.append(mk('h3', '', 'Suggested members')); const sx = (await get({ suggest: 1 })).j.rows || []; const list = mk('div', 'people'); sx.forEach(p => list.appendChild(personRow(p, { follow: true }))); if (!sx.length) list.appendChild(mk('div', 'empty', 'As more members complete their profiles, they will show up here.')); sg.append(list); r.append(sg);
     const soon = mk('div', 'card'); soon.append(mk('h3', '', 'Coming next')); const s = mk('div', 'soon'); [['Following feed', 'Posts and shared properties from people you follow.'], ['Discussions', 'Ask questions and learn from other investors.'], ['Educational posts', 'Guides on liens, deeds, and county research.'], ['Groups', 'Join groups by state, county or strategy.'], ['Direct messages', 'Private conversations, with your privacy choices.']].forEach(([a, b]) => { const d = mk('div'); d.append(mk('b', '', a), document.createTextNode(b)); s.appendChild(d); }); soon.append(s); r.append(soon);
     if (me.owner) ownerPanel(l);
@@ -98,7 +101,7 @@
     const aw = mk('button', 'btn2', 'Award a badge'); aw.type = 'button'; aw.style.marginLeft = '8px'; aw.onclick = async () => { const o = await get({ options: 1 }); const v = await sheet({ title: 'Award a badge', text: 'Type the member’s username. Verified and contribution badges are only ever given by you.', fields: [{ key: 'username', label: 'Username', placeholder: 'member123456' }, { key: 'verified', label: 'Verified', type: 'select', options: [['', 'Leave as is'], ['yes', 'Verified'], ['no', 'Not verified']] }, { key: 'award', label: 'Contribution badge', type: 'select', options: [['', 'None'], ...Object.entries(o.j.awards || {})] }], confirm: 'Save' }); if (!v) return;
       const t = await get({ u: v.username }); if (t.s !== 200) { msg.className = 'msg bad'; msg.textContent = 'No member with that username.'; return; } const b = { action: 'ownerAward', username: v.username }; if (v.verified) b.verified = v.verified === 'yes'; if (v.award) b.awards = [v.award]; const x = await post(b); msg.className = 'msg ' + (x.s === 200 ? 'ok' : 'bad'); msg.textContent = x.s === 200 ? 'Saved.' : (x.j.error || 'Failed.'); };
     c.append(bf, aw, msg);
-    const rp = (await get({ reports: 1 })).j.reports || []; c.append(mk('h4', '', 'Reports (' + rp.filter(x => x.status === 'open').length + ' open)')); rp.slice(0, 8).forEach(x => { const d = mk('div', 'person'); const g = mk('div', 'grow'); g.append(mk('b', '', x.category + ' · @' + x.targetName), mk('div', 'sub', 'from @' + x.byName + ' · ' + x.at.slice(0, 10) + (x.details ? ' · ' + x.details : ''))); d.append(g); if (x.status === 'open') { const cl = mk('button', 'btn2', 'Close'); cl.type = 'button'; cl.onclick = async () => { await post({ action: 'ownerCloseReport', id: x.id }); d.remove(); }; d.append(cl); } c.append(d); });
+    const rp = (await get({ reports: 1 })).j.reports || []; c.append(mk('h4', '', 'Reports (' + rp.filter(x => x.status === 'open').length + ' open)')); rp.slice(0, 8).forEach(x => { const d = mk('div', 'person'); const g = mk('div', 'grow'); g.append(mk('b', '', x.category + ' · @' + x.targetName), mk('div', 'sub', 'from @' + x.byName + ' · ' + x.at.slice(0, 10) + (x.details ? ' · ' + x.details : ''))); if (x.postText) g.append(mk('div', 'sub', 'Post: “' + x.postText + '”')); d.append(g); if (x.post && x.status === 'open') { const dp = mk('button', 'btn2', 'Delete post'); dp.type = 'button'; dp.onclick = async () => { const r = await post({ action: 'deletePost', key: x.post }); if (r.s === 200 || r.s === 404) { await post({ action: 'ownerCloseReport', id: x.id }); d.remove(); } }; d.append(dp); } if (x.status === 'open') { const cl = mk('button', 'btn2', 'Close'); cl.type = 'button'; cl.onclick = async () => { await post({ action: 'ownerCloseReport', id: x.id }); d.remove(); }; d.append(cl); } c.append(d); });
     const vr = (await get({ verifyRequests: 1 })).j.requests || []; c.append(mk('h4', '', 'Verification requests (' + vr.length + ')'));
     vr.forEach(x => { const d = mk('div', 'person'), g = mk('div', 'grow'); g.append(mk('b', '', x.name + ' (@' + x.username + ')'), mk('div', 'sub', Number(x.followers || 0).toLocaleString('en-US') + ' followers' + (x.note ? ' \u00B7 ' + x.note : ''))); d.append(g);
       [['Approve', true], ['Decline', false]].forEach(([l, a]) => { const b = mk('button', 'btn2' + (a ? ' primary' : ''), l); b.type = 'button'; b.onclick = async () => { b.disabled = true; await post({ action: 'ownerVerifyDecision', username: x.username, approve: a }); d.remove(); }; d.append(b); }); c.append(d); });
@@ -146,6 +149,44 @@
     return box;
   }
 
+
+  // ---- POSTS ----
+  const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (s < 60) return 'now'; if (s < 3600) return Math.floor(s / 60) + 'm'; if (s < 86400) return Math.floor(s / 3600) + 'h'; if (s < 604800) return Math.floor(s / 86400) + 'd'; return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  function upsell(title, text) { return sheet({ title, text, confirm: 'See plans' }).then(v => { if (v) location.href = '/plans/'; }); }
+  function composer(paid, after) {
+    if (!paid) return upsell('Posting is for paid members', 'Upgrade to share posts with the PricePocketAsset community. Everyone can still read posts.');
+    const ov = mk('div', 'cm-ov'), sh = mk('div', 'cm-sheet compose'); sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-label', 'New post');
+    const top = mk('div', 'cp-top'), no = mk('button', 'cp-x', 'Cancel'), ttl = mk('b', '', 'New post'), go = mk('button', 'cp-go', 'Post'); no.type = go.type = 'button'; go.disabled = true; top.append(no, ttl, go);
+    const ta = mk('textarea'); ta.maxLength = 1000; ta.placeholder = 'Share an update, a question or a tip…'; ta.setAttribute('aria-label', 'Post text');
+    const foot = mk('div', 'cp-foot'), cnt = mk('span', '', '0 / 1,000'), msg = mk('span', 'cp-msg'); msg.setAttribute('role', 'status'); foot.append(msg, cnt);
+    sh.append(top, ta, foot, mk('p', 'muted small', 'Posts are public to all members. Links show as plain text. Verify before you bid. Nothing here is investment advice.'));
+    const close = () => { ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); };
+    ta.oninput = () => { const n = ta.value.length; cnt.textContent = n.toLocaleString('en-US') + ' / 1,000'; go.disabled = !ta.value.trim(); };
+    no.onclick = close; ov.onclick = e => { if (e.target === ov) close(); };
+    go.onclick = async () => { go.disabled = true; msg.textContent = 'Posting…'; const r = await post({ action: 'createPost', text: ta.value }); if (r.s === 200) { close(); after && after(); } else { go.disabled = false; msg.textContent = r.j.error || 'Could not post.'; if (r.j.upgrade) { close(); upsell('Posting is for paid members', r.j.error); } } };
+    ov.append(sh); document.body.append(ov); requestAnimationFrame(() => { ov.classList.add('on'); ta.focus(); });
+  }
+  function postCard(p, owner, onGone) {
+    const c = mk('article', 'pcard'), hd = mk('div', 'p-hd'), a = p.author; hd.append(avatar(a, 'mini'));
+    const g = mk('div', 'grow'), nmr = mk('div', 'nmrow'), ln = mk('a', 'nm', a.name); ln.href = '/community/profile/?u=' + encodeURIComponent(a.username); nmr.append(ln); if (a.verified || a.founder) nmr.append(vbadge(a.founder ? 'founder' : 'verified', 16));
+    const t = mk('time', 'sub', '@' + a.username + ' · ' + ago(p.at)); t.dateTime = p.at; t.title = new Date(p.at).toLocaleString(); g.append(nmr, t); hd.append(g);
+    const mw = mk('div'); mw.style.position = 'relative'; const dots = mk('button', 'btn2 icon', '⋯'); dots.type = 'button'; dots.setAttribute('aria-label', 'Post options'); mw.append(dots); hd.append(mw);
+    dots.onclick = e => { e.stopPropagation(); const old = mw.querySelector('.menu'); if (old) return old.remove(); const m = mk('div', 'menu'); m.setAttribute('role', 'menu');
+      const it = (l, cls, fn) => { const b = mk('button', cls || '', l); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.onclick = () => { m.remove(); fn(); }; m.appendChild(b); };
+      if (p.mine || owner) it('Delete post', 'danger', async () => { if (!(await sheet({ title: 'Delete this post?', text: 'This cannot be undone.', confirm: 'Delete', danger: true }))) return; const r = await post({ action: 'deletePost', key: p.key }); if (r.s === 200) { c.remove(); onGone && onGone(); } else alert(r.j.error || 'Could not delete.'); });
+      if (!p.mine) it('Report post', 'danger', async () => { const o = await get({ options: 1 }); const v = await sheet({ title: 'Report this post', text: 'Reports are private and reviewed by PricePocketAsset.', fields: [{ key: 'category', type: 'radio', label: 'Reason', options: o.j.reportCategories }, { key: 'details', type: 'textarea', label: 'Details (optional)', max: 500 }], confirm: 'Send report' }); if (!v) return; const r = await post({ action: 'reportPost', key: p.key, category: v.category, details: v.details }); sheet({ title: r.s === 200 ? 'Report sent' : 'Could not send', text: r.s === 200 ? 'Thank you. PricePocketAsset will review it.' : (r.j.error || ''), confirm: 'OK' }); });
+      mw.appendChild(m); setTimeout(() => document.addEventListener('click', () => m.remove(), { once: true }), 0); };
+    c.append(hd, mk('p', 'p-tx', p.text)); return c;
+  }
+  async function postList(host, q, owner, emptyText) {
+    const x = await get(q); const rows = x.j.rows || []; const list = mk('div', 'plist'); host.append(list);
+    rows.forEach(p => list.append(postCard(p, owner))); if (!rows.length) list.append(mk('div', 'empty', emptyText)); return x.j;
+  }
+  async function postsTab(pane, P, R, J) {
+    if (R.self) { const nb = mk('button', 'cp-prompt'); nb.type = 'button'; nb.append(avatar(P, 'mini'), mk('span', '', 'What’s on your mind?')); nb.onclick = () => composer(J.paid, () => { pane.textContent = ''; postsTab(pane, P, R, J); }); pane.append(nb); }
+    await postList(pane, { u: P.username, posts: 1 }, J.owner, R.self ? 'You have not posted yet.' : P.name + ' has not posted yet.');
+  }
+
   // ---- PROFILE ----
   async function profile() {
     const root = $('root'), q = new URLSearchParams(location.search); let name = q.get('u');
@@ -154,7 +195,7 @@
     if (x.s === 404) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'Profile not available'), mk('p', 'muted', 'This profile does not exist or is not available to you.')); const a = mk('a', 'btn2', 'Back to Community'); a.href = '/community/'; c.append(a); root.append(c); return; }
     if (x.j.blockedByMe) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'You blocked ' + x.j.profile.name), mk('p', 'muted', 'You will not see each other’s activity or be able to follow or message each other.')); const b = mk('button', 'btn2 primary', 'Unblock'); b.type = 'button'; b.onclick = async () => { await post({ action: 'unblock', uid: x.j.profile.uid }); location.reload(); }; c.append(b); root.append(c); return; }
     const P = x.j.profile, R = x.j.rel; document.title = P.name + ' (@' + P.username + ') | PricePocketAsset Community'; root.textContent = '';
-    const cover = mk('div', 'cm-cover cv-' + (P.cover || 'forest')); cover.setAttribute('role', 'img'); cover.setAttribute('aria-label', 'Profile cover'); root.appendChild(cover);
+    const cover = mk('div', 'cm-cover cv-' + (P.cover || 'forest')); cover.setAttribute('role', 'img'); cover.setAttribute('aria-label', 'Profile cover'); if (P.coverPhoto) { cover.classList.add('photo'); cover.style.backgroundImage = 'url("' + P.coverPhoto + '")'; } root.appendChild(cover);
     const head = mk('div', 'cm-head'); head.append(avatar(P, 'cm-av')); 
     const id = mk('div', 'cm-id'), nm = mk('div', 'cm-name'); nm.append(mk('h1', '', P.name)); if (P.verified || P.founder) nm.append(vbadge(P.founder ? 'founder' : 'verified', P.founder ? 34 : 28)); badgePill(P).forEach(b => nm.appendChild(b)); id.append(nm, mk('div', 'cm-user', '@' + P.username));
     const meta = mk('div', 'cm-meta'); if (P.role) meta.append(mk('span', '', P.role)); if (P.location) meta.append(mk('span', '', '📍 ' + P.location)); if (P.joined) meta.append(mk('span', '', 'Member since ' + month(P.joined))); id.append(meta);
@@ -162,7 +203,7 @@
     const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers'], [P.stats.following, 'Following'], [P.stats.posts, 'Posts']].forEach(([n, l]) => { const d = mk('div'); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); st.appendChild(d); });
     const act = mk('div', 'cm-act'); side.append(st, act); head.append(id, side); root.appendChild(head);
     const refresh = () => location.reload();
-    if (R.self) { const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
+    if (R.self) { const pb = mk('button', 'btn2 post', '＋ Post'); pb.type = 'button'; pb.onclick = () => composer(x.j.paid, () => show('posts')); act.appendChild(pb); const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
     else {
       if (R.system) { const s = mk('span', 'btn2 sys', '👑 Founder Connection'); s.setAttribute('role', 'status'); s.title = 'Official PricePocketAsset Account. Connected since you joined PricePocketAsset.'; act.appendChild(s); }
       else { const f = mk('button', 'btn2 ' + (R.following ? '' : 'primary'), R.following ? 'Following' : 'Follow'); f.type = 'button'; if (!R.following && !R.canFollow) { f.disabled = true; f.textContent = 'Not accepting followers'; }
@@ -181,10 +222,10 @@
     // tabs
     root.appendChild(liveBlock(P, R, head, act));
     const tabs = mk('div', 'tabs'); tabs.setAttribute('role', 'tablist'); tabs.setAttribute('aria-label', 'Profile sections'); const pane = mk('div', 'pane'); pane.setAttribute('role', 'tabpanel'); pane.setAttribute('aria-live', 'polite');
-    const T = [['about', 'About'], ['activity', 'Activity'], ['collections', 'Collections'], ['community', 'Community'], ['reputation', 'Reputation']];
-    const show = async k => { tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); pane.textContent = ''; history.replaceState(null, '', '?u=' + P.username + (k === 'about' ? '' : '&tab=' + k)); await ({ about, activity, collections, community, reputation }[k])(pane, P, R, x.j); };
+    const T = [['posts', 'Posts'], ['about', 'About'], ['collections', 'Collections'], ['community', 'Community'], ['reputation', 'Reputation']];
+    const show = async k => { tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === k))); pane.textContent = ''; history.replaceState(null, '', '?u=' + P.username + (k === 'posts' ? '' : '&tab=' + k)); await ({ posts: postsTab, about, activity, collections, community, reputation }[k])(pane, P, R, x.j); };
     T.forEach(([k, l]) => { const b = mk('button', '', l); b.type = 'button'; b.dataset.k = k; b.setAttribute('role', 'tab'); b.onclick = () => show(k); tabs.appendChild(b); });
-    root.append(tabs, pane); const first = q.get('tab'); show(T.some(t => t[0] === first) ? first : 'about');
+    root.append(tabs, pane); const first = q.get('tab'); show(T.some(t => t[0] === first) ? first : 'posts');
   }
   function badgeGrid(P) { const g = mk('div', 'badges'); (P.badges || []).forEach(b => { const d = mk('div', 'badge b-' + b.key), i = mk('i', '', b.key === 'verified' ? '' : (ICON[b.key] || '★')); if (b.key === 'verified') i.appendChild(vbadge('verified', 30)); const t = mk('div'); t.append(mk('b', '', b.label), mk('span', '', b.desc)); d.append(i, t); g.appendChild(d); }); if (!(P.badges || []).length) g.appendChild(mk('div', 'empty', 'No badges yet.')); return g; }
   async function about(pane, P, R) {
@@ -231,6 +272,46 @@
     }
   }
 
+
+  // ---- photo picker: choose, drag and zoom, save. The canvas re-encode drops hidden location/camera data. ----
+  function cropSheet(file, kind) {
+    return new Promise(res => {
+      const W = kind === 'avatar' ? 512 : 1500, H = kind === 'avatar' ? 512 : 500;
+      const ov = mk('div', 'cm-ov'), sh = mk('div', 'cm-sheet crop'); sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true'); sh.setAttribute('aria-label', 'Adjust photo');
+      sh.append(mk('h3', '', kind === 'avatar' ? 'Profile photo' : 'Background photo'), mk('p', 'muted small', 'Drag to move. Use the slider to zoom.'));
+      const cv = mk('canvas', 'crop-cv' + (kind === 'avatar' ? ' round' : '')); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+      const zr = mk('input'); zr.type = 'range'; zr.min = '1'; zr.max = '4'; zr.step = '0.01'; zr.value = '1'; zr.setAttribute('aria-label', 'Zoom');
+      const row = mk('div', 'row'), no = mk('button', 'btn2', 'Cancel'), yes = mk('button', 'btn2 primary', 'Save'); no.type = yes.type = 'button'; row.append(no, yes);
+      const msg = mk('p', 'msg'); msg.setAttribute('role', 'status'); sh.append(cv, zr, msg, row);
+      const img = new Image(), url = URL.createObjectURL(file); let base = 1, z = 1, ox = 0, oy = 0;
+      const clamp = () => { const s = base * z, w = img.naturalWidth * s, h = img.naturalHeight * s; ox = Math.min(0, Math.max(W - w, ox)); oy = Math.min(0, Math.max(H - h, oy)); };
+      const draw = () => { clamp(); const s = base * z; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.drawImage(img, ox, oy, img.naturalWidth * s, img.naturalHeight * s); };
+      img.onload = () => { base = Math.max(W / img.naturalWidth, H / img.naturalHeight); ox = (W - img.naturalWidth * base) / 2; oy = (H - img.naturalHeight * base) / 2; draw(); };
+      img.onerror = () => { msg.className = 'msg bad'; msg.textContent = 'This picture could not be opened. Try a JPG or PNG.'; yes.disabled = true; };
+      img.src = url;
+      zr.oninput = () => { const cx = W / 2, cy = H / 2, old = z; z = +zr.value; ox = cx - (cx - ox) * z / old; oy = cy - (cy - oy) * z / old; draw(); };
+      let drag = null; cv.onpointerdown = e => { drag = { x: e.clientX, y: e.clientY, ox, oy }; cv.setPointerCapture(e.pointerId); };
+      cv.onpointermove = e => { if (!drag) return; const k = W / cv.getBoundingClientRect().width; ox = drag.ox + (e.clientX - drag.x) * k; oy = drag.oy + (e.clientY - drag.y) * k; draw(); };
+      cv.onpointerup = cv.onpointercancel = () => { drag = null; };
+      const done = v => { URL.revokeObjectURL(url); ov.classList.remove('on'); setTimeout(() => ov.remove(), 200); res(v); };
+      no.onclick = () => done(null);
+      yes.onclick = () => { let q = 0.86, d = cv.toDataURL('image/jpeg', q); while (d.length > 1.9e6 && q > 0.4) { q -= 0.1; d = cv.toDataURL('image/jpeg', q); } done(d); };
+      ov.append(sh); document.body.append(ov); requestAnimationFrame(() => ov.classList.add('on'));
+    });
+  }
+  function photoCard(me) {
+    const c = mk('div', 'card'); c.id = 'photos'; c.append(mk('h3', '', 'Photos'));
+    if (!me.paid) { c.append(mk('p', 'muted', 'Changing your profile photo and background photo is part of the paid plan.')); const a = mk('a', 'btn2 primary', 'See plans'); a.href = '/plans/'; c.append(a); return c; }
+    const prev = mk('div', 'ph-prev'), cov = mk('div', 'ph-cover cv-' + (me.cover || 'forest')); if (me.coverPhoto) cov.style.backgroundImage = 'url("' + me.coverPhoto + '")'; const av = avatar(me, 'ph-av'); prev.append(cov, av); c.append(prev);
+    const msg = mk('p', 'msg'); msg.setAttribute('role', 'status');
+    const pick = kind => { const f = mk('input'); f.type = 'file'; f.accept = 'image/jpeg,image/png,image/webp,image/heic,image/heif'; f.onchange = async () => { const file = f.files && f.files[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) { msg.className = 'msg bad'; msg.textContent = 'Please choose a picture under 5 MB.'; return; } const d = await cropSheet(file, kind); if (!d) return; msg.className = 'msg'; msg.textContent = 'Saving…'; const r = await post({ action: 'setPhoto', kind, data: d }); msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { if (kind === 'avatar') { av.className = 'ph-av ph'; av.textContent = ''; const i = mk('img'); i.src = d; i.alt = ''; av.append(i); } else cov.style.backgroundImage = 'url("' + d + '")'; } }; f.click(); };
+    const rm = async kind => { const r = await post({ action: 'setPhoto', kind, data: null }); if (r.s === 200) location.reload(); };
+    const row = mk('div', 'ph-row'); [['Change photo', () => pick('avatar')], ['Change background', () => pick('cover')]].forEach(([l, fn]) => { const b = mk('button', 'btn2 primary', l); b.type = 'button'; b.onclick = fn; row.append(b); });
+    if (me.photo) { const b = mk('button', 'btn2', 'Remove photo'); b.type = 'button'; b.onclick = () => rm('avatar'); row.append(b); }
+    if (me.coverPhoto) { const b = mk('button', 'btn2', 'Remove background'); b.type = 'button'; b.onclick = () => rm('cover'); row.append(b); }
+    c.append(row, msg, mk('p', 'muted small', 'JPG, PNG, WebP or HEIC, up to 5 MB. Pictures are resized on your phone and hidden location data is removed before upload.')); return c;
+  }
+
   // ---- SETTINGS ----
   async function settings() {
     const root = $('root'), m = await get({ me: 1 }); if (m.s === 401) return needSignin(root); const me = m.j.me, o = (await get({ options: 1 })).j; root.textContent = '';
@@ -260,7 +341,7 @@
     save.onclick = async () => { save.disabled = true; msg.className = 'msg'; msg.textContent = 'Saving…';
       const b = { action: 'saveProfile', name: name.value, username: user.value.toLowerCase(), role: role.value, experience: exp.value, bio: bio.value, city: city.value, state: stt.value, cover, interests: [...chosen], privacy: { showLocation: showLoc.checked, showActivity: showAct.checked, discoverable: disc.checked, showProBadge: proB.checked, whoCanFollow: wf.value, whoCanMessage: wm.value, collectionsDefault: cd.value }, notif: { founderPosts: fp.checked ? 'on' : 'muted', founderAnnouncements: fa.checked ? 'on' : 'muted', follows: nf.checked, messages: nm.checked, frequency: fq.value } };
       if (pin && pin.value.trim()) b.pinned = pin.value; const r = await post(b); save.disabled = false; msg.className = 'msg ' + (r.s === 200 ? 'ok' : 'bad'); msg.textContent = r.s === 200 ? 'Saved.' : (r.j.error || 'Could not save.'); if (r.s === 200) { back.href = '/community/profile/?u=' + b.username; msg.scrollIntoView({ block: 'nearest' }); } };
-    form.append(c1, c2, c3, c4); root.append(form, msg, save); if (location.hash) { const t = $(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+    form.append(photoCard(me), c1, c2, c3, c4); root.append(form, msg, save); if (location.hash) { const t = $(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   }
   const page = document.body.dataset.page; ({ hub, profile, settings }[page] || (() => {}))();
 })();

@@ -1,5 +1,6 @@
 // Community API (members only). All permission checks live here and in lib/community.mjs; the pages only display what this returns.
 //   GET  ?me=1 | ?u=name | ?u=name&list=followers|following | ?u=name&mutual=1 | ?u=name&collections=1 | ?search=q | ?suggest=1 | ?options=1 | ?reports=1 (owner)
+//   GET ?feed=1 | ?u=name&posts=1     POST createPost|deletePost|reportPost|setPhoto (paid for create/photo) | ownerRemovePhoto
 //   POST {action: saveProfile|follow|unfollow|block|unblock|report|saveCollection|deleteCollection|ownerAward|ownerBackfill|ownerCloseReport}
 import * as auth from '../lib/auth.mjs';
 import * as C from '../lib/community.mjs';
@@ -16,14 +17,16 @@ export default async function handler(req, context) {
   const me = await C.ensureProfile(user);   // creates the profile and the Founder connection on first visit (also heals members created before this feature)
   const founder = await C.isFounderProfile(me);
   const u = new URL(req.url), q = u.searchParams;
+  const paid = auth.isPaid(user);
 
   if (req.method === 'GET') {
     if (q.get('options')) return json(200, { ok: true, roles: C.ROLES, experience: C.EXPERIENCE, interests: C.INTERESTS, reportCategories: C.REPORT_CATEGORIES, awards: Object.fromEntries(Object.entries(C.AWARDABLE).map(([k, v]) => [k, v[0]])) });
-    if (q.get('me')) return json(200, { ok: true, me: Object.assign(await C.publicView(me, me.uid), { privacy: me.privacy, notif: me.notif, city: me.city, state: me.state, founderView: founder, owner: !!user.owner, verify: await C.verifyStatus(me) }) });
+    if (q.get('me')) return json(200, { ok: true, me: Object.assign(await C.publicView(me, me.uid), { privacy: me.privacy, notif: me.notif, city: me.city, state: me.state, founderView: founder, owner: !!user.owner, paid, verify: await C.verifyStatus(me) }) });
     if (q.get('search') !== null && q.get('search') !== undefined) return json(200, Object.assign({ ok: true }, await C.search(q.get('search'), me)));
     if (q.get('suggest')) return json(200, Object.assign({ ok: true }, await C.suggestions(me)));
     if (q.get('verifyRequests')) { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); return json(200, { ok: true, requests: await C.listVerifyRequests() }); }
     if (q.get('reports')) { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); return json(200, { ok: true, reports: await C.listReports() }); }
+    if (q.get('feed')) return json(200, Object.assign({ ok: true, canPost: paid }, await C.listPosts(me, { limit: 40 })));
     const name = q.get('u');
     if (name) {
       const t = await C.getByUsername(name);
@@ -33,8 +36,9 @@ export default async function handler(req, context) {
       if (rel.blocked) return json(200, { ok: true, blockedByMe: true, profile: { uid: t.uid, username: t.username, name: t.name }, rel });
       if (q.get('list')) { const k = q.get('list'); if (!['followers', 'following'].includes(k)) return json(400, { ok: false, error: 'Bad list.' }); return json(200, Object.assign({ ok: true }, await C.listFollows(t, k, me, { limit: 50, offset: Math.max(0, +q.get('offset') || 0) }))); }
       if (q.get('mutual')) return json(200, Object.assign({ ok: true }, await C.mutual(t, me)));
+      if (q.get('posts')) return json(200, Object.assign({ ok: true, canPost: paid && t.uid === me.uid }, await C.listPosts(me, { uid: t.uid, limit: 50 })));
       if (q.get('collections')) return json(200, { ok: true, collections: await C.listCollections(t, me.uid) });
-      return json(200, { ok: true, profile: await C.publicView(t, me.uid), rel, viewerIsFounder: founder, owner: !!user.owner });
+      return json(200, { ok: true, profile: await C.publicView(t, me.uid), rel, viewerIsFounder: founder, owner: !!user.owner, paid });
     }
     return json(400, { ok: false, error: 'Nothing asked.' });
   }
@@ -49,6 +53,19 @@ export default async function handler(req, context) {
   if (act === 'block') return done(await C.block(me, b.uid));
   if (act === 'unblock') return done(await C.unblock(me, b.uid));
   if (act === 'report') { if (!(await RL.hit('report:' + user.email, 10, 3600e3)).ok) return json(429, { ok: false, error: 'You have sent several reports. Please wait before sending more.' }); return done(await C.report(me, b.uid, b.category, b.details)); }
+  if (act === 'createPost') {
+    if (!paid) return json(402, { ok: false, error: 'Posting is for paid members.', upgrade: true });
+    if (!(await RL.hit('post:' + user.email, +(process.env.POST_LIMIT_HOUR || 10), 3600e3)).ok) return json(429, { ok: false, error: 'You have posted a lot in the last hour. Please wait a bit.' });
+    return done(await C.createPost(me, b.text));
+  }
+  if (act === 'deletePost') return done(await C.deletePost(me, b.key, { owner: !!user.owner }));
+  if (act === 'reportPost') { if (!(await RL.hit('report:' + user.email, 10, 3600e3)).ok) return json(429, { ok: false, error: 'You have sent several reports. Please wait before sending more.' }); return done(await C.reportPost(me, b.key, b.category, b.details)); }
+  if (act === 'setPhoto') {
+    if (!paid) return json(402, { ok: false, error: 'Changing your photos is for paid members.', upgrade: true });
+    if (!(await RL.hit('photo:' + user.email, 20, 3600e3)).ok) return json(429, { ok: false, error: 'Too many photo changes. Please wait a bit.' });
+    return done(await C.setPhoto(me, b.kind, b.data));
+  }
+  if (act === 'ownerRemovePhoto') { if (!user.owner) return json(403, { ok: false, error: 'Owner only.' }); const t = await C.getByUsername(b.username); if (!t) return json(404, { ok: false, error: 'Member not found.' }); return done(await C.ownerRemovePhoto(t.uid, b.kind)); }
   if (act === 'requestVerify') return done(await C.requestVerify(me, b.note));
   if (act === 'saveCollection') return done(await C.saveCollection(me, b));
   if (act === 'deleteCollection') return done(await C.deleteCollection(me, b.id));
