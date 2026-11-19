@@ -21,6 +21,13 @@
     '.pp-bell{width:36px!important;height:36px!important;transition:transform .25s cubic-bezier(.32,.72,0,1)}.pp-bell:active{transform:scale(.92)}' +
     '.pp-menu>button,.pp-menu .pp-btn,header .btn.small{min-height:36px!important;padding:0 14px!important;border-radius:999px!important;font-size:14px!important;font-weight:600!important;box-shadow:0 2px 8px rgba(11,110,79,.18)!important;transition:transform .25s cubic-bezier(.32,.72,0,1)}.pp-menu>button:active{transform:scale(.96)}' +
     '@media(prefers-reduced-motion:reduce){.pp-back,.pp-bell,.pp-menu>button{transition:none!important;transform:none!important}}' +
+    '.nav{background:rgba(250,250,252,.72)!important;-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);border-bottom:.5px solid transparent!important;transition:border-color .35s cubic-bezier(.32,.72,0,1),background-color .35s}' +
+    '.nav.pp-scrolled{border-bottom-color:rgba(0,0,0,.12)!important}' +
+    '.pp-menu>a:not(.pp-bell),.pp-menu>button{background:linear-gradient(180deg,#14885f,#0b6e4f)!important;color:#fff!important;border:0!important;box-shadow:0 2px 10px rgba(11,110,79,.28)!important;padding:0 16px!important;display:inline-flex!important;align-items:center!important}' +
+    'header.nav .nav-in{justify-content:flex-start!important;gap:10px}header.nav .logo{margin-right:auto!important}header.nav nav{margin-left:0!important}'+
+    '.pp-hdr-r{display:flex;align-items:center;gap:8px}.pp-hdr-r .pp-menu{display:inline-flex}' +
+    '@media(prefers-color-scheme:dark){.nav{background:rgba(12,12,14,.72)!important}}' +
+    '@media(prefers-reduced-motion:reduce){.nav{transition:none!important}}' +
     '.pp-back{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;margin-right:6px;border:0;border-radius:20px;background:rgba(127,127,127,.14);color:inherit;font-size:24px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
     '.pp-signin{margin-right:8px;background:transparent!important;border:2px solid currentColor;color:inherit!important}.dnav .pp-signin{color:#e6ecf7!important;border-color:#e6ecf7}' +
     '.dnav .pp-signin,.dnav .dbtn{padding:9px 16px}.pp-signin,.pp-menu>a,.dnav .dbtn{white-space:nowrap}' +
@@ -103,8 +110,13 @@
       const bell = document.createElement('a'); bell.href = '/notifications/'; bell.className = 'pp-bell'; bell.setAttribute('aria-label', 'Notifications'); bell.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
       fetch('/.netlify/functions/notifications?count=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.count) { const n = document.createElement('b'); n.textContent = d.count > 99 ? '99+' : String(d.count); bell.append(n); bell.setAttribute('aria-label', 'Notifications, ' + d.count + ' new'); } }).catch(() => {});
       wrap.insertBefore(bell, wrap.firstChild);
+      // hairline appears only after scrolling
+      if (header && !window.__ppScrollBound) { window.__ppScrollBound = 1; const on = () => header.classList.toggle('pp-scrolled', scrollY > 6); addEventListener('scroll', on, { passive: true }); on(); }
       if (cta) cta.replaceWith(wrap);
       else { const nav = header && header.querySelector('nav'); (nav || header || document.body).appendChild(wrap); }
+      // group the header actions on the right: back, bell, account
+      const hdr = header; if (hdr && wrap.parentNode && wrap.parentNode.tagName === 'NAV') { const grp2 = document.createElement('div'); grp2.className = 'pp-hdr-r'; wrap.parentNode.insertBefore(grp2, wrap); grp2.append(wrap); }
+
       // signed-in people do not need the newsletter prompts
       const c = document.getElementById('contact'); if (c) c.hidden = true;
       document.querySelectorAll('a[href$="#contact"]').forEach(a => { const holder = a.closest('p'); (holder || a).hidden = true; });
