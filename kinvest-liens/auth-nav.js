@@ -15,6 +15,8 @@
     '@media(prefers-color-scheme:dark){.pp-panel{background:rgba(38,38,42,.82);color:#f5f5f7;border-color:rgba(255,255,255,.14)}.pp-grp{background:rgba(255,255,255,.08)}.pp-panel a,.pp-panel button,.pp-who b{color:#f5f5f7}.pp-grp>*+*{box-shadow:0 -.5px 0 rgba(255,255,255,.14)}.pp-panel .pp-out{color:#ff6961}.pp-who small,.pp-panel .pp-ownlab{color:#a1a1a6}.pp-panel a:hover,.pp-panel button:hover{background:rgba(47,191,140,.16)}}' +
     '@media(prefers-reduced-motion:reduce){.pp-panel{animation:none}}' +
     'header .pp-panel a,header .pp-panel button{color:#1d1d1f!important}header .pp-panel .pp-out{color:#d70015!important}@media(prefers-color-scheme:dark){header .pp-panel a,header .pp-panel button{color:#f5f5f7!important}header .pp-panel .pp-out{color:#ff6961!important}}.nav .pp-panel a,.nav nav .pp-panel a:not(.btn){display:flex!important}.pp-panel a::after{position:static;height:auto;background:none;transform:none}' +
+    '.pp-menu{display:inline-flex!important;align-items:center;gap:8px}.pp-bell{position:relative;display:inline-flex!important;align-items:center;justify-content:center;width:42px;height:42px;border-radius:21px;background:rgba(127,127,127,.14);color:inherit!important;text-decoration:none}.pp-bell::after{display:none!important}.pp-bell b{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;border-radius:10px;background:#d70015;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 5px;line-height:1}' +
+    '@media(max-width:440px){header a.logo{font-size:0!important;letter-spacing:0}header a.logo img{margin-right:0}}' +
     '.pp-back{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;margin-right:6px;border:0;border-radius:20px;background:rgba(127,127,127,.14);color:inherit;font-size:24px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}' +
     '.pp-signin{margin-right:8px;background:transparent!important;border:2px solid currentColor;color:inherit!important}.dnav .pp-signin{color:#e6ecf7!important;border-color:#e6ecf7}' +
     '.dnav .pp-signin,.dnav .dbtn{padding:9px 16px}.pp-signin,.pp-menu>a,.dnav .dbtn{white-space:nowrap}' +
@@ -93,6 +95,10 @@
       p.append(grp(lp), grp(out)); wrap.append(b, p);
       b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
       document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
+      // the bell: one count for messages, follows, likes, comments and retail alerts
+      const bell = document.createElement('a'); bell.href = '/notifications/'; bell.className = 'pp-bell'; bell.setAttribute('aria-label', 'Notifications'); bell.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+      fetch('/.netlify/functions/notifications?count=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.count) { const n = document.createElement('b'); n.textContent = d.count > 99 ? '99+' : String(d.count); bell.append(n); bell.setAttribute('aria-label', 'Notifications, ' + d.count + ' new'); } }).catch(() => {});
+      wrap.insertBefore(bell, wrap.firstChild);
       if (cta) cta.replaceWith(wrap);
       else { const nav = header && header.querySelector('nav'); (nav || header || document.body).appendChild(wrap); }
       // signed-in people do not need the newsletter prompts

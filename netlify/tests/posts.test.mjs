@@ -83,4 +83,12 @@ r = await call(P, { action: 'setPhoto', kind: 'cover', data: null }); ok(r.s ===
   await call(A, { action: 'block', uid: mp.uid }); ok((await call(A, { post: key })).s === 404 && (await call(A, { action: 'like', key })).s === 404, 'blocked: cannot see or like');
   await call(A, { action: 'unblock', uid: mp.uid }); ok((await call(A, { post: 'bad' })).s === 404, 'bad post link gives not available');
   globalThis.fetch = of; }
+// the bell
+{ const nf = (await import('../functions/notifications.mjs')).default; const nc = async c => { const r = await nf(new Request('http://x/n', { headers: { cookie: c } })); return { s: r.status, j: await r.json() }; };
+  ok((await nf(new Request('http://x/n'))).status === 401, 'bell needs sign-in');
+  let x = await nc(P); ok(x.j.items.some(i => i.kind === 'like') && x.j.items.some(i => i.kind === 'comment' && /commented/.test(i.text)), 'bell lists likes and comments on my posts');
+  ok(x.j.items.filter(i => i.kind === 'like').length <= 2 && x.j.count > 0, 'likes grouped; unread count');
+  await call(A, { action: 'follow', uid: mp.uid }); x = await nc(P); ok(x.j.items[0].kind === 'follow' && /started following you/.test(x.j.items[0].text), 'new follower shows in the bell');
+  await nf(new Request('http://x/n', { method: 'POST', headers: { cookie: P } })); ok((await nc(P)).j.items.every(i => i.read), 'opening the bell marks everything read');
+  ok(!(await nc(A)).j.items.some(i => /Sample post for likes/.test(i.text)), 'others never see my notifications'); }
 console.log('# pass ' + pass);

@@ -27,6 +27,7 @@ const K = { p: u => 'cp_' + u, pe: e => 'cpe_' + sha(e), pu: n => 'cpu_' + n, f:
 const idOk = s => /^[a-f0-9]{16}$/.test(String(s));
 const err = (status, error) => ({ ok: false, status, error });
 
+const bell = (uid, o) => import('./notify.mjs').then(N => N.add(uid, o)).catch(() => {});
 const pingOwner = (t, b, k) => { import('./retail.mjs').then(R => R.notifyOwner(t, b, '/community/', k)).catch(() => {}); };
 // ---- profiles --------------------------------------------------------------------------------------------------
 export async function getByUid(uid) { return idOk(uid) ? auth.kvGet(K.p(uid)) : null; }
@@ -121,7 +122,7 @@ export async function follow(me, targetUid) {
   if ((t.privacy || {}).whoCanFollow === 'nobody') return err(403, 'This member is not accepting new followers.');
   if (rel.following) return { ok: true, already: true };
   await auth.kvPut(K.f(me.uid, t.uid), { at: now() }); await auth.kvPut(K.r(t.uid, me.uid), { at: now() });
-  await bump(me.uid, 'following', 1); await bump(t.uid, 'followers', 1); return { ok: true };
+  await bump(me.uid, 'following', 1); await bump(t.uid, 'followers', 1); bell(t.uid, { kind: 'follow', actor: me.uid, text: 'started following you.', path: '/community/profile/?u=' + me.username }); return { ok: true };
 }
 export async function unfollow(me, targetUid) {
   const t = await getByUid(targetUid); if (!t) return err(404, 'Member not found.');
@@ -293,7 +294,7 @@ async function savePostCount(p, field, d) { const fresh = await auth.kvGet(KP(p.
 export async function getPost(viewer, key) { const p = await visiblePost(viewer, key); if (!p) return err(404, 'This post is not available.'); return { ok: true, post: await postView(p, viewer, {}) }; }
 export async function like(me, key, on) {
   const p = await visiblePost(me, key); if (!p) return err(404, 'This post is not available.'); const k = KL(key, me.uid), had = await auth.kvGet(k);
-  if (on && !had) { await auth.kvPut(k, { at: now() }); const n = await savePostCount(p, 'likes', 1); if (p.uid !== me.uid) socialPush(p, 'like', me, n).catch(() => {}); return { ok: true, liked: true, likes: n }; }
+  if (on && !had) { await auth.kvPut(k, { at: now() }); const n = await savePostCount(p, 'likes', 1); if (p.uid !== me.uid) await bell(p.uid, { kind: 'like', actor: me.uid, text: 'liked your post.', path: '/community/post/?k=' + key, group: 'like:' + key }); if (p.uid !== me.uid) socialPush(p, 'like', me, n).catch(() => {}); return { ok: true, liked: true, likes: n }; }
   if (!on && had) { await auth.kvDel(k); return { ok: true, liked: false, likes: await savePostCount(p, 'likes', -1) }; }
   return { ok: true, liked: !!had, likes: p.likes || 0 };
 }
@@ -303,7 +304,7 @@ export async function addComment(me, key, text) {
   const lastK = 'cpclast_' + me.uid, last = await auth.kvGet(lastK); if (last && last.t === t && Date.now() - Date.parse(last.at) < 600e3) return err(429, 'You just posted that comment.');
   const id = String(Date.now()).padStart(13, '0') + rid(3), c = { id, uid: me.uid, text: t, at: now() };
   await auth.kvPut(KC(key, id), c); await auth.kvPut(lastK, { t, at: c.at }); const n = await savePostCount(p, 'comments', 1);
-  if (p.uid !== me.uid) await socialPush(p, 'comment', me, n, t).catch(() => {});
+  if (p.uid !== me.uid) { await bell(p.uid, { kind: 'comment', actor: me.uid, text: 'commented: “' + t.slice(0, 80) + '”', path: '/community/post/?k=' + key }); await socialPush(p, 'comment', me, n, t).catch(() => {}); }
   return { ok: true, comment: Object.assign({ key: key + '_' + id, mine: true, canDelete: true, author: await miniView(me, me.uid) }, { text: t, at: c.at }), comments: n };
 }
 export async function listComments(viewer, key, { owner } = {}) {
