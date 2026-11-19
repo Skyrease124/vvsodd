@@ -4,7 +4,7 @@
   Content-Security-Policy: frame-ancestors 'self'
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(self)
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(self), payment=(self)
 
 # OneSignal service worker: must be served from the site root, as JavaScript, never cached for long.
 /OneSignalSDKWorker.js
