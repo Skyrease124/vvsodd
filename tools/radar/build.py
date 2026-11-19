@@ -112,16 +112,16 @@ def first_seen(path, needle):
         return out_[0] if out_ else today
     except Exception: return today
 grp = collections.OrderedDict()
-for c in [x for x in out['counties'] if x['file'] in ('al-state-land-data.js', 'ar-cosl-data.js', 'ms-forfeited-data.js', 'nm-auctions-data.js', 'liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js', 'liens-fulton.js')]:
+for c in [x for x in out['counties'] if x['file'] in ('al-state-land-data.js', 'ar-cosl-data.js', 'ms-forfeited-data.js', 'nm-auctions-data.js', 'liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js', 'liens-fulton.js', 'liens-cochise.js', 'liens-mobile.js')]:
     k = c['state'] + '|' + c['county'] + '|' + c['file']
     if k not in ADDED: ADDED[k] = first_seen('kinvest-liens/liens/states/' + c['file'], json.dumps(c['county'])[1:-1] if c['file'] != 'nm-auctions-data.js' else 'San Miguel')
     grp.setdefault((c['state'], c['file'], ADDED[k]), []).append(c)
 for (st, fn, day), cs in grp.items():
     n = sum(c['count'] for c in cs); c0 = cs[0]; one = len(cs) == 1
     out['changes'].append({'count': n, 'county': c0['county'] if one else '%d counties' % len(cs), 'detectedAt': day, 'id': hashlib.sha1((st + fn + day).encode()).hexdigest()[:12],
-                           'items': [] if one else sorted(c['county'] for c in cs)[:12], 'link': links(st), 'official': True, 'publishedAt': c0['checked'],
-                           'source': {'name': ('Monroe County Tax Claim Bureau: Repository List (official county PDF)' if c0['file'] == 'liens-monroepa.js' else 'City of Rochester: 2026 foreclosure auction list (official city PDF)' if c0['file'] == 'liens-rochester.js' else 'Macon-Bibb Tax Commissioner: judicial in rem list (official county PDF)' if c0['file'] == 'liens-bibb.js' else 'Fulton County Sheriff: Dec 1, 2026 tax / levy sale list (official county PDF)' if c0['file'] == 'liens-fulton.js' else c0['label'] + ': official state list'), 'url': c0['source']}, 'state': st,
-                           'text': ('Auction scheduled: ' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else 'New list added: ') + format(n, ',') + (' items' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else ' parcels') + ('' if one else ' in %d counties' % len(cs)) + (' (repository list of unsold properties, no prices)' if c0['file'] == 'liens-monroepa.js' else ' (foreclosure auction list with estimated minimum bids)' if c0['file'] == 'liens-rochester.js' else ' (judicial in rem auction list, no prices or owners)' if c0['file'] == 'liens-bibb.js' else ' (Sheriff tax / levy sale Dec 1, 2026; no prices or owners)' if c0['file'] == 'liens-fulton.js' else ' (' + c0['label'].lower() + ')'), 'type': 'new_list'})
+                           'items': [] if one else sorted(c['county'] for c in cs)[:12], 'link': links(st), 'official': c0['file'] != 'liens-mobile.js', 'publishedAt': c0['checked'],
+                           'source': {'name': ('Monroe County Tax Claim Bureau: Repository List (official county PDF)' if c0['file'] == 'liens-monroepa.js' else 'City of Rochester: 2026 foreclosure auction list (official city PDF)' if c0['file'] == 'liens-rochester.js' else 'Macon-Bibb Tax Commissioner: judicial in rem list (official county PDF)' if c0['file'] == 'liens-bibb.js' else 'Fulton County Sheriff: Dec 1, 2026 tax / levy sale list (official county PDF)' if c0['file'] == 'liens-fulton.js' else 'Cochise County Treasurer: Tax Lien List (official county list)' if c0['file'] == 'liens-cochise.js' else 'Third-party list of Mobile County 2025 county liens (not an official county list)' if c0['file'] == 'liens-mobile.js' else c0['label'] + ': official state list'), 'url': c0['source']}, 'state': st,
+                           'text': ('Auction scheduled: ' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else 'New list added: ') + format(n, ',') + (' items' if c0['group'] == 'deed' and c0['file'] not in ('liens-monroepa.js', 'liens-rochester.js', 'liens-bibb.js') else ' parcels') + ('' if one else ' in %d counties' % len(cs)) + (' (repository list of unsold properties, no prices)' if c0['file'] == 'liens-monroepa.js' else ' (foreclosure auction list with estimated minimum bids)' if c0['file'] == 'liens-rochester.js' else ' (judicial in rem auction list, no prices or owners)' if c0['file'] == 'liens-bibb.js' else ' (Sheriff tax / levy sale Dec 1, 2026; no prices or owners)' if c0['file'] == 'liens-fulton.js' else ' (tax lien list from the county treasurer, owner names left out)' if c0['file'] == 'liens-cochise.js' else ' (third-party list marked available for purchase; not an official county list)' if c0['file'] == 'liens-mobile.js' else ' (' + c0['label'].lower() + ')'), 'type': 'new_list'})
 up = rd(S + 'upcoming-sales.json', {'listings': []})
 for (cn, typ), n in collections.Counter((l['county'], l['type']) for l in up['listings'] if l['type'] in ('taxdeed', 'laft')).items():
     k = 'FL|' + cn + '|' + typ
@@ -145,7 +145,9 @@ json.dump(out, open(S + 'radar.json', 'w'), separators=(',', ':'), sort_keys=Tru
 
 # ---- keep the homepage counters (lien-summary.js LIEN_SUMMARY) in step with every list on the site
 _ls = open(S + 'lien-summary.js').read(); _a = _ls.index('const LIEN_SUMMARY = ['); _b = _ls.index('];', _a) + 2
-_rows = ',\n'.join("  {state: '%s', county: %s, count: %d}" % (c['state'], json.dumps(c['county']), c['count']) for c in sorted(out['counties'], key=lambda c: (c['state'], c['county'])))
+_agg = collections.OrderedDict()
+for c in out['counties']: _agg[(c['state'], c['county'])] = _agg.get((c['state'], c['county']), 0) + c['count']  # one row per county, even when a county has two files (e.g. Mobile)
+_rows = ',\n'.join("  {state: '%s', county: %s, count: %d}" % (st, json.dumps(cn), n) for (st, cn), n in sorted(_agg.items()))
 _new = _ls[:_a] + 'const LIEN_SUMMARY = [   // generated by tools/radar/build.py from every county and state list on the site\n' + _rows + '\n];' + _ls[_b:]
 if _new != _ls: open(S + 'lien-summary.js', 'w').write(_new)
 print('counties', len(out['counties']), 'changes', len(out['changes']), 'bytes', os.path.getsize(S + 'radar.json'))

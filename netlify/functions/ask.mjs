@@ -61,11 +61,11 @@ function buildContext(data, a) {
   }
   // state-held land and state-run auctions loaded from official state files (AL, AR, MS, NM)
   const BUYKEY = { AL: 'AL-ADOR', AR: 'AR-COSL', MS: 'MS-TFL' };
-  const extra = data.RADAR ? data.RADAR.counties.filter(c => c.state === a && (c.group === 'state-held' || ['nm-auctions-data.js'].includes(c.file))) : [];
+  const extra = data.RADAR ? data.RADAR.counties.filter(c => c.state === a && (['state-held', 'lien-sale', 'county-held'].includes(c.group) || ['nm-auctions-data.js'].includes(c.file))) : [];
   if (extra.length) {
     const total = extra.reduce((n, c) => n + c.count, 0);
-    lines.push('\nLISTINGS ON OUR SITE FOR THIS STATE (from official state files): ' + total.toLocaleString('en-US') + ' parcels.');
-    extra.sort((x, y) => y.count - x.count).slice(0, 25).forEach(c => lines.push('- ' + c.county + (/County/.test(c.county) ? '' : ' County') + ': ' + c.count + ' parcels (' + c.label + '; ' + (c.sale && c.sale.text || '') + ')' + (c.amounts && c.amounts.length ? '; ' + c.priceLabel + ' from $' + c.amounts[0] + ' to $' + c.amounts[c.amounts.length - 1] : '') + '. Source checked ' + c.checked + '.'));
+    lines.push('\nLISTINGS ON OUR SITE FOR THIS STATE (from state and county files; lists marked third-party are not official): ' + total.toLocaleString('en-US') + ' parcels.');
+    extra.sort((x, y) => y.count - x.count).slice(0, 25).forEach(c => lines.push('- ' + c.county + (/County/.test(c.county) ? '' : ' County') + ': ' + c.count + ' parcels (' + c.label + (c.file === 'liens-mobile.js' ? ', third-party list, not official' : '') + '; ' + (c.sale && c.sale.text || '') + ')' + (c.amounts && c.amounts.length ? '; ' + c.priceLabel + ' from $' + c.amounts[0] + ' to $' + c.amounts[c.amounts.length - 1] : '') + '. Source checked ' + c.checked + '.'));
     if (extra.length > 25) lines.push('- and ' + (extra.length - 25) + ' more counties.');
     extra.forEach(c => addSrc(c.label + ' source', c.source));
     const g = BUYKEY[a] && data.COUNTY_BUY[BUYKEY[a]];
