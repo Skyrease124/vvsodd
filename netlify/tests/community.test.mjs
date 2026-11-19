@@ -30,7 +30,7 @@ ok((await me(A)).notif.founderPosts === 'muted', 'the mute setting is saved');
 r = await call(A, { action: 'saveProfile', notif: { founderPosts: 'gone' } }); ok(r.s === 400, 'only valid notification choices are accepted');
 await call(A, { action: 'saveProfile', pinned: 'hi' }); ok(!(await call(F, { u: 'pricepocketasset' })).j.profile.pinned.includes('hi'), 'a normal member cannot pin a Founder message');
 r = await call(F, { action: 'saveProfile', pinned: 'Welcome to PricePocketAsset.' }); ok(r.s === 200 && (await call(A, { u: 'pricepocketasset' })).j.profile.pinned === 'Welcome to PricePocketAsset.', 'the Founder can pin an official message, members see it');
-const fv = (await call(A, { u: 'pricepocketasset' })).j; ok(fv.rel.system && !fv.rel.canFollow && !fv.rel.canBlock && fv.rel.canMessage.reason === 'system', 'Founder profile for a member: system connection, no follow / block, no direct message');
+const fv = (await call(A, { u: 'pricepocketasset' })).j; ok(fv.rel.system && !fv.rel.canFollow && !fv.rel.canBlock && fv.rel.canMessage.mode === 'request', 'Founder profile for a member: system connection, no follow / block; messages go to the Founder\'s requests');
 ok(fv.profile.stats.followers === 3, 'Founder follower count counts the system connections');
 // --- normal follow system ---
 r = await call(A, { action: 'follow', uid: ma.uid }); ok(r.s === 400, 'cannot follow yourself');
@@ -49,8 +49,8 @@ ok((await call(A, { u: mb.username })).j.profile.location === '', 'location is h
 await call(B, { action: 'saveProfile', privacy: { showLocation: true } }); ok((await call(A, { u: mb.username })).j.profile.location === 'Orlando, FL', 'location shows only after the member chooses to show it');
 await call(B, { action: 'saveProfile', privacy: { whoCanFollow: 'nobody' } }); r = await call(A, { action: 'follow', uid: mb.uid }); ok(r.s === 403, 'who can follow me: nobody is enforced on the server');
 await call(B, { action: 'saveProfile', privacy: { whoCanFollow: 'everyone', whoCanMessage: 'nobody' } }); ok(!(await call(A, { u: mb.username })).j.rel.canMessage.ok, 'who can message me: nobody');
-await call(B, { action: 'saveProfile', privacy: { whoCanMessage: 'everyone' } }); ok((await call(A, { u: mb.username })).j.rel.canMessage.ok && !(await call(A, { u: mb.username })).j.rel.messagingLive, 'who can message me: everyone (button allowed; messaging itself is not live yet)');
-await call(B, { action: 'saveProfile', privacy: { whoCanMessage: 'followers' } }); ok(!(await call(A, { u: mb.username })).j.rel.canMessage.ok, 'followers-only messaging: not allowed when you do not follow them');
+await call(B, { action: 'saveProfile', privacy: { whoCanMessage: 'everyone' } }); ok((await call(A, { u: mb.username })).j.rel.canMessage.mode === 'direct' && (await call(A, { u: mb.username })).j.rel.messagingLive, 'who can message me: everyone (button allowed; messaging itself is not live yet)');
+await call(B, { action: 'saveProfile', privacy: { whoCanMessage: 'followers' } }); ok((await call(A, { u: mb.username })).j.rel.canMessage.mode === 'request', 'followers-only messaging: a non-follower can only send a message request');
 await call(B, { action: 'saveProfile', privacy: { showActivity: false } }); ok((await call(A, { u: mb.username })).j.profile.activityHidden === true && (await call(B, { u: mb.username })).j.profile.activityHidden === false, 'activity can be hidden from others, never from yourself');
 // --- no sensitive data ever leaves ---
 const dump = JSON.stringify([await call(A, { u: mb.username }), await call(A, { u: mb.username, list: 'followers' }), await call(A, { search: 'member' }), await call(A, { suggest: 1 }), await call(A, { u: 'pricepocketasset' })]);
