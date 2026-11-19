@@ -1,5 +1,6 @@
 // Member accounts: sign up, sign in, sign out, saved liens.
 import crypto from 'node:crypto';
+import * as Community from '../lib/community.mjs';
 import * as auth from '../lib/auth.mjs';
 import * as usage from '../lib/usage.mjs';
 import * as S from '../lib/stripe.mjs';
@@ -339,6 +340,7 @@ async function handle(event) {
     const u = await auth.createUser(email, pw, owner);
     if (!u) return json(409, { error: 'That email already has an account. Please sign in.' });
     if (hasCode && (await auth.redeemCode(b.accessCode, email)) === 'ok') { u.family = true; await auth.saveUser(u); }
+    try { await Community.ensureProfile(u); } catch (e) { /* the community profile is created on first visit if this fails; a signup never fails because of it */ }
     await Promise.race([alerts.notifySignup(u, u.family ? 'with a family access code' : ''), new Promise(r => setTimeout(r, 4000))]);   // an alert never blocks or fails a signup
     return json(200, { user: pub(u) }, await auth.sessionCookie(email));
   }
