@@ -34,6 +34,20 @@
     '@media(max-width:520px){.dnav-in{gap:8px!important}.dnav .dlogo small{display:none}.dnav .dlogo svg{width:34px;height:28px}.dnav .dlogo b{font-size:18px}.dnav .pp-signin,.dnav .dbtn{padding:8px 11px;font-size:14px}.pp-signin{margin-right:4px}.nav .btn.small{padding:8px 11px;font-size:14px;white-space:nowrap}}';
   document.head.appendChild(css);
 
+  // Approved header design: stacked logo, gold divider, green bell with count, gold-ringed account pill, gold + green swoosh.
+  const hcss = document.createElement('style');
+  hcss.textContent = "header.nav{background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 44' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23f6e3a0'/%3E%3Cstop offset='.5' stop-color='%23d4a63c'/%3E%3Cstop offset='1' stop-color='%23f6e3a0'/%3E%3C/linearGradient%3E%3ClinearGradient id='w' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%230b6e4f' stop-opacity='0'/%3E%3Cstop offset='.55' stop-color='%230b6e4f' stop-opacity='.35'/%3E%3Cstop offset='1' stop-color='%230a4d38' stop-opacity='.9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M180 44 C250 34 320 20 400 4 L400 44Z' fill='url(%23w)'/%3E%3Cpath d='M0 10 C60 0 110 26 210 26 C300 26 350 12 400 8' fill='none' stroke='url(%23g)' stroke-width='2.5'/%3E%3Cpath d='M0 16 C60 8 110 32 210 31 C300 31 350 17 400 14' fill='none' stroke='url(%23g)' stroke-width='1' stroke-opacity='.6'/%3E%3C/svg%3E\") bottom/100% 40px no-repeat,linear-gradient(180deg,rgba(255,255,255,.97),rgba(247,243,234,.97))!important;border-radius:0 0 26px 26px!important;border-bottom:0!important;box-shadow:0 8px 24px rgba(0,0,0,.08)!important}" +
+    "header.nav .nav-in{height:auto!important;min-height:60px;padding:6px 12px 24px!important;gap:8px!important;max-width:none}" +
+    "header.nav a.logo{display:flex!important;flex-direction:column;align-items:center;gap:1px;font-size:12.5px!important;font-weight:800!important;letter-spacing:-.01em!important;color:#0b4a34!important;line-height:1.1;margin-right:0!important;text-decoration:none}" +
+    "header.nav a.logo img,header.nav a.logo img.logoimg{height:34px!important;width:auto!important;margin:0!important}" +
+    "header.nav .pp-back{width:38px!important;height:38px!important;min-width:38px!important;background:#fff!important;color:#0b4a34!important;border:.5px solid rgba(0,0,0,.06)!important;box-shadow:0 2px 8px rgba(0,0,0,.14)!important;font-size:22px!important}" +
+    "header.nav .pp-hdr-r{gap:8px!important}header.nav .pp-hdr-r::before{width:1px!important;height:42px!important;background:linear-gradient(transparent,#d6ad4f,transparent)!important;margin:0 2px 0 0!important}" +
+    "header.nav .pp-bell{width:40px!important;height:40px!important;background:linear-gradient(145deg,#fff7dc,#efce78)!important;color:#0b6e4f!important;border:1px solid #e2b85c!important;box-shadow:0 4px 12px rgba(201,154,46,.3),inset 0 1px 0 #fff!important}" +
+    "header.nav .pp-bell b{top:-6px!important;right:-6px!important;border:2px solid #fff;box-sizing:content-box;min-width:16px!important;height:16px!important;font-size:10px!important}" +
+    "header.nav .pp-menu>a:not(.pp-bell){background:linear-gradient(180deg,#1f8a5c,#0a4d38)!important;border:1.5px solid #e6bd62!important;color:#fff!important;font-size:14px!important;font-weight:600!important;min-height:38px!important;padding:0 14px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 12px rgba(10,77,56,.35)!important}";
+  document.head.appendChild(hcss);
+  document.querySelectorAll('header.nav img.logoimg').forEach(i => { i.src = '/img/logo-mark-light.png'; });
+
   const header = document.querySelector('header');
   // Back button on every page except the home page (the Home Screen app has no browser back button).
   if (header && location.pathname !== '/' && !header.querySelector('.pp-back')) {
