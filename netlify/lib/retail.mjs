@@ -177,7 +177,8 @@ async function deliver(uids, alert) {
   for (const uid of uids) {
     const ib = (await auth.kvGet('rin_' + uid)) || { items: [] }; if (!ib.items.some(x => x.id === alert.id)) { ib.items.unshift({ id: alert.id, read: false }); ib.items = ib.items.slice(0, 150); await auth.kvPut('rin_' + uid, ib); inbox++; }
     const email = await emailOf(uid); if (!email) continue; const u = await auth.getUser(email); if (!u || u.revoked) continue;
-    const pp = prefsOf(u); if (!pp.enabled || !pp.subscribed) { off++; continue; }   // only members who turned notifications on
+    const pp = prefsOf(u); if (!pp.enabled || !pp.subscribed) { off++; continue; }
+    if (((await auth.kvGet('rpref_' + uid)) || {}).muted) { off++; continue; }   // member turned retail pushes off (still in their alerts center)   // only members who turned notifications on
     const r = await OS.send({ email, title: alert.title, body: alert.body, link: alert.url || '', path: '/retail/?alert=' + alert.id, key: 'retail:' + alert.dedupe, topic: 'retail-' + (alert.product || alert.id), retail: true });
     if (r.ok && !r.skipped) pushed++; else if (!r.ok) failed++;
   }
@@ -236,6 +237,7 @@ export async function getPrefs(uid) { return Object.assign(defaultPrefs(), (awai
 export async function setPrefs(uid, b) {
   const p = await getPrefs(uid); const pick = (src, allowed) => { const o = {}; for (const k of allowed) if (typeof (src || {})[k] === 'boolean') o[k] = src[k]; return o; };
   p.cats = Object.assign({}, p.cats, pick(b.cats, CATEGORIES)); p.types = Object.assign({}, p.types, pick(b.types, TYPES)); p.stores = Object.assign({}, p.stores, pick(b.stores, Object.keys(RETAILERS)));
+  if (typeof b.muted === 'boolean') p.muted = b.muted;
   await auth.kvPut('rpref_' + uid, p); return { ok: true, prefs: p };
 }
 export async function inbox(uid) {

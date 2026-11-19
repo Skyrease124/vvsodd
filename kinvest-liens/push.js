@@ -57,7 +57,23 @@
     [en, off, test].forEach(b => { b.type = 'button'; }); btns.append(en, off, test);
     const prefs = mk('fieldset', 'pushprefs'); prefs.appendChild(Object.assign(mk('legend', 'small', 'Send me'), {})); const boxes = {};
     CATS.forEach(([k, t, d]) => { const l = mk('label', 'pushrow'), cb = mk('input'); cb.type = 'checkbox'; boxes[k] = cb; const s = mk('span'); s.append(mk('b', '', t), mk('span', 'small muted', ' ' + d)); l.append(cb, s); prefs.appendChild(l); });
-    card.append(status, btns, msg, prefs, mk('p', 'small muted', 'Notifications only say what an official record shows (a list was imported, a page lists a sale date, a deadline you saved). They never say a property is available. Confirm everything with the county.'));
+    // Community and Retail switches: saved in the same places as the Community settings and Retail preferences pages (one setting, shown in both).
+    const extra = mk('fieldset', 'pushprefs'); extra.hidden = true; const addRow = (host, title, desc, on, save) => { const l = mk('label', 'pushrow'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = on; const sp = mk('span'); sp.append(mk('b', '', title), mk('span', 'small muted', ' ' + desc)); l.append(cb, sp); host.appendChild(l); cb.addEventListener('change', async () => { const ok = await save(cb.checked); if (ok) say('Saved.'); else { cb.checked = !cb.checked; say('Could not save.', true); } }); return cb; };
+    (async () => { try {
+      const cm = await fetch('/.netlify/functions/community?me=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null); const rp = await fetch('/.netlify/functions/retail?prefs=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null);
+      if (!cm || !cm.me) return; const nt = cm.me.notif || {};
+      const cSave = patch => fetch('/.netlify/functions/community', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'saveProfile', notif: patch }) }).then(r => r.ok);
+      extra.appendChild(Object.assign(mk('legend', 'small', 'Community'), {}));
+      addRow(extra, 'Messages', 'When someone sends you a private message', nt.messages !== false, v => cSave({ messages: v }));
+      addRow(extra, 'Show message preview', 'Off: the notification only says you have a new message', nt.msgPreview !== false, v => cSave({ msgPreview: v }));
+      addRow(extra, 'Likes and comments', 'On your posts', nt.social !== false, v => cSave({ social: v }));
+      addRow(extra, 'New followers', 'When someone follows you', nt.follows !== false, v => cSave({ follows: v }));
+      if (rp && rp.prefs) { const lg = mk('legend', 'small', 'Retail Alerts'); lg.style.marginTop = '14px'; extra.appendChild(lg);
+        addRow(extra, 'Retail alerts', 'Restocks, drops and price drops you chose', !rp.prefs.muted, v => fetch('/.netlify/functions/retail', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'prefs', muted: !v }) }).then(r => r.ok));
+        const a = mk('a', 'small', 'Choose categories and stores \u203a'); a.href = '/retail/?tab=prefs'; a.style.cssText = 'display:inline-block;margin:6px 0 0 4px;font-weight:600'; extra.appendChild(a); }
+      extra.hidden = prefs.hidden;
+    } catch (e) { /* keep property settings working */ } })();
+    card.append(status, btns, msg, prefs, extra, mk('p', 'small muted', 'Notifications only say what an official record shows (a list was imported, a page lists a sale date, a deadline you saved). They never say a property is available. Confirm everything with the county.'));
     const say = (t, bad) => { msg.textContent = t || ''; msg.style.color = bad ? '#f87171' : ''; };
     let st = (await api('GET')); if (!st.ok) { status.textContent = 'Notifications are unavailable right now.'; en.hidden = off.hidden = test.hidden = true; prefs.hidden = true; return; }
     let cfg = st.d, OS = null, optedIn = false;
@@ -67,7 +83,7 @@
       if (OS) { try { optedIn = !!(OS.User.PushSubscription.optedIn && OS.Notifications.permission); } catch (e) { /* keep */ } }
       const on = !!(cfg.prefs.enabled && cfg.prefs.subscribed && (optedIn || !OS));
       status.textContent = needInstall ? 'On iPhone, notifications work from the Home Screen app. Open Share, tap "Add to Home Screen", then open PricePocketPro from your Home Screen and come back here.' : perm === 'denied' ? 'Blocked in your browser settings. Allow notifications for this site there, then reload.' : on ? 'On for this device.' : 'Off.';
-      en.hidden = needInstall || on || perm === 'denied' || perm === 'unsupported'; off.hidden = !on; test.hidden = !on; prefs.hidden = !cfg.prefs.enabled;
+      en.hidden = needInstall || on || perm === 'denied' || perm === 'unsupported'; off.hidden = !on; test.hidden = !on; prefs.hidden = !cfg.prefs.enabled; extra.hidden = prefs.hidden;
       CATS.forEach(([k]) => { boxes[k].checked = !!cfg.prefs[k]; });
       if (!cfg.configured) say('Notifications are not switched on for the site yet, so nothing will be delivered.', true);
     }
