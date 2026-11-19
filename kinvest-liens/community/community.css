@@ -209,3 +209,14 @@
 .ppl .person{flex-wrap:wrap;gap:10px}.ppl .person .grow{flex:1 1 calc(100% - 60px);min-width:0}.ppl .person>.btn2{flex:1;justify-content:center;min-height:40px}.ppl .person .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ppl .people{display:grid;gap:8px;min-width:0}.ppl .person{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}.ppl .person .grow>*{min-width:0;overflow:hidden;text-overflow:ellipsis}.ppl .person .grow .sub{white-space:normal}
 .ppl .person>.btn2{background:var(--card);box-shadow:0 0 0 .5px var(--line)}.ppl .person>.btn2.outline{background:var(--brand);color:#fff}
+
+/* ---- Smoother, lighter buttons and header (Apple-style) ---- */
+:root{--ease-apple:cubic-bezier(.32,.72,0,1)}
+.cm-act .btn2,.btn2{min-height:40px;font-size:.95rem;font-weight:600;padding:0 18px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .25s var(--ease-apple),background-color .25s var(--ease-apple),box-shadow .25s var(--ease-apple),opacity .25s}
+.btn2:active{transform:scale(.96)}
+.btn2.primary,.btn2.post,.btn2.live{box-shadow:0 4px 14px rgba(11,110,79,.18)}
+.btn2.live{box-shadow:0 4px 14px rgba(255,45,45,.22)}
+.cm-act{gap:6px}
+.cm-act .btn2.icon{width:40px;min-width:40px;padding:0}
+@media(max-width:520px){.cm-act{flex-wrap:nowrap}.cm-act .btn2{flex:1 1 0;min-width:0;padding:0 10px;font-size:.9rem;white-space:nowrap}.cm-act .btn2.icon{flex:0 0 40px}}
+@media(prefers-reduced-motion:reduce){.btn2,.btn2:active{transition:none;transform:none}}
