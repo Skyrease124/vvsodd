@@ -5,7 +5,8 @@
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const get = async q => { try { const r = await fetch(API + '?' + new URLSearchParams(q), { credentials: 'same-origin' }); return { s: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { s: 0, j: { error: 'Could not reach PricePocketAsset.' } }; } };
   const post = async o => { try { const r = await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }); return { s: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { s: 0, j: { error: 'Could not reach PricePocketAsset.' } }; } };
-  const STATUS = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', sold_out: 'SOLD OUT', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
+  const STATUS = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', sold_out: 'OUT OF STOCK', out_of_stock: 'OUT OF STOCK', invite_only: 'Invite Only', preorder: 'Preorder', coming_soon: 'Coming Soon', waitlist: 'Waitlist', limited_access: 'Limited Access', unknown: 'Unknown', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
+  const STOCK_OPTS = [['upcoming', 'Upcoming'], ['monitoring', 'Monitoring'], ['in_stock', 'In stock'], ['low_stock', 'Low stock'], ['out_of_stock', 'Out of stock'], ['invite_only', 'Invite only'], ['preorder', 'Preorder'], ['coming_soon', 'Coming soon'], ['waitlist', 'Waitlist'], ['limited_access', 'Limited access'], ['unknown', 'Unknown']];
   const ICON = { pokemon: '🔥', sneakers: '👟', electronics: '⚡', gaming: '🎮', collectibles: '⭐' };
   const money = n => n == null ? '' : '$' + Number(n).toFixed(2);
   const ago = iso => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
@@ -34,7 +35,7 @@
     if (p.price != null) { const pr = mk('div', 'rt-price', money(p.price)); if (p.prevPrice != null && p.prevPrice > p.price) pr.append(mk('s', '', money(p.prevPrice))); b.append(pr); }
     if (p.variant) b.append(mk('div', 'rt-meta', 'Variant: ' + p.variant));
     if (p.status === 'upcoming' && p.releaseDate) b.append(mk('div', 'rt-meta', '📅 Expected ' + when(p.releaseDate) + ' (verify with the store)'));
-    b.append(mk('div', 'rt-meta', (p.auto ? 'Checked ' : 'Confirmed ') + ago(p.checkedAt) + (p.watchers ? ' · ' + p.watchers + ' watching' : '')));
+    b.append(mk('div', 'rt-meta', (p.auto ? 'Checked ' : 'Updated ') + ago(p.checkedAt) + (p.watchers ? ' · ' + p.watchers + ' watching' : '')));
     const row = mk('div', 'rt-row'), w = mk('button', 'rt-btn' + (ctx.watched.has(p.id) ? ' on' : ''), ctx.watched.has(p.id) ? '✓ Watching' : (p.status === 'upcoming' ? 'Watch This' : 'Alert Me')); w.type = 'button';
     w.onclick = () => watchSheet(p, ctx).then(ch => { if (ch) ctx.reload(); });
     row.append(w);
@@ -119,7 +120,7 @@
     const add = mk('div', 'rt-box'); add.append(mk('h3', '', 'Add a product'));
     const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn', 'Read page'); look.type = 'button';
     const name = input('', 'Product name'), img = input('', 'https://… image link (optional)', 'url'), price = input('', 'e.g. 54.99'); price.inputMode = 'decimal';
-    const cat = select(cats), st = select([['upcoming', 'Upcoming'], ['monitoring', 'Monitoring'], ['in_stock', 'In stock'], ['low_stock', 'Low stock'], ['sold_out', 'Sold out']], 'monitoring'), rel = input('', '', 'datetime-local'), vr = input('', 'Size / color (optional)');
+    const cat = select(cats), st = select(STOCK_OPTS, 'monitoring'), rel = input('', '', 'datetime-local'), vr = input('', 'Size / color (optional)');
     const [autoRow, auto] = toggle('Automatic stock checks', 'Only for pages where stock status could be read.', false); auto.disabled = true;
     const note = mk('p', 'rt-muted rt-small'), amsg = mk('p', 'rt-msg');
     const f = mk('div', 'rt-form'); const two = (a, b) => { const d = mk('div', 'rt-two'); d.append(a, b); return d; };
@@ -134,8 +135,8 @@
     if (!x.j.products.length) list.append(mk('div', 'rt-empty', 'No products yet.'));
     x.j.products.forEach(p => { const d = mk('div', 'rt-ap'), th = mk('div', 'th'); if (p.image) th.style.backgroundImage = 'url("' + p.image.replace(/"/g, '%22') + '")'; const g = mk('div');
       g.append(mk('b', '', p.name), mk('div', 'rt-meta', p.retailerName + ' · ' + (meta.categories[p.category] || '') + ' · ' + (STATUS[p.rawStatus] || p.rawStatus) + (p.price != null ? ' · ' + money(p.price) : '') + ' · ' + p.watchers + ' watching · ' + (p.auto ? 'auto' : 'owner-confirmed') + (p.active ? '' : ' · OFF')));
-      if (p.lastError) g.append(mk('div', 'rt-err', 'Last check failed: ' + p.lastError));
-      const acts = mk('div', 'acts'), sel = select([['', 'Set status…'], ['upcoming', 'Upcoming'], ['monitoring', 'Monitoring'], ['in_stock', 'In stock'], ['low_stock', 'Low stock'], ['sold_out', 'Sold out'], ['disabled', 'Disabled']]);
+      g.append(mk('div', 'rt-why', 'Status: ' + (STATUS[p.rawStatus] || p.rawStatus) + (p.statusReason ? ' — ' + p.statusReason : ''))); if (p.lastError) g.append(mk('div', 'rt-err', 'Last check failed: ' + p.lastError));
+      const acts = mk('div', 'acts'), sel = select([['', 'Set status…']].concat(STOCK_OPTS, [['disabled', 'Disabled']]));
       sel.onchange = async () => { if (!sel.value) return; if ((sel.value === 'in_stock' || sel.value === 'low_stock') && !(await confirmSheet('Mark as ' + STATUS[sel.value].toLowerCase() + '?', 'If it was not in stock before, matching members get a push now. Only do this after you checked the store page.', 'Confirm'))) { sel.value = ''; return; } const r = await post({ action: 'update', id: p.id, status: sel.value }); const s = (r.j.sent || [])[0]; toast(r.s === 200 ? (s ? (s.skipped ? 'Saved. Alert held back (cooldown).' : 'Saved. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : 'Saved.') : (r.j.error || 'Error')); setTimeout(() => location.reload(), 900); };
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };

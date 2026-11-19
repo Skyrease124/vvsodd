@@ -82,7 +82,7 @@ sent.length = 0; r = await call(F, { action: 'broadcast', title: 'Poke', message
 r = await call(F, { action: 'broadcast', title: 'x', message: 'y', url: 'https://evil.com/', audience: { type: 'category', value: 'pokemon' } }); ok(r.s === 400, 'broadcast links must be a supported store or our site (no open redirect)');
 r = await call(F, { action: 'broadcast', title: 'x', message: 'y', url: '//evil.com', audience: { type: 'category', value: 'pokemon' } }); ok(r.s === 400, 'protocol-relative link refused');
 // monitor: one fetch per product no matter how many watchers
-let fetches = 0; R._setFetch(async () => { fetches++; return new Response('<script type="application/ld+json">{"@type":"Product","name":"X","offers":{"@type":"Offer","price":"44.00","availability":"https://schema.org/InStock"}}</script>', { status: 200 }); });
+let fetches = 0; R._setFetch(async () => { fetches++; return new Response('<script type="application/ld+json">{"@type":"Product","name":"X","offers":{"@type":"Offer","price":"44.00","availability":"https://schema.org/InStock"}}</script><button class="add">Add to Cart</button>', { status: 200 }); });
 const g = await R.getProduct(wid); g.auto = true; g.status = 'sold_out'; g.checkedAt = ''; g.lastAlert = {}; await auth.kvPut('rp_' + wid, g);
 for (const c of [Q, Z, F]) await call(c === F ? P : c, { action: 'watch', id: wid, inStock: true });
 let m = await R.monitor(); ok(fetches === 1 && m.checked === 1 && m.changed === 1, 'monitor: one check for a product with many watchers');

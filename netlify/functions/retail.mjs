@@ -17,7 +17,7 @@ export default async function handler(req, context) {
   const me = await C.ensureProfile(user), paid = auth.isPaid(user), owner = !!user.owner, q = new URL(req.url).searchParams;
 
   if (req.method === 'GET') {
-    if (q.get('feed')) { const ps = (await R.listProducts()).map(R.card); return json(200, { ok: true, paid, owner, inStock: ps.filter(p => p.status === 'in_stock' || p.status === 'low_stock'), upcoming: ps.filter(p => p.status === 'upcoming').sort((a, b) => (a.releaseDate || '9') < (b.releaseDate || '9') ? -1 : 1), other: ps.filter(p => ['monitoring', 'sold_out'].includes(p.status)), categories: R.CAT_LABEL, retailers: Object.fromEntries(Object.entries(R.RETAILERS).map(([k, v]) => [k, v.name])) }); }
+    if (q.get('feed')) { const ps = (await R.listProducts()).map(R.card); return json(200, { ok: true, paid, owner, inStock: ps.filter(p => p.status === 'in_stock' || p.status === 'low_stock'), upcoming: ps.filter(p => p.status === 'upcoming').sort((a, b) => (a.releaseDate || '9') < (b.releaseDate || '9') ? -1 : 1), other: ps.filter(p => !['in_stock', 'low_stock', 'upcoming'].includes(p.status)), categories: R.CAT_LABEL, retailers: Object.fromEntries(Object.entries(R.RETAILERS).map(([k, v]) => [k, v.name])) }); }
     if (q.get('mine')) return json(200, { ok: true, paid, watches: await R.myWatches(me.uid) });
     if (q.get('prefs')) return json(200, { ok: true, prefs: await R.getPrefs(me.uid), categories: R.CAT_LABEL, retailers: Object.fromEntries(Object.entries(R.RETAILERS).map(([k, v]) => [k, v.name])) });
     if (q.get('inbox')) return json(200, Object.assign({ ok: true }, await R.inbox(me.uid)));
