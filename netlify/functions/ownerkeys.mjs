@@ -104,7 +104,12 @@ export default async function handler(req) {
   }
   if (!KEYS.NAMES[b.name]) return json(400, { ok: false, error: 'Unknown key name.' });
   if (b.remove) { await KEYS.remove(b.name); return json(200, { ok: true, keys: list() }); }
-  const v = String(b.value || '').trim();
+  let v = String(b.value || '').trim();
+  if (b.name === 'LIVEKIT_URL') {
+    v = v.replace(/\/+$/, '');
+    if (!/^wss:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.livekit\.cloud$/i.test(v)) return json(400, { ok: false, error: 'The LiveKit URL must look like wss://yourproject.livekit.cloud (starts with wss://, ends with .livekit.cloud, nothing after it).' });
+    await KEYS.save(b.name, v); return json(200, { ok: true, keys: list() });
+  }
   if (!/^[A-Za-z0-9._\-]{8,200}$/.test(v)) return json(400, { ok: false, error: 'That does not look like a key (letters and numbers only, no spaces).' });
   await KEYS.save(b.name, v); return json(200, { ok: true, keys: list() });
 }

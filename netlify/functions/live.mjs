@@ -15,6 +15,7 @@ export default async function handler(req) {
   const user = await auth.userFromCookie(req.headers.get('cookie'));
   if (!user) return json(401, { ok: false, error: 'Sign in to use PricePocket Live.', signin: true });
   if (!(await RL.hit('live:' + user.email, req.method === 'POST' ? +(process.env.LIVE_WRITE_LIMIT || 30) : +(process.env.LIVE_READ_LIMIT || 240), 60e3)).ok) return json(429, { ok: false, error: 'Too many requests. Please slow down.' });
+  await L.loadKeys();
   const me = await C.ensureProfile(user);
   const q = new URL(req.url).searchParams;
   if (req.method === 'GET') {

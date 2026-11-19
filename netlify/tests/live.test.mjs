@@ -71,6 +71,19 @@ r = await call(H, { action: 'start', title: 'Round two' }); ok(r.s === 200 && !r
   ok(await hit(body.replace('EV_1', 'EV_2'), await sign(body)) === 401, 'a signature for a different body is refused');
   ok(await hit(body, await sign(body)) === 200 && (await call(O, { token: s2.id })).s === 410 && (await call(O, { u: gp.username })).j.live === null, 'a signed room_finished marks the live ended (host closed the app): profile stops showing LIVE');
   ok(await hit(JSON.stringify({ event: 'participant_joined', room: { name: 'x' } }), await sign(JSON.stringify({ event: 'participant_joined', room: { name: 'x' } }))) === 200, 'other event types are accepted and ignored'); }
+// ---- keys can live in the owner key box instead of Netlify variables
+{ const K = await import('../lib/apikeys.mjs'); const OK = (await import('../functions/ownerkeys.mjs')).default; const OWN = await ck('founder@example.com');
+  const save = async (name, value) => { const r = await OK(new Request('http://x/k', { method: 'POST', body: JSON.stringify({ name, value }), headers: { cookie: OWN, 'content-type': 'application/json' } })); return r.status; };
+  const keep = { u: process.env.LIVEKIT_URL, k: process.env.LIVEKIT_API_KEY, s: process.env.LIVEKIT_API_SECRET };
+  delete process.env.LIVEKIT_URL; delete process.env.LIVEKIT_API_KEY; delete process.env.LIVEKIT_API_SECRET; await K.load(true);
+  ok((await call(G, { action: 'start', title: 'No keys anywhere' })).s === 503, 'with the keys in neither Netlify nor the key box: "not switched on"');
+  ok(await save('LIVEKIT_URL', 'https://example.com') === 400 && await save('LIVEKIT_URL', 'was://x.livekit.cloud.') === 400, 'the key box rejects a wrongly typed LiveKit URL with a clear message');
+  ok(await save('LIVEKIT_URL', 'wss://example.livekit.cloud/') === 200 && await save('LIVEKIT_API_KEY', keep.k) === 200 && await save('LIVEKIT_API_SECRET', keep.s) === 200, 'owner saves the three settings in the key box (trailing slash tidied)');
+  const rr = await call(G, { action: 'start', title: 'Keys from the box' }); const tk = await call(G, { token: rr.j.session.id });
+  ok(rr.s === 200 && tk.s === 200 && tk.j.url === 'wss://example.livekit.cloud' && (await ver.verify(tk.j.token)).sub === gp.uid, 'Live works with the settings from the key box, and the browser only ever receives the URL and a token');
+  ok(!JSON.stringify([rr.j, tk.j]).includes(keep.s) && !JSON.stringify((await (await OK(new Request('http://x/k', { headers: { cookie: OWN } }))).json())).includes(keep.s), 'the secret is never returned by the live API or the key box listing');
+  await call(G, { action: 'end', id: rr.j.session.id });
+  process.env.LIVEKIT_URL = keep.u; process.env.LIVEKIT_API_KEY = keep.k; process.env.LIVEKIT_API_SECRET = keep.s; await K.load(true); }
 // ---- deactivated hosts disappear
 const hu = await auth.getUser('hostie@example.com'); hu.revoked = true; await auth.saveUser(hu);
 ok((await call(G, { u: hp.username })).j.live === null, 'a deactivated host never shows as live');
