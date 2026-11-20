@@ -277,7 +277,7 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
   flex:none;min-height:32px;border:1px solid #3c5c6d;border-radius:9px;background:#142d3d;color:#edf8ff;
 }
 .pm-home-toolbar button{width:31px;padding:0;font-size:1.05rem;cursor:pointer}
-.pm-home-toolbar select{max-width:116px;padding:0 4px;font-size:.72rem}
+.pm-home-toolbar select{max-width:116px;padding:0 4px;font-size:.72rem;-webkit-backdrop-filter:none;backdrop-filter:none}
 .ppa-map-home #pmResults{padding:0 9px 6px}
 .ppa-map-home #pmResults .pm-cardw{border-bottom:1px solid #294354}
 .ppa-map-home #pmResults .pm-card{width:100%;min-height:42px;margin:0;border:0;border-radius:7px;background:transparent;box-shadow:none}
