@@ -7,6 +7,7 @@ window.ppaAccount.then(user => {
   const tools = [
     ['Members','Manage access and membership','/members/','profile'],
     ['Imports & review','Review incoming county data','/admin/imports/','layers'],
+    ['Certificate Review','Review Florida tax certificates and record decisions','/owner/certificates/','file'],
     ['Retail Alerts','Manage alert settings','/owner/retail/','search'],
     ['API keys','Manage service credentials','/owner/keys/','lock'],
     ['Read a county PDF','Extract county records','/owner/ocr/','file'],
