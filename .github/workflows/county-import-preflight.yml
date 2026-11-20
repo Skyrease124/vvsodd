@@ -5,6 +5,8 @@ on:
       - 'netlify/lib/county-import-validation.js'
       - 'scripts/check-county-import.js'
       - 'tests/county-import-validation.test.js'
+      - 'scripts/check-existing-parcels.js'
+      - 'tests/existing-parcels.test.js'
       - '.github/workflows/county-import-preflight.yml'
   workflow_dispatch:
 jobs:
@@ -18,4 +20,4 @@ jobs:
         with:
           node-version: '20'
       - name: Run county import validation tests
-        run: node --test tests/county-import-validation.test.js
+        run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js
