@@ -1,0 +1,25 @@
+name: Validate Firecrawl standard retention
+on:
+  push:
+    branches:
+      - fix/firecrawl-standard-retention-20261120
+      - claude/engineering-workspace
+    paths:
+      - netlify/functions/owner-intelligence.mjs
+      - tests/owner-firecrawl-standard-retention.test.mjs
+      - .github/workflows/validate-firecrawl-standard-retention.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check netlify/functions/owner-intelligence.mjs
+      - run: node --test tests/owner-firecrawl-standard-retention.test.mjs
+      - run: node --test tests/owner-intelligence-center.test.mjs
