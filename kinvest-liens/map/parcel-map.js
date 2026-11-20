@@ -192,6 +192,7 @@
     const b = map.getBounds(), z = map.getZoom(); const hit = IDX.datasets.filter(d => d.bb && !(d.bb[2] < b.getWest() || d.bb[0] > b.getEast() || d.bb[3] < b.getSouth() || d.bb[1] > b.getNorth()));
     if (z < 9 && hit.length > 4) { say('Zoom in a little first: ' + hit.length + ' counties are in view.'); return; }
     await Promise.all(hit.filter(d => !loaded[d.id]).slice(0, 4).map(d => load(d.id))); active = new Set(hit.filter(d => loaded[d.id]).map(d => d.id)); F.inView = true; $('pmArea').textContent = 'Showing this area ✓'; $('pmArea').classList.add('on'); $('pmArea').hidden = false; refresh();
+    sel = null; aiRefresh();
     if (!shown().some(passes)) say('No records with a verified position in this view.');
   }
   function clearArea() { F.inView = false; const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); } refresh(); }
@@ -364,11 +365,17 @@
   // ---------- PricePocket AI, built into the map (Pro). It knows the state, county and parcel in view. Nothing is sent until you press Ask (or tap a suggestion). ----------
   const COL = { 'Tax lien certificate': '#22c55e', 'Tax deed': '#3b82f6', 'Redeemable deed': '#f59e0b', 'Hybrid': '#a855f7', 'Municipal lien': '#06b6d4', 'Sources differ': '#94a3b8' };
   let aiBusy = false, tab = 'ai', aiEls = null, hlStates = [];
-  const aiCtx = () => { if (sel) return { d: IDX.datasets.find(x => x.id === sel._d), r: sel }; const d = curCounty && IDX.datasets.find(x => x.id === curCounty); if (d) return { d }; if (curState) { const s = IDX.allStates.find(x => x.a === curState); return { st: curState, sn: s ? s.n : curState }; } return null; };
+  const aiCtx = () => { if (sel) return { d: IDX.datasets.find(x => x.id === sel._d), r: sel }; if (F.inView) {
+      const area = [...active].map(id => IDX.datasets.find(x => x.id === id)).filter(Boolean);
+      if (area.length === 1) return {d:area[0]};
+      if (area.length > 1) return {states:[...new Set(area.map(d => d.state))], sn:'the current map area'};
+    }
+    const d = curCounty && IDX.datasets.find(x => x.id === curCounty); if (d) return { d }; if (curState) { const s = IDX.allStates.find(x => x.a === curState); return { st: curState, sn: s ? s.n : curState }; } return null; };
   const ctxLabel = c => !c ? 'the whole country' : c.r ? 'parcel ' + c.r.p + ' · ' + c.d.county + ', ' + c.d.state : c.d ? c.d.county + ', ' + c.d.state : c.sn;
   function chips() {
     const c = aiCtx(); if (!c) return [['📈', 'Compare states', 'Which states pay the highest interest?'], ['⏱️', 'Fast turnarounds', 'Which states have the shortest redemption period?'], ['💰', 'Cheapest liens', 'List the cheapest liens'], ['📅', 'My deadlines', 'Which of my certificates have upcoming deadlines?']];
     if (c.r) return [['🔍', 'Research this parcel', 'Research parcel ' + c.r.p + ' in ' + c.d.county + ', ' + c.d.state + ': risks and what to verify before bidding'], ['⏱️', 'Redemption rules', 'What are the redemption rules in ' + c.d.state + '?'], ['⚖️', 'How the sale works', 'What does ' + c.d.state + ' law say about tax ' + (c.r.c === 'tax_deed' ? 'deed' : 'lien') + ' sales?'], ['📈', 'Compare states', 'Which states pay the highest interest?']];
+    if (c.states) return [['💰', 'Cheapest in this area', 'List the cheapest liens here'], ['📈', 'Compare states', 'Which states pay the highest interest?']];
     const w = c.d ? c.d.county + ', ' + c.d.state : c.sn, s = c.d ? c.d.state : c.st; return [['💰', 'Cheapest here', 'List the cheapest liens in ' + w], ['⏱️', 'Redemption rules', 'What are the redemption rules in ' + s + '?'], ['📈', 'Best interest in ' + s, 'Which counties in ' + s + ' pay the highest interest?'], ['📅', 'My deadlines', 'Which of my certificates have upcoming deadlines?']];
   }
   function buildAi() {
@@ -431,8 +438,8 @@
     out.appendChild(details);
   }
 
-  async function runAi(q, out, offset = 0, states = curState ? [curState] : [], county = aiCtx()?.d?.county || null) {
-    let r, d; try { r = await fetch('/.netlify/functions/ai', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q.slice(0, 300), states, offset, mapCounty: county }) }); d = await r.json().catch(() => ({})); } catch (e) { out.textContent = ''; out.appendChild(mk('p', 'pm-flag warn', 'Could not reach PricePocket AI. Please try again.')); aiAgain(); return; }
+  async function runAi(q, out, offset = 0, states = aiCtx()?.states || (aiCtx()?.d ? [aiCtx().d.state] : curState ? [curState] : []), county = aiCtx()?.d?.county || null, parcel = aiCtx()?.r?.p || null) {
+    let r, d; try { r = await fetch('/.netlify/functions/ai', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q.slice(0, 300), states, offset, mapCounty: county, mapParcel: parcel }) }); d = await r.json().catch(() => ({})); } catch (e) { out.textContent = ''; out.appendChild(mk('p', 'pm-flag warn', 'Could not reach PricePocket AI. Please try again.')); aiAgain(); return; }
     out.textContent = ''; if (!r.ok) { out.appendChild(mk('p', 'pm-flag warn', d.error || 'Something went wrong. Please try again.')); aiAgain(); return; }
     const lines = String(d.answer || '').split(/\n+/).map(x => x.trim()).filter(Boolean), bullets = lines.filter(x => /^[-•*]\s+/.test(x)), verify = lines.filter(x => /^verify:/i.test(x)), rest = lines.filter(x => !bullets.includes(x) && !verify.includes(x));
     out.appendChild(mk('p', 'ai-q', q));
@@ -450,7 +457,7 @@
           aiBusy = true;
           aiEls.go.disabled = true;
           controls.querySelectorAll('button').forEach(button => { button.disabled = true; });
-          try { await runAi(q, out, target, states, county); }
+          try { await runAi(q, out, target, states, county, parcel); }
           finally { aiBusy = false; aiEls.go.disabled = false; }
         });
         controls.appendChild(b);
@@ -611,7 +618,8 @@
     if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
     active = new Set(['__none__']); F.inView = false; refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
     const bb = stateBB(a); if (bb) fitTo(bb, fitPad()); if (mapReady) map.setFilter('st-sel', ['==', ['get', 'a'], a]);
-    stateCard(a); aiRefresh(); history.replaceState(null, '', '?s=' + a);
+    stateCard(a); aiRefresh();
+    const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); history.replaceState(null, '', url);
   }
   function stateCard(a) {
     const R = $('pmResults'), s = IDX.allStates.find(x => x.a === a), rule = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a], ds = IDX.datasets.filter(d => d.state === a); R.textContent = '';

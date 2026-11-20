@@ -334,12 +334,12 @@ function coverage(state) {
   if (!COV) { COV = {}; for (const c of Object.keys(FILES)) { const st = COUNTY_STATE[c]; if (!st) continue; let rows = []; try { rows = loadLiens(c); } catch (e) { continue; } const o = COV[st] = COV[st] || { liens: 0, counties: [], cheapest: null }; o.liens += rows.length; o.counties.push(c); for (const l of rows) if (l.amount > 0 && (o.cheapest == null || l.amount < o.cheapest)) o.cheapest = l.amount; } }
   return COV[state] || { liens: 0, counties: [], cheapest: null };
 }
-async function runAgent(q, data, uiScope, cfg, me, mapCounty) {
+async function runAgent(q, data, uiScope, cfg, me, mapCounty, mapParcel) {
   const codes = data.STATES.map(s => s.a), idx = await KB.getIndex(data), today = new Date().toISOString().slice(0, 10);
-  const scopeKey = uiScope.join(',') + '|' + (mapCounty || '');
+  const scopeKey = [uiScope.join(','), mapCounty || '', mapParcel || ''].join('|');
   const key = 'ai:rc:v2:' + crypto.createHash('sha256').update(q.toLowerCase() + '|' + scopeKey + '|' + idx.hash + '|' + today).digest('hex').slice(0, 24);
   try { const hit = await kvGet(key); if (hit && hit.result && Date.now() - hit.t < 6 * 3600e3) return { ...hit.result, cached: true }; } catch (e) { /* no cache */ }
-  const ctx = { data, codes, idx, uiScope, today, findParcel, coverage, ruleIntent, cleanIntent, runStates, runLiens, describe, applyLienGeography: (it, q, states, scope) => applyLienGeography(it, q, states, scope, mapCounty),
+  const ctx = { data, codes, idx, uiScope, today, mapParcel, findParcel, coverage, ruleIntent, cleanIntent, runStates, runLiens, describe, applyLienGeography: (it, q, states, scope) => applyLienGeography(it, q, states, scope, mapCounty),
     parse: async text => { const { text: out } = await complete(cfg, PARSE_SYS(codes, Object.keys(FILES)), 'Selected states on the map: ' + (uiScope.join(',') || 'none') + '\nQuestion: ' + text, { maxTokens: 400 }); return parseJson(out); },
     write: async pack => (await complete(cfg, RESEARCH_SYS, 'QUESTION: ' + q + '\nEVIDENCE: ' + JSON.stringify(pack).slice(0, 9000), { maxTokens: 500 })).text.slice(0, 1600) };
   const result = await AGENT.research(q, ctx);
@@ -370,6 +370,7 @@ async function handle(event) {
   const wide = /\b(nationwide|across the (?:country|u\.?s\.?)|all states)\b/i.test(q);
   if (wide) uiScope = [];
   const mapCounty = !wide && b.mapCounty ? Object.keys(FILES).find(c => countyKey(c) === countyKey(b.mapCounty) && uiScope.includes(COUNTY_STATE[c])) : null;
+  const mapParcel = mapCounty && /\b(?:this|selected|current) (?:parcel|property|lot)\b/i.test(q) && /^[a-z\d._-]{4,55}$/i.test(String(b.mapParcel || '')) ? String(b.mapParcel) : null;
 
   { const slot = await usage.take('ai', me.email); if (!slot.ok) return json(429, { error: slot.why === 'user' ? 'You have reached today\u2019s question limit. It resets tomorrow.' : 'PricePocket AI is busy today. Please try again tomorrow.' }); }
   const now = Date.now(), rec = (hits.get(me.email) || []).filter(t => now - t < 3600000);
@@ -394,9 +395,9 @@ async function handle(event) {
   }
   // Research questions ("research", "compare", "risks", a parcel number...) go through the multistep agent. Set b.classic=true to use the older one-shot path.
   const byRules = ruleIntent(q, data);
-  if (!b.classic && AGENT.wantsResearch(q) && (byRules?.task !== 'liens' || /\b(research|investigate|analy[sz]e|report|due diligence|risks?|evaluate|break ?down|deep dive|compare|versus)\b/i.test(q))) {
+  if (!b.classic && (mapParcel || AGENT.wantsResearch(q) && (byRules?.task !== 'liens' || /\b(research|investigate|analy[sz]e|report|due diligence|risks?|evaluate|break ?down|deep dive|compare|versus)\b/i.test(q)))) {
     try {
-      const r = await runAgent(q, data, uiScope, cfg, me, mapCounty);
+      const r = await runAgent(q, data, uiScope, cfg, me, mapCounty, mapParcel);
       await usage.record('ai', true);
       return json(200, { kind: 'research', answer: r.answer, understood: true, searched: 'research agent: ' + r.plan.length + ' steps', plan: r.plan, trace: r.trace, results: r.evidence.liens, states: r.evidence.states, total: r.evidence.total, findings: r.findings, uncertainty: r.uncertainty, sources: r.sources, cached: !!r.cached, usedModel: r.usedModel, search: r.evidence.search, scope: r.evidence.search?.states || uiScope });
     } catch (e) { console.log('ai agent failed', e && e.message); /* fall back to the classic path below */ }
