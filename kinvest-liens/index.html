@@ -94,6 +94,15 @@
 </section>
 </div>
   </section>
+  <aside class="flyover-teaser" aria-label="Upcoming Parcel Flyover feature"><span class="flyover-teaser-icon" aria-hidden="true">✈</span><div class="flyover-teaser-copy"><div class="flyover-teaser-heading"><strong>Parcel Flyover</strong><span class="flyover-teaser-badge">COMING SOON</span></div><p>Explore properties from above with immersive 3D flyovers.</p></div><span class="flyover-teaser-pro">Planned Pro feature</span></aside>
+  <style>
+  .flyover-teaser{display:flex;align-items:center;gap:14px;margin:14px auto 18px;padding:15px 18px;max-width:1100px;border:1px solid rgba(88,231,167,.36);border-radius:18px;background:linear-gradient(115deg,#102d35,#0b1c2d 70%);color:#f5faff;box-shadow:0 10px 28px rgba(0,0,0,.12);overflow:hidden}
+  .flyover-teaser-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:rgba(56,213,145,.14);color:#5df1ae;font-size:27px;animation:flyover-float 3.6s ease-in-out infinite}
+  .flyover-teaser-copy{flex:1;min-width:0}.flyover-teaser-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.flyover-teaser-heading strong{font-size:16px}.flyover-teaser-badge{border:1px solid rgba(243,195,87,.6);border-radius:999px;padding:3px 8px;font-size:10px;letter-spacing:.08em;font-weight:800;color:#f5d47a}.flyover-teaser-copy p{margin:5px 0 0;color:#b9cad4;font-size:13px;line-height:1.45}.flyover-teaser-pro{flex:none;font-size:12px;color:#f5d47a}
+  @keyframes flyover-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @media(max-width:650px){.flyover-teaser{margin:12px 14px 16px;padding:13px;gap:10px}.flyover-teaser-icon{width:40px;height:40px}.flyover-teaser-pro{display:none}.flyover-teaser-heading strong{font-size:15px}.flyover-teaser-copy p{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.flyover-teaser-icon{animation:none}}
+  </style>
   <nav class="app-tiles" id="app-tools" aria-label="Primary tools">
     <a class="app-card app-primary" href="/community/profile/"><span data-icon="profile"></span><b>Profile</b><small>Your account and activity</small></a>
     <a class="app-card" href="/map/"><span data-icon="map"></span><b data-map-label>Map</b><small>Search parcels and counties</small></a>
