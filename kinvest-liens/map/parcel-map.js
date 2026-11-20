@@ -67,6 +67,62 @@
     return true;
   }
 
+  // New owner-approved research updates are fetched from the server-gated Pro/Free feed.
+  // They never modify the existing static parcel datasets or introduce guessed coordinates.
+  let researchUpdates = [], researchAccess = 'free', researchPins = [], researchOn = true, researchPopup = null;
+  function paintResearch() {
+    if (!mapReady || !map.getSource('research-updates') || !window.PPAResearchMap) return;
+    const relevant = Object.values(loaded).filter(d => !active.size || active.has(d.meta.id));
+    researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
+    const features = researchOn ? researchPins.map(item => ({
+      type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
+      properties: {id:item.release.id, type:item.release.type}
+    })) : [];
+    map.getSource('research-updates').setData({type:'FeatureCollection', features});
+    const count = $('pmResearchCount');
+    if (count) count.textContent = researchPins.length ? ' · ' + researchPins.length + ' matched' : '';
+  }
+  async function loadResearch() {
+    try {
+      const response = await fetch('/.netlify/functions/research-updates', {
+        credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json'}
+      });
+      if (!response.ok) throw Error('Research updates unavailable');
+      const data = await response.json();
+      if (!data.ok || !Array.isArray(data.records)) throw Error('Invalid research response');
+      researchAccess = data.access === 'pro' ? 'pro' : 'free';
+      researchUpdates = data.records.filter(r => r &&
+        (r.type === 'lien' || r.type === 'land') && r.researchOnly === true &&
+        r.availableForPurchase === false && typeof r.id === 'string');
+    } catch (error) { researchUpdates = []; researchAccess = 'free'; }
+    paintResearch();
+  }
+  function openResearchPin(event) {
+    const feat = event.features && event.features[0];
+    if (!feat) return;
+    const item = researchPins.find(row => row.release.id === feat.properties.id);
+    if (!item) return;
+    const r = item.release, pane = mk('div');
+    pane.style.cssText = 'color:#13263b;font:14px/1.5 system-ui;max-width:270px';
+    pane.appendChild(mk('b', '', 'New approved ' + (r.type === 'lien' ? 'lien' : 'land') + ' research'));
+    pane.appendChild(mk('div', '', r.title || 'Research update'));
+    pane.appendChild(mk('div', '', (r.county || '') + ', ' + (r.state || '') + ' · Parcel ' + r.parcelId));
+    if (r.description) pane.appendChild(mk('p', '', r.description));
+    pane.appendChild(mk('div', '', 'Research only. Not verified for purchase.'));
+    if (researchAccess === 'pro') pane.appendChild(mk('small', '', 'Pro early access · Free receives updates after 48 hours.'));
+    try {
+      const url = new URL(r.evidenceUrl || r.sourceUrl);
+      if (url.protocol === 'https:') {
+        const a = mk('a', '', 'Verify official research source');
+        a.href = url.href; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        pane.appendChild(a);
+      }
+    } catch (_) {}
+    if (researchPopup) researchPopup.remove();
+    researchPopup = new maplibregl.Popup({offset:12,closeButton:true})
+      .setLngLat(item.coordinates).setDOMContent(pane).addTo(map);
+  }
+
   // ---------- map ----------
   const STYLE = () => ({ version: 8, glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources: { osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' },
@@ -118,6 +174,16 @@
         'text-size': ['interpolate', ['linear'], ['zoom'], 13.5, ['case', ['>=', ac, 12], 10, 0], 15.5, ['case', ['>=', ac, 3], 11, 0], 17, ['case', ['>=', ac, 0.4], 11, 0], 18, ['case', ['>=', ac, 0.12], 12, 0], 19, ['case', ['>=', ac, 0.03], 13, 0], 20, 14] },
         paint: { 'text-color': ['case', ['==', ['get', 'no'], 1], '#cbd5e1', '#ffffff'], 'text-halo-color': 'rgba(6,10,22,.92)', 'text-halo-width': 1.6, 'text-opacity': ['case', ['==', ['get', 'no'], 1], 0.8, 1] } });
       map.addLayer({ id: 'pts', type: 'circle', source: 'pts', paint: { 'circle-radius': 7, 'circle-color': catColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+      // Distinct research pins are restricted to server-visible releases with exact mapped parcel matches.
+      map.addSource('research-updates', { type:'geojson', data: empty });
+      map.addLayer({id:'research-pin', type:'circle', source:'research-updates',
+        paint:{'circle-color':['match',['get','type'],'lien','#f59e0b','land','#10b981','#f59e0b'],
+          'circle-radius':['interpolate',['linear'],['zoom'],6,7,13,10],
+          'circle-stroke-color':'#ffffff','circle-stroke-width':2.4,'circle-opacity':0.96}});
+      map.on('click','research-pin',openResearchPin);
+      map.on('mouseenter','research-pin',()=>{map.getCanvas().style.cursor='pointer';});
+      map.on('mouseleave','research-pin',()=>{map.getCanvas().style.cursor='';});
+      paintResearch();
       ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); map.on('click', l, e => { const f = e.features && e.features[0]; if (f) { const r = byId(f.properties.i); if (r) select(r, { fly: false }); } }); });
       map.on('click', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts', 'p-dots'] }).length) closePop(); });
       setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
@@ -131,7 +197,7 @@
   function refresh() {
     const rs = shown().filter(passes); const polys = rs.filter(r => r.g), pts = rs.filter(r => !r.g && r.cx);
     if (mapReady) { map.getSource('parcels').setData({ type: 'FeatureCollection', features: polys.map(feature) }); map.getSource('dots').setData({ type: 'FeatureCollection', features: polys.filter(r => r.cx).map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); map.getSource('pts').setData({ type: 'FeatureCollection', features: pts.map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); }
-    renderResults(rs); renderCounts();
+    renderResults(rs); renderCounts(); paintResearch();
   }
   // Padding keeps the records clear of the search pill, the round buttons and the phone's bottom sheet, so a county lands centered in what you can actually see.
   const fitPad = () => homeMap ? {top:18,bottom:28,left:14,right:14} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
@@ -337,6 +403,15 @@
     box.appendChild(mk('h3', '', 'Property type'));
     Object.entries(CATS).forEach(([k, v]) => { const l = mk('label'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = F.cats[k]; cb.addEventListener('change', () => { F.cats[k] = cb.checked; refresh(); }); const sw = mk('span', 'sw'); sw.style.background = v.c; const n = mk('span', 'n'); n.dataset.cat = k; l.append(cb, sw, document.createTextNode(v.n), n); box.appendChild(l); });
     const lv = mk('label'), cv = mk('input'); cv.type = 'checkbox'; cv.addEventListener('change', () => { F.vacantOnly = cv.checked; refresh(); }); const sv = mk('span', 'sw'); sv.style.background = 'transparent'; sv.style.border = '2px solid ' + VAC; const nv = mk('span', 'n'); nv.dataset.cat = 'vac'; lv.append(cv, sv, document.createTextNode('Vacant land only'), nv); box.appendChild(lv);
+    box.appendChild(mk('h3', '', 'Research updates'));
+    const researchLabel = mk('label');
+    const researchToggle = mk('input');
+    researchToggle.type = 'checkbox'; researchToggle.checked = researchOn;
+    researchToggle.addEventListener('change', () => { researchOn = researchToggle.checked; paintResearch(); });
+    const researchCount = mk('span', 'n'); researchCount.id = 'pmResearchCount';
+    researchLabel.append(researchToggle, document.createTextNode(' Approved updates (Pro first, Free after 48 hours)'), researchCount);
+    box.appendChild(researchLabel);
+    box.appendChild(mk('p','note','Pins only appear for server-approved updates that exactly match an existing mapped parcel.'));
     box.appendChild(mk('h3', '', 'Filters'));
     const chk = (label, key) => { const l = mk('label'), c = mk('input'); c.type = 'checkbox'; c.addEventListener('change', () => { F[key] = c.checked; refresh(); }); l.append(c, document.createTextNode(label)); box.appendChild(l); };
     chk('Small lots (1 acre or less)', 'small'); chk('Upcoming sales on the list', 'upcoming'); chk('Over-the-counter or surplus', 'otc'); chk('Verified on the official list we checked', 'verified');
@@ -970,7 +1045,7 @@
   async function boot() {
     try { IDX = await api('/map/index.json'); } catch (e) { ($('pmResults') || $('pmAiBox')).textContent = 'The map data could not be loaded. Please try again.'; return; }
     const account = (embedded ? window.parent.ppaAccount : window.ppaAccount) || fetch('/.netlify/functions/account', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d?.user || null);
-    account.then(u => { signedIn = !!u; paid = !!(u && (u.owner || u.paid)); acctDone = true; if (sel) popup(sel); afterAccount(); }).catch(() => { acctDone = true; afterAccount(); });
+    account.then(u => { signedIn = !!u; paid = !!(u && (u.owner || u.paid)); acctDone = true; if (sel) popup(sel); afterAccount(); loadResearch(); }).catch(() => { acctDone = true; afterAccount(); loadResearch(); });
     if (workspace) return;
     buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => openAi()); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
     try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
