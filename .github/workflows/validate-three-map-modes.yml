@@ -1,0 +1,25 @@
+name: Validate three shared maps nationwide research
+on:
+  push:
+    branches:
+      - feature/nationwide-research-pins-all-three
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/parcel-map.js
+      - tests/test_all_three_map_modes.mjs
+      - .github/workflows/validate-three-map-modes.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --test tests/test_all_three_map_modes.mjs
+      - run: node --test tests/test_research_map_overlay.mjs

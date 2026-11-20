@@ -70,9 +70,38 @@
   // New owner-approved research updates are fetched from the server-gated Pro/Free feed.
   // They never modify the existing static parcel datasets or introduce guessed coordinates.
   let researchUpdates = [], researchAccess = 'free', researchPins = [], researchOn = true, researchPopup = null;
+  let researchMapped = {};
+  // Preload only the counties referenced by approved records already released to this visitor.
+  // This does not add county data to the ordinary results or expose restricted records.
+  async function locateApprovedResearch() {
+    if (!IDX || !researchUpdates.length || !window.PPAResearchMap) return;
+    const countyKey = value => String(value || '').trim().toLowerCase().replace(/\s+county$/, '');
+    const choices = new Map();
+    for (const r of researchUpdates) {
+      const ds = IDX.datasets.filter(d => d.state === r.state && countyKey(d.county) === countyKey(r.county));
+      // Fail closed if county identity is ambiguous in the map catalog.
+      if (ds.length === 1) choices.set(ds[0].id, ds[0]);
+    }
+    // Bounded requests avoid downloading the entire national map dataset on mobile.
+    const entries = [...choices.values()].slice(0, 12);
+    await Promise.all(entries.map(async d => {
+      if (loaded[d.id] || researchMapped[d.id]) return;
+      try {
+        const raw = await api('/map/data/' + d.file);
+        if (!raw || !Array.isArray(raw.recs) || !raw.dict || raw.id !== d.id) return;
+        const expanded = expand(raw);
+        expanded.meta = d;
+        researchMapped[d.id] = expanded;
+      } catch (_) { /* unmatched records remain without a pin */ }
+    }));
+    paintResearch();
+  }
+
   function paintResearch() {
     if (!mapReady || !map.getSource('research-updates') || !window.PPAResearchMap) return;
-    const relevant = Object.values(loaded).filter(d => !active.size || active.has(d.meta.id));
+    const byCounty = new Map([...Object.values(researchMapped), ...Object.values(loaded)].map(d => [d.meta.id, d]));
+    const relevant = [...byCounty.values()].filter(d =>
+      (!active.size || active.has(d.meta.id)) && (!curState || d.meta.state === curState));
     researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
     const features = researchOn ? researchPins.map(item => ({
       type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
@@ -96,6 +125,7 @@
         r.availableForPurchase === false && typeof r.id === 'string');
     } catch (error) { researchUpdates = []; researchAccess = 'free'; }
     paintResearch();
+    await locateApprovedResearch();
   }
   function openResearchPin(event) {
     const feat = event.features && event.features[0];
