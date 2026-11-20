@@ -615,6 +615,51 @@
   }
   const hoaText = v => !v ? 'Not on file' : v === 'unknown' ? 'Not confirmed' : v;
   const tile = (k, v, s) => { const t = mk('div', 't'); t.append(mk('span', 'k', k), mk('b', '', v == null || v === '' ? '—' : String(v))); if (s) t.appendChild(mk('span', 's', s)); return t; };
+  // Turf is strictly opt-in browser-side property research; no county records are rewritten.
+  function spatialPanel(r,d){
+    const panel=mk('section','pm-spatial'),title=mk('h4','', 'Parcel measurements');
+    const lib=window.PPAParcelSpatial, turfLib=window.turf;
+    panel.appendChild(title);
+    const ac=lib?.calculateAcreage(r,turfLib)||{status:'unavailable',reason:'Spatial analysis unavailable'};
+    if(ac.status==='measured'){
+      const amount=ac.acres>=0.1?ac.acres.toFixed(2):ac.acres.toFixed(4);
+      panel.appendChild(mk('p','pm-spatial-value','Calculated acreage: '+amount+' acres'));
+      panel.appendChild(mk('p','pm-spatial-note','Estimated from the mapped parcel polygon using Turf.js; may differ from county-reported acreage.'));
+    }else panel.appendChild(mk('p','pm-spatial-note','Calculated acreage unavailable: '+ac.reason+'.'));
+    const buildings=mk('p','pm-spatial-result');
+    const box=lib?.buildingQueryBBox(r,d);
+    if(!box){
+      buildings.textContent=d?.state==='FL'&&/^Lee(?: County)?$/i.test(d?.county||'')
+        ?'Building overlap: unavailable for this parcel boundary or query area.'
+        :'Building overlap: not available for this county (Lee County coverage only).';
+      panel.appendChild(buildings);
+      return panel;
+    }
+    buildings.textContent='Building overlap: not checked';
+    const check=mk('button','pm-spatial-check','Check mapped buildings');
+    check.type='button';
+    check.addEventListener('click',async()=>{
+      if(!panel.isConnected)return;
+      check.disabled=true;buildings.textContent='Checking Lee County mapped building footprints…';
+      try{
+        const url='/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source:'lee-buildings',bbox:box});
+        const response=await fetch(url,{credentials:'same-origin'});
+        if(!response.ok)throw Error('County GIS service unavailable');
+        const data=await response.json();
+        if(!panel.isConnected)return;
+        const result=lib.buildingOverlap(r,data,turfLib);
+        if(result.status==='overlap')buildings.textContent='Mapped building overlap detected ('+result.count+' footprint'+(result.count===1?'':'s')+').'+
+          (result.partial?' Results may be incomplete.':'');
+        else if(result.status==='no-overlap')buildings.textContent='No overlap in the returned building footprints. Not confirmation of vacant land.';
+        else if(result.status==='incomplete')buildings.textContent='Building overlap inconclusive: returned data incomplete.';
+        else buildings.textContent='Building overlap unavailable: '+result.reason+'.';
+      }catch{
+        if(panel.isConnected)buildings.textContent='Building overlap unavailable: county GIS could not be checked.';
+      }finally{if(panel.isConnected){check.disabled=false;check.textContent='Check again';}}
+    });
+    panel.append(check,buildings,mk('p','pm-spatial-note','Footprints are a map-data research signal, not proof of current building condition or vacancy.'));
+    return panel;
+  }
   function group(title, open, fill) { const g = mk('details', 'grp'); if (open) g.open = true; const s = mk('summary'); s.append(mk('span', '', title), mk('i', 'chev')); g.appendChild(s); const dl = mk('dl'); fill(dl, g); g.appendChild(dl); return g; }
   // ---------- Explore (same tools as the parcel page: Photo, Street View, Cameras, Weather, Fires, Crime, Record, Neighborhood, Jobs, Road, Places, Energy, Parks) ----------
   // The tool code lives in /liens/states/lien-ui.js (shared with the parcel page). It loads only when someone opens "Explore", and the map calls below are no-ops
@@ -644,6 +689,7 @@
       if (fact) facts.append(mk('span', '', fact));
     }
     info.append(facts);
+    info.appendChild(spatialPanel(r,d));
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
     details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
@@ -664,6 +710,7 @@
     // key facts
     const sale = r.sd ? [r.sl || 'Sale date', r.sd, null] : (r.av != null && !(r.amt == null && r.mv != null)) ? ['Assessed', money(r.av), null] : ['Status', r.t ? r.t.split(/[.(]/)[0].slice(0, 28) : null, null];
     const tiles = mk('div', 'tiles'); tiles.append(tile(r.amt != null ? (/min.*bid|starting bid/i.test(r.al || '') ? 'Min. bid' : /bid/i.test(r.al || '') ? 'Bid' : /price|face/i.test(r.al || '') ? 'Price' : 'Amount') : (r.mv != null ? 'County value' : 'Amount'), r.amt != null ? money(r.amt) : (r.mv != null ? money(r.mv) : null)), tile('Size', acres(r) || sqft(r)), tile(sale[0], sale[1])); bd.appendChild(tiles);
+    bd.appendChild(spatialPanel(r,d));
     const st = mk('div', 'stat ' + (r.v ? 'ok' : 'warn')); st.append(mk('i', 'sdot'), mk('div', '', ''));
     const sb = st.lastChild; sb.append(mk('b', '', r.v ? 'On the official list we checked' + (r.ck ? ' · ' + r.ck : '') : 'Not confirmed as available'), mk('span', '', r.v ? 'Lists change. Confirm with the county before you rely on it.' : (r.t || 'Treat this as a historical or unverified record.') + (r.fr ? ' ' + r.fr + '.' : ''))); bd.appendChild(st);
     // owner
