@@ -1,0 +1,46 @@
+name: Stage Wakulla official tax certificate spreadsheet
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - 'scripts/stage-wakulla-certificates.py'
+      - '.github/workflows/stage-wakulla-certs.yml'
+  schedule:
+    - cron: '23 10 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch official Wakulla Excel list and stage validated certificates
+        run: python scripts/stage-wakulla-certificates.py
+      - name: Upload staged records for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wakulla-certificate-staging
+          path: county-import-staging/fl-wakulla-certificate-export.json
+      - name: Push staged data to separate review branch
+        if: success()
+        uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
+        with:
+          branch: automation/wakulla-certificate-review
+          title: 'Review Wakulla county certificate source update'
+          body: 'Review imported Wakulla certificates before publishing. All availability statuses are unverified; no live listings are changed.'
+          commit-message: 'Stage official Wakulla tax certificate list'
+          add-paths: county-import-staging/fl-wakulla-certificate-export.json
+      - name: Link review branch
+        if: always()
+        run: |
+          echo "### Wakulla certificate staging" >> "$GITHUB_STEP_SUMMARY"
+          echo "Review [the staging branch](https://github.com/${{ github.repository }}/compare/claude/engineering-workspace...automation/wakulla-certificate-review), or the run artifact. Never treat this list as verified purchasable inventory." >> "$GITHUB_STEP_SUMMARY"
