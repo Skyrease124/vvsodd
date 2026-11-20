@@ -1,4 +1,9 @@
 :root{--app-bg:#07121e;--app-panel:#112236;--app-line:#344b60;--app-text:#f4f8ff;--app-muted:#b7c8d9;--app-green:#65edab;--app-gold:#ffdc7a;--app-ease:cubic-bezier(.2,.75,.22,1)}
+.ppa-home .hc-mode{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+.ppa-home .hc-mode[hidden]{display:none}
+.ppa-home .hc-mode .hc-chip{min-height:36px;background:#0c2030;border-color:#43627b;color:var(--app-text);font-size:.78rem;padding-inline:12px}
+.ppa-home .hc-mode .hc-chip[aria-pressed="true"]{background:#124333;border-color:#60c798;color:#bcffda}
+.ppa-home .hc-mode .hc-chip:focus-visible{outline:2px solid var(--app-green);outline-offset:2px}
 .ppa-home,.ppa-auth,.ppa-workspace,.ppa-owner{background:radial-gradient(ellipse at 46% 0,#102b40 0,transparent 34rem),var(--app-bg);color:var(--app-text);min-height:100dvh}
 :is(.ppa-home,.ppa-auth,.ppa-workspace,.ppa-owner) a{color:var(--app-green)}
 :is(.ppa-home,.ppa-auth,.ppa-workspace,.ppa-owner) :focus-visible,.app-bottom :focus-visible{outline:2px solid var(--app-gold);outline-offset:3px}
