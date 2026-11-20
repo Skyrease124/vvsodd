@@ -24,7 +24,7 @@ select{border:1px solid #547181;color:white;background:#173749;max-width:100%}
 .error{color:#ffc3ab}
 #workspace[hidden],#sourceCards[hidden]{display:none!important}
 </style></head><body>
-<main><p><a href="/owner/">← Owner Dashboard</a></p>
+<main id="ownerMain" hidden><p><a href="/owner/">← Owner Dashboard</a></p>
 <section class="hero"><h1>Owner Intelligence Center</h1>
 <p class="muted">Your private command center for official county-source monitoring, research evidence and AI-assisted summaries. Certificate approvals and Research Releases stay separate.</p>
 <p id="access" role="status">Verifying owner access…</p></section>
@@ -101,6 +101,7 @@ function render(d){
 }
 async function reload(){
  const d=await request();
+ el('ownerMain').hidden=false;
  el('workspace').hidden=false;
  el('access').textContent='Owner access confirmed.';
  render(d);
@@ -113,6 +114,6 @@ async function act(input){
  catch(e){el('message').textContent=e.message;}
  finally{busy=false;for(const b of document.querySelectorAll('button'))b.disabled=false;}
 }
-reload().catch(e=>{el('access').textContent=e.message;});
+reload().catch(()=>{window.location.replace('/owner/');});
 </script>
 </body></html>
