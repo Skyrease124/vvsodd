@@ -350,10 +350,10 @@ async function runAgent(q, data, uiScope, cfg, me, mapCounty, mapParcel) {
 async function handle(event) {
   const cfg = await keystore.getConfig();
   const me = await auth.userFromCookie((event.headers || {}).cookie);
-  if (event.httpMethod === 'GET') return json(200, { enabled: !!cfg, signedIn: !!me, paid: auth.isPaid(me), counties: Object.keys(FILES) });
+  if (event.httpMethod === 'GET') return json(200, { enabled: !!cfg, signedIn: !!me, paid: auth.isPro(me), counties: Object.keys(FILES) });
   if (event.httpMethod !== 'POST') return json(405, { error: 'Use POST.' });
   if (!me) return json(401, { error: 'Please sign in to use PricePocket AI.', needLogin: true });
-  if (!auth.isPaid(me)) return json(402, { error: 'PricePocket AI is for Pro members.', needPaid: true });
+  if (!auth.isPro(me)) return json(402, { error: 'PricePocket AI is for Pro members.', needPaid: true });
   if (!cfg) return json(503, { error: 'PricePocket AI is not switched on yet.' });
   let b; try { b = JSON.parse(event.body || '{}'); } catch (e) { return json(400, { error: 'Bad request.' }); }
   const q = String(b.question || '').replace(/\s+/g, ' ').trim();
