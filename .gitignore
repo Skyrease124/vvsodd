@@ -1,3 +1,6 @@
 deliverables/
 node_modules/
 __pycache__/
+
+# Netlify CLI local link (site ID only, machine-specific)
+.netlify/
