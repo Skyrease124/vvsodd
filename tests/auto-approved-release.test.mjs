@@ -75,3 +75,29 @@ test('real Palm Beach staged parcel fixture matches an existing mapped location 
   assert.equal(JSON.stringify(matched[0].coordinates),'[-80.10162,26.73355]');
   assert.equal(audienceFor(item,null,date),'none');
 });
+
+
+test('Wakulla certificates on the same parcel and number across tax years remain separate releases',async()=>{
+ const kv=store();
+ const older={...record,taxYear:'2020'};
+ const newer={...record,taxYear:'2021'};
+ const oldKey='fl|wakulla|'+record.parcelId.toLowerCase()+'|18|2020';
+ const newKey='fl|wakulla|'+record.parcelId.toLowerCase()+'|18|2021';
+ const oldReview={...approval(),certificateKey:oldKey};
+ const newReview={...approval(),certificateKey:newKey};
+ const first=await syncReviewedCertificate(options(kv,oldReview,{record:older}));
+ const second=await syncReviewedCertificate(options(kv,newReview,{record:newer}));
+ assert.equal(first.action,'published');
+ assert.equal(second.action,'published');
+ assert.notEqual(first.id,second.id);
+ const published=kv.db.get('approved-research-releases-v1').list;
+ assert.equal(published.length,2);
+ assert.deepEqual(new Set(published.map(x=>x.reviewCertificateKey)),new Set([oldKey,newKey]));
+ const withdrawn=await syncReviewedCertificate(options(kv,{...oldReview,decision:'needs-follow-up',
+  publishApprovedResearch:false,publicationAuthorized:false},{record:older}));
+ assert.equal(withdrawn.action,'withdrawn');
+ const remaining=kv.db.get('approved-research-releases-v1').list;
+ assert.equal(remaining.length,1);
+ assert.equal(remaining[0].reviewCertificateKey,newKey);
+ assert.equal(remaining[0].availableForPurchase,false);
+});

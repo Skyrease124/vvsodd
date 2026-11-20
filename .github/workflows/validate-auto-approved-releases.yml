@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/auto-publish-approved-research
+      - fix/wakulla-cross-year-certificate-isolation-20261120
       - claude/engineering-workspace
     paths:
       - netlify/lib/auto-research-release.mjs
