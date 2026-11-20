@@ -144,6 +144,7 @@
   // ---------- top bar and filters ----------
   const ICON = { haz: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/></svg>', layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
   function iconBtn(svg, label, fn, cls) { const b = mk('button', 'pm-ib ' + (cls || '')); b.type = 'button'; b.innerHTML = svg; b.setAttribute('aria-label', label); b.title = label; b.addEventListener('click', fn); return b; }
+  let homeSearch, homeAiRequest;
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
@@ -154,16 +155,29 @@
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
-    let asking = false;
+    let asking = false, mapDraft = '', aiDraft = '';
     const lay = iconBtn(ICON.layers, 'Layers', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => {
-      if (!homeMap || !paid) { openAi(); return; }
-      asking = !asking;
-      aib.setAttribute('aria-pressed', String(asking));
-      input.placeholder = asking ? 'Ask about this map area…' : 'Search state, county, parcel, owner…';
-      input.setAttribute('aria-label', input.placeholder);
-      go.setAttribute('aria-label', asking ? 'Send question to Map Assistant' : 'Search');
-      input.focus();
+      if (homeMap && paid) setMode(!asking);
+      else openAi();
     }, homeMap ? '' : 'pm-aib');
+    function setMode(on) {
+      if (asking === on) return;
+      if (asking) aiDraft = input.value;
+      else mapDraft = input.value;
+      asking = on;
+      aib.setAttribute('aria-checked', String(on));
+      input.value = on ? aiDraft : mapDraft;
+      input.placeholder = on ? 'Ask about this map area…' : 'Search state, county, parcel, owner…';
+      input.enterKeyHint = on ? 'send' : 'search';
+      input.setAttribute('aria-label', input.placeholder);
+      go.setAttribute('aria-label', on ? 'Send question to Map Assistant' : 'Search');
+      if (tab === 'ai') openRight(false);
+      if (!on) {
+        homeAiRequest?.abort();
+        setStateHl([]);
+        if (tab === 'ai' && mapReady) map.getSource('near').setData(empty);
+      }
+    }
     const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, camb, hzb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
@@ -175,7 +189,12 @@
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const entered = input.value.trim();
-      if (asking) { if (entered) openAi(entered, true); return; }
+      if (asking) {
+        if (entered.length < 3) { say('Enter a question for Map Assistant.'); return; }
+        input.blur();
+        openAi(entered, true);
+        return;
+      }
       const raw = entered.toLowerCase();
       const query = raw.replace(/ county\b/g, '').replace(/[,]+/g, ' ').replace(/\s+/g, ' ');
       F.query = null;
@@ -199,7 +218,7 @@
         else { showTab('list', true); if (!shown().some(passes)) say('No matching parcels in the current county and filters.'); }
       }
     });
-    input.addEventListener('search', () => { if (!input.value && F.query) { F.query = null; refresh(); } });
+    input.addEventListener(homeMap ? 'input' : 'search', () => { if (!asking && !input.value && F.query) { F.query = null; refresh(); } });
     const tools = mk('details', 'pm-tools'); tools.append(mk('summary', '', 'Map Tools'), camb, hzb);
     stack.insertBefore(tools, aib);
     for (const [button, label] of [[lay, 'Layers'], [fb, 'Filters']]) button.appendChild(mk('span', 'pm-control-label', label));
@@ -208,7 +227,11 @@
       go.innerHTML = ICON.pin;
       go.setAttribute('aria-label', 'Search');
       form.prepend(go);
-      aib.setAttribute('aria-pressed', 'false');
+      input.type = 'text';
+      input.setAttribute('role', 'searchbox');
+      input.autocomplete = 'off';
+      input.enterKeyHint = 'search';
+      homeSearch = { i:input, go, setMode };
       searchBar.append(form, aib);
       const results = iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg>', 'Properties', () => showTab('list', true), 'pm-home-results');
       results.append(mk('span', 'pm-control-label', 'Properties'));
@@ -535,17 +558,38 @@
   }
   function buildAi() {
     const h = $('pmAiBox'); h.textContent = '';
-    const hero = mk('div', 'ai-hero'); hero.append(mk('span', 'ai-dot'), mk('b', '', workspace ? 'PricePocket AI' : 'Map Assistant'), mk('span', 'ai-sub', workspace ? 'Full Pro workspace' : 'Ask about the current map area')); if (!workspace) h.appendChild(hero);
+    const hero = mk('div', 'ai-hero'); hero.append(mk('span', 'ai-dot'), mk('b', '', workspace ? 'PricePocket AI' : 'Map Assistant'), mk('span', 'ai-sub', workspace ? 'Full Pro workspace' : 'Ask about the current map area')); if (!workspace && !homeMap) h.appendChild(hero);
     const ctx = mk('p', 'note ai-ctx'); h.appendChild(ctx);
     if (!signedIn || !paid) { const g = mk('p', 'pm-flag warn'); g.append(document.createTextNode('PricePocket AI is for Pro members. ')); const a = mk('a', '', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('PricePocket AI'); a.style.color = '#fde68a'; g.appendChild(a); h.appendChild(g); h.appendChild(mk('p', 'note', 'You can still use the whole map, boundaries and property lists for free.')); aiEls = null; return; }
-    const f = mk('form', 'aif'), i = mk('input'); i.type = 'text'; i.maxLength = 300; i.autocomplete = 'off'; i.placeholder = 'Ask about a state, county or parcel…'; i.setAttribute('aria-label', 'Ask PricePocket AI'); const go = mk('button', 'pm-btn primary', 'Ask'); go.type = 'submit'; f.append(i, go); h.appendChild(f);
+    let i, go;
+    if (homeMap) {
+      ({ i, go } = homeSearch);
+    } else {
+      const f = mk('form', 'aif');
+      i = mk('input'); i.type = 'text'; i.maxLength = 300; i.autocomplete = 'off';
+      i.placeholder = 'Ask about a state, county or parcel…';
+      i.setAttribute('aria-label', 'Ask PricePocket AI');
+      go = mk('button', 'pm-btn primary', 'Ask'); go.type = 'submit';
+      f.append(i, go); h.appendChild(f);
+      f.addEventListener('submit', e => { e.preventDefault(); submitAi(i.value); });
+    }
     const tryH = mk('h3', 'ai-try', 'Try asking'), grid = mk('div', 'ai-cards'); const out = mk('div', 'aiout'); out.setAttribute('aria-live', 'polite'); h.append(tryH, grid, out);
-    f.addEventListener('submit', async e => { e.preventDefault(); const q = i.value.replace(/\s+/g, ' ').trim(); if (q.length < 3 || aiBusy) return; aiBusy = true; go.disabled = true; tryH.hidden = true; grid.hidden = true; out.textContent = ''; out.appendChild(mk('p', 'note', 'Researching… this can take a few seconds.')); await runAi(q, out); aiBusy = false; go.disabled = false; });
-    aiEls = { ctx, i, f, go, grid, out, tryH };
+    aiEls = { ctx, i, go, grid, out, tryH };
+  }
+  async function submitAi(value) {
+    const q = value.replace(/\s+/g, ' ').trim();
+    if (q.length < 3 || aiBusy) return;
+    aiBusy = true;
+    const {go, tryH, grid, out} = aiEls;
+    if (!homeMap) go.disabled = true;
+    tryH.hidden = grid.hidden = true;
+    out.replaceChildren(mk('p', 'note', 'Researching… this can take a few seconds.'));
+    try { await runAi(q, out); }
+    finally { aiBusy = false; go.disabled = false; }
   }
   function aiRefresh() {
     if (!aiEls) return; if (!workspace) aiEls.ctx.textContent = 'Looking at: ' + ctxLabel(aiCtx()) + (aiCtx() ? '' : ' — pick a state or tap the map and the AI follows you');
-    aiEls.grid.textContent = ''; chips().forEach(([ic, t, q]) => { const b = mk('button', 'ai-card'); b.type = 'button'; b.append(mk('span', 'ic', ic), mk('b', '', t), mk('span', 'q', '“' + (q.length > 70 ? q.slice(0, 67) + '…' : q) + '”')); b.addEventListener('click', () => { aiEls.i.value = q; aiEls.f.requestSubmit(); }); aiEls.grid.appendChild(b); });
+    aiEls.grid.textContent = ''; chips().forEach(([ic, t, q]) => { const b = mk('button', 'ai-card'); b.type = 'button'; b.append(mk('span', 'ic', ic), mk('b', '', t), mk('span', 'q', '“' + (q.length > 70 ? q.slice(0, 67) + '…' : q) + '”')); b.addEventListener('click', () => { aiEls.i.value = q; submitAi(q); }); aiEls.grid.appendChild(b); });
   }
   function showTab(t, open) {
     tab = t; $('pmAiBox').hidden = t !== 'ai'; $('pmResults').hidden = t !== 'list'; $('tabAi').setAttribute('aria-selected', String(t === 'ai')); $('tabList').setAttribute('aria-selected', String(t === 'list'));
@@ -564,7 +608,8 @@
       const url = '/plans/?src=Map%20Assistant'; if (embedded) window.top.location.href = url; else location.href = url; return;
     }
     showTab('ai', true); $('pmPop').hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } if (!aiEls) { if (q0) say('Sign in with a Pro account to ask PricePocket AI.'); return; }
-    if (q0) { aiEls.i.value = q0; if (run) aiEls.f.requestSubmit(); } setTimeout(() => { try { aiEls.i.focus({ preventScroll: true }); } catch (e) {} }, 60);
+    if (q0) { aiEls.i.value = q0; if (run) submitAi(q0); }
+    if (!homeMap) setTimeout(() => { try { aiEls.i.focus({ preventScroll: true }); } catch (e) {} }, 60);
   }
   function setStateHl(codes) { hlStates = codes; if (mapReady && map.getLayer('st-hl')) map.setFilter('st-hl', ['in', ['get', 'a'], ['literal', codes.length ? codes : ['__none__']]]); }
   function showLienSearch(out, d) {
@@ -602,7 +647,9 @@
   }
 
   async function runAi(q, out, offset = 0, states = (workspace ? window.ppaWorkshopScope?.().states : null) || aiCtx()?.states || (aiCtx()?.d ? [aiCtx().d.state] : curState ? [curState] : []), county = (workspace ? window.ppaWorkshopScope?.().county : null) || aiCtx()?.d?.county || null, parcel = aiCtx()?.r?.p || null) {
-    let r, d; try { r = await fetch('/.netlify/functions/ai', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q.slice(0, 300), states, offset, mapCounty: county, mapParcel: parcel }) }); d = await r.json().catch(() => ({})); } catch (e) { out.textContent = ''; out.appendChild(mk('p', 'pm-flag warn', 'Could not reach PricePocket AI. Please try again.')); aiAgain(); return; }
+    const signal = homeMap ? (homeAiRequest = new AbortController()).signal : undefined;
+    let r, d; try { r = await fetch('/.netlify/functions/ai', { method: 'POST', credentials: 'same-origin', signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q.slice(0, 300), states, offset, mapCounty: county, mapParcel: parcel }) }); d = await r.json().catch(() => ({})); } catch (e) { if (signal?.aborted) return; out.textContent = ''; out.appendChild(mk('p', 'pm-flag warn', 'Could not reach PricePocket AI. Please try again.')); aiAgain(); return; }
+    if (signal?.aborted) return;
     out.textContent = ''; if (!r.ok) { out.appendChild(mk('p', 'pm-flag warn', d.error || 'Something went wrong. Please try again.')); aiAgain(); return; }
     if (workspace && !offset) dispatchEvent(new CustomEvent('ppa:workshop-result',{detail:{question:q,data:d}}));
     const lines = String(d.answer || '').split(/\n+/).map(x => x.trim()).filter(Boolean), bullets = lines.filter(x => /^[-•*]\s+/.test(x)), verify = lines.filter(x => /^verify:/i.test(x)), rest = lines.filter(x => !bullets.includes(x) && !verify.includes(x));
@@ -619,7 +666,7 @@
         b.addEventListener('click', async () => {
           if (aiBusy) return;
           aiBusy = true;
-          aiEls.go.disabled = true;
+          if (!homeMap) aiEls.go.disabled = true;
           controls.querySelectorAll('button').forEach(button => { button.disabled = true; });
           try { await runAi(q, out, target, states, county, parcel); }
           finally { aiBusy = false; aiEls.go.disabled = false; }
@@ -669,7 +716,7 @@
     out.appendChild(mk('p', 'note', 'AI can be wrong. It answers from the county lists and state rules on this site. Verify with the county before you bid. Not legal or investment advice.'));
     aiAgain();
   }
-  function aiAgain() { const b = mk('button', 'pm-btn', 'Ask something else'); b.type = 'button'; b.style.margin = '6px 0 12px'; b.addEventListener('click', () => { aiEls.out.textContent = ''; aiEls.tryH.hidden = false; aiEls.grid.hidden = false; aiEls.i.value = ''; setStateHl([]); if (mapReady) map.getSource('near').setData(empty); aiEls.i.focus(); }); aiEls.out.appendChild(b); }
+  function aiAgain() { const b = mk('button', 'pm-btn', 'Ask something else'); b.type = 'button'; b.style.margin = '6px 0 12px'; b.addEventListener('click', () => { aiEls.out.textContent = ''; aiEls.tryH.hidden = false; aiEls.grid.hidden = false; aiEls.i.value = ''; setStateHl([]); if (mapReady) map.getSource('near').setData(empty); if (homeMap) { openRight(false); } else aiEls.i.focus(); }); aiEls.out.appendChild(b); }
 
     // ---------- Active hazards: open wildfire / flood / storm / volcano / landslide events from NASA EONET via /hazards. An information layer, not a parcel risk score. ----------
   const HZ = { wildfires: ['Wildfire', '#ef4444'], floods: ['Flood', '#3b82f6'], severeStorms: ['Storm', '#a855f7'], volcanoes: ['Volcano', '#f97316'], landslides: ['Landslide', '#a16207'] };
@@ -861,6 +908,13 @@
       ask.replaceChildren(mk('span', '', paid ? 'Map Assistant' : '🔒 Map Assistant'), mk('b', '', 'Pro'));
       ask.setAttribute('aria-label', paid ? 'Map Assistant' : 'Map Assistant, Pro feature');
       ask.title = 'Ask questions about the current county, parcel or map area.';
+      if (homeMap && paid) {
+        ask.setAttribute('role', 'switch');
+        ask.setAttribute('aria-checked', 'false');
+        const track = mk('span', 'pm-ai-switch');
+        track.setAttribute('aria-hidden', 'true');
+        ask.append(track);
+      }
     }
     if (workspace) {
       $('pmAiBox').hidden = false; aiRefresh();
@@ -872,7 +926,11 @@
       return;
     }
     const q = new URLSearchParams(location.search), q0 = q.get('q'), wantAi = q.get('ai') || q0;
-    if (wantAi) { showTab('ai', true); } else showTab('list'); aiRefresh();
+    if (wantAi) {
+      if (homeMap && paid) homeSearch.setMode(true);
+      showTab('ai', true);
+    } else showTab('list');
+    aiRefresh();
     if (q0 && aiEls) aiEls.i.value = q0.slice(0, 300); // from an old AI link: filled in, you press Ask
   }
   async function boot() {
