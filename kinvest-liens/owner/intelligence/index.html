@@ -73,7 +73,7 @@ body,main,#ownerMain,#workspace{color:#eff9fd!important}
 <label><input type="checkbox" id="ai"> NVIDIA AI summary</label>
 </div>
 <p id="fcStatus" class="muted"></p>
-<p class="muted">To enable Firecrawl, configure <code>FIRECRAWL_API_KEY</code> as a server-side Netlify environment variable. No key is sent to the browser. Each source is limited to one scan per six hours.</p>
+<p id="fcSetup" class="muted" hidden>Firecrawl requires a server-side Netlify <code>FIRECRAWL_API_KEY</code>. The key is never sent to your browser.</p><p class="muted">Successful Firecrawl scans: up to 3 per day and 25 per month. Failed attempts do not use that quota, but retries are throttled. Sources have a six-hour cooldown after successful scans using the same method.</p>
 </div>
 <div id="message" role="status" aria-live="polite" class="muted"></div>
 <h2>Florida source monitoring</h2>
@@ -102,7 +102,8 @@ function render(d){
  el('sourceCount').textContent=d.stats.sources;
  el('checkedCount').textContent=d.stats.checked;
  el('pendingCount').textContent=d.stats.pending;
- el('fcStatus').textContent=d.firecrawlConfigured?'Firecrawl configured (server-side)':'Firecrawl not configured. Direct official-source checks are available.';
+ el('fcStatus').textContent=d.firecrawlConfigured?'Firecrawl connected in Netlify — ready to scan':'Firecrawl key not configured; free official-source checks are available.';
+ el('fcSetup').hidden=!!d.firecrawlConfigured;
  const root=el('sourceCards');root.replaceChildren();
  for(const s of d.records){
   const card=make('article');card.className='card';
