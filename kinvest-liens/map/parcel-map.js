@@ -143,7 +143,7 @@
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
-    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
+    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
     stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = ''; fillCounties(coSel); aiRefresh(); return; } focusState(stSel.value); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
@@ -158,7 +158,7 @@
       input.setAttribute('aria-label', input.placeholder);
       go.setAttribute('aria-label', asking ? 'Send question to Map Assistant' : 'Search');
       input.focus();
-    }, 'pm-aib');
+    }, homeMap ? '' : 'pm-aib');
     const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, camb, hzb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
@@ -220,7 +220,7 @@
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
-    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + ' · ' + d.records.toLocaleString('en-US') + ' records'); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
+    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
   }
   function stateNote() {
     const R = $('pmResults'); if (!curState) return; const has = IDX.datasets.some(d => d.state === curState), s = IDX.allStates.find(x => x.a === curState);
