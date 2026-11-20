@@ -1,0 +1,16 @@
+{
+  "mode": "comparison",
+  "source": "https://sjctax.us/downloads/Unredeemed_County_Individual_Certificates.csv",
+  "checkedAt": "2026-11-20T20:06:28.193381+00:00",
+  "previousCheckedAt": "2026-11-20T20:02:36.185072+00:00",
+  "summary": {
+    "baselineRecords": 4091,
+    "currentRecords": 4091,
+    "added": 0,
+    "missingFromLatest": 0,
+    "statusChanged": 0,
+    "amountChanged": 0
+  },
+  "changes": [],
+  "note": "A certificate missing from the new file is NOT proof of redemption."
+}
