@@ -4,6 +4,7 @@ import * as auth from '../lib/auth.mjs';
 import * as keystore from '../lib/keystore.mjs';
 import {complete} from '../lib/llm.mjs';
 import {SOURCE_REGISTRY,sourceById,researchKey,safeScrapeExcerpt,compareSource,validateMark} from '../lib/owner-intelligence-sources.mjs';
+import {periodKeys,successKey,attemptKey,quotaDecision,recordAttempt,recordSuccess,sourceCooldown} from '../lib/owner-firecrawl-quota.mjs';
 
 const respond=(status,obj)=>new Response(JSON.stringify(obj),{status,headers:{
   'Content-Type':'application/json; charset=utf-8','Cache-Control':'private,no-store',
@@ -70,24 +71,28 @@ export default async function handler(request){
   if(body.action!=='scan')return respond(400,{ok:false,error:'Unsupported action'});
   const provider=body.provider==='firecrawl'?'firecrawl':body.provider==='official'?'official':null;
   if(!provider)return respond(400,{ok:false,error:'Choose an allowed research provider'});
-  const now=Date.now();
-  if(prev?.checkedAt && now-Date.parse(prev.checkedAt)<6*60*60*1000)
-   return respond(429,{ok:false,error:'This official source was checked less than six hours ago. Try again later.'});
-  // Conservative Firecrawl spending guard. Three scans per calendar day, 25 per UTC month.
-  let creditsKey=null,used=null;
+  const now=new Date();
+  if(sourceCooldown(prev,provider,now))
+   return respond(429,{ok:false,error:'This source was successfully checked using '+provider+' less than six hours ago. Choose another source or try later.'});
+  // New v2 accounting: the old v1 counter included failed Firecrawl requests.
+  // Keep an independent retry throttle, but only successful extractions use the scan quota.
+  let successes=null,successCounterKey=null;
   if(provider==='firecrawl'){
-   creditsKey='owner-intel-firecrawl-'+monthKey();
-   used=(await auth.kvGet(creditsKey))||{total:0,days:{}};
-   const day=new Date().toISOString().slice(0,10);
-   if(used.total>=25||(used.days?.[day]||0)>=3)
-    return respond(429,{ok:false,error:'Owner Firecrawl safety limit reached (3/day, 25/month)'});
-   // Reserve before network call to prevent failed requests or retries from exceeding the ceiling.
-   used.total++;used.days=used.days||{};used.days[day]=(used.days[day]||0)+1;
-   await auth.kvPut(creditsKey,used);
+   const periods=periodKeys(now);
+   successCounterKey=successKey(periods.month);
+   const retryCounterKey=attemptKey(periods.day);
+   const [successRecord,attemptRecord]=await Promise.all([
+    auth.kvGet(successCounterKey),auth.kvGet(retryCounterKey)
+   ]);
+   const decision=quotaDecision(successRecord,attemptRecord,now);
+   if(!decision.allowed)return respond(429,{ok:false,error:decision.reason});
+   successes=successRecord;
+   await auth.kvPut(retryCounterKey,recordAttempt(attemptRecord,now));
   }
   // Read and store bounded content only. Do not scrape arbitrary destinations or publish records.
   const excerpt=provider==='firecrawl'?await firecrawlSource(src.url):await directSource(src.url);
   if(excerpt.length<100)throw Error('The source returned too little usable text for comparison');
+  if(provider==='firecrawl')await auth.kvPut(successCounterKey,recordSuccess(successes,now));
   const comparison=compareSource(prev,{hash:digest(excerpt),excerpt});
   let aiSummary=null,aiStatus='disabled';
   if(body.useAI===true){
