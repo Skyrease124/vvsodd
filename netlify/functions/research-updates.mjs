@@ -2,6 +2,7 @@
 // Does NOT alter free maps, Land for Sale, private certificate staging, or AI membership.
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
+import { getSnapshot } from './certificate-review.mjs';
 import { audienceFor, isProAccount, makeRelease, safeResearchRecord, PRO_EARLY_ACCESS_MS } from '../lib/research-releases.mjs';
 
 const INDEX='approved-research-releases-v1';
@@ -42,6 +43,20 @@ export default async function handler(req) {
   if(b?.action!=='release')return json(400,{ok:false,error:'Unknown action.'});
   try {
     const id=crypto.randomUUID();
+    if (b.type === 'lien') {
+      const countyToSlug={'Wakulla':'wakulla','Palm Beach':'palm-beach','St. Johns':'st-johns'};
+      const slug=countyToSlug[b.county];
+      if (b.state!=='FL'||!slug) throw Error('Lien releases currently require a reviewed Florida county certificate.');
+      if (typeof b.certificateKey!=='string'||b.certificateKey.length>250) throw Error('Enter the exact reviewed certificate key.');
+      const snap=await getSnapshot(slug);
+      const key=b.certificateKey.trim().toLowerCase();
+      const row=snap.indexed.get(key);
+      if (!row||row.parcelId!==b.parcelId||String(row.certificateNumber)!==String(b.certificateNumber)) throw Error('Certificate does not match current staged county data.');
+      const digest=crypto.createHash('sha256').update(key).digest('hex');
+      const review=await auth.kvGet('cert-review-'+digest);
+      if (!review||review.decision!=='approved-for-research'||review.snapshotSha256!==snap.hash) throw Error('Current certificate must first be approved for research in Owner Dashboard → Certificate Review.');
+      if (!review.evidenceUrl||b.evidenceUrl!==review.evidenceUrl) throw Error('Use the official URL approved during certificate review.');
+    }
     const item=makeRelease({...b,id},new Date(),me.email);
     // This owner-triggered action is the separate publication approval step.
     // Nothing published automatically from the county import staging system.
