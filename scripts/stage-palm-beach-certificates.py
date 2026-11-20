@@ -15,7 +15,7 @@ def load_module(name, filename):
     return module
 
 _wakulla=load_module('wakulla', 'stage-wakulla-certificates.py')
-URL='https://www.pbctax.gov/wp-content/uploads/2026/11/County_Certs_PBCTax-11.2.26.xlsx'
+URL=None
 def normalize_amount(raw):
     if not raw:
         return None
@@ -31,7 +31,7 @@ def normalize_amount(raw):
         raise ValueError('Invalid amount') from error
     return format(rounded,'.2f')
 
-def normalize(rows):
+def normalize(rows,source_url):
     if len(rows)<2:
         raise ValueError('No certificate records')
     head=[re.sub(r'[^a-z0-9]','',s.lower()) for s in rows[0]]
@@ -67,14 +67,16 @@ def normalize(rows):
                          'faceAmountRaw':money['faceAmountRaw'],
                          'totalAmountRaw':money['totalAmountRaw'],
                          'interestRateRaw':rate or None,
-                         'sourceUrl':URL,'status':'unverified','availableForPurchase':False})
-    return {'source':URL,'checkedAt':datetime.now(timezone.utc).isoformat(),
+                         'sourceUrl':source_url,'status':'unverified','availableForPurchase':False})
+    return {'source':source_url,'checkedAt':datetime.now(timezone.utc).isoformat(),
             'classification':'official county-held certificate file; verify availability with Tax Collector',
             'summary':{'received':len(rows)-1,'accepted':len(accepted),'rejected':len(rejected)},
             'rejected':rejected[:100],'records':accepted}
 def main():
     probe=load_module('probe','probe-county-certificate-files.py')
-    result=normalize(_wakulla.load_rows(probe.download(URL)))
+    discover=load_module('discover','discover-palm-beach-source.py')
+    source_url=discover.discover_url()
+    result=normalize(_wakulla.load_rows(probe.download(source_url)),source_url)
     if not result['records'] or result['summary']['rejected']:
         raise ValueError('Refusing staging due to failed records: '+json.dumps({'summary':result['summary'],'sampleErrors':result['rejected'][:8]}))
     out=Path('county-import-staging/fl-palm-beach-certificate-export.json')
