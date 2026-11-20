@@ -204,3 +204,16 @@ body.ppa-map-embed .pm{position:fixed;inset:0;height:auto;margin:0}
 .pm-stack #pmAsk.pm-aib{background:#102820!important;border:1px solid #d6b24e!important;color:#ffdc7a!important;box-shadow:0 0 10px #e9bd523c;display:flex;align-items:center;justify-content:center;min-height:42px}
 .ppa-map-embed .pm-legend{display:none}.ppa-map-embed .pm-right[data-snap=peek]{transform:translateY(calc(100% - 54px))}.ppa-map-embed .pm-sheet-grip{height:14px}.ppa-map-embed .pm-sheet-grip::before{top:5px}.ppa-map-embed .maplibregl-ctrl-bottom-right{bottom:62px}.ppa-map-embed .pm-pop .phero{display:block;min-height:0;max-height:66px}.ppa-map-embed .pm-pop .phero img{max-height:66px;object-fit:cover}
 .ppa-map-embed .pm-top{right:9px}.ppa-map-embed .pm-pill{max-width:calc(100% - 48px)}
+.pm-control-label{display:none}
+.ppa-map-embed .pm-stack{position:relative;inset:auto;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;margin:0 0 5px}
+.ppa-map-embed .pm-stack .pm-ib{width:auto;min-height:37px;height:37px;padding:0 6px;border-radius:11px;display:flex;align-items:center;gap:3px;white-space:nowrap}
+.ppa-map-embed .pm-stack #pmAsk.pm-aib{min-height:37px;padding:0 6px;margin-left:auto}
+.ppa-map-embed .pm-stack .pm-ib svg{width:16px;height:16px}.ppa-map-embed .pm-control-label{display:inline;font-size:.69rem}
+.ppa-map-embed .pm-tools summary{min-height:37px;padding:3px 7px;font-size:.69rem}
+.ppa-map-embed .pm-tools[open]{position:relative}
+.ppa-map-embed .pm-tools[open] button{position:absolute;top:37px;left:0;min-width:35px;justify-content:center}
+.ppa-map-embed .pm-tools[open] button+button{left:40px}
+.ppa-map-embed .pm-seg{top:38px;left:0;right:auto;z-index:2}
+.ppa-map-embed .pm-pill{max-width:100%;height:38px}.ppa-map-embed .pm-pill select{height:38px;min-height:38px;font-size:.84rem}
+.ppa-map-embed .pm-area{top:139px}.ppa-map-embed .pm-msg{top:auto;bottom:65px}
+@media(max-width:340px){.ppa-map-embed .pm-stack .pm-ib svg{display:none}.ppa-map-embed .pm-stack #pmAsk.pm-aib{font-size:.68rem}}
