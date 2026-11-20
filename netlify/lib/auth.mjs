@@ -177,6 +177,15 @@ export function isPaid(u) {
   return !!u.paidThrough && u.paidThrough >= new Date().toISOString().slice(0, 10);
 }
 
+// Pro entitlement is stricter than general paid/full-family privileges.
+// Family accounts keep other invited access but not Pro-only AI or early releases.
+export function isPro(u) {
+  if (!u) return false;
+  if (u.owner) return true;
+  if (u.disputeHold) return false;
+  return !!u.paidThrough && /^\\d{4}-\\d{2}-\\d{2}$/.test(u.paidThrough) && u.paidThrough >= new Date().toISOString().slice(0, 10);
+}
+
 // Family access codes: the owner makes them, each works once, and gives free full access.
 export const genCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const r = crypto.randomBytes(8); let o = ''; for (const x of r) o += A[x % A.length]; return 'FAM-' + o.slice(0, 4) + '-' + o.slice(4); };
 export const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
