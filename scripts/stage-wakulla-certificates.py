@@ -95,6 +95,14 @@ def normalize(rows, source_url):
             'classification':'county certificate export; status unverified; review required',
             'summary':{'received':len(rows)-1,'accepted':len(out),'rejected':len(rejected)},
             'rejected':rejected[:100],'records':out}
+def apply_status_classification(report):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('certificate_status',Path(__file__).with_name('certificate-status.py'))
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report['statusSummary']=module.classify_all(report['records'])
+    return report
+
 def run():
     discovery_spec=importlib.util.spec_from_file_location('wakulla_source', Path(__file__).with_name('discover-wakulla-source.py'))
     discovery=importlib.util.module_from_spec(discovery_spec)
@@ -103,6 +111,7 @@ def run():
     report=normalize(load_rows(download(current_url)),current_url)
     if not report['records'] or report['summary']['rejected']:
         raise ValueError('Validation failed; refusing to stage '+json.dumps(report['summary']))
+    apply_status_classification(report)
     dest=Path('county-import-staging/fl-wakulla-certificate-export.json')
     dest.parent.mkdir(exist_ok=True)
     dest.write_text(json.dumps(report,indent=2)+'\n',encoding='utf8')
