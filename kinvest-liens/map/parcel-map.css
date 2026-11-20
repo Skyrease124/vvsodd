@@ -223,7 +223,7 @@ body.ppa-map-embed .pm{position:fixed;inset:0;height:auto;margin:0}
 .ppa-picker .pm-top,.ppa-picker .pm-right,.ppa-picker .pm-left,.ppa-picker .pm-pop,.ppa-picker .pm-area,.ppa-picker .pm-msg,.ppa-picker #ppaBar,.ppa-picker .pp-top{display:none!important}
 
 /* The homepage map uses floating controls and opens the full panels on demand. */
-body.ppa-map-home .pm{display:block}
+body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home .pm-center{height:100%}
 .ppa-map-home .pm-top{inset:7px 8px auto}
 .ppa-map-home .pm-home-search{display:flex;gap:4px;align-items:stretch;margin-bottom:4px;border:1px solid #547369;border-radius:999px;padding:2px;background:#081b27ec;backdrop-filter:blur(12px)}
@@ -280,3 +280,8 @@ body.ppa-map-home .pm{display:block}
 .ppa-map-home .pm-left .pm-x{min-width:40px;min-height:40px;border:0;background:none;color:#fff;font-size:1.5rem}
 @media(max-width:355px){.ppa-map-home .pm-home-results .pm-control-label{display:none}}
 .ppa-map-home .pm-stack .pm-home-results svg{display:block}
+/* Avoid stacking backdrop sampling layers over the WebGL canvas in the Home iframe. */
+.ppa-map-home :is(.pm-home-search,.pm-pill,.pm-ib,.pm-seg,.pm-area,.pm-msg .m,.pm-left,.pm-right,.pm-pop,.pm-cam){
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}

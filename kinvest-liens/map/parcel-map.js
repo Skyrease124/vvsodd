@@ -86,6 +86,11 @@
       map.addControl(navigationControl, controlSide);
       map.addControl(locationControl, controlSide);
       map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
+      const repaint = () => {
+        if (!document.hidden) requestAnimationFrame(() => { map.resize(); map.triggerRepaint(); });
+      };
+      document.addEventListener('visibilitychange', repaint);
+      window.addEventListener('pageshow', e => { if (e.persisted) repaint(); });
     } else {
       map.addControl(locationControl, controlSide);
       map.addControl(navigationControl, controlSide);
