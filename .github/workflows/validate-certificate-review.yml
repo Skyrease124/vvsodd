@@ -1,0 +1,23 @@
+name: Validate manual certificate review gate
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - scripts/review-certificate.py
+      - tests/test_review_certificate.py
+      - .github/workflows/manual-certificate-review.yml
+      - .github/workflows/validate-certificate-review.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test review gate denies unsafe purchase/publication
+        run: python -m unittest discover -s tests -p 'test_review_certificate.py'
