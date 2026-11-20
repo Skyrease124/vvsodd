@@ -22,6 +22,7 @@ async function understand(st) {
   if (!it) { it = ctx.cleanIntent({}, ctx.codes, ctx.uiScope || []); how = 'general'; }
   if (it.task === 'general' && /\b(liens?|parcels?|lots?|propert(?:y|ies)|acres?)\b/i.test(q)) it.task = 'liens';
   const parcel = (q.match(/\b\d{2,}[-\d.]{5,}\b/) || [])[0] || null;
+  if (it.task === 'liens' || parcel) ctx.applyLienGeography?.(it, q, ctx.data.STATES, ctx.uiScope || []);
   return { intent: Object.assign(it, { parcel, how }), trace: [step('Understand request', ctx.describe(it) + (parcel ? ' · parcel ' + parcel : ''))] };
 }
 async function plan(st) {
@@ -37,7 +38,8 @@ async function retrieve(st) {
   const { ctx, intent: it, q } = st, ev = st.evidence && st.retried ? { ...st.evidence } : {}; const t = [];
   let it2 = it;
   if (st.retried) { ev.relaxed = true; it2 = { ...it, relaxed: true }; for (const k of ['uses', 'excludeHomestead', 'hideFlood', 'hideWetlands', 'hideEnvRestricted', 'hideLandlocked', 'minCoverage']) delete it2[k]; if (it2.lien) it2.lien = {}; }
-  if (it2.parcel && ctx.findParcel) { const hit = ctx.findParcel(it2.parcel); ev.parcelHit = hit; ev.liens = { total: hit.length, rows: [] }; t.push(step('Look up parcel', hit.length ? hit.length + ' exact match(es) in county lists' : 'not on any list we carry')); }
+  if (it2.geography?.message) { ev.liens = ctx.runLiens(it2); return { evidence: ev, trace: [step('Check county and state', ev.liens.message)] }; }
+  if (it2.parcel && ctx.findParcel) { const hit = ctx.findParcel(it2.parcel, it2); ev.parcelHit = hit; ev.liens = { total: hit.length, rows: [] }; t.push(step('Look up parcel', hit.length ? hit.length + ' exact match(es) in county lists' : 'not on any list we carry')); }
   else if (it2.task === 'liens') { ev.liens = ctx.runLiens(it2); t.push(step('Search county lists', ev.liens.noData ? 'no list for these states' : (ev.liens.total || 0) + ' match(es)' + (st.retried ? ' (filters relaxed)' : ''))); }
   if (it2.task === 'states' || (it2.scope || []).length > 1) { ev.states = ctx.runStates(ctx.data, it2); t.push(step('Compare state rules', (ev.states.total || 0) + ' state(s)')); }
   if (ctx.coverage && (it2.task === 'states' || (it2.scope || []).length > 1 || it2.task === 'liens')) { ev.coverage = (it2.scope || []).slice(0, 6).map(c => ({ state: c, ...ctx.coverage(c) })); if (ev.coverage.length) t.push(step('List coverage', ev.coverage.map(c => c.state + ': ' + c.liens + ' liens').join(', '))); }
@@ -65,7 +67,7 @@ async function verify(st) {
   for (const s of ((ev.states && ev.states.rows) || [])) if (s.verify) conflicts.push(s.name + ': sources differ on this state’s rules; do not rely on the figures without checking the county.');
   for (const k of ev.kb || []) if (k.verify && !conflicts.some(c => c.startsWith(k.state))) conflicts.push((k.state || '') + ': knowledge base flags this state as unverified.');
   const total = ev.liens && ev.liens.total;
-  const needRetry = !st.retried && !st.intent.parcel && ev.liens && !ev.liens.noData && total === 0;
+  const needRetry = !st.retried && !st.intent.parcel && !(st.intent.geography?.requested || st.intent.counties)?.length && !st.intent.lien?.missingMarket && ev.liens && !ev.liens.noData && total === 0;
   if (ev.liens && ev.liens.noData) gaps.push('We hold no county lien list for the states asked about; only their rules are covered.');
   if (!rows.length && !(ev.states && (ev.states.rows || []).length) && !(ev.kb || []).length) gaps.push('Nothing in our records matched the question.');
   if (st.intent.parcel && !(ev.parcelHit || []).length) gaps.push('Parcel ' + st.intent.parcel + ' is not on any county list we carry. Check the county tax collector; it may be absent from our lists or mistyped.');
@@ -74,6 +76,7 @@ async function verify(st) {
 
 function deterministic(st) {
   const ev = st.evidence, f = st.findings, lines = [], rows = (ev.liens && ev.liens.rows) || [];
+  if (ev.liens?.message) return ev.liens.message;
   if (st.intent.parcel && !(ev.parcelHit || []).length) { lines.push('Parcel ' + st.intent.parcel + ' is not on any county list we carry, so I cannot report on it. I will not guess. Check the number against the county tax collector or property appraiser.'); return lines.join('\n'); }
   if (ev.states && (ev.states.rows || []).length) { lines.push('Rules compared for ' + ev.states.rows.length + ' state' + (ev.states.rows.length > 1 ? 's' : '') + '.'); ev.states.rows.slice(0, 6).forEach(s => lines.push('- ' + s.name + ': ' + s.system + '; rate ' + s.rate + '; redemption ' + s.redemption + '; bidding ' + s.bidding + (s.verify ? ' (needs checking)' : ''))); }
   if ((ev.parcelHit || []).length) { lines.push('Parcel record' + (ev.parcelHit.length > 1 ? 's' : '') + ' on county lists.'); ev.parcelHit.slice(0, 3).forEach(r => lines.push('- ' + r.county + ' ' + r.parcel + ': ' + (r.amount != null ? 'amount on list ' + money(r.amount) : 'amount not on list') + (r.market != null ? '; county land value ' + money(r.market) : '') + (r.status ? '; status ' + r.status : '') + (r.saleDate ? '; sale date ' + r.saleDate : '') + (r.checked ? '; list checked ' + r.checked : ''))); }
@@ -85,7 +88,7 @@ function deterministic(st) {
 }
 async function analyze(st) {
   const { ctx } = st, ev = st.evidence, f = st.findings; let text = null, usedModel = false;
-  if (ctx.write) {
+  if (ctx.write && !ev.liens?.message) {
     const pack = { question: st.q, plan: st.plan, rules: ev.states && ev.states.rows, liens: ((ev.liens && ev.liens.rows) || []).slice(0, 8), passages: (ev.kb || []).slice(0, 5).map(k => ({ title: k.title, text: k.text })), gaps: f.gaps.slice(0, 8), conflicts: f.conflicts, notes: f.notes.slice(0, 6) };
     try { text = await ctx.write(pack); usedModel = !!text; } catch (e) { text = null; }
   }
@@ -100,7 +103,7 @@ async function report(st) {
   (ev.kb || []).forEach(k => add(k.title, k.url, k.kind, k.checked));
   const uncertainty = [...f.conflicts, ...f.gaps.slice(0, 6)];
   const text = st.analysis.text + (f.notes.length ? '\n\nHistorical or stale: ' + (f.notes.length > 3 ? f.notes.length + ' of the listings checked are historical or stale, for example: ' + f.notes[0] : f.notes.join(' ')) : '') + '\n\nVerify: confirm every figure, date and availability with the county tax collector before you act. This is research, not advice.';
-  return { result: { answer: text, usedModel: st.analysis.usedModel, plan: st.plan, trace: st.trace.concat(step('Generate report', sources.length + ' source(s)')), evidence: { liens: ((ev.liens && ev.liens.rows) || []).slice(0, 8), states: (ev.states && ev.states.rows) || [], total: ev.liens ? ev.liens.total : null }, findings: f, sources, uncertainty, coverage: ev.coverage || [], parcel: ev.parcelHit || [] }, trace: [] };
+  return { result: { answer: text, usedModel: st.analysis.usedModel, plan: st.plan, trace: st.trace.concat(step('Generate report', sources.length + ' source(s)')), evidence: { liens: ((ev.liens && ev.liens.rows) || []).slice(0, 8), states: (ev.states && ev.states.rows) || [], total: ev.liens ? ev.liens.total : null, search: ev.liens?.search }, findings: f, sources, uncertainty, coverage: ev.coverage || [], parcel: ev.parcelHit || [] }, trace: [] };
 }
 
 export function buildGraph() {
