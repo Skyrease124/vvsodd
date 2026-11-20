@@ -1,0 +1,29 @@
+name: Validate Florida visual GIS overlays
+on:
+  push:
+    branches:
+      - feature/florida-verified-gis-overlays-20261120
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/parcel-map.js
+      - kinvest-liens/map/parcel-map.css
+      - netlify/functions/florida-gis-overlay.mjs
+      - tests/florida-gis-overlays.test.mjs
+      - .github/workflows/validate-florida-gis-overlays.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --check netlify/functions/florida-gis-overlay.mjs
+      - run: node --test tests/florida-gis-overlays.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
+      - run: node --test tests/test_all_parcel_research_maps.mjs
