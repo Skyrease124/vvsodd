@@ -32,6 +32,23 @@
     '.pp-signin{margin-right:8px;background:transparent!important;border:2px solid currentColor;color:inherit!important}.dnav .pp-signin{color:#e6ecf7!important;border-color:#e6ecf7}' +
     '.dnav .pp-signin,.dnav .dbtn{padding:9px 16px}.pp-signin,.pp-menu>a,.dnav .dbtn{white-space:nowrap}' +
     '@media(max-width:520px){.dnav-in{gap:8px!important}.dnav .dlogo small{display:none}.dnav .dlogo svg{width:34px;height:28px}.dnav .dlogo b{font-size:18px}.dnav .pp-signin,.dnav .dbtn{padding:8px 11px;font-size:14px}.pp-signin{margin-right:4px}.nav .btn.small{padding:8px 11px;font-size:14px;white-space:nowrap}}';
+    css.textContent += '.ppx-sheet{position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;max-width:none;max-height:88dvh;overflow:auto;-webkit-overflow-scrolling:touch;background:#0f1a2e;color:#f5f5f7;border-radius:24px 24px 0 0;padding:8px 16px calc(18px + env(safe-area-inset-bottom));margin:0;box-shadow:0 -12px 40px rgba(0,0,0,.45);z-index:2147483000;box-sizing:border-box;font-family:-apple-system,Segoe UI,Roboto,sans-serif;text-align:left}' +
+    '.ppx-sheet[hidden]{display:none!important}.ppx-handle{width:44px;height:5px;border-radius:3px;background:#3a4560;margin:0 auto 12px}' +
+    '.ppx-hd{position:relative;display:flex;align-items:center;gap:12px;padding:0 48px 0 0;margin:0 0 12px}' +
+    '.ppx-av{flex:0 0 44px;width:44px;height:44px;border-radius:50%;background:#0b6e4f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.05rem}' +
+    '.ppx-inf{min-width:0;flex:1 1 auto}.ppx-nm{color:#f5f5f7;font-weight:700;font-size:.95rem;overflow-wrap:anywhere;word-break:break-word;line-height:1.3}' +
+    '.ppx-role{display:inline-block;margin-top:4px;padding:2px 9px;border-radius:999px;border:1px solid #c99a2e;color:#f5d77a;font-size:.72rem;font-weight:700}' +
+    '.ppx-x{position:absolute;right:0;top:4px;width:36px;height:36px;border-radius:50%;border:0;background:#1a2540;color:#f5f5f7;font-size:1.4rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}' +
+    '.ppx-find{display:block;width:100%;min-height:44px;border-radius:14px;border:0;background:#1a2540;color:#f5f5f7;padding:0 14px;font:inherit;font-size:1rem;margin:0 0 12px;box-sizing:border-box;-webkit-appearance:none}.ppx-find::placeholder{color:#8b96ad}' +
+    '.ppx-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}' +
+    '.ppx-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:84px;border-radius:18px;background:#1a2540;color:#f5f5f7;text-decoration:none;font-weight:600;font-size:.95rem;padding:12px;box-sizing:border-box}' +
+    '.ppx-tile.ppx-hi{background:linear-gradient(135deg,#1f9d55,#0b6e4f)}.ppx-tile[hidden]{display:none!important}' +
+    '.ppx-list{margin-top:8px}' +
+    '.ppx-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.08);color:#f5f5f7;text-decoration:none;font-weight:600}.ppx-row i{font-style:normal;opacity:.5;font-size:1.3rem}.ppx-row[hidden]{display:none!important}' +
+    '.ppx-more,.ppx-own{margin-top:6px;border:0;background:none}.ppx-more summary,.ppx-own summary{list-style:none;cursor:pointer;padding:14px 4px;font-weight:600;color:#f5f5f7;display:flex;justify-content:space-between;align-items:center}.ppx-more summary::-webkit-details-marker,.ppx-own summary::-webkit-details-marker{display:none}.ppx-more summary::after,.ppx-own summary::after{content:"\u203a";opacity:.5;font-size:1.3rem;transform:rotate(90deg)}.ppx-more[open] summary::after,.ppx-own[open] summary::after{transform:rotate(-90deg)}' +
+    '.ppx-own{border:1.5px solid #c99a2e;border-radius:16px;padding:0 12px;margin-top:12px}.ppx-own summary{color:#f5d77a}' +
+    '.ppx-grp{display:block}.ppx-grp a{display:block;color:#f5f5f7;text-decoration:none;font-weight:500;padding:11px 4px}.ppx-grp a[hidden]{display:none!important}' +
+    '.ppx-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}.ppx-foot a,.ppx-foot button{background:none;border:0;color:#f5f5f7;font:inherit;font-weight:600;padding:8px;text-decoration:none;cursor:pointer}.ppx-foot .pp-out{color:#ff6b7a}' ;
   document.head.appendChild(css);
 
   // Approved header design: stacked logo, gold divider, green bell with count, gold-ringed account pill, gold + green swoosh.
@@ -76,7 +93,7 @@
       navLinks.forEach(a => { a.textContent = 'My account'; });
       const wrap = document.createElement('div'); wrap.className = 'pp-menu';
       const b = document.createElement('a'); b.href = '#'; b.className = cta ? cta.className.replace(/\bghost\b/, '') : 'btn small'; b.textContent = 'My account ▾'; b.setAttribute('aria-haspopup', 'true'); b.setAttribute('aria-expanded', 'false');
-      const p = document.createElement('div'); p.className = 'pp-panel'; p.hidden = true;
+      const p = document.createElement('div'); p.className = 'ppx-sheet'; p.hidden = true;
       const who = document.createElement('div'); who.className = 'pp-who'; { const av = document.createElement('span'); av.className = 'pp-av'; av.textContent = (user.email || '?').charAt(0).toUpperCase(); const tx = document.createElement('div'), nm = document.createElement('b'), rl = document.createElement('small'); nm.textContent = user.email; rl.textContent = user.owner ? 'Owner' : (user.paid || (user.paidThrough && user.paidThrough >= today)) ? 'PricePocketPro member' : 'Free account'; tx.append(nm, rl); who.append(av, tx); }
       const l1 = document.createElement('a'); l1.href = '/portfolio/'; l1.textContent = 'My portfolio';
       const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
@@ -116,11 +133,46 @@
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
       const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
-      p.append(who, grp(aiLink || (() => { const x = document.createElement('a'); x.href = '/map/'; x.textContent = 'Parcel Map + AI'; return x; })(), lmsg, lcam, lrt, lcm, lpf, l8, l9, l1, isPro ? ldl : null, isPro ? lnot : null, l2, lset), grp(l6, l7, ldon)); if (ms) p.append(grp(ms));
-      if (user.owner) { const lab = document.createElement('div'); lab.className = 'pp-ownlab'; lab.textContent = 'Owner tools'; p.append(lab, grp(l4, l10, lort, lk, lo, l3, l5)); }
-      p.append(grp(lp), grp(out)); wrap.append(b, p);
-      b.addEventListener('click', e => { e.preventDefault(); p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
-      document.addEventListener('click', e => { if (!wrap.contains(e.target)) { p.hidden = true; b.setAttribute('aria-expanded', 'false'); } });
+      // ---- menu look (own class names, so older menu styles cannot reach it)
+      const ico = d => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+      const el = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
+      const aiMain = aiLink || el('a', '', 'Parcel Map + AI'); if (!aiLink) aiMain.href = '/map/';
+      const tile = (a, label, svg, hi) => { a.textContent = ''; a.className = 'ppx-tile' + (hi ? ' ppx-hi' : ''); a.innerHTML = ico(svg); a.appendChild(el('span', '', label)); return a; };
+      const tiles = el('div', 'ppx-tiles');
+      tiles.append(
+        tile(aiMain, 'Map + AI', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', true),
+        tile(l1, 'Portfolio', '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+        tile(l9, 'Watchlist', '<path d="M6 3h12v18l-6-4-6 4z"/>'),
+        tile(l8, 'Master Class', '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>'));
+      const rowOf = (a, svg, label) => { const t = label || a.textContent; a.textContent = ''; a.className = 'ppx-row'; a.innerHTML = ico(svg); a.appendChild(el('span', '', t)); a.appendChild(el('i', '', '\u203a')); return a; };
+      const list = el('div', 'ppx-list');
+      list.append(
+        rowOf(lcm, '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-6 7-6s7 2.4 7 6"/><circle cx="17" cy="7" r="2.5"/><path d="M22 18c0-2.6-1.8-4.5-4.5-4.8"/>'),
+        rowOf(l6, '<path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/>', 'Marketplace'),
+        isPro ? rowOf(ldl, '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>') : null);
+      const more = el('details', 'ppx-more'); more.appendChild(el('summary', '', 'More'));
+      const mg = el('div', 'ppx-grp');
+      [lpf, lmsg, lcam, lrt, l2, isPro ? lnot : null, l7, ldon, lp, ms].filter(Boolean).forEach(x => mg.appendChild(x));
+      more.appendChild(mg);
+      const ownerBox = user.owner ? (() => { const d = el('details', 'ppx-own'); d.appendChild(el('summary', '', 'Owner tools')); const og = el('div', 'ppx-grp'); [l4, l10, lort, lk, lo, l3, l5].forEach(x => og.appendChild(x)); d.appendChild(og); return d; })() : null;
+      // header: avatar, name, role, close
+      const hd = el('div', 'ppx-hd');
+      const av3 = el('div', 'ppx-av', (user.email || '?').charAt(0).toUpperCase());
+      const inf = el('div', 'ppx-inf'); inf.append(el('div', 'ppx-nm', user.email || ''), el('span', 'ppx-role', user.owner ? 'Owner' : (isPro ? 'Pro member' : 'Member')));
+      const close = el('button', 'ppx-x', '\u00d7'); close.type = 'button'; close.setAttribute('aria-label', 'Close menu');
+      close.addEventListener('click', () => { closeSheet(); });
+      hd.append(av3, inf, close);
+      const find = el('input', 'ppx-find'); find.type = 'search'; find.placeholder = 'Find a tool'; find.setAttribute('aria-label', 'Find a tool');
+      const foot = el('div', 'ppx-foot'); foot.append(lset, out);
+      p.append(el('div', 'ppx-handle'), hd, find, tiles, list, more, ...(ownerBox ? [ownerBox] : []), foot);
+      p.querySelectorAll('a').forEach(a => { a.dataset.tool = (a.textContent || '').toLowerCase(); });
+      find.addEventListener('input', () => { const q = find.value.trim().toLowerCase(); p.querySelectorAll('a[data-tool]').forEach(a => { a.hidden = !!q && !a.dataset.tool.includes(q); }); if (q) more.open = true; });
+      wrap.append(b);
+      const openSheet = () => { if (p.parentNode !== document.body) document.body.appendChild(p); p.hidden = false; b.setAttribute('aria-expanded', 'true'); };
+      const closeSheet = () => { p.hidden = true; b.setAttribute('aria-expanded', 'false'); };
+      b.addEventListener('click', e => { e.preventDefault(); if (p.hidden) openSheet(); else closeSheet(); });
+      document.addEventListener('click', e => { if (!wrap.contains(e.target) && !p.contains(e.target)) closeSheet(); });
+      p.hidden = true; if (p.parentNode !== document.body) document.body.appendChild(p);
       // the bell: one count for messages, follows, likes, comments and retail alerts
       const bell = document.createElement('a'); bell.href = '/notifications/'; bell.className = 'pp-bell'; bell.setAttribute('aria-label', 'Notifications'); bell.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
       fetch('/.netlify/functions/notifications?count=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.count) { const n = document.createElement('b'); n.textContent = d.count > 99 ? '99+' : String(d.count); bell.append(n); bell.setAttribute('aria-label', 'Notifications, ' + d.count + ' new'); } }).catch(() => {});
