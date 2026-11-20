@@ -55,6 +55,8 @@ nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visibl
 <div class="controls"><select id="autoPriority" aria-label="AI review priority"><option value="">All review priorities</option><option value="urgent">Urgent</option><option value="review">Needs verification</option><option value="routine">Routine</option></select>
 <button id="autoPrevious" type="button" class="secondary">Previous</button>
 <button id="autoNext" type="button" class="secondary">Next</button></div>
+<div class="controls"><button id="selectVisible" type="button" class="secondary">Select visible</button><button id="clearSelected" type="button" class="secondary">Clear selection</button><button id="bulkFollowUp" type="button" class="secondary">Flag selected for follow-up</button><button id="bulkInspected" type="button" class="secondary">Mark selected inspected</button><button id="bulkClear" type="button" class="secondary">Clear private marks</button></div>
+<p class="auto-status">Batch actions are private triage notes only. They cannot approve or publish research.</p>
 <div id="autoItems" aria-live="polite"></div>
 </section>
 <div class="controls">
@@ -168,7 +170,7 @@ el('reviewForm').addEventListener('submit',async e=>{
 });
 
 const AUTO='/.netlify/functions/certificate-auto-review';
-let autoPage=0,autoBusy=false,autoMatched=0;
+let autoPage=0,autoBusy=false,autoMatched=0,autoSnapshotHash=null,visibleAutoKeys=[],selectedAutoKeys=new Set();
 async function autoRequest(county,scan=false){
  const qs=new URLSearchParams({county,priority:el('autoPriority').value,page:autoPage});
  const opt={credentials:'same-origin',headers:{Accept:'application/json'}};
@@ -179,16 +181,27 @@ async function autoRequest(county,scan=false){
 }
 function showAuto(data){
  const target=el('autoItems');target.replaceChildren();
+ visibleAutoKeys=[];
+ autoSnapshotHash=data.snapshotSha256||null;
+ selectedAutoKeys.clear();
  const summary=el('autoSummary');
  if(data.needsScan){summary.textContent='No current analysis. Run a scan for this county.';autoMatched=0;}
  else{
   const s=data.summary;
-  summary.textContent=s.message+(data.aiSummary?' AI summary: '+data.aiSummary:' Rules-based screening only; no AI summary available.');
+  const aiNote=data.aiSummary?' AI summary: '+data.aiSummary:
+   data.aiStatus==='not-configured'?' NVIDIA AI is not configured in site settings.':
+   data.aiStatus==='error'?' NVIDIA summary failed; rules-based review still completed.':
+   data.aiStatus==='disabled'?' AI summary was disabled for this scan.':' Rules-based screening only; no AI summary available.';
+  summary.textContent=s.message+aiNote;
   autoMatched=data.matched;
   for(const item of data.items||[]){
    const article=document.createElement('article');article.className='auto-item';
    const heading=document.createElement('strong');heading.textContent=item.priority.toUpperCase()+' · Certificate '+item.certificateNumber+' · '+item.taxYear;
-   article.append(heading);
+   const pick=document.createElement('input');pick.type='checkbox';pick.setAttribute('aria-label','Select certificate '+item.certificateNumber+' tax year '+item.taxYear);pick.checked=selectedAutoKeys.has(item.certificateKey);
+   pick.addEventListener('change',()=>{if(pick.checked)selectedAutoKeys.add(item.certificateKey);else selectedAutoKeys.delete(item.certificateKey)});
+   article.append(pick,document.createTextNode(' '),heading);
+   visibleAutoKeys.push(item.certificateKey);
+   details(article,'Private triage status',item.triageMark||'Not marked');
    details(article,'Parcel',item.parcelId);
    details(article,'Findings',item.findings.map(f=>f.detail).join(' ' )||'No new source conflicts detected.');
    const btn=document.createElement('button');btn.type='button';btn.textContent='Open manual review';
@@ -204,6 +217,30 @@ function showAuto(data){
  el('autoPrevious').disabled=autoPage===0;
  el('autoNext').disabled=(autoPage+1)*30>=autoMatched;
 }
+async function markBatch(action){
+ if(autoBusy||selectedAutoKeys.size===0){el('autoStatus').textContent='Select certificates first.';return;}
+ if(selectedAutoKeys.size>100){el('autoStatus').textContent='Choose no more than 100 per batch.';return;}
+ const county=el('county').value;
+ autoBusy=true;
+ try{
+  const response=await fetch(AUTO,{method:'POST',credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/json'},
+   body:JSON.stringify({county,operation:'batch-mark',action,snapshotSha256:autoSnapshotHash,certificateKeys:[...selectedAutoKeys]})});
+  const d=await response.json().catch(()=>({}));if(!response.ok||!d.ok)throw Error(d.error||'Batch request failed');
+  el('autoStatus').textContent=d.updated+' private triage marks saved. No research was approved or published.';
+ }catch(e){el('autoStatus').textContent=e.message;}
+ finally{autoBusy=false;}
+ await loadAuto();
+}
+el('selectVisible').addEventListener('click',()=>{
+ selectedAutoKeys=new Set(visibleAutoKeys.slice(0,100));
+ for(const cb of el('autoItems').querySelectorAll('input[type=checkbox]'))cb.checked=true;
+});
+el('clearSelected').addEventListener('click',()=>{
+ selectedAutoKeys.clear();for(const cb of el('autoItems').querySelectorAll('input[type=checkbox]'))cb.checked=false;
+});
+el('bulkFollowUp').addEventListener('click',()=>markBatch('mark-follow-up'));
+el('bulkInspected').addEventListener('click',()=>markBatch('mark-inspected'));
+el('bulkClear').addEventListener('click',()=>markBatch('clear-mark'));
 async function loadAuto(){
  if(autoBusy)return;autoBusy=true;
  try{const d=await autoRequest(el('county').value);showAuto(d);}
