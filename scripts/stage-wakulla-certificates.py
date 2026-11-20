@@ -15,7 +15,7 @@ _spec.loader.exec_module(_probe)
 download=_probe.download
 
 NS='{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
-URL='https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx'
+URL=None
 MAX_ROWS=100000
 def clean(value):
     return str(value or '').strip()
@@ -54,7 +54,7 @@ def load_rows(data):
                 rows.append(values)
                 if len(rows)>MAX_ROWS+1:raise ValueError('More than 100,000 records')
         return rows
-def normalize(rows):
+def normalize(rows, source_url):
     if len(rows)<2:raise ValueError('No certificate records')
     head=rows[0]
     names={re.sub(r'[^a-z0-9]','',h.lower()):i for i,h in enumerate(head)}
@@ -89,14 +89,18 @@ def normalize(rows):
             'unpaidBalanceRaw':value(row,balance_i) or None,
             'countyOrIndividualRaw':value(row,class_i) or None,
             'paidStatusRaw':value(row,status_i) or None,
-            'sourceUrl':URL,'status':'unverified','availableForPurchase':False
+            'sourceUrl':source_url,'status':'unverified','availableForPurchase':False
         })
-    return {'source':URL,'checkedAt':datetime.now(timezone.utc).isoformat(),
+    return {'source':source_url,'checkedAt':datetime.now(timezone.utc).isoformat(),
             'classification':'county certificate export; status unverified; review required',
             'summary':{'received':len(rows)-1,'accepted':len(out),'rejected':len(rejected)},
             'rejected':rejected[:100],'records':out}
 def run():
-    report=normalize(load_rows(download(URL)))
+    discovery_spec=importlib.util.spec_from_file_location('wakulla_source', Path(__file__).with_name('discover-wakulla-source.py'))
+    discovery=importlib.util.module_from_spec(discovery_spec)
+    discovery_spec.loader.exec_module(discovery)
+    current_url=discovery.discover_url()
+    report=normalize(load_rows(download(current_url)),current_url)
     if not report['records'] or report['summary']['rejected']:
         raise ValueError('Validation failed; refusing to stage '+json.dumps(report['summary']))
     dest=Path('county-import-staging/fl-wakulla-certificate-export.json')
