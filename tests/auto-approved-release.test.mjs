@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {syncReviewedCertificate} from '../netlify/lib/auto-research-release.mjs';
-import {audienceFor,PRO_EARLY_ACCESS_MS} from '../netlify/lib/research-releases.mjs';
+import {audienceFor,PRO_EARLY_ACCESS_MS,safeResearchRecord} from '../netlify/lib/research-releases.mjs';
+import vm from 'node:vm';
 const record={state:'FL',county:'Wakulla',parcelId:'00-00-003-082-06186-001',
  certificateNumber:'18',taxYear:'2024',status:'unverified',availableForPurchase:false};
 const snapshot={hash:'snapshot-1',data:{checkedAt:'2026-11-18T10:00:00.000Z'}};
@@ -53,4 +54,24 @@ test('certificate review API and owner UI enforce explicit one-click publication
  assert.match(ui,/Approve &amp; publish research update/);
  assert.match(ui,/publishApprovedResearch/);
  assert.match(ui,/48 hours/);
+});
+
+test('real Palm Beach staged parcel fixture matches an existing mapped location (no publication)',async()=>{
+  // Parcel and center verified against the Palm Beach staged export and the map's AL/FL county datasets.
+  const palm={...record,county:'Palm Beach',parcelId:'74-42-43-13-17-004-0000',
+    certificateNumber:'102',taxYear:'2017'};
+  const palmKey='fl|palm beach|74-42-43-13-17-004-0000|102|2017';
+  const kv=store();
+  const result=await syncReviewedCertificate(options(kv,{...approval(),certificateKey:palmKey,
+    evidenceUrl:'https://www.pbctax.gov/'},{record:palm}));
+  assert.equal(result.action,'published');
+  const item=safeResearchRecord(kv.db.get('approved-research-releases-v1').list[0]);
+  const code=fs.readFileSync('kinvest-liens/map/research-match.js','utf8');
+  const ctx={module:{exports:{}},globalThis:{}};
+  vm.runInNewContext(code,ctx,{timeout:1000});
+  const matched=ctx.module.exports.match([item],[{meta:{id:'FL-palm-beach',state:'FL',county:'Palm Beach County'},
+    recs:[{p:palm.parcelId,cx:[-80.10162,26.73355]}]}]);
+  assert.equal(matched.length,1);
+  assert.equal(JSON.stringify(matched[0].coordinates),'[-80.10162,26.73355]');
+  assert.equal(audienceFor(item,null,date),'none');
 });
