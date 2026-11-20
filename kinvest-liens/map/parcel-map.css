@@ -233,7 +233,6 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home .pm-search button{display:grid;place-items:center;min-width:31px;border:0;background:none;padding:0}
 .ppa-map-home .pm-home-search #pmAsk{flex:none;display:flex;align-items:center;gap:4px;width:auto;height:32px;min-height:32px;padding:0 6px;border-radius:999px;border:1px solid #dbb252;background:#182a23;color:#fff4c9;font-size:.68rem;font-weight:750;white-space:nowrap;box-shadow:0 0 8px #ecbd583f}
 .ppa-map-home #pmAsk b{border-radius:999px;background:#f4ce66;color:#161d17;padding:1px 4px;text-transform:uppercase;font-size:.61rem}
-.ppa-map-home #pmAsk[aria-pressed=true]{background:#574418;border-color:#ffe297}
 .ppa-map-home .pm-stack{margin-bottom:4px}
 .ppa-map-home .pm-stack .pm-ib,.ppa-map-home .pm-tools summary,.ppa-map-home .pm-pill{border:1px solid #70918a;background:#081d27ef;border-radius:999px;color:#f5fff9}
 .ppa-map-home .pm-stack .pm-ib,.ppa-map-home .pm-tools summary{height:32px;min-height:32px;padding-inline:7px}
@@ -319,4 +318,26 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home :is(.pm-home-search,.pm-pill,.pm-ib,.pm-seg,.pm-area,.pm-msg .m,.pm-left,.pm-right,.pm-pop,.pm-cam){
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
+}
+
+/* Compact Home search mode switch. The whole labeled control is tappable. */
+.ppa-map-home .pm-ai-switch{
+  position:relative;display:block;flex:none;width:24px;height:14px;border-radius:999px;
+  background:#3c5264;box-shadow:inset 0 0 0 1px #7c909f;
+  transition:background-color 180ms ease-out,box-shadow 180ms ease-out;
+}
+.ppa-map-home .pm-ai-switch::after{
+  content:'';position:absolute;inset:2px auto auto 2px;width:10px;height:10px;
+  border-radius:50%;background:#fff;transition:transform 180ms ease-out;
+}
+.ppa-map-home #pmAsk[aria-checked=true]{
+  background:#193d32;border-color:#e3bd61;
+}
+.ppa-map-home #pmAsk[aria-checked=true] .pm-ai-switch{
+  background:#198454;box-shadow:inset 0 0 0 1px #81e4b3;
+}
+.ppa-map-home #pmAsk[aria-checked=true] .pm-ai-switch::after{transform:translateX(10px)}
+.ppa-map-home #pmAsk:focus-visible{outline:2px solid #ffe393;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){
+  .ppa-map-home .pm-ai-switch,.ppa-map-home .pm-ai-switch::after{transition:none}
 }
