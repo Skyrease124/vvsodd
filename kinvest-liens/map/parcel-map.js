@@ -347,7 +347,7 @@
   }
   function homeParcelCard(card, r, d) {
     const info = mk('div', 'pm-home-parcel-info');
-    const county = /county|parish|borough|city/i.test(d.county) ? d.county : d.county + ' County';
+    const county = /\b(county|parish|borough|city)\b/i.test(d.county) ? d.county : d.county + ' County';
     info.append(mk('b', '', county + ', ' + d.state), mk('span', '', 'Parcel: ' + r.p));
     const facts = mk('div', 'pm-home-facts');
     for (const fact of [acres(r) || sqft(r), r.amt == null ? null : (r.al || 'Listed amount') + ': ' + money(r.amt), r.mv == null ? 'Market value unavailable' : 'Market value: ' + money(r.mv)]) {
