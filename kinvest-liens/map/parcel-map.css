@@ -439,3 +439,14 @@ body.ppa-map-home .pm{
 /* Actionable GIS load diagnostics, readable on narrow maps. */
 .pm-gis-status{position:absolute;z-index:12;top:108px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(330px,calc(100vw - 36px));border:1px solid #1fb9bd;border-radius:12px;padding:10px 13px;background:rgba(9,30,46,.94);color:#eefeff;font-size:12px;line-height:1.4;text-align:center;pointer-events:none;box-shadow:0 6px 20px #0005}
 .pm-gis-status[hidden]{display:none!important}
+
+
+/* Two research-only Turf tools, displayed with high contrast in property details. */
+.pm-spatial{margin:12px 0;padding:13px;border:1px solid rgba(91,213,219,.5);border-radius:13px;background:#112f41;color:#eff9fd}
+.pm-spatial h4{margin:0 0 8px;font-size:15px;font-weight:800;color:#fff}
+.pm-spatial-value{margin:4px 0 7px;font-weight:750;color:#a8f0dd;font-size:16px}
+.pm-spatial-note{margin:6px 0 0;font-size:12px;line-height:1.45;color:#c1d9e2}
+.pm-spatial-result{margin:10px 0 2px;font-size:13px;line-height:1.4;color:#eef8fd}
+.pm .pm-spatial-check{display:block;margin:9px 0 0;border:1px solid #55ceb9;border-radius:10px;background:#086f59;color:#fff;font-weight:750;min-height:44px;padding:8px 13px;cursor:pointer}
+.pm .pm-spatial-check:disabled{opacity:.6;cursor:wait}
+.pm .pm-spatial-check:focus-visible{outline:3px solid #b1fff2;outline-offset:2px}
