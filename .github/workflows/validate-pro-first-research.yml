@@ -1,0 +1,36 @@
+name: Validate Pro first research releases
+on:
+  push:
+    branches:
+      - feature/pro-48h-early-access
+      - claude/engineering-workspace
+    paths:
+      - netlify/lib/research-releases.mjs
+      - netlify/functions/research-updates.mjs
+      - netlify/lib/auth.mjs
+      - netlify/functions/ai.mjs
+      - netlify/functions/certificate-review.mjs
+      - kinvest-liens/index.html
+      - kinvest-liens/reviewed-certificates.html
+      - kinvest-liens/owner/research-releases/index.html
+      - kinvest-liens/owner/dashboard.js
+      - tests/test_pro_first_research.mjs
+      - .github/workflows/validate-pro-first-research.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check netlify/functions/research-updates.mjs
+      - run: node --check netlify/lib/research-releases.mjs
+      - run: node --check netlify/functions/certificate-review.mjs
+      - run: node --check netlify/functions/ai.mjs
+      - run: node --check netlify/lib/auth.mjs
+      - run: node --test tests/test_pro_first_research.mjs
