@@ -204,6 +204,11 @@
         'text-size': ['interpolate', ['linear'], ['zoom'], 13.5, ['case', ['>=', ac, 12], 10, 0], 15.5, ['case', ['>=', ac, 3], 11, 0], 17, ['case', ['>=', ac, 0.4], 11, 0], 18, ['case', ['>=', ac, 0.12], 12, 0], 19, ['case', ['>=', ac, 0.03], 13, 0], 20, 14] },
         paint: { 'text-color': ['case', ['==', ['get', 'no'], 1], '#cbd5e1', '#ffffff'], 'text-halo-color': 'rgba(6,10,22,.92)', 'text-halo-width': 1.6, 'text-opacity': ['case', ['==', ['get', 'no'], 1], 0.8, 1] } });
       map.addLayer({ id: 'pts', type: 'circle', source: 'pts', paint: { 'circle-radius': 7, 'circle-color': catColor, 'circle-stroke-color': '#fff', 'circle-stroke-width': 2 } });
+      map.addSource('fl-gis-parcels',{type:'geojson',data:gisEmpty()});
+      map.addLayer({id:'fl-gis-parcel-outline',type:'line',source:'fl-gis-parcels',paint:{'line-color':'#36d6e9','line-width':1.6,'line-opacity':0.85}});
+      map.addSource('fl-gis-buildings',{type:'geojson',data:gisEmpty()});
+      map.addLayer({id:'fl-gis-building-outline',type:'line',source:'fl-gis-buildings',paint:{'line-color':'#ffd36b','line-width':1.5,'line-opacity':0.85}});
+      map.on('moveend',queueFloridaGIS);
       // Distinct research pins are restricted to server-visible releases with exact mapped parcel matches.
       map.addSource('research-updates', { type:'geojson', data: empty });
       map.addLayer({id:'research-pin', type:'circle', source:'research-updates',
@@ -218,6 +223,48 @@
       map.on('click', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts', 'p-dots'] }).length) closePop(); });
       setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
     });
+  }
+
+  // Optional GIS reference layers: visual only, never modify lien or ownership records.
+  let flGisOn=false,flGisRequest=0,flGisDebounce=null;
+  const gisEmpty=()=>({type:'FeatureCollection',features:[]});
+  function clearFloridaGIS(){
+    if(!mapReady)return;
+    for(const key of ['fl-gis-parcels','fl-gis-buildings'])map.getSource(key)?.setData(gisEmpty());
+  }
+  async function updateFloridaGIS(){
+    if(!flGisOn||!mapReady)return;
+    const sequence=++flGisRequest;
+    if(map.getZoom()<16){clearFloridaGIS();return;}
+    const b=map.getBounds(),w=b.getWest(),e=b.getEast(),s=b.getSouth(),n=b.getNorth();
+    if(e-w>0.018||n-s>0.018){clearFloridaGIS();return;}
+    const x=(w+e)/2,y=(s+n)/2;
+    const county=x>-81.05&&x<-79.65&&y>26.25&&y<27.05?'palm':
+      x>-82.35&&x<-81.45&&y>25.8&&y<26.95?'lee':null;
+    if(!county){clearFloridaGIS();return;}
+    const targets=county==='palm'?[['palm-parcels','fl-gis-parcels']]:
+      [['lee-parcels','fl-gis-parcels'],['lee-buildings','fl-gis-buildings']];
+    clearFloridaGIS();
+    const bbox=[w,s,e,n].map(v=>v.toFixed(6)).join(',');
+    await Promise.all(targets.map(async ([source,target])=>{
+      try{
+        const response=await fetch('/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source,bbox}),{credentials:'same-origin'});
+        if(!response.ok)throw Error('Source unavailable');
+        const data=await response.json();
+        if(sequence!==flGisRequest||!flGisOn)return;
+        if(data.type==='FeatureCollection'&&Array.isArray(data.features))map.getSource(target)?.setData(data);
+      }catch{if(sequence===flGisRequest)say('Official Florida GIS unavailable in this area. Existing parcel results unchanged.');}
+    }));
+  }
+  function queueFloridaGIS(){
+    ++flGisRequest;clearTimeout(flGisDebounce);
+    if(!flGisOn){clearFloridaGIS();return;}
+    flGisDebounce=setTimeout(updateFloridaGIS,1000);
+  }
+  function toggleFloridaGIS(button){
+    flGisOn=!flGisOn;button.setAttribute('aria-pressed',String(flGisOn));
+    if(flGisOn)say('Florida GIS outlines on. Zoom to street level in Palm Beach or Lee. Visual reference only.');
+    queueFloridaGIS();
   }
   function natLegend() { const lg = $('pmLegend'); if (lg && mapReady) { const nat = map.getZoom() < 6.5; lg.classList.toggle('nat', nat); $('pmMap').classList.toggle('nat', map.getZoom() < 7); } }
   function feature(r) {
@@ -277,7 +324,12 @@
         if (tab === 'ai' && mapReady) map.getSource('near').setData(empty);
       }
     }
-    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, camb, hzb, aib, seg);
+    const floridaBtn=mk('button','pm-gis-toggle','FL GIS');floridaBtn.type='button';
+    floridaBtn.setAttribute('aria-label','Toggle official Florida GIS parcel and building outlines');
+    floridaBtn.setAttribute('aria-pressed','false');
+    floridaBtn.title='Official GIS visual reference, not tax-sale availability';
+    floridaBtn.addEventListener('click',()=>toggleFloridaGIS(floridaBtn));
+    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, floridaBtn, camb, hzb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
     aib.title = 'Ask questions about the current county, parcel or map area.';
