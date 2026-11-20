@@ -3,6 +3,7 @@
 import csv, io, json, re, urllib.request, urllib.parse, zipfile, xml.etree.ElementTree as ET
 SOURCES=[
   {"id":"fl-wakulla","url":"https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx","type":"xlsx"},
+  {"id":"fl-palm-beach-held","url":"https://www.pbctax.gov/wp-content/uploads/2026/11/County_Certs_PBCTax-11.2.26.xlsx","type":"xlsx"},
   {"id":"fl-leon-held","url":"https://www.leontaxcollector.net/Portals/69/userFiles/CertFiles/OpenCountyCertificates20261102.zip","type":"zip"}
 ]
 M='{http://schemas.openxmlformats.org/spreadsheetml/2006/main}'
