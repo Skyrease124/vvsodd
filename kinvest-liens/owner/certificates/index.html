@@ -24,6 +24,13 @@ form{display:grid;gap:11px}label{display:grid;gap:5px;font-size:14px;font-weight
 textarea{width:100%;min-height:84px;resize:vertical}#message{font-size:14px}#access{margin-top:10px}
 nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #5f91d0}
 [hidden]{display:none!important}
+
+.auto-tools{background:#fff;border:1px solid #d4dfe8;border-radius:12px;padding:16px;margin:16px 0}
+.auto-tools h2{font-size:21px;margin:0 0 8px}
+.auto-status{font-size:14px;line-height:1.5;color:#475569;margin:8px 0}
+.auto-item{border-top:1px solid #e4ebf1;padding:12px 0;font-size:14px}
+.auto-item p{margin:5px 0;overflow-wrap:anywhere}
+.auto-item button{padding:8px 12px}
 </style></head>
 <body>
 <header><nav><a href="/owner/">← Owner Dashboard</a><a href="/">PricePocketAsset</a></nav></header>
@@ -34,6 +41,22 @@ nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visibl
 <p id="access" role="status">Checking owner access…</p>
 <div id="workspace" hidden>
 <section class="summary"><strong id="stats">Choose a county to load records.</strong><p id="source" class="sub"></p></section>
+
+<section class="auto-tools" aria-labelledby="autoTitle">
+<h2 id="autoTitle">AI Auto Review · Owner Only</h2>
+<p class="sub">Scan official staged records for missing or conflicting evidence. This creates private suggestions only. You must personally verify official sources and approve publication.</p>
+<div class="controls">
+<button id="scanAll" type="button">Review All Counties</button>
+<button id="scanCounty" class="secondary" type="button">Scan Selected County</button>
+<label><span>AI summary</span><input type="checkbox" id="useAI" checked> Use NVIDIA AI when configured (up to 1 request per county)</label>
+</div>
+<p id="autoStatus" class="auto-status" role="status" aria-live="polite">No automatic review has been run in this session.</p>
+<div id="autoSummary" class="auto-status"></div>
+<div class="controls"><select id="autoPriority" aria-label="AI review priority"><option value="">All review priorities</option><option value="urgent">Urgent</option><option value="review">Needs verification</option><option value="routine">Routine</option></select>
+<button id="autoPrevious" type="button" class="secondary">Previous</button>
+<button id="autoNext" type="button" class="secondary">Next</button></div>
+<div id="autoItems" aria-live="polite"></div>
+</section>
 <div class="controls">
 <select id="county" aria-label="Choose county"><option value="wakulla">Wakulla</option><option value="palm-beach">Palm Beach</option><option value="st-johns">St. Johns</option></select>
 <input id="search" type="search" placeholder="Search parcel or certificate number" aria-label="Search certificates">
@@ -143,6 +166,73 @@ el('reviewForm').addEventListener('submit',async e=>{
  }catch(err){el('message').textContent='Unable to save: '+err.message}
  finally{el('submit').disabled=false}
 });
-(async()=>{try{await request(null);el('workspace').hidden=false;await load()}
+
+const AUTO='/.netlify/functions/certificate-auto-review';
+let autoPage=0,autoBusy=false,autoMatched=0;
+async function autoRequest(county,scan=false){
+ const qs=new URLSearchParams({county,priority:el('autoPriority').value,page:autoPage});
+ const opt={credentials:'same-origin',headers:{Accept:'application/json'}};
+ if(scan){opt.method='POST';opt.headers['Content-Type']='application/json';opt.body=JSON.stringify({county,useAI:el('useAI').checked})}
+ const r=await fetch(AUTO+(scan?'':'?'+qs),opt),d=await r.json().catch(()=>({}));
+ if(!r.ok||!d.ok)throw Error(d.error||'Review request failed');
+ return d;
+}
+function showAuto(data){
+ const target=el('autoItems');target.replaceChildren();
+ const summary=el('autoSummary');
+ if(data.needsScan){summary.textContent='No current analysis. Run a scan for this county.';autoMatched=0;}
+ else{
+  const s=data.summary;
+  summary.textContent=s.message+(data.aiSummary?' AI summary: '+data.aiSummary:' Rules-based screening only; no AI summary available.');
+  autoMatched=data.matched;
+  for(const item of data.items||[]){
+   const article=document.createElement('article');article.className='auto-item';
+   const heading=document.createElement('strong');heading.textContent=item.priority.toUpperCase()+' · Certificate '+item.certificateNumber+' · '+item.taxYear;
+   article.append(heading);
+   details(article,'Parcel',item.parcelId);
+   details(article,'Findings',item.findings.map(f=>f.detail).join(' ' )||'No new source conflicts detected.');
+   const btn=document.createElement('button');btn.type='button';btn.textContent='Open manual review';
+   btn.addEventListener('click',async()=>{
+    page=0;el('search').value=item.parcelId;el('holding').value='';el('redemption').value='';
+    await load();
+    const matching=records.find(x=>x.certificateKey===item.certificateKey);
+    if(matching){const b=[...el('cards').querySelectorAll('button')][records.indexOf(matching)];if(b)b.click();}
+    else el('autoStatus').textContent='Search this parcel, then open the matching certificate year for manual review.';
+   });article.append(btn);target.append(article);
+  }
+ }
+ el('autoPrevious').disabled=autoPage===0;
+ el('autoNext').disabled=(autoPage+1)*30>=autoMatched;
+}
+async function loadAuto(){
+ if(autoBusy)return;autoBusy=true;
+ try{const d=await autoRequest(el('county').value);showAuto(d);}
+ catch(e){el('autoStatus').textContent=e.message;}
+ finally{autoBusy=false;}
+}
+async function runAuto(counties){
+ if(autoBusy)return;autoBusy=true;
+ for(const id of ['scanAll','scanCounty'])el(id).disabled=true;
+ try{
+  for(let i=0;i<counties.length;i++){
+   el('autoStatus').textContent='Scanning '+(i+1)+' of '+counties.length+': '+counties[i]+'…';
+   const d=await autoRequest(counties[i],true);
+   el('autoStatus').textContent='Scanned '+(i+1)+' of '+counties.length+' counties. '+d.summary.message;
+   if(counties[i]===el('county').value){autoPage=0;showAuto(d);}
+  }
+  autoPage=0;
+  const current=await autoRequest(el('county').value);showAuto(current);
+  el('autoStatus').textContent='Private analysis saved. Open each finding for manual review. Nothing was published.';
+ }catch(e){el('autoStatus').textContent='Scan stopped: '+e.message;}
+ finally{autoBusy=false;for(const id of ['scanAll','scanCounty'])el(id).disabled=false;}
+}
+el('scanAll').addEventListener('click',()=>runAuto(['wakulla','palm-beach','st-johns']));
+el('scanCounty').addEventListener('click',()=>runAuto([el('county').value]));
+el('autoPriority').addEventListener('change',()=>{autoPage=0;loadAuto()});
+el('autoPrevious').addEventListener('click',()=>{if(autoPage){autoPage--;loadAuto()}});
+el('autoNext').addEventListener('click',()=>{if((autoPage+1)*30<autoMatched){autoPage++;loadAuto()}});
+el('county').addEventListener('change',()=>{autoPage=0;loadAuto()});
+
+(async()=>{try{await request(null);el('workspace').hidden=false;await load();await loadAuto()}
 catch(e){say(e.message+' Sign in using your owner account.')}})();
 </script></body></html>
