@@ -31,6 +31,7 @@ def workbook(data):
     sheets=[]
     for name in sorted(n for n in z.namelist() if re.fullmatch(r'xl/worksheets/sheet\d+\.xml',n))[:10]:
       first=[]
+      sample=[]
       with z.open(name) as handle:
         for _,elem in ET.iterparse(handle,events=('end',)):
           if elem.tag==M+'row':
@@ -43,9 +44,11 @@ def workbook(data):
               inline=cell.find(M+'is')
               if inline is not None:raw=''.join(t.text or '' for t in inline.iter(M+'t'))
               cells.append(str(raw or '').strip()[:120])
-            if any(cells):first=cells[:50];break
+            if any(cells):
+              sample.append(cells[:50])
+              if len(sample)>=7:break
           if elem.tag==M+'row':elem.clear()
-      sheets.append({'sheet':name,'firstPopulatedRow':first})
+      sheets.append({'sheet':name,'sampleRows':sample})
     return sheets
 def inspect(src,data):
   if src['type']=='xlsx':return {'sheets':workbook(data)}
