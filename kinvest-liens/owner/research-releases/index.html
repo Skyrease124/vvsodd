@@ -9,11 +9,11 @@ textarea{min-height:110px}button{background:#14664f;color:white;padding:13px;bor
 button:disabled{opacity:.5}.notice{background:#fff3df;padding:14px;border:1px solid #dfc39d;border-radius:10px}
 small{color:#596d7f;font-weight:400}a{color:#19775c}header a{color:#c2ffe1}[hidden]{display:none!important}
 </style></head><body><header><a href="/owner/">← Owner Dashboard</a></header><main>
-<h1>Research Update Releases</h1><p>Publish owner-approved tax lien and parcel-land research updates with <strong>48 hours of Pro-only early access</strong>. Free visitors receive the same approved updates automatically after 48 hours.</p>
-<div class="notice">This does not edit your existing public maps or the separate Land for Sale area. All releases are research-only, not purchase offers. Lien records must first pass Certificate Review.</div>
+<h1>Research Update Releases</h1><p>Publish owner-approved tax lien and parcel-land research updates with <strong>48 hours of Pro-only early access</strong>. Free visitors receive the same approved updates automatically after 48 hours. Certificate Review now publishes approved certificates in one step; this form is for approved parcel-land research.</p>
+<div class="notice">Approved certificates now publish automatically from Certificate Review when you confirm publication, and display as research on maps with verified parcel coordinates. Use this form for other owner-reviewed land research. No purchases or unverified records are published.</div>
 <p id="status" role="status">Checking owner access…</p>
 <form id="form" hidden>
-<label>Research type<select name="type" id="type"><option value="lien">Tax lien certificate</option><option value="land">Parcel / land research</option></select></label>
+<label>Research type<select name="type" id="type"><option value="land">Parcel / land research</option></select></label>
 <label>State code<input name="state" value="FL" maxlength="2" required></label>
 <label>County<input name="county" placeholder="Wakulla" maxlength="80" required></label>
 <label>Parcel ID<input name="parcelId" maxlength="100" required></label>
@@ -44,7 +44,7 @@ form.addEventListener('submit',async e=>{
  const fields=Object.fromEntries(new FormData(form));fields.approvedForResearch=true;fields.action='release';
  try{const r=await fetch('/.netlify/functions/research-updates',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(fields)});
  const d=await r.json();if(!r.ok)throw Error(d.error||'Publication failed.');
- result.textContent='Released to Pro now. Free release: '+new Date(d.freeReleaseAt).toLocaleString()+'. No map listings changed.';form.reset();toggle();
+ result.textContent='Released to Pro now. Free release: '+new Date(d.freeReleaseAt).toLocaleString()+'. Matching mapped parcels will show approved research pins.';form.reset();toggle();
  }catch(err){result.textContent=err.message}finally{save.disabled=false}
 });
 </script></body></html>
