@@ -69,7 +69,7 @@ window.TaxRadarOn = true;
     if (c.type === 'result' && c.prices) li.appendChild(mk('p', 'small', 'Actual sale prices from ' + money(c.prices.min) + ' to ' + money(c.prices.max) + ' (first ' + c.items.length + ' shown by price order on the county page).'));
     if (c.type === 'missing') li.appendChild(mk('p', 'small', 'Not called sold, redeemed or withdrawn: that needs an official record.'));
     const meta = mk('p', 'small rmeta', 'Detected ' + fmtDate(c.detectedAt) + (c.publishedAt ? ' · published ' + fmtDate(c.publishedAt) : '') + ' · '); const a = mk('a', '', 'Source: ' + (c.source.name || 'official record')); a.href = c.source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; meta.appendChild(a); li.appendChild(meta);
-    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: 'smooth'}); });
+    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
     const l1 = mk('a', 'btn small ghost', 'See affected listings'); l1.href = c.link + '#' + encodeURIComponent(c.county);
     act.append(b1, l1); const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
     li.appendChild(act); return li;
@@ -198,6 +198,10 @@ window.TaxRadarOn = true;
   function renderPanel(a, focusChange, onlyChanges) {
     panelState = a; const p = $('rpanel'); p.textContent = ''; p.hidden = false; const st = M.by[a]; const cs = stateCounties(a);
     const head = mk('div', 'rp-head'); const h = mk('h3', '', st.n); h.id = 'rpanelh'; const x = mk('button', 'rp-x', 'Close'); x.type = 'button'; x.setAttribute('aria-label', 'Close ' + st.n + ' panel'); x.addEventListener('click', closePanel); head.append(h, x); p.appendChild(head);
+    const parcelMap = mk('a', 'btn small', 'Open parcel map for ' + st.n + ' →');
+    parcelMap.href = '/map/?s=' + encodeURIComponent(a);
+    parcelMap.dataset.radarParcelState = a;
+    p.appendChild(parcelMap);
     const sys = mk('p', 'rp-sys'); const dot = mk('i'); dot.style.background = M.COL[st.sys] || '#94a3b8'; sys.append(dot, st.sys + (st.v ? ' (verify)' : '') + ' · interest: ' + st.rate); p.appendChild(sys);
     // Officials: the governor (DC: mayor) and, where a state has one of the 50 largest cities, its mayor. Source: Wikipedia, checked Nov 2026 (see officials.js).
     if (typeof OFFICIALS !== 'undefined') { const g = OFFICIALS.gov[a], ms = OFFICIALS.mayors[a] || [], ol = mk('ul', 'rp-off'); const line = (role, o) => { const li = mk('li'); li.append(mk('b', '', o.name), mk('span', 'rp-party ' + (/^Republican/.test(o.party) ? 'r' : /^Democratic/.test(o.party) ? 'd' : 'i'), o.party), mk('small', '', role)); ol.appendChild(li); };
@@ -253,7 +257,7 @@ window.TaxRadarOn = true;
       if (!opts.length) { const li = mk('li', 'none', 'No state matches that.'); list.appendChild(li); }
       list.hidden = false; input.setAttribute('aria-expanded', 'true');
     };
-    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: 'smooth'}); };
+    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
     input.addEventListener('input', () => { act = -1; draw(); }); input.addEventListener('focus', () => { input.select(); draw(); });
     input.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(act + 1, Math.min(opts.length, 60) - 1); draw(); }
@@ -277,7 +281,10 @@ window.TaxRadarOn = true;
     fetch('liens/states/radar.json').then(r => r.json()).then(d => {
       S.data = d; renderWhat(); setupFind();
       document.querySelectorAll('.rtabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-      let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); });
+      let rz;
+      const redraw = () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); };
+      if (window.ResizeObserver) new ResizeObserver(redraw).observe(M.svg);
+      else window.addEventListener('resize', redraw);
       window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); } });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rpanel').hidden) closePanel(); });
       setTab(S.tab); if (S.sel && M.by[S.sel]) { M.select(S.sel); }

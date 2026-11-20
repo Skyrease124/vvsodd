@@ -233,7 +233,6 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home .pm-search button{display:grid;place-items:center;min-width:31px;border:0;background:none;padding:0}
 .ppa-map-home .pm-home-search #pmAsk{flex:none;display:flex;align-items:center;gap:4px;width:auto;height:32px;min-height:32px;padding:0 6px;border-radius:999px;border:1px solid #dbb252;background:#182a23;color:#fff4c9;font-size:.68rem;font-weight:750;white-space:nowrap;box-shadow:0 0 8px #ecbd583f}
 .ppa-map-home #pmAsk b{border-radius:999px;background:#f4ce66;color:#161d17;padding:1px 4px;text-transform:uppercase;font-size:.61rem}
-.ppa-map-home #pmAsk[aria-pressed=true]{background:#574418;border-color:#ffe297}
 .ppa-map-home .pm-stack{margin-bottom:4px}
 .ppa-map-home .pm-stack .pm-ib,.ppa-map-home .pm-tools summary,.ppa-map-home .pm-pill{border:1px solid #70918a;background:#081d27ef;border-radius:999px;color:#f5fff9}
 .ppa-map-home .pm-stack .pm-ib,.ppa-map-home .pm-tools summary{height:32px;min-height:32px;padding-inline:7px}
@@ -319,4 +318,87 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home :is(.pm-home-search,.pm-pill,.pm-ib,.pm-seg,.pm-area,.pm-msg .m,.pm-left,.pm-right,.pm-pop,.pm-cam){
   -webkit-backdrop-filter:none;
   backdrop-filter:none;
+}
+
+/* Compact Home search mode switch. The whole labeled control is tappable. */
+.ppa-map-home .pm-ai-switch{
+  position:relative;display:block;flex:none;width:24px;height:14px;border-radius:999px;
+  background:#3c5264;box-shadow:inset 0 0 0 1px #7c909f;
+  transition:background-color 180ms ease-out,box-shadow 180ms ease-out;
+}
+.ppa-map-home .pm-ai-switch::after{
+  content:'';position:absolute;inset:2px auto auto 2px;width:10px;height:10px;
+  border-radius:50%;background:#fff;transition:transform 180ms ease-out;
+}
+.ppa-map-home #pmAsk[aria-checked=true]{
+  background:#193d32;border-color:#e3bd61;
+}
+.ppa-map-home #pmAsk[aria-checked=true] .pm-ai-switch{
+  background:#198454;box-shadow:inset 0 0 0 1px #81e4b3;
+}
+.ppa-map-home #pmAsk[aria-checked=true] .pm-ai-switch::after{transform:translateX(10px)}
+.ppa-map-home #pmAsk:focus-visible{outline:2px solid #ffe393;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){
+  .ppa-map-home .pm-ai-switch,.ppa-map-home .pm-ai-switch::after{transition:none}
+}
+
+/* Home map chrome lives in the grid, outside the interactive canvas. */
+body.ppa-map-home .pm{
+  position:relative;inset:auto;display:grid;flex:none;grid-template-columns:minmax(0,1fr) 59px;
+  grid-template-areas:"search search" "canvas rail" "extra extra";
+  background:#0c2030;overflow:hidden;
+}
+.ppa-map-home .pm-top{grid-area:search;position:static;display:block;padding:6px 7px;pointer-events:auto}
+.ppa-map-home .pm-home-scope{display:flex;align-items:center;gap:5px}
+.ppa-map-home .pm-pill{flex:1;max-width:320px;width:auto}
+.ppa-map-home .pm-home-scope .pm-area{position:static;transform:none;margin-left:auto;padding-inline:6px;font-size:.66rem}
+.ppa-map-home .pm-center{grid-area:canvas;height:clamp(238px,58vw,365px);overflow:hidden}
+.ppa-map-home .pm-home-rail{
+  grid-area:rail;display:flex;flex-direction:column;gap:5px;min-height:0;
+  border-left:1px solid #355467;background:#102838;padding:4px;overflow:auto;scrollbar-width:thin;overscroll-behavior:contain;
+}
+.ppa-map-home .pm-home-rail .pm-stack{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin:0}
+.ppa-map-home .pm-home-rail .pm-ib,.ppa-map-home .pm-home-rail .pm-tools summary{
+  justify-content:center;flex-direction:column;gap:0;width:100%;min-height:35px;height:auto;
+  border-radius:8px;padding:2px;box-shadow:none;text-align:center;
+}
+.ppa-map-home .pm-home-rail .pm-ib svg{display:block;width:14px;height:14px}
+.ppa-map-home .pm-home-rail .pm-control-label,.ppa-map-home .pm-home-rail .pm-tools summary{display:block;font-size:.57rem;line-height:1.1}
+.ppa-map-home .pm-home-rail .pm-tools summary{display:grid;align-content:center}
+.ppa-map-home .pm-home-rail .pm-tools summary::after{content:'⌄'}
+.ppa-map-home .pm-home-rail .pm-tools[open] button{position:static;margin-top:3px}
+.ppa-map-home .pm-home-rail .pm-seg{position:static;flex-direction:column;gap:2px}
+.ppa-map-home .pm-home-rail .pm-seg button{min-height:28px;padding:0 2px;font-size:.61rem}
+.ppa-map-home .pm-home-rail .maplibregl-ctrl-top-right{position:static}
+.ppa-map-home .pm-home-rail .maplibregl-ctrl-top-right .maplibregl-ctrl{float:none;display:grid;margin:3px 0 0}
+.ppa-map-home .pm-home-rail .maplibregl-ctrl-top-right button{width:100%;height:27px}
+.ppa-map-home .pm-home-content{grid-area:extra;min-width:0}
+.ppa-map-home .pm-home-content #pmMsg:empty{display:none}
+.ppa-map-home .pm-home-content #pmMsg{position:static;transform:none;width:auto;max-width:none;padding:4px}
+.ppa-map-home .pm-home-content :is(.pm-right,.pm-left,.pm-pop,.pm-cam){
+  position:static;inset:auto;width:auto;max-width:none;transform:none;
+  background:#0d2433;border-radius:0;border:0;border-top:1px solid #355467;box-shadow:none;
+}
+.ppa-map-home .pm-home-content .pm-right[data-snap=peek]{display:none}
+.ppa-map-home .pm-home-content .pm-right{height:170px}
+.ppa-map-home .pm-home-content .pm-right:is([data-snap=full],[data-view=ai]){height:270px}
+.ppa-map-home .pm-home-content .pm-right:not([data-snap=peek]){animation:pmHomeEnter 190ms ease-out both}
+.ppa-map-home .pm-home-content .pm-cam,.ppa-map-home .pm-home-content .pm-left{max-height:300px;overflow:auto}
+.ppa-map-home .pm-home-content .pm-pop:not([hidden]){margin:0}
+.ppa-map-home .pm-home-content .pm-rh{background:#102b3b}
+@keyframes pmHomeEnter{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
+@media(min-width:900px){
+  body.ppa-map-home .pm:has(.pm-right:not([inert]),.pm-left.open,.pm-pop:not([hidden]),.pm-cam:not([hidden])){
+    grid-template-columns:minmax(0,1fr) 59px minmax(245px,31%);
+    grid-template-areas:"search search search" "canvas rail extra";
+  }
+  .ppa-map-home .pm-center{height:clamp(375px,38vw,495px)}
+  .ppa-map-home .pm-home-content:has(.pm-right:not([inert]),.pm-left.open,.pm-pop:not([hidden]),.pm-cam:not([hidden])){
+    border-left:1px solid #355467;overflow:auto;max-height:clamp(375px,38vw,495px);
+  }
+  .ppa-map-home .pm-home-content .pm-right{height:235px}
+  .ppa-map-home .pm-home-content .pm-right:is([data-snap=full],[data-view=ai]){height:clamp(375px,38vw,495px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .ppa-map-home .pm-home-content .pm-right:not([data-snap=peek]){animation:none}
 }

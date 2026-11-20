@@ -145,3 +145,22 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
   .ppa-home header.dnav .dlogo>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
   .ppa-home header.dnav .pp-menu{flex:none}
 }
+
+.ppa-home .app-map{scroll-margin-top:64px}
+.app-map-views{display:flex;gap:4px;padding:5px 7px;border-bottom:1px solid #365267;background:#102636}
+.app-map-views button{min-height:35px;flex:1;border:1px solid transparent;border-radius:9px;background:transparent;color:#c4d7e3;font:650 .83rem system-ui,sans-serif;cursor:pointer}
+.app-map-views button[aria-pressed=true]{border-color:#4d8777;background:#163e39;color:#e9fff5}
+.ppa-home .app-map #home-radar.app-radar{margin:0;padding:0;background:#0d2132}
+.ppa-home #home-radar .dhero{padding:8px}
+.ppa-home #home-radar .dwrap{padding:0}
+.ppa-home #home-radar .rhead{display:none}
+.ppa-home #home-radar .dmap.rmap{margin-inline:0;width:100%;animation:none}
+.ppa-home #home-radar .rcombo ul{position:static}
+.ppa-home #home-radar .rpanel:not([hidden]){
+  position:static;order:4;width:auto;max-width:none;transform:none;max-height:28rem;
+  border:1px solid #3d647b;border-radius:12px;box-shadow:none;
+}
+@media(prefers-reduced-motion:no-preference){
+  .ppa-home #home-radar:not([hidden]),.ppa-home #home-parcels:not([hidden]){animation:homeMapViewIn 190ms ease-out both}
+  @keyframes homeMapViewIn{from{opacity:.35}to{opacity:1}}
+}
