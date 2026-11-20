@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Owner Intelligence Center | PricePocketAsset</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app-shell.css">
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#edf7fa;background:#0a1a2a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(#0e2638,#071522);min-height:100vh}
+main{max-width:1050px;margin:auto;padding:20px 16px 60px}h1{font-size:clamp(26px,5vw,38px);margin:4px 0}
+a{color:#86e7cd}.muted{color:#b7ceda;line-height:1.55}
+.hero{border:1px solid #2b5762;border-radius:18px;padding:20px;background:#112d3c;margin-bottom:18px}
+.card{border:1px solid #375263;background:#142d3f;border-radius:15px;padding:17px;margin-bottom:12px}
+.card h2{font-size:19px;margin:0 0 6px}.card p{line-height:1.5}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.stats div{background:#173b48;padding:12px;border-radius:12px}
+.stats strong{font-size:26px;display:block}.stats span{font-size:12px;color:#b6ced5}
+button,select{font:inherit;border-radius:10px;padding:11px;min-height:44px}
+button{border:0;background:#08765a;color:white;font-weight:700;cursor:pointer}
+button.secondary{background:#28495a}
+button:disabled{opacity:.5;cursor:default}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+label{display:inline-flex;gap:8px;align-items:center;font-size:14px}
+select{border:1px solid #547181;color:white;background:#173749;max-width:100%}
+.pill{display:inline-block;border-radius:25px;padding:5px 10px;background:#26536a;font-size:12px}
+.error{color:#ffc3ab}
+#workspace[hidden],#sourceCards[hidden]{display:none!important}
+</style></head><body>
+<main id="ownerMain" hidden><p><a href="/owner/">← Owner Dashboard</a></p>
+<section class="hero"><h1>Owner Intelligence Center</h1>
+<p class="muted">Your private command center for official county-source monitoring, research evidence and AI-assisted summaries. Certificate approvals and Research Releases stay separate.</p>
+<p id="access" role="status">Verifying owner access…</p></section>
+<div id="workspace" hidden>
+<div class="stats">
+<div><strong id="sourceCount">0</strong><span>Configured sources</span></div>
+<div><strong id="checkedCount">0</strong><span>Sources checked</span></div>
+<div><strong id="pendingCount">0</strong><span>Changes for review</span></div>
+</div>
+<div class="card"><h2>Private research controls</h2>
+<p class="muted">Choose a source and scan it. The first successful check records a baseline; later changes enter your private review queue. Research is never published automatically.</p>
+<div class="controls">
+<label>Research method <select id="provider">
+<option value="official">Official source direct (free)</option>
+<option value="firecrawl">Firecrawl (uses API credits)</option>
+</select></label>
+<label><input type="checkbox" id="ai"> NVIDIA AI summary</label>
+</div>
+<p id="fcStatus" class="muted"></p>
+<p class="muted">To enable Firecrawl, configure <code>FIRECRAWL_API_KEY</code> as a server-side Netlify environment variable. No key is sent to the browser. Each source is limited to one scan per six hours.</p>
+</div>
+<div id="message" role="status" aria-live="polite" class="muted"></div>
+<h2>Florida source monitoring</h2>
+<div id="sourceCards"></div>
+<div class="card"><h2>Next-stage capabilities</h2>
+<p class="muted">Auction calendars, GIS source health, state law changes, land bank discoveries, and scheduled scans can be added here once their official feeds and individual access terms are validated. They are not active scanners yet.</p>
+<p><a href="/owner/certificates/">Certificate Review</a> · <a href="/owner/research-releases/">Research Releases</a></p>
+</div>
+</div></main>
+<script>
+'use strict';
+const API='/.netlify/functions/owner-intelligence';
+const el=id=>document.getElementById(id);
+const make=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n};
+let busy=false;
+async function request(data){
+ const opts={credentials:'same-origin',headers:{Accept:'application/json'}};
+ if(data){opts.method='POST';opts.headers['Content-Type']='application/json';opts.body=JSON.stringify(data)}
+ const res=await fetch(API,opts);
+ const answer=await res.json().catch(()=>({}));
+ if(!res.ok||!answer.ok)throw Error(answer.error||'Request failed');
+ return answer;
+}
+function link(url,text){const a=make('a',text);a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a}
+function render(d){
+ el('sourceCount').textContent=d.stats.sources;
+ el('checkedCount').textContent=d.stats.checked;
+ el('pendingCount').textContent=d.stats.pending;
+ el('fcStatus').textContent=d.firecrawlConfigured?'Firecrawl configured (server-side)':'Firecrawl not configured. Direct official-source checks are available.';
+ const root=el('sourceCards');root.replaceChildren();
+ for(const s of d.records){
+  const card=make('article');card.className='card';
+  const title=make('h2',s.label),kind=make('span',s.category);kind.className='pill';
+  const status=make('p',s.reviewStatus==='needs-review'?'Research changed — needs owner review':
+    s.reviewStatus==='baseline'?'Baseline saved':
+    s.reviewStatus==='unchanged'?'No change since previous check':
+    s.reviewStatus==='inspected'?'Marked inspected':
+    s.reviewStatus==='dismissed'?'Dismissed for now':'Not checked');
+  card.append(title,kind,status,make('p','Last checked: '+(s.checkedAt?new Date(s.checkedAt).toLocaleString():'Never')));
+  card.append(link(s.url,'Official source'));
+  if(s.summary)card.append(make('p','AI summary: '+s.summary));
+  if(s.aiStatus==='error')card.append(make('p','NVIDIA summary unavailable; source check still saved.'));
+  const buttons=make('div');buttons.className='controls';
+  const scan=make('button','Scan source');scan.type='button';
+  scan.onclick=()=>act({action:'scan',sourceId:s.id,provider:el('provider').value,useAI:el('ai').checked});
+  buttons.append(scan);
+  if(s.checkedAt){
+   const inspected=make('button','Mark inspected');inspected.className='secondary';inspected.onclick=()=>act({action:'mark',sourceId:s.id,status:'inspected'});
+   const follow=make('button','Needs follow-up');follow.className='secondary';follow.onclick=()=>act({action:'mark',sourceId:s.id,status:'needs-review'});
+   buttons.append(inspected,follow);
+  }
+  card.append(buttons);root.append(card);
+ }
+}
+async function reload(){
+ const d=await request();
+ el('ownerMain').hidden=false;
+ el('workspace').hidden=false;
+ el('access').textContent='Owner access confirmed.';
+ render(d);
+}
+async function act(input){
+ if(busy)return;
+ busy=true;el('message').textContent='Checking official source…';
+ for(const b of document.querySelectorAll('button'))b.disabled=true;
+ try{const out=await request(input);el('message').textContent=out.message||'Private review status saved. No data was published.';await reload();}
+ catch(e){el('message').textContent=e.message;}
+ finally{busy=false;for(const b of document.querySelectorAll('button'))b.disabled=false;}
+}
+reload().catch(()=>{window.location.replace('/owner/');});
+</script>
+</body></html>

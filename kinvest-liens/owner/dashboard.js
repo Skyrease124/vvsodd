@@ -7,6 +7,7 @@ window.ppaAccount.then(user => {
   const tools = [
     ['Members','Manage access and membership','/members/','profile'],
     ['Imports & review','Review incoming county data','/admin/imports/','layers'],
+    ['Intelligence Center','Owner-only source monitoring, Firecrawl research and private findings','/owner/intelligence/','search'],
     ['Certificate Review','Review Florida tax certificates and record decisions','/owner/certificates/','file'],
     ['Research Releases','Give Pro members 48-hour early access to approved lien and land updates','/owner/research-releases/','layers'],
     ['Retail Alerts','Manage alert settings','/owner/retail/','search'],
