@@ -30,7 +30,7 @@ nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visibl
 <main>
 <h1>Certificate Review</h1>
 <p class="sub">Owner-only Florida tax certificate review. Inspect county records, record decisions, and retain an audit trail through your PricePocketAsset account.</p>
-<div class="notice"><strong>Research only, not for sale.</strong> A certificate being unredeemed or county-held does not establish that it can be purchased. Approvals recorded here never publish listings or change purchase availability.</div>
+<div class="notice"><strong>Research only, not for sale.</strong> A certificate being unredeemed or county-held does not establish that it can be purchased. Approving with the publication confirmation automatically adds a research-only update to Pro members immediately and Free visitors 48 hours later. No purchase availability is implied.</div>
 <p id="access" role="status">Checking owner access…</p>
 <div id="workspace" hidden>
 <section class="summary"><strong id="stats">Choose a county to load records.</strong><p id="source" class="sub"></p></section>
@@ -46,9 +46,11 @@ nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visibl
 <section id="reviewPanel" class="review-panel" hidden>
 <h2>Review selected certificate</h2><p id="selection"></p>
 <form id="reviewForm">
-<label>Decision<select id="decision"><option value="needs-follow-up">Needs follow-up</option><option value="approved-for-research">Approved for research only</option><option value="rejected">Rejected</option></select></label>
+<label>Decision<select id="decision"><option value="needs-follow-up">Needs follow-up</option><option value="approved-for-research">Approve &amp; publish research update</option><option value="rejected">Rejected</option></select></label>
 <label>Official evidence URL<input id="evidence" type="url" maxlength="2000" placeholder="https://county-tax-collector…"></label>
 <label>Reason for decision<textarea id="reason" minlength="12" maxlength="1000" required placeholder="Describe what you verified with the official source."></textarea></label>
+<label id="publishGroup" hidden><span><input type="checkbox" id="publishApprovedResearch">
+ I confirm this official-source research may appear on Pro maps immediately and Free maps after 48 hours. It is not offered for purchase.</span></label>
 <div class="controls"><button id="submit" type="submit">Save review decision</button><button class="secondary" type="button" id="cancel">Cancel</button></div>
 </form><p id="message" role="status" aria-live="polite"></p>
 </section>
@@ -73,6 +75,13 @@ function details(card,label,value){if(value===undefined||value===null||value==='
  const p=document.createElement('p'),b=document.createElement('strong');b.textContent=label+': ';
  p.append(b,document.createTextNode(String(value)));card.append(p);
 }
+function syncPublishChoice(){
+ const show=el('decision').value==='approved-for-research';
+ el('publishGroup').hidden=!show;
+ el('publishApprovedResearch').required=show;
+ if(!show)el('publishApprovedResearch').checked=false;
+}
+el('decision').addEventListener('change',syncPublishChoice);
 function render(){
  const target=el('cards');target.replaceChildren();
  if(!records.length){const p=document.createElement('p');p.textContent='No matching records on this page.';target.append(p)}
@@ -88,6 +97,7 @@ function render(){
    selected=r;el('reviewPanel').hidden=false;el('selection').textContent=r.certificateKey;
    el('decision').value=r.review?.decision||'needs-follow-up';
    el('evidence').value=r.review?.evidenceUrl||'';el('reason').value=r.review?.reason||'';
+   el('publishApprovedResearch').checked=false; syncPublishChoice();
    el('message').textContent='';
    el('reviewPanel').scrollIntoView({behavior:'smooth',block:'start'});
   });card.append(button);target.append(card);
@@ -120,8 +130,12 @@ el('reviewForm').addEventListener('submit',async e=>{
  try{
   const d=await request(null,{county:el('county').value,certificateKey:selected.certificateKey,
    snapshotSha256:snapshotHash,decision:el('decision').value,
-   evidenceUrl:el('evidence').value.trim(),reason:el('reason').value.trim()});
-  el('message').textContent='Decision saved. Audit receipt '+d.review.id+'. No record published.';
+   evidenceUrl:el('evidence').value.trim(),reason:el('reason').value.trim(),
+   publishApprovedResearch:el('publishApprovedResearch').checked});
+  el('message').textContent='Decision saved. Audit receipt '+d.review.id+'. '+
+   (d.release?.action==='published'?'Published to Pro now; Free after 48 hours.':
+    d.release?.action==='already-published'?'Research already live; original Free release time preserved.':
+    d.release?.action==='withdrawn'?'Research update withdrawn from maps.':'No research update published.');
   selected.review=d.review;render();
  }catch(err){el('message').textContent='Unable to save: '+err.message}
  finally{el('submit').disabled=false}

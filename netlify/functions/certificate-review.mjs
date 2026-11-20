@@ -1,6 +1,7 @@
 // Owner-only certificate research review API. Never publishes or marks purchasable.
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
+import { syncReviewedCertificate } from '../lib/auto-research-release.mjs';
 
 const REPO='Skyrease124/vvsodd';
 const CONFIG={
@@ -109,14 +110,32 @@ export default async function handler(req){
     if(!r)return reply(404,{ok:false,error:'Certificate not found in current county staging data.'});
     if(b.snapshotSha256!==snap.hash)return reply(409,{ok:false,error:'County snapshot changed. Reload before reviewing.'});
     const decision=validateDecision(b,r);
+    // The single approval action is also the research publication authorization.
+    if(decision.decision==='approved-for-research' && b.publishApprovedResearch!==true)
+      return reply(400,{ok:false,error:'Confirm the 48-hour Pro-first publication before approving.'});
     const key=certificateKey(r),id=crypto.randomUUID(),when=new Date().toISOString();
     const receipt={id,at:when,county:CONFIG[b.county].label,certificateKey:key,reviewer:me.email,
-      snapshotSha256:snap.hash,...decision,publicationAuthorized:false,availableForPurchase:false,
-      meaning:'Research review only; no purchase availability or website publication.'};
+      snapshotSha256:snap.hash,...decision,
+      publicationAuthorized:decision.decision==='approved-for-research' && b.publishApprovedResearch===true,
+      publishApprovedResearch:decision.decision==='approved-for-research' && b.publishApprovedResearch===true,
+      availableForPurchase:false,
+      meaning:'Research only; approval with explicit consent publishes a gated Pro-first research update, never a purchase offer.'};
     // Write audit entry before updating latest decision. Every decision creates a separate audit key.
     await auth.kvPut('cert-audit-'+id,receipt);
     await auth.kvPut('cert-review-'+keyHash(key),receipt);
-    return reply(200,{ok:true,review:receipt});
+    let release;
+    try {
+      release=await syncReviewedCertificate({
+        record:r,review:receipt,snapshot:snap,reviewer:me.email,
+        kvGet:auth.kvGet,kvPut:auth.kvPut
+      });
+    } catch (err) {
+      console.error('approved certificate release failed:',err?.message);
+      // The review is safely recorded, but do not falsely claim it was released.
+      return reply(503,{ok:false,reviewSaved:true,review:receipt,
+        error:'Review saved, but research map release did not complete. Retry this approval.'});
+    }
+    return reply(200,{ok:true,review:receipt,release});
   }catch(e){
     console.error('certificate review:',e?.message);
     return reply(503,{ok:false,error:String(e?.message||'Certificate review unavailable.').slice(0,170)});
