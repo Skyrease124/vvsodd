@@ -31,12 +31,25 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_wakulla_discovery.py'
       - name: Fetch official Wakulla Excel list and stage validated certificates
         run: python scripts/stage-wakulla-certificates.py
+      - name: Compare with last reviewed snapshot (never infer redemption from disappearance)
+        run: |
+          python -m unittest discover -s tests -p 'test_certificate_snapshot_changes.py'
+          PREVIOUS=/tmp/previous-certificate-snapshot.json
+          if git fetch --no-tags origin refs/heads/automation/wakulla-certificate-review:refs/remotes/origin/automation/wakulla-certificate-review; then
+            git show origin/automation/wakulla-certificate-review:county-import-staging/fl-wakulla-certificate-export.json > "$PREVIOUS" || rm -f "$PREVIOUS"
+          fi
+          python scripts/compare-certificate-snapshots.py \
+            --current county-import-staging/fl-wakulla-certificate-export.json \
+            --previous "$PREVIOUS" \
+            --output county-import-staging/fl-wakulla-certificate-export-changes.json
       - name: Upload staged records for review
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: wakulla-certificate-staging
-          path: county-import-staging/fl-wakulla-certificate-export.json
+          path: |
+            county-import-staging/fl-wakulla-certificate-export.json
+            county-import-staging/fl-wakulla-certificate-export-changes.json
       - name: Push staged data to separate review branch
         if: success()
         uses: peter-evans/create-pull-request@v7
@@ -46,7 +59,9 @@ jobs:
           title: 'Review Wakulla county certificate source update'
           body: 'Review imported Wakulla certificates before publishing. All availability statuses are unverified; no live listings are changed.'
           commit-message: 'Stage official Wakulla tax certificate list'
-          add-paths: county-import-staging/fl-wakulla-certificate-export.json
+          add-paths: |
+            county-import-staging/fl-wakulla-certificate-export.json
+            county-import-staging/fl-wakulla-certificate-export-changes.json
       - name: Link review branch
         if: always()
         run: |
