@@ -98,7 +98,7 @@ ok(r.providers.find(p => p.id === 'az').status === 'ok' && r.cameras.length === 
 await nearby(32.88, -111.75, 10, 5); ok(azCalls === 1, 'AZ511 list cached (provider allows 10 calls/minute)');
 process.env.GA511_KEY = 'TEST'; _verified.ga = false; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled with a key until a real preview is verified'); _verified.ga = true;
 _verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY;
-// 511WI can be tested by its owner before it is enabled on the public camera map.
+// A verified 511WI feed uses the owner-saved key only for authenticated Pro requests.
 {
   delete process.env.WI511_KEY;
   const ownerApi = (await import('../functions/ownerkeys.mjs')).default;
@@ -116,10 +116,15 @@ _verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY
   ok(saved.keys.find(k=>k.name===keyName).hint === '…1234' && !JSON.stringify(saved).includes(wisconsinTestKey), '511WI key save returns only the masked suffix');
   const result = await (await request(owner,testWi)).json();
   ok(result.ok && result.cameras === 1 && result.sample.name === 'I-41 at County A' && result.image.ok && wisconsinCalls === 1 && !JSON.stringify(result).includes(wisconsinTestKey), 'Test it checks an enabled Wisconsin camera and its picture');
-  const wi = await nearby(44.30,-88.45,15,4);
-  ok(wi.providers.find(p=>p.id==='wi').status === 'viewer' && wisconsinCalls === 1, 'Wisconsin retains its official viewer before the feed is verified');
+  const wisconsinQuery = 'lat=44.30&lng=-88.45&radius=15&limit=4';
+  const guest = await api(new Request('http://x/c?' + wisconsinQuery), {});
+  ok(guest.status === 402 && wisconsinCalls === 1, 'Signed-out visitors cannot load Wisconsin cameras');
+  const wi = (await call(wisconsinQuery)).j;
+  ok(wi.providers.find(p=>p.id==='wi').status === 'ok' && wi.cameras.some(c=>c.name==='I-41 at County A' && c.src==='wi') &&
+    wisconsinCalls === 2 && !JSON.stringify(wi).includes(wisconsinTestKey), 'Pro camera lookup fetches 511WI with the saved key and returns only camera data');
   const removed = await (await request(owner,{name:keyName,remove:true})).json();
-  ok(!removed.keys.find(k=>k.name===keyName).set, 'The owner can remove the Wisconsin key');
+  ok(!removed.keys.find(k=>k.name===keyName).set && (await call(wisconsinQuery)).j.providers.find(p=>p.id==='wi').status === 'viewer' &&
+    wisconsinCalls === 2, 'Removing the Wisconsin key restores the official viewer without another source request');
 }
 const anon = await api(new Request('http://x/c?lat=30.69&lng=-81.6'), {}), free = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: FREE } }), {}), pro = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: PRO } }), {});
 ok(anon.status === 402 && free.status === 402 && (await free.json()).needPaid === true && pro.status === 200, 'cameras are for paid members: signed-out and free accounts get 402, a paid account gets the data');

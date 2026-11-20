@@ -7,7 +7,7 @@
   const losAngeles = ['Los Angeles, CA',34.0522,-118.2437];
   const places = [losAngeles,['Tampa, FL',27.9506,-82.4572],['Orlando, FL',28.5383,-81.3792],
     ['Miami, FL',25.7617,-80.1918],['Fort Myers Beach, FL',26.452,-81.9495],
-    ['San Diego, CA',32.7157,-117.1611],['Austin, TX',30.2672,-97.7431]];
+    ['San Diego, CA',32.7157,-117.1611],['Austin, TX',30.2672,-97.7431],['Milwaukee, WI',43.0389,-87.9065]];
   const link = (text, href) => Object.assign(mk('a','',text),{href});
   const allLink = document.getElementById('hcAll');
   const grid = mk('div','hc-grid'), msg = mk('p','hc-msg'), options = mk('details','hc-options');
