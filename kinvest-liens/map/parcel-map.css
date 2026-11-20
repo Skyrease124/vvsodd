@@ -435,3 +435,7 @@ body.ppa-map-home .pm{
 /* Optional Florida official GIS visual outline control. */
 .pm-gis-toggle{border:1px solid #29c3cf!important;border-radius:10px;background:#123c52!important;color:#ddfbff!important;padding:9px 12px!important;font-size:12px!important;font-weight:750!important;white-space:nowrap}
 .pm-gis-toggle[aria-pressed="true"]{background:#0c806d!important;color:#fff!important;box-shadow:0 0 0 2px #65e8d0}
+
+/* Actionable GIS load diagnostics, readable on narrow maps. */
+.pm-gis-status{position:absolute;z-index:12;top:108px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(330px,calc(100vw - 36px));border:1px solid #1fb9bd;border-radius:12px;padding:10px 13px;background:rgba(9,30,46,.94);color:#eefeff;font-size:12px;line-height:1.4;text-align:center;pointer-events:none;box-shadow:0 6px 20px #0005}
+.pm-gis-status[hidden]{display:none!important}

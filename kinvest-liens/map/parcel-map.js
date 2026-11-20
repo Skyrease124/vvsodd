@@ -225,9 +225,15 @@
     });
   }
 
-  // Optional GIS reference layers: visual only, never modify lien or ownership records.
-  let flGisOn=false,flGisRequest=0,flGisDebounce=null;
+  // Optional official GIS reference outlines; never alter tax lien data or vacancy.
+  let flGisOn=false,flGisRequest=0,flGisDebounce=null,flGisLastStatus='';
   const gisEmpty=()=>({type:'FeatureCollection',features:[]});
+  function gisStatus(message){
+    if(flGisLastStatus===message)return;
+    flGisLastStatus=message;
+    const node=$('pmGisStatus');
+    if(node){node.hidden=!flGisOn;node.textContent=message;}
+  }
   function clearFloridaGIS(){
     if(!mapReady)return;
     for(const key of ['fl-gis-parcels','fl-gis-buildings'])map.getSource(key)?.setData(gisEmpty());
@@ -235,35 +241,45 @@
   async function updateFloridaGIS(){
     if(!flGisOn||!mapReady)return;
     const sequence=++flGisRequest;
-    if(map.getZoom()<16){clearFloridaGIS();return;}
+    if(map.getZoom()<16){clearFloridaGIS();gisStatus('FL GIS: zoom closer to street level (16+) to load outlines.');return;}
     const b=map.getBounds(),w=b.getWest(),e=b.getEast(),s=b.getSouth(),n=b.getNorth();
-    if(e-w>0.018||n-s>0.018){clearFloridaGIS();return;}
+    if(e-w>0.018||n-s>0.018){clearFloridaGIS();gisStatus('FL GIS: zoom closer until the visible map area is smaller.');return;}
     const x=(w+e)/2,y=(s+n)/2;
     const county=x>-81.05&&x<-79.65&&y>26.25&&y<27.05?'palm':
       x>-82.35&&x<-81.45&&y>25.8&&y<26.95?'lee':null;
-    if(!county){clearFloridaGIS();return;}
+    if(!county){clearFloridaGIS();gisStatus('FL GIS: currently available only in Palm Beach and Lee County.');return;}
     const targets=county==='palm'?[['palm-parcels','fl-gis-parcels']]:
       [['lee-parcels','fl-gis-parcels'],['lee-buildings','fl-gis-buildings']];
     clearFloridaGIS();
+    gisStatus('FL GIS: loading official '+(county==='palm'?'Palm Beach':'Lee County')+' outlines…');
     const bbox=[w,s,e,n].map(v=>v.toFixed(6)).join(',');
-    await Promise.all(targets.map(async ([source,target])=>{
+    const results=await Promise.all(targets.map(async ([source,target])=>{
       try{
         const response=await fetch('/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source,bbox}),{credentials:'same-origin'});
-        if(!response.ok)throw Error('Source unavailable');
-        const data=await response.json();
-        if(sequence!==flGisRequest||!flGisOn)return;
-        if(data.type==='FeatureCollection'&&Array.isArray(data.features))map.getSource(target)?.setData(data);
-      }catch{if(sequence===flGisRequest)say('Official Florida GIS unavailable in this area. Existing parcel results unchanged.');}
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok)throw Error(data.error||'GIS service unavailable');
+        if(data.type!=='FeatureCollection'||!Array.isArray(data.features))throw Error('Invalid GIS response');
+        if(sequence===flGisRequest&&flGisOn)map.getSource(target)?.setData(data);
+        return {ok:true,count:data.features.length,truncated:!!data.metadata?.truncated};
+      }catch(e){return {ok:false,error:e.message};}
     }));
+    if(sequence!==flGisRequest||!flGisOn)return;
+    const good=results.filter(r=>r.ok),bad=results.filter(r=>!r.ok),count=good.reduce((n,r)=>n+r.count,0);
+    if(bad.length)gisStatus('FL GIS: '+bad.length+' county GIS layer(s) unavailable. '+(count?count+' outlines loaded. ':'')+'Existing map unaffected.');
+    else if(!count)gisStatus('FL GIS: official GIS returned no polygon outlines here. Move or zoom closer.');
+    else gisStatus('FL GIS: '+count+' official outlines loaded'+(results.some(r=>r.truncated)?' (partial area; zoom closer)':'')+'. Visual references only.');
   }
   function queueFloridaGIS(){
     ++flGisRequest;clearTimeout(flGisDebounce);
     if(!flGisOn){clearFloridaGIS();return;}
-    flGisDebounce=setTimeout(updateFloridaGIS,1000);
+    flGisDebounce=setTimeout(updateFloridaGIS,450);
   }
   function toggleFloridaGIS(button){
     flGisOn=!flGisOn;button.setAttribute('aria-pressed',String(flGisOn));
-    if(flGisOn)say('Florida GIS outlines on. Zoom to street level in Palm Beach or Lee. Visual reference only.');
+    const node=$('pmGisStatus');if(node)node.hidden=!flGisOn;
+    flGisLastStatus='';
+    if(flGisOn)gisStatus('FL GIS enabled. Checking zoom and official sources…');
+    else gisStatus('');
     queueFloridaGIS();
   }
   function natLegend() { const lg = $('pmLegend'); if (lg && mapReady) { const nat = map.getZoom() < 6.5; lg.classList.toggle('nat', nat); $('pmMap').classList.toggle('nat', map.getZoom() < 7); } }
@@ -324,12 +340,13 @@
         if (tab === 'ai' && mapReady) map.getSource('near').setData(empty);
       }
     }
+    const gisHud=mk('div','pm-gis-status');gisHud.id='pmGisStatus';gisHud.hidden=true;gisHud.setAttribute('role','status');gisHud.setAttribute('aria-live','polite');
     const floridaBtn=mk('button','pm-gis-toggle','FL GIS');floridaBtn.type='button';
     floridaBtn.setAttribute('aria-label','Toggle official Florida GIS parcel and building outlines');
     floridaBtn.setAttribute('aria-pressed','false');
     floridaBtn.title='Official GIS visual reference, not tax-sale availability';
     floridaBtn.addEventListener('click',()=>toggleFloridaGIS(floridaBtn));
-    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, floridaBtn, camb, hzb, aib, seg);
+    const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, floridaBtn, camb, hzb, aib, seg); t.append(gisHud);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
     aib.title = 'Ask questions about the current county, parcel or map area.';
