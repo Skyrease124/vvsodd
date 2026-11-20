@@ -431,3 +431,7 @@ body.ppa-map-home .pm{
 @keyframes ppaCardEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:520px){.aiout .ppa-ai-property-grid{grid-template-columns:1fr}.aiout .ppa-ai-property-card{padding:15px}.aiout .ppa-ai-pagination{align-items:stretch}.aiout .ppa-ai-page-actions{margin-left:auto}}
 @media(prefers-reduced-motion:reduce){.aiout .ppa-ai-property-card{animation:none}.aiout .ppa-ai-card-primary{transition:none}}
+
+/* Optional Florida official GIS visual outline control. */
+.pm-gis-toggle{border:1px solid #29c3cf!important;border-radius:10px;background:#123c52!important;color:#ddfbff!important;padding:9px 12px!important;font-size:12px!important;font-weight:750!important;white-space:nowrap}
+.pm-gis-toggle[aria-pressed="true"]{background:#0c806d!important;color:#fff!important;box-shadow:0 0 0 2px #65e8d0}
