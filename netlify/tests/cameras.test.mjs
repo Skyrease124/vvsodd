@@ -39,6 +39,16 @@ ok(r.cameras.every((c, i, a) => !i || a[i - 1].miles <= c.miles) && Math.abs(r.c
 ok(r.providers.find(p => p.id === 'ga').status === 'viewer' && r.providers.find(p => p.id === 'fl').status === 'ok', 'border parcel: Georgia official viewer offered across the state line (no key = not integrated)');
 ok(r.cameras[0].kind === 'snapshot' && r.cameras[0].viewer === 'https://www.fl511.com/cctv' && /Directory record/.test(r.cameras[0].sourceMeta), 'shared record: source, ID, name, coords, view type, official viewer URL; directory timestamp kept as metadata only');
 r = await nearby(30.69, -81.60, 10, 2); ok(r.cameras.length === 2 && r.totalInRadius === 3, 'limit is configurable');
+// Home can request snapshots first without changing the map's distance order.
+{ _reset();
+  flFeats = [fl('lee', 26.64, -81.91)];
+  const nearest = await nearby(26.548365, -81.981341, 30, 4);
+  const previews = await nearby(26.548365, -81.981341, 30, 4, true);
+  ok(nearest.cameras[0].id === 'butterfly' && !nearest.cameras[0].image && previews.cameras.every(c => c.image), 'Home prioritizes snapshots while the map keeps the nearest official viewer');
+  const beach = await nearby(26.452566, -81.956567, 8, 4, true);
+  ok(beach.cameras[0].id === 'timessq' && beach.cameras[0].kind === 'viewer' && new URL(beach.cameras[0].image).searchParams.get('oid') === 'CID_IWIS00001740', 'Fort Myers Beach uses the official snapshot and retains the official live viewer');
+  flFeats = [fl('1', 30.70, -81.60)]; _reset();
+}
 // no nearby cameras
 r = await nearby(25.95, -81.05, 10, 5); ok(r.ok && r.cameras.length === 0 && r.providers.find(p => p.id === 'fl').status === 'ok', 'remote parcel: working feed, zero matches ("No public cameras found")');
 // provider outage isolation: FL down, beach cams still answer
