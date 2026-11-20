@@ -34,7 +34,7 @@
   const put = (key, value) => { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (e) { /* optional storage */ } };
   let recent = null;
   try { recent = normalize(JSON.parse(get(RECENT) || 'null')); } catch (e) { /* invalid stored data */ }
-  let chosen = null, regional = null;
+  let chosen = null, regional = null, revision = 0;
   const listeners = new Set();
   const current = () => recent || chosen || regional;
   const emit = source => { for (const listener of listeners) listener(current(), source); };
@@ -43,14 +43,14 @@
   let regionRequest, legacyRequest;
   function restore() {
     if (!legacyRequest) {
-      let old;
+      let old; const startedAt = revision;
       try {
         const url = new URL(JSON.parse(get('ppa_recent_map') || 'null')?.url || '/', location.origin);
         if (url.origin === location.origin && url.pathname === '/map/' && url.searchParams.get('c')) old = url.searchParams;
       } catch (e) { /* ignore invalid URLs */ }
       legacyRequest = old ? fetch('/map/index.json').then(r => r.ok ? r.json() : null).then(data => {
         const dataset = data?.datasets.find(d => d.id === old.get('c'));
-        if (dataset && !recent) {
+        if (dataset && !recent && revision === startedAt) {
           const p = old.get('p');
           const area = countyArea(dataset);
           recent = normalize({...area, parcel:p});
@@ -80,7 +80,7 @@
     const lat = Math.round(position.coords.latitude * 100) / 100, lng = Math.round(position.coords.longitude * 100) / 100;
     if (!coordinates(lat, lng)) throw new Error('Your position is outside the supported map area.');
     const state = await fetch('/.netlify/functions/where?' + new URLSearchParams({lat,lon:lng})).then(r => r.ok ? r.json() : null).catch(() => null);
-    recent = null; put(RECENT, null); put('ppa_recent_map',null); legacyRequest = Promise.resolve(null);
+    revision++; recent = null; put(RECENT, null); put('ppa_recent_map',null); legacyRequest = Promise.resolve(null);
     chosen = normalize({ state: state?.state, label: state?.name || 'Near me', lat, lng });
     emit('chosen');
     return chosen;
@@ -89,8 +89,9 @@
     get: current, ready, countyArea, mapPath, coordinates,
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     browse(value) {
-      recent = normalize(value);
-      if (!recent) return;
+      const next = normalize(value);
+      if (!next) return;
+      revision++; recent = next;
       put(RECENT, JSON.stringify(recent));
       emit('browse');
     },
