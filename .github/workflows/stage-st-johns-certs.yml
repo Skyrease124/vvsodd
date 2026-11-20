@@ -4,6 +4,8 @@ on:
     branches:
       - claude/engineering-workspace
     paths:
+      - scripts/build-certificate-review-html.py
+      - tests/test_certificate_review_html.py
       - scripts/report-certificate-changes.py
       - tests/test_certificate_change_alerts.py
       - scripts/stage-st-johns-certificates.py
@@ -49,6 +51,15 @@ jobs:
           python scripts/report-certificate-changes.py \
             --report county-import-staging/fl-st-johns-unpaid-certificates-changes.json \
             --county 'St. Johns'
+      - name: Test offline administrator review dashboard
+        run: python -m unittest discover -s tests -p 'test_certificate_review_html.py'
+      - name: Generate read-only administrator review dashboard
+        run: |
+          python scripts/build-certificate-review-html.py \
+            --records county-import-staging/fl-st-johns-unpaid-certificates.json \
+            --changes county-import-staging/fl-st-johns-unpaid-certificates-changes.json \
+            --county 'St. Johns' \
+            --output county-review-html/fl-st-johns-unpaid-certificates-review.html
       - name: Archive review-only staged report
         if: success()
         uses: actions/upload-artifact@v4
@@ -57,6 +68,7 @@ jobs:
           path: |
             county-import-staging/fl-st-johns-unpaid-certificates.json
             county-import-staging/fl-st-johns-unpaid-certificates-changes.json
+            county-review-html/fl-st-johns-unpaid-certificates-review.html
       - name: Push staging review branch
         if: success()
         continue-on-error: true
