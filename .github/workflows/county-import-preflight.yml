@@ -9,6 +9,9 @@ on:
       - 'tests/existing-parcels.test.js'
       - '.github/workflows/county-import-preflight.yml'
       - 'kinvest-liens/liens/states/parcels/**'
+      - 'kinvest-liens/map/data/**'
+      - 'scripts/check-map-datasets.js'
+      - 'tests/map-datasets.test.js'
   workflow_dispatch:
 jobs:
   validate:
@@ -21,6 +24,17 @@ jobs:
         with:
           node-version: '20'
       - name: Run county import validation tests
-        run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js
+        run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js tests/map-datasets.test.js
       - name: Check actual county parcel GIS dataset (read only)
         run: node scripts/check-existing-parcels.js kinvest-liens/liens/states/parcels/al-63.json AL
+      - name: Check production map dataset sample
+        run: node scripts/check-map-datasets.js kinvest-liens/map/data/AL-05.json
+      - name: Validate changed map datasets
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --no-tags origin ${{ github.event.pull_request.base.sha }}
+          git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }} HEAD -- 'kinvest-liens/map/data/*.json' > /tmp/changed-map-files
+          if [ -s /tmp/changed-map-files ]; then
+            while IFS= read -r file; do node scripts/check-map-datasets.js "$file" || exit 1; done < /tmp/changed-map-files
+          fi
