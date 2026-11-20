@@ -41,27 +41,31 @@
     allLink.href = path(lat,lng,radius);
     msg.textContent = 'Finding cameras near ' + name + '…';
     try {
-      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:4}), {signal:job.signal});
+      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:4,preview:1}), {signal:job.signal});
       if (job.signal.aborted) return;
       if (r.status === 401 || r.status === 402) { locked(); return; }
       const d = await r.json();
+      if (job.signal.aborted) return;
       if (!r.ok || !d.ok) throw new Error('unavailable');
       const cams = d.cameras.filter(c => c.image || c.video || c.viewer);
       msg.textContent = cams.length ? 'Near ' + name + ' · Swipe for more' : 'No cameras found near ' + name + '.';
       const update = cams.map(c => {
         const card = link('',path(c.lat,c.lng,15)); card.className = 'hc-card';
+        if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
+        const media = mk('div','hc-media');
+        const fallback = mk('span','hc-viewer',c.kind === 'viewer' ? 'Open official camera ↗' : 'Open camera →');
         const cap = mk('div','hc-cap'); cap.append(mk('b','',c.name),mk('span','',c.road || c.operator));
+        card.append(media,cap);
+        media.append(fallback);
         grid.append(card);
-        if (!c.image) {
-          if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
-          card.append(mk('span','hc-viewer',c.kind === 'viewer' ? 'Official camera ↗' : 'Open live camera →'),cap);
-          return null;
-        }
+        if (!c.image) return null;
         const img = Object.assign(mk('img',''),{alt:'',loading:'lazy',decoding:'async',referrerPolicy:'no-referrer'});
+        const badge = mk('span','hc-snapshot','Snapshot');
+        badge.hidden = true;
         const set = () => { img.src = c.image + (c.image.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now()/60000); };
-        img.onerror = () => card.classList.add('off');
-        img.onload = () => card.classList.remove('off');
-        card.append(img,cap); set(); return set;
+        img.onerror = () => { media.classList.remove('has-snapshot'); badge.hidden = true; fallback.hidden = false; };
+        img.onload = () => { media.classList.add('has-snapshot'); badge.hidden = false; fallback.hidden = true; };
+        media.append(img,badge); set(); return set;
       }).filter(Boolean);
       if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
     } catch(e) {
