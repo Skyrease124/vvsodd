@@ -72,6 +72,18 @@ export default async function handler(request){
   const now=Date.now();
   if(prev?.checkedAt && now-Date.parse(prev.checkedAt)<6*60*60*1000)
    return respond(429,{ok:false,error:'This official source was checked less than six hours ago. Try again later.'});
+  // Conservative Firecrawl spending guard. Three scans per calendar day, 25 per UTC month.
+  let creditsKey=null,used=null;
+  if(provider==='firecrawl'){
+   creditsKey='owner-intel-firecrawl-'+monthKey();
+   used=(await auth.kvGet(creditsKey))||{total:0,days:{}};
+   const day=new Date().toISOString().slice(0,10);
+   if(used.total>=25||(used.days?.[day]||0)>=3)
+    return respond(429,{ok:false,error:'Owner Firecrawl safety limit reached (3/day, 25/month)'});
+   // Reserve before network call to prevent failed requests or retries from exceeding the ceiling.
+   used.total++;used.days=used.days||{};used.days[day]=(used.days[day]||0)+1;
+   await auth.kvPut(creditsKey,used);
+  }
   // Read and store bounded content only. Do not scrape arbitrary destinations or publish records.
   const excerpt=provider==='firecrawl'?await firecrawlSource(src.url):await directSource(src.url);
   if(excerpt.length<100)throw Error('The source returned too little usable text for comparison');
