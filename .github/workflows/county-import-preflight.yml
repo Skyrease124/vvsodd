@@ -1,0 +1,21 @@
+name: County import preflight tests
+on:
+  pull_request:
+    paths:
+      - 'netlify/lib/county-import-validation.js'
+      - 'scripts/check-county-import.js'
+      - 'tests/county-import-validation.test.js'
+      - '.github/workflows/county-import-preflight.yml'
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run county import validation tests
+        run: node --test tests/county-import-validation.test.js
