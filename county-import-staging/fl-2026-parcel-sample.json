@@ -1,0 +1,645 @@
+{
+  "source": {
+    "id": "fl-2026-parcel-sample",
+    "state": "FL",
+    "county": "Florida Statewide",
+    "url": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/DOR_Parcels/FeatureServer/1/query?where=PARCELNO%20IS%20NOT%20NULL&outFields=OBJECTID%2CPARCELNO&returnGeometry=false&resultRecordCount=100&f=json",
+    "format": "arcgis-parcels"
+  },
+  "checkedAt": "2026-11-20T19:07:28.230Z",
+  "data": {
+    "objectIdFieldName": "OBJECTID",
+    "uniqueIdField": {
+      "name": "OBJECTID",
+      "isSystemMaintained": true
+    },
+    "globalIdFieldName": "",
+    "geometryType": "esriGeometryPolygon",
+    "spatialReference": {
+      "wkid": 102658,
+      "latestWkid": 2236
+    },
+    "fields": [
+      {
+        "name": "OBJECTID",
+        "type": "esriFieldTypeOID",
+        "alias": "OBJECTID",
+        "sqlType": "sqlTypeOther",
+        "domain": null,
+        "defaultValue": null
+      },
+      {
+        "name": "PARCELNO",
+        "type": "esriFieldTypeString",
+        "alias": "PARCELNO",
+        "sqlType": "sqlTypeOther",
+        "length": 50,
+        "domain": null,
+        "defaultValue": null
+      }
+    ],
+    "exceededTransferLimit": true,
+    "features": [
+      {
+        "attributes": {
+          "OBJECTID": 1,
+          "PARCELNO": "50865003700"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 2,
+          "PARCELNO": "50880004386"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 3,
+          "PARCELNO": "50880002540"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 4,
+          "PARCELNO": "24207501223"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 5,
+          "PARCELNO": "50880005068"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 6,
+          "PARCELNO": "24207503289"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 7,
+          "PARCELNO": "50880000720"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 8,
+          "PARCELNO": "24207502222"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 9,
+          "PARCELNO": "50880002184"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 10,
+          "PARCELNO": "24207502345"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 11,
+          "PARCELNO": "50865004084"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 12,
+          "PARCELNO": "50865007269"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 13,
+          "PARCELNO": "50880002786"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 14,
+          "PARCELNO": "50880000429"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 15,
+          "PARCELNO": "24207501508"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 16,
+          "PARCELNO": "24207502565"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 17,
+          "PARCELNO": "30055000546"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 18,
+          "PARCELNO": "24207501304"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 19,
+          "PARCELNO": "24207502303"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 20,
+          "PARCELNO": "24207500143"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 21,
+          "PARCELNO": "30055001040"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 22,
+          "PARCELNO": "82680001706"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 23,
+          "PARCELNO": "82680003720"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 24,
+          "PARCELNO": "82680003487"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 25,
+          "PARCELNO": "82680002022"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 26,
+          "PARCELNO": "82680000888"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 27,
+          "PARCELNO": "82680002666"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 28,
+          "PARCELNO": "82680003225"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 29,
+          "PARCELNO": "31155005903"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 30,
+          "PARCELNO": "31155002362"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 31,
+          "PARCELNO": "82680002048"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 32,
+          "PARCELNO": "30055000384"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 33,
+          "PARCELNO": "82680002983"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 34,
+          "PARCELNO": "31155003963"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 35,
+          "PARCELNO": "82680000286"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 36,
+          "PARCELNO": "31155006083"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 37,
+          "PARCELNO": "31155003604"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 38,
+          "PARCELNO": "31155005987"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 39,
+          "PARCELNO": "31155005026"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 40,
+          "PARCELNO": "31155005482"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 41,
+          "PARCELNO": "31155003484"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 42,
+          "PARCELNO": "31155006562"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 43,
+          "PARCELNO": "31155002663"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 44,
+          "PARCELNO": "31155001981"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 45,
+          "PARCELNO": "31155005521"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 46,
+          "PARCELNO": "31155006724"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 47,
+          "PARCELNO": "31155000704"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 48,
+          "PARCELNO": "31155000128"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 49,
+          "PARCELNO": "31155002168"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 50,
+          "PARCELNO": "60583840002"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 51,
+          "PARCELNO": "60586240007"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 52,
+          "PARCELNO": "60584080007"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 53,
+          "PARCELNO": "60585040004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 54,
+          "PARCELNO": "60584640007"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 55,
+          "PARCELNO": "60582160000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 56,
+          "PARCELNO": "00469641408"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 57,
+          "PARCELNO": "00091800002"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 58,
+          "PARCELNO": "01165320006"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 59,
+          "PARCELNO": "00319800001"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 60,
+          "PARCELNO": "01057320004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 61,
+          "PARCELNO": "00088120009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 62,
+          "PARCELNO": "00082962166"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 63,
+          "PARCELNO": "00065800009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 64,
+          "PARCELNO": "00114480105"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 65,
+          "PARCELNO": "00071040400"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 66,
+          "PARCELNO": "00082961840"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 67,
+          "PARCELNO": "00241040007"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 68,
+          "PARCELNO": "13420003085"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 69,
+          "PARCELNO": "01103560006"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 70,
+          "PARCELNO": "01057160002"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 71,
+          "PARCELNO": "01061600008"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 72,
+          "PARCELNO": "00525280004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 73,
+          "PARCELNO": "14008120004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 74,
+          "PARCELNO": "00079080006"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 75,
+          "PARCELNO": "00712440000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 76,
+          "PARCELNO": "00276400007"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 77,
+          "PARCELNO": "01166800004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 78,
+          "PARCELNO": "00105840000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 79,
+          "PARCELNO": "00070040003"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 80,
+          "PARCELNO": "00776080008"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 81,
+          "PARCELNO": "14240004881"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 82,
+          "PARCELNO": "00114760003"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 83,
+          "PARCELNO": "00754000000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 84,
+          "PARCELNO": "14019760000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 85,
+          "PARCELNO": "00376720001"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 86,
+          "PARCELNO": "00697320009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 87,
+          "PARCELNO": "00748840001"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 88,
+          "PARCELNO": "00466360009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 89,
+          "PARCELNO": "00631040002"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 90,
+          "PARCELNO": "00491000004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 91,
+          "PARCELNO": "00675440008"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 92,
+          "PARCELNO": "00788520006"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 93,
+          "PARCELNO": "00662320005"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 94,
+          "PARCELNO": "00662400006"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 95,
+          "PARCELNO": "00932000000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 96,
+          "PARCELNO": "00750000004"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 97,
+          "PARCELNO": "00099480000"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 98,
+          "PARCELNO": "00712920009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 99,
+          "PARCELNO": "00947960009"
+        }
+      },
+      {
+        "attributes": {
+          "OBJECTID": 100,
+          "PARCELNO": "00702480009"
+        }
+      }
+    ]
+  }
+}
