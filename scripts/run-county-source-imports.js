@@ -8,7 +8,12 @@ const path=require('node:path');
 const {validateCountyImport}=require('../netlify/lib/county-import-validation');
 const {checkMapDataset}=require('./check-map-datasets');
 const MAX_BYTES=15*1024*1024;
-const safeSegment=s=>/^[a-z0-9-]+$/i.test(s);
+const safeSegment=s=>typeof s==='string'&&/^[a-z0-9-]+$/i.test(s);
+function arcgisToRecords(data){
+  if(data?.error)throw Error('ArcGIS error: '+String(data.error.message||'Query failed'));
+  if(!Array.isArray(data?.features))throw Error('ArcGIS response missing features');
+  return data.features.map(feature=>({parcelId:feature?.attributes?.PARCELNO,sourceObjectId:feature?.attributes?.OBJECTID}));
+}
 async function fetchJSON(url,fetcher=fetch){
   const parsed=new URL(url);
   if(parsed.protocol!=='https:'||parsed.username||parsed.password||parsed.port||!parsed.hostname||/^(localhost|.*\.local)$/i.test(parsed.hostname))throw Error('Only approved public HTTPS endpoints are allowed');
@@ -28,12 +33,12 @@ async function run(manifest,options={}){
   const results=[];
   for(const source of manifest){
     const {id,state,county,url,format}=source;
-    if(!safeSegment(id)||!/^[A-Z]{2}$/.test(state)||typeof county!=='string'||!county.trim()||!['records','map'].includes(format))throw Error('Invalid source manifest entry');
+    if(!safeSegment(id)||!/^[A-Z]{2}$/.test(state)||typeof county!=='string'||!county.trim()||!['records','map','arcgis-parcels'].includes(format))throw Error('Invalid source manifest entry');
     try{
       const data=await fetchJSON(url,options.fetcher);
       let report;
-      if(format==='records'){
-        const result=validateCountyImport(data,{state,county});
+      if(format==='records'||format==='arcgis-parcels'){
+        const result=validateCountyImport(format==='arcgis-parcels'?arcgisToRecords(data):data,{state,county});
         report={summary:result.summary,errors:result.rejected.slice(0,30),ok:result.readyToPublish};
       }else{
         const checked=checkMapDataset(data,id+'.json');
@@ -49,7 +54,7 @@ async function run(manifest,options={}){
   }
   return results;
 }
-module.exports={run,fetchJSON};
+module.exports={run,fetchJSON,arcgisToRecords};
 if(require.main===module)(async()=>{
   const manifest=JSON.parse(await fs.readFile(process.argv[2]||'county-sources.json','utf8'));
   const reports=await run(manifest);
