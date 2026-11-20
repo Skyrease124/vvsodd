@@ -7,7 +7,9 @@ window.TaxRadarOn = true;
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   const money = n => n == null ? '' : '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits: Number.isInteger(Number(n)) ? 0 : 2, maximumFractionDigits: 2});
   const NS = 'http://www.w3.org/2000/svg', mks = (t, a) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); return e; };
-  const TODAY = new Date().toISOString().slice(0, 10);
+  // the visitor's own calendar day (toISOString uses UTC, which is already tomorrow in the evening in the US)
+  const dayOf = d => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+  const TODAY = dayOf(new Date());
   const SS = (() => { try { return window.sessionStorage; } catch (e) { return null; } })();
   const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
   const saved = (() => { try { return JSON.parse((SS && SS.getItem('ppa_radar')) || '{}'); } catch (e) { return {}; } })();
@@ -31,7 +33,7 @@ window.TaxRadarOn = true;
   function since() {
     let last = null; try { last = LS && LS.getItem('ppa_last_visit'); } catch (e) {}
     if (last && /^\d{4}-\d\d-\d\d$/.test(last)) return {from: last, label: 'Since your last visit (' + fmtDate(last) + ')', prior: true};
-    const d = new Date(); d.setDate(d.getDate() - 7); return {from: d.toISOString().slice(0, 10), label: 'Past 7 days', prior: false};
+    const d = new Date(); d.setDate(d.getDate() - 7); return {from: dayOf(d), label: 'Past 7 days', prior: false};
   }
   const TLAB = {new_list: 'New list', amount: 'Amount changed', schedule: 'Sale date changed', canceled: 'Sale canceled', result: 'Results published', missing: 'No longer listed', added: 'Listing added', details: 'Details added'};
   const TICON = {new_list: '★', amount: '$', schedule: '⏰', canceled: '✕', result: '✓', missing: '?', added: '+', details: '\u2139'};
@@ -42,7 +44,7 @@ window.TaxRadarOn = true;
     const tr = S.data.counties.filter(c => c.tracked).length;
     if (!changes.length) {
       box.appendChild(mk('p', 'rempty', 'No updates detected ' + (W.prior ? 'since your last visit' : 'in the past 7 days') + '. We compare each new official county list with the last complete one (' + tr + ' counties tracked), and only real differences show here.'));
-      if (W.prior) { const b = mk('button', 'rlink', 'Show the past 7 days instead'); b.type = 'button'; b.addEventListener('click', () => { const d = new Date(); d.setDate(d.getDate() - 7); W = {from: d.toISOString().slice(0, 10), label: 'Past 7 days', prior: false}; renderWhat(); renderMap(); }); box.appendChild(b); }
+      if (W.prior) { const b = mk('button', 'rlink', 'Show the past 7 days instead'); b.type = 'button'; b.addEventListener('click', () => { const d = new Date(); d.setDate(d.getDate() - 7); W = {from: dayOf(d), label: 'Past 7 days', prior: false}; renderWhat(); renderMap(); }); box.appendChild(b); }
       return;
     }
     const counts = {}; changes.forEach(c => { counts[c.type] = (counts[c.type] || 0) + 1; });
