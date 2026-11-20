@@ -9,9 +9,9 @@
       "county": "Monroe",
       "publisher": "Monroe County Tax Collector",
       "landingUrl": "https://monroetaxcollector.com/services/tax-certificate-information/",
-      "access": "public-list-with-csv-export-described",
+      "access": "official instructions describe signed-in bidder winning-bids CSV; public full-county CSV not verified",
       "feedUrl": null,
-      "format": "csv-export-manual-discovery-required",
+      "format": "authenticated-bidder-results-csv-not-public-feed",
       "recordType": "tax-certificates",
       "autoImportEnabled": false,
       "reviewRequired": true
