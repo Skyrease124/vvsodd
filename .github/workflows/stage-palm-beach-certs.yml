@@ -5,6 +5,8 @@ on:
       - claude/engineering-workspace
     paths:
       - 'scripts/stage-palm-beach-certificates.py'
+      - scripts/certificate-status.py
+      - tests/test_certificate_status.py
       - 'scripts/discover-palm-beach-source.py'
       - 'tests/test_palm_beach_discovery.py'
       - '.github/workflows/stage-palm-beach-certs.yml'
@@ -23,6 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test ownership, redemption and tax deed classifications
+        run: python -m unittest discover -s tests -p 'test_certificate_status.py'
       - name: Unit-test current source discovery
         run: python -m unittest discover -s tests -p 'test_palm_beach_discovery.py'
       - name: Download and validate Palm Beach official certificate spreadsheet

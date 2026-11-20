@@ -65,6 +65,14 @@ def normalize(text):
                  'sourceStatusCodes':counts},
       'rejected':rejected[:100],'records':out}
     return report
+def apply_status_classification(report):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('certificate_status',Path(__file__).with_name('certificate-status.py'))
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report['statusSummary']=module.classify_all(report['records'])
+    return report
+
 def main():
     req=urllib.request.Request(URL,headers={'User-Agent':'PricePocketAsset public source validation','Accept':'text/csv,*/*'})
     with urllib.request.urlopen(req,timeout=25) as response:
@@ -75,6 +83,7 @@ def main():
     if report['summary']['rejected']:
         raise ValueError('Refusing staging due to rejected rows: '+json.dumps(report['summary'])+
                          '; example: '+json.dumps(report['rejected'][:8]))
+    apply_status_classification(report)
     dest=Path('county-import-staging/fl-st-johns-unpaid-certificates.json')
     dest.parent.mkdir(parents=True,exist_ok=True)
     dest.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')

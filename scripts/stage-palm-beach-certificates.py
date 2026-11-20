@@ -72,6 +72,14 @@ def normalize(rows,source_url):
             'classification':'official county-held certificate file; verify availability with Tax Collector',
             'summary':{'received':len(rows)-1,'accepted':len(accepted),'rejected':len(rejected)},
             'rejected':rejected[:100],'records':accepted}
+def apply_status_classification(report):
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('certificate_status',Path(__file__).with_name('certificate-status.py'))
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report['statusSummary']=module.classify_all(report['records'])
+    return report
+
 def main():
     probe=load_module('probe','probe-county-certificate-files.py')
     discover=load_module('discover','discover-palm-beach-source.py')
@@ -79,6 +87,7 @@ def main():
     result=normalize(_wakulla.load_rows(probe.download(source_url)),source_url)
     if not result['records'] or result['summary']['rejected']:
         raise ValueError('Refusing staging due to failed records: '+json.dumps({'summary':result['summary'],'sampleErrors':result['rejected'][:8]}))
+    apply_status_classification(result)
     out=Path('county-import-staging/fl-palm-beach-certificate-export.json')
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(result,indent=2)+'\n',encoding='utf8')

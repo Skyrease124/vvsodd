@@ -5,6 +5,8 @@ on:
       - claude/engineering-workspace
     paths:
       - 'scripts/stage-wakulla-certificates.py'
+      - scripts/certificate-status.py
+      - tests/test_certificate_status.py
       - 'scripts/discover-wakulla-source.py'
       - 'tests/test_wakulla_discovery.py'
       - '.github/workflows/stage-wakulla-certs.yml'
@@ -23,6 +25,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test ownership, redemption and tax deed classifications
+        run: python -m unittest discover -s tests -p 'test_certificate_status.py'
       - name: Test current county link discovery
         run: python -m unittest discover -s tests -p 'test_wakulla_discovery.py'
       - name: Fetch official Wakulla Excel list and stage validated certificates
