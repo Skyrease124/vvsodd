@@ -22,7 +22,7 @@ const ArCoslUI = {
     let view = 'cards';
     const vb = mk('button', 'btn small ghost', 'Table view'); vb.type = 'button'; tools.appendChild(vb);
     vb.addEventListener('click', () => { view = view === 'cards' ? 'table' : 'cards'; vb.textContent = view === 'cards' ? 'Table view' : 'Card view'; draw(); });
-    const spec = x => ({file: 'ar.json', key: x[0] + '|' + x[1], parcel: x[1], desc: [x[4], x[3] ? x[3] + ' acres' : ''].filter(Boolean).join(' \u00B7 '), srcName: 'Arkansas statewide parcel map (Arkansas GIS Office)'});
+    const spec = x => ({state:'AR',county:x[0],file: 'ar.json', key: x[0] + '|' + x[1], parcel: x[1], desc: [x[4], x[3] ? x[3] + ' acres' : ''].filter(Boolean).join(' \u00B7 '), srcName: 'Arkansas statewide parcel map (Arkansas GIS Office)'});
     const post = x => (typeof AR_COSL_POST !== 'undefined' && AR_COSL_POST.rows[x[0] + '|' + x[1]]) || null;   // delinquent year, back taxes due, lienholders (COSL post-auction list)
     const drawCards = () => {
       wrap.textContent = ''; const g = mk('div', 'lcards');

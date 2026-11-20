@@ -1,0 +1,30 @@
+name: Validate all parcel map research overlays
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/liens/states/research-parcel-overlays.js
+      - kinvest-liens/liens/states/lien-ui.js
+      - kinvest-liens/liens/states/land-map.js
+      - kinvest-liens/liens/states/state/index.html
+      - kinvest-liens/liens/states/county/index.html
+      - kinvest-liens/liens/parcel/index.html
+      - tests/test_all_parcel_research_maps.mjs
+      - .github/workflows/validate-all-parcel-research-maps.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/liens/states/research-parcel-overlays.js
+      - run: node --check kinvest-liens/liens/states/lien-ui.js
+      - run: node --check kinvest-liens/liens/states/land-map.js
+      - run: node --test tests/test_all_parcel_research_maps.mjs
