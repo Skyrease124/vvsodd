@@ -59,7 +59,7 @@
   // ---- shared pieces ----
   function avatar(p, cls) {
     const a = mk('div', cls + (p.founder ? ' f' : ''));
-    if (p.photo) { a.classList.add('ph'); const i = mk('img'); i.src = p.photo; i.alt = ''; i.loading = 'lazy'; a.appendChild(i); }
+    if (p.photo) { a.classList.add('ph'); const i = mk('img'); i.src = p.photo; i.alt = ''; i.loading = 'lazy'; i.decoding = 'async'; i.addEventListener('error', () => { a.classList.remove('ph'); a.textContent = initials(p.name); }, {once:true}); a.appendChild(i); }
     else if (p.founder) { const i = mk('img'); i.src = '/img/logo-mark.png'; i.alt = ''; a.appendChild(i); } else a.textContent = initials(p.name);
     return a;
   }
@@ -272,11 +272,12 @@
 
   // ---- PROFILE ----
   async function profile() {
-    const root = $('root'), q = new URLSearchParams(location.search); let name = q.get('u');
-    if (!name) { const m = await get({ me: 1 }); if (m.s === 401) return needSignin(root); name = m.j.me.username; history.replaceState(null, '', '?u=' + name); }
+    const root = $('root'), q = new URLSearchParams(location.search); let name = q.get('u'), viewer;
+    if (!name) { const m = await get({ me: 1 }); if (m.s === 401) return needSignin(root); if (!m.j.me) { root.textContent = 'Profile could not load. Please refresh.'; return; } viewer = m.j.me; name = viewer.username; history.replaceState(null, '', '?u=' + name); }
     const x = await get({ u: name }); if (x.s === 401) return needSignin(root);
     if (x.s === 404) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'Profile not available'), mk('p', 'muted', 'This profile does not exist or is not available to you.')); const a = mk('a', 'btn2', 'Back to Community'); a.href = '/community/'; c.append(a); root.append(c); return; }
     if (x.j.blockedByMe) { root.textContent = ''; const c = mk('div', 'card'); c.append(mk('h3', '', 'You blocked ' + x.j.profile.name), mk('p', 'muted', 'You will not see each other’s activity or be able to follow or message each other.')); const b = mk('button', 'btn2 primary', 'Unblock'); b.type = 'button'; b.onclick = async () => { await post({ action: 'unblock', uid: x.j.profile.uid }); location.reload(); }; c.append(b); root.append(c); return; }
+    if (!x.j.profile || !x.j.rel) { root.textContent = 'Profile could not load. Please refresh.'; return; }
     const P = x.j.profile, R = x.j.rel; document.title = P.name + ' (@' + P.username + ') | PricePocketAsset Community'; root.textContent = '';
     const cover = mk('div', 'cm-cover cv-' + (P.cover || 'forest')); cover.setAttribute('role', 'img'); cover.setAttribute('aria-label', 'Profile cover'); if (P.coverPhoto) { cover.classList.add('photo'); cover.style.backgroundImage = 'url("' + P.coverPhoto + '")'; } root.appendChild(cover);
     const head = mk('div', 'cm-head'); head.append(avatar(P, 'cm-av')); 
@@ -286,7 +287,11 @@
     const side = mk('div', 'cm-side'), st = mk('div', 'cm-stats'); [[P.stats.followers, 'Followers', 'followers'], [P.stats.following, 'Following', 'following'], [P.stats.posts, 'Posts', 'posts']].forEach(([n, l, k]) => { const d = mk('button', 'cm-stat'); d.type = 'button'; d.setAttribute('aria-label', l + ': ' + n); d.append(mk('b', '', Number(n).toLocaleString('en-US')), mk('span', '', l)); d.onclick = () => k === 'posts' ? (window.__cmShow && window.__cmShow('posts')) : peopleSheet(P, k); st.appendChild(d); });
     const act = mk('div', 'cm-act'); side.append(st, act); head.append(id, side); root.appendChild(head);
     const refresh = () => location.reload();
-    if (R.self) { const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
+    if (R.self) {
+      const plan = mk('span','app-badge'); nm.append(plan); plan.hidden = true;
+      const showPlan = me => { if (me) { plan.textContent = me.owner ? 'Owner' : me.paid ? 'Pro' : 'Free'; plan.hidden = false; } };
+      if (viewer) showPlan(viewer); else get({me:1}).then(d => showPlan(d.j.me));
+      const e = mk('a', 'btn2 primary', 'Edit profile'); e.href = '/community/settings/'; act.appendChild(e); }
     else {
       if (R.system) { const s = mk('span', 'btn2 sys', '👑 Founder Connection'); s.setAttribute('role', 'status'); s.title = 'Official PricePocketAsset Account. Connected since you joined PricePocketAsset.'; act.appendChild(s); }
       else { const f = mk('button', 'btn2 ' + (R.following ? '' : 'primary'), R.following ? 'Following' : 'Follow'); f.type = 'button'; if (!R.following && !R.canFollow) { f.disabled = true; f.textContent = 'Not accepting followers'; }

@@ -345,10 +345,17 @@ async function handle(event) {
     if (String(b.ownerCode || '').trim() && !owner) return json(400, { error: 'That owner code is not right. Leave it empty if you are not the owner.' });
     const hasCode = !!String(b.accessCode || '').trim();
     if (hasCode) { const c = (await auth.getCodes()).find(x => auth.normCode(x.code) === auth.normCode(b.accessCode)); if (!c) return json(400, { error: 'That access code is not right. Leave it empty if you do not have one.' }); if (c.usedBy) return json(400, { error: 'That access code was already used.' }); }
+    let username = '';
+    if (b.username !== undefined) {
+      if (b.terms !== true) return json(400, { error: 'Accept the Terms of Service and Privacy Policy to continue.' });
+      const choice = await Community.signupUsername(b.username);
+      if (!choice.ok) return json(choice.status, { error: choice.error });
+      username = choice.name;
+    }
     const u = await auth.createUser(email, pw, owner);
     if (!u) return json(409, { error: 'That email already has an account. Please sign in.' });
     if (hasCode && (await auth.redeemCode(b.accessCode, email)) === 'ok') { u.family = true; await auth.saveUser(u); }
-    let newProf = null; try { newProf = await Community.ensureProfile(u); } catch (e) { /* the community profile is created on first visit if this fails; a signup never fails because of it */ }
+    let newProf = null; try { newProf = await Community.ensureProfile(u, username); } catch (e) { /* the community profile is created on first visit if this fails; a signup never fails because of it */ }
     // Owner-only: a bell item and a private phone push for the new member. Neither can ever block or fail a signup.
     try { if (!u.owner && newProf) { const fu = await Community.founderUid(); const N = await import('../lib/notify.mjs'); const R = await import('../lib/retail.mjs');
       await Promise.race([Promise.all([fu ? N.add(fu, { kind: 'signup', actor: newProf.uid, text: 'joined PricePocketAsset (@' + newProf.username + ').', path: '/community/profile/?u=' + newProf.username }) : null, R.notifyOwner('👋 New member joined', '@' + newProf.username + ' just signed up.', '/community/profile/?u=' + newProf.username, 'signup' + newProf.uid)]), new Promise(r => setTimeout(r, 4000))]); } } catch (e) { /* never affects signup */ }
@@ -365,7 +372,7 @@ async function handle(event) {
   if (!u) { await RL.hit('login-fail:' + email, 10, 900e3); const existing = await auth.getUser(email); if (existing) EV.logActivity(existing, 'login_failed', { ip: ipOf(event.headers), ua: (event.headers || {})['user-agent'] || null, page: 'sign-in', result: 'failed' }).catch(() => {}); return json(401, { error: 'Wrong email or password.' }); }
   await RL.clear('login-fail:' + email);
   u.lastLogin = new Date().toISOString(); await auth.saveUser(u);
-  const ck = await auth.sessionCookie(email);
+  const ck = await auth.sessionCookie(email, b.remember !== false);
   EV.logActivity(u, 'login_success', { ip: ipOf(event.headers), ua: (event.headers || {})['user-agent'] || null, session: EV.sessionOf(ck), page: 'sign-in' }).catch(() => {});
   return json(200, { user: pub(u) }, ck);
 }

@@ -5,7 +5,20 @@
   function setMode(m) {
     mode = m; $('tabin').className = 'btn' + (m === 'in' ? '' : ' ghost'); $('tabup').className = 'btn' + (m === 'up' ? '' : ' ghost');
     $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in'; $('acodewrap').hidden = m === 'in';
-    $('pw').autocomplete = m === 'in' ? 'current-password' : 'new-password'; $('msg').textContent = '';
+    const signup = m === 'up';
+    ['usernamewrap','confirmwrap','signupterms','signup-benefits'].forEach(id => { $(id).hidden = !signup; });
+    $('loginopts').hidden = signup;
+    ['username','confirmpw','signupaccept'].forEach(id => { $(id).required = signup; });
+    $('pw').minLength = signup ? 8 : 0;
+    $('pw').autocomplete = signup ? 'new-password' : 'current-password';
+    $('account-title').textContent = signup ? 'Create Your Account' : 'Welcome back';
+    $('account-subtitle').hidden = false;
+    $('account-subtitle').textContent = signup ? 'Get a free account to search properties, explore data, save lists and track opportunities.' : 'Sign in to your PricePocketAsset account to search properties, manage lists and track opportunities.';
+    const switchLink = document.createElement('a');
+    switchLink.href = signup ? '/login/' : '/account/?mode=up';
+    switchLink.textContent = signup ? 'Sign in →' : 'Create a free account →';
+    $('account-switch').replaceChildren(signup ? 'Already have an account? ' : 'New here? ', switchLink);
+    $('msg').textContent = '';
   }
   let billing = null;
   // Coming from the plan page (/plans/): ?plan=pro opens the subscribe terms after sign-in; ?next= returns the member to where they were. Only same-site paths are accepted.
@@ -66,6 +79,7 @@
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
     $('codebox').hidden = !!(paid || user.owner);
     $('plantext').textContent = user.owner ? 'Owner: every Pro feature is on.' : user.family ? 'Family access: every Pro feature is on and free for you.' : paid ? 'Pro member through ' + user.paidThrough + '. Every Pro feature is on.' : (user.paidThrough ? 'Your paid time ended on ' + user.paidThrough + '. ' : 'Free account. ') + 'Lists, maps and official sources are free. Pro ($5.50 a week) adds the AI, live checks on every lot (Street View, weather, fires, crime, energy, cameras), owner mailing details, downloads and the full course. ';
+    $('account-title').textContent = 'My account'; $('account-subtitle').hidden = true;
     $('who').textContent = user.email; $('ownbadge').hidden = !user.owner; $('ownerbtns').hidden = !user.owner;
     const ul = $('saved'); ul.textContent = '';
     if (!user.saved.length) { const li = document.createElement('li'); li.textContent = 'No favorites yet. Tap \u2606 Favorite on a lien to keep it here.'; ul.appendChild(li); }
@@ -95,11 +109,16 @@
   $('redeem').addEventListener('click', async () => { $('codemsg').textContent = 'One moment\u2026'; const r = await post({action: 'redeem', code: $('rcode').value}); if (r.ok) { location.reload(); } else $('codemsg').textContent = r.d.error || 'Something went wrong.'; });
   $('tabin').addEventListener('click', () => setMode('in')); $('tabup').addEventListener('click', () => setMode('up'));
   $('form').addEventListener('submit', async e => {
-    e.preventDefault(); $('go').disabled = true; $('msg').textContent = 'One moment…';
-    const r = await post({action: mode === 'in' ? 'login' : 'signup', email: $('email').value, password: $('pw').value, ownerCode: '', accessCode: mode === 'up' ? $('acode').value : ''});
+    e.preventDefault();
+    if (!$('form').reportValidity()) return;
+    const signup = mode === 'up';
+    if (signup && $('pw').value !== $('confirmpw').value) { $('msg').textContent = 'Passwords must match.'; $('confirmpw').focus(); return; }
+    $('go').disabled = true; $('msg').textContent = 'One moment…';
+    const r = await post({action: signup ? 'signup' : 'login', email: $('email').value, password: $('pw').value,
+      ...(signup ? {username: $('username').value, terms: $('signupaccept').checked, accessCode: $('acode').value} : {remember: $('remember').checked})});
     $('go').disabled = false;
     if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); if (mode === 'up' && !WANT_PRO) { location.href = '/community/welcome/?next=' + encodeURIComponent(NEXT || '/map/'); return; } if (NEXT && !WANT_PRO) { location.href = NEXT; return; } } else $('msg').textContent = r.d.error || 'Something went wrong.';
   });
   $('logout').addEventListener('click', async () => { if (window.PPPush) await window.PPPush.logout(); await post({action: 'logout'}); show(null); });
-  fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode('in'); show(null); });
+  fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode(QS.get('mode') === 'up' ? 'up' : 'in'); show(null); });
 })();

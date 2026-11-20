@@ -10,10 +10,18 @@
   const mapA = document.getElementById('hcAll');
   host.append(chips, grid, msg);
   PLACES.forEach(([n], i) => { const b = mk('button', 'hc-chip', n); b.type = 'button'; b.setAttribute('aria-pressed', String(i === 0)); b.addEventListener('click', () => { cur = i; chips.querySelectorAll('button').forEach((x, j) => x.setAttribute('aria-pressed', String(j === i))); load(); }); chips.appendChild(b); });
+  function locked() {
+    chips.hidden = true;
+    mapA.textContent = 'Compare plans →'; mapA.href = '/plans/?src=Live%20cameras';
+    msg.textContent = '';
+    const g = mk('span','hc-lock','🔒 Live cameras are a Pro feature. ');
+    const a = mk('a','','Upgrade to Pro →'); a.href = mapA.href;
+    g.append(a); msg.append(g);
+  }
   async function load() {
     clearInterval(timer); grid.textContent = ''; msg.textContent = 'Finding cameras…'; const [name, lat, lng] = PLACES[cur]; mapA.href = '/map/?cams=1&lat=' + lat + '&lng=' + lng;
-    let r, d; try { r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat, lng, radius: 15, limit: 6 }), { credentials: 'same-origin' }); d = await r.json(); } catch (e) { msg.textContent = 'Cameras are temporarily unavailable. Please try again soon.'; return; }
-    if (r.status === 402 || r.status === 401) { msg.textContent = ''; const g = mk('p', 'hc-lock'); g.append(document.createTextNode('Live cameras are for Pro members. ')); const a = mk('a', '', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Live cameras'); g.appendChild(a); msg.appendChild(g); return; }
+    let r, d; try { r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat, lng, radius: 15, limit: 4 }), { credentials: 'same-origin' }); d = await r.json(); } catch (e) { msg.textContent = 'Cameras are temporarily unavailable. Please try again soon.'; return; }
+    if (r.status === 402 || r.status === 401) { locked(); return; }
     if (!r.ok || !d.ok) { msg.textContent = 'Cameras are temporarily unavailable. Please try again soon.'; return; }
     const cams = d.cameras.filter(c => c.image); if (!cams.length) { msg.textContent = 'No public cameras with a live picture were found near ' + name + ' right now.'; return; }
     msg.textContent = 'Near ' + name.split(',')[0] + ' \u00b7 pictures refresh about every minute \u00b7 swipe for more';
@@ -21,6 +29,6 @@
       const cap = mk('div', 'hc-cap'); cap.append(mk('b', '', c.name), mk('span', '', [c.road, (c.miles < 0.1 ? '<0.1' : c.miles.toFixed(1)) + ' mi from ' + name.split(',')[0], c.operator].filter(Boolean).join(' · '))); card.append(img, cap); grid.appendChild(card); });
     timer = setInterval(() => { if (!document.hidden && grid.isConnected) imgs.forEach(f => f()); }, 60000);
   }
-  const go = () => { if (started) return; started = true; load(); };
+  const go = async () => { if (started) return; started = true; const user = await window.ppaAccount; if (!user?.paid && !user?.owner) locked(); else load(); };
   if ('IntersectionObserver' in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); go(); } }, { rootMargin: '200px' }); io.observe(host); } else go();
 })();
