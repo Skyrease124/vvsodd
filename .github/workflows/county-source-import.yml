@@ -1,5 +1,12 @@
 name: Scheduled county source import
 on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - 'county-sources.json'
+      - 'scripts/run-county-source-imports.js'
+      - '.github/workflows/county-source-import.yml'
   schedule:
     - cron: '17 9 * * 1'
   workflow_dispatch:
