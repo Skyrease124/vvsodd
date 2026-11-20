@@ -61,7 +61,7 @@ def main():
     probe=load_module('probe','probe-county-certificate-files.py')
     result=normalize(_wakulla.load_rows(probe.download(URL)))
     if not result['records'] or result['summary']['rejected']:
-        raise ValueError('Refusing staging due to failed records: '+json.dumps(result['summary']))
+        raise ValueError('Refusing staging due to failed records: '+json.dumps({'summary':result['summary'],'sampleErrors':result['rejected'][:8]}))
     out=Path('county-import-staging/fl-palm-beach-certificate-export.json')
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(result,indent=2)+'\n',encoding='utf8')
