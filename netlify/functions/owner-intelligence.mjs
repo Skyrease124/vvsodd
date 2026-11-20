@@ -29,7 +29,8 @@ async function firecrawlSource(url){
  if(!key)throw Error('Firecrawl is not configured in Netlify environment variables');
  const r=await fetch('https://api.firecrawl.dev/v2/scrape',{method:'POST',
   signal:AbortSignal.timeout(20000),headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
-  body:JSON.stringify({url,formats:['markdown'],onlyMainContent:true,timeout:18000,zeroDataRetention:true})});
+  // Standard Firecrawl data retention is used by owner consent. Do not request enterprise-only ZDR.
+  body:JSON.stringify({url,formats:['markdown'],onlyMainContent:true,timeout:18000})});
  if(!r.ok)throw Error('Firecrawl returned '+r.status);
  const data=await r.json();
  if(data.success===false||!data.data?.markdown)throw Error('Firecrawl returned no page text');
