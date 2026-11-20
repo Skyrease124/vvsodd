@@ -4,6 +4,8 @@ on:
     branches:
       - claude/engineering-workspace
     paths:
+      - scripts/report-certificate-changes.py
+      - tests/test_certificate_change_alerts.py
       - 'scripts/stage-wakulla-certificates.py'
       - scripts/certificate-status.py
       - tests/test_certificate_status.py
@@ -31,6 +33,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_wakulla_discovery.py'
       - name: Fetch official Wakulla Excel list and stage validated certificates
         run: python scripts/stage-wakulla-certificates.py
+      - name: Unit-test change alerts
+        run: python -m unittest discover -s tests -p 'test_certificate_change_alerts.py'
       - name: Compare with last reviewed snapshot (never infer redemption from disappearance)
         run: |
           python -m unittest discover -s tests -p 'test_certificate_snapshot_changes.py'
@@ -42,6 +46,11 @@ jobs:
             --current county-import-staging/fl-wakulla-certificate-export.json \
             --previous "$PREVIOUS" \
             --output county-import-staging/fl-wakulla-certificate-export-changes.json
+      - name: Summarize changes and warn if manual review needed
+        run: |
+          python scripts/report-certificate-changes.py \
+            --report county-import-staging/fl-wakulla-certificate-export-changes.json \
+            --county 'Wakulla'
       - name: Upload staged records for review
         if: success()
         uses: actions/upload-artifact@v4
