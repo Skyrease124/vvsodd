@@ -225,3 +225,36 @@
 .soc-pill{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;background:var(--fill);color:var(--ink);font-weight:600;font-size:.9rem;text-decoration:none;box-shadow:0 0 0 .5px var(--line)}
 .soc-pill:active{transform:scale(.96)}
 .soc-x{border:0;width:24px;height:24px;margin-left:-6px;border-radius:50%;background:transparent;color:var(--mute);font-size:1.1rem;line-height:1;align-self:center}
+
+/* The Profile shell is always navy, regardless of the device appearance setting. */
+.ppa-profile .cm,
+.ppa-profile .cm-ov {
+  color-scheme: dark;
+  --ink: var(--app-text);
+  --mute: var(--app-muted);
+  --line: var(--app-line);
+  --fill: var(--app-panel);
+  --card: #192e44;
+  --brand: var(--app-green);
+  --blue: #8fcaff;
+  --red: #ff9da4;
+  --profile-action: #0b6e4f;
+  color: var(--ink);
+}
+
+.ppa-profile :is(.cm-sheet, .menu) { background: var(--card); }
+.ppa-profile .menu button { color: var(--ink); }
+.ppa-profile .menu button.danger { color: var(--red); }
+.ppa-profile .menu button:hover { background: var(--fill); }
+.ppa-profile :is(.chip, .pill.pro, .pill.pub) { background: #12382f; }
+.ppa-profile :is(.founder-note, .person.sys) { background: linear-gradient(150deg, #2c2619, var(--card)); }
+.ppa-profile :is(.cm, .cm-ov) .btn2:not(.primary, .post, .live, .sys, .solid):hover { background: var(--card); }
+.ppa-profile .cm .btn2.outline { color: var(--brand); background: transparent; }
+.ppa-profile :is(.cm, .cm-ov) :is(.btn2.primary, .cp-go, .p-csend, .seg button.on, .ppl .btn2.outline) {
+  background: var(--profile-action);
+  color: #fff;
+}
+.ppa-profile :is(.cm, .cm-ov) .btn2.primary:hover { background: #0d7756; }
+.ppa-profile .cm-ov .btn2.solid.danger { background: #a52532; color: #fff; }
+.ppa-profile .cm .btn2.live { background: #c51e2a; }
+.ppa-profile .cm .btn2.live:hover { background: #ae1722; }
