@@ -2,6 +2,8 @@
 // Not clickable on purpose. Hidden when there is nothing recent to report or the source is unavailable (never claims "no hazards").
 (function () {
   'use strict';
+  var query = new URLSearchParams(location.search);
+  if (window.parent !== window && query.get('embed') === '1' && query.get('home') === '1') return;
   var host = document.getElementById('pmRH') ? { el: document.getElementById('pmRH'), cls: ' hz-sheet' } : (document.querySelector('.dwrap .rhead') ? { el: document.querySelector('.dwrap .rhead'), cls: ' hz-home', before: true } : null);
   if (!host) return;
   var ICON = { wildfires: '🔥', floods: '🌊', severeStorms: '🌀', volcanoes: '🌋', landslides: '⛰️' };
