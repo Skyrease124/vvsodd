@@ -4,6 +4,8 @@ on:
     branches:
       - claude/engineering-workspace
     paths:
+      - scripts/build-certificate-review-html.py
+      - tests/test_certificate_review_html.py
       - scripts/report-certificate-changes.py
       - tests/test_certificate_change_alerts.py
       - 'scripts/stage-palm-beach-certificates.py'
@@ -51,6 +53,15 @@ jobs:
           python scripts/report-certificate-changes.py \
             --report county-import-staging/fl-palm-beach-certificate-export-changes.json \
             --county 'Palm Beach'
+      - name: Test offline administrator review dashboard
+        run: python -m unittest discover -s tests -p 'test_certificate_review_html.py'
+      - name: Generate read-only administrator review dashboard
+        run: |
+          python scripts/build-certificate-review-html.py \
+            --records county-import-staging/fl-palm-beach-certificate-export.json \
+            --changes county-import-staging/fl-palm-beach-certificate-export-changes.json \
+            --county 'Palm Beach' \
+            --output county-review-html/fl-palm-beach-certificate-export-review.html
       - name: Upload verified-format staged records for review
         if: success()
         uses: actions/upload-artifact@v4
@@ -59,6 +70,7 @@ jobs:
           path: |
             county-import-staging/fl-palm-beach-certificate-export.json
             county-import-staging/fl-palm-beach-certificate-export-changes.json
+            county-review-html/fl-palm-beach-certificate-export-review.html
       - name: Push staging branch for human review
         if: success()
         continue-on-error: true
