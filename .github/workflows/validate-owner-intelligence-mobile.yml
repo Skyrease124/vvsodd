@@ -1,0 +1,24 @@
+name: Validate Owner Intelligence mobile readability
+on:
+  push:
+    branches:
+      - fix/owner-intelligence-mobile-readability-20261120
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/owner/intelligence/index.html
+      - tests/owner-intelligence-mobile-readability.test.mjs
+      - .github/workflows/validate-owner-intelligence-mobile.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/owner-intelligence-mobile-readability.test.mjs
+      - run: node --test tests/owner-intelligence-center.test.mjs

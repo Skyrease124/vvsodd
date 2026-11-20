@@ -23,6 +23,35 @@ select{border:1px solid #547181;color:white;background:#173749;max-width:100%}
 .pill{display:inline-block;border-radius:25px;padding:5px 10px;background:#26536a;font-size:12px}
 .error{color:#ffc3ab}
 #workspace[hidden],#sourceCards[hidden]{display:none!important}
+
+/* Scoped accessibility corrections override inherited light theme typography. */
+body,main,#ownerMain,#workspace{color:#eff9fd!important}
+#ownerMain :is(h1,h2,h3,strong,label,.pill,#access,#message,#sourceCards h2,#sourceCards p){color:#f1f8fc!important}
+#ownerMain :is(.muted,.card p,.hero p){color:#c7dce7!important}
+#ownerMain .stats strong{color:#ffffff!important}
+#ownerMain .stats span{color:#d8e9f0!important}
+#ownerMain .pill{color:#f0fbff!important;background:#21566b!important;border:1px solid #4b8798}
+#ownerMain button{color:#ffffff!important}
+#ownerMain select{color:#ffffff!important}
+#ownerMain a{color:#90f3d8!important}
+#ownerMain h2{line-height:1.25}
+#ownerMain .card{padding:16px;margin-bottom:12px}
+#ownerMain .hero{padding:18px}
+#ownerMain .controls label{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-weight:600;color:#edf7fd!important}
+#ownerMain input[type=checkbox]{width:22px;height:22px;flex:0 0 22px;accent-color:#24b48f}
+#ownerMain button:focus-visible,#ownerMain select:focus-visible{outline:3px solid #a5f7e1;outline-offset:2px}
+@media(max-width:540px){
+ #ownerMain{padding:14px 14px 40px!important}
+ #ownerMain h1{font-size:27px!important}
+ #ownerMain .stats{gap:8px}
+ #ownerMain .stats div{padding:11px 9px;min-width:0}
+ #ownerMain .stats strong{font-size:25px}
+ #ownerMain .stats span{font-size:12px;line-height:1.25;display:block}
+ #ownerMain .controls{flex-direction:column;align-items:stretch}
+ #ownerMain .controls button,#ownerMain .controls select{width:100%;text-align:center}
+ #ownerMain .card h2{font-size:20px}
+}
+
 </style></head><body>
 <main id="ownerMain" hidden><p><a href="/owner/">← Owner Dashboard</a></p>
 <section class="hero"><h1>Owner Intelligence Center</h1>
@@ -49,10 +78,10 @@ select{border:1px solid #547181;color:white;background:#173749;max-width:100%}
 <div id="message" role="status" aria-live="polite" class="muted"></div>
 <h2>Florida source monitoring</h2>
 <div id="sourceCards"></div>
-<div class="card"><h2>Next-stage capabilities</h2>
+<details class="card"><summary style="cursor:pointer;color:#eff9fd;font-weight:700;font-size:19px">Upcoming tools</summary><div style="padding-top:10px">
 <p class="muted">Auction calendars, GIS source health, state law changes, land bank discoveries, and scheduled scans can be added here once their official feeds and individual access terms are validated. They are not active scanners yet.</p>
-<p><a href="/owner/certificates/">Certificate Review</a> · <a href="/owner/research-releases/">Research Releases</a></p>
-</div>
+<p><a href="/owner/certificates/">Certificate Review</a> · <a href="/owner/research-releases/">Research Releases</a></p></div>
+</details>
 </div></main>
 <script>
 'use strict';
