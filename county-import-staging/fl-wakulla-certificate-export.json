@@ -1,0 +1,5849 @@
+{
+  "source": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+  "checkedAt": "2026-11-20T20:06:26.597803+00:00",
+  "classification": "county certificate export; status unverified; review required",
+  "summary": {
+    "received": 224,
+    "accepted": 224,
+    "rejected": 0
+  },
+  "rejected": [],
+  "records": [
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "43.06",
+      "unpaidBalanceRaw": "60.94",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "52.16",
+      "unpaidBalanceRaw": "63.1",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "47.25",
+      "unpaidBalanceRaw": "74.760000000000005",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "53.36",
+      "unpaidBalanceRaw": "93.23",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "43.61",
+      "unpaidBalanceRaw": "100.88",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-003-082-06186-001",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "49.55",
+      "unpaidBalanceRaw": "104.85",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06331-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "38.659999999999997",
+      "unpaidBalanceRaw": "55.35",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06331-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "47.44",
+      "unpaidBalanceRaw": "57.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-007",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.54",
+      "unpaidBalanceRaw": "56.47",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-007",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.32",
+      "unpaidBalanceRaw": "58.92",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-007",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.07",
+      "unpaidBalanceRaw": "70.150000000000006",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-008",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.770000000000003",
+      "unpaidBalanceRaw": "56.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-008",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.55",
+      "unpaidBalanceRaw": "59.17",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-008",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.3",
+      "unpaidBalanceRaw": "70.489999999999995",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-009",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "37.659999999999997",
+      "unpaidBalanceRaw": "54.08",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-009",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "46.44",
+      "unpaidBalanceRaw": "56.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-009",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "42.19",
+      "unpaidBalanceRaw": "67.430000000000007",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-010",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "37.659999999999997",
+      "unpaidBalanceRaw": "54.08",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-010",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "46.44",
+      "unpaidBalanceRaw": "56.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-015-000-06336-010",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "42.19",
+      "unpaidBalanceRaw": "67.430000000000007",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "122.2",
+      "unpaidBalanceRaw": "139.44999999999999",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "76.849999999999994",
+      "unpaidBalanceRaw": "159.18",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "71.45",
+      "unpaidBalanceRaw": "161.30000000000001",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "92.33",
+      "unpaidBalanceRaw": "173.37",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "107.92",
+      "unpaidBalanceRaw": "182.16",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08548-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "124.72",
+      "unpaidBalanceRaw": "187.09",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "74.53",
+      "unpaidBalanceRaw": "100.9",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "55.98",
+      "unpaidBalanceRaw": "127.73",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "84.01",
+      "unpaidBalanceRaw": "128.06",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "61.67",
+      "unpaidBalanceRaw": "128.97",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "115.74",
+      "unpaidBalanceRaw": "132.41",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "69.849999999999994",
+      "unpaidBalanceRaw": "132.68",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-034-009-08560-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "79.14",
+      "unpaidBalanceRaw": "135.25",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "71.63",
+      "unpaidBalanceRaw": "97.22",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "84.92",
+      "unpaidBalanceRaw": "98.81",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "75.22",
+      "unpaidBalanceRaw": "115.32",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "73.16",
+      "unpaidBalanceRaw": "125.5",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "55.41",
+      "unpaidBalanceRaw": "126.49",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "61.67",
+      "unpaidBalanceRaw": "128.97",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07137-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "69.849999999999994",
+      "unpaidBalanceRaw": "132.68",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07811-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "70.31",
+      "unpaidBalanceRaw": "158.82",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "37.270000000000003",
+      "unpaidBalanceRaw": "53.58",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.36",
+      "unpaidBalanceRaw": "58.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "41.79",
+      "unpaidBalanceRaw": "66.849999999999994",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "49.54",
+      "unpaidBalanceRaw": "87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "46.54",
+      "unpaidBalanceRaw": "90.49",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "40.54",
+      "unpaidBalanceRaw": "94.22",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-07825-001",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "46.54",
+      "unpaidBalanceRaw": "98.86",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "71.63",
+      "unpaidBalanceRaw": "97.22",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "84.92",
+      "unpaidBalanceRaw": "98.81",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "75.22",
+      "unpaidBalanceRaw": "115.32",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "73.16",
+      "unpaidBalanceRaw": "125.5",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "55.41",
+      "unpaidBalanceRaw": "126.49",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "61.67",
+      "unpaidBalanceRaw": "128.97",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-035-008-08025-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "69.849999999999994",
+      "unpaidBalanceRaw": "132.68",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-037-238-09734-S12",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.89",
+      "unpaidBalanceRaw": "59.54",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-037-238-09734-S12",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.63",
+      "unpaidBalanceRaw": "70.959999999999994",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-037-239-09734-N12",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.82",
+      "unpaidBalanceRaw": "56.82",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-037-239-09734-N12",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.61",
+      "unpaidBalanceRaw": "59.23",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-037-239-09734-N12",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.35",
+      "unpaidBalanceRaw": "70.56",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "44.73",
+      "unpaidBalanceRaw": "63.06",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "53.42",
+      "unpaidBalanceRaw": "64.48",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "49.36",
+      "unpaidBalanceRaw": "77.819999999999993",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "54.66",
+      "unpaidBalanceRaw": "95.35",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "42.37",
+      "unpaidBalanceRaw": "98.19",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09301-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "48.34",
+      "unpaidBalanceRaw": "102.45",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09395-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "59.07",
+      "unpaidBalanceRaw": "134.43",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-043-010-09396-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "59.07",
+      "unpaidBalanceRaw": "134.43",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-069-000-10114-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.69",
+      "unpaidBalanceRaw": "56.66",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-069-000-10114-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.47",
+      "unpaidBalanceRaw": "59.08",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-069-000-10114-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.22",
+      "unpaidBalanceRaw": "70.37",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-069-000-10114-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "52.04",
+      "unpaidBalanceRaw": "91.08",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "49.25",
+      "unpaidBalanceRaw": "77.66",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "41.53",
+      "unpaidBalanceRaw": "96.37",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "56.86",
+      "unpaidBalanceRaw": "98.93",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "47.51",
+      "unpaidBalanceRaw": "100.79",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "93.78",
+      "unpaidBalanceRaw": "108.47",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10505-025",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "107.57",
+      "unpaidBalanceRaw": "142.86000000000001",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "38.36",
+      "unpaidBalanceRaw": "54.97",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.17",
+      "unpaidBalanceRaw": "70.3",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "51.34",
+      "unpaidBalanceRaw": "89.93",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "48.35",
+      "unpaidBalanceRaw": "93.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "41.53",
+      "unpaidBalanceRaw": "96.37",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "47.51",
+      "unpaidBalanceRaw": "100.79",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10506-021",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "93.58",
+      "unpaidBalanceRaw": "108.25",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "40.04",
+      "unpaidBalanceRaw": "57.1",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.22",
+      "unpaidBalanceRaw": "59.9",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.17",
+      "unpaidBalanceRaw": "70.3",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "51.34",
+      "unpaidBalanceRaw": "89.93",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "48.35",
+      "unpaidBalanceRaw": "93.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10507-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "41.52",
+      "unpaidBalanceRaw": "96.35",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "40.51",
+      "unpaidBalanceRaw": "57.7",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.72",
+      "unpaidBalanceRaw": "60.44",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "77.39",
+      "unpaidBalanceRaw": "118.47",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "76.459999999999994",
+      "unpaidBalanceRaw": "130.88",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "74.040000000000006",
+      "unpaidBalanceRaw": "140.26",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "73.03",
+      "unpaidBalanceRaw": "151.58000000000001",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-077-014-10513-018",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "67.56",
+      "unpaidBalanceRaw": "152.86000000000001",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "57.15",
+      "unpaidBalanceRaw": "78.83",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "67.8",
+      "unpaidBalanceRaw": "80.150000000000006",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "70.61",
+      "unpaidBalanceRaw": "108.63",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "62.71",
+      "unpaidBalanceRaw": "119.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "72.02",
+      "unpaidBalanceRaw": "123.64",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "54.11",
+      "unpaidBalanceRaw": "123.67",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10892-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "60.37",
+      "unpaidBalanceRaw": "126.39",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.869999999999997",
+      "unpaidBalanceRaw": "56.88",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.03",
+      "unpaidBalanceRaw": "59.69",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.39",
+      "unpaidBalanceRaw": "70.62",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "51.25",
+      "unpaidBalanceRaw": "89.79",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "47.98",
+      "unpaidBalanceRaw": "93.09",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "41.05",
+      "unpaidBalanceRaw": "95.33",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10893-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "47.07",
+      "unpaidBalanceRaw": "99.92",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "39.869999999999997",
+      "unpaidBalanceRaw": "56.88",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.03",
+      "unpaidBalanceRaw": "59.69",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.39",
+      "unpaidBalanceRaw": "70.62",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "51.25",
+      "unpaidBalanceRaw": "89.79",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "47.98",
+      "unpaidBalanceRaw": "93.09",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10903-006",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "47.09",
+      "unpaidBalanceRaw": "99.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "40.51",
+      "unpaidBalanceRaw": "57.7",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.74",
+      "unpaidBalanceRaw": "60.47",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "54.22",
+      "unpaidBalanceRaw": "84.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "59.02",
+      "unpaidBalanceRaw": "102.45",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "53.48",
+      "unpaidBalanceRaw": "103.05",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "45.96",
+      "unpaidBalanceRaw": "105.98",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10915-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "52.07",
+      "unpaidBalanceRaw": "109.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "38.659999999999997",
+      "unpaidBalanceRaw": "55.35",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "47.44",
+      "unpaidBalanceRaw": "57.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "54.22",
+      "unpaidBalanceRaw": "84.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "59.02",
+      "unpaidBalanceRaw": "102.45",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "45.96",
+      "unpaidBalanceRaw": "105.98",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10986-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "52.07",
+      "unpaidBalanceRaw": "109.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "38.659999999999997",
+      "unpaidBalanceRaw": "55.35",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "47.44",
+      "unpaidBalanceRaw": "57.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "54.22",
+      "unpaidBalanceRaw": "84.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "59.02",
+      "unpaidBalanceRaw": "102.45",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "45.96",
+      "unpaidBalanceRaw": "105.98",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-10987-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "52.07",
+      "unpaidBalanceRaw": "109.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11007-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "55.9",
+      "unpaidBalanceRaw": "87.31",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "53.31",
+      "unpaidBalanceRaw": "73.95",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "63.58",
+      "unpaidBalanceRaw": "75.55",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "55.9",
+      "unpaidBalanceRaw": "87.31",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "60.62",
+      "unpaidBalanceRaw": "105.06",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "54.92",
+      "unpaidBalanceRaw": "105.66",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "47.47",
+      "unpaidBalanceRaw": "109.26",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11010-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "53.35",
+      "unpaidBalanceRaw": "112.42",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11023-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "50.02",
+      "unpaidBalanceRaw": "60.77",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11023-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "54.22",
+      "unpaidBalanceRaw": "84.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-078-013-11048-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "54.22",
+      "unpaidBalanceRaw": "84.87",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-086-195-11586-F21",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.95",
+      "unpaidBalanceRaw": "59.61",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-095-000-11704-011",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "41.54",
+      "unpaidBalanceRaw": "59.01",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-095-000-11704-011",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "50.33",
+      "unpaidBalanceRaw": "61.11",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-095-000-11704-011",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "46.08",
+      "unpaidBalanceRaw": "73.069999999999993",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-095-000-11704-011",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "53.96",
+      "unpaidBalanceRaw": "94.2",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-114-088-11823-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "93.85",
+      "unpaidBalanceRaw": "108.55",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-121-000-11968-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "154.05000000000001",
+      "unpaidBalanceRaw": "174.16",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-121-000-11968-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "139.21",
+      "unpaidBalanceRaw": "208.1",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-121-000-11968-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "145.02000000000001",
+      "unpaidBalanceRaw": "242.63",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "00-00-121-000-11969-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "65.08",
+      "unpaidBalanceRaw": "77.19",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "02-4S-01E-000-05593-001",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "41.86",
+      "unpaidBalanceRaw": "59.41",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "02-4S-01E-000-05593-001",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "50.68",
+      "unpaidBalanceRaw": "61.49",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03744-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.74",
+      "unpaidBalanceRaw": "59.38",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03744-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.39",
+      "unpaidBalanceRaw": "70.62",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03744-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "51.51",
+      "unpaidBalanceRaw": "90.21",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03744-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "41.7",
+      "unpaidBalanceRaw": "96.74",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03744-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "47.68",
+      "unpaidBalanceRaw": "101.13",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03745-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.74",
+      "unpaidBalanceRaw": "59.38",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03745-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "44.39",
+      "unpaidBalanceRaw": "70.62",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "03-6S-02W-035-03762-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "48.71",
+      "unpaidBalanceRaw": "76.88",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-3S-01W-000-04289-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "46.12",
+      "unpaidBalanceRaw": "56.52",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-3S-01W-000-04289-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "41.87",
+      "unpaidBalanceRaw": "66.959999999999994",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "143.5",
+      "unpaidBalanceRaw": "162.66999999999999",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "115.46",
+      "unpaidBalanceRaw": "173.67",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "124.88",
+      "unpaidBalanceRaw": "209.8",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "123.61",
+      "unpaidBalanceRaw": "229.98",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "122.36",
+      "unpaidBalanceRaw": "249.75",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "05-5S-02W-000-02606-001",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "117.85",
+      "unpaidBalanceRaw": "261.98",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "11-4S-01E-071-05757-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "59.01",
+      "unpaidBalanceRaw": "91.81",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "12-5S-03W-040-00840-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "174.78",
+      "unpaidBalanceRaw": "196.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "12-5S-03W-040-00840-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "120.9",
+      "unpaidBalanceRaw": "268.60000000000002",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "12-5S-03W-063-00787-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "86.59",
+      "unpaidBalanceRaw": "131.81",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "12-5S-03W-063-00787-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "95.07",
+      "unpaidBalanceRaw": "161.21",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "12-5S-03W-063-00787-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "86.95",
+      "unpaidBalanceRaw": "194.93",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "41.35",
+      "unpaidBalanceRaw": "58.76",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "50.38",
+      "unpaidBalanceRaw": "61.16",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "45.48",
+      "unpaidBalanceRaw": "72.2",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "52.62",
+      "unpaidBalanceRaw": "92.02",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "42.83",
+      "unpaidBalanceRaw": "99.19",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "17-3S-01E-096-05377-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "48.79",
+      "unpaidBalanceRaw": "103.34",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "23-4S-02W-343-02034-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "53.36",
+      "unpaidBalanceRaw": "93.23",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "23-5S-02W-128-02816-079",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "50.52",
+      "unpaidBalanceRaw": "79.5",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-2S-01W-000-03978-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "115.46",
+      "unpaidBalanceRaw": "173.67",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-2S-01W-000-03978-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "124.88",
+      "unpaidBalanceRaw": "209.8",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-2S-01W-000-03978-000",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "122.4",
+      "unpaidBalanceRaw": "249.83",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-2S-01W-000-03978-000",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "117.89",
+      "unpaidBalanceRaw": "262.07",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-000-02975-002",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "51.26",
+      "unpaidBalanceRaw": "62.12",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-000-02975-002",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "46.58",
+      "unpaidBalanceRaw": "73.790000000000006",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-000-02975-002",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "52.68",
+      "unpaidBalanceRaw": "92.12",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-000-02975-002",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "42.92",
+      "unpaidBalanceRaw": "99.39",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-057-03222-010",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "53.43",
+      "unpaidBalanceRaw": "64.489999999999995",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-057-03222-010",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "49.08",
+      "unpaidBalanceRaw": "77.42",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-057-03222-010",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "56.34",
+      "unpaidBalanceRaw": "98.08",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "24-5S-02W-057-03222-010",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "46.7",
+      "unpaidBalanceRaw": "107.59",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "25-2S-02W-000-01439-003",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "48.74",
+      "unpaidBalanceRaw": "59.38",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "25-3S-01E-093-05462-000",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "40.21",
+      "unpaidBalanceRaw": "57.32",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "25-3S-01E-093-05462-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.1",
+      "unpaidBalanceRaw": "59.77",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "25-5S-02W-046-03409-001",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "49.27",
+      "unpaidBalanceRaw": "59.95",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "27-3S-02W-000-01679-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "51.67",
+      "unpaidBalanceRaw": "62.57",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "27-3S-02W-000-01679-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "47.42",
+      "unpaidBalanceRaw": "75.010000000000005",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "27-3S-02W-000-01679-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "55.35",
+      "unpaidBalanceRaw": "96.47",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "29-5S-03W-000-01207-000",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "51.06",
+      "unpaidBalanceRaw": "61.91",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "31-4S-02W-000-02372-000",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "57.02",
+      "unpaidBalanceRaw": "88.93",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "31-4S-02W-000-02372-000",
+      "certificateNumber": "18",
+      "taxYear": "2021",
+      "certificateFaceAmountRaw": "61.85",
+      "unpaidBalanceRaw": "118.2",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "34-3S-01E-000-05537-000",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "57.09",
+      "unpaidBalanceRaw": "99.31",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-135",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "188.37",
+      "unpaidBalanceRaw": "211.57",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-135",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "181.89",
+      "unpaidBalanceRaw": "237.25",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-135",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "200.1",
+      "unpaidBalanceRaw": "332.41",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-136",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "188.37",
+      "unpaidBalanceRaw": "211.57",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-136",
+      "certificateNumber": "18",
+      "taxYear": "2024",
+      "certificateFaceAmountRaw": "181.89",
+      "unpaidBalanceRaw": "237.25",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-3S-01E-263-05538-136",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "200.1",
+      "unpaidBalanceRaw": "332.41",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-5S-02W-000-03564-006",
+      "certificateNumber": "18",
+      "taxYear": "2025",
+      "certificateFaceAmountRaw": "77.040000000000006",
+      "unpaidBalanceRaw": "90.22",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-5S-02W-000-03564-006",
+      "certificateNumber": "18",
+      "taxYear": "2023",
+      "certificateFaceAmountRaw": "70.930000000000007",
+      "unpaidBalanceRaw": "109.1",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-5S-02W-000-03564-006",
+      "certificateNumber": "18",
+      "taxYear": "2022",
+      "certificateFaceAmountRaw": "68.11",
+      "unpaidBalanceRaw": "117.27",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-5S-02W-000-03564-006",
+      "certificateNumber": "18",
+      "taxYear": "2019",
+      "certificateFaceAmountRaw": "57.47",
+      "unpaidBalanceRaw": "130.96",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    },
+    {
+      "state": "FL",
+      "county": "Wakulla",
+      "parcelId": "35-5S-02W-000-03564-006",
+      "certificateNumber": "18",
+      "taxYear": "2020",
+      "certificateFaceAmountRaw": "63.55",
+      "unpaidBalanceRaw": "132.71",
+      "countyOrIndividualRaw": "C",
+      "paidStatusRaw": "U",
+      "sourceUrl": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+      "status": "unverified",
+      "availableForPurchase": false,
+      "holdingType": "county-held",
+      "redemptionStatus": "reported-unredeemed",
+      "taxDeedStatus": "unknown",
+      "statusEvidence": {
+        "certificateStatusRaw": "U",
+        "redemptionDateRaw": null,
+        "taxDeedApplicationRaw": null,
+        "holderTypeRaw": "C"
+      },
+      "verificationFlags": [
+        "tax-deed-application-needs-verification"
+      ]
+    }
+  ],
+  "statusSummary": {
+    "holdingType": {
+      "county-held": 224
+    },
+    "redemptionStatus": {
+      "reported-unredeemed": 224
+    },
+    "taxDeedStatus": {
+      "unknown": 224
+    },
+    "flagged": 224
+  }
+}
