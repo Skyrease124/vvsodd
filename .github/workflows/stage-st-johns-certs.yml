@@ -5,6 +5,8 @@ on:
       - claude/engineering-workspace
     paths:
       - scripts/stage-st-johns-certificates.py
+      - scripts/certificate-status.py
+      - tests/test_certificate_status.py
       - .github/workflows/stage-st-johns-certs.yml
   schedule:
     - cron: '41 10 * * 1'
@@ -21,6 +23,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test ownership, redemption and tax deed classifications
+        run: python -m unittest discover -s tests -p 'test_certificate_status.py'
       - name: Validate official St Johns unpaid certificate CSV
         run: python scripts/stage-st-johns-certificates.py
       - name: Archive review-only staged report
