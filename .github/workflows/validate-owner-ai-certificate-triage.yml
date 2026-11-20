@@ -1,0 +1,29 @@
+name: Validate owner AI certificate triage
+on:
+  push:
+    branches:
+      - feature/owner-ai-certificate-triage-20261120
+      - claude/engineering-workspace
+    paths:
+      - netlify/lib/certificate-auto-triage.mjs
+      - netlify/functions/certificate-auto-review.mjs
+      - kinvest-liens/owner/certificates/index.html
+      - tests/owner-certificate-auto-review.test.mjs
+      - .github/workflows/validate-owner-ai-certificate-triage.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check netlify/lib/certificate-auto-triage.mjs
+      - run: node --check netlify/functions/certificate-auto-review.mjs
+      - run: node --test tests/owner-certificate-auto-review.test.mjs
+      - run: node --test tests/auto-approved-release.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
