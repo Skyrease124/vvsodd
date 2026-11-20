@@ -2,6 +2,7 @@ name: Validate all parcel map research overlays
 on:
   push:
     branches:
+      - feature/all-parcel-map-research-updates
       - claude/engineering-workspace
     paths:
       - kinvest-liens/liens/states/research-parcel-overlays.js
