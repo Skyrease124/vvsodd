@@ -3,7 +3,7 @@
 // Prints the number of cameras, one real record, and checks that its preview image loads as a JPEG/PNG.
 import { PROVIDERS } from '../../netlify/functions/cameras.mjs';
 const id = process.argv[2], p = PROVIDERS[id];
-if (!p || !p.keyed) { console.error('usage: node tools/cameras/verify.mjs az|ga'); process.exit(2); }
+if (!p || !p.keyed) { console.error('usage: node tools/cameras/verify.mjs az|ga|wi'); process.exit(2); }
 if (!process.env[p.keyEnv]) { console.error(p.keyEnv + ' is not set'); process.exit(2); }
 const list = await p.keyed.call(p);
 const c = list[Math.floor(list.length / 2)];

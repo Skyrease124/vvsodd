@@ -28,7 +28,7 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-  const TEST = {GA511_KEY: 'ga', AZ511_KEY: 'az', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', CONGRESS_API_KEY: 'congress', LIVEKIT_URL: 'livekit', LIVEKIT_API_KEY: 'livekit', LIVEKIT_API_SECRET: 'livekit', ONESIGNAL_REST_API_KEY: 'onesignal'};
+  const TEST = {GA511_KEY: 'ga', AZ511_KEY: 'az', WI511_KEY: 'wi', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', CONGRESS_API_KEY: 'congress', LIVEKIT_URL: 'livekit', LIVEKIT_API_KEY: 'livekit', LIVEKIT_API_SECRET: 'livekit', ONESIGNAL_REST_API_KEY: 'onesignal'};
   async function api(body) { const r = await fetch('/.netlify/functions/ownerkeys', body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {}); return r.json().catch(() => ({ok: false, error: 'No answer.'})); }
   function draw(d) {
     const box = $('list'); box.textContent = '';
