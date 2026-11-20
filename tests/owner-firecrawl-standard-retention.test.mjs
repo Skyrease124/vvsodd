@@ -11,6 +11,6 @@ test('Firecrawl remains server-side owner-only and cannot publish records',()=>{
   assert.match(source,/if\(!user\.owner\)return respond\(403/);
   assert.match(source,/process\.env\.FIRECRAWL_API_KEY/);
   assert.match(source,/request\.headers\.get\('origin'\)!==u\.origin/);
-  assert.match(source,/total>=25/);
+  assert.match(source,/quotaDecision\(successRecord,attemptRecord,now\)/);
   assert.doesNotMatch(source,/syncReviewedCertificate|makeRelease|approved-research-releases-v1/);
 });
