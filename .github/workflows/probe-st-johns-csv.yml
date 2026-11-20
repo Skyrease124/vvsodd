@@ -1,0 +1,22 @@
+name: Probe St Johns official unpaid certificate CSV
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - scripts/probe-st-johns-csv.py
+      - .github/workflows/probe-st-johns-csv.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test official St Johns CSV file and header
+        run: python scripts/probe-st-johns-csv.py
