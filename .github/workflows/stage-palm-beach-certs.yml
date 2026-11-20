@@ -1,0 +1,45 @@
+name: Stage Palm Beach official county-held certificates
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - 'scripts/stage-palm-beach-certificates.py'
+      - '.github/workflows/stage-palm-beach-certs.yml'
+  schedule:
+    - cron: '31 10 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download and validate Palm Beach official certificate spreadsheet
+        run: python scripts/stage-palm-beach-certificates.py
+      - name: Upload verified-format staged records for review
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: palm-beach-certificate-staging
+          path: county-import-staging/fl-palm-beach-certificate-export.json
+      - name: Push staging branch for human review
+        if: success()
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/palm-beach-certificate-review
+          title: 'Review Palm Beach county-held certificate updates'
+          body: 'Records sourced from Palm Beach Tax Collector. Availability not confirmed. No live map or AI publication.'
+          commit-message: 'Stage official Palm Beach county-held certificates'
+          add-paths: county-import-staging/fl-palm-beach-certificate-export.json
+      - name: Link staged data for review
+        if: always()
+        run: |
+          echo "Review [Palm Beach staged branch](https://github.com/${{ github.repository }}/compare/claude/engineering-workspace...automation/palm-beach-certificate-review). Do not advertise as purchasable without county confirmation." >> "$GITHUB_STEP_SUMMARY"
