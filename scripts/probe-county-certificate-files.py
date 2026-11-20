@@ -42,7 +42,7 @@ def workbook(data):
               if inline is not None:raw=''.join(t.text or '' for t in inline.iter(M+'t'))
               cells.append(str(raw or '').strip()[:120])
             if any(cells):first=cells[:50];break
-          elem.clear()
+          if elem.tag==M+'row':elem.clear()
       sheets.append({'sheet':name,'firstPopulatedRow':first})
     return sheets
 def inspect(src,data):
