@@ -42,9 +42,10 @@ test('server protects EVERY read and write with owner session and same-origin wr
  assert.match(server,/sourceById\(body\?\.sourceId\)/);
  assert.match(server,/FIRECRAWL_API_KEY/);
  assert.match(server,/getConfig\(\)/);
- assert.match(server,/owner-intel-firecrawl-/);
- assert.match(server,/total>=25/);
- assert.match(server,/>=3/);
+ assert.match(server,/successKey\(periods\.month\)/);
+ assert.match(server,/quotaDecision\(successRecord,attemptRecord,now\)/);
+ assert.match(server,/recordSuccess\(successes,now\)/);
+ assert.match(server,/recordAttempt\(attemptRecord,now\)/);
  assert.doesNotMatch(server,/syncReviewedCertificate|approved-research-releases-v1|publishApprovedResearch|makeRelease/);
 });
 test('dashboard is inaccessible visually without owner validation and JS is valid',()=>{
