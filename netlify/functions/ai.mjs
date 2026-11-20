@@ -399,7 +399,7 @@ async function handle(event) {
     try {
       const r = await runAgent(q, data, uiScope, cfg, me, mapCounty, mapParcel);
       await usage.record('ai', true);
-      return json(200, { kind: 'research', answer: r.answer, understood: true, searched: 'research agent: ' + r.plan.length + ' steps', plan: r.plan, trace: r.trace, results: r.evidence.liens, states: r.evidence.states, total: r.evidence.total, findings: r.findings, uncertainty: r.uncertainty, sources: r.sources, cached: !!r.cached, usedModel: r.usedModel, search: r.evidence.search, scope: r.evidence.search?.states || uiScope });
+      return json(200, { kind: 'research', answer: r.answer, understood: true, searched: 'research agent: ' + r.plan.length + ' steps', plan: r.plan, trace: r.trace, results: r.evidence.liens, parcel: r.evidence.parcel || [], states: r.evidence.states, total: r.evidence.total, findings: r.findings, uncertainty: r.uncertainty, sources: r.sources, cached: !!r.cached, usedModel: r.usedModel, search: r.evidence.search, scope: r.evidence.search?.states || uiScope });
     } catch (e) { console.log('ai agent failed', e && e.message); /* fall back to the classic path below */ }
   }
   let it = cleanIntent({}, codes, uiScope), parsed = false;

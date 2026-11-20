@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>My account | PricePocketAsset</title>
 <meta name="theme-color" content="#0b6e4f">
@@ -14,34 +14,36 @@
 <meta name="apple-mobile-web-app-title" content="PricePocket">
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="/app-shell.css">
+<link rel="stylesheet" href="/auth-screen.css">
 </head>
 <body class="ppa-auth">
-<header class="app-bar"><a class="app-brand" href="/"><img src="/img/logo-mark.png" alt=""><span>PricePocket<em>Asset</em></span></a><nav class="app-actions" aria-label="Account"><a class="app-outline" href="/login/">Sign In</a><a class="dbtn" href="/account/?mode=up">Sign Up</a></nav></header>
+<header class="app-bar"><a class="app-brand" href="/"><img src="/img/logo-mark.png" alt=""><span>PricePocket<em>Asset</em></span></a><nav class="app-actions" aria-label="Account"><a class="app-outline" href="/login/"><span data-icon="profile"></span>Sign In</a><a class="dbtn" href="/account/?mode=up"><span data-icon="userplus"></span>Sign Up</a></nav></header>
 <main>
 <section class="wrap section narrow">
-  <div class="app-heading"><h1 id="account-title">My account</h1><p id="account-subtitle" hidden></p></div>
+  <div class="app-heading auth-account-heading"><span data-icon="userplus" class="auth-title-icon" aria-hidden="true"></span><div><h1 id="account-title">My account</h1><p id="account-subtitle" hidden></p></div></div>
   <div id="out" class="app-auth-grid" hidden>
     <div class="setupform app-auth-card">
-      <div class="setupbtns"><button class="btn" id="tabin" type="button">Sign in</button><button class="btn ghost" id="tabup" type="button">Create account</button></div>
+      <div class="setupbtns auth-segments" role="group" aria-label="Account mode"><button class="btn" id="tabup" type="button"><span data-icon="userplus"></span>Create Account</button><button class="btn ghost" id="tabin" type="button"><span data-icon="profile"></span>Sign In</button></div>
       <form id="form" novalidate>
-        <label>Email Address <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-        <label id="usernamewrap" hidden>Username <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="20" placeholder="Choose a username"></label>
-        <label>Password <small id="pwhint" hidden>At least 8 characters.</small>
-          <span class="pwwrap" style="position:relative;display:block"><input id="pw" name="password" aria-describedby="pwhint" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding-right:56px">
-          <button type="button" id="eye" aria-label="Show password" aria-pressed="false" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;padding:8px;line-height:0;color:inherit">
-            <svg id="eyeon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-            <svg id="eyeoff" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
-          </button></span></label>
-        <label id="confirmwrap" hidden>Confirm Password <span class="app-field"><input id="confirmpw" name="confirm-password" type="password" autocomplete="new-password"><button type="button" data-toggle-password="confirmpw" aria-label="Show password" aria-pressed="false"></button></span></label>
-        <label id="acodewrap" hidden>Access Code <span class="muted">(Optional)</span> <input id="acode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX" aria-describedby="acodehelp"><small id="acodehelp">Only needed if you were given an invite or special code.</small></label>
-        <label class="app-check" id="signupterms" hidden><input type="checkbox" id="signupaccept"> <span>I agree to the <a href="/legal/terms/" target="_blank" rel="noopener">Terms of Service</a> and <a href="/legal/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+        <label><span class="auth-label"><span data-icon="email"></span>Email Address <span class="auth-required" aria-hidden="true">*</span></span><input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="Enter your email (e.g., you@example.com)" aria-describedby="email-error" required><small class="auth-field-error" id="email-error" hidden></small></label>
+        <label id="usernamewrap" hidden><span class="auth-label"><span data-icon="profile"></span>Username <span class="auth-required" aria-hidden="true">*</span></span><input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="20" placeholder="Choose a username" aria-describedby="username-error"><small class="auth-field-error" id="username-error" hidden></small></label>
+        <label><span class="auth-label"><span data-icon="lock"></span>Password <span class="auth-required" aria-hidden="true">*</span></span><span class="app-field"><input id="pw" name="password" type="password" autocomplete="current-password" aria-describedby="pw-error" required><button type="button" id="eye" data-toggle-password="pw" aria-label="Show password" aria-pressed="false"></button></span><small class="auth-field-error" id="pw-error" hidden></small></label>
+        <label id="confirmwrap" hidden><span class="auth-label"><span data-icon="lock"></span>Confirm Password <span class="auth-required" aria-hidden="true">*</span></span><span class="app-field"><input id="confirmpw" name="confirm-password" type="password" autocomplete="new-password" placeholder="Re-enter your password" aria-describedby="confirmpw-error"><button type="button" data-toggle-password="confirmpw" aria-label="Show password" aria-pressed="false"></button></span><small class="auth-field-error" id="confirmpw-error" hidden></small></label>
+        <label id="acodewrap" hidden><span class="auth-label"><span data-icon="tag"></span>Access Code <span class="auth-optional">(Optional)</span></span><input id="acode" type="text" autocomplete="off" autocapitalize="characters" placeholder="Enter code (e.g., FAM-XXXX-XXXX)" aria-describedby="acodehelp acode-error"><small id="acodehelp">Only needed if you were given an invite or special code.</small><small class="auth-field-error" id="acode-error" hidden></small></label>
+        <div id="signupterms" hidden><label class="app-check"><input type="checkbox" id="signupaccept" aria-describedby="signupaccept-error"><span>I agree to the <a href="/legal/terms/" target="_blank" rel="noopener">Terms of Service</a> and <a href="/legal/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</span></label><small class="auth-field-error" id="signupaccept-error" hidden></small></div>
         <div class="app-auth-options" id="loginopts"><label class="app-check"><input id="remember" type="checkbox" checked> Remember me</label><a href="/forgot/">Forgot your password?</a></div>
-        <button class="btn" id="go" type="submit">Sign in</button>
-        <p id="msg" class="small" role="status" aria-live="polite"></p>
+        <p id="msg" role="status" aria-live="polite"></p>
+        <button class="btn auth-submit" id="go" type="submit"><span data-icon="userplus"></span><span class="auth-submit-label">Create Account</span></button>
       </form>
       <p class="app-auth-switch" id="account-switch"></p>
     </div>
-    <aside class="app-auth-card app-benefits" id="signup-benefits" hidden><h2>Your Account Gives You</h2><ul><li>Search and view properties</li><li>Access county and state data</li><li>Save lists and watch properties</li><li>Learn with master classes</li><li>Get alerts and updates</li></ul><h3>Go Pro Anytime</h3><p>Unlock PricePocket AI, live cameras, bulk downloads and more.</p></aside>
+    <aside class="app-auth-card app-benefits" id="signup-benefits" hidden><h2>Your Account Gives You</h2><ul>
+      <li><span data-icon="search"></span>Search &amp; view properties<span data-icon="check"></span></li>
+      <li><span data-icon="layers"></span>Access county &amp; state data<span data-icon="check"></span></li>
+      <li><span data-icon="bookmark"></span>Save lists &amp; watch properties<span data-icon="check"></span></li>
+      <li><span data-icon="learn"></span>Learn with master classes<span data-icon="check"></span></li>
+      <li><span data-icon="bell"></span>Get alerts &amp; updates<span data-icon="check"></span></li>
+    </ul><h3><span data-icon="crown"></span>Go Pro Anytime</h3><p>Unlock PricePocket AI, live cameras, bulk downloads and more.</p></aside>
   </div>
   <div id="in" hidden>
     <p>Signed in as <b id="who"></b> <span id="ownbadge" class="small muted" hidden>(owner)</span></p>
@@ -75,17 +77,18 @@
     <ul id="saved" class="sflags" style="display:block"></ul>
     <p><button class="btn ghost" id="logout" type="button">Sign out</button></p>
   </div>
-  <p class="small muted">Educational only. Not legal, tax or investment advice.</p>
+
 </section>
 </main>
-<footer class="app-footer"><div><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/billing/">Billing &amp; refunds</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<footer class="app-footer auth-footer"><p class="auth-disclaimer"><span data-icon="info"></span><span>Educational only. Not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</span></p><nav aria-label="Legal"><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a></nav></footer>
 <script src="/push.js" defer></script>
 <script src="../liens/states/liens-data.js"></script>
 <script src="../liens/states/lien-ui.js"></script>
 <script src="../liens/states/upcoming-sales.js"></script>
 <script src="../liens/states/auction-updates.js"></script>
-<script src="account.js"></script>
+<script src="/app-ui.js" defer></script>
 <script src="/auth-fields.js" defer></script>
+<script src="account.js" defer></script>
 <script src="/auth-nav.js" defer></script>
 </body>
 </html>

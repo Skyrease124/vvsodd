@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>PricePocketAsset | Smarter Asset Tools</title>
 <meta name="theme-color" content="#0b6e4f">
 <meta property="og:title" content="PricePocketAsset">
@@ -45,11 +45,12 @@
 <div class="app-home">
   <section class="app-intro" aria-labelledby="home-title">
     <div><span class="app-plan" data-app-plan hidden></span><h1 id="home-title">Find property opportunities <em>faster.</em></h1><p>Tax liens, deeds, county data, land deals and more — all in one place.</p></div>
-    <div id="homewx" class="homewx" hidden aria-live="polite"></div>
+    <div id="homewx" class="homewx" aria-live="polite"></div>
   </section>
   <section class="app-map" aria-label="Parcel Map">
-    <iframe src="/map/?embed=1&amp;c=FL-hillsborough" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
-    <div class="app-map-foot"><a href="/map/">Open full map →</a></div>
+    <script src="/app-location.js"></script>
+    <iframe src="/map/?embed=1" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
+    <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span><a data-open-map href="/map/">Open full map →</a></div>
   </section>
   <nav class="app-tiles" id="app-tools" aria-label="Primary tools">
     <a class="app-card app-primary" href="/community/profile/"><span data-icon="profile"></span><b>Profile</b><small>Your account and activity</small></a>
@@ -60,7 +61,7 @@
   <section class="app-section" aria-labelledby="foryou-title">
     <div class="app-section-title"><h2 id="foryou-title">For You</h2><a href="/account/watchlist/">View all →</a></div>
     <div class="app-suggestions">
-      <a href="#map"><span data-icon="layers"></span><span><b>County updates</b><small>Tax Sale Radar</small></span></a>
+      <a href="#map" data-open-radar><span data-icon="layers"></span><span><b data-updated>County updates</b><small data-updated-note>Tax Sale Radar</small></span></a>
       <a href="/account/watchlist/"><span data-icon="bookmark"></span><span><b data-saved>Watchlist</b><small>Track saved properties</small></span></a>
       <a data-recent-link href="/map/"><span data-icon="search"></span><span><b data-recent-label>Parcel search</b><small data-recent>Explore the map</small></span></a>
     </div>
@@ -106,7 +107,7 @@
 <div class="app-home">
 <section id="hcams-wrap" class="wrap section hcams-sec">
   <div id="hcams" class="hcams" aria-live="polite">
-    <div class="hc-head"><div><p class="eyebrow">Pro</p><h2>Live cameras</h2></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
+    <div class="hc-head"><div class="hc-title"><h2>Live Cameras</h2><span class="app-badge">Pro</span></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
     <p class="hc-sub">Public cameras from state transportation and tourism feeds. They show conditions at the camera, not at any property.</p>
   </div>
 </section>
@@ -118,16 +119,16 @@
     <a class="app-card" href="/map/?sort=low&amp;vacant=1"><span data-icon="pin"></span><b>Cheap Land</b><small>Browse low listed amounts</small></a>
     <a class="app-card" href="/liens/states/"><span data-icon="layers"></span><b>County Data</b><small>Official records and sources</small></a>
     <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Classes</b><small>Lessons and practice drills</small></a>
-    <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Full AI workspace for search, lists and research</small></a>
+    <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Workspace for research, lists and analysis</small></a>
   </nav>
 </section>
-<aside class="app-upgrade" data-upgrade><div><b>Upgrade to Pro</b><p>Unlock PricePocket AI, Map AI, live cameras, advanced filters and bulk downloads.</p></div><a class="app-button" href="/plans/">Compare Plans →</a></aside>
+<aside class="app-upgrade" data-upgrade><div><b>Upgrade to Pro</b><p>Unlock PricePocket AI, Map Assistant, live cameras and bulk downloads.</p></div><a class="app-button" href="/plans/">Compare Plans →</a></aside>
 </div>
 </main>
 
 <footer class="app-footer">
   <p>Education and research tools only. Not legal, tax, or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</p>
-  <nav aria-label="Site information"><a href="/plans/">Free vs Pro</a><a href="/about/">About</a><a href="/support/">Support</a><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a><a href="/donate/">Support the site</a></nav>
+  <nav aria-label="Site information"><a href="/plans/">Free vs Pro</a><a href="/about/">About</a><a href="/support/">Support</a><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a></nav>
 </footer>
 <script src="script.js"></script>
 <script src="liens/states/states.js"></script>
@@ -139,7 +140,7 @@
 <script src="home-state.js"></script>
 <script src="/app-ui.js" defer></script>
 <script src="/auth-nav.js" defer></script>
-<script src="/home-wx.js"></script>
+<script src="/home-conditions.js" defer></script>
 <script src="/home-cams.js" defer></script>
 <script src="/hazard-ticker.js" defer></script>
 <script src="/home-a2hs.js" defer></script>
