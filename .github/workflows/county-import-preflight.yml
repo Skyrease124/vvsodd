@@ -8,6 +8,7 @@ on:
       - 'scripts/check-existing-parcels.js'
       - 'tests/existing-parcels.test.js'
       - '.github/workflows/county-import-preflight.yml'
+      - 'kinvest-liens/liens/states/parcels/**'
   workflow_dispatch:
 jobs:
   validate:
@@ -21,3 +22,5 @@ jobs:
           node-version: '20'
       - name: Run county import validation tests
         run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js
+      - name: Check actual county parcel GIS dataset (read only)
+        run: node scripts/check-existing-parcels.js kinvest-liens/liens/states/parcels/al-63.json AL
