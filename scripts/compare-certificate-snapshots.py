@@ -7,6 +7,7 @@ change report. The first run establishes a baseline with no inferred events.
 import argparse
 import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 STATUS_FIELDS=('holdingType','redemptionStatus','taxDeedStatus')
 AMOUNT_FIELDS=('faceAmount','faceAmountRaw','certificateFaceAmountRaw','dueAmount','totalAmountRaw','unpaidBalanceRaw')
@@ -44,7 +45,9 @@ def compare(current,previous=None):
                 'added':0,'missingFromLatest':0,'statusChanged':0,'amountChanged':0},
                 'changes':[],'note':'First snapshot: no change or redemption inferred.'}
     old,old_keys=load_snapshot(previous)
-    if cur.get('source')!=old.get('source'):
+    old_source=urlparse(str(old.get('source') or ''))
+    current_source=urlparse(str(cur.get('source') or ''))
+    if old_source.scheme!='https' or current_source.scheme!='https' or old_source.hostname!=current_source.hostname:
         raise ValueError('Different source URLs: refusing cross-source comparison')
     cur_counties={(r.get('state'),r.get('county')) for r in cur_keys.values()}
     prev_counties={(r.get('state'),r.get('county')) for r in old_keys.values()}
