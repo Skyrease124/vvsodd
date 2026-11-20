@@ -184,6 +184,7 @@
       const county = counties.find(x => x.state === curState) || (counties.length === 1 ? counties[0] : null);
       if (county) { await pickCounty(county.id); return; }
       if (counties.length > 1) { say('Include the state to identify the county.'); return; }
+      if (/\bcounty\b/.test(raw)) { say('No parcel dataset on this map matches that county.'); return; }
       if (raw && !active.size) { say('Choose a county before searching by parcel or owner.'); return; }
       F.query = raw ? raw.split(/\s+/) : null;
       refresh();
@@ -702,7 +703,7 @@
     if (panel) { stateCard(a, !homeMap); if (homeMap) openRight(false); }
     aiRefresh();
     if (remember && locationContext) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
-    const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); history.replaceState(null, '', url);
+    const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
   }
   function stateCard(a, open = true) {
     const R = $('pmResults'), s = IDX.allStates.find(x => x.a === a), rule = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a], ds = IDX.datasets.filter(d => d.state === a); R.textContent = '';
@@ -744,6 +745,8 @@
   }
   async function start2() {
     const q = new URLSearchParams(location.search), county = q.get('c'), parcel = q.get('p'), state = q.get('s');
+    const point = new URLSearchParams(location.hash.slice(1));
+    const lat = Number(point.get('lat')), lng = Number(point.get('lng'));
     if (q.get('cams') && q.get('lat') && q.get('lng')) {
       const lat = Number(q.get('lat')), lng = Number(q.get('lng'));
       let tries = 0;
@@ -754,6 +757,9 @@
       await pickCounty(county, {announce:!embedded, remember:!parcel && !embedded});
       const record = parcel && loaded[county]?.recs.find(r => String(r.p) === parcel);
       if (record) select(record, {fly:true,remember:!embedded});
+    } else if (!embedded && locationContext?.coordinates(lat, lng)) {
+      const knownState = IDX.allStates.some(s => s.a === state) ? state : '';
+      await showArea({state:knownState,lat,lng});
     } else if (state && IDX.allStates.some(s => s.a === state)) {
       focusState(state, {remember:!embedded,panel:!embedded});
     } else if (embedded && !pickerMap && locationContext) {

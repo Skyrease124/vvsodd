@@ -28,6 +28,13 @@ test('Recent state and approximate point do not invent a county or imply zero co
   assert.equal(mapPath(null),'/map/');
 });
 
+test('Open full map retains the current regional or device point in the URL fragment', () => {
+  const href = new URL(mapPath(normalize({state:'FL',lat:26.64,lng:-81.87})), 'https://example.test');
+  assert.equal(href.search,'?s=FL');
+  assert.equal(href.hash,'#lat=26.64&lng=-81.87');
+  assert.equal(mapPath({lat:0,lng:0}),'/map/');
+});
+
 test('Approximate location is opt-in to the existing location response shape and stays coarse', async () => {
   const geo = {country:{code:'US'},subdivision:{code:'FL',name:'Florida'},city:'Fort Myers',latitude:26.64308,longitude:-81.87419};
   const base = 'https://example.test/.netlify/functions/where';

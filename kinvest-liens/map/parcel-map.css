@@ -279,3 +279,4 @@ body.ppa-map-home .pm{display:block}
 .ppa-map-home .pm-left .pm-sheet-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .ppa-map-home .pm-left .pm-x{min-width:40px;min-height:40px;border:0;background:none;color:#fff;font-size:1.5rem}
 @media(max-width:355px){.ppa-map-home .pm-home-results .pm-control-label{display:none}}
+.ppa-map-home .pm-stack .pm-home-results svg{display:block}
