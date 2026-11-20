@@ -62,7 +62,8 @@ function groupByParcel(liens) {
   const m = new Map();
   liens.forEach(l => {
     let g = m.get(l.parcel);
-    if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: l.market, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate, certList: [], saleDate: l.saleDate || null, mineral: false}; m.set(l.parcel, g); }
+    if (!g) { g = {parcel: l.parcel, county: l.county, face: 0, payoff: 0, years: [], certs: 0, use: l.use, area: l.area, market: Number.isFinite(l.market) ? l.market : null, homestead: !!l.homestead, acres: l.acres, lastSale: l.lastSale, lastPrice: l.lastPrice, desc: l.desc, rate: l.rate, certList: [], saleDate: l.saleDate || null, mineral: false}; m.set(l.parcel, g); }
+    if (g.market == null && Number.isFinite(l.market)) g.market = l.market;
     if (l.amount == null) { g.noPrice = true; g.priceLabel = l.priceLabel; if (!g.area && l.address) g.area = l.address; if (l.status) g.status = l.status; }
     if (l.mineral) g.mineral = true; if (l.env) g.env = l.env;
     if (l.road != null) { g.road = l.road; g.flood = l.flood; g.wet = l.wet; }
@@ -74,9 +75,10 @@ function groupByParcel(liens) {
 // Fixed, public scoring. Higher = more worth reading about. NOT a prediction and NOT advice.
 function score(g) {
   let s = 50; const green = [], red = [];
-  const cov = g.market != null && g.face > 0 ? g.market / g.face : null;
+  const cov = g.market != null && !g.noPrice && g.face > 0 ? g.market / g.face : null;
   g.coverage = cov == null ? null : Math.round(cov * 10) / 10;
-  if (cov == null) red.push('No county value on file');
+  if (g.market == null) red.push('Market value unavailable');
+  else if (cov == null) red.push('Tax debt unavailable for coverage calculation');
   else if (cov < 1) { s -= 35; red.push('County values the lot below the tax debt'); }
   else if (cov >= 50) { s += 35; green.push('County value is ' + Math.round(cov) + ' times the tax debt'); }
   else if (cov >= 10) { s += 25; green.push('County value is ' + Math.round(cov) + ' times the tax debt'); }
@@ -116,7 +118,7 @@ function score(g) {
   return g;
 }
 
-const num = (v, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : null; };
+const num = (v, lo, hi) => { if (v == null || v === '') return null; const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : null; };
 function cleanFilters(f, allUses) {
   f = f && typeof f === 'object' ? f : {};
   const uses = Array.isArray(f.uses) ? f.uses.map(String).filter(u => allUses.includes(u)) : [];
@@ -140,20 +142,20 @@ function applyFilters(rows, f) {
     if (f.hideWetlands && g.wet === 1) return false;
     if (f.hideEnvRestricted && g.env && g.env.length) return false;
     if (f.excludeHomestead && g.homestead) return false;
-    if (g.market != null && g.market < g.face) return false;
+    if (g.market != null && !g.noPrice && g.market < g.face) return false;
     if (f.uses.length && !f.uses.includes(g.use)) return false;
-    if (f.minValue != null && !(g.market >= f.minValue)) return false;
-    if (f.maxValue != null && !(g.market <= f.maxValue)) return false;
-    if (f.minFace != null && g.face < f.minFace) return false;
-    if (f.maxFace != null && g.face > f.maxFace) return false;
+    if (f.minValue != null && (g.market == null || g.market < f.minValue)) return false;
+    if (f.maxValue != null && (g.market == null || g.market > f.maxValue)) return false;
+    if (f.minFace != null && (g.noPrice || g.face < f.minFace)) return false;
+    if (f.maxFace != null && (g.noPrice || g.face > f.maxFace)) return false;
     if (f.minAcres != null && !(g.acres >= f.minAcres)) return false;
     if (f.maxAcres != null && !(g.acres <= f.maxAcres)) return false;
-    if (f.minCoverage != null && !(g.coverage >= f.minCoverage)) return false;
+    if (f.minCoverage != null && (g.coverage == null || g.coverage < f.minCoverage)) return false;
     return true;
   });
 }
 function rank(rows, f) {
-  const key = f.focus === 'cheap' ? (a, b) => a.face - b.face : f.focus === 'big' ? (a, b) => (b.market || 0) - (a.market || 0) : (a, b) => b.score - a.score;
+  const key = f.focus === 'cheap' ? (a, b) => (Number(!!a.noPrice) - Number(!!b.noPrice) || a.face - b.face) : f.focus === 'big' ? (a, b) => (Number(a.market == null) - Number(b.market == null) || b.market - a.market) : (a, b) => b.score - a.score;
   return rows.slice().sort((a, b) => key(a, b) || b.score - a.score);
 }
 
