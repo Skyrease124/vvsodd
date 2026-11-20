@@ -1,6 +1,8 @@
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import where from '../functions/where.mjs';
 
 const require = createRequire(import.meta.url);
@@ -33,6 +35,33 @@ test('Open full map retains the current regional or device point in the URL frag
   assert.equal(href.search,'?s=FL');
   assert.equal(href.hash,'#lat=26.64&lng=-81.87');
   assert.equal(mapPath({lat:0,lng:0}),'/map/');
+});
+
+test('Clearing the map stays nationwide on reload and leaves the chosen state intact', async () => {
+  const source = readFileSync(new URL('../../kinvest-liens/app-location.js', import.meta.url), 'utf8');
+  const storage = new Map([['ppa_state', 'FL']]);
+  const open = () => {
+    const window = {};
+    runInNewContext(source, {
+      window, location: { origin: 'https://example.test' },
+      localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
+      fetch: () => { throw new Error('A cleared map must not request automatic location'); }
+    });
+    return window.ppaLocation;
+  };
+  const loc = open();
+  loc.browse({ state: 'AZ', label: 'Arizona' });
+  assert.equal(loc.get().state, 'AZ');
+  const changes = [];
+  loc.subscribe((area, reason) => changes.push([area, reason]));
+  loc.clear();
+  assert.deepEqual(changes, [[null, 'clear']]);
+  assert.equal(await loc.ready(), null);
+  assert.equal(storage.get('ppa_state'), 'FL');
+  const reopened = open();
+  assert.equal(await reopened.ready(), null);
+  reopened.browse({ state: 'WI' });
+  assert.equal((await reopened.ready()).state, 'WI');
 });
 
 test('Approximate location is opt-in to the existing location response shape and stays coarse', async () => {

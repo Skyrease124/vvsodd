@@ -4,16 +4,24 @@
   if (!host) return;
   const loc = window.ppaLocation;
   const mk = (tag, cls, text) => Object.assign(document.createElement(tag), {className:cls,textContent:text || ''});
-  const losAngeles = ['Los Angeles, CA',34.0522,-118.2437];
-  const places = [losAngeles,['Tampa, FL',27.9506,-82.4572],['Orlando, FL',28.5383,-81.3792],
+  const losAngeles = {label:'Los Angeles, CA',lat:34.0522,lng:-118.2437};
+  const places = [['Tampa, FL',27.9506,-82.4572],['Orlando, FL',28.5383,-81.3792],
     ['Miami, FL',25.7617,-80.1918],['Fort Myers Beach, FL',26.452,-81.9495],
     ['San Diego, CA',32.7157,-117.1611],['Austin, TX',30.2672,-97.7431],['Milwaukee, WI',43.0389,-87.9065]];
   const link = (text, href) => Object.assign(mk('a','',text),{href});
   const allLink = document.getElementById('hcAll');
   const grid = mk('div','hc-grid'), msg = mk('p','hc-msg'), options = mk('details','hc-options');
   options.append(mk('summary','','Browse other camera areas'));
-  const chips = mk('div','hc-chips'); options.append(chips); host.append(grid,msg,options);
-  let controller, refresh, started = false, currentKey, stopVideo, hlsLibrary;
+  const chips = mk('div','hc-chips'); options.append(chips);
+  const mode = mk('div','hc-mode'); mode.hidden = true;
+  mode.setAttribute('role','group'); mode.setAttribute('aria-label','Camera area');
+  const defaultButton = mk('button','hc-chip','Los Angeles');
+  const mapButton = mk('button','hc-chip','Follow map');
+  defaultButton.type = mapButton.type = 'button';
+  mode.append(defaultButton,mapButton);
+  msg.setAttribute('role','status');
+  host.append(mode,grid,msg,options);
+  let controller, refresh, started = false, currentKey, stopVideo, hlsLibrary, cameraMode;
   const plans = '/plans/?src=Live%20cameras';
   function watchVideo(camera, media, badge, signal) {
     const video = mk('video','hc-video');
@@ -59,12 +67,12 @@
     return stop;
   }
   function locked() {
-    options.hidden = true;
+    mode.hidden = options.hidden = true;
     allLink.href = plans;
     allLink.textContent = 'Compare plans →';
     const preview = link('', plans); preview.className = 'hc-locked-card';
     preview.append(mk('span','hc-locked-label','🔒 Live Cameras are a Pro feature'),
-      mk('small','','Traffic and beach cameras · ' + (loc.get()?.label || 'Available regions')),mk('span','hc-locked-cta','Upgrade to Pro →'));
+      mk('small','','Traffic and beach cameras'),mk('span','hc-locked-cta','Upgrade to Pro →'));
     grid.replaceChildren(preview); msg.textContent = '';
   }
   const path = (lat,lng,radius) => '/map/?' + new URLSearchParams({cams:'1',lat,lng,radius});
@@ -78,7 +86,7 @@
     grid.replaceChildren();
     allLink.href = '/cams/'; allLink.textContent = 'View all →';
     if (!loc.coordinates(area?.lat,area?.lng)) {
-      msg.textContent = area?.label ? 'Choose a county or browse a camera area to see cameras in ' + area.label + '.' : 'Choose a map location or browse a camera area.';
+      msg.textContent = area?.label ? 'Choose a county on the map to see nearby cameras in ' + area.label + '.' : 'Choose a map area to see nearby cameras.';
       return;
     }
     const {lat,lng} = area, name = area.label || 'the map area', radius = 30;
@@ -122,20 +130,31 @@
       if (!job.signal.aborted) { currentKey = null; msg.textContent = 'Cameras are temporarily unavailable.'; }
     }
   }
+  function selectMode(next) {
+    cameraMode = next;
+    defaultButton.setAttribute('aria-pressed', String(next === 'default'));
+    mapButton.setAttribute('aria-pressed', String(next === 'map'));
+  }
+  function useMapArea(area) { if (cameraMode === 'map') load(area || losAngeles); }
+  defaultButton.addEventListener('click', () => { selectMode('default'); load(losAngeles); });
+  mapButton.addEventListener('click', async () => {
+    selectMode('map');
+    await loc.ready();
+    useMapArea(loc.get());
+  });
   places.forEach(([label,lat,lng]) => {
     const button = mk('button','hc-chip',label); button.type = 'button';
-    button.addEventListener('click', () => { options.open = false; load({label,lat,lng}); });
+    button.addEventListener('click', () => { options.open = false; selectMode('manual'); load({label,lat,lng}); });
     chips.append(button);
   });
   const go = async () => {
     if (started) return; started = true;
     const user = await window.ppaAccount;
-    if (!user?.paid && !user?.owner) { locked(); loc.subscribe(locked); return; }
-    const nearby = mk('button','hc-chip','Near current map'); nearby.type = 'button';
-    nearby.addEventListener('click', async () => { options.open = false; load(await loc.ready()); });
-    chips.prepend(nearby);
-    const [label,lat,lng] = losAngeles;
-    load({label,lat,lng});
+    if (!user?.paid && !user?.owner) { locked(); return; }
+    mode.hidden = false;
+    loc.subscribe(useMapArea);
+    selectMode('default');
+    load(losAngeles);
   };
   const observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) { observer.disconnect(); go(); } }, {rootMargin:'220px'});
   observer.observe(host);

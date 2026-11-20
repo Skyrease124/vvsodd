@@ -46,10 +46,9 @@
   const recentLink = document.querySelector('[data-recent-link]');
   const showArea = area => {
     areaLink.href = loc.mapPath(area);
-    if (!area) return;
-    document.querySelector('[data-recent-label]').textContent = area.parcel ? 'Recent parcel' : 'Map area';
-    document.querySelector('[data-recent]').textContent = area.label || 'Current map area';
-    recentLink.href = loc.mapPath(area);
+    document.querySelector('[data-recent-label]').textContent = area?.parcel ? 'Recent parcel' : area ? 'Map area' : 'Explore the map';
+    document.querySelector('[data-recent]').textContent = area ? area.label || 'Current map area' : 'Search parcels & counties';
+    recentLink.href = areaLink.href;
   };
   loc.subscribe(showArea); loc.ready().then(showArea);
   const device = document.querySelector('[data-use-location]');
@@ -61,7 +60,7 @@
     finally { device.disabled = false; }
   });
   try {
-    if (!loc.get() && localStorage.getItem('ppa_auto_location') === '1' && !sessionStorage.getItem('ppa_auto_loc_tried')) {
+    if (!loc.get() && !loc.isCleared() && localStorage.getItem('ppa_auto_location') === '1' && !sessionStorage.getItem('ppa_auto_loc_tried')) {
       sessionStorage.setItem('ppa_auto_loc_tried', '1'); device.click();
     }
   } catch(e) { /* optional storage */ }

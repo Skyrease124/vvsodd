@@ -33,11 +33,13 @@
 
   const get = key => { try { return localStorage.getItem(key); } catch (e) { return null; } };
   const put = (key, value) => { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, value); } catch (e) { /* optional storage */ } };
+  const storedArea = get(RECENT);
+  let cleared = storedArea === 'null';
   let recent = null;
-  try { recent = normalize(JSON.parse(get(RECENT) || 'null')); } catch (e) { /* invalid stored data */ }
+  try { recent = normalize(JSON.parse(storedArea || 'null')); } catch (e) { /* invalid stored data */ }
   let chosen = null, regional = null, revision = 0;
   const listeners = new Set();
-  const current = () => recent || chosen || regional;
+  const current = () => cleared ? null : recent || chosen || regional;
   const emit = source => { for (const listener of listeners) listener(current(), source); };
   const preferredState = get('ppa_state');
   if (/^[A-Z]{2}$/.test(preferredState || '')) chosen = normalize({ state: preferredState, label: preferredState });
@@ -62,7 +64,11 @@
     }
     return legacyRequest;
   }
-  async function ready() { return recent || await restore() || await region(); }
+  async function ready() {
+    if (recent || cleared) return current();
+    await restore();
+    return recent || cleared ? current() : region();
+  }
   function region() {
     if (!regionRequest) regionRequest = fetch('/.netlify/functions/where?regional=1')
       .then(r => r.ok ? r.json() : null)
@@ -81,20 +87,26 @@
     const lat = Math.round(position.coords.latitude * 100) / 100, lng = Math.round(position.coords.longitude * 100) / 100;
     if (!coordinates(lat, lng)) throw new Error('Your position is outside the supported map area.');
     const state = await fetch('/.netlify/functions/where?' + new URLSearchParams({lat,lon:lng})).then(r => r.ok ? r.json() : null).catch(() => null);
-    revision++; recent = null; put(RECENT, null); put('ppa_recent_map',null); legacyRequest = Promise.resolve(null);
+    revision++; cleared = false; recent = null; put(RECENT, null); put('ppa_recent_map',null); legacyRequest = Promise.resolve(null);
     chosen = normalize({ state: state?.state, label: state?.name || 'Near me', lat, lng });
     emit('chosen');
     return chosen;
   }
   window.ppaLocation = {
     get: current, ready, countyArea, mapPath, coordinates,
+    isCleared: () => cleared,
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     browse(value) {
       const next = normalize(value);
       if (!next) return;
-      revision++; recent = next;
+      revision++; cleared = false; recent = next;
       put(RECENT, JSON.stringify(recent));
       emit('browse');
+    },
+    clear() {
+      revision++; recent = null; cleared = true;
+      put(RECENT, 'null');
+      emit('clear');
     },
     useDevice
   };

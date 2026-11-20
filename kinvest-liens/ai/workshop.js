@@ -164,8 +164,8 @@
     county.addEventListener('change',browse);
     addEventListener('ppa:workshop-area',event => {
       const area = event.detail;
-      if (!area?.state) return;
-      selected.value = area.state; fillCounties(area.county || '');
+      if (area && !area.state) return;
+      selected.value = area?.state || ''; fillCounties(area?.county || '');
       composer.setScope(countyMeta()?.county || index.allStates.find(s => s.a === selected.value)?.n || 'Nationwide');
     });
     for (const id of ['work-geo','work-quick','work-history']) $(id).hidden = false;

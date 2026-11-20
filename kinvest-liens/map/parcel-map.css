@@ -351,6 +351,10 @@ body.ppa-map-home .pm{
 .ppa-map-home .pm-top{grid-area:search;position:static;display:block;padding:6px 7px;pointer-events:auto}
 .ppa-map-home .pm-home-scope{display:flex;align-items:center;gap:5px}
 .ppa-map-home .pm-pill{flex:1;max-width:320px;width:auto}
+.pm-pill .pm-clear-selection{flex:none;align-self:stretch;padding:0 9px;border:0;border-inline-start:1px solid #ffffff30;background:transparent;color:#b8f9df;font:inherit;font-size:.77rem;font-weight:700;cursor:pointer}
+.pm-pill .pm-clear-selection[hidden]{display:none}
+.pm-pill .pm-clear-selection:hover{background:#ffffff16}
+.pm-pill .pm-clear-selection:focus-visible{outline:2px solid #70edb0;outline-offset:-3px}
 .ppa-map-home .pm-home-scope .pm-area{position:static;transform:none;margin-left:auto;padding-inline:6px;font-size:.66rem}
 .ppa-map-home .pm-center{grid-area:canvas;height:clamp(238px,58vw,365px);overflow:hidden}
 .ppa-map-home .pm-home-rail{
