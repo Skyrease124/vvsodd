@@ -77,7 +77,7 @@
   const empty = { type: 'FeatureCollection', features: [] };
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
   function initMap() {
-    map = window.__ppaMap = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: pickerMap ? {top:8,bottom:8,left:10,right:10} : embedded ? {top:90,bottom:46,left:10,right:10} : {top:150,bottom:150,left:12,right:12} }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
+    map = window.__ppaMap = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: homeMap ? {top:16,bottom:22,left:12,right:12} : pickerMap ? {top:8,bottom:8,left:10,right:10} : embedded ? {top:90,bottom:46,left:10,right:10} : {top:150,bottom:150,left:12,right:12} }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
     if (embedded) map.scrollZoom.disable();
     const controlSide = homeMap ? 'top-right' : 'bottom-right';
     const locationControl = new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false });
@@ -86,9 +86,12 @@
       map.addControl(navigationControl, controlSide);
       map.addControl(locationControl, controlSide);
       map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
+      const mapControls = $('pmMap').querySelector('.maplibregl-ctrl-top-right');
+      if (mapControls) $('pmHomeRail').append(mapControls);
       const repaint = () => {
         if (!document.hidden) requestAnimationFrame(() => { map.resize(); map.triggerRepaint(); });
       };
+      new ResizeObserver(repaint).observe($('pmMap'));
       document.addEventListener('visibilitychange', repaint);
       window.addEventListener('pageshow', e => { if (e.persisted) repaint(); });
     } else {
@@ -131,7 +134,7 @@
     renderResults(rs); renderCounts();
   }
   // Padding keeps the records clear of the search pill, the round buttons and the phone's bottom sheet, so a county lands centered in what you can actually see.
-  const fitPad = () => homeMap ? {top:102,bottom:34,left:14,right:50} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
+  const fitPad = () => homeMap ? {top:18,bottom:28,left:14,right:14} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
   // The box to zoom to: the county's records, ignoring a few far-away strays (bad addresses) so the view lands on where the parcels really are.
   function fitBB(ds) {
     const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx); if (!d.bb || pts.length < 8) return d.bb;
@@ -238,7 +241,22 @@
       results.setAttribute('aria-controls','pmRight');
       stack.insertBefore(results, seg);
       buildHomeDrawer(results);
-      t.append(searchBar, stack, pill, area);
+      const scope = mk('div','pm-home-scope');
+      scope.append(pill,area);
+      t.append(searchBar,scope);
+      const layout = $('pm'), rail = mk('div','pm-home-rail'), content = mk('div','pm-home-content');
+      rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
+      content.id = 'pmHomeContent';
+      rail.append(stack);
+      content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
+      $('pmMap').parentElement.before(t);
+      layout.append(rail,content);
+      const resizeFrame = () => {
+        const height = Math.ceil(layout.getBoundingClientRect().height);
+        if (height > 0 && window.frameElement) window.frameElement.style.height = height + 'px';
+      };
+      new ResizeObserver(resizeFrame).observe(layout);
+      resizeFrame();
     } else t.append(form, stack, pill, area);
     $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
@@ -510,7 +528,7 @@
     if (dataset && locationContext && o?.remember !== false) rememberArea(locationContext.countyArea(dataset, r));
     if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); if (homeMap) map.getSource('sel-point').setData(r.cx ? {type:'Feature',geometry:{type:'Point',coordinates:r.cx},properties:{}} : empty); }
     if (homeMap && o?.fly && r.bb && mapReady) {
-      map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], {padding:{top:105,bottom:108,left:24,right:48},maxZoom:18.5,duration:REDUCED ? 0 : 240});
+      map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], {padding:{top:20,bottom:26,left:22,right:22},maxZoom:18.5,duration:REDUCED ? 0 : 240});
     } else if (o && o.fly && r.bb && mapReady) map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], { padding: { top: embedded ? 92 : 120, bottom: embedded ? Math.min(185, Math.floor(innerHeight * .36)) : window.innerWidth < 980 ? 330 : 120, left: 60, right: window.innerWidth > 979 ? 420 : 40 }, maxZoom: 18.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3) });
     else if (r.cx && mapReady && o && o.fly) map.easeTo({ center: r.cx, zoom: Math.max(map.getZoom(), 16) });
     openRight(false); setMapUrl(r._d, r.p); refresh(); aiRefresh();
@@ -737,7 +755,7 @@
     map.on('mouseenter', 'hz-c', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'hz-c', () => { map.getCanvas().style.cursor = ''; });
   }
   async function openHaz() {
-    let p = $('pmHz'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmHz'; p.setAttribute('aria-label', 'Active hazards'); $('pmTop').parentNode.appendChild(p); }
+    let p = $('pmHz'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmHz'; p.setAttribute('aria-label', 'Active hazards'); (homeMap ? $('pmHomeContent') : $('pmTop').parentNode).appendChild(p); }
     hzOn = true; $('pmHzBtn').classList.add('on'); p.hidden = false; const cp = $('pmCam'); if (cp) cp.hidden = true; if (typeof camOff === 'function' && camsOn) camOff(); $('pmPop').hidden = true; if (isMobile()) setSnap('peek');
     p.textContent = ''; const hd = mk('div', 'hd'), x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close hazards'); x.addEventListener('click', hzOff); hd.append(mk('b', '', 'Active hazards'), x); p.appendChild(hd);
     if (!mapReady) { p.appendChild(mk('p', 'note', 'The map is still loading.')); return; }
@@ -759,7 +777,7 @@
   let camsOn = false, camMk = [], camTimer = null, camHls = null, camLast = null, camSel = null, camCtl = null, camMove = null;
   const CAM_HLS = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js';
   const camHav = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 3958.8 * 2 * Math.asin(Math.sqrt(h)); };
-  function camPanel() { let p = $('pmCam'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmCam'; p.setAttribute('aria-label', 'Live cameras'); $('pmTop').parentNode.appendChild(p); } return p; }
+  function camPanel() { let p = $('pmCam'); if (!p) { p = mk('section', 'pm-cam'); p.id = 'pmCam'; p.setAttribute('aria-label', 'Live cameras'); (homeMap ? $('pmHomeContent') : $('pmTop').parentNode).appendChild(p); } return p; }
   function camStop() { if (camTimer) { clearInterval(camTimer); camTimer = null; } if (camHls) { try { camHls.destroy(); } catch (e) {} camHls = null; } const p = $('pmCam'); if (p) p.querySelectorAll('video').forEach(v => { try { v.pause(); v.removeAttribute('src'); v.load(); } catch (e) {} }); }
   function camClear() { camMk.forEach(x => x.remove()); camMk = []; }
   function camOff() { camsOn = false; camStop(); camClear(); const p = $('pmCam'); if (p) p.hidden = true; const b = $('pmCamBtn'); if (b) b.classList.remove('on'); if (map && map.off) map.off('moveend', camMoved); }
@@ -776,7 +794,7 @@
     try { const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat: lat.toFixed(5), lng: lng.toFixed(5), radius: rad, limit: 20 }), { credentials: 'same-origin', signal: ac.signal }); d = await r.json(); if (!r.ok || !d || d.ok !== true) throw new Error(); } catch (e) { clearTimeout(to); p.lastChild.remove(); p.appendChild(mk('p', 'pm-flag warn', 'Cameras are temporarily unavailable. Please try again in a moment.')); return; } clearTimeout(to);
     camLast = { lat, lng, radius: rad }; camSel = null; camStop(); camClear(); p.querySelectorAll('.note').forEach(n => n.remove()); renderCams(p, d, { lat, lng });
     // Phone: the camera sheet covers the lower half, so frame the cameras in the part of the map that stays visible (never hidden behind the sheet).
-    if (center && d.cameras.length) { const xs = d.cameras.map(c => c.lng).concat([lng]), ys = d.cameras.map(c => c.lat).concat([lat]); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: isMobile() ? { top: 150, bottom: Math.max(150, Math.round(innerHeight - ($('pmCam').getBoundingClientRect().top || innerHeight * 0.4)) + 16), left: 40, right: 80 } : { top: 110, bottom: 60, left: 440, right: 80 }, maxZoom: 14, duration: REDUCED ? 0 : 700 }); }
+    if (center && d.cameras.length) { const xs = d.cameras.map(c => c.lng).concat([lng]), ys = d.cameras.map(c => c.lat).concat([lat]); map.fitBounds([[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]], { padding: homeMap ? fitPad() : isMobile() ? { top: 150, bottom: Math.max(150, Math.round(innerHeight - ($('pmCam').getBoundingClientRect().top || innerHeight * 0.4)) + 16), left: 40, right: 80 } : { top: 110, bottom: 60, left: 440, right: 80 }, maxZoom: 14, duration: REDUCED ? 0 : 700 }); }
     map.off('moveend', camMoved); map.on('moveend', camMoved);
   }
   function renderCams(p, d, ctr) {

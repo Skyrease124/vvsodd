@@ -65,7 +65,36 @@
       sessionStorage.setItem('ppa_auto_loc_tried', '1'); device.click();
     }
   } catch(e) { /* optional storage */ }
-  document.querySelector('[data-open-radar]').addEventListener('click', () => { document.getElementById('map').open = true; });
+  const mapWorkspace = document.getElementById('map');
+  const mapViews = [...mapWorkspace.querySelectorAll('[data-home-map-view]')];
+  function showMapView(view) {
+    for (const control of mapViews) {
+      const selected = control.dataset.homeMapView === view;
+      control.setAttribute('aria-pressed', String(selected));
+      document.getElementById(control.getAttribute('aria-controls')).hidden = !selected;
+    }
+  }
+  for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
+  const openRadarLink = event => {
+    event.preventDefault();
+    showMapView('radar');
+    mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    mapViews[1].focus({preventScroll:true});
+  };
+  document.querySelector('[data-open-radar]').addEventListener('click', openRadarLink);
+  document.getElementById('home-radar').addEventListener('click', event => {
+    const link = event.target.closest('[data-radar-parcel-state]');
+    const state = link && mapWorkspace.querySelector('iframe').contentDocument?.querySelector('select[aria-label="State"]');
+    if (!state || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    showMapView('parcels');
+    state.value = link.dataset.radarParcelState;
+    state.dispatchEvent(new Event('change'));
+    mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    mapViews[0].focus({preventScroll:true});
+  });
+  if (location.hash === '#map') showMapView('radar');
+  window.addEventListener('hashchange', () => { if (location.hash === '#map') showMapView('radar'); });
   const header = document.querySelector('.dnav');
   let frame = 0;
   addEventListener('scroll', () => {

@@ -198,6 +198,10 @@ window.TaxRadarOn = true;
   function renderPanel(a, focusChange, onlyChanges) {
     panelState = a; const p = $('rpanel'); p.textContent = ''; p.hidden = false; const st = M.by[a]; const cs = stateCounties(a);
     const head = mk('div', 'rp-head'); const h = mk('h3', '', st.n); h.id = 'rpanelh'; const x = mk('button', 'rp-x', 'Close'); x.type = 'button'; x.setAttribute('aria-label', 'Close ' + st.n + ' panel'); x.addEventListener('click', closePanel); head.append(h, x); p.appendChild(head);
+    const parcelMap = mk('a', 'btn small', 'Open parcel map for ' + st.n + ' →');
+    parcelMap.href = '/map/?s=' + encodeURIComponent(a);
+    parcelMap.dataset.radarParcelState = a;
+    p.appendChild(parcelMap);
     const sys = mk('p', 'rp-sys'); const dot = mk('i'); dot.style.background = M.COL[st.sys] || '#94a3b8'; sys.append(dot, st.sys + (st.v ? ' (verify)' : '') + ' · interest: ' + st.rate); p.appendChild(sys);
     // Officials: the governor (DC: mayor) and, where a state has one of the 50 largest cities, its mayor. Source: Wikipedia, checked Nov 2026 (see officials.js).
     if (typeof OFFICIALS !== 'undefined') { const g = OFFICIALS.gov[a], ms = OFFICIALS.mayors[a] || [], ol = mk('ul', 'rp-off'); const line = (role, o) => { const li = mk('li'); li.append(mk('b', '', o.name), mk('span', 'rp-party ' + (/^Republican/.test(o.party) ? 'r' : /^Democratic/.test(o.party) ? 'd' : 'i'), o.party), mk('small', '', role)); ol.appendChild(li); };
@@ -277,7 +281,10 @@ window.TaxRadarOn = true;
     fetch('liens/states/radar.json').then(r => r.json()).then(d => {
       S.data = d; renderWhat(); setupFind();
       document.querySelectorAll('.rtabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
-      let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); });
+      let rz;
+      const redraw = () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); };
+      if (window.ResizeObserver) new ResizeObserver(redraw).observe(M.svg);
+      else window.addEventListener('resize', redraw);
       window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); } });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rpanel').hidden) closePanel(); });
       setTab(S.tab); if (S.sel && M.by[S.sel]) { M.select(S.sel); }
