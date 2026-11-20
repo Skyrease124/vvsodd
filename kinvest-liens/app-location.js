@@ -18,7 +18,8 @@
     const q = new URLSearchParams(base.split('?')[1] || '');
     if (area?.county) { q.set('c', area.county); if (area.parcel) q.set('p', area.parcel); }
     else if (area?.state) q.set('s', area.state);
-    return base.split('?')[0] + (q.size ? '?' + q : '');
+    const point = !area?.county && coordinates(area?.lat, area?.lng) ? '#' + new URLSearchParams({lat:area.lat,lng:area.lng}) : '';
+    return base.split('?')[0] + (q.size ? '?' + q : '') + point;
   }
   function countyArea(dataset, record) {
     const point = record?.cx;

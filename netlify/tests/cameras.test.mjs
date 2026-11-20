@@ -7,11 +7,11 @@ const PRO = (await __auth.sessionCookie('pro@example.com')).split(';')[0], FREE 
 const mod = await import('../functions/cameras.mjs'); const { default: api, nearby, imageMeta, _reset, miles, _verified } = mod;
 let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
 const fl = (id, lat, lng, img = 'https://images-dis.divas.cloud/DGI/x' + id + '.jpg') => ({ attributes: { ID: id, DESCRIPT: 'TEST FIXTURE cam ' + id, HIGHWAY: 'I-95', DIRECTION: 'N', LATITUDE: lat, LONGITUDE: lng, TIMESTAMP: '07/20/2026 8:09:58 PM', IMAGE: img } });
-let flFeats = [], flDown = false, caDown = false, heads = 0;
+let flFeats = [], flDown = false, caDown = false, caRecords = [], heads = 0;
 globalThis.fetch = async (u, o) => { u = String(u);
   if (o && o.method === 'HEAD') { heads++; return { ok: true, headers: { get: k => k === 'last-modified' ? 'Tue, 17 Nov 2026 03:31:47 GMT' : null } }; }
   if (u.includes('FL511')) { if (flDown) throw new Error('net'); return { ok: true, json: async () => ({ features: flFeats }) }; }
-  if (u.includes('cwwp2.dot.ca.gov')) { if (caDown) return { ok: false, status: 500 }; return { ok: true, json: async () => ({ data: [] }) }; }
+  if (u.includes('cwwp2.dot.ca.gov')) { if (caDown) return { ok: false, status: 500 }; return { ok: true, json: async () => ({ data: u.includes('cctvStatusD07') ? caRecords : [] }) }; }
   if (u.includes('az511.com/api/v2/get/cameras') || u.includes('511ga.org/api/v2/get/cameras')) { azCalls++; return { ok: true, json: async () => [{ Id: 2056, Roadway: 'I-10', Direction: 'Unknown', Latitude: 32.88, Longitude: -111.75, Location: 'TEST FIXTURE I-10 @ MP 200', Views: [{ Id: 960, Url: 'https://az511.com/map/Cctv/960', Status: 'Enabled', Description: 'TEST FIXTURE I-10 EB 200' }, { Id: 961, Url: 'https://az511.com/map/Cctv/961', Status: 'Disabled', Description: 'off' }] }, { Id: 9, Latitude: 0, Longitude: 0, Views: [{ Id: 1, Url: 'https://az511.com/map/Cctv/1', Status: 'Enabled' }] }] }; }
   if (u.includes('data.austintexas.gov')) { atxCalls++; if (atxDown) return { ok: false, status: 500 }; return { ok: true, json: async () => [
     { camera_id: '1', location_name: '  TEST FIXTURE  830 BLK W RUNDBERG LN ', primary_st: ' RUNDBERG LN', location: { type: 'Point', coordinates: [-97.698158, 30.363686] }, screenshot_address: 'https://cctv.austinmobility.io/image/1.jpg', modified_date: '2023-07-18T20:45:00.000Z' },
@@ -39,6 +39,16 @@ ok(r.cameras.every((c, i, a) => !i || a[i - 1].miles <= c.miles) && Math.abs(r.c
 ok(r.providers.find(p => p.id === 'ga').status === 'viewer' && r.providers.find(p => p.id === 'fl').status === 'ok', 'border parcel: Georgia official viewer offered across the state line (no key = not integrated)');
 ok(r.cameras[0].kind === 'snapshot' && r.cameras[0].viewer === 'https://www.fl511.com/cctv' && /Directory record/.test(r.cameras[0].sourceMeta), 'shared record: source, ID, name, coords, view type, official viewer URL; directory timestamp kept as metadata only');
 r = await nearby(30.69, -81.60, 10, 2); ok(r.cameras.length === 2 && r.totalInRadius === 3, 'limit is configurable');
+// Home can request snapshots first without changing the map's distance order.
+{ _reset();
+  flFeats = [fl('lee', 26.64, -81.91)];
+  const nearest = await nearby(26.548365, -81.981341, 30, 4);
+  const previews = await nearby(26.548365, -81.981341, 30, 4, true);
+  ok(nearest.cameras[0].id === 'butterfly' && !nearest.cameras[0].image && previews.cameras.every(c => c.image), 'Home prioritizes snapshots while the map keeps the nearest official viewer');
+  const beach = await nearby(26.452566, -81.956567, 8, 4, true);
+  ok(beach.cameras[0].id === 'timessq' && beach.cameras[0].kind === 'viewer' && new URL(beach.cameras[0].image).searchParams.get('oid') === 'CID_IWIS00001740', 'Fort Myers Beach uses the official snapshot and retains the official live viewer');
+  flFeats = [fl('1', 30.70, -81.60)]; _reset();
+}
 // no nearby cameras
 r = await nearby(25.95, -81.05, 10, 5); ok(r.ok && r.cameras.length === 0 && r.providers.find(p => p.id === 'fl').status === 'ok', 'remote parcel: working feed, zero matches ("No public cameras found")');
 // provider outage isolation: FL down, beach cams still answer
@@ -56,6 +66,15 @@ ok((await imageMeta('fl', 'nope')).ok === false, 'unknown camera ID: no lookup')
 const call = async q => { const x = await api(new Request('http://x/c?' + q, { headers: { cookie: PRO } }), {}); return { s: x.status, j: await x.json() }; };
 ok((await call('lat=abc&lng=1')).s === 400 && (await call('meta=1&src=evil&id=1')).s === 400, 'bad input refused');
 ok((await call('lat=30.69&lng=-81.6&radius=999&limit=999')).j.radius === 50, 'radius capped at 50 miles, limit at 20');
+{ _reset();
+  const ca = (index, lat, video = '') => ({cctv:{index, location:{latitude:lat,longitude:-118.2437,locationName:index}, imageData:{streamingVideoURL:video,static:{currentImageURL:'https://cwwp2.dot.ca.gov/test.jpg'}}}});
+  caRecords = [ca('near snapshot',34.0522), ca('live video',34.0622,'https://wzmedia.dot.ca.gov/test.m3u8')];
+  const query = 'lat=34.0522&lng=-118.2437&radius=10&limit=1';
+  const standard = await call(query);
+  const video = await call(query+'&preview=1&video=1');
+  ok(standard.j.cameras[0].name === 'near snapshot' && video.j.cameras[0].name === 'live video' && video.j.cameras[0].kind === 'video', 'live video can be ranked first for the Pro camera browser without changing map ordering');
+  caRecords = []; _reset();
+}
 // AZ511 / 511GA gating: off without key; off with key until verified; then parsed
 _reset(); delete process.env.AZ511_KEY; r = await nearby(32.88, -111.75, 10, 5);
 ok(r.providers.find(p => p.id === 'az').status === 'viewer' && azCalls === 0 && r.providers.find(p => p.id === 'az').viewer === 'https://az511.com/cctv', 'AZ511 without a key: official viewer link only, API never called');

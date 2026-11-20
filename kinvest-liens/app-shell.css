@@ -120,3 +120,28 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
   .app-bar .pp-menu>a.dbtn{font-size:.78rem!important;padding-inline:8px!important;margin:0!important}
 }
 :is(.ppa-auth,.ppa-workspace) .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* Home camera previews use the same dark surface in every color scheme. */
+.ppa-home .hc-card{background:#0d2133;border-color:#405c71;color:#f4f8ff}
+.ppa-home .hc-media{position:relative;aspect-ratio:16/9;background:#0e3040;overflow:hidden}
+.ppa-home .hc-media img{position:absolute;inset:0;width:100%;height:100%;opacity:0}
+.ppa-home .hc-media.has-snapshot img{opacity:1}
+.ppa-home .hc-viewer{height:100%}
+.hc-snapshot{position:absolute;top:6px;right:6px;padding:2px 6px;border-radius:12px;background:#101e2aee;color:#fff;font-size:.62rem;font-weight:750}
+.ppa-home .hc-cap span{color:var(--app-muted)}
+.ppa-home .hc-media video{display:block;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+.ppa-home .hc-media video.is-ready{opacity:1}
+.ppa-home .hc-snapshot{z-index:1;pointer-events:none}
+.ppa-home .hc-cap-link{display:block;color:inherit;text-decoration:none}
+@media(max-width:360px){
+  .ppa-home header.dnav .dnav-in{gap:4px!important;padding-inline:6px}
+  .ppa-home header.dnav .dlogo b{font-size:.88rem}
+  .ppa-home header.dnav .dlogo .dmark{width:28px}
+  .ppa-home header.dnav .pp-bell{width:29px!important;height:29px!important;flex:none}
+  .ppa-home header.dnav .pp-menu>a:not(.pp-bell){font-size:.72rem!important;padding-inline:6px!important}
+}
+@media(max-width:360px){
+  .ppa-home header.dnav .dlogo{min-width:0;gap:4px}
+  .ppa-home header.dnav .dlogo>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .ppa-home header.dnav .pp-menu{flex:none}
+}

@@ -8,12 +8,14 @@
   const embedded = params.get('embed') === '1' && window.parent !== window;
   const locationContext = embedded ? window.parent.ppaLocation : window.ppaLocation;
   const pickerMap = params.get('picker') === '1';
+  const homeMap = embedded && params.get('home') === '1' && !pickerMap;
   const rememberArea = area => {
     if (pickerMap) { window.parent.dispatchEvent(new CustomEvent('ppa:workshop-area', { detail:area })); return; }
     locationContext?.browse(area);
   };
   if (embedded) {
     document.body.classList.add('ppa-map-embed'); if (pickerMap) document.body.classList.add('ppa-picker');
+    if (homeMap) document.body.classList.add('ppa-map-home');
     const baseLink = document.createElement('base'); baseLink.target = '_top'; document.head.appendChild(baseLink);
   }
   function setMapUrl(county, parcel) {
@@ -77,10 +79,20 @@
   function initMap() {
     map = window.__ppaMap = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: pickerMap ? {top:8,bottom:8,left:10,right:10} : embedded ? {top:90,bottom:46,left:10,right:10} : {top:150,bottom:150,left:12,right:12} }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
     if (embedded) map.scrollZoom.disable();
-    map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false }), 'bottom-right');
-    map.touchZoomRotate.disableRotation(); map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    const controlSide = homeMap ? 'top-right' : 'bottom-right';
+    const locationControl = new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false });
+    const navigationControl = new maplibregl.NavigationControl({ showCompass: false });
+    if (homeMap) {
+      map.addControl(navigationControl, controlSide);
+      map.addControl(locationControl, controlSide);
+      map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
+    } else {
+      map.addControl(locationControl, controlSide);
+      map.addControl(navigationControl, controlSide);
+    }
+    map.touchZoomRotate.disableRotation();
     map.on('load', () => {
-      mapReady = true; ['parcels', 'near', 'sel', 'pts', 'dots'].forEach(s => map.addSource(s, { type: 'geojson', data: empty }));
+      mapReady = true; ['parcels', 'near', 'sel', 'sel-point', 'pts', 'dots'].forEach(s => map.addSource(s, { type: 'geojson', data: empty }));
       // At county zoom a lot is smaller than a pixel, so each drawn parcel also gets a dot that fades out as the real outline appears.
       map.addLayer({ id: 'p-dots', type: 'circle', source: 'dots', maxzoom: 16, paint: { 'circle-color': catColor, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 2.5, 10, 4.5, 14, 5.5], 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1, 'circle-opacity': ['interpolate', ['linear'], ['zoom'], 6, 0.9, 14.5, 0.9, 16, 0], 'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 14.5, 0.9, 16, 0] } });
       map.addLayer({ id: 'p-fill', type: 'fill', source: 'parcels', paint: { 'fill-color': catColor, 'fill-opacity': ['case', ['==', ['get', 'v'], 1], 0.4, 0.2] } });
@@ -89,9 +101,10 @@
       map.addLayer({ id: 'p-vac', type: 'line', source: 'parcels', filter: ['==', ['get', 'va'], 1], paint: { 'line-color': VAC, 'line-width': ['interpolate', ['linear'], ['zoom'], 12, 1, 18, 3], 'line-offset': 0 } });
       map.addLayer({ id: 'n-fill', type: 'fill', source: 'near', paint: { 'fill-color': '#22d3ee', 'fill-opacity': 0.3 } });
       map.addLayer({ id: 'n-line', type: 'line', source: 'near', paint: { 'line-color': '#22d3ee', 'line-width': 2.6 } });
-      map.addLayer({ id: 's-fill', type: 'fill', source: 'sel', paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.18 } });
+      map.addLayer({ id: 's-fill', type: 'fill', source: 'sel', paint: { 'fill-color': homeMap ? '#ffd45a' : '#ffffff', 'fill-opacity': homeMap ? 0.35 : 0.18 } });
       map.addLayer({ id: 's-glow', type: 'line', source: 'sel', paint: { 'line-color': '#ffc95f', 'line-width': 11, 'line-opacity': .45, 'line-blur': 6 } });
       map.addLayer({ id: 's-line', type: 'line', source: 'sel', paint: { 'line-color': '#ffdf81', 'line-width': 3.4 } });
+      if (homeMap) map.addLayer({ id:'s-dot', type:'circle', source:'sel-point', paint:{'circle-color':'#18af75','circle-radius':7,'circle-stroke-color':'#e8fff4','circle-stroke-width':2} });
       const ac = ['coalesce', ['get', 'ac'], 0.2];
       map.addLayer({ id: 'p-label', type: 'symbol', source: 'parcels', minzoom: 13.5, layout: { 'text-field': ['get', 'lbl'], 'text-font': ['Noto Sans Bold'], 'text-max-width': 7, 'text-line-height': 1.1, 'text-allow-overlap': false, 'text-padding': 3, 'symbol-sort-key': ['-', 0, ac],
         'text-size': ['interpolate', ['linear'], ['zoom'], 13.5, ['case', ['>=', ac, 12], 10, 0], 15.5, ['case', ['>=', ac, 3], 11, 0], 17, ['case', ['>=', ac, 0.4], 11, 0], 18, ['case', ['>=', ac, 0.12], 12, 0], 19, ['case', ['>=', ac, 0.03], 13, 0], 20, 14] },
@@ -113,7 +126,7 @@
     renderResults(rs); renderCounts();
   }
   // Padding keeps the records clear of the search pill, the round buttons and the phone's bottom sheet, so a county lands centered in what you can actually see.
-  const fitPad = () => embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
+  const fitPad = () => homeMap ? {top:102,bottom:34,left:14,right:50} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
   // The box to zoom to: the county's records, ignoring a few far-away strays (bad addresses) so the view lands on where the parcels really are.
   function fitBB(ds) {
     const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx); if (!d.bb || pts.length < 8) return d.bb;
@@ -130,13 +143,22 @@
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
-    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
+    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
     stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = ''; fillCounties(coSel); aiRefresh(); return; } focusState(stSel.value); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
-    const lay = iconBtn(ICON.layers, 'Layers', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => openAi(), 'pm-aib');
+    let asking = false;
+    const lay = iconBtn(ICON.layers, 'Layers', () => { seg.hidden = !seg.hidden; }), fb = iconBtn(ICON.filter, 'Filters', () => { if (isMobile()) $('pmLeft').classList.add('open'); }, 'pm-fab'), aib = iconBtn(ICON.spark, 'Ask PricePocket AI', () => {
+      if (!homeMap || !paid) { openAi(); return; }
+      asking = !asking;
+      aib.setAttribute('aria-pressed', String(asking));
+      input.placeholder = asking ? 'Ask about this map area…' : 'Search state, county, parcel, owner…';
+      input.setAttribute('aria-label', input.placeholder);
+      go.setAttribute('aria-label', asking ? 'Send question to Map Assistant' : 'Search');
+      input.focus();
+    }, homeMap ? '' : 'pm-aib');
     const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, camb, hzb, aib, seg);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
@@ -147,7 +169,9 @@
     const go = mk('button', '', 'Search'); go.type = 'submit'; form.append(input, go);
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const raw = input.value.trim().toLowerCase();
+      const entered = input.value.trim();
+      if (asking) { if (entered) openAi(entered, true); return; }
+      const raw = entered.toLowerCase();
       const query = raw.replace(/ county\b/g, '').replace(/[,]+/g, ' ').replace(/\s+/g, ' ');
       F.query = null;
       const state = IDX.allStates.find(x => x.n.toLowerCase() === query || x.a.toLowerCase() === query);
@@ -160,6 +184,7 @@
       const county = counties.find(x => x.state === curState) || (counties.length === 1 ? counties[0] : null);
       if (county) { await pickCounty(county.id); return; }
       if (counties.length > 1) { say('Include the state to identify the county.'); return; }
+      if (/\bcounty\b/.test(raw)) { say('No parcel dataset on this map matches that county.'); return; }
       if (raw && !active.size) { say('Choose a county before searching by parcel or owner.'); return; }
       F.query = raw ? raw.split(/\s+/) : null;
       refresh();
@@ -173,13 +198,30 @@
     const tools = mk('details', 'pm-tools'); tools.append(mk('summary', '', 'Map Tools'), camb, hzb);
     stack.insertBefore(tools, aib);
     for (const [button, label] of [[lay, 'Layers'], [fb, 'Filters']]) button.appendChild(mk('span', 'pm-control-label', label));
-    t.append(form, stack, pill, area); $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
+    if (homeMap) {
+      const searchBar = mk('div', 'pm-home-search');
+      go.innerHTML = ICON.pin;
+      go.setAttribute('aria-label', 'Search');
+      form.prepend(go);
+      aib.setAttribute('aria-pressed', 'false');
+      searchBar.append(form, aib);
+      const results = iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg>', 'Properties', () => showTab('list', true), 'pm-home-results');
+      results.append(mk('span', 'pm-control-label', 'Properties'));
+      stack.insertBefore(results, seg);
+      const dismiss = mk('button', 'pm-home-dismiss', '×');
+      dismiss.type = 'button';
+      dismiss.setAttribute('aria-label', 'Close map panel');
+      dismiss.addEventListener('click', () => setSnap('peek'));
+      $('pmRH').append(dismiss);
+      t.append(searchBar, stack, pill, area);
+    } else t.append(form, stack, pill, area);
+    $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
     window.__pm = { stSel, coSel };
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
-    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + ' · ' + d.records.toLocaleString('en-US') + ' records'); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
+    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
   }
   function stateNote() {
     const R = $('pmResults'); if (!curState) return; const has = IDX.datasets.some(d => d.state === curState), s = IDX.allStates.find(x => x.a === curState);
@@ -249,7 +291,7 @@
     if (rs.length > pageN) { const m = mk('button', 'pm-btn', 'Show more'); m.type = 'button'; m.style.width = '100%'; m.addEventListener('click', () => { pageN += 40; refresh(); }); R.appendChild(m); }
     if (!rs.length) R.appendChild(mk('p', 'pm-empty', 'Nothing matches these filters. Try resetting them.'));
   }
-  const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => window.innerWidth < 980;
+  const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => homeMap || window.innerWidth < 980;
   // Bottom sheet with three resting heights (peek, half, full). Drag the handle or the tabs; it springs to the nearest one.
   const SNAPS = ['peek', 'half', 'full']; let snap = 'peek';
   function setSnap(s) { snap = s; const r = $('pmRight'); r.dataset.snap = s; r.style.removeProperty('--sy'); r.classList.remove('dragging'); }
@@ -266,7 +308,7 @@
   }
 
   // ---------- popup ----------
-  function closePop() { $('pmPop').hidden = true; sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
+  function closePop() { $('pmPop').hidden = true; sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
   function row(dl, k, v) { if (v == null || v === '') return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }
   // Satellite picture of the parcel with its verified outline drawn on top (same projection as the picture, so they line up).
   const MERC = { R: 6378137, X: lng => lng * Math.PI / 180 * 6378137, Y: lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137 };
@@ -304,8 +346,30 @@
       setTimeout(() => { const old = wrap.querySelector('.cambar .tool[aria-label^="Nearby Cameras"]'); if (old) { const nb = old.cloneNode(true); old.replaceWith(nb); nb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); } }, 400);
     }).catch(() => { const n = wrap.querySelector('.note'); if (n) n.textContent = 'Tools could not load. Check your connection and try again.'; });
   }
+  function homeParcelCard(card, r, d) {
+    const info = mk('div', 'pm-home-parcel-info');
+    const county = /\b(county|parish|borough|city)\b/i.test(d.county) ? d.county : d.county + ' County';
+    info.append(mk('b', '', county + ', ' + d.state), mk('span', '', 'Parcel: ' + r.p));
+    const facts = mk('div', 'pm-home-facts');
+    for (const fact of [acres(r) || sqft(r), r.amt == null ? null : (r.al || 'Listed amount') + ': ' + money(r.amt), r.mv == null ? 'Market value unavailable' : 'Market value: ' + money(r.mv)]) {
+      if (fact) facts.append(mk('span', '', fact));
+    }
+    info.append(facts);
+    const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
+    const details = mk('a', 'pm-home-property', 'View property →');
+    details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
+    card.append(info, close, details);
+    if (r.g && r.bb) {
+      const thumbnail = hero(r, d);
+      const image = thumbnail.querySelector('img');
+      image.addEventListener('error', () => thumbnail.remove(), {once:true});
+      card.prepend(thumbnail);
+    }
+    card.hidden = false;
+  }
   function popup(r) {
     const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
+    if (homeMap) { homeParcelCard(p, r, d); return; }
     const hd = mk('div', 'hd'), ttl = mk('div', 't'); ttl.append(mk('b', r.a ? '' : 'idt', r.a || r.p), mk('span', '', (r.a ? '' : 'Parcel ID · ') + d.county + ', ' + d.state + (r.a ? ' · ' + r.p : ''))); const x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closePop); hd.append(ttl, x); p.appendChild(hd);
     const bd = mk('div', 'bd'); bd.appendChild(hero(r, d));
     // key facts
@@ -347,8 +411,10 @@
     sel = r; near = null; popup(r);
     const dataset = IDX.datasets.find(x => x.id === r._d);
     if (dataset && locationContext && o?.remember !== false) rememberArea(locationContext.countyArea(dataset, r));
-    if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); }
-    if (o && o.fly && r.bb && mapReady) map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], { padding: { top: embedded ? 92 : 120, bottom: embedded ? Math.min(185, Math.floor(innerHeight * .36)) : window.innerWidth < 980 ? 330 : 120, left: 60, right: window.innerWidth > 979 ? 420 : 40 }, maxZoom: 18.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3) });
+    if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); if (homeMap) map.getSource('sel-point').setData(r.cx ? {type:'Feature',geometry:{type:'Point',coordinates:r.cx},properties:{}} : empty); }
+    if (homeMap && o?.fly && r.bb && mapReady) {
+      map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], {padding:{top:105,bottom:108,left:24,right:48},maxZoom:18.5,duration:REDUCED ? 0 : 240});
+    } else if (o && o.fly && r.bb && mapReady) map.fitBounds([[r.bb[0], r.bb[1]], [r.bb[2], r.bb[3]]], { padding: { top: embedded ? 92 : 120, bottom: embedded ? Math.min(185, Math.floor(innerHeight * .36)) : window.innerWidth < 980 ? 330 : 120, left: 60, right: window.innerWidth > 979 ? 420 : 40 }, maxZoom: 18.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3) });
     else if (r.cx && mapReady && o && o.fly) map.easeTo({ center: r.cx, zoom: Math.max(map.getZoom(), 16) });
     openRight(false); setMapUrl(r._d, r.p); refresh(); aiRefresh();
   }
@@ -619,7 +685,7 @@
     gj.features.forEach(f => { const a = f.properties.a, s = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a] || {}; f.properties.sys = s.sys || 'Sources differ'; f.properties.n = s.n || a; f.properties.has = have[a] ? 1 : 0; f.properties.col = COL[s.sys] || '#94a3b8'; });
     map.addSource('states', { type: 'geojson', data: gj });
     const before = 'p-fill';
-    map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], 0.62, 0.42], 6.5, 0.4, 8.5, 0] } }, before);
+    map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], homeMap ? 0.20 : 0.62, homeMap ? 0.10 : 0.42], 6.5, homeMap ? 0.07 : 0.4, 8.5, 0] } }, before);
     map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
     map.addLayer({ id: 'st-hl', type: 'line', source: 'states', filter: ['in', ['get', 'a'], ['literal', ['__none__']]], paint: { 'line-color': '#22d3ee', 'line-width': 3.2 } }, before);
     map.addLayer({ id: 'st-sel', type: 'line', source: 'states', filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
@@ -633,12 +699,13 @@
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
     if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
     active = new Set(['__none__']); F.inView = false; refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
-    const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) map.setFilter('st-sel', ['==', ['get', 'a'], a]);
-    if (panel) stateCard(a); aiRefresh();
+    const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
+    if (panel) { stateCard(a, !homeMap); if (homeMap) openRight(false); }
+    aiRefresh();
     if (remember && locationContext) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
-    const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); history.replaceState(null, '', url);
+    const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
   }
-  function stateCard(a) {
+  function stateCard(a, open = true) {
     const R = $('pmResults'), s = IDX.allStates.find(x => x.a === a), rule = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a], ds = IDX.datasets.filter(d => d.state === a); R.textContent = '';
     R.appendChild(mk('h3', '', s ? s.n : a)); if (rule) { const dl = mk('dl', 'pm-rules'); [['Sale type', rule.sys], ['Interest or penalty', rule.rate], ['Redemption', rule.red], ['Bidding', rule.bid]].forEach(([k, v]) => { if (v) { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); } }); R.appendChild(dl); if (rule.verify) R.appendChild(mk('p', 'note', 'Sources differ for this state. Verify with the county.')); }
     if (typeof OFFICIALS !== 'undefined') { const g = OFFICIALS.gov[a], ms = OFFICIALS.mayors[a] || []; if (g || ms.length) { const dl = mk('dl', 'pm-rules'); if (g) { const d = mk('div'); d.append(mk('dt', '', g.title), mk('dd', '', g.name + ' (' + g.party + ')')); dl.appendChild(d); } ms.forEach(x => { const d = mk('div'); d.append(mk('dt', '', 'Mayor of ' + x.city), mk('dd', '', x.name + ' (' + x.party + ')')); dl.appendChild(d); }); R.appendChild(dl); R.appendChild(mk('p', 'note', 'As listed on Wikipedia, checked Nov 2026. Officials change: verify.')); } }
@@ -652,7 +719,7 @@
     const lk = mk('a', 'pm-btn', 'Full ' + (s ? s.n : a) + ' rules'); lk.href = '/liens/states/state/?s=' + a; lk.style.cssText = 'display:inline-flex;align-items:center;text-decoration:none;margin:6px 0'; R.appendChild(lk);
     if (!ds.length) { R.appendChild(mk('p', 'pm-empty', 'No verified parcel records or boundaries for ' + (s ? s.n : a) + ' counties yet, so nothing is drawn. We never show shapes or listings we cannot verify.')); }
     else { R.appendChild(mk('h3', '', 'Counties on the map (' + ds.length + ')')); const row = mk('div', 'pm-chips-row'); ds.sort((x, y) => y.mapped - x.mapped).slice(0, 40).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ' · ' + d.records.toLocaleString('en-US')); b.type = 'button'; b.addEventListener('click', () => { pickCounty(d.id); showTab('list'); }); row.appendChild(b); }); R.appendChild(row); }
-    showTab('list', true);
+    showTab('list', open);
   }
 
   // ---------- start ----------
@@ -678,6 +745,8 @@
   }
   async function start2() {
     const q = new URLSearchParams(location.search), county = q.get('c'), parcel = q.get('p'), state = q.get('s');
+    const point = new URLSearchParams(location.hash.slice(1));
+    const lat = Number(point.get('lat')), lng = Number(point.get('lng'));
     if (q.get('cams') && q.get('lat') && q.get('lng')) {
       const lat = Number(q.get('lat')), lng = Number(q.get('lng'));
       let tries = 0;
@@ -688,6 +757,9 @@
       await pickCounty(county, {announce:!embedded, remember:!parcel && !embedded});
       const record = parcel && loaded[county]?.recs.find(r => String(r.p) === parcel);
       if (record) select(record, {fly:true,remember:!embedded});
+    } else if (!embedded && locationContext?.coordinates(lat, lng)) {
+      const knownState = IDX.allStates.some(s => s.a === state) ? state : '';
+      await showArea({state:knownState,lat,lng});
     } else if (state && IDX.allStates.some(s => s.a === state)) {
       focusState(state, {remember:!embedded,panel:!embedded});
     } else if (embedded && !pickerMap && locationContext) {
