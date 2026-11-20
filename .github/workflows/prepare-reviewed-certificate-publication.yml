@@ -1,0 +1,83 @@
+name: Prepare reviewed certificate for research publication
+on:
+  workflow_dispatch:
+    inputs:
+      county:
+        description: County used for the original review
+        required: true
+        type: choice
+        options:
+          - wakulla
+          - palm-beach
+          - st-johns
+      review_run_id:
+        description: Successful Manual Florida certificate research review workflow run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prepare:
+    if: github.actor == 'Skyrease124'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test research publication gates
+        run: python -m unittest discover -s tests -p 'test_prepare_research_publication.py'
+      - name: Validate upstream human review run and retrieve audit receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_RUN: ${{ inputs.review_run_id }}
+        run: |
+          case "$REVIEW_RUN" in
+            ''|*[!0-9]*) echo "Invalid numeric review run ID"; exit 1;;
+          esac
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REVIEW_RUN" \
+            --jq '[.name,.conclusion,.event,.head_branch,.actor.login] | @tsv' > /tmp/review-run-info
+          IFS="$(printf '\t')" read -r NAME CONCLUSION EVENT BRANCH ACTOR < /tmp/review-run-info
+          test "$NAME" = "Manual Florida certificate research review"
+          test "$CONCLUSION" = "success"
+          test "$EVENT" = "workflow_dispatch"
+          test "$BRANCH" = "claude/engineering-workspace"
+          test "$ACTOR" = "Skyrease124"
+          mkdir -p review-input
+          gh run download "$REVIEW_RUN" --name certificate-manual-review-receipt --dir review-input
+          test -s review-input/certificate-review-receipt.json
+      - name: Load matching county snapshot (must exactly match SHA256 in audit receipt)
+        env:
+          COUNTY: ${{ inputs.county }}
+        run: |
+          case "$COUNTY" in
+            wakulla) BRANCH=automation/wakulla-certificate-review; FILE=fl-wakulla-certificate-export.json;;
+            palm-beach) BRANCH=automation/palm-beach-certificate-review; FILE=fl-palm-beach-certificate-export.json;;
+            st-johns) BRANCH=automation/st-johns-certificate-review; FILE=fl-st-johns-unpaid-certificates.json;;
+            *) echo "Invalid county"; exit 1;;
+          esac
+          git fetch --no-tags origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+          git show "origin/$BRANCH:county-import-staging/$FILE" > "review-input/$FILE"
+          printf 'SNAPSHOT_FILE=%s\n' "review-input/$FILE" >> "$GITHUB_ENV"
+      - name: Prepare research-only candidate (no automatic publication)
+        env:
+          COUNTY: ${{ inputs.county }}
+        run: |
+          python scripts/prepare-research-publication.py \
+            --county "$COUNTY" \
+            --snapshot "$SNAPSHOT_FILE" \
+            --receipt review-input/certificate-review-receipt.json \
+            --output publication-review/research-candidate.json
+      - name: Archive research-only candidate for separate publication decision
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-research-publication-candidate
+          path: publication-review/research-candidate.json
+          retention-days: 90
+      - name: Summarize outstanding review
+        run: |
+          echo "### Reviewed certificate publication candidate prepared" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download the JSON artifact and review before separately merging into a research-only dataset." >> "$GITHUB_STEP_SUMMARY"
+          echo "**Nothing has been published.** Sale availability remains false." >> "$GITHUB_STEP_SUMMARY"
