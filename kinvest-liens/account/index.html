@@ -64,6 +64,12 @@
     <p id="ownerbtns" hidden><a class="btn" href="../members/">Members</a> <a class="btn ghost" href="../usage/">Usage &amp; daily limit (AI)</a> <a class="btn ghost" href="../billing/">Billing setup</a></p>
     <p><a class="btn" href="../portfolio/">My portfolio (liens I bought)</a></p>
     <div id="pushhost"></div>
+    <h2>Settings</h2>
+    <div class="notice" id="setbox">
+      <label class="subchk"><input type="checkbox" id="autoloc"> <span>Use my current location on the home page (asks your phone once per visit)</span></label>
+      <p class="small muted">This setting is saved on this device only. Your phone will still ask for permission.</p>
+    </div>
+    <script>(function(){var c=document.getElementById('autoloc');try{c.checked=localStorage.getItem('ppa_auto_location')==='1';c.addEventListener('change',function(){localStorage.setItem('ppa_auto_location',c.checked?'1':'0');sessionStorage.removeItem('ppa_auto_loc_tried');});}catch(e){c.disabled=true;}})();</script>
     <h2>My favorites</h2>
     <p class="small muted">Tap ☆ Favorite on any lien to keep it here, so you can come back to it. For your own research notes, not advice.</p>
     <ul id="saved" class="sflags" style="display:block"></ul>
