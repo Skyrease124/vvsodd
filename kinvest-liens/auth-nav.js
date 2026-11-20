@@ -119,7 +119,7 @@
     }
     if (user) {
       navLinks.forEach(a => { a.textContent = 'My account'; });
-      header?.querySelectorAll('.app-actions a[href="/login/"]').forEach(a => { a.hidden = true; });
+      header?.querySelectorAll('.app-actions a[href="/login/"], .app-actions a[href^="/login/?"]').forEach(a => { a.hidden = true; });
       const nav = document.createElement('nav'); nav.className = 'app-bottom'; nav.setAttribute('aria-label', 'Mobile navigation');
       const bottomPaths = [
         ['Home','/','M3 11l9-8 9 8v10h-6v-6H9v6H3z'],

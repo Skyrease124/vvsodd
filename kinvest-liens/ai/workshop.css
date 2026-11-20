@@ -18,5 +18,6 @@
 #work-saved,.work-property-list,#work-history-items{list-style:none;padding:0;margin:5px 0}
 #work-saved li,.work-property-list li{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid #476675;padding:5px 0;font-size:.78rem}.work-property-list li div{flex:1;min-width:135px;overflow-wrap:anywhere}.work-property-list li small{display:block;color:#c1d4de}.work-property-list li label{display:flex;flex-direction:row;align-items:center;font-size:.73rem}.work-property-list li input{accent-color:#2ed889}
 #work-history-dialog{width:min(90vw,475px);max-height:75dvh;overflow:auto;color-scheme:dark}#work-history-dialog::backdrop{background:#000a}#work-history-items li+li{margin-top:5px}
+.ai-workshop .a2hs{background:var(--app-panel);border-color:var(--app-line);color:var(--app-text)}
 @media(min-width:800px){.work-action-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.work-panel{padding:12px}.work-review{gap:7px}}
 @media(prefers-reduced-motion:reduce){.workshop-button,.work-action-grid button{transition:none;scale:1!important}}
