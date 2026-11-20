@@ -6,6 +6,8 @@ on:
       - claude/engineering-workspace
     paths:
       - 'netlify/functions/certificate-auto-review.mjs'
+      - 'netlify/lib/certificate-batch-marks.mjs'
+      - 'tests/owner-certificate-auto-review.test.mjs'
       - 'kinvest-liens/owner/certificates/index.html'
       - 'tests/owner-ai-batch-and-summary.test.mjs'
       - '.github/workflows/validate-owner-ai-batch-summary.yml'
