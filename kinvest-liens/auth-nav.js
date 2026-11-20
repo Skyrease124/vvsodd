@@ -119,7 +119,7 @@
     }
     if (user) {
       navLinks.forEach(a => { a.textContent = 'My account'; });
-      header?.querySelectorAll('.app-actions a[href="/login/"]').forEach(a => { a.hidden = true; });
+      header?.querySelectorAll('.app-actions a[href="/login/"], .app-actions a[href^="/login/?"]').forEach(a => { a.hidden = true; });
       const nav = document.createElement('nav'); nav.className = 'app-bottom'; nav.setAttribute('aria-label', 'Mobile navigation');
       const bottomPaths = [
         ['Home','/','M3 11l9-8 9 8v10h-6v-6H9v6H3z'],
@@ -178,16 +178,17 @@
       const tile = (a, label, svg, hi) => { a.textContent = ''; a.className = 'ppx-tile' + (hi ? ' ppx-hi' : ''); a.innerHTML = ico(svg); a.appendChild(el('span', '', label)); return a; };
       const tiles = el('div', 'ppx-tiles');
       tiles.append(
-        tile(lpf, 'Profile', '<circle cx="12" cy="6.5" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>'),
-        tile(aiMain, isPro ? 'Map + AI' : 'Map', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', true),
+        tile(lpf, 'Profile', '<circle cx="12" cy="6.5" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>', true),
+        tile(aiMain, isPro ? 'Map + AI' : 'Map', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
         tile(l1, 'Portfolio', '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
         tile(l8, 'Master Class', '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>'));
       const rowOf = (a, svg, label) => { const t = label || a.textContent; a.textContent = ''; a.className = 'ppx-row'; a.innerHTML = ico(svg); a.appendChild(el('span', '', t)); const chevron = el('i', '', '\u203a'); chevron.setAttribute('aria-hidden', 'true'); a.appendChild(chevron); return a; };
+      if (!isPro) { ldl.href = '/plans/?src=Download%20Center'; ldl.textContent = 'Download Center · Pro'; }
       const list = el('div', 'ppx-list');
       list.append(
         rowOf(l9, '<path d="M6 3h12v18l-6-4-6 4z"/>', 'Watchlist'),
         rowOf(lcm, '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-6 7-6s7 2.4 7 6"/><circle cx="17" cy="7" r="2.5"/><path d="M22 18c0-2.6-1.8-4.5-4.5-4.8"/>'),
-        ...(isPro ? [rowOf(ldl, '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>')] : []));
+        rowOf(ldl, '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>'));
       const bellIcon = '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/>';
       const more = el('details', 'ppx-more'); more.open = true; more.appendChild(el('summary', '', 'More'));
       const mg = el('div', 'ppx-grp');
@@ -195,13 +196,17 @@
         rowOf(lmsg, '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>', 'Messages'),
         rowOf(lcam, '<rect x="2" y="5" width="14" height="14" rx="2"/><path d="m16 9 6-3v12l-6-3"/>'),
         rowOf(lrt, bellIcon + '<path d="M3 6 2 9m19-3 1 3"/>'));
-      if (isPro) mg.appendChild(rowOf(lnot, bellIcon));
+      lnot.href = '/notifications/';
+      mg.appendChild(rowOf(lnot, bellIcon));
       more.appendChild(mg);
       const ownerBox = user.owner ? el('div', 'ppx-own') : null;
       if (ownerBox) { const ownerLink = el('a', '', 'Owner Dashboard →'); ownerLink.href = '/owner/'; ownerLink.dataset.tool = 'owner dashboard'; ownerBox.appendChild(ownerLink); }
       const fullAi = el('a', '', 'PricePocket AI · Pro'); fullAi.href = isPro ? '/ai/' : '/plans/?src=PricePocket%20AI';
       const hd = el('div', 'ppx-hd');
-      const av3 = el('div', 'ppx-av', (user.email || '?').charAt(0).toUpperCase());
+      const av3 = el('div', 'ppx-av');
+      const initial = el('span', '', '?'); initial.setAttribute('aria-hidden','true');
+      const portrait = el('a', 'ppx-av-link'); portrait.href = lpf.href; portrait.setAttribute('aria-label','Open profile');
+      av3.append(initial,portrait);
       const camera = el('a', 'ppx-camera');
       camera.href = '/community/settings/';
       camera.setAttribute('aria-label', 'Edit profile photo');
@@ -228,7 +233,8 @@
       const secondary = el('div', 'ppx-secondary');
       if (ownerBox) secondary.appendChild(ownerBox);
       secondary.appendChild(foot);
-      const body = el('div', 'ppx-body'); body.append(el('div', 'ppx-handle'), hd, search, tiles, list, more, secondary);
+      const drag = el('div', 'ppx-drag'); drag.append(el('div', 'ppx-handle')); drag.setAttribute('aria-hidden','true');
+      const body = el('div', 'ppx-body'); body.append(drag, hd, search, tiles, list, more, secondary);
       p.id = 'ppx-account-menu'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Account menu');
       b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-controls', p.id);
       p.append(brandbar, body);
@@ -255,11 +261,11 @@
         fetch('/.netlify/functions/community?me=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(data => {
           const profile = data?.me;
           if (!profile) { requestedProfile = false; return; }
-          if (profile.name) { nm.textContent = profile.name; av3.firstChild.nodeValue = profile.name.charAt(0).toUpperCase(); }
+          if (profile.name) { nm.textContent = profile.name; initial.textContent = profile.name.charAt(0).toUpperCase(); }
           if (profile.username) { handle.textContent = '@' + profile.username; handle.hidden = false; }
           if (profile.photo) {
             const photo = el('img'); photo.src = profile.photo; photo.alt = '';
-            photo.addEventListener('error', () => photo.remove(), { once:true }); av3.prepend(photo);
+            photo.addEventListener('error', () => photo.remove(), { once:true }); portrait.append(photo);
           }
         }).catch(() => { requestedProfile = false; });
       };
@@ -272,6 +278,16 @@
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
         if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
       });
+      let dragStart = null;
+      drag.addEventListener('pointerdown', e => { dragStart = e.clientY; drag.setPointerCapture(e.pointerId); });
+      drag.addEventListener('pointermove', e => {
+        if (dragStart != null) p.style.translate = '0 ' + Math.max(0,e.clientY - dragStart) + 'px';
+      });
+      const endDrag = e => {
+        if (dragStart != null && e.type !== 'pointercancel' && e.clientY - dragStart > 70) closeSheet(true);
+        p.style.translate = ''; dragStart = null;
+      };
+      drag.addEventListener('pointerup', endDrag); drag.addEventListener('pointercancel', endDrag);
       close.addEventListener('click', () => closeSheet(true));
       menuButton.addEventListener('click', () => closeSheet(true));
       b.addEventListener('click', e => { e.preventDefault(); if (p.hidden) openSheet(); else closeSheet(); });

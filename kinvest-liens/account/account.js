@@ -1,11 +1,16 @@
 (function () {
   const $ = id => document.getElementById(id);
   const API = '/.netlify/functions/account';
+  const fields = window.ppaAuthFields;
   let mode = 'in';
   function setMode(m) {
     mode = m; $('tabin').className = 'btn' + (m === 'in' ? '' : ' ghost'); $('tabup').className = 'btn' + (m === 'up' ? '' : ' ghost');
-    $('go').textContent = m === 'in' ? 'Sign in' : 'Create account'; $('pwhint').hidden = m === 'in'; $('acodewrap').hidden = m === 'in';
+    $('acodewrap').hidden = m === 'in';
     const signup = m === 'up';
+    $('tabup').setAttribute('aria-pressed',String(signup));
+    $('tabin').setAttribute('aria-pressed',String(!signup));
+    $('pw').placeholder = signup ? 'Create a password (at least 8 characters)' : 'Password';
+    fields.pending($('go'),false,signup);
     ['usernamewrap','confirmwrap','signupterms','signup-benefits'].forEach(id => { $(id).hidden = !signup; });
     $('loginopts').hidden = signup;
     ['username','confirmpw','signupaccept'].forEach(id => { $(id).required = signup; });
@@ -18,7 +23,7 @@
     switchLink.href = signup ? '/login/' : '/account/?mode=up';
     switchLink.textContent = signup ? 'Sign in →' : 'Create a free account →';
     $('account-switch').replaceChildren(signup ? 'Already have an account? ' : 'New here? ', switchLink);
-    $('msg').textContent = '';
+    fields.clear();
   }
   let billing = null;
   // Coming from the plan page (/plans/): ?plan=pro opens the subscribe terms after sign-in; ?next= returns the member to where they were. Only same-site paths are accepted.
@@ -74,7 +79,7 @@
   function show(user) {
     window.__ppUser = user;
     if (user) { const pro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= new Date().toISOString().slice(0, 10)); $('ainote').textContent = pro ? 'Ask across all states: rankings, comparisons and lien lists.' : '\uD83D\uDD12 Pro members only ($5.50 a week).'; } if (user && billing) { planButtons(user); proFlow(); }
-    $('out').hidden = !!user; $('in').hidden = !user; if (!user) return;
+    $('out').hidden = !!user; $('in').hidden = !user; document.body.classList.toggle('auth-entry',!user); if (!user) return;
     { const pp = () => { if (window.PPPush) { window.PPPush.mount($('pushhost'), user); window.PPPush.sync(user); } }; if (window.PPPush) pp(); else window.addEventListener('load', pp, {once: true}); }
     const today = new Date().toISOString().slice(0, 10), paid = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
     $('codebox').hidden = !!(paid || user.owner);
@@ -102,22 +107,23 @@
     });
   }
   async function post(o) { try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return {ok: r.ok, d: await r.json()}; } catch (e) { return {ok: false, d: {error: 'Could not reach the server. Try again.'}}; } }
-  $('eye').addEventListener('click', () => {
-    const show = $('pw').type === 'password'; $('pw').type = show ? 'text' : 'password';
-    $('eyeon').style.display = show ? 'none' : ''; $('eyeoff').style.display = show ? '' : 'none'; $('eye').setAttribute('aria-pressed', String(show)); $('eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-  });
   $('redeem').addEventListener('click', async () => { $('codemsg').textContent = 'One moment\u2026'; const r = await post({action: 'redeem', code: $('rcode').value}); if (r.ok) { location.reload(); } else $('codemsg').textContent = r.d.error || 'Something went wrong.'; });
   $('tabin').addEventListener('click', () => setMode('in')); $('tabup').addEventListener('click', () => setMode('up'));
   $('form').addEventListener('submit', async e => {
     e.preventDefault();
-    if (!$('form').reportValidity()) return;
-    const signup = mode === 'up';
-    if (signup && $('pw').value !== $('confirmpw').value) { $('msg').textContent = 'Passwords must match.'; $('confirmpw').focus(); return; }
-    $('go').disabled = true; $('msg').textContent = 'One moment…';
+    const signup = mode === 'up', button = $('go');
+    if (button.disabled || !fields.validate(signup)) return;
+    fields.pending(button,true,signup);
+    $('tabup').disabled = $('tabin').disabled = true;
     const r = await post({action: signup ? 'signup' : 'login', email: $('email').value, password: $('pw').value,
       ...(signup ? {username: $('username').value, terms: $('signupaccept').checked, accessCode: $('acode').value} : {remember: $('remember').checked})});
-    $('go').disabled = false;
-    if (r.ok) { $('pw').value = ''; $('pw').type = 'password'; $('eyeon').style.display = ''; $('eyeoff').style.display = 'none'; show(r.d.user); if (mode === 'up' && !WANT_PRO) { location.href = '/community/welcome/?next=' + encodeURIComponent(NEXT || '/map/'); return; } if (NEXT && !WANT_PRO) { location.href = NEXT; return; } } else $('msg').textContent = r.d.error || 'Something went wrong.';
+    if (r.ok) {
+      $('pw').value = ''; $('confirmpw').value = ''; fields.resetVisibility(); show(r.d.user);
+      if (signup && !WANT_PRO) { location.href = '/community/welcome/?next=' + encodeURIComponent(NEXT || '/map/'); return; }
+      if (NEXT && !WANT_PRO) { location.href = NEXT; return; }
+    } else fields.status(r.d.error || 'Something went wrong.');
+    fields.pending(button,false,signup);
+    $('tabup').disabled = $('tabin').disabled = false;
   });
   $('logout').addEventListener('click', async () => { if (window.PPPush) await window.PPPush.logout(); await post({action: 'logout'}); show(null); });
   fetch(API).then(r => r.json()).then(d => { setMode(new URLSearchParams(location.search).get('mode') === 'up' ? 'up' : 'in'); show(d.user); }).catch(() => { setMode(QS.get('mode') === 'up' ? 'up' : 'in'); show(null); });

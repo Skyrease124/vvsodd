@@ -1,5 +1,12 @@
 (function () {
   const paths = {
+    email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>',
+    bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9M10 21h4"/>',
+    tag:'<path d="M3 12 12 3h8v8l-9 9z"/><circle cx="16" cy="7" r="1"/>',
+    userplus:'<circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2m4-12v8m-4-4h8"/>',
+    crown:'<path d="m2 7 5 4 5-7 5 7 5-4-3 11H5zM5 21h14"/>',
+    check:'<path d="m4 12 5 5L20 6"/>',
+    info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8v.1"/>',
     home:'<path d="m3 11 9-8 9 8v10h-6v-6H9v6H3z"/>',
     profile:'<circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
     map:'<path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2zm6-2v14m6-12v14"/>',
@@ -34,12 +41,35 @@
     }
   };
   if (window.ppaAccount) window.ppaAccount.then(update); else window.addEventListener('ppa:account', e => update(e.detail), {once:true});
+  const loc = window.ppaLocation;
+  const areaLink = document.querySelector('[data-open-map]');
+  const recentLink = document.querySelector('[data-recent-link]');
+  const showArea = area => {
+    areaLink.href = loc.mapPath(area);
+    if (!area) return;
+    document.querySelector('[data-recent-label]').textContent = area.parcel ? 'Recent parcel' : 'Map area';
+    document.querySelector('[data-recent]').textContent = area.label || 'Current map area';
+    recentLink.href = loc.mapPath(area);
+  };
+  loc.subscribe(showArea); loc.ready().then(showArea);
+  const device = document.querySelector('[data-use-location]');
+  const status = document.querySelector('[data-location-status]');
+  device.addEventListener('click', async () => {
+    device.disabled = true; status.textContent = 'Finding location…';
+    try { await loc.useDevice(); status.textContent = ''; }
+    catch(e) { status.textContent = 'Location unavailable'; }
+    finally { device.disabled = false; }
+  });
   try {
-    const recent = JSON.parse(localStorage.getItem('ppa_recent_map') || 'null');
-    if (recent && typeof recent.label === 'string' && /^\/map\/\?/.test(recent.url)) {
-      document.querySelector('[data-recent-label]').textContent = 'Recently viewed';
-      document.querySelector('[data-recent]').textContent = recent.label;
-      document.querySelector('[data-recent-link]').href = recent.url;
+    if (!loc.get() && localStorage.getItem('ppa_auto_location') === '1' && !sessionStorage.getItem('ppa_auto_loc_tried')) {
+      sessionStorage.setItem('ppa_auto_loc_tried', '1'); device.click();
     }
-  } catch (e) { /* storage is optional */ }
+  } catch(e) { /* optional storage */ }
+  document.querySelector('[data-open-radar]').addEventListener('click', () => { document.getElementById('map').open = true; });
+  const header = document.querySelector('.dnav');
+  let frame = 0;
+  addEventListener('scroll', () => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => { frame = 0; header.classList.toggle('app-scrolled', scrollY > 12); });
+  }, {passive:true});
 })();

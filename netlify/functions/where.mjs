@@ -33,6 +33,15 @@ export default async (req, context) => {
   const geo = (context && context.geo) || {};
   const country = geo.country && geo.country.code;
   const sub = geo.subdivision && geo.subdivision.code;
-  if (country === 'US' && sub && /^[A-Z]{2}$/.test(sub)) return json(200, { state: sub, name: (geo.subdivision && geo.subdivision.name) || sub, source: 'connection' });
+  if (country === 'US' && sub && /^[A-Z]{2}$/.test(sub)) {
+    const area = { state: sub, name: geo.subdivision.name || sub, source: 'connection' };
+    const lat = Number(geo.latitude), lng = Number(geo.longitude);
+    if (u.searchParams.get('regional') === '1' && lat >= 18 && lat <= 72 && lng >= -180 && lng <= -60) {
+      area.lat = Math.round(lat * 10) / 10;
+      area.lng = Math.round(lng * 10) / 10;
+      if (typeof geo.city === 'string') area.city = geo.city.slice(0, 60);
+    }
+    return json(200, area);
+  }
   return json(200, { state: null, country: country || null });
 };

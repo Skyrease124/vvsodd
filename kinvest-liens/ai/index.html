@@ -1,7 +1,55 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex"><meta name="theme-color" content="#07121e">
-<title>PricePocket AI | PricePocketPro</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/map/parcel-map.css"><link rel="stylesheet" href="/app-shell.css"></head>
-<body class="ppa-workspace"><header class="app-bar"><a class="app-brand" href="/"><img src="/img/logo-mark.png" alt=""><span>PricePocket<em>Asset</em></span></a><nav class="app-actions"><a class="app-outline" href="/map/">Parcel Map</a><a class="dbtn" href="/account/?mode=up">Sign Up</a></nav></header>
-<main class="app-work"><div class="app-heading"><span class="app-badge">Pro</span><h1>PricePocket AI</h1><p>Search county lists, compare states, research liens and ask about your portfolio.</p></div>
-<section class="app-work-panel" id="pmAiBox" aria-label="AI workspace"><p>Checking membership…</p></section><nav class="app-footer" aria-label="Related tools"><a href="/downloads/">Download Center →</a> <a href="/portfolio/">Portfolio →</a></nav></main>
-<script src="/app-ui.js" defer></script><script src="/auth-nav.js" defer></script><script src="/map/parcel-map.js" defer></script></body></html>
+<title>PricePocket AI Workshop | PricePocketPro</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/map/parcel-map.css"><link rel="stylesheet" href="/app-shell.css"><link rel="stylesheet" href="/ai/workshop.css"></head>
+<body class="ppa-workspace">
+<header class="app-bar"><a class="app-brand" href="/"><img src="/img/logo-mark.png" alt=""><span>PricePocket<em>Asset</em></span></a><nav class="app-actions" aria-label="Account"><a class="app-outline" href="/login/?next=/ai/">Sign In</a><a class="dbtn" href="/account/?mode=up">Sign Up</a></nav></header>
+<main class="app-work ai-workshop">
+  <div class="app-heading workshop-heading"><div><h1><span data-icon="spark"></span>PricePocket AI Workshop <span class="app-badge">Pro</span></h1><p>Research properties, compare areas, and organize your findings.</p></div><button type="button" class="workshop-button" id="work-history" hidden>AI History</button></div>
+  <section id="work-geo" hidden aria-label="Research geography">
+    <div class="work-scope">
+      <label><span class="sr-only">Research state</span><select id="work-state"><option value="">Nationwide</option></select></label>
+      <label><span class="sr-only">Research county</span><select id="work-county" disabled><option value="">All counties</option></select></label>
+    </div>
+    <iframe title="Research geography map" loading="lazy"></iframe>
+  </section>
+  <div class="work-tabs" role="tablist" aria-label="Research workspace" hidden>
+    <button id="work-tab-ask" role="tab" type="button" aria-controls="work-ask" aria-selected="true"><span data-icon="spark"></span>Ask AI</button>
+    <button id="work-tab-properties" role="tab" type="button" aria-controls="work-properties" aria-selected="false" tabindex="-1"><span data-icon="home"></span>Properties</button>
+    <button id="work-tab-lists" role="tab" type="button" aria-controls="work-lists" aria-selected="false" tabindex="-1"><span data-icon="bookmark"></span>Lists</button>
+    <button id="work-tab-analysis" role="tab" type="button" aria-controls="work-analysis" aria-selected="false" tabindex="-1"><span data-icon="chart"></span>Analysis</button>
+  </div>
+  <section class="work-panel" id="work-ask" aria-label="Ask PricePocket AI">
+    <div id="pmAiBox" aria-label="AI workspace"><p>Checking membership…</p></div>
+  </section>
+  <section id="work-properties" class="work-panel" role="tabpanel" aria-labelledby="work-tab-properties" hidden>
+    <div class="work-panel-title"><h2>Properties</h2><button type="button" class="workshop-button" data-prompt="List the cheapest tax liens">Search properties</button></div>
+    <div id="work-results" aria-live="polite"><p>Run a property or lien search to see the records here.</p></div>
+  </section>
+  <section id="work-lists" class="work-panel" role="tabpanel" aria-labelledby="work-tab-lists" hidden>
+    <div class="work-panel-title"><h2>Saved lists</h2><a href="/downloads/">Download Center →</a></div>
+    <form id="work-new-list" class="work-list-form"><label for="work-list-name" class="sr-only">List name</label><input id="work-list-name" placeholder="Name your list" maxlength="60" required><button type="submit" class="workshop-button">Create list</button></form>
+    <p id="work-list-status" role="status"></p>
+    <ul id="work-saved"></ul>
+  </section>
+  <section id="work-analysis" class="work-panel" role="tabpanel" aria-labelledby="work-tab-analysis" hidden>
+    <div class="work-panel-title"><h2>Analysis</h2><button type="button" class="workshop-button" data-prompt="Compare states by redemption periods and interest rates">Compare states</button></div>
+    <div id="work-insights" aria-live="polite"><p>Your latest answer, search scope and sources will appear here.</p></div>
+  </section>
+  <section id="work-quick" hidden><h2>Quick Actions</h2>
+    <div class="work-action-grid">
+      <button type="button" data-prompt="List the cheapest tax liens"><span data-icon="search"></span>Search Properties</button>
+      <button type="button" data-panel="lists"><span data-icon="bookmark"></span>Save &amp; Track</button>
+      <a href="/account/watchlist/"><span data-icon="bell"></span>Get Updates</a>
+      <button type="button" data-prompt="Compare states by redemption periods and interest rates"><span data-icon="map"></span>Compare Areas</button>
+      <button type="button" data-prompt="Research tax sale rules and official sources for "><span data-icon="pin"></span>County Research</button>
+      <button type="button" data-prompt="Find tax liens under "><span data-icon="layers"></span>Lien Research</button>
+      <button type="button" data-panel="lists" data-list-focus><span data-icon="file"></span>Create List</button>
+      <a href="/downloads/"><span data-icon="file"></span>Download Data</a>
+      <button type="button" data-panel="analysis"><span data-icon="chart"></span>Analyze</button>
+    </div>
+  </section>
+  <dialog id="work-history-dialog" class="work-panel" aria-labelledby="work-history-title"><div class="work-panel-title"><h2 id="work-history-title">AI History</h2><form method="dialog"><button class="workshop-button">Close</button></form></div><p>Questions from this visit. Tap one to reuse it.</p><ul id="work-history-items"></ul></dialog>
+</main>
+<script src="/app-location.js" defer></script><script src="/app-ui.js" defer></script><script src="/auth-nav.js" defer></script><script src="/dl/select.js" defer></script><script src="/ai/workshop.js" defer></script><script src="/map/parcel-map.js" defer></script>
+</body></html>
