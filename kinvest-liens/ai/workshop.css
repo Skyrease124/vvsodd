@@ -21,3 +21,34 @@
 .ai-workshop .a2hs{background:var(--app-panel);border-color:var(--app-line);color:var(--app-text)}
 @media(min-width:800px){.work-action-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.work-panel{padding:12px}.work-review{gap:7px}}
 @media(prefers-reduced-motion:reduce){.workshop-button,.work-action-grid button{transition:none;scale:1!important}}
+
+
+/* Premium AI response presentation */
+.ppa-workspace .aiout{margin-top:16px;display:grid;gap:14px;animation:ppaReveal .35s cubic-bezier(.2,.8,.2,1) both}
+.ppa-workspace .aiout .ans{font-size:clamp(.94rem,2.7vw,1.05rem);line-height:1.65;letter-spacing:-.012em}
+.ppa-workspace .aiout :is(h2,h3){letter-spacing:-.025em;line-height:1.25}
+.ppa-workspace .aiout :is(button,a){transition:background-color .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease}
+.ppa-workspace .aiout button{min-height:42px;border-radius:12px;font-weight:650}
+.ppa-workspace .aiout button:not(:disabled):active{transform:scale(.98)}
+.ppa-workspace .aiout :is(input,select,button,a):focus-visible,.work-property-list :is(a,button,input):focus-visible{outline:2px solid #6cf5b4;outline-offset:3px}
+.ppa-workspace .aiout details{border:1px solid #36566b;border-radius:14px;padding:12px;background:#10283a}
+.ppa-workspace .aiout summary{cursor:pointer;color:#c8e2f1;font-weight:650}
+.ppa-workspace .aiout a{color:#81edbd}
+.ppa-workspace .aiout .ans :is(p,li){max-width:75ch}
+.ppa-workspace .aiout .ans ul{padding-left:1.3rem}
+.ppa-workspace .aiout .ans li+li{margin-top:7px}
+.ppa-workspace .work-panel{box-shadow:0 8px 30px #00000014}
+.ppa-workspace .work-property-list{display:grid;gap:12px;margin-top:14px}
+.ppa-workspace .work-property-list>li{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px;padding:16px;border:1px solid #395d70;border-radius:18px;background:linear-gradient(145deg,#163448,#0b2132);box-shadow:0 8px 24px #0002;animation:ppaReveal .3s ease both}
+.ppa-workspace .work-property-list>li>div{grid-column:1/-1;min-width:0}
+.ppa-workspace .work-property-list>li b{font-size:1rem;color:#f7fbff}
+.ppa-workspace .work-property-list>li small{font-size:.85rem;line-height:1.55;margin-top:7px;color:#bcd1e1}
+.ppa-workspace .work-property-list>li>a{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 14px;border-radius:11px;border:1px solid #43bd89;color:#eafff4;text-decoration:none;font-weight:650;background:#08794f}
+.ppa-workspace .work-property-list>li label{align-self:center;gap:7px;color:#cde8e0}
+.ppa-workspace .work-property-list input{width:18px;height:18px}
+.ppa-workspace .work-review{gap:8px}
+.ppa-workspace .work-review button{min-height:42px;padding:8px 13px;border-radius:12px}
+@keyframes ppaReveal{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(hover:hover){.ppa-workspace .work-property-list>li:hover{border-color:#62cba3;transform:translateY(-1px)}.ppa-workspace .aiout button:not(:disabled):hover{border-color:#79e9b9}}
+@media(max-width:520px){.ppa-workspace .work-property-list>li{padding:13px}.ppa-workspace .work-review button{flex:1 1 auto}.ppa-workspace .aiout{gap:11px}}
+@media(prefers-reduced-motion:reduce){.ppa-workspace .aiout,.ppa-workspace .work-property-list>li{animation:none}.ppa-workspace .aiout :is(button,a){transition:none}.ppa-workspace .work-property-list>li:hover{transform:none}}
