@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Reviewed Certificate Research | PricePocketAsset</title>
+<meta name="description" content="Source-linked Florida tax certificate research records. Research only, not an offer to purchase.">
+<style>
+:root{font:16px system-ui,-apple-system,sans-serif;color:#14283b;background:#f5f8fb}
+*{box-sizing:border-box}body{margin:0}.shell{max-width:1120px;padding:24px;margin:auto}
+header{background:#10283f;color:#fff}header a{color:#a7f4d7;text-decoration:none}
+nav{display:flex;justify-content:space-between;gap:14px;align-items:center}nav strong{font-size:19px}
+h1{font-size:clamp(28px,5vw,42px);letter-spacing:-.03em;margin:0 0 12px}
+h2{font-size:20px}.lead{color:#506175;line-height:1.6}
+.hero{padding:34px 0 10px}
+.notice{background:#fff5e8;border:1px solid #e8c99f;padding:16px;border-radius:12px;line-height:1.55}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+input,select{background:white;padding:12px;border:1px solid #b8c8d9;border-radius:10px;font:inherit;max-width:100%;min-width:170px}
+#search{flex:1;min-width:220px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;margin-top:16px}
+.item{border:1px solid #d4e0ec;background:#fff;padding:18px;border-radius:14px}
+.item h3{margin:0 0 8px;font-size:18px}
+.item p{margin:7px 0;color:#53687b;overflow-wrap:anywhere}
+.pill{display:inline-block;padding:4px 9px;border-radius:100px;background:#e4f0fb;color:#183f68;font-size:12px;font-weight:650}
+a{color:#185d90}a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #3d86de}
+#state{padding:22px;border:1px solid #d4e0ec;border-radius:14px;background:#fff}
+footer{border-top:1px solid #d4e0ec;margin-top:32px;padding-top:18px;color:#66798a;font-size:14px}
+</style></head><body>
+<header><div class="shell"><nav><a href="/" aria-label="Back to PricePocketAsset home"><strong>PricePocketAsset</strong></a><a href="/">Home</a></nav></div></header>
+<main class="shell">
+<div class="hero"><h1>Reviewed certificate research</h1>
+<p class="lead">Official-source tax certificate details that have passed a separate manual research-review process.</p></div>
+<div class="notice"><strong>Research only. Not an investment offer.</strong> County ownership, redemption status, tax-deed proceedings, and ability to purchase can change. Even a county-held certificate is not necessarily available to buy. Verify everything with the issuing tax collector. This page does not sell certificates or provide checkout.</div>
+<div class="actions"><input id="search" type="search" placeholder="Search parcel or certificate number" aria-label="Search certificate records"><select id="county" aria-label="Select Florida county"><option value="">All counties</option><option>Wakulla</option><option>Palm Beach</option><option>St. Johns</option></select></div>
+<div id="state" role="status" aria-live="polite">Loading reviewed research records…</div>
+<section class="grid" id="records" aria-label="Reviewed certificate records"></section>
+<footer>Data comes from county reports and is presented for education and independent verification, never as a confirmed purchase listing.</footer>
+</main>
+<script>
+'use strict';
+const container=document.getElementById('records');
+const state=document.getElementById('state');
+const search=document.getElementById('search');
+const county=document.getElementById('county');
+let approved=[];
+function line(parent,label,value){
+  if(value===null||value===undefined||value==='')return;
+  const p=document.createElement('p');
+  const b=document.createElement('strong');b.textContent=label+': ';
+  p.append(b,document.createTextNode(String(value)));parent.append(p);
+}
+function draw(){
+  container.replaceChildren();
+  const term=search.value.trim().toLowerCase();
+  const filtered=approved.filter(r=>(!county.value||r.county===county.value)&&
+    (!term||[r.parcelId,r.certificateNumber,r.county].some(v=>String(v||'').toLowerCase().includes(term))));
+  if(!approved.length){
+    state.textContent='No certificates have been approved for website research publication yet. Our county imports remain in administrative review.';
+    return;
+  }
+  state.textContent=filtered.length+' reviewed research record(s). None is confirmed available for purchase.';
+  const fragment=document.createDocumentFragment();
+  for(const r of filtered.slice(0,250)){
+    const card=document.createElement('article');card.className='item';
+    const title=document.createElement('h3');title.textContent=r.county+' · Certificate '+r.certificateNumber;card.append(title);
+    const badge=document.createElement('span');badge.className='pill';badge.textContent='Research only · not for sale';card.append(badge);
+    line(card,'Parcel',r.parcelId);line(card,'Tax year',r.taxYear);
+    line(card,'Holding type',r.holdingType);line(card,'Redemption',r.redemptionStatus);
+    line(card,'Tax deed',r.taxDeedStatus);
+    const a=document.createElement('a');a.textContent='Verify with official source';a.target='_blank';a.rel='noopener noreferrer';
+    try{const url=new URL(r.evidenceUrl);if(url.protocol==='https:') {a.href=url.href;card.append(a)}}catch(_){}
+    fragment.append(card);
+  }
+  container.append(fragment);
+}
+async function init(){
+  try{
+    const response=await fetch('/data/reviewed-certificates.json',{cache:'no-store'});
+    if(!response.ok)throw Error('Dataset unavailable');
+    const data=await response.json();
+    if(data.schemaVersion!==1||data.kind!=='approved-certificate-research'||!Array.isArray(data.records))
+      throw Error('Unexpected dataset format');
+    approved=data.records.filter(r=>r&&r.listingType==='tax-certificate-research-only'&&
+      r.researchReviewStatus==='approved-for-research'&&r.availableForPurchase===false&&
+      r.purchaseLink==null&&r.status==='unverified');
+    draw();
+  }catch(error){
+    state.textContent='Reviewed records are temporarily unavailable. No purchase availability is implied.';
+  }
+}
+search.addEventListener('input',draw);county.addEventListener('change',draw);init();
+</script></body></html>
