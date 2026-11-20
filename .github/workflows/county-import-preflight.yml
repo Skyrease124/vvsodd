@@ -12,6 +12,10 @@ on:
       - 'kinvest-liens/map/data/**'
       - 'scripts/check-map-datasets.js'
       - 'tests/map-datasets.test.js'
+      - 'scripts/run-county-source-imports.js'
+      - 'tests/county-source-imports.test.js'
+      - 'county-sources.json'
+      - '.github/workflows/county-source-import.yml'
   workflow_dispatch:
 jobs:
   validate:
@@ -24,7 +28,7 @@ jobs:
         with:
           node-version: '20'
       - name: Run county import validation tests
-        run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js tests/map-datasets.test.js
+        run: node --test tests/county-import-validation.test.js tests/existing-parcels.test.js tests/map-datasets.test.js tests/county-source-imports.test.js
       - name: Check actual county parcel GIS dataset (read only)
         run: node scripts/check-existing-parcels.js kinvest-liens/liens/states/parcels/al-63.json AL
       - name: Check production map dataset sample
