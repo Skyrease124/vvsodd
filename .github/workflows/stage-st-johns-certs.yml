@@ -4,6 +4,8 @@ on:
     branches:
       - claude/engineering-workspace
     paths:
+      - scripts/report-certificate-changes.py
+      - tests/test_certificate_change_alerts.py
       - scripts/stage-st-johns-certificates.py
       - scripts/certificate-status.py
       - tests/test_certificate_status.py
@@ -29,6 +31,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_certificate_status.py'
       - name: Validate official St Johns unpaid certificate CSV
         run: python scripts/stage-st-johns-certificates.py
+      - name: Unit-test change alerts
+        run: python -m unittest discover -s tests -p 'test_certificate_change_alerts.py'
       - name: Compare with last reviewed snapshot (never infer redemption from disappearance)
         run: |
           python -m unittest discover -s tests -p 'test_certificate_snapshot_changes.py'
@@ -40,6 +44,11 @@ jobs:
             --current county-import-staging/fl-st-johns-unpaid-certificates.json \
             --previous "$PREVIOUS" \
             --output county-import-staging/fl-st-johns-unpaid-certificates-changes.json
+      - name: Summarize changes and warn if manual review needed
+        run: |
+          python scripts/report-certificate-changes.py \
+            --report county-import-staging/fl-st-johns-unpaid-certificates-changes.json \
+            --county 'St. Johns'
       - name: Archive review-only staged report
         if: success()
         uses: actions/upload-artifact@v4
