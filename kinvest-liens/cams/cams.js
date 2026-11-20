@@ -8,7 +8,8 @@
   var STATES = [
     { a: 'FL', n: 'Florida', cities: [['Tampa', 27.9506, -82.4572], ['Orlando', 28.5383, -81.3792], ['Miami', 25.7617, -80.1918], ['Jacksonville', 30.3322, -81.6557], ['West Palm Beach', 26.7153, -80.0534], ['Fort Myers Beach', 26.452, -81.9495], ['Tallahassee', 30.4383, -84.2807], ['Pensacola', 30.4213, -87.2169]] },
     { a: 'CA', n: 'California', cities: [['Los Angeles', 34.0522, -118.2437], ['San Diego', 32.7157, -117.1611], ['San Francisco', 37.7749, -122.4194], ['Sacramento', 38.5816, -121.4944], ['San Jose', 37.3382, -121.8863]] },
-    { a: 'TX', n: 'Texas', cities: [['Austin', 30.2672, -97.7431]] }
+    { a: 'TX', n: 'Texas', cities: [['Austin', 30.2672, -97.7431]] },
+    { a: 'WI', n: 'Wisconsin', cities: [['Milwaukee', 43.0389, -87.9065], ['Madison', 43.0731, -89.4012], ['Green Bay', 44.5133, -88.0133], ['Appleton', 44.2619, -88.4154], ['Eau Claire', 44.8113, -91.4985]] }
   ];
   var q = new URLSearchParams(location.search), st = 1, ci = 0, cams = [], cur = -1, timer = null, hls = null, token = 0;
   var s0 = STATES.findIndex(function (s) { return s.a === (q.get('s') || '').toUpperCase(); }); if (s0 >= 0) st = s0;
@@ -32,6 +33,10 @@
     if (!r.ok || !d.ok) { $('msg').textContent = 'Cameras are temporarily unavailable. Please try again in a moment.'; return; }
     var bad = (d.providers || []).filter(function (x) { return x.status === 'unavailable'; });
     cams = d.cameras.filter(function (c) { return c.image || c.video; });
+    var wisconsin = (d.providers || []).find(function (x) { return x.id === 'wi'; });
+    if (!cams.length && wisconsin && wisconsin.status !== 'ok') {
+      gate('Wisconsin camera snapshots are unavailable here right now.', ['Open 511WI', wisconsin.viewer]); return;
+    }
     if (!cams.length) { $('msg').textContent = bad.length ? 'The camera feed for ' + p[0] + ' is not answering right now. That does not mean there are no cameras. Try again soon.' : 'No public cameras with a picture were found near ' + p[0] + '.'; return; }
     $('msg').textContent = cams.length + ' camera' + (cams.length === 1 ? '' : 's') + ' near ' + p[0] + '. Pictures refresh about every minute.';
     var g = $('grid');

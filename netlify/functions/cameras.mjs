@@ -103,7 +103,8 @@ export const PROVIDERS = {
 };
 // Key-based providers are integrated only after a real record was checked with the key. Until then they show the official viewer link.
 // Verify a real record and preview with the Owner API Keys page or tools/cameras/verify.mjs before enabling a feed.
-const VERIFIED = { az: false, ga: true, wi: false, ny: false };   // ga: verified 2026-11-17 by the owner key test (4,330 cameras, live JPEG preview)
+// Owner checks confirmed Georgia on 2026-11-17 and Wisconsin on 2026-11-20.
+const VERIFIED = { az: false, ga: true, wi: true, ny: false };
 export const _verified = VERIFIED;   // tests only
 const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && KEYS.keyOf(p.keyEnv) && VERIFIED[id]); };
 
