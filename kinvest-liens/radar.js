@@ -69,7 +69,7 @@ window.TaxRadarOn = true;
     if (c.type === 'result' && c.prices) li.appendChild(mk('p', 'small', 'Actual sale prices from ' + money(c.prices.min) + ' to ' + money(c.prices.max) + ' (first ' + c.items.length + ' shown by price order on the county page).'));
     if (c.type === 'missing') li.appendChild(mk('p', 'small', 'Not called sold, redeemed or withdrawn: that needs an official record.'));
     const meta = mk('p', 'small rmeta', 'Detected ' + fmtDate(c.detectedAt) + (c.publishedAt ? ' · published ' + fmtDate(c.publishedAt) : '') + ' · '); const a = mk('a', '', 'Source: ' + (c.source.name || 'official record')); a.href = c.source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; meta.appendChild(a); li.appendChild(meta);
-    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: 'smooth'}); });
+    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
     const l1 = mk('a', 'btn small ghost', 'See affected listings'); l1.href = c.link + '#' + encodeURIComponent(c.county);
     act.append(b1, l1); const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
     li.appendChild(act); return li;
@@ -257,7 +257,7 @@ window.TaxRadarOn = true;
       if (!opts.length) { const li = mk('li', 'none', 'No state matches that.'); list.appendChild(li); }
       list.hidden = false; input.setAttribute('aria-expanded', 'true');
     };
-    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: 'smooth'}); };
+    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
     input.addEventListener('input', () => { act = -1; draw(); }); input.addEventListener('focus', () => { input.select(); draw(); });
     input.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(act + 1, Math.min(opts.length, 60) - 1); draw(); }

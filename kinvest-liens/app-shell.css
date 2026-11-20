@@ -155,8 +155,9 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
 .ppa-home #home-radar .dwrap{padding:0}
 .ppa-home #home-radar .rhead{display:none}
 .ppa-home #home-radar .dmap.rmap{margin-inline:0;width:100%;animation:none}
+.ppa-home #home-radar .rcombo ul{position:static}
 .ppa-home #home-radar .rpanel:not([hidden]){
-  position:static;width:auto;max-width:none;transform:none;max-height:28rem;
+  position:static;order:4;width:auto;max-width:none;transform:none;max-height:28rem;
   border:1px solid #3d647b;border-radius:12px;box-shadow:none;
 }
 @media(prefers-reduced-motion:no-preference){
