@@ -1,0 +1,27 @@
+name: Scheduled county source import
+on:
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Fetch and validate approved county feeds
+        run: node scripts/run-county-source-imports.js county-sources.json
+      - name: Open review PR for staged county updates
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/county-source-staging
+          delete-branch: true
+          title: 'Review staged county source updates'
+          body: 'Automated county data fetch. Review source, validation results, and parcel records before importing into production. This does not publish live records.'
+          commit-message: 'Stage validated county source updates'
+          add-paths: county-import-staging/
