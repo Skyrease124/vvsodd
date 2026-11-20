@@ -60,3 +60,9 @@
 .ppa-auth .app-auth-card label #pwhint{display:inline;font-size:.75rem;margin-left:4px}.ppa-auth .setupbtns #tabup{order:-1}.ppa-auth .setupbtns .btn{padding:7px 5px;line-height:1.2;font-size:.9rem}.ppa-auth .setupbtns .btn.ghost{color:#e5edf5}.ppa-auth.loginpg main .narrow>p a{color:var(--app-green)}
 .ppa-auth .app-footer{border:0;padding-top:7px}.ppa-auth .app-footer b{color:#d0dfec}.ppa-auth details.a2hs{background:var(--app-panel);border-color:var(--app-line)}
 .ppx-sheet .ppx-inf{flex:1}
+.ppa-auth .app-auth-card label.app-check,.ppa-auth .app-auth-card #signupterms{flex-direction:row}.ppa-auth .setupbtns .btn.ghost{color:#e5edf5!important}
+@media(max-width:760px){
+  body.pmbody.ppa-app-member:not(.ppa-has-bar){--app-map-nav:calc(57px + env(safe-area-inset-bottom))}
+  body.pmbody.ppa-app-member .pm{margin-bottom:var(--app-map-nav,0px)}
+  body.pmbody.ppa-app-member .pm-pop,body.pmbody.ppa-app-member .pm-left,body.pmbody.ppa-app-member .pm-right{bottom:calc(var(--app-map-nav,0px) + var(--ppabh,0px))}
+}
