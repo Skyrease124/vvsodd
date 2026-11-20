@@ -64,6 +64,8 @@
   }
 
   pick.addEventListener('change', () => { if (pick.value) setState(pick.value, 'pick'); });
+  // Settings switch (Account page): when on, the home page asks for the device location once per visit.
+  try { if (localStorage.getItem('ppa_auto_location') === '1' && !sessionStorage.getItem('ppa_auto_loc_tried')) { sessionStorage.setItem('ppa_auto_loc_tried', '1'); setTimeout(() => loc.click(), 800); } } catch (e) { /* storage blocked: the button still works */ }
   loc.addEventListener('click', () => {
     if (!navigator.geolocation) { note.textContent = 'Your browser cannot share its location. Choose your state from the list.'; return; }
     note.textContent = 'Asking your phone for your location…'; loc.disabled = true;
