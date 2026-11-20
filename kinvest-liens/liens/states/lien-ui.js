@@ -1301,7 +1301,7 @@ const LienMap = {
     }
     const msg = dlg.querySelector('.lotmsg'), foot = dlg.querySelector('.lotfoot'), box = dlg.querySelector('.lotmap');
     dlg.querySelector('b').textContent = 'Parcel ' + l.parcel;
-    msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = '';
+    msg.textContent = 'Loading the lot outline\u2026'; foot.textContent = ''; dlg.dataset.researchParcelKey=''; dlg.querySelector('.ppa-research-overlay')?.remove();
     { const hd = dlg.querySelector('.lothead'); let pl = hd.querySelector('.pfhead'); if (pl) pl.remove(); if (typeof PF !== 'undefined' && l.parcel) { pl = document.createElement('span'); pl.className = 'pfhead'; hd.insertBefore(pl, hd.lastElementChild); PF.cardButtons(l, pl, 'btn small ghost'); } }
     let fx = dlg.querySelector('.lotfacts'); if (!fx) { fx = document.createElement('p'); fx.className = 'lotfacts small'; msg.after(fx); } fx.textContent = '';
     if (cfg) { const pa = document.createElement('a'); pa.href = cfg.page(l.parcel); pa.target = '_blank'; pa.rel = 'noopener noreferrer'; pa.textContent = 'Look up the owner and tax history on the ' + cfg.pageName + ' site';
@@ -1321,6 +1321,7 @@ const LienMap = {
         sat.addTo(m); const layersCtl = L.control.layers({'Satellite': sat, 'Street': street}).addTo(m); OFM.add(m, layersCtl);
         if (!CountyAerial.enabled(l.county)) { const lc = CountyAerial.labelControl(L, m); lc.set('Satellite: Esri World Imagery (capture dates vary)'); m.on('baselayerchange', e => lc.set(e.layer === street ? 'Street map: \u00a9 OpenStreetMap contributors' : 'Satellite: Esri World Imagery (capture dates vary)')); }
         const g = box._outline = L.geoJSON(ParcelData.geojson(pd.r), {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.18}}).addTo(m);
+        if(window.PPAResearchParcelOverlay) void window.PPAResearchParcelOverlay.attach(L,m,g,dlg,{state:l.state||'FL',county:l.county,parcel:l.parcel});
         { const tt = TrafficData.seg(pd.r); if (tt) { const road = L.layerGroup(tt.geo.map(pa => L.polyline(pa.map(q => [q[1], q[0]]), {color: '#ff7a00', weight: 7, opacity: 0.9, lineCap: 'round'}))).addTo(m); box._traffic = road;
             road.eachLayer(x => x.bindTooltip(TrafficData.fmt(tt.aadt) + ' vehicles/day (' + tt.yr + ') \u00b7 ' + TrafficData.fmt(tt.ft) + ' ft away', {sticky: true}));
             // the lot stays fully in view; when the road is within 500 ft the view widens to show both, otherwise a button does
@@ -1367,6 +1368,7 @@ const LienMap = {
       const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'});
       sat.addTo(m); OFM.add(m, L.control.layers({'Satellite': sat, 'Street': street}).addTo(m));
       const g = L.geoJSON(r, {style: {color: '#ff3b30', weight: 3, fillColor: '#ff3b30', fillOpacity: 0.25}}).addTo(m);
+        if(window.PPAResearchParcelOverlay) void window.PPAResearchParcelOverlay.attach(L,m,g,dlg,{state:l.state||'FL',county:l.county,parcel:l.parcel});
       m.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
       CameraData.mapAttach(L, m, box, () => g.getBounds().getCenter());
       setTimeout(() => m.invalidateSize(), 50);
@@ -1436,7 +1438,7 @@ const LienLand = {
 };
 // Outlines for non-Florida card thumbnails (exact parcel-ID matches from official county GIS: tools/az-parcels/match.py)
 const LAND_OUTLINES = {'Pinal': {file: 'az-pinal.json', src: 'Pinal County GIS'}, 'Coconino': {file: 'az-coconino.json', src: 'Coconino County GIS'}, 'Larimer': {file: 'co-larimer.json', src: 'Larimer County GIS'}, 'Saguache': {file: 'co-saguache.json', src: 'Saguache County GIS'}, 'El Paso': {file: 'co-elpaso.json', src: 'El Paso County GIS'}, 'Boulder': {file: 'co-boulder.json', src: 'Boulder County GIS'}};
-const landSpec = l => ({file: LAND_OUTLINES[l.county].file, key: l.parcel, parcel: l.parcel, desc: [l.address, l.desc].filter(Boolean).join(' \u00B7 '), srcName: LAND_OUTLINES[l.county].src});
+const landSpec = l => ({state:l.state||'FL',county:l.county,file: LAND_OUTLINES[l.county].file, key: l.parcel, parcel: l.parcel, desc: [l.address, l.desc].filter(Boolean).join(' \u00B7 '), srcName: LAND_OUTLINES[l.county].src});
 const LienBuy = {
   button(l, cls) {
     const g = typeof COUNTY_BUY !== 'undefined' && COUNTY_BUY[l.buyKey || l.county]; if (!g) return null;

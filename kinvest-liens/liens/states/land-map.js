@@ -29,6 +29,8 @@ const LandMap = {
     const mk = (t, cl, x) => { const e = document.createElement(t); if (cl) e.className = cl; if (x != null) e.textContent = x; return e; };
     let dlg = document.getElementById('aldlg'); if (dlg) dlg.remove();
     dlg = mk('dialog', 'lotdlg'); dlg.id = 'aldlg'; document.body.appendChild(dlg);
+    const researchState=sp.state||(/^al-/.test(sp.file)?'AL':/^ar/.test(sp.file)?'AR':/^az-/.test(sp.file)?'AZ':/^co-/.test(sp.file)?'CO':'');
+    const researchCounty=sp.county||(/^ar/.test(sp.file)?String(sp.key).split('|')[0]:String(sp.srcName||'').replace(/ GIS$/i,''));
     const head = mk('div', 'ustop'); head.append(mk('b', '', 'Parcel ' + sp.parcel)); const x = mk('button', 'btn small', 'Close'); x.type = 'button'; x.onclick = () => dlg.close(); head.append(x); dlg.appendChild(head);
     dlg.appendChild(mk('p', 'small', sp.desc || ''));
     const box = mk('div', 'lotmap'); box.style.height = '340px'; dlg.appendChild(box);
@@ -41,6 +43,7 @@ const LandMap = {
     const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom: 20, maxNativeZoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(map);
     if (typeof OFM !== 'undefined') OFM.add(map, L.control.layers({'Satellite': sat}).addTo(map));
     const g = L.geoJSON({type: 'Feature', properties: {}, geometry: {type: 'Polygon', coordinates: m.g}}, {style: {color: '#ffd166', weight: 3, fillColor: '#ffd166', fillOpacity: 0.15}}).addTo(map);
+    if(window.PPAResearchParcelOverlay) void window.PPAResearchParcelOverlay.attach(L,map,g,dlg,{state:researchState,county:researchCounty,parcel:sp.parcel});
     map.fitBounds(g.getBounds(), {maxZoom: 19, padding: [30, 30]});
     if (typeof CameraData !== 'undefined') CameraData.mapAttach(L, map, box, () => g.getBounds().getCenter());
     if (typeof EnvCtlData !== 'undefined') { const st = /^co-/.test(sp.file) ? 'CO' : /^az-/.test(sp.file) ? 'AZ' : /^al-/.test(sp.file) ? 'AL' : /^ar/.test(sp.file) ? 'AR' : null; if (st) dlg.appendChild(EnvCtlData.section({state: st, parcel: sp.parcel}, {st: 'matched', g: m.g})); }

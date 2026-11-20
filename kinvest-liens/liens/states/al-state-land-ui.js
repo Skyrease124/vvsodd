@@ -25,12 +25,12 @@ const AlStateLandUI = {
     const drawCards = () => {
       wrap.textContent = ''; const g = mk('div', 'lcards');
       list.slice(0, shown).forEach(({c, r}) => {
-        const card = mk('article', 'lcardx'); const th = mk('div', 'lthumb loading'); card.appendChild(th); LandMap.thumb({file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}, th);
+        const card = mk('article', 'lcardx'); const th = mk('div', 'lthumb loading'); card.appendChild(th); LandMap.thumb({state:'AL',county:c.county,file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}, th);
         const h = mk('div', 'lch'); h.append(mk('b', '', r[4] || 'No parcel ID'), mk('span', 'small', c.county.replace(' County', '') + ' \u00B7 tax sale ' + r[1])); card.appendChild(h);
         const amt = mk('div', 'lamt'); amt.append(mk('span', 'small', 'Bid at the tax sale (not today\u2019s price)'), mk('b', '', r[6] == null ? 'Not shown' : money(r[6]))); card.appendChild(amt);
         card.appendChild(mk('div', 'small', r[5]));
         card.appendChild(mk('div', 'small muted', 'Owner of record: ' + r[0] + ' \u00B7 cert ' + r[2]));
-        const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => LandMap.open({file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}); act.appendChild(b); const hb = typeof LienBuy !== 'undefined' && LienBuy.button({state: 'AL', county: c.county.replace(' County', ''), parcel: r[4], cert: r[2], amount: r[6], buyKey: 'AL-ADOR', alCounty: c.county, alDate: c.date, desc: r[5]}, 'btn small ghost'); if (hb) { hb.style.marginLeft = '6px'; act.appendChild(hb); } card.appendChild(act);
+        const act = mk('div', 'lact'); const b = mk('button', 'btn small', 'Show on map'); b.type = 'button'; b.onclick = () => LandMap.open({state:'AL',county:c.county,file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}); act.appendChild(b); const hb = typeof LienBuy !== 'undefined' && LienBuy.button({state: 'AL', county: c.county.replace(' County', ''), parcel: r[4], cert: r[2], amount: r[6], buyKey: 'AL-ADOR', alCounty: c.county, alDate: c.date, desc: r[5]}, 'btn small ghost'); if (hb) { hb.style.marginLeft = '6px'; act.appendChild(hb); } card.appendChild(act);
         g.appendChild(card);
       });
       wrap.appendChild(g); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
@@ -39,7 +39,7 @@ const AlStateLandUI = {
       wrap.textContent = ''; const t = mk('table', 'liens'), hr = t.createTHead().insertRow();
       ['County', 'Parcel', 'Owner of record', 'Description', 'Tax sale year', 'Cert #', 'Bid at tax sale', ''].forEach(x => hr.appendChild(mk('th', '', x)));
       const tb = t.createTBody();
-      list.slice(0, shown).forEach(({c, r}) => { const row = tb.insertRow(); [c.county.replace(' County', ''), r[4], r[0], r[5], r[1], r[2], r[6] == null ? 'Not shown' : money(r[6])].forEach(v => row.insertCell().textContent = v); const b = mk('button', 'btn small ghost', 'Map'); b.type = 'button'; b.onclick = () => LandMap.open({file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}); row.insertCell().appendChild(b); });
+      list.slice(0, shown).forEach(({c, r}) => { const row = tb.insertRow(); [c.county.replace(' County', ''), r[4], r[0], r[5], r[1], r[2], r[6] == null ? 'Not shown' : money(r[6])].forEach(v => row.insertCell().textContent = v); const b = mk('button', 'btn small ghost', 'Map'); b.type = 'button'; b.onclick = () => LandMap.open({state:'AL',county:c.county,file: 'al-' + c.co + '.json', key: r[4], parcel: r[4], desc: r[5], srcName: c.county + ' GIS'}); row.insertCell().appendChild(b); });
       wrap.appendChild(t); cnt.textContent = 'Showing ' + Math.min(shown, list.length).toLocaleString('en-US') + ' of ' + list.length.toLocaleString('en-US'); more.hidden = shown >= list.length;
     };
     const apply = () => {
