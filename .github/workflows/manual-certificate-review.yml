@@ -1,0 +1,94 @@
+name: Manual Florida certificate research review
+on:
+  workflow_dispatch:
+    inputs:
+      county:
+        description: County staging file
+        required: true
+        type: choice
+        options:
+          - wakulla
+          - palm-beach
+          - st-johns
+      certificate_key:
+        description: Exact five-part certificate key from staging change report
+        required: true
+        type: string
+      decision:
+        description: Research review decision (not availability to purchase)
+        required: true
+        type: choice
+        options:
+          - approved-for-research
+          - needs-follow-up
+          - rejected
+      evidence_url:
+        description: Official county/portal HTTPS evidence link
+        required: true
+        type: string
+      reason:
+        description: Explanation of review evidence (12+ characters)
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run manual review safety tests
+        run: python -m unittest discover -s tests -p 'test_review_certificate.py'
+      - name: Fetch chosen county staging snapshot
+        env:
+          COUNTY: ${{ inputs.county }}
+        run: |
+          case "$COUNTY" in
+            wakulla) BRANCH=automation/wakulla-certificate-review; FILE=fl-wakulla-certificate-export.json;;
+            palm-beach) BRANCH=automation/palm-beach-certificate-review; FILE=fl-palm-beach-certificate-export.json;;
+            st-johns) BRANCH=automation/st-johns-certificate-review; FILE=fl-st-johns-unpaid-certificates.json;;
+            *) echo "Invalid county"; exit 1;;
+          esac
+          git fetch --no-tags origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH"
+          mkdir -p review-input
+          git show "origin/$BRANCH:county-import-staging/$FILE" > "review-input/$FILE"
+          printf 'SNAPSHOT_FILE=%s\n' "review-input/$FILE" >> "$GITHUB_ENV"
+      - name: Generate non-publishing review decision receipt
+        env:
+          COUNTY: ${{ inputs.county }}
+          CERTIFICATE_KEY: ${{ inputs.certificate_key }}
+          DECISION: ${{ inputs.decision }}
+          EVIDENCE_URL: ${{ inputs.evidence_url }}
+          REASON: ${{ inputs.reason }}
+          REVIEWER: ${{ github.actor }}
+        run: |
+          python scripts/review-certificate.py \
+            --snapshot "$SNAPSHOT_FILE" \
+            --county "$COUNTY" \
+            --certificate-key "$CERTIFICATE_KEY" \
+            --decision "$DECISION" \
+            --evidence-url "$EVIDENCE_URL" \
+            --reason "$REASON" \
+            --reviewer "$REVIEWER" \
+            --output review-output/certificate-review-receipt.json
+      - name: Archive review decision as audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: certificate-manual-review-receipt
+          path: review-output/certificate-review-receipt.json
+          retention-days: 90
+      - name: Summarize review result
+        env:
+          COUNTY: ${{ inputs.county }}
+          DECISION: ${{ inputs.decision }}
+        run: |
+          echo "### Manual certificate research review" >> "$GITHUB_STEP_SUMMARY"
+          echo "County: $COUNTY" >> "$GITHUB_STEP_SUMMARY"
+          echo "Decision: $DECISION" >> "$GITHUB_STEP_SUMMARY"
+          echo "Audit receipt stored as this run's artifact. **No listings were published and purchase availability remains unverified.**" >> "$GITHUB_STEP_SUMMARY"
