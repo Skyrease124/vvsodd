@@ -1,0 +1,30 @@
+name: Validate Turf parcel acreage and building overlap
+on:
+  push:
+    branches:
+      - feature/turf-acreage-building-overlap-20261120
+      - claude/engineering-workspace
+    paths:
+      - 'kinvest-liens/map/parcel-spatial.js'
+      - 'kinvest-liens/map/parcel-map.js'
+      - 'kinvest-liens/map/parcel-map.css'
+      - 'kinvest-liens/map/index.html'
+      - 'tests/parcel-turf-acreage-buildings.test.mjs'
+      - '.github/workflows/validate-parcel-turf.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-spatial.js
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --test tests/parcel-turf-acreage-buildings.test.mjs
+      - run: node --test tests/florida-gis-overlays.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
