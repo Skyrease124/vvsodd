@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Probe approved county-held certificate files. Inspect headers only; never publish."""
-import csv, io, json, re, urllib.request, zipfile, xml.etree.ElementTree as ET
+import csv, io, json, re, urllib.request, urllib.parse, zipfile, xml.etree.ElementTree as ET
 SOURCES=[
   {"id":"fl-wakulla","url":"https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx","type":"xlsx"},
   {"id":"fl-leon-held","url":"https://www.leontaxcollector.net/Portals/69/userFiles/CertFiles/OpenCountyCertificates20261102.zip","type":"zip"}
@@ -10,7 +10,11 @@ LIMIT=15*1024*1024
 def download(url):
   req=urllib.request.Request(url,headers={'User-Agent':'PricePocketAsset public source validation','Accept':'application/octet-stream'})
   with urllib.request.urlopen(req,timeout=25) as r:
-    if r.url!=url: raise ValueError('Unexpected redirect')
+    requested = urllib.parse.urlparse(url)
+    resolved = urllib.parse.urlparse(r.url)
+    approved = {requested.hostname, 'static1.squarespace.com', 'static.squarespace.com', 'assets.squarespace.com'}
+    if resolved.scheme != 'https' or resolved.hostname not in approved:
+      raise ValueError('Unapproved redirect host: ' + str(resolved.hostname))
     data=r.read(LIMIT+1)
   if len(data)>LIMIT: raise ValueError('Download exceeds 15 MB')
   return data
