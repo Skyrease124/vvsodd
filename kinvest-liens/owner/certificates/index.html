@@ -84,12 +84,13 @@ function syncPublishChoice(){
 el('decision').addEventListener('change',syncPublishChoice);
 function render(){
  const target=el('cards');target.replaceChildren();
- if(!records.length){const p=document.createElement('p');p.textContent='No matching records on this page.';target.append(p)}
+ if(!records.length){const p=document.createElement('p');p.textContent=matched===0?'No records match these filters. Try All holding types or clear your search.':'No matching records on this page.';target.append(p)}
  for(const r of records){
   const card=document.createElement('article');card.className='card';
   const title=document.createElement('h2');title.textContent='Certificate '+r.certificateNumber;card.append(title);
   const tag=document.createElement('span');tag.className='pill';tag.textContent=(r.review?.decision||'Awaiting review');card.append(tag);
   details(card,'Parcel',r.parcelId);details(card,'Tax year',r.taxYear);details(card,'Holder',r.holdingType||'Unknown');
+  if(r.holdingEvidenceSource==='official-county-held-list')details(card,'Holder evidence','Official county-held list; current purchase eligibility unverified');
   details(card,'Redemption',r.redemptionStatus||'Unknown');details(card,'Tax deed',r.taxDeedStatus||'Unknown');
   details(card,'Reported balance',r.dueAmount||r.totalAmountRaw||r.unpaidBalanceRaw||'');
   const button=document.createElement('button');button.type='button';button.textContent='Review certificate';
@@ -112,13 +113,15 @@ async function load(){
     holding:el('holding').value,redemption:el('redemption').value,page});
   records=d.records;matched=d.matched;snapshotHash=d.snapshotSha256;
   el('stats').textContent=d.county+' · '+d.total.toLocaleString()+' staged certificates';
-  el('source').textContent='County source checked: '+(d.sourceCheckedAt||'Not reported')+'. No purchase availability verified.';
+  const sourceDate=d.sourceCheckedAt?new Date(d.sourceCheckedAt):null;
+  el('source').textContent='County source checked: '+(sourceDate&&!Number.isNaN(sourceDate.getTime())?sourceDate.toLocaleString(): 'Not reported')+'. No purchase availability verified.';
   render();say('Owner access confirmed.');
  }catch(e){records=[];el('cards').textContent='';say(e.message);el('stats').textContent='No records loaded.'}
  finally{busy=false}
 }
 let debounce;
-for(const field of ['county','holding','redemption'])el(field).addEventListener('change',()=>{page=0;selected=null;el('reviewPanel').hidden=true;load()});
+el('county').addEventListener('change',()=>{page=0;selected=null;el('reviewPanel').hidden=true;el('holding').value='';el('redemption').value='';el('search').value='';load()});
+for(const field of ['holding','redemption'])el(field).addEventListener('change',()=>{page=0;selected=null;el('reviewPanel').hidden=true;load()});
 el('search').addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(()=>{page=0;load()},300)});
 el('refresh').addEventListener('click',load);
 el('previous').addEventListener('click',()=>{if(page>0){page--;load()}});

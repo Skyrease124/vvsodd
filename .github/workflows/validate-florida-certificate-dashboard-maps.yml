@@ -1,0 +1,45 @@
+name: Validate Florida certificate dashboard and all map routes
+on:
+  push:
+    branches:
+      - fix/florida-certificate-dashboard-maps-20261120
+      - claude/engineering-workspace
+    paths:
+      - 'scripts/stage-palm-beach-certificates.py'
+      - 'netlify/lib/certificate-review-filters.mjs'
+      - 'netlify/functions/certificate-review.mjs'
+      - 'kinvest-liens/owner/certificates/index.html'
+      - 'tests/test_palm_beach_holding_provenance.py'
+      - 'tests/test_certificate_review_filters.mjs'
+      - '.github/workflows/validate-florida-certificate-dashboard-maps.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Palm Beach importer, status and source discovery
+        run: |
+          python -m unittest discover -s tests -p 'test_certificate_status.py'
+          python -m unittest discover -s tests -p 'test_palm_beach_discovery.py'
+          python -m unittest discover -s tests -p 'test_palm_beach_holding_provenance.py'
+      - name: Validate owner API and research filters
+        run: |
+          node --check netlify/lib/certificate-review-filters.mjs
+          node --check netlify/functions/certificate-review.mjs
+          node --test tests/test_certificate_review_filters.mjs
+          python tests/check_owner_certificate_dashboard.py
+      - name: Validate approval release controls and all three map experiences
+        run: |
+          node --test tests/auto-approved-release.test.mjs
+          node --test tests/test_all_three_map_modes.mjs
+          node --test tests/test_all_parcel_research_maps.mjs

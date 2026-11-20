@@ -67,6 +67,10 @@ def normalize(rows,source_url):
                          'faceAmountRaw':money['faceAmountRaw'],
                          'totalAmountRaw':money['totalAmountRaw'],
                          'interestRateRaw':rate or None,
+                         # The official Palm Beach link explicitly describes this as a county-held list.
+                         # Source-list ownership classification does not verify redemption or OTC availability.
+                         'certificateTypeRaw':'County Held',
+                         'holderEvidenceSource':'official-county-held-list',
                          'sourceUrl':source_url,'status':'unverified','availableForPurchase':False})
     return {'source':source_url,'checkedAt':datetime.now(timezone.utc).isoformat(),
             'classification':'official county-held certificate file; verify availability with Tax Collector',
