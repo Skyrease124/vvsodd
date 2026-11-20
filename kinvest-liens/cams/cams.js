@@ -10,7 +10,7 @@
     { a: 'CA', n: 'California', cities: [['Los Angeles', 34.0522, -118.2437], ['San Diego', 32.7157, -117.1611], ['San Francisco', 37.7749, -122.4194], ['Sacramento', 38.5816, -121.4944], ['San Jose', 37.3382, -121.8863]] },
     { a: 'TX', n: 'Texas', cities: [['Austin', 30.2672, -97.7431]] }
   ];
-  var q = new URLSearchParams(location.search), st = 0, ci = 0, cams = [], cur = -1, timer = null, hls = null, token = 0;
+  var q = new URLSearchParams(location.search), st = 1, ci = 0, cams = [], cur = -1, timer = null, hls = null, token = 0;
   var s0 = STATES.findIndex(function (s) { return s.a === (q.get('s') || '').toUpperCase(); }); if (s0 >= 0) st = s0;
   var c0 = parseInt(q.get('c'), 10); if (c0 >= 0 && c0 < STATES[st].cities.length) ci = c0;
 
@@ -26,14 +26,14 @@
     var my = ++token; stop(); $('stage').hidden = true; $('grid').textContent = ''; $('msg').textContent = 'Finding cameras…'; cams = []; cur = -1;
     var p = STATES[st].cities[ci]; history.replaceState(null, '', '?s=' + STATES[st].a + '&c=' + ci);
     $('onmap').href = '/map/?cams=1&lat=' + p[1] + '&lng=' + p[2];
-    var r, d; try { r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat: p[1], lng: p[2], radius: 15, limit: 20 }), { credentials: 'same-origin' }); d = await r.json(); } catch (e) { if (my === token) $('msg').textContent = 'Cameras are temporarily unavailable. Please try again in a moment.'; return; }
+    var r, d; try { r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({ lat: p[1], lng: p[2], radius: 15, limit: 20, video: Number(STATES[st].a === 'CA') }), { credentials: 'same-origin' }); d = await r.json(); } catch (e) { if (my === token) $('msg').textContent = 'Cameras are temporarily unavailable. Please try again in a moment.'; return; }
     if (my !== token) return;
     if (r.status === 401 || r.status === 402) { gate('Live Cams are for Pro members.', ['See the Pro plan', '/plans/?from=' + encodeURIComponent(location.pathname + location.search) + '&src=' + encodeURIComponent('Live cameras')]); return; }
     if (!r.ok || !d.ok) { $('msg').textContent = 'Cameras are temporarily unavailable. Please try again in a moment.'; return; }
     var bad = (d.providers || []).filter(function (x) { return x.status === 'unavailable'; });
     cams = d.cameras.filter(function (c) { return c.image || c.video; });
     if (!cams.length) { $('msg').textContent = bad.length ? 'The camera feed for ' + p[0] + ' is not answering right now. That does not mean there are no cameras. Try again soon.' : 'No public cameras with a picture were found near ' + p[0] + '.'; return; }
-    $('msg').textContent = cams.length + ' camera' + (cams.length === 1 ? '' : 's') + ' near ' + p[0] + ', closest first. Pictures refresh about every minute.';
+    $('msg').textContent = cams.length + ' camera' + (cams.length === 1 ? '' : 's') + ' near ' + p[0] + '. Pictures refresh about every minute.';
     var g = $('grid');
     cams.forEach(function (c, i) {
       var b = mk('button', 'lc-card'); b.type = 'button'; b.setAttribute('aria-label', 'Watch ' + c.name);

@@ -120,7 +120,7 @@ const R = 3958.8;
 export function miles(a, b, c, d) { const r = x => x * Math.PI / 180, dLat = r(c - a), dLng = r(d - b); const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(dLng / 2) ** 2; return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))); }
 function nearBox(lat, lng, bb, radius) { const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v)); return miles(lat, lng, cl(lat, bb[1], bb[3]), cl(lng, bb[0], bb[2])) <= radius; }
 
-export async function nearby(lat, lng, radius = 10, limit = 5, preferSnapshots = false) {
+export async function nearby(lat, lng, radius = 10, limit = 5, preferSnapshots = false, preferVideo = false) {
   const ids = Object.keys(PROVIDERS).filter(id => nearBox(lat, lng, PROVIDERS[id].bbox, radius));
   const providers = [], all = [];
   await Promise.all(ids.map(async id => {
@@ -132,7 +132,8 @@ export async function nearby(lat, lng, radius = 10, limit = 5, preferSnapshots =
       providers.push({ id, name: p.name, state: p.state, status: 'ok', partial: !!list.partial, viewer: p.viewer });
     } catch (e) { providers.push({ id, name: p.name, state: p.state, status: 'unavailable', viewer: p.viewer }); }
   }));
-  all.sort((a, b) => (preferSnapshots ? Number(Boolean(b.image)) - Number(Boolean(a.image)) : 0) || a.miles - b.miles || a.name.localeCompare(b.name));
+  const priority = camera => preferVideo && camera.video ? 2 : preferSnapshots && camera.image ? 1 : 0;
+  all.sort((a, b) => priority(b) - priority(a) || a.miles - b.miles || a.name.localeCompare(b.name));
   providers.sort((a, b) => a.id.localeCompare(b.id));
   return { ok: true, radius, limit, cameras: all.slice(0, limit), totalInRadius: all.length, providers, checked: new Date().toISOString() };
 }
@@ -160,5 +161,5 @@ export default async function handler(req, context) {
   const lat = num(q('lat')), lng = num(q('lng'));
   if (!validLL(lat, lng)) return json(400, { ok: false, error: 'Bad location.' });
   const radius = Math.min(50, Math.max(1, num(q('radius')) || 10)), limit = Math.min(20, Math.max(1, Math.round(num(q('limit')) || 5)));
-  return json(200, await nearby(lat, lng, radius, limit, q('preview') === '1'));
+  return json(200, await nearby(lat, lng, radius, limit, q('preview') === '1', q('video') === '1'));
 }
