@@ -23,7 +23,8 @@ jobs:
           node-version: '20'
       - name: Fetch and validate approved county feeds
         run: node scripts/run-county-source-imports.js county-sources.json
-      - name: Open review PR for staged county updates
+      - name: Stage county updates (PR creation may require repo permission)
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v7
         with:
           branch: automation/county-source-staging
@@ -32,3 +33,8 @@ jobs:
           body: 'Automated county data fetch. Review source, validation results, and parcel records before importing into production. This does not publish live records.'
           commit-message: 'Stage validated county source updates'
           add-paths: county-import-staging/
+      - name: Report review branch link
+        if: always()
+        run: |
+          echo "### County import staging review" >> "$GITHUB_STEP_SUMMARY"
+          echo "Review staged data in [automation/county-source-staging](https://github.com/${{ github.repository }}/compare/claude/engineering-workspace...automation/county-source-staging) before publishing. GitHub Actions may block creating PRs; the staged branch remains available." >> "$GITHUB_STEP_SUMMARY"
