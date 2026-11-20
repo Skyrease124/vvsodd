@@ -25,10 +25,10 @@
   }
   const path = (lat,lng,radius) => '/map/?' + new URLSearchParams({cams:'1',lat,lng,radius});
   async function load(area) {
-    clearInterval(refresh);
     const key = [area?.lat,area?.lng,area?.label].join('|');
     if (key === currentKey) return;
     currentKey = key;
+    clearInterval(refresh);
     controller?.abort();
     const job = new AbortController(); controller = job;
     grid.replaceChildren();
@@ -57,7 +57,7 @@
         const cap = mk('div','hc-cap'); cap.append(mk('b','',c.name),mk('span','',[c.road,c.operator].filter(Boolean).join(' · ')));
         card.append(img,cap); grid.append(card); set(); return set;
       });
-      refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
+      if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
     } catch(e) {
       if (!job.signal.aborted) { currentKey = null; msg.textContent = 'Cameras are temporarily unavailable.'; }
     }
