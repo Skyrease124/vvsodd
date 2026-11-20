@@ -5,7 +5,6 @@
  * Pure functions: no writes, no network calls, no existing site behavior changes.
  */
 const MAX_RECORDS = 100000;
-const MAX_TEXT = 500;
 const ID_KEYS = ['parcelId', 'parcel_id', 'parcelNumber', 'parcel_number', 'apn'];
 const MONEY_KEYS = ['taxOwed', 'tax_owed', 'amountDue', 'amount_due', 'taxAmount'];
 const pick = (row, keys) => keys.find(k => row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '');
@@ -35,7 +34,7 @@ function validateCountyImport(records, options = {}) {
     let taxOwed = null;
     if (moneyKey) {
       const raw = clean(row[moneyKey]);
-      if (!/^\\$?\\d+(?:,\\d{3})*(?:\\.\\d{1,2})?$/.test(raw)) errors.push('Invalid tax amount');
+      if (!/^\$?\d+(?:,\d{3})*(?:\.\d{1,2})?$/.test(raw)) errors.push('Invalid tax amount');
       else {
         taxOwed = Number(raw.replace(/[$,]/g, ''));
         if (!Number.isSafeInteger(Math.round(taxOwed * 100))) errors.push('Tax amount out of range');
