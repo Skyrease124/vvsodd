@@ -7,6 +7,8 @@ on:
       - scripts/stage-st-johns-certificates.py
       - scripts/certificate-status.py
       - tests/test_certificate_status.py
+      - scripts/compare-certificate-snapshots.py
+      - tests/test_certificate_snapshot_changes.py
       - .github/workflows/stage-st-johns-certs.yml
   schedule:
     - cron: '41 10 * * 1'
@@ -27,12 +29,25 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_certificate_status.py'
       - name: Validate official St Johns unpaid certificate CSV
         run: python scripts/stage-st-johns-certificates.py
+      - name: Compare with last reviewed snapshot (never infer redemption from disappearance)
+        run: |
+          python -m unittest discover -s tests -p 'test_certificate_snapshot_changes.py'
+          PREVIOUS=/tmp/previous-certificate-snapshot.json
+          if git fetch --no-tags origin refs/heads/automation/st-johns-certificate-review:refs/remotes/origin/automation/st-johns-certificate-review; then
+            git show origin/automation/st-johns-certificate-review:county-import-staging/fl-st-johns-unpaid-certificates.json > "$PREVIOUS" || rm -f "$PREVIOUS"
+          fi
+          python scripts/compare-certificate-snapshots.py \
+            --current county-import-staging/fl-st-johns-unpaid-certificates.json \
+            --previous "$PREVIOUS" \
+            --output county-import-staging/fl-st-johns-unpaid-certificates-changes.json
       - name: Archive review-only staged report
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: st-johns-certificate-staging
-          path: county-import-staging/fl-st-johns-unpaid-certificates.json
+          path: |
+            county-import-staging/fl-st-johns-unpaid-certificates.json
+            county-import-staging/fl-st-johns-unpaid-certificates-changes.json
       - name: Push staging review branch
         if: success()
         continue-on-error: true
@@ -42,7 +57,9 @@ jobs:
           title: 'Review St Johns unpaid certificate list update'
           body: 'Official county report. All records remain unverified and not purchasable; source contains county and individual certificates and may include changing statuses.'
           commit-message: 'Stage official St Johns unpaid certificate records'
-          add-paths: county-import-staging/fl-st-johns-unpaid-certificates.json
+          add-paths: |
+            county-import-staging/fl-st-johns-unpaid-certificates.json
+            county-import-staging/fl-st-johns-unpaid-certificates-changes.json
       - name: Link staging branch
         if: always()
         run: |
