@@ -148,11 +148,10 @@
       const list = el('div', 'ppx-list');
       list.append(
         rowOf(lcm, '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-6 7-6s7 2.4 7 6"/><circle cx="17" cy="7" r="2.5"/><path d="M22 18c0-2.6-1.8-4.5-4.5-4.8"/>'),
-        rowOf(l6, '<path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/>', 'Marketplace'),
         isPro ? rowOf(ldl, '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>') : null);
       const more = el('details', 'ppx-more'); more.appendChild(el('summary', '', 'More'));
       const mg = el('div', 'ppx-grp');
-      [lpf, lmsg, lcam, lrt, l2, isPro ? lnot : null, l7, ldon, lp, ms].filter(Boolean).forEach(x => mg.appendChild(x));
+      [lpf, lmsg, lcam, lrt, l2, isPro ? lnot : null, ldon, lp, ms].filter(Boolean).forEach(x => mg.appendChild(x));
       more.appendChild(mg);
       const ownerBox = user.owner ? (() => { const d = el('details', 'ppx-own'); d.appendChild(el('summary', '', 'Owner tools')); const og = el('div', 'ppx-grp'); [l4, l10, lort, lk, lo, l3, l5].forEach(x => og.appendChild(x)); d.appendChild(og); return d; })() : null;
       // header: avatar, name, role, close
