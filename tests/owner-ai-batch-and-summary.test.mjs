@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {applyBatchMarks} from '../netlify/functions/certificate-auto-review.mjs';
+import {applyBatchMarks} from '../netlify/lib/certificate-batch-marks.mjs';
 const key=(y)=>'fl|wakulla|parcel-1|18|'+y;
 const snapshot=()=>({snapshotSha256:'current',items:[
  {certificateKey:key(2020),availableForPurchase:false},
