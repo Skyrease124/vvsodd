@@ -46,17 +46,23 @@
       if (r.status === 401 || r.status === 402) { locked(); return; }
       const d = await r.json();
       if (!r.ok || !d.ok) throw new Error('unavailable');
-      const cams = d.cameras.filter(c => c.image);
-      msg.textContent = cams.length ? 'Near ' + name + ' · Swipe for more' : 'No live snapshots found near ' + name + '.';
+      const cams = d.cameras.filter(c => c.image || c.video || c.viewer);
+      msg.textContent = cams.length ? 'Near ' + name + ' · Swipe for more' : 'No cameras found near ' + name + '.';
       const update = cams.map(c => {
         const card = link('',path(c.lat,c.lng,15)); card.className = 'hc-card';
+        const cap = mk('div','hc-cap'); cap.append(mk('b','',c.name),mk('span','',c.road || c.operator));
+        grid.append(card);
+        if (!c.image) {
+          if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
+          card.append(mk('span','hc-viewer',c.kind === 'viewer' ? 'Official camera ↗' : 'Open live camera →'),cap);
+          return null;
+        }
         const img = Object.assign(mk('img',''),{alt:'',loading:'lazy',decoding:'async',referrerPolicy:'no-referrer'});
         const set = () => { img.src = c.image + (c.image.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now()/60000); };
         img.onerror = () => card.classList.add('off');
         img.onload = () => card.classList.remove('off');
-        const cap = mk('div','hc-cap'); cap.append(mk('b','',c.name),mk('span','',[c.road,c.operator].filter(Boolean).join(' · ')));
-        card.append(img,cap); grid.append(card); set(); return set;
-      });
+        card.append(img,cap); set(); return set;
+      }).filter(Boolean);
       if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
     } catch(e) {
       if (!job.signal.aborted) { currentKey = null; msg.textContent = 'Cameras are temporarily unavailable.'; }
