@@ -1,0 +1,27 @@
+name: Validate Florida GIS status messaging
+on:
+  push:
+    branches:
+      - fix/florida-gis-layer-feedback-20261120
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/parcel-map.js
+      - kinvest-liens/map/parcel-map.css
+      - tests/florida-gis-status.test.mjs
+      - .github/workflows/validate-florida-gis-feedback.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --test tests/florida-gis-status.test.mjs
+      - run: node --test tests/florida-gis-overlays.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
