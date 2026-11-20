@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-20",
+  "purpose": "Verified Florida tax-certificate source discovery. Landing pages are NOT automatic feeds; never treat directory listings as purchasable certificates.",
+  "sources": [
+    {
+      "id": "fl-monroe-certificate",
+      "state": "FL",
+      "county": "Monroe",
+      "publisher": "Monroe County Tax Collector",
+      "landingUrl": "https://monroetaxcollector.com/services/tax-certificate-information/",
+      "access": "public-list-with-csv-export-described",
+      "feedUrl": null,
+      "format": "csv-export-manual-discovery-required",
+      "recordType": "tax-certificates",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-charlotte-tax-files",
+      "state": "FL",
+      "county": "Charlotte",
+      "publisher": "Charlotte County Tax Collector",
+      "landingUrl": "https://taxcollector.charlottecountyfl.gov/files",
+      "access": "public-files-page",
+      "feedUrl": null,
+      "format": "unverified-download",
+      "recordType": "tax-related-files",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-portal-downloads",
+      "state": "FL",
+      "county": "Participating counties",
+      "publisher": "Florida Tax Sale Portal",
+      "landingUrl": "https://www.flataxsales.com/Home.aspx",
+      "access": "downloads-described-on-public-homepage",
+      "feedUrl": null,
+      "format": "certificate-history-holder-tax-roll",
+      "recordType": "mixed-tax-files",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-lienhub-county",
+      "state": "FL",
+      "county": "Participating counties",
+      "publisher": "LienHub",
+      "landingUrl": "https://lienhub.com/",
+      "access": "automated-requests-unverified-or-blocked",
+      "feedUrl": null,
+      "format": "unknown",
+      "recordType": "tax-certificate-portal",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    }
+  ]
+}
