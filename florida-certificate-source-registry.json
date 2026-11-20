@@ -54,6 +54,32 @@
       "recordType": "tax-certificate-portal",
       "autoImportEnabled": false,
       "reviewRequired": true
+    },
+    {
+      "id": "fl-wakulla-county-held",
+      "state": "FL",
+      "county": "Wakulla",
+      "publisher": "Wakulla County Tax Collector",
+      "landingUrl": "https://wakullatax.com/property-tax",
+      "access": "public county certificate list download linked on official page",
+      "feedUrl": null,
+      "format": "unverified-file-format",
+      "recordType": "county-held-certificates",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-leon-cert-list",
+      "state": "FL",
+      "county": "Leon",
+      "publisher": "Leon County Tax Collector",
+      "landingUrl": "https://www.leontaxcollector.net/Services/Property-Taxes/Certificate-Lists",
+      "access": "public certificate lists dated November 2 2026",
+      "feedUrl": null,
+      "format": "unverified-file-format",
+      "recordType": "certificates-available-for-purchase",
+      "autoImportEnabled": false,
+      "reviewRequired": true
     }
   ]
 }
