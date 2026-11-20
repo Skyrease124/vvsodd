@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - claude/engineering-workspace
+      - fix/owner-certificate-regression-auto-publication
     paths:
       - kinvest-liens/owner/dashboard.js
       - kinvest-liens/owner/certificates/index.html
