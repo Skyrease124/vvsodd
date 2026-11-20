@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Certificate Review | PricePocketAsset Owner</title>
+<link rel="icon" href="/img/favicon.png"><link rel="stylesheet" href="/app-shell.css">
+<style>
+:root{font:16px system-ui,-apple-system,sans-serif;color:#183047;background:#f4f7fb}
+*{box-sizing:border-box}body{margin:0}header{background:#10263d;color:white;padding:16px}header a{color:#b5f1da;text-decoration:none}
+main{max-width:1140px;margin:auto;padding:20px}h1{font-size:clamp(26px,5vw,34px);margin:10px 0}
+.sub{color:#637586;line-height:1.55}.notice{border:1px solid #e2c79c;background:#fff4e3;padding:14px;border-radius:12px;line-height:1.5;margin:16px 0}
+.controls{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+input,select,textarea{background:white;padding:11px;border:1px solid #c5d4e0;border-radius:9px;font:inherit;min-width:0}
+input[type=search]{flex:1;min-width:200px}select{max-width:100%}
+button{background:#14664f;color:#fff;border:0;border-radius:9px;padding:11px 14px;font:inherit;font-weight:600;cursor:pointer}
+button:disabled{opacity:.55;cursor:not-allowed}
+button.secondary{background:#e8eff5;color:#1f425a}
+section.summary{background:white;border:1px solid #d4dfe8;padding:14px;border-radius:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:12px;margin:18px 0}
+.card{border:1px solid #d6e2ed;border-radius:13px;padding:16px;background:white}
+.card h2{font-size:19px;margin:0 0 8px;overflow-wrap:anywhere}
+.card p{font-size:14px;color:#4a6174;overflow-wrap:anywhere}
+.pill{display:inline-block;background:#edf2f7;border-radius:30px;padding:5px 9px;font-size:12px;font-weight:700}
+.review-panel{background:#fff;border:1px solid #cddae6;border-radius:13px;padding:18px;margin:18px 0}
+form{display:grid;gap:11px}label{display:grid;gap:5px;font-size:14px;font-weight:600}
+textarea{width:100%;min-height:84px;resize:vertical}#message{font-size:14px}#access{margin-top:10px}
+nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #5f91d0}
+[hidden]{display:none!important}
+</style></head>
+<body>
+<header><nav><a href="/owner/">← Owner Dashboard</a><a href="/">PricePocketAsset</a></nav></header>
+<main>
+<h1>Certificate Review</h1>
+<p class="sub">Owner-only Florida tax certificate review. Inspect county records, record decisions, and retain an audit trail through your PricePocketAsset account.</p>
+<div class="notice"><strong>Research only, not for sale.</strong> A certificate being unredeemed or county-held does not establish that it can be purchased. Approvals recorded here never publish listings or change purchase availability.</div>
+<p id="access" role="status">Checking owner access…</p>
+<div id="workspace" hidden>
+<section class="summary"><strong id="stats">Choose a county to load records.</strong><p id="source" class="sub"></p></section>
+<div class="controls">
+<select id="county" aria-label="Choose county"><option value="wakulla">Wakulla</option><option value="palm-beach">Palm Beach</option><option value="st-johns">St. Johns</option></select>
+<input id="search" type="search" placeholder="Search parcel or certificate number" aria-label="Search certificates">
+<select id="holding" aria-label="Holding type"><option value="">All holding types</option><option value="county-held">County-held</option><option value="individually-held">Individually held</option><option value="unknown">Unknown</option></select>
+<select id="redemption" aria-label="Redemption status"><option value="">All redemption statuses</option><option value="reported-unredeemed">Unredeemed reported</option><option value="reported-redeemed">Redeemed reported</option><option value="unknown">Unknown</option></select>
+<button id="refresh" type="button" class="secondary">Refresh</button>
+</div>
+<div id="cards" class="cards" aria-live="polite"></div>
+<div class="controls"><button class="secondary" type="button" id="previous">Previous</button><span id="page"></span><button class="secondary" type="button" id="next">Next</button></div>
+<section id="reviewPanel" class="review-panel" hidden>
+<h2>Review selected certificate</h2><p id="selection"></p>
+<form id="reviewForm">
+<label>Decision<select id="decision"><option value="needs-follow-up">Needs follow-up</option><option value="approved-for-research">Approved for research only</option><option value="rejected">Rejected</option></select></label>
+<label>Official evidence URL<input id="evidence" type="url" maxlength="2000" placeholder="https://county-tax-collector…"></label>
+<label>Reason for decision<textarea id="reason" minlength="12" maxlength="1000" required placeholder="Describe what you verified with the official source."></textarea></label>
+<div class="controls"><button id="submit" type="submit">Save review decision</button><button class="secondary" type="button" id="cancel">Cancel</button></div>
+</form><p id="message" role="status" aria-live="polite"></p>
+</section>
+</div>
+</main>
+<script>
+'use strict';
+const API='/.netlify/functions/certificate-review';
+const el=id=>document.getElementById(id);
+let selected=null,records=[],page=0,matched=0,snapshotHash=null,busy=false;
+const say=(msg)=>{el('access').textContent=msg};
+async function request(params,body){
+  const url=API+(params?'?'+new URLSearchParams(params):'');
+  const options={credentials:'same-origin',headers:{'Accept':'application/json'}};
+  if(body){options.method='POST';options.headers['Content-Type']='application/json';options.body=JSON.stringify(body)}
+  const r=await fetch(url,options);
+  const d=await r.json().catch(()=>({error:'Server response unavailable.'}));
+  if(!r.ok||!d.ok)throw Error(d.error||'Request failed ('+r.status+').');
+  return d;
+}
+function details(card,label,value){if(value===undefined||value===null||value==='')return;
+ const p=document.createElement('p'),b=document.createElement('strong');b.textContent=label+': ';
+ p.append(b,document.createTextNode(String(value)));card.append(p);
+}
+function render(){
+ const target=el('cards');target.replaceChildren();
+ if(!records.length){const p=document.createElement('p');p.textContent='No matching records on this page.';target.append(p)}
+ for(const r of records){
+  const card=document.createElement('article');card.className='card';
+  const title=document.createElement('h2');title.textContent='Certificate '+r.certificateNumber;card.append(title);
+  const tag=document.createElement('span');tag.className='pill';tag.textContent=(r.review?.decision||'Awaiting review');card.append(tag);
+  details(card,'Parcel',r.parcelId);details(card,'Tax year',r.taxYear);details(card,'Holder',r.holdingType||'Unknown');
+  details(card,'Redemption',r.redemptionStatus||'Unknown');details(card,'Tax deed',r.taxDeedStatus||'Unknown');
+  details(card,'Reported balance',r.dueAmount||r.totalAmountRaw||r.unpaidBalanceRaw||'');
+  const button=document.createElement('button');button.type='button';button.textContent='Review certificate';
+  button.addEventListener('click',()=>{
+   selected=r;el('reviewPanel').hidden=false;el('selection').textContent=r.certificateKey;
+   el('decision').value=r.review?.decision||'needs-follow-up';
+   el('evidence').value=r.review?.evidenceUrl||'';el('reason').value=r.review?.reason||'';
+   el('message').textContent='';
+   el('reviewPanel').scrollIntoView({behavior:'smooth',block:'start'});
+  });card.append(button);target.append(card);
+ }
+ el('page').textContent='Page '+(page+1)+' · '+matched+' matching';
+ el('previous').disabled=page===0;el('next').disabled=(page+1)*40>=matched;
+}
+async function load(){
+ if(busy)return;busy=true;el('cards').textContent='Loading county records…';
+ try{
+  const d=await request({county:el('county').value,q:el('search').value,
+    holding:el('holding').value,redemption:el('redemption').value,page});
+  records=d.records;matched=d.matched;snapshotHash=d.snapshotSha256;
+  el('stats').textContent=d.county+' · '+d.total.toLocaleString()+' staged certificates';
+  el('source').textContent='County source checked: '+(d.sourceCheckedAt||'Not reported')+'. No purchase availability verified.';
+  render();say('Owner access confirmed.');
+ }catch(e){records=[];el('cards').textContent='';say(e.message);el('stats').textContent='No records loaded.'}
+ finally{busy=false}
+}
+let debounce;
+for(const field of ['county','holding','redemption'])el(field).addEventListener('change',()=>{page=0;selected=null;el('reviewPanel').hidden=true;load()});
+el('search').addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(()=>{page=0;load()},300)});
+el('refresh').addEventListener('click',load);
+el('previous').addEventListener('click',()=>{if(page>0){page--;load()}});
+el('next').addEventListener('click',()=>{if((page+1)*40<matched){page++;load()}});
+el('cancel').addEventListener('click',()=>{selected=null;el('reviewPanel').hidden=true});
+el('reviewForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!selected||!snapshotHash)return;
+ el('submit').disabled=true;el('message').textContent='Recording decision…';
+ try{
+  const d=await request(null,{county:el('county').value,certificateKey:selected.certificateKey,
+   snapshotSha256:snapshotHash,decision:el('decision').value,
+   evidenceUrl:el('evidence').value.trim(),reason:el('reason').value.trim()});
+  el('message').textContent='Decision saved. Audit receipt '+d.review.id+'. No record published.';
+  selected.review=d.review;render();
+ }catch(err){el('message').textContent='Unable to save: '+err.message}
+ finally{el('submit').disabled=false}
+});
+(async()=>{try{await request(null);el('workspace').hidden=false;await load()}
+catch(e){say(e.message+' Sign in using your owner account.')}})();
+</script></body></html>
