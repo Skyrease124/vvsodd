@@ -168,7 +168,7 @@
       selected.value = area.state; fillCounties(area.county || '');
       composer.setScope(countyMeta()?.county || index.allStates.find(s => s.a === selected.value)?.n || 'Nationwide');
     });
-    for (const id of ['work-geo','work-quick','work-history']) $(id).hidden = false;
+    for (const id of ['work-geo','work-quick','work-history','studio-entry']) $(id).hidden = false;
     document.querySelector('.work-tabs').hidden = false;
     $('work-ask').setAttribute('role','tabpanel'); $('work-ask').setAttribute('aria-labelledby','work-tab-ask');
     browse();
