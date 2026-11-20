@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-20",
+  "purpose": "Verified Florida tax-certificate source discovery. Landing pages are NOT automatic feeds; never treat directory listings as purchasable certificates.",
+  "sources": [
+    {
+      "id": "fl-monroe-certificate",
+      "state": "FL",
+      "county": "Monroe",
+      "publisher": "Monroe County Tax Collector",
+      "landingUrl": "https://monroetaxcollector.com/services/tax-certificate-information/",
+      "access": "official instructions describe signed-in bidder winning-bids CSV; public full-county CSV not verified",
+      "feedUrl": null,
+      "format": "authenticated-bidder-results-csv-not-public-feed",
+      "recordType": "tax-certificates",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-charlotte-tax-files",
+      "state": "FL",
+      "county": "Charlotte",
+      "publisher": "Charlotte County Tax Collector",
+      "landingUrl": "https://taxcollector.charlottecountyfl.gov/files",
+      "access": "public-files-page",
+      "feedUrl": null,
+      "format": "unverified-download",
+      "recordType": "tax-related-files",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-portal-downloads",
+      "state": "FL",
+      "county": "Participating counties",
+      "publisher": "Florida Tax Sale Portal",
+      "landingUrl": "https://www.flataxsales.com/Home.aspx",
+      "access": "downloads-described-on-public-homepage",
+      "feedUrl": null,
+      "format": "certificate-history-holder-tax-roll",
+      "recordType": "mixed-tax-files",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-lienhub-county",
+      "state": "FL",
+      "county": "Participating counties",
+      "publisher": "LienHub",
+      "landingUrl": "https://lienhub.com/",
+      "access": "automated-requests-unverified-or-blocked",
+      "feedUrl": null,
+      "format": "unknown",
+      "recordType": "tax-certificate-portal",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-wakulla-county-held",
+      "state": "FL",
+      "county": "Wakulla",
+      "publisher": "Wakulla County Tax Collector",
+      "landingUrl": "https://wakullatax.com/property-tax",
+      "access": "public direct download verified; contents/schema not yet tested",
+      "feedUrl": "https://wakullatax.com/s/WakullaCountyCertificates-esft.xlsx",
+      "format": "xlsx",
+      "recordType": "county-held-certificates",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    },
+    {
+      "id": "fl-leon-cert-list",
+      "state": "FL",
+      "county": "Leon",
+      "publisher": "Leon County Tax Collector",
+      "landingUrl": "https://www.leontaxcollector.net/Services/Property-Taxes/Certificate-Lists",
+      "access": "public direct download of 2026-11-02 county held certificates; contents/schema not yet tested",
+      "feedUrl": "https://www.leontaxcollector.net/Portals/69/userFiles/CertFiles/OpenCountyCertificates20261102.zip",
+      "format": "zip",
+      "recordType": "certificates-available-for-purchase",
+      "autoImportEnabled": false,
+      "reviewRequired": true
+    }
+  ]
+}
