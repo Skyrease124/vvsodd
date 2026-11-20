@@ -2,6 +2,7 @@
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
 import { syncReviewedCertificate } from '../lib/auto-research-release.mjs';
+import { reviewHoldingType,reviewHoldingEvidence,matchReviewFilters } from '../lib/certificate-review-filters.mjs';
 
 const REPO='Skyrease124/vvsodd';
 const CONFIG={
@@ -58,12 +59,14 @@ export async function getSnapshot(slug){
   cache.set(slug,{time:Date.now(),data:snapshot});
   return snapshot;
 }
-function brief(record,review){
+function brief(record,review,report){
   const names=['parcelId','certificateNumber','taxYear','certificateYear','holdingType','redemptionStatus',
     'taxDeedStatus','faceAmount','faceAmountRaw','certificateFaceAmountRaw','dueAmount','totalAmountRaw',
     'unpaidBalanceRaw','verificationFlags','certificateStatusRaw','certificateTypeRaw'];
   const item={certificateKey:certificateKey(record)};
   for(const name of names)if(record[name]!==undefined)item[name]=record[name];
+  item.holdingType=reviewHoldingType(record,report);
+  item.holdingEvidenceSource=reviewHoldingEvidence(record,report);
   item.availableForPurchase=false;
   item.review=review||null;
   return item;
@@ -92,15 +95,13 @@ export default async function handler(req){
       const holding=String(url.searchParams.get('holding')||'');
       const redemption=String(url.searchParams.get('redemption')||'');
       const page=Math.max(0,Math.min(100000,Number.parseInt(url.searchParams.get('page')||'0',10)||0));
-      let records=[...snap.indexed.values()].filter(r=>
-        (!q||[r.parcelId,r.certificateNumber].some(v=>String(v||'').toLowerCase().includes(q)))&&
-        (!holding||r.holdingType===holding)&&(!redemption||r.redemptionStatus===redemption));
+      let records=[...snap.indexed.values()].filter(r=>matchReviewFilters(r,snap.data,{q,holding,redemption}));
       const subset=records.slice(page*40,page*40+40);
       const reviews=await Promise.all(subset.map(r=>auth.kvGet('cert-review-'+keyHash(certificateKey(r)))));
       const currentReviews=reviews.map(review=>review&&review.snapshotSha256===snap.hash?review:null);
       return reply(200,{ok:true,county:CONFIG[slug].label,sourceCheckedAt:snap.data.checkedAt||null,
         total:snap.indexed.size,matched:records.length,page,pageSize:40,snapshotSha256:snap.hash,
-        records:subset.map((r,i)=>brief(r,currentReviews[i])),researchOnly:true});
+        records:subset.map((r,i)=>brief(r,currentReviews[i],snap.data)),researchOnly:true});
     }
     const b=await req.json();
     if(!b||!CONFIG[b.county]||typeof b.certificateKey!=='string'||b.certificateKey.length>250)
