@@ -22,7 +22,7 @@ const num = v => { const n = Number(v); return Number.isFinite(n) ? n : null; };
 const validLL = (lat, lng) => lat != null && lng != null && Math.abs(lat) > 1 && Math.abs(lng) > 1 && lat >= 17 && lat <= 72 && lng >= -180 && lng <= -60;
 const https = u => (typeof u === 'string' && /^https:\/\//.test(u.trim())) ? u.trim() : '';
 
-// 511 platform (AZ511, 511GA): GET {base}/api/v2/get/cameras?key=...&format=json -> [{Id, Roadway, Direction, Latitude, Longitude, Location, Views:[{Id, Url, Status, Description}]}]
+// 511 platform (AZ511, 511GA, 511WI): GET {base}/api/v2/get/cameras?key=...&format=json -> [{Id, Roadway, Direction, Latitude, Longitude, Location, Views:[{Id, Url, Status, Description}]}]
 // (format documented at https://az511.com/help/endpoint/cameras). Throttled to 10 calls/60 s by the provider: one call returns every camera and is cached.
 function ibi511(base, src, operator, viewer) {
   return async function load() {
@@ -92,6 +92,7 @@ export const PROVIDERS = {
   // Key-based feeds: switched on only when the key is set on the server AND a real record has been verified (see VERIFIED below).
   az: { name: 'AZ511 (Arizona DOT)', state: 'AZ', bbox: [-114.9, 31.3, -109.0, 37.0], viewer: 'https://az511.com/cctv', keyEnv: 'AZ511_KEY', keyed: ibi511('https://az511.com', 'az', 'AZ511 / Arizona DOT', 'https://az511.com/cctv') },
   ga: { name: '511GA (Georgia DOT)', state: 'GA', bbox: [-85.7, 30.3, -80.8, 35.1], viewer: 'https://511ga.org/cctv', keyEnv: 'GA511_KEY', keyed: ibi511('https://511ga.org', 'ga', '511GA / Georgia DOT', 'https://511ga.org/cctv') },
+  wi: { name: '511WI (Wisconsin DOT)', state: 'WI', bbox: [-92.9, 42.4, -86.2, 47.3], viewer: 'https://511wi.gov/cctv', keyEnv: 'WI511_KEY', keyed: ibi511('https://511wi.gov', 'wi', '511WI / Wisconsin DOT', 'https://511wi.gov/cctv') },
   ny: { name: '511NY (New York State DOT)', state: 'NY', bbox: [-79.8, 40.4, -71.8, 45.1], viewer: 'https://511ny.org/cctv', keyEnv: 'NY511_KEY' },   // adapter not built: different API, developer access pending
   // Viewer-only states: official viewer link, no integrated feed.
   hou: { name: 'Houston TranStar (Houston-area transportation partners)', state: 'TX', bbox: [-96.2, 29.2, -94.6, 30.5], viewer: 'https://traffic.houstontranstar.org/' },
@@ -101,8 +102,8 @@ export const PROVIDERS = {
   al: { name: 'ALGO Traffic (Alabama DOT)', state: 'AL', bbox: [-88.5, 30.1, -84.8, 35.1], viewer: 'https://algotraffic.com/Cameras' },
 };
 // Key-based providers are integrated only after a real record was checked with the key. Until then they show the official viewer link.
-// To switch one on: add the key in Netlify (AZ511_KEY / GA511_KEY), run tools/cameras/verify.mjs with that key, check the record and preview, then set it true here.
-const VERIFIED = { az: false, ga: true, ny: false };   // ga: verified 2026-11-17 by the owner key test (4,330 cameras, live JPEG preview)
+// Verify a real record and preview with the Owner API Keys page or tools/cameras/verify.mjs before enabling a feed.
+const VERIFIED = { az: false, ga: true, wi: false, ny: false };   // ga: verified 2026-11-17 by the owner key test (4,330 cameras, live JPEG preview)
 export const _verified = VERIFIED;   // tests only
 const isLive = id => { const p = PROVIDERS[id]; return !!p.load || !!(p.keyed && p.keyEnv && KEYS.keyOf(p.keyEnv) && VERIFIED[id]); };
 

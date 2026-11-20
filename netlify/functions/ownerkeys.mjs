@@ -1,7 +1,7 @@
 // Owner-only API key box (/owner/keys/). The owner pastes a key; it is stored on the server and never shown again (only the last 4 characters).
 //   GET                         -> { ok, keys:[{name,label,set,hint,source}] }
 //   POST {name, value}          -> save      POST {name, remove:true} -> clear
-//   POST {test:'ga'|'az'}       -> server-side check: camera count, one sample camera, and whether its image loads (the key is never returned)
+//   POST {test:'ga'|'az'|'wi'}       -> server-side check: camera count, one sample camera, and whether its image loads (the key is never returned)
 import * as auth from '../lib/auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 import { APP_ID as OSAPP, postAny as OSPOST, candidates as OSKEYS } from '../lib/onesignal.mjs';

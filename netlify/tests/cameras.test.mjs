@@ -8,11 +8,24 @@ const mod = await import('../functions/cameras.mjs'); const { default: api, near
 let pass = 0; const ok = (c, m) => { assert.ok(c, m); pass++; console.log('ok -', m); };
 const fl = (id, lat, lng, img = 'https://images-dis.divas.cloud/DGI/x' + id + '.jpg') => ({ attributes: { ID: id, DESCRIPT: 'TEST FIXTURE cam ' + id, HIGHWAY: 'I-95', DIRECTION: 'N', LATITUDE: lat, LONGITUDE: lng, TIMESTAMP: '07/20/2026 8:09:58 PM', IMAGE: img } });
 let flFeats = [], flDown = false, caDown = false, caRecords = [], heads = 0;
+const wisconsinTestKey = 'fixture-wisconsin-key-1234';
+let wisconsinCalls = 0;
 globalThis.fetch = async (u, o) => { u = String(u);
   if (o && o.method === 'HEAD') { heads++; return { ok: true, headers: { get: k => k === 'last-modified' ? 'Tue, 17 Nov 2026 03:31:47 GMT' : null } }; }
   if (u.includes('FL511')) { if (flDown) throw new Error('net'); return { ok: true, json: async () => ({ features: flFeats }) }; }
   if (u.includes('cwwp2.dot.ca.gov')) { if (caDown) return { ok: false, status: 500 }; return { ok: true, json: async () => ({ data: u.includes('cctvStatusD07') ? caRecords : [] }) }; }
   if (u.includes('az511.com/api/v2/get/cameras') || u.includes('511ga.org/api/v2/get/cameras')) { azCalls++; return { ok: true, json: async () => [{ Id: 2056, Roadway: 'I-10', Direction: 'Unknown', Latitude: 32.88, Longitude: -111.75, Location: 'TEST FIXTURE I-10 @ MP 200', Views: [{ Id: 960, Url: 'https://az511.com/map/Cctv/960', Status: 'Enabled', Description: 'TEST FIXTURE I-10 EB 200' }, { Id: 961, Url: 'https://az511.com/map/Cctv/961', Status: 'Disabled', Description: 'off' }] }, { Id: 9, Latitude: 0, Longitude: 0, Views: [{ Id: 1, Url: 'https://az511.com/map/Cctv/1', Status: 'Enabled' }] }] }; }
+  if (u.startsWith('https://511wi.gov/api/v2/get/cameras?')) {
+    wisconsinCalls++;
+    const query = new URL(u).searchParams;
+    if (query.get('key') !== wisconsinTestKey) return new Response(null,{status:400});
+    assert.equal(query.get('format'),'json');
+    return Response.json([{Id:3,Roadway:'I-41',Direction:'Unknown',Latitude:44.299419,Longitude:-88.446465,Location:'I-41 at County A',Views:[
+      {Id:1450,Url:'https://511wi.gov/map/Cctv/1450',Status:'Enabled',Description:''},
+      {Id:1451,Url:'https://511wi.gov/map/Cctv/1451',Status:'Disabled',Description:''}
+    ]}]);
+  }
+  if (u === 'https://511wi.gov/map/Cctv/1450') return new Response(new Uint8Array(2500), {headers:{'Content-Type':'image/jpeg'}});
   if (u.includes('data.austintexas.gov')) { atxCalls++; if (atxDown) return { ok: false, status: 500 }; return { ok: true, json: async () => [
     { camera_id: '1', location_name: '  TEST FIXTURE  830 BLK W RUNDBERG LN ', primary_st: ' RUNDBERG LN', location: { type: 'Point', coordinates: [-97.698158, 30.363686] }, screenshot_address: 'https://cctv.austinmobility.io/image/1.jpg', modified_date: '2023-07-18T20:45:00.000Z' },
     { camera_id: '2', location_name: 'TEST FIXTURE no image', location: { type: 'Point', coordinates: [-97.70, 30.36] }, screenshot_address: '' },
@@ -85,6 +98,29 @@ ok(r.providers.find(p => p.id === 'az').status === 'ok' && r.cameras.length === 
 await nearby(32.88, -111.75, 10, 5); ok(azCalls === 1, 'AZ511 list cached (provider allows 10 calls/minute)');
 process.env.GA511_KEY = 'TEST'; _verified.ga = false; r = await nearby(30.69, -81.60, 10, 5); ok(r.providers.find(p => p.id === 'ga').status === 'viewer', 'Georgia stays disabled with a key until a real preview is verified'); _verified.ga = true;
 _verified.az = false; delete process.env.AZ511_KEY; delete process.env.GA511_KEY;
+// 511WI can be tested by its owner before it is enabled on the public camera map.
+{
+  delete process.env.WI511_KEY;
+  const ownerApi = (await import('../functions/ownerkeys.mjs')).default;
+  await __auth.createUser('owner@example.test','password123',true);
+  const owner = (await __auth.sessionCookie('owner@example.test')).split(';')[0];
+  const request = (cookie, body) => ownerApi(new Request('http://x/ownerkeys',{
+    method:body?'POST':'GET',headers:{cookie,'Content-Type':'application/json'},
+    ...(body?{body:JSON.stringify(body)}:{})
+  }));
+  const testWi = {test:'wi'}, keyName = 'WI511_KEY';
+  ok((await request(PRO,testWi)).status === 403 && (await request('',testWi)).status === 401, '511WI key testing is owner-only');
+  const list = await (await request(owner)).json();
+  ok(list.keys.some(k=>k.name===keyName && !k.set) && !(await (await request(owner,testWi)).json()).ok && wisconsinCalls === 0, '511WI appears before a key is saved and skips the source request');
+  const saved = await (await request(owner,{name:keyName,value:wisconsinTestKey})).json();
+  ok(saved.keys.find(k=>k.name===keyName).hint === '…1234' && !JSON.stringify(saved).includes(wisconsinTestKey), '511WI key save returns only the masked suffix');
+  const result = await (await request(owner,testWi)).json();
+  ok(result.ok && result.cameras === 1 && result.sample.name === 'I-41 at County A' && result.image.ok && wisconsinCalls === 1 && !JSON.stringify(result).includes(wisconsinTestKey), 'Test it checks an enabled Wisconsin camera and its picture');
+  const wi = await nearby(44.30,-88.45,15,4);
+  ok(wi.providers.find(p=>p.id==='wi').status === 'viewer' && wisconsinCalls === 1, 'Wisconsin retains its official viewer before the feed is verified');
+  const removed = await (await request(owner,{name:keyName,remove:true})).json();
+  ok(!removed.keys.find(k=>k.name===keyName).set, 'The owner can remove the Wisconsin key');
+}
 const anon = await api(new Request('http://x/c?lat=30.69&lng=-81.6'), {}), free = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: FREE } }), {}), pro = await api(new Request('http://x/c?lat=30.69&lng=-81.6', { headers: { cookie: PRO } }), {});
 ok(anon.status === 402 && free.status === 402 && (await free.json()).needPaid === true && pro.status === 200, 'cameras are for paid members: signed-out and free accounts get 402, a paid account gets the data');
 console.log('\n' + pass + ' checks passed');
