@@ -56,3 +56,7 @@
 .ppa-home .app-section-title h2,.ppa-home .hc-head h2{color:#f4f8ff}.ppa-home .hc-head .eyebrow{color:var(--app-gold)}.ppa-home .hc-sub,.ppa-home .hc-msg{color:var(--app-muted)}.ppa-home .hc-lock{display:block;padding:9px 10px;border-radius:10px;background:#213125;border:1px solid #937943;color:#ffe499}.ppa-home .hc-msg{margin:7px 0 0}.ppa-home details.a2hs{background:var(--app-panel);border-color:var(--app-line)}
 .ppa-home .dnav-in>a.pp-signin{margin-left:auto}.ppa-home .dnav-in>a.dbtn:last-child{margin-left:0}
 @media(prefers-reduced-motion:no-preference){.app-intro,.app-tiles{animation:appFadeRise 225ms var(--app-ease) both}@keyframes appFadeRise{from{opacity:.7;transform:translateY(9px)}to{opacity:1;transform:none}}}
+.ppa-auth .app-auth-card label.app-check,.ppa-auth .app-auth-card label#signupterms{display:flex;align-items:center;gap:7px;margin:0}.ppa-auth .app-auth-card input[type=checkbox]{appearance:auto;margin:0;padding:0;flex:none}.ppa-auth .app-auth-card #signupterms{align-items:flex-start}.ppa-auth .app-auth-card #signupterms input{margin-top:3px}
+.ppa-auth .app-auth-card label #pwhint{display:inline;font-size:.75rem;margin-left:4px}.ppa-auth .setupbtns #tabup{order:-1}.ppa-auth .setupbtns .btn{padding:7px 5px;line-height:1.2;font-size:.9rem}.ppa-auth .setupbtns .btn.ghost{color:#e5edf5}.ppa-auth.loginpg main .narrow>p a{color:var(--app-green)}
+.ppa-auth .app-footer{border:0;padding-top:7px}.ppa-auth .app-footer b{color:#d0dfec}.ppa-auth details.a2hs{background:var(--app-panel);border-color:var(--app-line)}
+.ppx-sheet .ppx-inf{flex:1}
