@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow"><title>Florida Open GIS Source Explorer | PricePocketAsset</title>
+<meta name="description" content="Research Florida county open address, parcel and building GIS source definitions and licensing before adding new map layers.">
+<link rel="stylesheet" href="/styles.css">
+<style>
+:root{color-scheme:dark}body{margin:0;background:#081322;color:#eaf4fa;font-family:system-ui,-apple-system,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+nav{display:flex;gap:16px;flex-wrap:wrap;padding:16px;border-bottom:1px solid #304256;background:#101f31}
+a{color:#80dcca}h1{font-size:clamp(26px,5vw,40px);margin-bottom:8px}
+p{line-height:1.55}small,.muted{color:#a8bbc9}
+.notice{background:#152b38;border:1px solid #517279;border-radius:14px;padding:14px;margin:18px 0}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}.stat{flex:1;min-width:130px;background:#162a40;border-radius:12px;padding:15px}
+.stat strong{font-size:27px;display:block}.stat span{color:#bbd0de;font-size:13px}
+.search{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+input,select{font:inherit;padding:12px;border:1px solid #6a8193;border-radius:9px;background:#182e40;color:white;max-width:100%;flex:1;min-width:200px}
+.card{background:#14283b;border:1px solid #3e5468;border-radius:13px;padding:16px;margin-bottom:12px}
+.card h2{font-size:20px;margin:0 0 5px}.layer{padding:10px 0;border-top:1px solid #324b5a;margin-top:10px}
+.pill{display:inline-block;background:#25485b;border-radius:40px;padding:5px 10px;font-size:12px;margin:4px 5px 4px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:12px}
+button{cursor:pointer;font:inherit;padding:11px;border-radius:9px;background:#136851;border:0;color:white}
+a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #89ecd4}
+</style></head><body>
+<nav><a href="/">PricePocketAsset</a><a href="/map/">Parcel Map</a><a href="/owner/certificates/">Owner Certificate Review</a></nav>
+<main>
+<h1>Florida GIS Source Explorer</h1>
+<p class="muted">Explore government GIS source definitions listed in OpenAddresses, starting with counties important to Florida tax lien and vacant-land research.</p>
+<div class="notice"><strong>Research sources only.</strong> This directory does not add parcel boundaries, validate ownership or confirm sale availability. A linked source may be outdated, unavailable or subject to separate reuse terms. Exact parcel boundaries must be matched by parcel ID before displaying them on the map.</div>
+<div class="stats">
+ <div class="stat"><strong id="areas">—</strong><span>Florida source entries</span></div>
+ <div class="stat"><strong id="covered">—</strong><span>Counties already on our map</span></div>
+ <div class="stat"><strong id="inspected">—</strong><span>Inspected source definitions</span></div>
+</div>
+<div class="search"><input id="q" type="search" placeholder="Search Florida county or city" aria-label="Search county or city">
+<select id="filter" aria-label="Filter source status"><option value="all">All sources</option><option value="new">Not already on parcel map</option><option value="inspected">Inspected source definitions</option><option value="parcel">Inspected parcel sources</option></select></div>
+<p class="muted" id="resultCount" role="status" aria-live="polite"></p><div class="grid" id="results"></div>
+<p class="muted">OpenAddresses source JSON definitions are CC0. Underlying government datasets may have separate usage rules. OpenAddresses is an independent project; it does not verify tax liens or endorse property listings here.</p>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const create=(tag,txt,cls)=>{const el=document.createElement(tag);if(txt!==undefined)el.textContent=txt;if(cls)el.className=cls;return el;};
+const link=(url,label)=>{try{const u=new URL(url);if(u.protocol!=='https:'&&u.protocol!=='http:')return null;
+const a=create('a',label);a.href=u.href;a.target='_blank';a.rel='noopener noreferrer';return a;}catch{return null;}};
+let entries=[];
+function render(){
+ const q=$('q').value.trim().toLowerCase(),filter=$('filter').value;
+ const filtered=entries.filter(x=>(!q||(x.county+' '+(x.city||'')).toLowerCase().includes(q))&&
+  (filter==='all'||filter==='new'&&!x.existingMapCounty||filter==='inspected'&&x.detailInspected||
+   filter==='parcel'&&x.layers.some(l=>l.type==='parcels')));
+ $('resultCount').textContent=filtered.length+' source definitions shown';
+ const root=$('results');root.replaceChildren();
+ for(const x of filtered){
+  const card=create('article',undefined,'card'),title=create('h2',x.city?x.city+' · '+x.county:x.county);
+  card.append(title,create('span',x.existingMapCounty?'Already has parcel-map dataset':'Potential new coverage','pill'),
+   create('span',x.detailInspected?'Source details inspected':'Source definition listed; details not yet inspected','pill'));
+  const ref=link(x.definitionUrl,'View OpenAddresses source definition');if(ref)card.append(create('p'),ref);
+  if(x.layers.length){
+   for(const l of x.layers){
+    const layer=create('div',undefined,'layer');
+    layer.append(create('strong',l.type.charAt(0).toUpperCase()+l.type.slice(1)+' · '+l.name));
+    layer.append(create('p','Protocol: '+(l.protocol||'unspecified')+' · Dataset terms: '+(l.license||'not stated')+
+     (l.year?' · Source year: '+l.year:''),'muted'));
+    const website=link(l.website,'Official source information');
+    if(website)layer.append(website);
+    if(l.licenseUrl){const license=link(l.licenseUrl,' · License/terms');if(license)layer.append(license);}
+    card.append(layer);
+   }
+  }else card.append(create('p','Layer details not independently inspected. Open the definition to review source and license.','muted'));
+  root.append(card);
+ }
+}
+(async()=>{try{
+ const r=await fetch('./sources.json',{cache:'no-cache'});if(!r.ok)throw Error('Source inventory unavailable');
+ const d=await r.json();entries=d.entries||[];
+ $('areas').textContent=entries.length;
+ $('covered').textContent=d.mapDatasetCount;
+ $('inspected').textContent=entries.filter(x=>x.detailInspected).length;
+ render();
+}catch(e){$('resultCount').textContent='Could not load Florida GIS sources. Please try again.';}})();
+for(const id of ['q','filter'])$(id).addEventListener(id==='q'?'input':'change',render);
+</script>
+</body></html>

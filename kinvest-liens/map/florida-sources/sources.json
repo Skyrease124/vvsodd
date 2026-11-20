@@ -1,0 +1,800 @@
+{
+  "type": "source-directory-only",
+  "state": "FL",
+  "source": "OpenAddresses source definitions",
+  "sourceCatalog": "https://github.com/openaddresses/openaddresses/tree/master/sources/us/fl",
+  "licenseNotice": "Definitions are CC0; underlying datasets have separate licenses, terms, accuracy and availability. No map data was imported or matched.",
+  "mapDatasetCount": 17,
+  "entries": [
+    {
+      "county": "Alachua",
+      "city": null,
+      "filename": "alachua.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/alachua.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Baker",
+      "city": null,
+      "filename": "baker.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/baker.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Bay",
+      "city": null,
+      "filename": "bay.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/bay.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Bradford",
+      "city": null,
+      "filename": "bradford.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/bradford.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Brevard",
+      "city": null,
+      "filename": "brevard.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/brevard.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Broward",
+      "city": null,
+      "filename": "broward.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/broward.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Calhoun",
+      "city": null,
+      "filename": "calhoun.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/calhoun.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Charlotte",
+      "city": null,
+      "filename": "charlotte.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/charlotte.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Citrus",
+      "city": null,
+      "filename": "citrus.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/citrus.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Lee",
+      "city": "Cape Coral",
+      "filename": "city_of_cape_coral.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_cape_coral.json",
+      "existingMapCounty": false,
+      "layers": [
+        {
+          "type": "addresses",
+          "name": "city",
+          "website": "https://capecoral-capegis.opendata.arcgis.com/datasets/CapeGIS::addresses/about",
+          "endpoint": "https://capeims.capecoral.gov/arcgis/rest/services/OpenData/Addresses/MapServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Not stated in source definition",
+          "licenseUrl": null,
+          "pidField": null
+        }
+      ],
+      "detailInspected": true
+    },
+    {
+      "county": "Fort Lauderdale",
+      "city": null,
+      "filename": "city_of_fort_lauderdale.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_fort_lauderdale.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Gainesville",
+      "city": null,
+      "filename": "city_of_gainesville.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_gainesville.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Key Biscayne",
+      "city": null,
+      "filename": "city_of_key_biscayne.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_key_biscayne.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Lakeland",
+      "city": null,
+      "filename": "city_of_lakeland.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_lakeland.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Miami",
+      "city": null,
+      "filename": "city_of_miami.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_miami.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Pinellas Park",
+      "city": null,
+      "filename": "city_of_pinellas_park.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_pinellas_park.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "West Palm Beach",
+      "city": null,
+      "filename": "city_of_west_palm_beach.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/city_of_west_palm_beach.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Clay",
+      "city": null,
+      "filename": "clay.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/clay.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Collier",
+      "city": null,
+      "filename": "collier.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/collier.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Columbia",
+      "city": null,
+      "filename": "columbia.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/columbia.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Desoto",
+      "city": null,
+      "filename": "desoto.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/desoto.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Dixie",
+      "city": null,
+      "filename": "dixie.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/dixie.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Duval",
+      "city": null,
+      "filename": "duval.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/duval.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Escambia",
+      "city": null,
+      "filename": "escambia.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/escambia.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Flagler",
+      "city": null,
+      "filename": "flagler.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/flagler.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Franklin",
+      "city": null,
+      "filename": "franklin.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/franklin.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Gadsden",
+      "city": null,
+      "filename": "gadsden.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/gadsden.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Gilchrist",
+      "city": null,
+      "filename": "gilchrist.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/gilchrist.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Glades",
+      "city": null,
+      "filename": "glades.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/glades.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Gulf",
+      "city": null,
+      "filename": "gulf.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/gulf.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Hamilton",
+      "city": null,
+      "filename": "hamilton.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/hamilton.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Hardee",
+      "city": null,
+      "filename": "hardee.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/hardee.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Hendry",
+      "city": null,
+      "filename": "hendry.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/hendry.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Hernando",
+      "city": null,
+      "filename": "hernando.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/hernando.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Highlands",
+      "city": null,
+      "filename": "highlands.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/highlands.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Hillsborough",
+      "city": null,
+      "filename": "hillsborough.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/hillsborough.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Holmes",
+      "city": null,
+      "filename": "holmes.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/holmes.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Indian River",
+      "city": null,
+      "filename": "indian_river.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/indian_river.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Jackson",
+      "city": null,
+      "filename": "jackson.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/jackson.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Jefferson",
+      "city": null,
+      "filename": "jefferson.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/jefferson.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Lafayette",
+      "city": null,
+      "filename": "lafayette.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/lafayette.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Lake",
+      "city": null,
+      "filename": "lake.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/lake.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Lee",
+      "city": null,
+      "filename": "lee.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/lee.json",
+      "existingMapCounty": false,
+      "layers": [
+        {
+          "type": "addresses",
+          "name": "county",
+          "website": "https://maps.leegov.com/datasets/ng911-address-points-file-geodatabase/about",
+          "endpoint": "https://services2.arcgis.com/LvWGAAhHwbCJ2GMP/arcgis/rest/services/NG911_Address_Points/FeatureServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Indemnification",
+          "licenseUrl": "https://www.leegov.com/gis/data/gis-data",
+          "pidField": null
+        },
+        {
+          "type": "parcels",
+          "name": "county",
+          "website": "https://maps.leegov.com/datasets/parcels-file-geodatabase/about",
+          "endpoint": "https://gismapserver.leegov.com/gisserver910/rest/services/Layers/ParcelAddress/MapServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Indemnification",
+          "licenseUrl": "https://www.leegov.com/gis/data/gis-data",
+          "pidField": "STRAP"
+        },
+        {
+          "type": "buildings",
+          "name": "county",
+          "website": "https://maps.leegov.com/datasets/LeeGIS::building-footprints-1/about",
+          "endpoint": "https://services2.arcgis.com/LvWGAAhHwbCJ2GMP/arcgis/rest/services/Building_Footprints/FeatureServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Indemnification",
+          "licenseUrl": "https://www.leegov.com/gis/data/gis-data",
+          "pidField": null
+        }
+      ],
+      "detailInspected": true
+    },
+    {
+      "county": "Leon",
+      "city": null,
+      "filename": "leon.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/leon.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Levy",
+      "city": null,
+      "filename": "levy.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/levy.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Liberty",
+      "city": null,
+      "filename": "liberty.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/liberty.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Madison",
+      "city": null,
+      "filename": "madison.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/madison.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Manatee",
+      "city": null,
+      "filename": "manatee.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/manatee.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Marion",
+      "city": null,
+      "filename": "marion.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/marion.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Martin",
+      "city": null,
+      "filename": "martin.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/martin.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Miami-Dade",
+      "city": null,
+      "filename": "miami-dade.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/miami-dade.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Monroe",
+      "city": null,
+      "filename": "monroe.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/monroe.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Nassau",
+      "city": null,
+      "filename": "nassau.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/nassau.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Okaloosa",
+      "city": null,
+      "filename": "okaloosa.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/okaloosa.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Okeechobee",
+      "city": null,
+      "filename": "okeechobee.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/okeechobee.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Orange",
+      "city": null,
+      "filename": "orange.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/orange.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Osceola",
+      "city": null,
+      "filename": "osceola.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/osceola.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Palm Beach",
+      "city": null,
+      "filename": "palm_beach.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/palm_beach.json",
+      "existingMapCounty": true,
+      "layers": [
+        {
+          "type": "addresses",
+          "name": "county",
+          "website": "https://opendata2-pbcgov.opendata.arcgis.com/datasets/situs-addresses/about",
+          "endpoint": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Situs%20Addresses/FeatureServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Public Domain",
+          "licenseUrl": null,
+          "pidField": null
+        },
+        {
+          "type": "parcels",
+          "name": "county",
+          "website": "https://opendata2-pbcgov.opendata.arcgis.com/datasets/PBCGOV::parcels/about",
+          "endpoint": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels/FeatureServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Public Domain",
+          "licenseUrl": null,
+          "pidField": "PARID"
+        }
+      ],
+      "detailInspected": true
+    },
+    {
+      "county": "Pasco",
+      "city": null,
+      "filename": "pasco.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/pasco.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Pinellas",
+      "city": null,
+      "filename": "pinellas.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/pinellas.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Polk",
+      "city": null,
+      "filename": "polk.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/polk.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Putnam",
+      "city": null,
+      "filename": "putnam.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/putnam.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Santa Rosa",
+      "city": null,
+      "filename": "santa_rosa.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/santa_rosa.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Sarasota",
+      "city": null,
+      "filename": "sarasota.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/sarasota.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Seminole",
+      "city": null,
+      "filename": "seminole.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/seminole.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "St. Johns",
+      "city": null,
+      "filename": "st-johns.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/st-johns.json",
+      "existingMapCounty": false,
+      "layers": [
+        {
+          "type": "addresses",
+          "name": "county",
+          "website": "https://data-sjcfl.hub.arcgis.com/datasets/5c6b300e4fda4964ac0694f7a266be08_0/about",
+          "endpoint": "https://services1.arcgis.com/t2yugAJW83eUIFui/arcgis/rest/services/Address_Sites/FeatureServer/0",
+          "protocol": "ESRI",
+          "year": null,
+          "license": "Not stated in source definition",
+          "licenseUrl": null,
+          "pidField": null
+        },
+        {
+          "type": "parcels",
+          "name": "county",
+          "website": "https://floridarevenue.com/property/Pages/DataPortal_RequestAssessmentRollGISData.aspx",
+          "endpoint": "https://floridarevenue.com/property/dataportal/Documents/PTO%20Data%20Portal/Map%20Data/2023F/stjohns_2023pin.zip",
+          "protocol": "http",
+          "year": 2023,
+          "license": "Not stated in source definition",
+          "licenseUrl": null,
+          "pidField": "PARCELNO"
+        }
+      ],
+      "detailInspected": true
+    },
+    {
+      "county": "St-Lucie",
+      "city": null,
+      "filename": "st-lucie.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/st-lucie.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Sumter",
+      "city": null,
+      "filename": "sumter.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/sumter.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Suwannee",
+      "city": null,
+      "filename": "suwannee.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/suwannee.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Taylor",
+      "city": null,
+      "filename": "taylor.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/taylor.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Union",
+      "city": null,
+      "filename": "union.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/union.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Volusia",
+      "city": null,
+      "filename": "volusia.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/volusia.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Wakulla",
+      "city": null,
+      "filename": "wakulla.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/wakulla.json",
+      "existingMapCounty": false,
+      "layers": [
+        {
+          "type": "addresses",
+          "name": "county",
+          "website": "https://pointmatch.floridarevenue.com/General/AddressFiles.aspx",
+          "endpoint": "https://data.openaddresses.io/cache/uploads/jeffdefacto/2026-06-03-qk9mm/WAKULLA_2026-07-01.csv",
+          "protocol": "http",
+          "year": 2026,
+          "license": "Not stated in source definition",
+          "licenseUrl": null,
+          "pidField": null
+        },
+        {
+          "type": "parcels",
+          "name": "county",
+          "website": "https://floridarevenue.com/property/Pages/DataPortal_RequestAssessmentRollGISData.aspx",
+          "endpoint": "https://floridarevenue.com/property/dataportal/Documents/PTO%20Data%20Portal/Map%20Data/2023F/wakulla_2023pin.zip",
+          "protocol": "http",
+          "year": 2023,
+          "license": "Not stated in source definition",
+          "licenseUrl": null,
+          "pidField": "PARCELNO"
+        }
+      ],
+      "detailInspected": true
+    },
+    {
+      "county": "Walton",
+      "city": null,
+      "filename": "walton.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/walton.json",
+      "existingMapCounty": true,
+      "layers": [],
+      "detailInspected": false
+    },
+    {
+      "county": "Washington",
+      "city": null,
+      "filename": "washington.json",
+      "definitionUrl": "https://github.com/openaddresses/openaddresses/blob/master/sources/us/fl/washington.json",
+      "existingMapCounty": false,
+      "layers": [],
+      "detailInspected": false
+    }
+  ]
+}

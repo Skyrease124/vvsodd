@@ -1,0 +1,26 @@
+name: Validate Florida OpenAddresses GIS source explorer
+on:
+  push:
+    branches:
+      - feature/florida-openaddresses-sources-20261120
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/florida-sources/**
+      - kinvest-liens/map/index.html
+      - tests/florida-openaddresses-sources.test.mjs
+      - .github/workflows/validate-florida-openaddresses.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/florida-openaddresses-sources.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
+      - run: node --test tests/test_all_parcel_research_maps.mjs
