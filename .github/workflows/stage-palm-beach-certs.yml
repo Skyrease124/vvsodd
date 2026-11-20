@@ -31,12 +31,25 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_palm_beach_discovery.py'
       - name: Download and validate Palm Beach official certificate spreadsheet
         run: python scripts/stage-palm-beach-certificates.py
+      - name: Compare with last reviewed snapshot (never infer redemption from disappearance)
+        run: |
+          python -m unittest discover -s tests -p 'test_certificate_snapshot_changes.py'
+          PREVIOUS=/tmp/previous-certificate-snapshot.json
+          if git fetch --no-tags origin refs/heads/automation/palm-beach-certificate-review:refs/remotes/origin/automation/palm-beach-certificate-review; then
+            git show origin/automation/palm-beach-certificate-review:county-import-staging/fl-palm-beach-certificate-export.json > "$PREVIOUS" || rm -f "$PREVIOUS"
+          fi
+          python scripts/compare-certificate-snapshots.py \
+            --current county-import-staging/fl-palm-beach-certificate-export.json \
+            --previous "$PREVIOUS" \
+            --output county-import-staging/fl-palm-beach-certificate-export-changes.json
       - name: Upload verified-format staged records for review
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: palm-beach-certificate-staging
-          path: county-import-staging/fl-palm-beach-certificate-export.json
+          path: |
+            county-import-staging/fl-palm-beach-certificate-export.json
+            county-import-staging/fl-palm-beach-certificate-export-changes.json
       - name: Push staging branch for human review
         if: success()
         continue-on-error: true
@@ -46,7 +59,9 @@ jobs:
           title: 'Review Palm Beach county-held certificate updates'
           body: 'Records sourced from Palm Beach Tax Collector. Availability not confirmed. No live map or AI publication.'
           commit-message: 'Stage official Palm Beach county-held certificates'
-          add-paths: county-import-staging/fl-palm-beach-certificate-export.json
+          add-paths: |
+            county-import-staging/fl-palm-beach-certificate-export.json
+            county-import-staging/fl-palm-beach-certificate-export-changes.json
       - name: Link staged data for review
         if: always()
         run: |
