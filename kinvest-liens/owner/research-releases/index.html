@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Research Releases | Owner Dashboard</title><link rel="stylesheet" href="/app-shell.css">
+<style>:root{font:16px system-ui,-apple-system,sans-serif;color:#172d41;background:#f4f7fb}*{box-sizing:border-box}body{margin:0}
+header{padding:18px;background:#10263d}header a{color:#c2ffe1}main{max-width:760px;margin:0 auto;padding:24px}h1{font-size:30px}
+p{line-height:1.55}form{display:grid;gap:14px;background:white;padding:20px;border:1px solid #d4dfe8;border-radius:14px}
+label{display:grid;gap:6px;font-weight:600}input,select,textarea{font:inherit;padding:11px;border:1px solid #b6c7d9;border-radius:9px;max-width:100%}
+textarea{min-height:110px}button{background:#14664f;color:white;padding:13px;border:none;border-radius:10px;font:inherit;font-weight:700}
+button:disabled{opacity:.5}.notice{background:#fff3df;padding:14px;border:1px solid #dfc39d;border-radius:10px}
+small{color:#596d7f;font-weight:400}a{color:#19775c}header a{color:#c2ffe1}[hidden]{display:none!important}
+</style></head><body><header><a href="/owner/">← Owner Dashboard</a></header><main>
+<h1>Research Update Releases</h1><p>Publish owner-approved tax lien and parcel-land research updates with <strong>48 hours of Pro-only early access</strong>. Free visitors receive the same approved updates automatically after 48 hours.</p>
+<div class="notice">This does not edit your existing public maps or the separate Land for Sale area. All releases are research-only, not purchase offers. Lien records must first pass Certificate Review.</div>
+<p id="status" role="status">Checking owner access…</p>
+<form id="form" hidden>
+<label>Research type<select name="type" id="type"><option value="lien">Tax lien certificate</option><option value="land">Parcel / land research</option></select></label>
+<label>State code<input name="state" value="FL" maxlength="2" required></label>
+<label>County<input name="county" placeholder="Wakulla" maxlength="80" required></label>
+<label>Parcel ID<input name="parcelId" maxlength="100" required></label>
+<label id="certGroup">Certificate number<input name="certificateNumber" maxlength="80"></label>
+<label id="keyGroup">Reviewed certificate key<input name="certificateKey" placeholder="fl|wakulla|parcel|cert|2024"><small>Copy this exact key from Certificate Review. A current approved research decision is required.</small></label>
+<label>Headline<input name="title" maxlength="140" placeholder="Updated county certificate research" required></label>
+<label>Research summary<textarea name="description" maxlength="1400" minlength="20" placeholder="Describe what the official county source confirms." required></textarea></label>
+<label>Official source URL<input name="evidenceUrl" type="url" maxlength="2000" placeholder="https://..." required></label>
+<label><span><input type="checkbox" name="approvedForResearch" required> I have personally verified this research and approve its release (Pro immediately, Free after 48 hours).</span></label>
+<button id="save" type="submit">Release reviewed research update</button>
+<p id="result" role="status"></p></form>
+<p><a href="/owner/certificates/">Open Certificate Review</a> · <a href="/reviewed-certificates.html">View member research updates</a></p>
+</main>
+<script>
+const status=document.getElementById('status'),form=document.getElementById('form'),type=document.getElementById('type');
+function toggle(){const isLien=type.value==='lien';for(const id of ['certGroup','keyGroup'])document.getElementById(id).hidden=!isLien;}
+type.addEventListener('change',toggle);toggle();
+fetch('/.netlify/functions/research-updates',{credentials:'same-origin'}).then(async r=>{
+ if(!r.ok)throw Error('Research update service unavailable.');
+ return fetch('/.netlify/functions/certificate-review',{credentials:'same-origin'});
+}).then(async r=>{if(!r.ok)throw Error(r.status===401?'Sign in to your owner account.':'Owner access required.');
+ status.textContent='Owner verified. New approved updates appear to Pro first.';form.hidden=false;
+}).catch(e=>status.textContent=e.message);
+form.addEventListener('submit',async e=>{
+ e.preventDefault();const result=document.getElementById('result'),save=document.getElementById('save');
+ if(!confirm('Release this research update to Pro now and Free after 48 hours?'))return;
+ save.disabled=true;result.textContent='Publishing approved research update…';
+ const fields=Object.fromEntries(new FormData(form));fields.approvedForResearch=true;fields.action='release';
+ try{const r=await fetch('/.netlify/functions/research-updates',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(fields)});
+ const d=await r.json();if(!r.ok)throw Error(d.error||'Publication failed.');
+ result.textContent='Released to Pro now. Free release: '+new Date(d.freeReleaseAt).toLocaleString()+'. No map listings changed.';form.reset();toggle();
+ }catch(err){result.textContent=err.message}finally{save.disabled=false}
+});
+</script></body></html>
