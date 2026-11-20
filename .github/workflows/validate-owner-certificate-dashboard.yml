@@ -1,0 +1,30 @@
+name: Validate owner certificate dashboard
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/owner/dashboard.js
+      - kinvest-liens/owner/certificates/index.html
+      - netlify/functions/certificate-review.mjs
+      - tests/check_owner_certificate_dashboard.py
+      - .github/workflows/validate-owner-certificate-dashboard.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Netlify API syntax
+        run: node --check netlify/functions/certificate-review.mjs
+      - name: Validate owner dashboard navigation and safeguards
+        run: python tests/check_owner_certificate_dashboard.py
