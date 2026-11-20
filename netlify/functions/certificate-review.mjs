@@ -31,7 +31,7 @@ export function validateDecision(b,record){
   return {decision:b.decision,reason:b.reason.trim(),evidenceUrl:b.evidenceUrl||null};
 }
 let cache=new Map();
-async function getSnapshot(slug){
+export async function getSnapshot(slug){
   const cfg=CONFIG[slug];
   if(!cfg)throw Error('Unsupported county.');
   const old=cache.get(slug);

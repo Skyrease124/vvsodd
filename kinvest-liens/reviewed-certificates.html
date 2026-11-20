@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="index,follow">
-<title>Reviewed Certificate Research | PricePocketAsset</title>
-<meta name="description" content="Source-linked Florida tax certificate research records. Research only, not an offer to purchase.">
+<title>Research Updates | PricePocketAsset</title>
+<meta name="description" content="Approved lien and parcel-land research updates. Pro early access for 48 hours. Research only, not an offer to purchase.">
 <style>
 :root{font:16px system-ui,-apple-system,sans-serif;color:#14283b;background:#f5f8fb}
 *{box-sizing:border-box}body{margin:0}.shell{max-width:1120px;padding:24px;margin:auto}
@@ -26,8 +26,8 @@ footer{border-top:1px solid #d4e0ec;margin-top:32px;padding-top:18px;color:#6679
 </style></head><body>
 <header><div class="shell"><nav><a href="/" aria-label="Back to PricePocketAsset home"><strong>PricePocketAsset</strong></a><a href="/">Home</a></nav></div></header>
 <main class="shell">
-<div class="hero"><h1>Reviewed certificate research</h1>
-<p class="lead">Official-source tax certificate details that have passed a separate manual research-review process.</p></div>
+<div class="hero"><h1>Approved lien & land research updates</h1>
+<p class="lead">Pro members see newly approved research updates first. Free visitors receive the same updates 48 hours later. AI research remains a Pro feature.</p></div>
 <div class="notice"><strong>Research only. Not an investment offer.</strong> County ownership, redemption status, tax-deed proceedings, and ability to purchase can change. Even a county-held certificate is not necessarily available to buy. Verify everything with the issuing tax collector. This page does not sell certificates or provide checkout.</div>
 <div class="actions"><input id="search" type="search" placeholder="Search parcel or certificate number" aria-label="Search certificate records"><select id="county" aria-label="Select Florida county"><option value="">All counties</option><option>Wakulla</option><option>Palm Beach</option><option>St. Johns</option></select></div>
 <div id="state" role="status" aria-live="polite">Loading reviewed research records…</div>
@@ -53,34 +53,34 @@ function draw(){
   const filtered=approved.filter(r=>(!county.value||r.county===county.value)&&
     (!term||[r.parcelId,r.certificateNumber,r.county].some(v=>String(v||'').toLowerCase().includes(term))));
   if(!approved.length){
-    state.textContent='No certificates have been approved for website research publication yet. Our county imports remain in administrative review.';
+    state.textContent='No approved lien or land research updates are available to your access level yet. Pro receives new releases 48 hours before Free.';
     return;
   }
-  state.textContent=filtered.length+' reviewed research record(s). None is confirmed available for purchase.';
+  state.textContent=filtered.length+' approved research update(s) visible to your membership. No purchase availability is confirmed.';
   const fragment=document.createDocumentFragment();
   for(const r of filtered.slice(0,250)){
     const card=document.createElement('article');card.className='item';
-    const title=document.createElement('h3');title.textContent=r.county+' · Certificate '+r.certificateNumber;card.append(title);
+    const title=document.createElement('h3');title.textContent=r.title||(r.county+' · '+(r.type==='land'?'Land research':'Certificate '+r.certificateNumber));card.append(title);
     const badge=document.createElement('span');badge.className='pill';badge.textContent='Research only · not for sale';card.append(badge);
     line(card,'Parcel',r.parcelId);line(card,'Tax year',r.taxYear);
     line(card,'Holding type',r.holdingType);line(card,'Redemption',r.redemptionStatus);
     line(card,'Tax deed',r.taxDeedStatus);
+    line(card,'Research summary',r.description);
+    line(card,'Pro release',r.proReleaseAt ? new Date(r.proReleaseAt).toLocaleDateString() : null);
     const a=document.createElement('a');a.textContent='Verify with official source';a.target='_blank';a.rel='noopener noreferrer';
-    try{const url=new URL(r.evidenceUrl);if(url.protocol==='https:') {a.href=url.href;card.append(a)}}catch(_){}
+    try{const url=new URL(r.evidenceUrl||r.sourceUrl);if(url.protocol==='https:') {a.href=url.href;card.append(a)}}catch(_){}
     fragment.append(card);
   }
   container.append(fragment);
 }
 async function init(){
   try{
-    const response=await fetch('/data/reviewed-certificates.json',{cache:'no-store'});
+    const response=await fetch('/.netlify/functions/research-updates',{cache:'no-store',credentials:'same-origin'});
     if(!response.ok)throw Error('Dataset unavailable');
     const data=await response.json();
-    if(data.schemaVersion!==1||data.kind!=='approved-certificate-research'||!Array.isArray(data.records))
+    if(!data.ok||!Array.isArray(data.records))
       throw Error('Unexpected dataset format');
-    approved=data.records.filter(r=>r&&r.listingType==='tax-certificate-research-only'&&
-      r.researchReviewStatus==='approved-for-research'&&r.availableForPurchase===false&&
-      r.purchaseLink==null&&r.status==='unverified');
+    approved=data.records.filter(r=>r&&r.researchOnly===true&&r.availableForPurchase===false&&['lien','land'].includes(r.type));
     draw();
   }catch(error){
     state.textContent='Reviewed records are temporarily unavailable. No purchase availability is implied.';

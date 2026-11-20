@@ -8,6 +8,7 @@ window.ppaAccount.then(user => {
     ['Members','Manage access and membership','/members/','profile'],
     ['Imports & review','Review incoming county data','/admin/imports/','layers'],
     ['Certificate Review','Review Florida tax certificates and record decisions','/owner/certificates/','file'],
+    ['Research Releases','Give Pro members 48-hour early access to approved lien and land updates','/owner/research-releases/','layers'],
     ['Retail Alerts','Manage alert settings','/owner/retail/','search'],
     ['API keys','Manage service credentials','/owner/keys/','lock'],
     ['Read a county PDF','Extract county records','/owner/ocr/','file'],
