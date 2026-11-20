@@ -75,7 +75,7 @@
   // This does not add county data to the ordinary results or expose restricted records.
   async function locateApprovedResearch() {
     if (!IDX || !researchUpdates.length || !window.PPAResearchMap) return;
-    const countyKey = value => String(value || '').trim().toLowerCase().replace(/\\s+county$/, '');
+    const countyKey = value => String(value || '').trim().toLowerCase().replace(/\s+county$/, '');
     const choices = new Map();
     for (const r of researchUpdates) {
       const ds = IDX.datasets.filter(d => d.state === r.state && countyKey(d.county) === countyKey(r.county));
