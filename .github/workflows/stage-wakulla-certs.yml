@@ -4,6 +4,8 @@ on:
     branches:
       - claude/engineering-workspace
     paths:
+      - scripts/build-certificate-review-html.py
+      - tests/test_certificate_review_html.py
       - scripts/report-certificate-changes.py
       - tests/test_certificate_change_alerts.py
       - 'scripts/stage-wakulla-certificates.py'
@@ -51,6 +53,15 @@ jobs:
           python scripts/report-certificate-changes.py \
             --report county-import-staging/fl-wakulla-certificate-export-changes.json \
             --county 'Wakulla'
+      - name: Test offline administrator review dashboard
+        run: python -m unittest discover -s tests -p 'test_certificate_review_html.py'
+      - name: Generate read-only administrator review dashboard
+        run: |
+          python scripts/build-certificate-review-html.py \
+            --records county-import-staging/fl-wakulla-certificate-export.json \
+            --changes county-import-staging/fl-wakulla-certificate-export-changes.json \
+            --county 'Wakulla' \
+            --output county-review-html/fl-wakulla-certificate-export-review.html
       - name: Upload staged records for review
         if: success()
         uses: actions/upload-artifact@v4
@@ -59,6 +70,7 @@ jobs:
           path: |
             county-import-staging/fl-wakulla-certificate-export.json
             county-import-staging/fl-wakulla-certificate-export-changes.json
+            county-review-html/fl-wakulla-certificate-export-review.html
       - name: Push staged data to separate review branch
         if: success()
         uses: peter-evans/create-pull-request@v7
