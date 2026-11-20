@@ -3,6 +3,8 @@ import * as auth from '../lib/auth.mjs';
 import {getSnapshot} from './certificate-review.mjs';
 import {triageSnapshot,summarizeForAI} from '../lib/certificate-auto-triage.mjs';
 import {complete} from '../lib/llm.mjs';
+import * as keystore from '../lib/keystore.mjs';
+import {applyBatchMarks} from '../lib/certificate-batch-marks.mjs';
 
 const COUNTIES=new Set(['wakulla','palm-beach','st-johns']);
 const reply=(code,obj)=>new Response(JSON.stringify(obj),{status:code,headers:{
@@ -34,29 +36,45 @@ export default async function handler(req){
       const priority=['urgent','review','routine'].includes(url.searchParams.get('priority'))?url.searchParams.get('priority'):'';
       const items=priority?stored.items.filter(x=>x.priority===priority):stored.items;
       return reply(200,{ok:true,county,needsScan:false,summary:stored.summary,scannedAt:stored.scannedAt,
-        aiSummary:stored.aiSummary||null,aiModel:stored.aiModel||null,matched:items.length,
-        page,items:items.slice(page*30,page*30+30),snapshotSha256:stored.snapshotSha256});
+        aiSummary:stored.aiSummary||null,aiModel:stored.aiModel||null,aiStatus:stored.aiStatus||'unknown',matched:items.length,
+        page,items:items.slice(page*30,page*30+30).map(x=>({...x,triageMark:stored.triageMarks?.[x.certificateKey]?.status||null})),
+        snapshotSha256:stored.snapshotSha256});
+    }
+    if(body?.operation==='batch-mark'){
+      const previous=await auth.kvGet(storeKey(county));
+      if(!previous||previous.snapshotSha256!==snap.hash)return reply(409,{ok:false,error:'Scan is stale. Run the county scan again.'});
+      let next;try{next=applyBatchMarks(previous,body);}catch(e){return reply(400,{ok:false,error:e.message});}
+      await auth.kvPut(storeKey(county),next);
+      return reply(200,{ok:true,county,updated:body.certificateKeys.length,
+        snapshotSha256:next.snapshotSha256,privateOnly:true,publicationAuthorized:false});
     }
     // A scan is a private recommendation only; the owner must use existing individual review for publication.
     const result=triageSnapshot(snap);
-    let aiSummary=null,aiModel=null;
-    if(body?.useAI===true && process.env.NVIDIA_API_KEY){
+    let aiSummary=null,aiModel=null,aiStatus=body?.useAI===true?'not-configured':'disabled';
+    const cfg=body?.useAI===true?await keystore.getConfig():null;
+    if(body?.useAI===true && cfg){
       try{
         const prompt='Write 2 short sentences summarizing the counts and missing evidence. '+
           'No record is verified for purchase or publication. Do not recommend approval, infer status, or invent facts.';
-        const response=await complete({key:process.env.NVIDIA_API_KEY},prompt,
+        const response=await complete(cfg,prompt,
           JSON.stringify(summarizeForAI(result)),{maxTokens:150,timeoutMs:12000});
         aiSummary=String(response.text).slice(0,900);
         aiModel=response.model;
-      }catch(e){console.warn('Optional triage AI summary unavailable:',e?.message);}
+        aiStatus='ready';
+      }catch(e){
+        aiStatus='error';
+        console.warn('Optional triage AI summary unavailable:',e?.message);
+      }
     }
     const stored={snapshotSha256:result.snapshotSha256,scannedAt:new Date().toISOString(),
-      items:result.items,summary:{total:result.total,counts:result.counts,sourceCheckedAt:result.sourceCheckedAt,
+      items:result.items,triageMarks:(await auth.kvGet(storeKey(county)))?.triageMarks||{},summary:{total:result.total,counts:result.counts,sourceCheckedAt:result.sourceCheckedAt,
         message:textSummary(result),ownerApprovalRequired:true,publicationAuthorized:false,
-        availableForPurchase:false},aiSummary,aiModel};
+        availableForPurchase:false},aiSummary,aiModel,aiStatus};
     await auth.kvPut(storeKey(county),stored);
     return reply(200,{ok:true,county,scannedAt:stored.scannedAt,summary:stored.summary,
-      aiSummary,aiModel,needsScan:false,matched:result.total,page:0,items:stored.items.slice(0,30)});
+      aiSummary,aiModel,aiStatus,needsScan:false,matched:result.total,page:0,
+      snapshotSha256:result.snapshotSha256,
+      items:stored.items.slice(0,30).map(x=>({...x,triageMark:stored.triageMarks[x.certificateKey]?.status||null}))});
   }catch(e){
     console.error('Certificate triage:',e?.message);
     return reply(503,{ok:false,error:'Private certificate review is temporarily unavailable.'});

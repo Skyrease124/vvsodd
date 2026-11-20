@@ -40,7 +40,7 @@ test('owner-only API and UI require explicit manual action',()=>{
  const ui=fs.readFileSync('kinvest-liens/owner/certificates/index.html','utf8');
  assert.match(api,/if\(!user\.owner\)/);
  assert.match(api,/req\.headers\.get\('origin'\)/);
- assert.match(api,/NVIDIA_API_KEY/);
+ assert.match(api,/keystore\.getConfig\(\)/);
  assert.doesNotMatch(api,/syncReviewedCertificate|publishApprovedResearch|approved-research-releases-v1/);
  assert.match(ui,/Review All Counties/);
  assert.match(ui,/Open manual review/);
