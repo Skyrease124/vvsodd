@@ -1,0 +1,45 @@
+name: Stage St Johns official unpaid certificate CSV
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - scripts/stage-st-johns-certificates.py
+      - .github/workflows/stage-st-johns-certs.yml
+  schedule:
+    - cron: '41 10 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate official St Johns unpaid certificate CSV
+        run: python scripts/stage-st-johns-certificates.py
+      - name: Archive review-only staged report
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: st-johns-certificate-staging
+          path: county-import-staging/fl-st-johns-unpaid-certificates.json
+      - name: Push staging review branch
+        if: success()
+        continue-on-error: true
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: automation/st-johns-certificate-review
+          title: 'Review St Johns unpaid certificate list update'
+          body: 'Official county report. All records remain unverified and not purchasable; source contains county and individual certificates and may include changing statuses.'
+          commit-message: 'Stage official St Johns unpaid certificate records'
+          add-paths: county-import-staging/fl-st-johns-unpaid-certificates.json
+      - name: Link staging branch
+        if: always()
+        run: |
+          echo "Review [St Johns staging branch](https://github.com/${{ github.repository }}/compare/claude/engineering-workspace...automation/st-johns-certificate-review) or the job artifact before publishing." >> "$GITHUB_STEP_SUMMARY"
