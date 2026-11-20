@@ -1,0 +1,37 @@
+name: Validate reviewed website research dataset
+on:
+  push:
+    branches:
+      - claude/engineering-workspace
+    paths:
+      - scripts/assemble-reviewed-research.py
+      - tests/test_assemble_reviewed_research.py
+      - kinvest-liens/reviewed-certificates.html
+      - kinvest-liens/data/reviewed-certificates.json
+      - .github/workflows/validate-reviewed-research-web.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test research-only dataset assembly
+        run: python -m unittest discover -s tests -p 'test_assemble_reviewed_research.py'
+      - name: Validate published dataset is safe
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('kinvest-liens/data/reviewed-certificates.json').read_text())
+          assert data['schemaVersion']==1 and data['kind']=='approved-certificate-research'
+          assert isinstance(data['records'],list)
+          assert len(data['records'])==0, 'Nonempty public dataset requires a separately reviewed deployment change'
+          assert Path('kinvest-liens/reviewed-certificates.html').is_file()
+          print('Safe empty research publication dataset verified')
+          PY
