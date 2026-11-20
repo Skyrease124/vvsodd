@@ -1,2 +1,9 @@
 [
+  {
+    "id": "fl-2026-parcel-sample",
+    "state": "FL",
+    "county": "Florida Statewide",
+    "format": "arcgis-parcels",
+    "url": "https://services2.arcgis.com/SlIq32SqARUHIhSx/arcgis/rest/services/DOR_Parcels/FeatureServer/1/query?where=PARCELNO%20IS%20NOT%20NULL&outFields=OBJECTID%2CPARCELNO&returnGeometry=false&resultRecordCount=100&f=json"
+  }
 ]
