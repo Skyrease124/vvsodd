@@ -10,6 +10,7 @@ on:
       - kinvest-liens/owner/intelligence/index.html
       - tests/owner-firecrawl-quota-v2.test.mjs
       - tests/owner-intelligence-center.test.mjs
+      - tests/owner-firecrawl-standard-retention.test.mjs
       - .github/workflows/validate-owner-firecrawl-quota.yml
   workflow_dispatch:
 permissions:
