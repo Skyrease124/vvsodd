@@ -63,11 +63,11 @@
     @media(max-width:600px){
       body:has(.ppx-sheet:not([hidden])){overflow:hidden}
       .ppx-sheet{inset:0;width:100%;max-height:none;border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column;overflow:hidden;background:#071326}
-      .ppx-brandbar{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:calc(10px + env(safe-area-inset-top)) 15px 11px;background:linear-gradient(#071222,#09182d)}
+      .ppx-brandbar{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:calc(16px + env(safe-area-inset-top)) 15px 14px;background:linear-gradient(#071222,#09182d)}
       .ppx-brand{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:clamp(.83rem,4.1vw,1.1rem);font-weight:800;letter-spacing:-.035em}.ppx-brand img{width:39px;height:auto}.ppx-brand em{color:#16c878;font-style:normal}
       .ppx-sheet .ppx-bell{position:relative;display:grid;place-items:center;flex:none;width:33px;height:33px;border-radius:50%;background:linear-gradient(145deg,#ffe589,#dbaa36);color:#1d180d;box-shadow:0 3px 12px #dba73850}.ppx-bell svg{width:20px}.ppx-bell b{position:absolute;top:-4px;right:-5px;padding:1px 4px;border-radius:10px;background:#be1736;color:white;font-size:.6rem}
       .ppx-account{white-space:nowrap;min-height:33px;padding:0 9px;border:1.5px solid #f0c65e;border-radius:11px;background:linear-gradient(#15815a,#07533d);color:#fff;font:inherit;font-size:clamp(.75rem,3.4vw,.96rem);font-weight:750;box-shadow:0 0 0 1px #ffdd7340 inset;cursor:pointer}
-      .ppx-secondary{margin-top:clamp(34px,9dvh,76px)}
+      .ppx-secondary{margin-top:clamp(60px,17dvh,145px)}
       .ppx-body{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;border:1px solid #4a65818c;border-bottom:0;border-radius:24px 24px 0 0}
     }
   `;
