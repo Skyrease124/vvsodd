@@ -1,0 +1,27 @@
+name: Validate reviewed map research overlays
+on:
+  push:
+    branches:
+      - feature/map-reviewed-research-overlays
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/parcel-map.js
+      - kinvest-liens/map/index.html
+      - kinvest-liens/map/research-match.js
+      - tests/test_research_map_overlay.mjs
+      - .github/workflows/validate-research-map-overlay.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --check kinvest-liens/map/research-match.js
+      - run: node --test tests/test_research_map_overlay.mjs
