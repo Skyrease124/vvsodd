@@ -13,7 +13,8 @@ class PublicationGateTests(unittest.TestCase):
           'certificateNumber':'17','taxYear':'2024','holdingType':'county-held',
           'redemptionStatus':'reported-unredeemed','taxDeedStatus':'unknown',
           'availableForPurchase':False,'status':'unverified',
-          'ownerName':'PRIVATE NAME','mailingAddress':'PRIVATE ADDRESS','faceAmountRaw':'100.00'}
+          'ownerName':'PRIVATE NAME','mailingAddress':'PRIVATE ADDRESS','faceAmountRaw':'100.00',
+          'sourceUrl':'https://wakullatax.com/s/certs.xlsx'}
         self.snap={'source':'https://wakullatax.com/s/certs.xlsx',
           'checkedAt':'2026-11-20','records':[self.row]}
         self.raw=json.dumps(self.snap).encode()
