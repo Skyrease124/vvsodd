@@ -84,9 +84,9 @@ export async function checkLogin(email, password) {
   if (good && u.revoked) return 'revoked';   // only someone who knows the password learns the account is deactivated
   return good ? u : null;
 }
-export async function sessionCookie(email) {
+export async function sessionCookie(email, remember = true) {
   const tok = await sign({ e: email, iat: Date.now(), exp: Date.now() + DAYS * 864e5, sid: crypto.randomBytes(9).toString('base64url') });
-  return `${COOKIE}=${tok}; Path=/; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
+  return `${COOKIE}=${tok}; Path=/;${remember ? ` Max-Age=${DAYS * 86400};` : ''} HttpOnly; Secure; SameSite=Lax`;
 }
 export const clearCookie = () => `${COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
 // Returns the user for a request's cookie header, or null.

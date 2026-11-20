@@ -152,3 +152,13 @@ test('lists without tax amounts return null and stay out of explicit amount filt
   assert(d.rows.length && d.rows.every(r => r.noPrice && r.face === null));
   assert.equal(runLiens({ ...search, lien: { maxFace: 1000 } }).total, 0);
 });
+
+test('Map AI defaults to the viewed county while explicit geography can override it', async () => {
+  const county = await ask('Show cheapest liens', { states: ['AZ'], mapCounty: 'Cochise County' });
+  assert.equal(county.total, 11126);
+  assert(county.results.every(r => r.county === 'Cochise'));
+  const explicit = await ask('Mobile County liens', { states: ['AZ'], mapCounty: 'Cochise County' });
+  assert.match(explicit.answer, /does not match|Alabama/);
+  const statewide = await ask('Show tax liens across Arizona', { states: ['AZ'], mapCounty: 'Cochise County' });
+  assert(statewide.total > county.total);
+});

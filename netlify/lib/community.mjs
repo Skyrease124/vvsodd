@@ -48,13 +48,21 @@ async function freeUsername(base) {
   return 'member' + rid(5);
 }
 // Creates the profile (and, for everyone except the Founder, the permanent Founder connection) if missing. Idempotent; safe to call on every request.
-export async function ensureProfile(user) {
+export async function signupUsername(value) {
+  const name = String(value).trim().toLowerCase();
+  if (!USERNAME.test(name)) return err(400, 'Choose a username with 3–20 letters, numbers or underscores, starting with a letter.');
+  if (RESERVED.has(name)) return err(400, 'That username is reserved.');
+  if (await auth.kvGet(K.pu(name))) return err(409, 'That username is taken.');
+  return { ok: true, name };
+}
+export async function ensureProfile(user, preferredUsername = '') {
   if (!user || !user.email) return null;
   const email = auth.normEmail(user.email), em = await auth.kvGet(K.pe(email));
   let p = em && em.uid ? await getByUid(em.uid) : null;
   if (!p) {
     const uid = rid(8), isF = email === FOUNDER_EMAIL() || uid === process.env.FOUNDER_USER_ID;
-    const username = isF && !(await auth.kvGet(K.pu('pricepocketasset'))) ? 'pricepocketasset' : await freeUsername('member' + String(Math.floor(Math.random() * 1e6)).padStart(6, '0'));
+    const available = preferredUsername && await signupUsername(preferredUsername);
+    const username = available?.ok ? available.name : isF && !(await auth.kvGet(K.pu('pricepocketasset'))) ? 'pricepocketasset' : await freeUsername('member' + String(Math.floor(Math.random() * 1e6)).padStart(6, '0'));
     p = { uid, email, username, name: isF ? 'PricePocketAsset' : 'New member', role: isF ? 'Founder & Owner' : '', experience: '', bio: '', interests: [], city: '', state: '', cover: isF ? 'lake' : COLORS[Math.floor(Math.random() * COLORS.length)],
       privacy: { showLocation: false, showActivity: true, whoCanFollow: 'everyone', whoCanMessage: 'followers', collectionsDefault: 'private', discoverable: true, showProBadge: true },
       notif: { founderPosts: 'on', founderAnnouncements: 'on', frequency: 'instant', follows: true, messages: true },

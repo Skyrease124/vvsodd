@@ -21,7 +21,7 @@ async function understand(st) {
   else if (ctx.parse) { try { const raw = await ctx.parse(q); if (raw) { it = ctx.cleanIntent(raw, ctx.codes, ctx.uiScope || []); how = 'model'; } } catch (e) { /* fall through */ } }
   if (!it) { it = ctx.cleanIntent({}, ctx.codes, ctx.uiScope || []); how = 'general'; }
   if (it.task === 'general' && /\b(liens?|parcels?|lots?|propert(?:y|ies)|acres?)\b/i.test(q)) it.task = 'liens';
-  const parcel = (q.match(/\b\d{2,}[-\d.]{5,}\b/) || [])[0] || null;
+  const parcel = (q.match(/\b\d{2,}[-\d.]{5,}\b/) || [])[0] || ctx.mapParcel || null;
   if (it.task === 'liens' || parcel) ctx.applyLienGeography?.(it, q, ctx.data.STATES, ctx.uiScope || []);
   return { intent: Object.assign(it, { parcel, how }), trace: [step('Understand request', ctx.describe(it) + (parcel ? ' · parcel ' + parcel : ''))] };
 }
@@ -89,7 +89,7 @@ function deterministic(st) {
 async function analyze(st) {
   const { ctx } = st, ev = st.evidence, f = st.findings; let text = null, usedModel = false;
   if (ctx.write && !ev.liens?.message) {
-    const pack = { question: st.q, plan: st.plan, rules: ev.states && ev.states.rows, liens: ((ev.liens && ev.liens.rows) || []).slice(0, 8), passages: (ev.kb || []).slice(0, 5).map(k => ({ title: k.title, text: k.text })), gaps: f.gaps.slice(0, 8), conflicts: f.conflicts, notes: f.notes.slice(0, 6) };
+    const pack = { question: st.q, plan: st.plan, rules: ev.states && ev.states.rows, liens: ((ev.liens && ev.liens.rows) || []).slice(0, 8), selectedParcel: ev.parcelHit || [], passages: (ev.kb || []).slice(0, 5).map(k => ({ title: k.title, text: k.text })), gaps: f.gaps.slice(0, 8), conflicts: f.conflicts, notes: f.notes.slice(0, 6) };
     try { text = await ctx.write(pack); usedModel = !!text; } catch (e) { text = null; }
   }
   const body = text || deterministic(st);

@@ -17,8 +17,9 @@
 <meta name="apple-mobile-web-app-title" content="PricePocket">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="radar.css">
+<link rel="stylesheet" href="/app-shell.css">
 </head>
-<body>
+<body class="ppa-home">
 <header class="dnav">
   <div class="dwrap dnav-in">
     <a class="dlogo" href="./" aria-label="PricePocketAsset home">
@@ -27,7 +28,7 @@
     </a>
     <nav class="dlinks" aria-label="Main">
       <a class="on" href="./">Home</a>
-      <a href="#map">Explore</a>
+      <a href="#products">Explore</a>
       <a href="liens/#calculator">Tools</a>
       <a href="learn/">Master Class</a>
       <a href="about/">About</a>
@@ -41,13 +42,37 @@
 </header>
 
 <main id="top">
-<div id="homewx" class="homewx wrap" hidden aria-live="polite"></div>
-<section id="map" class="dhero radar-on">
+<div class="app-home">
+  <section class="app-intro" aria-labelledby="home-title">
+    <div><span class="app-plan" data-app-plan hidden></span><h1 id="home-title">Find property opportunities <em>faster.</em></h1><p>Tax liens, deeds, county data, land deals and more — all in one place.</p></div>
+    <div id="homewx" class="homewx" hidden aria-live="polite"></div>
+  </section>
+  <section class="app-map" aria-label="Parcel Map">
+    <iframe src="/map/?embed=1&amp;c=FL-hillsborough" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
+    <div class="app-map-foot"><a href="/map/">Open full map →</a></div>
+  </section>
+  <nav class="app-tiles" id="app-tools" aria-label="Primary tools">
+    <a class="app-card app-primary" href="/community/profile/"><span data-icon="profile"></span><b>Profile</b><small>Your account and activity</small></a>
+    <a class="app-card" href="/map/"><span data-icon="map"></span><b data-map-label>Map</b><small>Search parcels and counties</small></a>
+    <a class="app-card" href="/portfolio/"><span data-icon="chart"></span><b>Portfolio</b><small>Track your deals</small></a>
+    <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Class</b><small>Lessons and practice</small></a>
+  </nav>
+  <section class="app-section" aria-labelledby="foryou-title">
+    <div class="app-section-title"><h2 id="foryou-title">For You</h2><a href="/account/watchlist/">View all →</a></div>
+    <div class="app-suggestions">
+      <a href="#map"><span data-icon="layers"></span><span><b>County updates</b><small>Tax Sale Radar</small></span></a>
+      <a href="/account/watchlist/"><span data-icon="bookmark"></span><span><b data-saved>Watchlist</b><small>Track saved properties</small></span></a>
+      <a data-recent-link href="/map/"><span data-icon="search"></span><span><b data-recent-label>Parcel search</b><small data-recent>Explore the map</small></span></a>
+    </div>
+  </section>
+</div>
+<details class="app-radar" id="map"><summary>Tax Sale Radar, auction calendar and sale history</summary>
+<section class="dhero radar-on">
   <div class="dwrap">
     <div class="rhead">
       <p id="hgreet" class="hgreet" aria-hidden="true"></p>
-      <h1>Tax Sale <span class="gold">Radar</span></h1>
-      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records. Educational only: verify with the county before you bid.</p>
+      <h2>Tax Sale <span class="gold">Radar</span></h2>
+      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records.</p>
     </div>
     <div id="radar" class="radar">
       <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
@@ -74,44 +99,35 @@
         <ul><li>Rates and rules differ by state and county</li><li>Redemption periods can tie up money for years</li><li>Always verify with the county before you bid</li></ul>
         <a class="dbtn" href="liens/">Learn More &rarr;</a></div>
     </div>
-    <p class="dnote">Educational only; not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal. Verify all figures with the county.</p>
   </div>
 </section>
+</details>
 
-
+<div class="app-home">
 <section id="hcams-wrap" class="wrap section hcams-sec">
   <div id="hcams" class="hcams" aria-live="polite">
     <div class="hc-head"><div><p class="eyebrow">Pro</p><h2>Live cameras</h2></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
     <p class="hc-sub">Public cameras from state transportation and tourism feeds. They show conditions at the camera, not at any property.</p>
   </div>
 </section>
-<section id="products" class="wrap section prods">
-  <h2>Explore</h2>
-  <p class="pl-sub">Everything on one site. The research tools are free; Pro adds the AI, live lot checks and downloads. <a href="plans/">Free vs Pro</a></p>
-  <nav class="pl" aria-label="Explore">
-    <a class="pl-row" href="map/"><span class="pl-ic" style="--c:#2563eb"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg></span><span class="pl-tx"><b>Parcel Map + AI</b><span>Real parcel outlines, owners and sale records, with PricePocket AI built in.</span></span><span class="pl-chev" aria-hidden="true"></span></a>
-    <a class="pl-row" href="liens/"><span class="pl-ic" style="--c:#0b6e4f"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></span><span class="pl-tx"><b>Tax Liens</b><span>Lists, state rules, a calculator and the official source for every state.</span></span><span class="pl-chev" aria-hidden="true"></span></a>
-    <a class="pl-row" href="learn/"><span class="pl-ic" style="--c:#d97706"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 9 9-5 9 5-9 5z"/><path d="M7 11.5V16c0 1.2 2.2 2.5 5 2.5s5-1.3 5-2.5v-4.5"/></svg></span><span class="pl-tx"><b>Master Class</b><span>Lessons, a glossary and practice drills.</span></span><span class="pl-chev" aria-hidden="true"></span></a>
-    <a class="pl-row" href="#hcams-wrap"><span class="pl-ic" style="--c:#0891b2"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span><span class="pl-tx"><b>Live cameras <i>Pro</i></b><span>Public traffic and beach cameras near a place.</span></span><span class="pl-chev" aria-hidden="true"></span></a>
+<section id="products" class="app-section">
+  <div class="app-section-title"><h2>Explore</h2><a href="/liens/#calculator">Browse tools →</a></div>
+  <nav class="app-explore" aria-label="Explore">
+    <a class="app-card" href="/map/"><span data-icon="map"></span><b>Parcel Map</b><small>Boundaries, records and sales</small></a>
+    <a class="app-card" href="/liens/"><span data-icon="file"></span><b>Tax Liens</b><small>Find lists and state rules</small></a>
+    <a class="app-card" href="/map/?sort=low&amp;vacant=1"><span data-icon="pin"></span><b>Cheap Land</b><small>Browse low listed amounts</small></a>
+    <a class="app-card" href="/liens/states/"><span data-icon="layers"></span><b>County Data</b><small>Official records and sources</small></a>
+    <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Classes</b><small>Lessons and practice drills</small></a>
+    <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Full AI workspace for search, lists and research</small></a>
   </nav>
-  <p class="pl-more">More asset tools and guides are planned.</p>
 </section>
-
-<section id="about" class="band abt">
-  <div class="wrap section narrow">
-    <p class="abtbtns"><a class="dbtn" href="plans/">Compare Free vs Pro &rarr;</a> <a class="dbtn dghost" href="about/">Read more about us &rarr;</a> <a class="dbtn dghost" href="donate/">Support the site &#9825;</a></p>
-    <p class="abtfine">Education and research tools only. Not legal, tax or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</p>
-  </div>
-</section>
-
+<aside class="app-upgrade" data-upgrade><div><b>Upgrade to Pro</b><p>Unlock PricePocket AI, Map AI, live cameras, advanced filters and bulk downloads.</p></div><a class="app-button" href="/plans/">Compare Plans →</a></aside>
+</div>
 </main>
 
-<footer>
-  <div class="wrap">
-    <p><b>PricePocketAsset</b> &copy; <span id="yr"></span></p>
-    <p class="small">For educational purposes only; not legal, tax or investment advice. Investing involves risk, including loss of principal. Rates and rules vary by jurisdiction.</p>
-    <p class="small"><a href="legal/privacy/">Privacy</a> &middot; <a href="legal/terms/">Terms</a> &middot; <a href="legal/billing/">Billing &amp; refunds</a> &middot; <a href="legal/disclaimer/">Disclaimer</a> &middot; <a href="donate/">Support the site</a></p>
-  </div>
+<footer class="app-footer">
+  <p>Education and research tools only. Not legal, tax, or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</p>
+  <nav aria-label="Site information"><a href="/plans/">Free vs Pro</a><a href="/about/">About</a><a href="/support/">Support</a><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a><a href="/donate/">Support the site</a></nav>
 </footer>
 <script src="script.js"></script>
 <script src="liens/states/states.js"></script>
@@ -121,7 +137,8 @@
 <script src="map.js"></script>
 <script src="radar.js"></script>
 <script src="home-state.js"></script>
-<script src="/auth-nav.js"></script>
+<script src="/app-ui.js" defer></script>
+<script src="/auth-nav.js" defer></script>
 <script src="/home-wx.js"></script>
 <script src="/home-cams.js" defer></script>
 <script src="/hazard-ticker.js" defer></script>

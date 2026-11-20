@@ -2,6 +2,12 @@
 // and the newsletter / sign-up prompts are hidden.
 (function () {
   const API = '/.netlify/functions/account';
+  const isEmbeddedMap = new URLSearchParams(location.search).get('embed') === '1' && window.top !== window;
+  if (isEmbeddedMap) return;
+  if (!document.querySelector('link[href="/app-shell.css"]')) {
+    const appCss = document.createElement('link'); appCss.rel = 'stylesheet'; appCss.href = '/app-shell.css'; document.head.appendChild(appCss);
+  }
+  window.ppaAccount ||= fetch(API).then(r => r.ok ? r.json() : null).then(d => d?.user || null).catch(() => null);
   const css = document.createElement('style');
   css.textContent = '.pp-menu{position:relative;display:inline-block}.pp-panel{position:absolute;right:0;top:calc(100% + 10px);width:272px;max-width:calc(100vw - 24px);max-height:min(76vh,620px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:rgba(250,251,252,.86);-webkit-backdrop-filter:saturate(1.8) blur(24px);backdrop-filter:saturate(1.8) blur(24px);color:#1d1d1f;border:.5px solid rgba(0,0,0,.12);border-radius:20px;box-shadow:0 0 0 .5px rgba(255,255,255,.6) inset,0 24px 60px -12px rgba(0,0,0,.45),0 6px 18px rgba(0,0,0,.14);padding:8px;z-index:50;transform-origin:calc(100% - 36px) -8px;animation:ppPanelIn .26s cubic-bezier(.2,.9,.25,1.1) both}' +
     '@keyframes ppPanelIn{from{opacity:0;transform:scale(.92) translateY(-6px)}to{opacity:1;transform:none}}' +
@@ -100,48 +106,59 @@
   function ppPush(user) { if (ppDevice()) ppPushLoad().then(P => { if (P) P.sync(user || null); }); }
   const navLinks = [...document.querySelectorAll('a[href$="account/"]')].filter(a => /^\s*(Account|Sign in)\s*$/i.test(a.textContent));
 
-  fetch(API).then(r => r.ok ? r.json() : null).then(d => {
-    const user = d && d.user;
+  window.ppaAccount.then(user => {
+    window.dispatchEvent(new CustomEvent('ppa:account', { detail:user }));
+    if (document.body.classList.contains('ppa-home')) document.body.dataset.account = user ? (user.paid ? 'pro' : 'free') : 'guest';
     ppPush(user); // keep this device tied to the signed-in account (only on devices that already turned notifications on)
     // Paid members (and the owner) see "PricePocketPro" instead of "PricePocketAsset".
-    const today = new Date().toISOString().slice(0, 10);
-    if (user && (user.owner || user.paid || (user.paidThrough && user.paidThrough >= today))) {
-      const em = document.querySelector('.dlogo em');
+    if (user && (user.owner || user.paid)) {
+      const em = document.querySelector('.dlogo em,.app-brand em');
       if (em && em.textContent === 'Asset') em.textContent = 'Pro';
       document.querySelectorAll('a.logo').forEach(a => { const t = a.lastChild; if (t && t.nodeType === 3) t.nodeValue = t.nodeValue.replace('Asset', 'Pro'); });
       const dl = document.querySelector('.dlogo'); if (dl) dl.setAttribute('aria-label', 'PricePocketPro home');
     }
     if (user) {
       navLinks.forEach(a => { a.textContent = 'My account'; });
+      header?.querySelectorAll('.app-actions a[href="/login/"]').forEach(a => { a.hidden = true; });
+      const nav = document.createElement('nav'); nav.className = 'app-bottom'; nav.setAttribute('aria-label', 'Mobile navigation');
+      const bottomPaths = [
+        ['Home','/','M3 11l9-8 9 8v10h-6v-6H9v6H3z'],
+        ['Map','/map/','M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14m6-12v14'],
+        ['Tools',null,'M3 8l9-5 9 5-9 5zM3 13l9 5 9-5M3 18l9 5 9-5'],
+        ['Watchlist','/account/watchlist/','M6 3h12v18l-6-4-6 4z'],
+        ['Community','/community/','M2 21v-2a7 7 0 0 1 14 0v2m0-16a3 3 0 0 1 0 6m3 3a5 5 0 0 1 3 5v2M12.5 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z'],
+        ['Profile','/community/profile/','M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21v-2a8 8 0 0 1 16 0v2']
+      ];
+      bottomPaths.forEach(([label,href,path]) => {
+        const link = document.createElement(href ? 'a' : 'button');
+        if (href) {
+          link.href = href;
+          const current = label === 'Community' ? location.pathname === href || (location.pathname.startsWith(href) && !location.pathname.startsWith('/community/profile/') && !location.pathname.startsWith('/community/settings/')) : location.pathname === href;
+          if (current) link.setAttribute('aria-current','page');
+        } else { link.type = 'button'; link.addEventListener('click', () => openSheet()); }
+        link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + path + '"/></svg>';
+        link.append(label); nav.appendChild(link);
+      });
+      document.body.classList.add('ppa-app-member'); document.body.appendChild(nav);
       const wrap = document.createElement('div'); wrap.className = 'pp-menu';
       const b = document.createElement('a'); b.href = '#'; b.className = cta ? cta.className.replace(/\bghost\b/, '') : 'btn small'; b.textContent = 'My account ▾'; b.setAttribute('aria-haspopup', 'true'); b.setAttribute('aria-expanded', 'false');
       const p = document.createElement('div'); p.className = 'ppx-sheet'; p.hidden = true;
-      const who = document.createElement('div'); who.className = 'pp-who'; { const av = document.createElement('span'); av.className = 'pp-av'; av.textContent = (user.email || '?').charAt(0).toUpperCase(); const tx = document.createElement('div'), nm = document.createElement('b'), rl = document.createElement('small'); nm.textContent = user.email; rl.textContent = user.owner ? 'Owner' : (user.paid || (user.paidThrough && user.paidThrough >= today)) ? 'PricePocketPro member' : 'Free account'; tx.append(nm, rl); who.append(av, tx); }
       const l1 = document.createElement('a'); l1.href = '/portfolio/'; l1.textContent = 'My portfolio';
       const l2 = document.createElement('a'); l2.href = '/account/'; l2.textContent = 'My favorites';
       const l9 = document.createElement('a'); l9.href = '/account/watchlist/'; l9.textContent = 'My watchlist';
-      const l10 = document.createElement('a'); l10.href = '/admin/imports/'; l10.textContent = 'Imports & review';
       const ldl = document.createElement('a'); ldl.href = '/downloads/'; ldl.textContent = 'Download Center';
       const lnot = document.createElement('a'); lnot.href = '/account/#pushhost'; lnot.textContent = 'Notifications';
       const lset = document.createElement('a'); lset.href = '/account/#settings'; lset.textContent = 'Settings';
       const l8 = document.createElement('a'); l8.href = '/learn/'; l8.textContent = 'Master Class';
       const ldon = document.createElement('a'); ldon.href = '/donate/'; ldon.textContent = 'Support the site';
-      const l6 = document.createElement('a'); l6.href = '/land/'; l6.textContent = 'Land for sale';
-      const l7 = document.createElement('a'); l7.href = '/land/sell/'; l7.textContent = 'Sell my land';
-      const l4 = document.createElement('a'); l4.href = '/members/'; l4.textContent = 'Members';
-      const l5 = document.createElement('a'); l5.href = '/billing/'; l5.textContent = 'Billing setup';
-      const lk = document.createElement('a'); lk.href = '/owner/keys/'; lk.textContent = 'API keys';
-      const lo = document.createElement('a'); lo.href = '/owner/ocr/'; lo.textContent = 'Read a county PDF';
       const lp = document.createElement('a'); lp.href = '/plans/'; lp.textContent = 'Free vs Pro';
-      const l3 = document.createElement('a'); l3.href = '/usage/'; l3.textContent = 'Usage';
       const lcm = document.createElement('a'); lcm.href = '/community/'; lcm.textContent = 'Community';
       const lpf = document.createElement('a'); lpf.href = '/community/profile/'; lpf.textContent = 'Profile';
       const lcam = document.createElement('a'); lcam.href = '/cams/'; lcam.textContent = 'Live Cams';
       const lmsg = document.createElement('a'); lmsg.href = '/messages/'; lmsg.textContent = 'Messages';
       fetch('/.netlify/functions/messages?unread=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { const n = d ? (d.unread || 0) + (d.requests || 0) : 0; if (n) { const b = document.createElement('b'); b.textContent = n > 99 ? '99+' : String(n); b.style.cssText = 'margin-left:8px;min-width:20px;height:20px;border-radius:10px;background:#d70015;color:#fff;font-size:.72rem;display:inline-grid;place-items:center;padding:0 5px'; (lmsg.querySelector('span') || lmsg).append(b); } }).catch(() => {});
       const lrt = document.createElement('a'); lrt.href = '/retail/'; lrt.textContent = 'Retail Alerts';
-      const lort = document.createElement('a'); lort.href = '/owner/retail/'; lort.textContent = 'Retail Alerts (owner)';
-      const isPro = user.owner || user.paid || (user.paidThrough && user.paidThrough >= today);
+      const isPro = user.owner || user.paid;
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/map/?ai=1'; aiLink.textContent = 'Parcel Map + AI'; }
       let ms = null;
       if (user.hasCustomer) {
@@ -154,16 +171,15 @@
       }
       const out = document.createElement('button'); out.type = 'button'; out.className = 'pp-out'; out.textContent = 'Sign out';
       out.addEventListener('click', async () => { if (ppDevice()) { const P = await ppPushLoad(); if (P) await P.logout(); } try { await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'logout'})}); } catch (e) {} location.reload(); });
-      const grp = (...els) => { const g = document.createElement('div'); g.className = 'pp-grp'; els.filter(Boolean).forEach(x => g.appendChild(x)); return g; };
       // ---- menu look (own class names, so older menu styles cannot reach it)
       const ico = d => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
       const el = (tag, cls, txt) => { const x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; };
-      const aiMain = aiLink || el('a', '', 'Parcel Map + AI'); if (!aiLink) aiMain.href = '/map/';
+      const aiMain = aiLink || el('a', '', 'Map'); if (!aiLink) aiMain.href = '/map/';
       const tile = (a, label, svg, hi) => { a.textContent = ''; a.className = 'ppx-tile' + (hi ? ' ppx-hi' : ''); a.innerHTML = ico(svg); a.appendChild(el('span', '', label)); return a; };
       const tiles = el('div', 'ppx-tiles');
       tiles.append(
         tile(lpf, 'Profile', '<circle cx="12" cy="6.5" r="4"/><path d="M4 22v-2a8 8 0 0 1 16 0v2"/>'),
-        tile(aiMain, 'Map + AI', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', true),
+        tile(aiMain, isPro ? 'Map + AI' : 'Map', '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>', true),
         tile(l1, 'Portfolio', '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
         tile(l8, 'Master Class', '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>'));
       const rowOf = (a, svg, label) => { const t = label || a.textContent; a.textContent = ''; a.className = 'ppx-row'; a.innerHTML = ico(svg); a.appendChild(el('span', '', t)); const chevron = el('i', '', '\u203a'); chevron.setAttribute('aria-hidden', 'true'); a.appendChild(chevron); return a; };
@@ -181,17 +197,19 @@
         rowOf(lrt, bellIcon + '<path d="M3 6 2 9m19-3 1 3"/>'));
       if (isPro) mg.appendChild(rowOf(lnot, bellIcon));
       more.appendChild(mg);
-      const ownerBox = user.owner ? (() => { const d = el('details', 'ppx-own'); d.appendChild(el('summary', '', 'Owner tools')); const og = el('div', 'ppx-grp'); [l4, l10, lort, lk, lo, l3, l5].forEach(x => og.appendChild(x)); d.appendChild(og); return d; })() : null;
+      const ownerBox = user.owner ? el('div', 'ppx-own') : null;
+      if (ownerBox) { const ownerLink = el('a', '', 'Owner Dashboard →'); ownerLink.href = '/owner/'; ownerLink.dataset.tool = 'owner dashboard'; ownerBox.appendChild(ownerLink); }
+      const fullAi = el('a', '', 'PricePocket AI · Pro'); fullAi.href = isPro ? '/ai/' : '/plans/?src=PricePocket%20AI';
       const hd = el('div', 'ppx-hd');
       const av3 = el('div', 'ppx-av', (user.email || '?').charAt(0).toUpperCase());
       const camera = el('a', 'ppx-camera');
-      camera.href = lpf.href;
+      camera.href = '/community/settings/';
       camera.setAttribute('aria-label', 'Edit profile photo');
       camera.innerHTML = ico('<path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/>');
       av3.appendChild(camera);
-      const nm = el('div', 'ppx-nm', user.email || 'My account');
+      const nm = el('div', 'ppx-nm', 'My profile');
       const handle = el('div', 'ppx-user'); handle.hidden = true;
-      const inf = el('div', 'ppx-inf'); inf.append(nm, handle, el('span', 'ppx-role', user.owner ? 'Owner' : (isPro ? 'Pro member' : 'Member')));
+      const inf = el('a', 'ppx-inf'); inf.href = lpf.href; inf.append(nm, handle, el('span', 'ppx-role', user.owner ? 'Owner' : (isPro ? 'Pro' : 'Free')));
       const close = el('button', 'ppx-x', '\u00d7'); close.type = 'button'; close.setAttribute('aria-label', 'Close menu');
       hd.append(av3, inf, close);
       const search = el('div', 'ppx-search');
@@ -199,7 +217,7 @@
       const find = el('input', 'ppx-find'); find.type = 'search'; find.placeholder = 'Find a tool'; find.setAttribute('aria-label', 'Find a tool');
       search.appendChild(find);
       const foot = el('div', 'ppx-foot');
-      const extras = el('div', 'ppx-grp'); extras.append(l2, lset, lp, ldon); if (ms) extras.append(ms); extras.append(out); foot.appendChild(extras);
+      const extras = el('div', 'ppx-grp'); extras.append(l2, fullAi, lset, lp, ldon); if (ms) extras.append(ms); extras.append(out); foot.appendChild(extras);
       const brandbar = el('div', 'ppx-brandbar');
       const brand = el('a', 'ppx-brand'); brand.href = '/';
       const mark = el('img'); mark.src = '/img/logo-mark.png'; mark.alt = '';
@@ -214,7 +232,7 @@
       p.id = 'ppx-account-menu'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Account menu');
       b.setAttribute('aria-haspopup', 'dialog'); b.setAttribute('aria-controls', p.id);
       p.append(brandbar, body);
-      const tools = [...body.querySelectorAll('.ppx-tile,.ppx-row,.ppx-grp a,.ppx-grp button')];
+      const tools = [...body.querySelectorAll('.ppx-tile,.ppx-row,.ppx-grp a,.ppx-grp button,.ppx-own a')];
       tools.forEach(item => { item.dataset.tool = item.textContent.toLowerCase(); });
       find.addEventListener('input', () => {
         const q = find.value.trim().toLowerCase();
@@ -226,9 +244,12 @@
         secondary.hidden = foot.hidden && (!ownerBox || ownerBox.hidden);
       });
       wrap.append(b);
-      let requestedProfile = false;
+      const backdrop = el('div', 'ppx-backdrop'); backdrop.hidden = true;
+      document.body.appendChild(backdrop);
+      let requestedProfile = false, returnFocus = null;
+      p.setAttribute('aria-modal','true');
       const openSheet = () => {
-        p.hidden = false; b.setAttribute('aria-expanded', 'true'); close.focus({preventScroll:true});
+        returnFocus = document.activeElement; backdrop.hidden = false; p.hidden = false; b.setAttribute('aria-expanded', 'true'); close.focus({preventScroll:true});
         if (requestedProfile) return;
         requestedProfile = true;
         fetch('/.netlify/functions/community?me=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(data => {
@@ -242,7 +263,15 @@
           }
         }).catch(() => { requestedProfile = false; });
       };
-      const closeSheet = (focus = false) => { p.hidden = true; b.setAttribute('aria-expanded', 'false'); if (focus) b.focus(); };
+      const closeSheet = (focus = false) => { p.hidden = true; backdrop.hidden = true; b.setAttribute('aria-expanded', 'false'); if (focus) (returnFocus || b).focus(); };
+      backdrop.addEventListener('click', () => closeSheet(true));
+      p.addEventListener('keydown', e => {
+        if (e.key !== 'Tab') return;
+        const items = [...p.querySelectorAll('a[href],button:not([disabled]),input,summary')].filter(x => x.getClientRects().length);
+        const first = items[0], last = items.at(-1);
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      });
       close.addEventListener('click', () => closeSheet(true));
       menuButton.addEventListener('click', () => closeSheet(true));
       b.addEventListener('click', e => { e.preventDefault(); if (p.hidden) openSheet(); else closeSheet(); });
@@ -266,7 +295,7 @@
     } else {
       const next = encodeURIComponent(location.pathname + location.search);
       navLinks.forEach(a => { a.textContent = 'Sign in'; a.href = '/login/?next=' + next; });
-      if (location.pathname.indexOf('/login') === 0) return;
+      if (location.pathname.indexOf('/login') === 0 || header?.classList.contains('app-bar')) return;
       const s = document.createElement('a');
       s.href = '/login/?next=' + next; s.textContent = 'Sign in';
       s.className = (cta ? cta.className.replace(/\b(ghost)\b/, '') : 'btn small') + ' pp-signin';
@@ -281,6 +310,7 @@
 
 // Motion: reveal sections as they scroll into view, and a back-to-top button. Skipped for reduced-motion users.
 (function () {
+  if (document.body.classList.contains('ppa-home') || document.body.classList.contains('ppa-auth')) return;
   if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!('IntersectionObserver' in window)) return;
   var SEL = 'main h2, main .salebox, main .askbox, main .notice, main .card, main .scard, main .setupform, main .takeaways, main .lessons li, main .stcell, main .countylist li, main .stfacts, main .dnote, main .band p, footer .wrap';
@@ -319,6 +349,7 @@
 // "Add to Home Screen" help at the bottom of every page: steps for iPhone, Android and desktop. Hidden once the site is already installed.
 (function () {
   function add() {
+    if (document.body.classList.contains('ppa-home') && document.getElementById('install')) return;
     if (document.querySelector('.a2hs')) return;
     const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); if (standalone) return;
     let foot = document.querySelector('footer .wrap') || document.querySelector('footer');

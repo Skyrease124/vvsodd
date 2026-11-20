@@ -13,35 +13,35 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PricePocket">
 <link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="/app-shell.css">
 </head>
-<body>
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="logo" href="../"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a>
-    <nav><a href="../#map">Map</a><a href="./">Account</a></nav>
-  </div>
-</header>
+<body class="ppa-auth">
+<header class="app-bar"><a class="app-brand" href="/"><img src="/img/logo-mark.png" alt=""><span>PricePocket<em>Asset</em></span></a><nav class="app-actions" aria-label="Account"><a class="app-outline" href="/login/">Sign In</a><a class="dbtn" href="/account/?mode=up">Sign Up</a></nav></header>
 <main>
 <section class="wrap section narrow">
-  <h1>My account</h1>
-  <div id="out" hidden>
-    <div class="setupform">
+  <div class="app-heading"><h1 id="account-title">My account</h1><p id="account-subtitle" hidden></p></div>
+  <div id="out" class="app-auth-grid" hidden>
+    <div class="setupform app-auth-card">
       <div class="setupbtns"><button class="btn" id="tabin" type="button">Sign in</button><button class="btn ghost" id="tabup" type="button">Create account</button></div>
       <form id="form" novalidate>
-        <label>Email <input id="email" type="email" autocomplete="email" required></label>
-        <label>Password
-          <span class="pwwrap" style="position:relative;display:block"><input id="pw" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding-right:56px">
+        <label>Email Address <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+        <label id="usernamewrap" hidden>Username <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="20" placeholder="Choose a username"></label>
+        <label>Password <small id="pwhint" hidden>At least 8 characters.</small>
+          <span class="pwwrap" style="position:relative;display:block"><input id="pw" name="password" aria-describedby="pwhint" type="password" autocomplete="current-password" required style="width:100%;box-sizing:border-box;padding-right:56px">
           <button type="button" id="eye" aria-label="Show password" aria-pressed="false" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;cursor:pointer;padding:8px;line-height:0;color:inherit">
             <svg id="eyeon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
             <svg id="eyeoff" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><path d="M17.94 17.94A10.9 10.9 0 0 1 12 20C5 20 1 12 1 12a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
           </button></span></label>
-        <label id="acodewrap" hidden>Access code <span class="muted">(optional, only if you were given one)</span> <input id="acode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX"></label>
-        <p class="small muted" id="pwhint" hidden>At least 8 characters. Pick one you do not use anywhere else.</p>
+        <label id="confirmwrap" hidden>Confirm Password <span class="app-field"><input id="confirmpw" name="confirm-password" type="password" autocomplete="new-password"><button type="button" data-toggle-password="confirmpw" aria-label="Show password" aria-pressed="false"></button></span></label>
+        <label id="acodewrap" hidden>Access Code <span class="muted">(Optional)</span> <input id="acode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX" aria-describedby="acodehelp"><small id="acodehelp">Only needed if you were given an invite or special code.</small></label>
+        <label class="app-check" id="signupterms" hidden><input type="checkbox" id="signupaccept"> <span>I agree to the <a href="/legal/terms/" target="_blank" rel="noopener">Terms of Service</a> and <a href="/legal/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+        <div class="app-auth-options" id="loginopts"><label class="app-check"><input id="remember" type="checkbox" checked> Remember me</label><a href="/forgot/">Forgot your password?</a></div>
         <button class="btn" id="go" type="submit">Sign in</button>
         <p id="msg" class="small" role="status" aria-live="polite"></p>
       </form>
-      <p class="small"><a href="../forgot/">Forgot your password?</a></p>
+      <p class="app-auth-switch" id="account-switch"></p>
     </div>
+    <aside class="app-auth-card app-benefits" id="signup-benefits" hidden><h2>Your Account Gives You</h2><ul><li>Search and view properties</li><li>Access county and state data</li><li>Save lists and watch properties</li><li>Learn with master classes</li><li>Get alerts and updates</li></ul><h3>Go Pro Anytime</h3><p>Unlock PricePocket AI, live cameras, bulk downloads and more.</p></aside>
   </div>
   <div id="in" hidden>
     <p>Signed in as <b id="who"></b> <span id="ownbadge" class="small muted" hidden>(owner)</span></p>
@@ -61,7 +61,7 @@
 <p id="planmsg" class="small" role="status" aria-live="polite"></p></div>
     <p id="aibtn"><a class="btn" id="ailink" href="../map/?ai=1">Parcel Map + AI</a> <span id="ainote" class="small muted"></span></p>
     <div class="salebox" id="codebox" hidden><h3>Have an access code?</h3><p class="small">If the site owner gave you a code, type it here to unlock everything.</p><p><input id="rcode" type="text" autocomplete="off" autocapitalize="characters" placeholder="FAM-XXXX-XXXX" aria-label="Access code"> <button class="btn" id="redeem" type="button">Unlock</button></p><p id="codemsg" class="small" role="status" aria-live="polite"></p></div>
-    <p id="ownerbtns" hidden><a class="btn" href="../members/">Members</a> <a class="btn ghost" href="../usage/">Usage &amp; daily limit (AI)</a> <a class="btn ghost" href="../billing/">Billing setup</a></p>
+    <p id="ownerbtns" hidden><a class="app-button" href="/owner/">Owner Dashboard →</a></p>
     <p><a class="btn" href="../portfolio/">My portfolio (liens I bought)</a></p>
     <div id="pushhost"></div>
     <h2 id="settings">Settings</h2>
@@ -78,13 +78,14 @@
   <p class="small muted">Educational only. Not legal, tax or investment advice.</p>
 </section>
 </main>
-<footer><div class="wrap"><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/billing/">Billing &amp; refunds</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
+<footer class="app-footer"><div><p><b>PricePocketAsset</b></p><p class="small"><a href="../legal/privacy/">Privacy</a> &middot; <a href="../legal/terms/">Terms</a> &middot; <a href="../legal/billing/">Billing &amp; refunds</a> &middot; <a href="../legal/disclaimer/">Disclaimer</a></p></div></footer>
 <script src="/push.js" defer></script>
 <script src="../liens/states/liens-data.js"></script>
 <script src="../liens/states/lien-ui.js"></script>
 <script src="../liens/states/upcoming-sales.js"></script>
 <script src="../liens/states/auction-updates.js"></script>
 <script src="account.js"></script>
-<script src="/auth-nav.js"></script>
+<script src="/auth-fields.js" defer></script>
+<script src="/auth-nav.js" defer></script>
 </body>
 </html>

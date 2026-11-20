@@ -86,4 +86,4 @@ if ($('lead')) $('lead').addEventListener('submit', async e => {
     msg.textContent = 'Sorry, something went wrong. Please try again.';
   }
 });
-$('yr').textContent = new Date().getFullYear();
+if ($('yr')) $('yr').textContent = new Date().getFullYear();
