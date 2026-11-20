@@ -96,9 +96,10 @@ export default async function handler(req){
         (!holding||r.holdingType===holding)&&(!redemption||r.redemptionStatus===redemption));
       const subset=records.slice(page*40,page*40+40);
       const reviews=await Promise.all(subset.map(r=>auth.kvGet('cert-review-'+keyHash(certificateKey(r)))));
+      const currentReviews=reviews.map(review=>review&&review.snapshotSha256===snap.hash?review:null);
       return reply(200,{ok:true,county:CONFIG[slug].label,sourceCheckedAt:snap.data.checkedAt||null,
-        total:snap.indexed.size,matched:records.length,page,pageSize:40,
-        records:subset.map((r,i)=>brief(r,reviews[i])),researchOnly:true});
+        total:snap.indexed.size,matched:records.length,page,pageSize:40,snapshotSha256:snap.hash,
+        records:subset.map((r,i)=>brief(r,currentReviews[i])),researchOnly:true});
     }
     const b=await req.json();
     if(!b||!CONFIG[b.county]||typeof b.certificateKey!=='string'||b.certificateKey.length>250)
