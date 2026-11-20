@@ -45,7 +45,7 @@ def normalize(rows):
         rate=read('interestRateRaw')
         if rate and not re.fullmatch(r'\d+(?:\.\d+)?%?',rate):problems.append('Invalid interest rate')
         if problems:
-            rejected.append({'row':number,'errors':problems})
+            rejected.append({'row':number,'errors':problems,'faceAmountRaw':read('faceAmountRaw')[:40],'totalAmountRaw':read('totalAmountRaw')[:40]})
             continue
         accepted.append({'state':'FL','county':'Palm Beach','parcelId':parcel,
                          'certificateNumber':cert,'taxYear':year or None,
