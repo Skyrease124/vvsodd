@@ -673,27 +673,26 @@
     const lines = String(d.answer || '').split(/\n+/).map(x => x.trim()).filter(Boolean), bullets = lines.filter(x => /^[-•*]\s+/.test(x)), verify = lines.filter(x => /^verify:/i.test(x)), rest = lines.filter(x => !bullets.includes(x) && !verify.includes(x));
     out.appendChild(mk('p', 'ai-q', q));
     if (rest.length) out.appendChild(mk('p', 'ans', rest.join(' '))); if (bullets.length) { const ul = mk('ul'); bullets.forEach(b => ul.appendChild(mk('li', '', b.replace(/^[-•*]\s+/, '')))); out.appendChild(ul); } if (verify.length) out.appendChild(mk('p', 'pm-flag warn', verify.join(' ')));
-    if (d.pagination && d.results.length) {
+    if (d.pagination && Array.isArray(d.results) && d.results.length) {
       const p = d.pagination;
-      out.appendChild(mk('p', 'note', 'Showing ' + (p.offset + 1).toLocaleString('en-US') + '–' + (p.offset + d.results.length).toLocaleString('en-US') + ' of ' + d.total.toLocaleString('en-US')));
-      const controls = mk('div', 'pm-tabs');
+      const pager = mk('div', 'ppa-ai-pagination');
+      const count = mk('span', 'ppa-ai-page-count', 'Results ' + (p.offset + 1).toLocaleString('en-US') + '–' + (p.offset + d.results.length).toLocaleString('en-US') + ' of ' + Number(d.total || d.results.length).toLocaleString('en-US'));
+      const controls = mk('div', 'ppa-ai-page-actions');
       function pageButton(label, target) {
-        if (target == null) return;
         const b = mk('button', 'pm-btn', label);
-        b.type = 'button';
+        b.type = 'button'; b.disabled = target == null;
         b.addEventListener('click', async () => {
-          if (aiBusy) return;
-          aiBusy = true;
-          if (!homeMap) aiEls.go.disabled = true;
+          if (aiBusy || target == null) return;
+          aiBusy = true; if (!homeMap) aiEls.go.disabled = true;
           controls.querySelectorAll('button').forEach(button => { button.disabled = true; });
           try { await runAi(q, out, target, states, county, parcel); }
-          finally { aiBusy = false; aiEls.go.disabled = false; }
+          finally { aiBusy = false; if (aiEls.go) aiEls.go.disabled = false; }
         });
         controls.appendChild(b);
       }
       pageButton('Previous', p.offset > 0 ? Math.max(0, p.offset - p.limit) : null);
       pageButton('Next', p.nextOffset);
-      out.appendChild(controls);
+      pager.append(count, controls); out.appendChild(pager);
     }
     showLienSearch(out, d);
     // states in the answer: shown on the map and as a compact table (tap a state to go there)
@@ -717,17 +716,34 @@
       if (keys.has(key)) hits.set(key, x);
     }
     if (lr.length) {
-      const w = mk('div');
-      lr.forEach(x => {
+      const section = mk('section', 'ppa-ai-results');
+      section.appendChild(mk('h3', 'ppa-ai-results-title', 'Matching properties'));
+      const grid = mk('div', 'ppa-ai-property-grid');
+      const formatAmount = value => typeof value === 'number' && Number.isFinite(value) ? money(value) : 'Not available';
+      lr.forEach((x, idx) => {
         const rec = hits.get(parcelKey(x.state, x.county, x.parcel));
-        const b = mk('button', 'lnk', [x.county, x.state, x.parcel].filter(Boolean).join(' · ') + (rec ? ' (on the map)' : ''));
-        b.type = 'button';
-        if (rec) b.addEventListener('click', () => select(rec, { fly: true }));
-        else b.disabled = true;
-        w.appendChild(b);
-        w.appendChild(mk('p', 'note', (x.face == null ? 'Tax owed unavailable' : 'Tax owed ' + x.face.toLocaleString('en-US', { style: 'currency', currency: 'USD' })) + ' · ' + (x.market == null ? 'Market value unavailable' : 'Market value ' + money(x.market))));
+        const card = mk('article', 'ppa-ai-property-card');
+        const head = mk('div', 'ppa-ai-card-head');
+        const title = mk('div');
+        title.append(mk('span', 'ppa-ai-card-index', 'PROPERTY ' + String(idx + 1).padStart(2, '0')),
+          mk('h4', '', [x.county, x.state].filter(Boolean).join(', ') || 'Property record'));
+        head.append(title, mk('span', 'ppa-ai-record-status', rec ? 'Map available' : 'County record'));
+        const id = mk('p', 'ppa-ai-parcel-id', 'Parcel ' + String(x.parcel));
+        const values = mk('div', 'ppa-ai-card-values');
+        const metric = (label, value) => { const el = mk('div', 'ppa-ai-metric'); el.append(mk('span', '', label), mk('strong', '', formatAmount(value))); return el; };
+        values.append(metric('Tax owed / listed', x.face), metric('Market value', x.market));
+        const actions = mk('div', 'ppa-ai-card-actions');
+        if (rec) {
+          const open = mk('button', 'ppa-ai-card-primary', 'View on map');
+          open.type = 'button';
+          open.addEventListener('click', () => select(rec, { fly: true }));
+          actions.append(open);
+        } else {
+          actions.append(mk('span', 'ppa-ai-card-unavailable', 'Map location not verified'));
+        }
+        card.append(head, id, values, actions); grid.appendChild(card);
       });
-      out.appendChild(w);
+      section.append(grid); out.appendChild(section);
     }
     if (mapReady) map.getSource('near').setData({ type: 'FeatureCollection', features: [...hits.values()].slice(0, 200).map(feature) });
     if (hits.size) out.appendChild(mk('p', 'note', hits.size + ' mentioned ' + (hits.size === 1 ? 'parcel is' : 'parcels are') + ' highlighted on the map.'));

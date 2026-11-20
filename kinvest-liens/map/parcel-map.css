@@ -402,3 +402,32 @@ body.ppa-map-home .pm{
 @media(prefers-reduced-motion:reduce){
   .ppa-map-home .pm-home-content .pm-right:not([data-snap=peek]){animation:none}
 }
+
+
+/* PricePocket AI answer cards — shared by Map Assistant and Pro Workshop */
+.aiout .ppa-ai-pagination{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:18px 0 20px;padding:12px 14px;border:1px solid #35566b;border-radius:16px;background:rgba(16,39,56,.72)}
+.aiout .ppa-ai-page-count{color:#d6e7f2;font-size:.9rem;font-weight:600;font-variant-numeric:tabular-nums}
+.aiout .ppa-ai-page-actions{display:flex;gap:8px}
+.aiout .ppa-ai-page-actions .pm-btn{width:auto;min-width:95px;min-height:40px;margin:0;padding:8px 14px;border-radius:11px;background:#193c4e;color:#f1f9ff;border:1px solid #51758a;font-size:.9rem}
+.aiout .ppa-ai-page-actions .pm-btn:disabled{opacity:.38;cursor:not-allowed}
+.aiout .ppa-ai-results{margin:18px 0 20px}
+.aiout .ppa-ai-results-title{margin:0 0 12px;font-size:1.08rem;letter-spacing:-.02em;color:#f5fcff}
+.aiout .ppa-ai-property-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:12px}
+.aiout .ppa-ai-property-card{min-width:0;padding:17px;border:1px solid #385f72;border-radius:18px;background:linear-gradient(150deg,#18394a 0%,#0c2334 100%);box-shadow:0 8px 26px #0002;animation:ppaCardEnter .32s cubic-bezier(.2,.8,.2,1) both}
+.aiout .ppa-ai-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.aiout .ppa-ai-card-index{display:block;color:#7fdcb9;font-size:.7rem;font-weight:800;letter-spacing:.11em}
+.aiout .ppa-ai-card-head h4{margin:5px 0 0;font-size:1.02rem;color:#fff;line-height:1.35;letter-spacing:-.02em}
+.aiout .ppa-ai-record-status{flex-shrink:0;padding:5px 8px;border-radius:99px;background:#22483f;color:#a4f1cf;font-size:.69rem;font-weight:700}
+.aiout .ppa-ai-parcel-id{margin:10px 0 14px;color:#bbd0df;font-size:.83rem;overflow-wrap:anywhere}
+.aiout .ppa-ai-card-values{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0;border-top:1px solid #355365;border-bottom:1px solid #355365}
+.aiout .ppa-ai-metric{min-width:0}
+.aiout .ppa-ai-metric span{display:block;font-size:.75rem;color:#a8c2d3}
+.aiout .ppa-ai-metric strong{display:block;margin-top:5px;font-size:1.17rem;color:#f9fcff;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.aiout .ppa-ai-card-actions{margin-top:13px}
+.aiout .ppa-ai-card-primary{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:9px 16px;border-radius:11px;border:1px solid #3cdb9a;background:#087a50;color:#fff;font-weight:750;cursor:pointer;transition:transform .2s ease,background .2s ease}
+.aiout .ppa-ai-card-primary:active{transform:scale(.98)}
+.aiout .ppa-ai-card-unavailable{color:#b4c7d3;font-size:.8rem}
+.aiout :is(.ppa-ai-card-primary,.ppa-ai-page-actions button):focus-visible{outline:2px solid #7cf3be;outline-offset:3px}
+@keyframes ppaCardEnter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.aiout .ppa-ai-property-grid{grid-template-columns:1fr}.aiout .ppa-ai-property-card{padding:15px}.aiout .ppa-ai-pagination{align-items:stretch}.aiout .ppa-ai-page-actions{margin-left:auto}}
+@media(prefers-reduced-motion:reduce){.aiout .ppa-ai-property-card{animation:none}.aiout .ppa-ai-card-primary{transition:none}}
