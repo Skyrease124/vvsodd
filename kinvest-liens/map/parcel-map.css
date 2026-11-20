@@ -288,7 +288,6 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home #pmResults .pm-card b{font-size:.8rem}
 .ppa-map-home #pmResults .pm-card .s{font-size:.68rem;margin:1px 0 0}
 .ppa-map-home #pmResults .pm-cardw>[data-ppasel]{display:none}
-.ppa-map-home.ppa-app-member #pmResults .pm-cardw>[data-ppasel]:empty{display:none}
 .ppa-map-home .pm-right[data-snap=full] #pmResults .pm-cardw:has(.ppasel) .pm-card .b{padding-right:43px}
 .ppa-map-home .pm-right[data-snap=full] #pmResults .pm-cardw:has(.ppasel)>[data-ppasel]{display:block;top:5px;right:4px}
 .ppa-map-home .pm-right .pm-empty{margin:7px 2px;font-size:.78rem}
