@@ -253,12 +253,47 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home .maplibregl-ctrl-bottom-right{bottom:0}
 .ppa-map-home .maplibregl-ctrl-attrib{font-size:9px;line-height:17px}
 .ppa-map-home .maplibregl-ctrl-scale{background:#081d27;color:#fff;border-color:#fff;font-size:9px}
-.ppa-map-home .pm-right[data-snap=peek]{display:none}
-.ppa-map-home .pm-right{position:absolute;z-index:20;inset:45px 0 0 auto;width:min(100%,468px);height:auto;max-height:none;transform:none;border-radius:15px;background:#0b1c29f5}
-.ppa-map-home .pm-right[data-snap=half],.ppa-map-home .pm-right[data-snap=full]{transform:none}
-.ppa-map-home .pm-rh{position:relative;padding-right:37px}
-.ppa-map-home .pm-sheet-grip{display:none}
-.ppa-map-home .pm-home-dismiss{position:absolute;top:4px;right:4px;width:35px;height:37px;border:0;background:#23374c;color:white;border-radius:10px;cursor:pointer}
+.ppa-map-home .pm-right{
+  position:absolute;z-index:20;inset:auto 0 0 auto;
+  width:min(100%,468px);height:min(58%,190px);max-height:none;box-sizing:border-box;
+  transform:none;border:1px solid #3e5d6d;border-radius:18px 18px 0 0;background:#0b1c29;
+  opacity:1;visibility:visible;
+  transition:height 210ms ease-out,opacity 190ms ease-out,transform 210ms ease-out;
+}
+.ppa-map-home .pm-right[data-snap=full],
+.ppa-map-home .pm-right[data-view=ai]{height:calc(100% - 45px);transform:none}
+.ppa-map-home .pm-right[data-snap=peek]{
+  display:flex;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(15px);
+  transition:opacity 180ms ease-in,transform 180ms ease-in,visibility 0s 180ms;
+}
+.ppa-map-home .pm-rh{padding:0;touch-action:auto;border-bottom:1px solid #294354}
+.ppa-map-home .pm-tabs2{display:none}
+.ppa-map-home .pm-sheet-grip{display:block;position:relative;height:14px;touch-action:none;cursor:ns-resize}
+.ppa-map-home .pm-sheet-grip::before{content:'';position:absolute;left:50%;border-radius:99px;top:5px;width:32px;margin-left:-16px;height:3px;background:#557181}
+.ppa-map-home .pm-right[data-view=ai] .pm-sheet-grip{display:none}
+.pm-home-toolbar{display:flex;align-items:center;gap:5px;padding:0 7px 3px 11px}
+.ppa-map-home .pm-home-title{flex:1;min-width:0;overflow-wrap:anywhere;margin:0;color:#f5faff;font-size:.94rem;line-height:1.2}
+.pm-home-toolbar button,.pm-home-toolbar select{
+  flex:none;min-height:32px;border:1px solid #3c5c6d;border-radius:9px;background:#142d3d;color:#edf8ff;
+}
+.pm-home-toolbar button{width:31px;padding:0;font-size:1.05rem;cursor:pointer}
+.pm-home-toolbar select{max-width:116px;padding:0 4px;font-size:.72rem;-webkit-backdrop-filter:none;backdrop-filter:none}
+.ppa-map-home #pmResults{padding:0 9px 6px}
+.ppa-map-home #pmResults .pm-cardw{border-bottom:1px solid #294354}
+.ppa-map-home #pmResults .pm-card{width:100%;min-height:42px;margin:0;border:0;border-radius:7px;background:transparent;box-shadow:none}
+.ppa-map-home #pmResults .pm-card.sel{background:#173a3b;box-shadow:inset 0 0 0 1px #478373}
+.ppa-map-home #pmResults .pm-card .b{padding:5px 7px;min-width:0}
+.ppa-map-home #pmResults .pm-card .bar{width:3px;margin:9px 0 9px 4px}
+.ppa-map-home #pmResults .pm-card b,.ppa-map-home #pmResults .pm-card .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppa-map-home #pmResults .pm-card b{font-size:.8rem}
+.ppa-map-home #pmResults .pm-card .s{font-size:.68rem;margin:1px 0 0}
+.ppa-map-home #pmResults .pm-cardw>[data-ppasel]{display:none}
+.ppa-map-home .pm-right[data-snap=full] #pmResults .pm-cardw:has(.ppasel) .pm-card .b{padding-right:43px}
+.ppa-map-home .pm-right[data-snap=full] #pmResults .pm-cardw:has(.ppasel)>[data-ppasel]{display:block;top:5px;right:4px}
+.ppa-map-home .pm-right .pm-empty{margin:7px 2px;font-size:.78rem}
+@media(prefers-reduced-motion:reduce){
+  .ppa-map-home .pm-right,.ppa-map-home .pm-right[data-snap=peek]{transition:none}
+}
 .ppa-map-home .pm-left{position:absolute;top:0;bottom:0;left:0;width:min(100%,310px);overflow:auto;z-index:21;display:none}
 .ppa-map-home .pm-left.open{display:block}
 .ppa-map-home .pm-pop:not([hidden]){position:absolute;inset:auto 7px 24px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:start;gap:4px 7px;width:auto;max-height:none;padding:6px;border:1px solid #6ca691;background:#081d25ed;border-radius:13px;z-index:12}

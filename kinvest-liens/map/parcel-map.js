@@ -212,17 +212,52 @@
       searchBar.append(form, aib);
       const results = iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg>', 'Properties', () => showTab('list', true), 'pm-home-results');
       results.append(mk('span', 'pm-control-label', 'Properties'));
+      results.setAttribute('aria-controls','pmRight');
       stack.insertBefore(results, seg);
-      const dismiss = mk('button', 'pm-home-dismiss', '×');
-      dismiss.type = 'button';
-      dismiss.setAttribute('aria-label', 'Close map panel');
-      dismiss.addEventListener('click', () => setSnap('peek'));
-      $('pmRH').append(dismiss);
+      buildHomeDrawer(results);
       t.append(searchBar, stack, pill, area);
     } else t.append(form, stack, pill, area);
     $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
     document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
     window.__pm = { stSel, coSel };
+  }
+  function buildHomeDrawer(trigger) {
+    const panel = $('pmRight'), header = $('pmRH'), grip = $('pmGrip');
+    const title = mk('h2', 'pm-home-title', 'Properties');
+    title.id = 'pmHomeTitle';
+    panel.setAttribute('aria-labelledby', title.id);
+    panel.removeAttribute('aria-label');
+    const sortControl = makeSort();
+    sortControl.id = 'pmHomeSort'; sortControl.hidden = true;
+    const expand = mk('button', 'pm-home-expand', '⌃');
+    expand.type = 'button'; expand.id = 'pmHomeExpand';
+    expand.setAttribute('aria-label', 'Expand properties');
+    expand.addEventListener('click', () => setSnap(snap === 'full' ? 'half' : 'full'));
+    const close = mk('button', 'pm-home-dismiss', '×');
+    close.type = 'button'; close.setAttribute('aria-label', 'Close map panel');
+    close.addEventListener('click', () => { setSnap('peek'); trigger.focus({preventScroll:true}); });
+    const toolbar = mk('div','pm-home-toolbar');
+    toolbar.append(title,sortControl,expand,close); header.append(toolbar);
+    let start, pointerId;
+    grip.addEventListener('pointerdown', e => {
+      start = e.clientY; pointerId = e.pointerId; grip.setPointerCapture(e.pointerId);
+    });
+    grip.addEventListener('pointerup', e => {
+      if (e.pointerId !== pointerId) return;
+      const travel = e.clientY - start;
+      pointerId = null;
+      if (travel < -18) setSnap('full');
+      if (travel > 18) setSnap(snap === 'full' ? 'half' : 'peek');
+    });
+    grip.addEventListener('pointercancel', () => { pointerId = null; });
+  }
+  function updateHomeDrawer(label, sortable = false) {
+    if (!homeMap) return;
+    const panel = $('pmRight');
+    panel.dataset.listTitle = label;
+    panel.dataset.sortable = String(sortable);
+    const title = $('pmHomeTitle'), sortControl = $('pmHomeSort');
+    if (panel.dataset.view !== 'ai') { title.textContent = label; sortControl.hidden = !sortable; }
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
@@ -268,7 +303,7 @@
     rng('Acreage', 'acMin', 'acMax', '0.1'); rng('Tax amount or minimum bid ($)', 'amtMin', 'amtMax', '100');
     const sel = (label, key, opts) => { const w = mk('label', 'col'); w.appendChild(mk('span', '', label)); const s = mk('select'); opts.forEach(([v, t]) => { const o = mk('option', '', t); o.value = v; s.appendChild(o); }); s.addEventListener('change', () => { F[key] = s.value; refresh(); }); w.appendChild(s); box.appendChild(w); };
     sel('Flood zone', 'flood', [['any', 'Any'], ['no', 'Not in a high-risk flood zone'], ['yes', 'In a high-risk flood zone']]); sel('Wetlands', 'wet', [['any', 'Any'], ['no', 'No mapped wetlands'], ['yes', 'Mapped wetlands present']]);
-    const row = mk('div', 'pm-chips-row'); const rs = mk('button', 'pm-btn', 'Reset filters'); rs.type = 'button'; rs.addEventListener('click', () => { Object.assign(F, { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: false, small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false }); buildFilters(); clearArea(); }); const ap = mk('button', 'pm-btn primary', 'Show results'); ap.type = 'button'; ap.addEventListener('click', () => { $('pmLeft').classList.remove('open'); openRight(true); }); row.append(ap, rs); box.appendChild(row);
+    const row = mk('div', 'pm-chips-row'); const rs = mk('button', 'pm-btn', 'Reset filters'); rs.type = 'button'; rs.addEventListener('click', () => { Object.assign(F, { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: false, small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false }); buildFilters(); clearArea(); }); const ap = mk('button', 'pm-btn primary', 'Show results'); ap.type = 'button'; ap.addEventListener('click', () => { $('pmLeft').classList.remove('open'); if (homeMap) showTab('list', true); else openRight(true); }); row.append(ap, rs); box.appendChild(row);
     const nt = mk('p', 'pm-empty'); nt.style.fontSize = '.8rem'; nt.textContent = 'Solid outline: on the official list we checked. Dashed outline: historical or not confirmed. Yellow edge: vacant land. Colors show the kind of record, not that a property is available.'; box.appendChild(nt);
   }
   function renderCounts() {
@@ -281,28 +316,62 @@
   const sortFns = { sale: (a, b) => (isUpcoming(b) - isUpcoming(a)) || String(a.sd || '9').localeCompare(String(b.sd || '9')) || (a.amt || 1e12) - (b.amt || 1e12), low: (a, b) => (a.amt == null) - (b.amt == null) || a.amt - b.amt, big: (a, b) => (b.ac || 0) - (a.ac || 0) };
   function card(r, extra) {
     const b = mk('button', 'pm-card' + (sel && sel.i === r.i ? ' sel' : '')); b.type = 'button'; b.style.setProperty('--c', (CATS[r.c] || {}).c || '#94a3b8'); const inn = mk('div', 'b');
-    inn.append(mk('b', '', r.a || 'Parcel ' + r.p), mk('span', 's', r.o || 'Owner not available'));
+    inn.append(mk('b', '', r.a || 'Parcel ' + r.p));
+    if (!homeMap) inn.append(mk('span', 's', r.o || 'Owner not available'));
     const meta = [CATS[r.c].n, acres(r), r.amt != null ? money(r.amt) : null].filter(Boolean).join(' · '); inn.appendChild(mk('span', 's', meta + (extra ? ' · ' + extra : '')));
-    inn.appendChild(mk('span', 'pm-chip ' + (r.v ? 'ok' : 'warn'), r.v ? 'On the list we checked' : 'Not confirmed available')); if (!r.g) inn.appendChild(mk('span', 'pm-chip', 'Not drawn: no verified boundary'));
-    b.appendChild(mk('span', 'bar')); b.appendChild(inn); b.addEventListener('click', () => select(r, { fly: true }));
+    if (homeMap) b.setAttribute('aria-pressed', String(sel?.i === r.i));
+    else {
+      inn.appendChild(mk('span', 'pm-chip ' + (r.v ? 'ok' : 'warn'), r.v ? 'On the list we checked' : 'Not confirmed available'));
+      if (!r.g) inn.appendChild(mk('span', 'pm-chip', 'Not drawn: no verified boundary'));
+    }
+    b.appendChild(mk('span', 'bar')); b.appendChild(inn); b.addEventListener('click', e => { select(r, { fly: true }); if (homeMap && !e.detail) $('pmPop').querySelector('a')?.focus({preventScroll:true}); });
     const w = mk('div', 'pm-cardw'); w.appendChild(b); const sp = mk('span'); sp.setAttribute('data-ppasel', JSON.stringify({ i: r.i, d: r._d, t: (r.a || 'Parcel ' + r.p) + ' \u00b7 ' + (IDX.datasets.find(x => x.id === r._d) || {}).county })); sp.style.cssText = 'display:block;padding:0 4px'; w.appendChild(sp); return w;
   }
+  function makeSort() {
+    const control = mk('select');
+    control.setAttribute('aria-label', homeMap ? 'Sort properties' : 'Sort');
+    for (const [value,label] of [['sale','Closest to sale'],['low','Lowest amount'],['big','Largest lot']]) {
+      const option = mk('option', '', label);
+      option.value = value; control.append(option);
+    }
+    control.value = sort;
+    control.addEventListener('change', () => { sort = control.value; $('pmResults').scrollTop = 0; refresh(); });
+    return control;
+  }
   function renderResults(rs) {
-    if (near) return renderNear(); const R = $('pmResults'); R.textContent = ''; $('tabList').textContent = rs.length ? 'Properties · ' + rs.length.toLocaleString('en-US') : 'Properties';
+    if (near) return renderNear();
+    const R = $('pmResults'), scroll = R.scrollTop, loadedAny = Object.keys(loaded).length > 0;
+    R.textContent = '';
+    $('tabList').textContent = rs.length ? 'Properties · ' + rs.length.toLocaleString('en-US') : 'Properties';
+    updateHomeDrawer(loadedAny ? rs.length.toLocaleString('en-US') + (rs.length === 1 ? ' property' : ' properties') : 'Properties', loadedAny && rs.length > 0);
     if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
-    const hd = mk('h3', '', 'Properties'); R.appendChild(hd); const cnt = mk('p', 'cnt', rs.length.toLocaleString('en-US') + ' match your filters' + (F.inView ? ' in this view' : '') + '. Showing ' + Math.min(rs.length, pageN) + '.'); R.appendChild(cnt);
-    const ss = mk('select'); ss.setAttribute('aria-label', 'Sort'); [['sale', 'Closest to sale'], ['low', 'Lowest amount'], ['big', 'Largest lot']].forEach(([v, t]) => { const o = mk('option', '', t); o.value = v; if (v === sort) o.selected = true; ss.appendChild(o); }); ss.addEventListener('change', () => { sort = ss.value; refresh(); }); ss.style.width = '100%'; ss.style.marginBottom = '6px'; R.appendChild(ss);
+    if (!homeMap) {
+      R.append(mk('h3', '', 'Properties'), mk('p', 'cnt', rs.length.toLocaleString('en-US') + ' match your filters' + (F.inView ? ' in this view' : '') + '. Showing ' + Math.min(rs.length, pageN) + '.'));
+      const control = makeSort(); control.style.cssText = 'width:100%;margin-bottom:6px'; R.append(control);
+    }
     [...rs].sort(sortFns[sort]).slice(0, pageN).forEach(r => R.appendChild(card(r)));
     if (rs.length > pageN) { const m = mk('button', 'pm-btn', 'Show more'); m.type = 'button'; m.style.width = '100%'; m.addEventListener('click', () => { pageN += 40; refresh(); }); R.appendChild(m); }
     if (!rs.length) R.appendChild(mk('p', 'pm-empty', 'Nothing matches these filters. Try resetting them.'));
+    if (homeMap) R.scrollTop = scroll;
   }
   const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => homeMap || window.innerWidth < 980;
   // Bottom sheet with three resting heights (peek, half, full). Drag the handle or the tabs; it springs to the nearest one.
   const SNAPS = ['peek', 'half', 'full']; let snap = 'peek';
-  function setSnap(s) { snap = s; const r = $('pmRight'); r.dataset.snap = s; r.style.removeProperty('--sy'); r.classList.remove('dragging'); }
+  function setSnap(s) {
+    snap = s;
+    const r = $('pmRight');
+    r.dataset.snap = s; r.style.removeProperty('--sy'); r.classList.remove('dragging');
+    if (homeMap) {
+      r.inert = s === 'peek';
+      document.querySelector('.pm-home-results').setAttribute('aria-expanded', String(s !== 'peek' && r.dataset.view === 'list'));
+      const expand = $('pmHomeExpand');
+      expand.textContent = s === 'full' ? '⌄' : '⌃';
+      expand.setAttribute('aria-label', s === 'full' ? 'Collapse properties' : 'Expand properties');
+    }
+  }
   const openRight = on => { if (isMobile()) setSnap(on ? (snap === 'peek' ? 'half' : snap) : 'peek'); };
   function initSheet() {
-    const r = $('pmRight'), h = $('pmRH'); setSnap('peek'); let y0 = 0, base0 = 0, t0 = 0, drag = false, moved = false;
+    const r = $('pmRight'), h = $('pmRH'); setSnap('peek'); if (homeMap) return; let y0 = 0, base0 = 0, t0 = 0, drag = false, moved = false;
     const px = { peek: () => r.offsetHeight - 124, half: () => r.offsetHeight * 0.46, full: () => r.offsetHeight * 0.06 };
     h.addEventListener('pointerdown', e => { if (!isMobile()) return; drag = true; moved = false; y0 = e.clientY; t0 = e.timeStamp; base0 = px[snap](); });
     h.addEventListener('pointermove', e => { if (!drag) return; const dy = e.clientY - y0; if (!moved && Math.abs(dy) > 6) { moved = true; try { h.setPointerCapture(e.pointerId); } catch (x) {} } if (!moved) return; r.classList.add('dragging'); r.style.setProperty('--sy', Math.max(px.full(), Math.min(px.peek(), base0 + dy)) + 'px'); });
@@ -480,6 +549,14 @@
   }
   function showTab(t, open) {
     tab = t; $('pmAiBox').hidden = t !== 'ai'; $('pmResults').hidden = t !== 'list'; $('tabAi').setAttribute('aria-selected', String(t === 'ai')); $('tabList').setAttribute('aria-selected', String(t === 'list'));
+    if (homeMap) {
+      const panel = $('pmRight');
+      panel.dataset.view = t;
+      $('pmHomeTitle').textContent = t === 'ai' ? 'Map Assistant' : panel.dataset.listTitle || 'Properties';
+      $('pmHomeSort').hidden = t === 'ai' || panel.dataset.sortable !== 'true';
+      $('pmHomeExpand').hidden = t === 'ai';
+      document.querySelector('.pm-home-results').setAttribute('aria-expanded', String(t === 'list' && snap !== 'peek'));
+    }
     if (open) openRight(true); if (t === 'ai') { aiRefresh(); }
   }
   function openAi(q0, run) {
@@ -712,6 +789,7 @@
   }
   function stateCard(a, open = true) {
     const R = $('pmResults'), s = IDX.allStates.find(x => x.a === a), rule = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a], ds = IDX.datasets.filter(d => d.state === a); R.textContent = '';
+    updateHomeDrawer('Properties');
     R.appendChild(mk('h3', '', s ? s.n : a)); if (rule) { const dl = mk('dl', 'pm-rules'); [['Sale type', rule.sys], ['Interest or penalty', rule.rate], ['Redemption', rule.red], ['Bidding', rule.bid]].forEach(([k, v]) => { if (v) { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); } }); R.appendChild(dl); if (rule.verify) R.appendChild(mk('p', 'note', 'Sources differ for this state. Verify with the county.')); }
     if (typeof OFFICIALS !== 'undefined') { const g = OFFICIALS.gov[a], ms = OFFICIALS.mayors[a] || []; if (g || ms.length) { const dl = mk('dl', 'pm-rules'); if (g) { const d = mk('div'); d.append(mk('dt', '', g.title), mk('dd', '', g.name + ' (' + g.party + ')')); dl.appendChild(d); } ms.forEach(x => { const d = mk('div'); d.append(mk('dt', '', 'Mayor of ' + x.city), mk('dd', '', x.name + ' (' + x.party + ')')); dl.appendChild(d); }); R.appendChild(dl); R.appendChild(mk('p', 'note', 'As listed on Wikipedia, checked Nov 2026. Officials change: verify.')); } }
     // U.S. Congress members for this state (Library of Congress). Appears only when the server has the key and the source answers.
@@ -806,6 +884,8 @@
     try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
   }
   function refresh0() { renderResults([]); }
-  window.addEventListener('keydown', e => { if (e.key === 'Escape' && !workspace) closePop(); });
+  window.addEventListener('keydown', e => { if (e.key !== 'Escape' || workspace) return;
+    if (homeMap && snap !== 'peek') { setSnap('peek'); document.querySelector('.pm-home-results').focus({preventScroll:true}); }
+    else closePop(); });
   boot();
 })();
