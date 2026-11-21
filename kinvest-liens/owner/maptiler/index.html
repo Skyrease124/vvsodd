@@ -20,7 +20,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <a href="/owner/">← Owner Dashboard</a>
 <h1>MapTiler — Private Map Preview</h1>
 <p>Test satellite imagery, terrain and your current verified parcel boundaries. Nothing here changes PricePocketAsset's public maps or publishes new properties.</p>
-<div class="panel"><b>MapTiler testing only</b><p class="muted">MapTiler free access is not licensed for commercial production. Each map load and style switch may use your MapTiler quota. Only open this preview when you want to test it. Restrict your key to pricepocketasset.com in MapTiler Cloud.</p>
+<div class="panel"><b>MapTiler testing only</b><p class="muted">MapTiler free access is not licensed for commercial production. Each map load and style switch may use your MapTiler quota. Only open this preview when you want to test it. Keep your key restricted in MapTiler Cloud. For a Netlify preview, its exact origin must also be allowed; production-only restrictions can reject previews.</p>
 <p id="status" role="status">Checking owner access…</p><p id="setup" hidden><a href="/owner/keys/">Save your MapTiler API key in Owner API Keys first.</a></p>
 <div id="controls" hidden><div class="controls">
 <div><label for="state">State</label><select id="state" aria-label="Choose state"><option value="">Loading states…</option></select></div>
@@ -34,15 +34,23 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div></div>
 </div>
 <div id="map" hidden aria-label="Private interactive map with parcel boundaries"></div>
-<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Only polygon boundaries already present in the published county data are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
+<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js" crossorigin></script>
 <script src="/map/brain-map-merge.js"></script>
+<script src="preview-utils.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 let key='',map=null,terrain=false,currentData=null,detail=null;
-let previewUpdateRunning=false;
+let previewUpdateRunning=false,correctionCounts={},loadTimer;
+const utils=window.PPAMapTilerPreview;
+function updateCountyCount(id,count){const option=[...$('county').options].find(o=>o.value===id),dataset=(window.__datasets||[]).find(d=>d.id===id);if(dataset){correctionCounts[id]=Math.max(0,count-(Number(dataset.mapped)||0));if(option)option.textContent=dataset.county+' · '+count+' mapped'+(count===0?' (no verified boundaries yet)':'');}}
+async function checkedStyle(){
+ const response=await fetch(styleUrl($('style').value),{signal:AbortSignal.timeout(15000)});
+ if(!response.ok){const error=Error('MapTiler style request failed');error.status=response.status;throw error;}
+ const style=await response.json();if(style.version!==8||!style.sources||!Array.isArray(style.layers))throw Error('MapTiler returned an invalid style');return style;
+}
 const msg=(text,isError=false)=>{$('status').textContent=text;$('status').className=isError?'error':'muted'};
 const styleUrl=id=>'https://api.maptiler.com/maps/'+id+'/style.json?key='+encodeURIComponent(key);
 const terrainUrl=()=>'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key='+encodeURIComponent(key);
@@ -51,14 +59,14 @@ function selectState(){
  const state=$('state').value,county=$('county');
  county.replaceChildren();
  const counties=(window.__datasets||[]).filter(x=>x.state===state).sort((a,b)=>a.county.localeCompare(b.county));
- for(const ds of counties){const option=document.createElement('option');option.value=ds.id;option.textContent=ds.county+' · '+ds.mapped+' mapped'+(ds.mapped===0?' (no boundaries yet)':'');county.append(option);}
+ for(const ds of counties){const option=document.createElement('option');option.value=ds.id;const mapped=utils.count(ds,correctionCounts);option.textContent=ds.county+' · '+mapped+' mapped'+(mapped===0?' (no verified boundaries yet)':'');county.append(option);}
  if(!counties.length){const no=document.createElement('option');no.value='';no.textContent='No county datasets';county.append(no);}
  county.disabled=!counties.length;
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
 }
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function reset(){if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
+function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
 function overlay(){
  if(!map||!currentData)return;
@@ -67,7 +75,7 @@ function overlay(){
  if(map.getSource('owner-parcels'))map.getSource('owner-parcels').setData(fc);
  else{map.addSource('owner-parcels',{type:'geojson',data:fc});map.addLayer({id:'owner-fill',type:'fill',source:'owner-parcels',paint:{'fill-color':'#00c9af','fill-opacity':0.2}});map.addLayer({id:'owner-outline',type:'line',source:'owner-parcels',paint:{'line-color':'#70ffe0','line-width':2}});}
  const bb=feats[0]?.geometry.coordinates?.[0];if(bb?.length){const bounds=new maplibregl.LngLatBounds();for(const p of bb){bounds.extend(p);}map.fitBounds(bounds,{padding:60,maxZoom:16,duration:0});}
- $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' existing mapped parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview capped at 250 polygons.';
+ $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' verified parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview capped at 250 polygons.';
 }
 async function loadData(){
  const d=detail;
@@ -75,7 +83,8 @@ async function loadData(){
  if(!response.ok)throw Error('Parcel dataset unavailable');
  const raw=await response.text();if(raw.length>12000000)throw Error('Dataset exceeds preview size limit');
  const data=JSON.parse(raw);if(!Array.isArray(data.recs))throw Error('No parcel records in dataset');
- if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data).catch(()=>{});}return data;
+ if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data);}
+ updateCountyCount(d.id,data.recs.filter(r=>r.g&&r.cx).length);return data;
 }
 // Update the same parcel overlays while the private preview remains open.
 async function refreshCurrentPreview(){
@@ -83,7 +92,7 @@ async function refreshCurrentPreview(){
  previewUpdateRunning=true;
  try{
   const result=await window.PPABrainMap.apply(currentData);
-  if(result.changed&&map?.isStyleLoaded())overlay();
+  if(result.changed){updateCountyCount(currentData.id,currentData.recs.filter(r=>r.g&&r.cx).length);if(map?.isStyleLoaded())overlay();}
  }catch(_){/* Existing verified data is retained if the feed is temporarily unreachable. */}
  finally{previewUpdateRunning=false;}
 }
@@ -100,37 +109,41 @@ function readyMap(){
 }
 $('load').onclick=async()=>{
  if(!key)return msg('Save your MapTiler API key first.',true);
- reset();$('load').disabled=true;
+ reset();$('load').disabled=true;msg('Loading verified parcel data…');
  try{
   const index=window.__datasets||[];detail=index.find(x=>x.id===$('county').value);
   if(!detail)throw Error('Select a county');
   // Allow dynamic approved overlays even when static county count is zero.
   currentData=await loadData();
+  msg('Checking MapTiler style access for '+location.origin+'…');
+  const style=await checkedStyle();
+  if(!window.maplibregl?.Map)throw Error('Map rendering library did not load');
   $('map').hidden=false;
-  map=new maplibregl.Map({container:'map',style:styleUrl($('style').value),center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});
+  map=new maplibregl.Map({container:'map',style,center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
-  map.on('load',()=>{readyMap();$('terrain').disabled=false;msg('Private preview loaded. Zoom into the existing parcel outlines.');});
-  map.on('error',e=>{msg('MapTiler loading error: check API key, plan, domain restrictions, and network connection.',true);});
+  loadTimer=setTimeout(()=>{if(map&&!map.loaded())msg('MapTiler tiles have not finished loading after 20 seconds. Check the provider access message or close the preview.',true);},20000);
+  map.on('load',()=>{clearTimeout(loadTimer);readyMap();$('terrain').disabled=false;msg('Private preview loaded. Zoom into the existing parcel outlines.');});
+  map.on('error',e=>{clearTimeout(loadTimer);msg(utils.errorMessage(e.error,location.origin,key),true);});
   $('close').disabled=false;
- }catch(e){reset();msg('Preview could not load: '+e.message,true)}
+ }catch(e){reset();msg(utils.errorMessage(e,location.origin,key),true)}
  finally{$('load').disabled=false}
 };
 $('close').onclick=()=>{reset();msg('Private map preview closed. Your public maps were not changed.')};
-$('style').onchange=()=>{if(!map)return;terrain=false;$('terrain').textContent='Enable 3D terrain';map.setStyle(styleUrl($('style').value));map.once('style.load',()=>{overlay();$('terrain').disabled=false;});};
+$('style').onchange=async()=>{if(!map)return;try{const style=await checkedStyle();if(!map)return;terrain=false;$('terrain').textContent='Enable 3D terrain';map.setStyle(style);map.once('style.load',()=>{overlay();$('terrain').disabled=false;});}catch(e){msg(utils.errorMessage(e,location.origin,key),true);}};
 $('terrain').onclick=()=>{
  if(!map||!map.isStyleLoaded())return;
  try{
   if(terrain){map.setTerrain(null);terrain=false;map.easeTo({pitch:0,duration:600});$('terrain').textContent='Enable 3D terrain';return;}
   if(!map.getSource('maptiler-dem'))map.addSource('maptiler-dem',{type:'raster-dem',url:terrainUrl(),tileSize:256});
   map.setTerrain({source:'maptiler-dem',exaggeration:1.4});terrain=true;map.easeTo({pitch:65,duration:800});$('terrain').textContent='Disable 3D terrain';
- }catch(e){msg('Terrain unavailable with this style or plan: '+e.message,true)}
+ }catch(e){msg(utils.errorMessage(e,location.origin,key),true)}
 };
 (async()=>{
  try{
   const response=await fetch('/.netlify/functions/owner-maptiler-preview',{credentials:'same-origin',cache:'no-store'});
   const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Owner access required');
   if(!d.configured){$('setup').hidden=false;msg('MapTiler key not saved yet.');return;}
-  key=d.key;
+  key=d.key;correctionCounts=d.correctionCounts||{};
   const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
   const index=await indexResponse.json();
   if(!Array.isArray(index.datasets)||!index.datasets.length)throw Error('No county datasets returned from map index.');
