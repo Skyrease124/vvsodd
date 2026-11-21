@@ -4,14 +4,14 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {AsyncLocalStorage} from 'node:async_hooks';
 async function setup(){
- const prod=new Map(),preview=new Map();let user={owner:true};
+ const prod=new Map(),preview=new Map(),seed=new Map();let user={owner:true};
  const context=vm.createContext({Response,URL,URLSearchParams,AbortSignal,console});
  const cache=new Map();
  function synthetic(key,exports){
   const m=new vm.SyntheticModule(Object.keys(exports),function(){for(const [k,v] of Object.entries(exports))this.setExport(k,v);},{context});cache.set(key,m);return m;
  }
  synthetic('node:async_hooks',{AsyncLocalStorage});
- synthetic('@netlify/blobs',{getDeployStore:options=>{assert.equal(options.name,undefined,'Use the default deploy store used by build uploads');return {get:async k=>preview.get(k),setJSON:async(k,v)=>preview.set(k,v),delete:async k=>preview.delete(k),list:async()=>({blobs:[...preview.keys()].map(key=>({key}))})};}});
+ synthetic('@netlify/blobs',{getStore:options=>{assert.equal(options.name,'ppa-brain-preview-pr452');return {get:async k=>preview.get(k),setJSON:async(k,v)=>preview.set(k,v),delete:async k=>preview.delete(k),list:async()=>({blobs:[...preview.keys()].map(key=>({key}))})};},getDeployStore:options=>{assert.equal(options.name,undefined);return {get:async k=>seed.get(k),setJSON:async(k,v)=>seed.set(k,v),delete:async k=>seed.delete(k),list:async()=>({blobs:[...seed.keys()].map(key=>({key}))})};}});
  synthetic('./auth.mjs',{userFromCookie:async()=>user,kvGet:async k=>prod.get(k),kvPut:async(k,v)=>prod.set(k,v),kvDel:async k=>prod.delete(k),kvList:async()=>[...prod.keys()]});
  const auth=new vm.SourceTextModule(fs.readFileSync('netlify/lib/brain-auth.mjs','utf8'),{context});
  await auth.link(s=>cache.get(s));await auth.evaluate();
@@ -19,7 +19,7 @@ async function setup(){
  const publisher=synthetic('./brain-map-publish-auto.mjs',{default:async()=>{publishes++;}});
  const endpoint=new vm.SourceTextModule(fs.readFileSync('netlify/functions/owner-brain-preview-test.mjs','utf8'),{context});
  await endpoint.link(s=>s==='../lib/brain-auth.mjs'?auth:publisher);await endpoint.evaluate();
- return {prod,preview,auth:auth.namespace,handler:endpoint.namespace.default,setUser:u=>{user=u;},publishes:()=>publishes};
+ return {prod,preview,seed,auth:auth.namespace,handler:endpoint.namespace.default,setUser:u=>{user=u;},publishes:()=>publishes};
 }
 test('concurrent preview and production requests use separate Brain stores, preserving global API budgets',async()=>{
  const h=await setup();
@@ -36,6 +36,17 @@ test('concurrent preview and production requests use separate Brain stores, pres
  await budget(null,{deploy:{context:'deploy-preview'}});
  assert.equal(h.prod.get('owner-brain-geoapify-usage-v1').used,20);
  assert.equal(h.preview.has('owner-brain-geoapify-usage-v1'),false);
+});
+test('seed is read only before persistent preview corrections exist',async()=>{
+ const h=await setup();
+ h.seed.set('brain-map-county-v1-MI-wayne',{version:1,records:{sample:{verifiedGeometry:true}}});
+ const read=h.auth.withBrainStore(async()=>h.auth.kvGet('brain-map-county-v1-MI-wayne'));
+ const write=h.auth.withBrainStore(async()=>h.auth.kvPut('brain-map-county-v1-MI-wayne',{version:2,records:{updated:true}}));
+ const ctx={deploy:{context:'deploy-preview'}};
+ assert.equal((await read(null,ctx)).version,1);
+ await write(null,ctx);
+ assert.equal((await read(null,ctx)).version,2);
+ assert.equal(h.seed.get('brain-map-county-v1-MI-wayne').version,1);
 });
 test('preview controls reject production, anonymous users, cross-origin requests, and unconfirmed writes',async()=>{
  const h=await setup(),url='https://preview.test/.netlify/functions/owner-brain-preview-test';
