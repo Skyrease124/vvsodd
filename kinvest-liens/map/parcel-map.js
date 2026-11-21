@@ -38,13 +38,28 @@
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
   const say = (t, keep) => { const m = $('pmMsg'); m.textContent = ''; if (t) { m.appendChild(mk('span', 'm', t)); if (!keep) setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 6500); } };
 
+  // Keep all visible map instances current without restarting MapLibre or redeploying.
+  // The Workshop map uses this same script; saved corrections refresh every 2 minutes.
+  let overlayRefreshRunning=false;
+  async function refreshVerifiedOverlays(){
+    if(document.hidden||overlayRefreshRunning||!window.PPABrainMap)return;
+    overlayRefreshRunning=true;let changed=false;
+    try{
+      for(const ds of Object.values(loaded).slice(0,8)){
+        const result=await window.PPABrainMap.apply(ds);
+        if(result.changed)changed=true;
+      }
+      if(changed){refresh();if(sel&&loaded[sel._d])popup(sel);}
+    }catch(_){/* Previous verified polygons remain visible when provider is offline. */}
+    finally{overlayRefreshRunning=false;}
+  }
   // ---------- data ----------
   function expand(ds) { const D = ds.dict; ds.recs.forEach(r => { for (const k in D) if (r[k] != null) r[k] = D[k][r[k]]; r._d = ds.id; r._n = ((r.a || '') + ' ' + (r.o || '') + ' ' + r.p).toLowerCase(); }); return ds; }
   function skeleton() { const R = $('pmResults'); R.textContent = ''; for (let i = 0; i < 6; i++) { const s = mk('div', 'pm-skel'); s.append(mk('i'), mk('i'), mk('i')); R.appendChild(s); } }
   async function load(id) {
     if (loaded[id]) return loaded[id]; const d = IDX.datasets.find(x => x.id === id); if (!d) return null;
     say('Loading ' + d.county + ', ' + d.state + '…', true); skeleton();
-    try { const ds = expand(await api('/map/data/' + d.file)); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
+    try { const ds = expand(await api('/map/data/' + d.file)); if(window.PPABrainMap)await window.PPABrainMap.apply(ds).catch(()=>{}); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
   }
   const all = () => Object.values(loaded).flatMap(d => d.recs);
   // Only the county (or the counties in a "Search this area" view) you picked is drawn and listed; counties you opened earlier stay cached but are not mixed in.
@@ -1280,6 +1295,8 @@
     try { IDX = await api('/map/index.json'); } catch (e) { ($('pmResults') || $('pmAiBox')).textContent = 'The map data could not be loaded. Please try again.'; return; }
     const account = (embedded ? window.parent.ppaAccount : window.ppaAccount) || fetch('/.netlify/functions/account', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d?.user || null);
     account.then(u => { signedIn = !!u; paid = !!(u && (u.owner || u.paid)); acctDone = true; if (sel) popup(sel); afterAccount(); loadResearch(); }).catch(() => { acctDone = true; afterAccount(); loadResearch(); });
+    setInterval(refreshVerifiedOverlays,120000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVerifiedOverlays();});
     if (workspace) return;
     buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => openAi()); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
     try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
