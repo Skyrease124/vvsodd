@@ -5,6 +5,27 @@
 <style>
 :root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#050b14;color:#ecf6ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}.world{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 43%,#164e4b 0%,#092c35 27%,#091426 64%,#030712 100%)}.world:before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 20deg at 55% 45%,transparent,#196c7255,transparent,#394c9350,transparent);filter:blur(46px);animation:bgTurn 20s linear infinite}.world:after{content:'';position:absolute;inset:0;background-image:radial-gradient(#8dbcf944 .6px,transparent 1px);background-size:19px 22px;opacity:.45;mask-image:linear-gradient(transparent,#0009,transparent);animation:starDrift 16s linear infinite}@keyframes bgTurn{to{transform:rotate(360deg)}}@keyframes starDrift{to{background-position:90px 150px}}
 main{max-width:1000px;margin:auto;padding:env(safe-area-inset-top) 14px 65px}header{display:flex;align-items:center;justify-content:space-between;padding:24px 4px 7px;gap:10px}a{color:#9af6c8}.brand{font-size:17px;font-weight:750;letter-spacing:-.5px}.on{font-size:10px;letter-spacing:1.2px;color:#93f6bb;padding:8px 11px;border-radius:999px;border:1px solid #4c9777aa;background:#11332988}.on:before{content:'● ';animation:pulse 2s ease-in-out infinite}@keyframes pulse{50%{opacity:.4}}h1{text-align:center;font-size:clamp(25px,6vw,42px);letter-spacing:-1.1px;margin:18px 0 3px}.sub{text-align:center;color:#a7b7cc;font-size:12px;line-height:1.5}.nav{max-width:760px;margin:15px auto 0;font-size:12px;display:flex;gap:14px;flex-wrap:wrap}.network{width:100%;max-width:720px;margin:8px auto 0;display:block;overflow:visible;filter:drop-shadow(0 0 18px #22a89020)}.fiber{stroke-dasharray:1 19;animation:flow var(--dur) linear var(--delay) infinite,fiberLight 4.7s ease-in-out var(--delay) infinite;stroke-linecap:round}@keyframes flow{to{stroke-dashoffset:-200}}@keyframes fiberLight{0%,100%{opacity:.2}45%{opacity:.95}65%{opacity:.4}}.node{transform-box:fill-box;transform-origin:center;animation:float 5s ease-in-out infinite}@keyframes float{50%{transform:translateY(-6px)}}.hub{transform-origin:350px 365px;animation:hubBreath 3s ease-in-out infinite}@keyframes hubBreath{50%{transform:scale(1.045);opacity:.84}}.ring{transform-origin:350px 365px;animation:rot 26s linear infinite}.ring.rev{animation-direction:reverse;animation-duration:19s}@keyframes rot{to{transform:rotate(360deg)}}.core-wave{transform-origin:350px 365px;animation:coreWave 3.1s ease-out infinite}@keyframes coreWave{0%{transform:scale(.78);opacity:.75}72%,100%{transform:scale(1.65);opacity:0}}.ringlight{transform-origin:350px 365px;animation:rot 9s linear infinite}.overview{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 auto 27px;max-width:760px}.metric{background:linear-gradient(160deg,#16302d99,#101d2ca8);border:1px solid #426e695c;border-radius:16px;padding:13px 4px;text-align:center}.metric b{font-size:clamp(20px,5.5vw,34px);display:block}.metric span{font-size:10px;letter-spacing:.4px;color:#9cacc1}.sect{max-width:760px;margin:20px auto 0}.sectHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}h2{font-size:20px;letter-spacing:-.5px;margin:0}.status{font-size:10px;border:1px solid #3d786e;border-radius:25px;padding:7px 10px;color:#a1eac9;white-space:nowrap}.ticker,.activity-window{border:1px solid #36535d87;background:#071b1e9e;border-radius:17px;overflow:hidden;position:relative}.ticker{min-height:85px;padding:10px}.tickerTrack{display:flex;width:max-content;align-items:center;gap:12px;animation:tickerMove 25s linear infinite}.transfer{display:flex;align-items:center;gap:9px;flex:0 0 260px;background:#17303aaa;border:1px solid #447c8d55;border-radius:11px;padding:10px}.transfer b{font-size:12px;display:block;white-space:nowrap}.transfer small{font-size:10px;display:block;color:#8eaaba;margin-top:3px}.file-icon{font-size:20px;color:#67e6e0}@keyframes tickerMove{to{transform:translateX(-50%)}}.activity-window{height:320px;overflow-y:auto;padding:8px}.log-entry{display:flex;gap:11px;align-items:center;margin:7px 3px;padding:12px 10px;border:1px solid #3551696b;border-radius:11px;background:#122337dc;min-height:63px}.led{width:8px;height:8px;background:var(--accent);box-shadow:0 0 13px var(--accent);border-radius:50%;flex-shrink:0}.logbody{flex:1;min-width:0}.logbody b{display:block;font-size:12px;color:var(--accent)}.logbody span{display:block;font-size:11px;color:#b3c4d6;margin-top:5px;overflow-wrap:anywhere}.log-entry small{font-size:10px;color:#9fb0c2;text-align:right}.foot{text-align:center;color:#859bad;font-size:11px;margin:19px auto;line-height:1.5;max-width:650px}.node-title{fill:white;font-size:22px;font-weight:700;text-anchor:middle}.node-role{fill:#adc1d1;font-size:12px;text-anchor:middle;letter-spacing:1px}.update{max-width:760px;margin:14px auto;padding:10px 12px;border:1px solid #36535d;border-radius:12px;color:#a7b7cc;font-size:12px}.empty{padding:22px;color:#aac0d1}.controls{display:flex;gap:8px;flex-wrap:wrap}button{cursor:pointer;background:#1d4c43;border:1px solid #75cdaa;color:#eafff2;padding:9px 12px;border-radius:10px;font-weight:650}.muted{color:#8eaaba}#gate{margin:14px auto;max-width:760px;padding:18px;border:1px solid #426e69;border-radius:12px}.only-authorized{display:none}body.authorized .only-authorized{display:block}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}@media(max-width:480px){.metric{padding:12px 3px}.transfer{flex-basis:220px}.status{font-size:9px}}
+
+
+#network{--signal:#65efd0}
+.event-wave{pointer-events:none;opacity:0;transform-origin:350px 365px}
+.event-beam{pointer-events:none;opacity:0;stroke-dasharray:10 20;stroke-linecap:round}
+#network.pulse-verify{--signal:#77f5cc}
+#network.pulse-publish{--signal:#61dcff}
+#network.pulse-error{--signal:#ff986f}
+#network.pulse-verify .event-wave,#network.pulse-publish .event-wave,#network.pulse-error .event-wave{animation:eventWave 1.6s ease-out 1}
+#network.pulse-verify .event-beam,#network.pulse-publish .event-beam,#network.pulse-error .event-beam{animation:eventBeam 1.5s ease-out 1}
+#network.pulse-verify .event-reactor,#network.pulse-publish .event-reactor,#network.pulse-error .event-reactor{animation:eventHub 1.5s ease-out 1}
+#network.pulse-publish .event-wave{animation-duration:2.1s}
+#network.pulse-error .event-wave{animation-duration:1s;animation-iteration-count:2}
+#network.pulse-publish .event-mapnode,#network.pulse-error .event-mapnode{animation:eventNode 1.6s ease-in-out 1}
+@keyframes eventWave{0%{opacity:.95;transform:scale(.65);stroke-width:5}80%{opacity:.3}100%{opacity:0;transform:scale(1.8);stroke-width:1}}
+@keyframes eventBeam{0%{opacity:0;stroke-dashoffset:190}25%{opacity:1}80%{opacity:.8}100%{opacity:0;stroke-dashoffset:-190}}
+@keyframes eventHub{0%,100%{filter:none}28%{filter:drop-shadow(0 0 22px var(--signal))}55%{filter:drop-shadow(0 0 35px var(--signal))}}
+@keyframes eventNode{0%,100%{filter:none}35%{filter:drop-shadow(0 0 19px var(--signal))}}
+#signalLabel{font-weight:650;color:#a4dccd}
+body.still .event-wave,body.still .event-beam,body.still .event-reactor{animation:none!important}
+@media(prefers-reduced-motion:reduce){.event-wave,.event-beam,.event-reactor,.event-mapnode{animation:none!important}}
 </style></head>
 <body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
 <div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
@@ -18,14 +39,14 @@ main{max-width:1000px;margin:auto;padding:env(safe-area-inset-top) 14px 65px}hea
 <circle class="hub" cx="350" cy="365" r="119" fill="#27ce9f" opacity=".08"/>
 <circle class="ring" cx="350" cy="365" r="116" fill="none" stroke="#7bfbc1" stroke-width="1.3" stroke-dasharray="4 17" opacity=".6"/>
 <circle class="ring rev" cx="350" cy="365" r="105" fill="none" stroke="#7bdbce" stroke-width="1" stroke-dasharray="2 12" opacity=".65"/>
-<circle cx="350" cy="365" r="91" fill="url(#core)" stroke="#96ffcf" stroke-width="2.6"/>
+<circle class="event-reactor" cx="350" cy="365" r="91" fill="url(#core)" stroke="#96ffcf" stroke-width="2.6"/>
 <circle class="ringlight" cx="350" cy="365" r="82" fill="none" stroke="url(#sweep)" stroke-width="6" stroke-dasharray="69 448"/>
 <text x="350" y="351" fill="#baffd8" text-anchor="middle" font-size="32" font-weight="800">NVIDIA</text>
 <text x="350" y="378" fill="#d7fff0" text-anchor="middle" font-size="15">THE AI BRAIN</text><text x="350" y="398" fill="#82d7b3" text-anchor="middle" font-size="10" letter-spacing="1">RECEIVE · PULSE · ROUTE</text>
-<g id="nodes"></g><text x="350" y="708" fill="#9eeedb" text-anchor="middle" font-size="10" letter-spacing="2">REACTOR VISUALIZATION</text>
+<g id="eventLayer" aria-hidden="true"><path class="event-beam" id="reactorBeam" d="M580 610 Q510 485 414 405" fill="none" stroke="var(--signal)" stroke-width="5"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="3" fill="none"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="2" fill="none" style="animation-delay:.2s"/></g><g id="nodes"></g><text x="350" y="708" fill="#9eeedb" text-anchor="middle" font-size="10" letter-spacing="2">REACTOR VISUALIZATION</text>
 </svg>
 <div class="overview"><div class="metric"><b id="verified">—</b><span>VERIFIED BY WORKER</span></div><div class="metric"><b id="published">—</b><span>WORKER PUBLICATIONS</span></div><div class="metric"><b id="cursor">—</b><span>WAYNE CURSOR</span></div></div>
-<div class="update"><strong id="county">Wayne County</strong><span> · </span><span id="workerState">Loading</span><span> · </span><span id="stamp">Not yet updated</span><div class="controls" style="margin-top:10px"><button id="refresh" type="button">Refresh activity</button><button id="motion" type="button" aria-pressed="false">Pause visual motion</button></div></div>
+<div class="update"><div id="signalLabel" role="status" aria-live="polite">Waiting for new recorded activity</div><strong id="county">Wayne County</strong><span> · </span><span id="workerState">Loading</span><span> · </span><span id="stamp">Not yet updated</span><div class="controls" style="margin-top:10px"><button id="refresh" type="button">Refresh activity</button><button id="motion" type="button" aria-pressed="false">Pause visual motion</button></div></div>
 <section class="sect"><div class="sectHead"><h2>Verified Transfers</h2><span class="status">RECORDED EVENTS</span></div><div class="ticker"><div id="ticker" class="tickerTrack"><span class="empty">Loading verified transfers…</span></div></div></section>
 <section class="sect"><div class="sectHead"><h2>Live Agent Activity</h2><span class="status">AUTO REFRESH 20S</span></div><div class="activity-window" id="activity" role="log" aria-live="off"><p class="empty">Loading recorded activity…</p></div></section>
 <div class="foot">The reactor pathways are a visual representation, not evidence of calls to Gemini, OpenAI or Groq. Only recorded worker and publication events appear in this activity feed. New records refresh automatically while this page is visible.</div>
@@ -44,7 +65,7 @@ for(const [group,n] of positions.entries()){
   const d='M '+sx.toFixed(2)+' '+sy.toFixed(2)+' Q '+(350+(n.x<350?-110:110)+dx).toFixed(2)+' '+(365+(n.y<365?-115:115)).toFixed(2)+' '+ex.toFixed(2)+' '+ey.toFixed(2);
   svg('path',{d,fill:'none',stroke:n.color,'stroke-width':i%6===0?'1.4':'0.8','class':'fiber',style:'--dur:'+(1.8+(i%11)*.18)+'s;--delay:-'+((i*0.31)%7).toFixed(2)+'s'},document.getElementById('fibers'));
  }
- const g=svg('g',{'class':'node',style:'animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));
+ const g=svg('g',{'class':'node'+(n.name==='Mapping'?' event-mapnode':''),style:'animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));
  svg('ellipse',{cx:n.x,cy:n.y,rx:88,ry:57,fill:'#15273c',stroke:n.color,'stroke-width':'1.3'},g);
  const title=svg('text',{x:n.x,y:n.y,'class':'node-title'},g);title.textContent=n.name;
  const subtitle=svg('text',{x:n.x,y:n.y+24,'class':'node-role'},g);subtitle.textContent=n.role;
@@ -53,7 +74,39 @@ const $=id=>document.getElementById(id),text=(el,str)=>{el.textContent=str};
 const time=s=>s?new Date(s).toLocaleString():'Unknown time';
 const color={success:'#52ebba',warning:'#ffbd7d',error:'#ff8e8e',info:'#72b9ff'};
 let active=false;
+let seenEvents=new Set(),signalQueue=[],signalTimer=null;
+function classifyEvent(ev){
+ if(ev.status==='error'||ev.status==='warning')return 'pulse-error';
+ if(ev.type==='published')return 'pulse-publish';
+ if(ev.type==='verification_result'&&ev.status==='success')return 'pulse-verify';
+ return null;
+}
+function signalFromEvents(events){
+ const current=new Set(events.map(e=>e.id));
+ if(!active){seenEvents=current;return;}
+ const fresh=events.filter(e=>!seenEvents.has(e.id)).reverse().slice(-8);
+ seenEvents=current;
+ for(const ev of fresh){const kind=classifyEvent(ev);if(kind)signalQueue.push({kind,ev});}
+ if(signalQueue.length>12)signalQueue=signalQueue.slice(-12);
+ playSignal();
+}
+function playSignal(){
+ if(signalTimer||!signalQueue.length||document.hidden||document.body.classList.contains('still'))return;
+ const {kind,ev}=signalQueue.shift(),network=$('network');
+ network.classList.remove('pulse-verify','pulse-publish','pulse-error');
+ void network.getBoundingClientRect().width;
+ network.classList.add(kind);
+ $('reactorBeam').setAttribute('d',kind==='pulse-error'?'M120 610 Q200 485 286 405':'M580 610 Q510 485 414 405');
+ text($('signalLabel'),kind==='pulse-publish'?'MAP PUBLICATION · '+ev.parcelId:
+  kind==='pulse-error'?'AGENT WARNING · '+(ev.parcelId||ev.agent):
+  'OFFICIAL GIS VERIFIED · '+(ev.parcelId||'parcel'));
+ signalTimer=setTimeout(()=>{
+  network.classList.remove(kind);signalTimer=null;
+  playSignal();
+ },kind==='pulse-publish'?2200:1700);
+}
 function render(d){
+ signalFromEvents(d.events||[]);
  document.body.classList.add('authorized');$('gate').hidden=true;active=true;
  text($('connection'),d.summary.paused?'PAUSED':'CONNECTED');
  text($('verified'),String(d.summary.verified));text($('published'),String(d.summary.published));text($('cursor'),String(d.summary.cursor));
@@ -89,8 +142,8 @@ async function refresh(){
  finally{refresh.busy=false;}
 }
 $('refresh').onclick=()=>refresh();
-$('motion').onclick=()=>{const paused=document.body.classList.toggle('still');const node=document.createElement('style');if(paused){node.id='motion-off';node.textContent='body.still *{animation-play-state:paused!important}';document.head.append(node);}else document.getElementById('motion-off')?.remove();$('motion').textContent=paused?'Resume visual motion':'Pause visual motion';$('motion').setAttribute('aria-pressed',String(paused));};
+$('motion').onclick=()=>{const paused=document.body.classList.toggle('still');if(!paused)playSignal();const node=document.createElement('style');if(paused){node.id='motion-off';node.textContent='body.still *{animation-play-state:paused!important}';document.head.append(node);}else document.getElementById('motion-off')?.remove();$('motion').textContent=paused?'Resume visual motion':'Pause visual motion';$('motion').setAttribute('aria-pressed',String(paused));};
 refresh();const timer=setInterval(()=>{if(!document.hidden)refresh()},20000);
-window.addEventListener('pagehide',()=>clearInterval(timer),{once:true});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
+window.addEventListener('pagehide',()=>{clearInterval(timer);if(signalTimer)clearTimeout(signalTimer);signalQueue=[];},{once:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){refresh();playSignal();}});
 </script></body></html>
