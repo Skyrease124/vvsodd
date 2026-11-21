@@ -8,6 +8,7 @@ window.ppaAccount.then(user => {
     ['Members','Manage access and membership','/members/','profile'],
     ['Imports & review','Review incoming county data','/admin/imports/','layers'],
     ['Intelligence Center','Owner-only source monitoring, Firecrawl research and private findings','/owner/intelligence/','search'],
+    ['AI Brain Control Center','Scan missing parcel positions into a 50-record owner review queue','/owner/brain/','search'],
     ['Map Coverage & Repair','Find missing parcel locations across every map; read-only owner research','/owner/map-coverage/','map'],
     ['Certificate Review','Review Florida tax certificates and record decisions','/owner/certificates/','file'],
     ['Research Releases','Give Pro members 48-hour early access to approved lien and land updates','/owner/research-releases/','layers'],
