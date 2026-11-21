@@ -23,7 +23,8 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <div class="panel"><b>MapTiler testing only</b><p class="muted">MapTiler free access is not licensed for commercial production. Each map load and style switch may use your MapTiler quota. Only open this preview when you want to test it. Restrict your key to pricepocketasset.com in MapTiler Cloud.</p>
 <p id="status" role="status">Checking owner access…</p><p id="setup" hidden><a href="/owner/keys/">Save your MapTiler API key in Owner API Keys first.</a></p>
 <div id="controls" hidden><div class="controls">
-<div><label for="county">Parcel dataset</label><select id="county"></select></div>
+<div><label for="state">State</label><select id="state" aria-label="Choose state"></select></div>
+<div><label for="county">County</label><select id="county" aria-label="Choose county"></select></div>
 <div><label for="style">MapTiler appearance</label><select id="style">
 <option value="satellite-v4">Satellite</option>
 <option value="streets-v4">Streets</option>
@@ -43,6 +44,16 @@ let key='',map=null,terrain=false,currentData=null,detail=null;
 const msg=(text,isError=false)=>{$('status').textContent=text;$('status').className=isError?'error':'muted'};
 const styleUrl=id=>'https://api.maptiler.com/maps/'+id+'/style.json?key='+encodeURIComponent(key);
 const terrainUrl=()=>'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key='+encodeURIComponent(key);
+const preferredState='FL';
+function selectState(){
+ const state=$('state').value,county=$('county');
+ county.replaceChildren();
+ const counties=(window.__datasets||[]).filter(x=>x.state===state).sort((a,b)=>a.county.localeCompare(b.county));
+ for(const ds of counties){const option=document.createElement('option');option.value=ds.id;option.textContent=ds.county+' · '+ds.mapped+' mapped'+(ds.mapped===0?' (no boundaries yet)':'');county.append(option);}
+ county.disabled=!counties.length;
+ if(map)reset();
+ msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
+}
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function reset(){if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
@@ -78,6 +89,7 @@ $('load').onclick=async()=>{
  try{
   const index=window.__datasets||[];detail=index.find(x=>x.id===$('county').value);
   if(!detail)throw Error('Select a county');
+  if(!detail.mapped)throw Error('This county has no verified map boundaries yet. Choose another county for the satellite overlay.');
   currentData=await loadData();
   $('map').hidden=false;
   map=new maplibregl.Map({container:'map',style:styleUrl($('style').value),center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});
@@ -106,9 +118,14 @@ $('terrain').onclick=()=>{
   key=d.key;
   const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
   const index=await indexResponse.json();
-  window.__datasets=(index.datasets||[]).filter(x=>x.mapped>0&&/^[A-Za-z0-9_-]+\.json$/.test(x.file||'')).sort((a,b)=>b.mapped-a.mapped);
-  for(const ds of window.__datasets){const o=document.createElement('option');o.value=ds.id;o.textContent=ds.state+' · '+ds.county+' ('+ds.mapped+' mapped)';$('county').append(o);}
-  $('controls').hidden=false;msg('Ready for private testing. The map is not loaded until you choose Load private map preview.');
+  window.__datasets=(index.datasets||[]).filter(x=>/^[A-Za-z0-9_-]+\\.json$/.test(x.file||''));
+  const states=[...new Set(window.__datasets.map(x=>x.state))].sort();
+  for(const state of states){const o=document.createElement('option');o.value=state;o.textContent=(index.states?.[state]?.n||state)+' ('+state+')';$('state').append(o);}
+  $('state').value=states.includes(preferredState)?preferredState:states[0]||'';
+  $('state').addEventListener('change',selectState);
+  $('county').addEventListener('change',()=>{if(map)reset();msg('County changed. Load the preview to show the selected county.');});
+  selectState();
+  $('controls').hidden=false;
  }catch(e){msg('Preview unavailable: '+e.message,true);}
 })();
 </script></body></html>
