@@ -185,7 +185,12 @@ async function handler(req,context){
    }
    // Existing guarded publisher independently checks the official polygon and
    // the shared pause switch; the saved overlay is authoritative for success.
-   await publish(req,context);
+   await publish(req,{...context,waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
+    if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
+    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
+    s.dailyUsed++;
+    await auth.kvPut(STORE,{...s,cursor:i});
+   }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const success=published.records?.[r.i]?.verifiedGeometry===true;
    result.rows.push({parcelId:id,status:success?'published':'publish_pending',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice()});
