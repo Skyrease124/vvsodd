@@ -11,7 +11,7 @@ test('county status endpoint requires owner and is GET only',()=>{
  assert.doesNotMatch(endpoint,/complete\(|GEOAPIFY_API_KEY|TAVILY_API_KEY/);
 });
 test('owner progress view shows active work and explicit connector blockers',()=>{
- for(const phrase of ['County Agent Progress','Estimated remaining','Blocked: ','staged','Publisher','Refresh county status'])assert.ok(frontend.includes(phrase),phrase);
+ for(const phrase of ['County Agent Progress','Estimated remaining','Blocked: ','staged','Publisher','Force Auto Run'])assert.ok(frontend.includes(phrase),phrase);
  assert.match(frontend,/owner-brain-county-progress/);
 });
 
@@ -22,4 +22,18 @@ test('county progress bar is accessible and uses precise verified percentage',()
  assert.match(frontend,/c\.baselineMapped/);
  assert.match(frontend,/c\.verifiedCorrections/);
  assert.match(frontend,/County mapping progress/);
+});
+
+test('coverage refreshes automatically and force run respects guarded preview endpoint',()=>{
+ assert.match(frontend,/setInterval\(\(\)=>/);
+ assert.match(frontend,/20000/);
+ assert.match(frontend,/visibilitychange/);
+ assert.match(frontend,/ppa:brain-map-updated/);
+ assert.match(frontend,/force\.hidden=!?\(/);
+ assert.match(frontend,/d\.preview&&c\.id==='MI-wayne'/);
+ assert.match(frontend,/owner-brain-wayne-run/);
+ assert.match(frontend,/action:'run-wayne-batch',confirmed:true/);
+ assert.match(frontend,/daily limit still apply/);
+ const preview=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
+ assert.match(preview,/dispatchEvent\(new CustomEvent\('ppa:brain-map-updated'/);
 });
