@@ -7,7 +7,7 @@ export function rankedCounties(index){
  return (index?.datasets||[]).filter(safe).map((d,i)=>({...d,originalOrder:i}))
   .sort((a,b)=>(b.records-b.mapped)-(a.records-a.mapped)||a.originalOrder-b.originalOrder);
 }
-export async function activeCounty(index,storage){
+export async function activeCounty(index,storage,loadDataset){
  const datasets=rankedCounties(index),byId=new Map(datasets.map(d=>[d.id,d]));
  let plan=await storage.kvGet(KEY);
  if(!Array.isArray(plan?.order)||!plan.order.length){
@@ -25,8 +25,13 @@ export async function activeCounty(index,storage){
   // polygons are counted only for their original county records.
   const saved=await storage.kvGet('brain-map-county-v1-'+d.id)||{records:{}};
   const valid=Object.values(saved.records||{}).filter(r=>r?.verifiedGeometry===true&&r?.i&&Array.isArray(r.g)&&r.g.length).length;
-  // Conservative: require an actual full-dataset reconciliation before
-  // a county can be marked complete, rather than trusting patch counts.
+  // A county advances only after confirming every original record has
+  // official geometry (base or verified correction). No geocoder candidates.
+  if(d.mapped+valid>=d.records&&typeof loadDataset==='function'){
+   const file=await loadDataset(d);
+   const recs=file?.recs||[];
+   if(recs.length===d.records&&recs.every(r=>r?.i&&(r.g&&r.g.length||r.cx||saved.records?.[r.i]?.verifiedGeometry===true&&saved.records[r.i].g?.length)))continue;
+  }
   return {dataset:d,remaining:Math.max(0,d.records-d.mapped-valid),verifiedCorrections:valid,
    blocked:!['MI-wayne'].includes(d.id),
    blocker:d.id==='MI-wayne'?null:'Official county polygon connector not yet configured',
