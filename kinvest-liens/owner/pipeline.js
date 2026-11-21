@@ -21,17 +21,28 @@
  const heading=document.createElement('h2');heading.textContent='County Agent Progress';
  const status=document.createElement('p');status.setAttribute('role','status');status.textContent='Loading current county priority…';panel.append(heading,status);
  const details=document.createElement('div');panel.append(details);
- const refresh=document.createElement('button');refresh.textContent='Refresh county status';refresh.type='button';refresh.style.cssText='background:#19543f;color:#fff;border:1px solid #75d7b6;border-radius:10px;padding:10px 14px;margin-top:8px';refresh.addEventListener('click',load);panel.append(refresh);
+ const controls=document.createElement('div');controls.style.cssText='display:flex;flex-wrap:wrap;gap:12px;margin-top:14px;align-items:center';
+ const force=document.createElement('button');force.type='button';force.textContent='Force Auto Run';
+ force.style.cssText='background:#19543f;color:#fff;border:1px solid #75d7b6;border-radius:10px;padding:10px 14px';
+ force.hidden=true;
+ const updateInfo=document.createElement('span');updateInfo.style.cssText='color:#b4d1d6;font-size:13px';
+ updateInfo.textContent='Auto updates every 20 seconds';
+ controls.append(force,updateInfo);panel.append(controls);
+ const forceResult=document.createElement('p');forceResult.setAttribute('role','status');panel.append(forceResult);
  const parent=document.querySelector('#app')||main;parent.prepend(panel);
  function line(text){const p=document.createElement('p');p.textContent=text;return p;}
+ let inFlight=false;
  async function load(){
-  refresh.disabled=true;status.textContent='Checking saved county progress…';
+  if(inFlight||document.hidden)return;
+  inFlight=true;
   try{
    const response=await fetch('/.netlify/functions/owner-brain-county-progress',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(12000)});
    const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Progress unavailable');
    details.replaceChildren();
    if(d.complete){status.textContent='Every county passed the stored completion gate.';return;}
    const c=d.current;
+   force.hidden=!(d.preview&&c.id==='MI-wayne'&&!d.queue.paused);
+   force.disabled=d.queue.paused;
    status.textContent='County '+c.position+' of '+c.total+': '+c.county+', '+c.state+' · '+d.state.replaceAll('_',' ');
    details.append(line('Records: '+c.records.toLocaleString()+' · Baseline mapped: '+c.baselineMapped.toLocaleString()+' · Verified correction entries: '+c.verifiedCorrections.toLocaleString()+' · Estimated remaining: '+c.estimatedRemaining.toLocaleString()));
    // Use only existing mapped records and verified published polygon corrections.
@@ -62,8 +73,31 @@
    details.append(line('Agent activity: Official GIS '+d.agents.official.state+' · Photon '+d.agents.photon.state+' · Geoapify '+d.agents.geoapify.state+' · Publisher '+d.agents.publisher.state));
    if(c.blocker){const warning=line('Blocked: '+c.blocker);warning.style.color='#f0cb86';details.append(warning);}
    const note=line('County changes only after full verification. Address searches alone do not count as mapped.');note.style.color='#a7c7d0';details.append(note);
-  }catch(e){status.textContent='County progress unavailable: '+e.message;}
-  finally{refresh.disabled=false;}
+  updateInfo.textContent='Updated '+new Date().toLocaleTimeString()+' · Auto refresh every 20s';
+  }catch(e){
+   if(!details.childElementCount)status.textContent='County progress unavailable: '+e.message;
+   updateInfo.textContent='Auto refresh will retry · '+e.message;
+  }
+  finally{inFlight=false;}
  }
+ force.onclick=async()=>{
+  if(!confirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
+  force.disabled=true;forceResult.textContent='Running guarded Wayne County batch…';
+  try{
+   const response=await fetch('/.netlify/functions/owner-brain-wayne-run',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),signal:AbortSignal.timeout(55000)});
+   const data=await response.json();
+   if(!response.ok||!data.ok)throw Error(data.error||'Batch not completed');
+   forceResult.textContent='Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;
+   window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:data.published}}));
+  }catch(e){forceResult.textContent='Force run stopped: '+e.message;}
+  finally{force.disabled=false;await load();}
+ };
+ const onFocus=()=>{if(!document.hidden)void load();};
+ document.addEventListener('visibilitychange',onFocus);
+ window.addEventListener('ppa:brain-map-updated',onFocus);
+ const timer=setInterval(()=>{if(!document.hidden)void load();},20000);
+ window.addEventListener('pagehide',()=>{clearInterval(timer);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('ppa:brain-map-updated',onFocus);},{once:true});
  await load();
 })();
