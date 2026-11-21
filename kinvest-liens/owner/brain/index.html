@@ -4,6 +4,7 @@
  <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
  <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
+ <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
  <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
 </section><p><a href="/owner/brain/activity/" style="display:inline-block;padding:12px 16px;border:1px solid #75d0b1;border-radius:12px;background:#1a433e;font-weight:700">✦ NVIDIA Pulse Reactor · Live Activity</a></p><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. Official polygon verification currently supports Detroit. Other counties remain research leads until a verified connector is available.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
@@ -142,12 +143,27 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
   try{
    const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
    const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Unavailable');
-   summary.textContent=d.unattendedProductionEnabled?'Unattended Wayne pilot enabled':'Preview-only · 24/7 production scheduler not enabled';
+   summary.textContent=d.unattendedProductionEnabled?'24/7 Wayne scheduler: ON':
+    d.preview?'Preview mode · 24/7 schedule only on the published website':'24/7 Wayne scheduler: OFF';
+   const toggle=document.getElementById('unattendedToggle');
+   toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
+   toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
    checks.textContent='Wayne cursor '+d.worker.cursor+' · Published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
     ' · Other counties blocked until verified GIS connectors are configured';
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}
  }
  document.getElementById('unattendedRefresh').onclick=loadAutonomy;
+ document.getElementById('unattendedToggle').onclick=async()=>{
+  const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
+  if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
+  btn.disabled=true;
+  try{
+   const res=await fetch('/.netlify/functions/owner-brain-scheduler-control',{method:'POST',credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({action:enable?'enable':'disable',confirmed:true,scope:'wayne-verified-gis-only'})});
+   const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Control unavailable');
+   await loadAutonomy();
+  }catch(e){summary.textContent='Could not update scheduler: '+e.message;}finally{btn.disabled=false;}
+ };
  await loadAutonomy();
 })();
 </script></body></html>
