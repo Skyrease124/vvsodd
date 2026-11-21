@@ -182,7 +182,7 @@
       window.addEventListener('pageshow', e => { if (e.persisted) repaint(); });
     } else {
       map.addControl(locationControl, controlSide);
-      map.addControl(navigationControl, controlSide);
+      // Floating menu supplies zoom controls; keep geolocation registered for its trigger.
     }
     map.touchZoomRotate.disableRotation();
     map.on('load', () => {
@@ -231,7 +231,7 @@
   function syncGisState(){
     if(!gisButton)return;
     const state=curState||'';
-    gisButton.textContent=state?state+' GIS':'GIS';
+    gisButton.textContent=state?(state+' GIS'+(state==='FL'?'':' · N/A')):'GIS · N/A';
     const supported=state==='FL';
     gisButton.disabled=!supported;
     gisButton.setAttribute('aria-disabled',String(!supported));
@@ -407,7 +407,7 @@
     stack.append(plus,minus,locate);
     const menuToggle=iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>','Open map tools',()=>{const on=stack.classList.toggle('pm-menu-open');menuToggle.setAttribute('aria-expanded',String(on));menuToggle.setAttribute('aria-label',on?'Close map tools':'Open map tools');},'pm-menu-toggle');
     stack.id='pmFloatingTools';menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-controls','pmFloatingTools');stack.prepend(menuToggle);
-    stack.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.pm-menu-toggle')){stack.classList.remove('pm-menu-open');menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-label','Open map tools');}});
+    stack.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.pm-menu-toggle')&&!e.target.closest('[aria-label="Layers"]')){stack.classList.remove('pm-menu-open');menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-label','Open map tools');}});
 
     for (const [button, label] of [[lay, 'Layers'], [fb, 'Filters']]) button.appendChild(mk('span', 'pm-control-label', label));
     if (homeMap) {
