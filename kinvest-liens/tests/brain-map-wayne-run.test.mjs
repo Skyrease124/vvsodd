@@ -74,7 +74,7 @@ test('one run advances completed records, saves review failures, publishes only 
  assert.equal(data.cursor,3);assert.equal(h.publications(),1);
  const second=await (await h.invoke()).json();
  assert.equal(second.attempted,1);assert.equal(second.cursor,4);
- assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,4);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,8);
 });
 test('existing published polygons skip duplicate GIS requests and do not republish',async()=>{
  const h=await setup({existing:true});
@@ -82,7 +82,7 @@ test('existing published polygons skip duplicate GIS requests and do not republi
  assert.equal(result.attempted,1);
  assert.equal(result.cursor,4);
  assert.equal(result.published,0);
- assert.equal(h.reads(),1);
+ assert.equal(h.reads(),2);
  assert.equal(h.store.get('brain-map-county-v1-MI-wayne').records.r1.verifiedGeometry,true);
 });
 test('saved cursor resumes later source row rather than reprocessing earlier parcels',async()=>{
@@ -90,18 +90,18 @@ test('saved cursor resumes later source row rather than reprocessing earlier par
  const result=await (await h.invoke()).json();
  assert.equal(result.attempted,1);
  assert.equal(result.cursor,4);
- assert.equal(h.reads(),1);
+ assert.equal(h.reads(),2);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').runs,3);
 });
-test('timed-out parcel lookup falls back to official object ID, preserves verification, and charges all three GIS requests',async()=>{
+test('timed-out indexed ID lookup falls back to direct polygon, preserves verification and charges requests',async()=>{
  const h=await setup({timeoutFirst:true});
  const d=await (await h.invoke()).json();
  assert.equal(d.attempted,3);
  assert.equal(d.verified,1);
  assert.equal(d.published,1);
- assert.equal(d.rows[0].lookupMethod,'indexed_object_id');
- assert.equal(h.reads(),5);
- assert.equal(d.dailyUsed,5);
+ assert.equal(d.rows[0].lookupMethod,'direct');
+ assert.equal(h.reads(),6);
+ assert.equal(d.dailyUsed,6);
  assert.equal(h.publications(),1);
 });
 test('transient GIS outage schedules backoff without skipping or publishing',async()=>{
@@ -140,4 +140,12 @@ test('owner UI explicitly exposes next bounded preview run',()=>{
  assert.match(code,/MAX_PER_DAY=30/);
  assert.match(code,/controlNow\?\.status==='paused'/);
  assert.match(code,/await publish\(req,context\)/);
+});
+
+test('index-first request path keeps strict verification and fallback boundary',()=>{
+ assert.match(code,/official=await lookupWithObjectId\(id,i\)/);
+ assert.match(code,/method='direct'/);
+ assert.match(code,/official=await officialGet\(url,i,6500,'direct_polygon'\)/);
+ assert.match(code,/primary.code==='AMBIGUOUS'/);
+ assert.match(code,/verifyOfficial\(r,official.features\)/);
 });
