@@ -9,6 +9,7 @@ const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
 const STORE='owner-brain-wayne-worker-v1', OVERLAY='brain-map-county-v1-MI-wayne';
 const CONTROL='owner-brain-scanner-v1', APPROVALS='owner-brain-approvals-v1';
 const MAX_ATTEMPTS=3, MAX_PER_DAY=30, LEASE_MS=90000;
+const RETRY_DELAYS_MS=[60000,180000]; // one minute, then three; stop after three provider attempts
 const response=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const today=()=>new Date().toISOString().slice(0,10);
@@ -52,6 +53,14 @@ async function handler(req,context){
  if(s.lockedUntil&&Date.parse(s.lockedUntil)>Date.now())return response(409,{ok:false,error:'Another batch run is in progress'});
  if(s.day!==today())s={...s,day:today(),dailyUsed:0};
  if(s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
+ // Do not consume quota or advance the cursor while a failed parcel is cooling down.
+ if(s.retry?.exhausted)return response(409,{ok:false,error:'GIS retry limit reached; owner review required',retry:s.retry,cursor:s.cursor});
+ if(s.retry?.nextAt&&Date.parse(s.retry.nextAt)>Date.now())return response(200,{
+  ok:true,previewOnly:!scheduled,state:'retry_wait',cursor:s.cursor,
+  attempted:0,verified:0,published:0,needsReview:0,failures:0,
+  dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,retry:s.retry,rows:[],
+  message:'GIS retry scheduled; no provider request or map write occurred'
+ });
  const token=crypto.randomUUID();
  s={...s,token,lockedUntil:new Date(Date.now()+LEASE_MS).toISOString(),lastStarted:new Date().toISOString(),state:'running'};
  await auth.kvPut(STORE,s);
@@ -75,6 +84,7 @@ async function handler(req,context){
    const r=rows[i];
    if(!valid(r)||overlay.records?.[r?.i]){i++;continue;}
    const id=String(r.p).replace(/\.$/,'');
+   if(s.retry&&(s.retry.parcelId!==id||s.retry.cursor!==i))s.retry=null;
    // Reserve the quota before each remote request. Advance cursor only after
    // a completed match/mismatch, never after transient HTTP/provider failures.
    s.dailyUsed++;result.attempted++;
@@ -85,10 +95,17 @@ async function handler(req,context){
    try{
     official=await get(url,1000000);
    }catch(e){
-    result.failures++;s.state='provider_error';
-    result.rows.push({parcelId:id,status:'retry_later',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110)});
+    result.failures++;
+    const attempts=(s.retry?.parcelId===id?s.retry.attempts:0)+1;
+    const exhausted=attempts>=3;
+    const nextAt=exhausted?null:new Date(Date.now()+RETRY_DELAYS_MS[attempts-1]).toISOString();
+    s.retry={parcelId:id,cursor:i,attempts,maxAttempts:3,nextAt,exhausted,lastError:String(e.message).slice(0,110)};
+    s.state=exhausted?'provider_error':'retry_wait';
+    result.rows.push({parcelId:id,status:'retry_later',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110),retryAttempt:attempts,nextRetryAt:nextAt});
     break;
    }
+   // A successful provider response clears transient retry state even if parcel identity needs review.
+   s.retry=null;
    try{
     verified=verifyOfficial(r,official.features);
     if(!Number.isSafeInteger(verified.officialObjectId)||verified.officialObjectId<=0)throw Error('Official object ID unavailable');
@@ -128,7 +145,7 @@ async function handler(req,context){
   if(s.state==='running')s.state=i>=rows.length?'source_scanned':'idle';
   s.lastCompleted=new Date().toISOString();
   return response(200,{ok:true,previewOnly:true,cursor:s.cursor,sourceRecords:rows.length,
-   dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,state:s.state,...result,
+   dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,state:s.state,retry:s.retry||null,...result,
    message:scheduled?'Scheduled bounded official GIS batch; no paid AI calls':'Owner-triggered preview batch; no paid AI calls or production writes'});
  }catch(e){
   s.state='error';s.lastError=String(e.message||e).slice(0,130);
