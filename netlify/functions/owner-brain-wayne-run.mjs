@@ -28,17 +28,24 @@ function state(value){
  {cursor:0,day:today(),dailyUsed:0,runs:0,verified:0,published:0,needsReview:0,failures:0,recent:[]};
 }
 async function handler(req,context){
- if(context?.deploy?.context!=='deploy-preview'||!auth.isBrainPreview())return response(404,{ok:false,error:'Deploy preview only'});
+ const scheduled=context?.internalScheduled===true;
+ if(scheduled){
+  if(context?.deploy?.context!=='production')return response(404,{ok:false,error:'Scheduled execution requires published production deployment'});
+ }else if(context?.deploy?.context!=='deploy-preview'||!auth.isBrainPreview())return response(404,{ok:false,error:'Deploy preview only'});
  if(req.method!=='GET'&&req.method!=='POST')return response(405,{ok:false,error:'GET or POST only'});
- const user=await auth.userFromCookie(req.headers.get('cookie')||'');
- if(!user?.owner)return response(user?403:401,{ok:false,error:'Owner access required'});
- if(req.method==='GET'){
+ if(!scheduled){
+  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
+  if(!user?.owner)return response(user?403:401,{ok:false,error:'Owner access required'});
+ }
+ if(req.method==='GET'&&!scheduled){
   const s=state(await auth.kvGet(STORE));
   return response(200,{ok:true,previewOnly:true,...s,lockedUntil:s.lockedUntil||null,maxAttempts:MAX_ATTEMPTS,dailyLimit:MAX_PER_DAY});
  }
- if(req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
- let body;try{const raw=await req.text();if(raw.length>250)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
- if(body?.action!=='run-wayne-batch'||body.confirmed!==true)return response(400,{ok:false,error:'Explicit confirmation required'});
+ if(!scheduled&&req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
+ if(!scheduled){
+  let body;try{const raw=await req.text();if(raw.length>250)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
+  if(body?.action!=='run-wayne-batch'||body.confirmed!==true)return response(400,{ok:false,error:'Explicit confirmation required'});
+ }
  const control=await auth.kvGet(CONTROL);
  if(control?.status==='paused')return response(409,{ok:false,error:'Automation paused'});
  let s=state(await auth.kvGet(STORE));
@@ -119,12 +126,12 @@ async function handler(req,context){
   s.lastCompleted=new Date().toISOString();
   return response(200,{ok:true,previewOnly:true,cursor:s.cursor,sourceRecords:rows.length,
    dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,state:s.state,...result,
-   message:'Owner-triggered preview batch; no paid AI calls or production writes'});
+   message:scheduled?'Scheduled bounded official GIS batch; no paid AI calls':'Owner-triggered preview batch; no paid AI calls or production writes'});
  }catch(e){
   s.state='error';s.lastError=String(e.message||e).slice(0,130);
   return response(502,{ok:false,error:'Batch interrupted: '+s.lastError,cursor:s.cursor});
  }finally{
-  // Writes to deploy-specific isolated storage; release only our own lease.
+  // Release only this run's lease. Preview uses its isolated persistent store.
   const latest=await auth.kvGet(STORE);
   if(latest?.token===token){
    await auth.kvPut(STORE,{...s,token:null,lockedUntil:null});
@@ -132,3 +139,7 @@ async function handler(req,context){
  }
 }
 export default auth.withBrainStore(handler);
+
+// Only the separately deployed scheduled Netlify function imports this entry.
+// Both scheduled and Force Auto Run execute the same verifier, publisher, cursor and limits.
+export const runScheduledWayne=auth.withBrainStore((req,context)=>handler(req,{...context,internalScheduled:true}));
