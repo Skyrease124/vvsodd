@@ -17,7 +17,7 @@ async function handler(req){
   // performed the work when the record identifies only official GIS.
   for(const [i,h] of (history?.entries||[]).slice(0,100).entries()){
    const at=date(h.at);if(!at)continue;
-   events.push({id:'pub-'+i+'-'+at,at,agent:'Mapping',from:'GIS Publisher',to:'Mapping',type:h.action==='published'?'published':'publication',
+   events.push({id:'pub-'+clean(h.dataset)+'-'+clean(h.recordId||h.parcelId)+'-'+at,at,agent:'Mapping',from:'GIS Publisher',to:'Mapping',type:h.action==='published'?'published':'publication',
     message:(h.action==='published'?'Verified polygon published':'Map event')+' · '+clean(h.dataset)+' · parcel '+clean(h.parcelId),
     parcelId:clean(h.parcelId),county:clean(h.dataset),status:h.action==='published'?'success':'info'});
   }
@@ -25,9 +25,10 @@ async function handler(req){
   for(const [i,r] of recent.entries()){
    // The worker stores latest batch timestamp, not per-parcel timestamps.
    // Mark that time as approximate rather than inventing event timestamps.
-   const at=date(worker?.lastCompleted||worker?.lastStarted);
+   const precise=date(r.checkedAt);
+   const at=precise||date(worker?.lastCompleted||worker?.lastStarted);
    if(!at)continue;
-   events.push({id:'gis-'+i+'-'+clean(r.parcelId),at,approximateTime:true,agent:'Official GIS',
+   events.push({id:'gis-'+clean(r.parcelId)+'-'+clean(r.status)+'-'+at,at,approximateTime:!precise,agent:'Official GIS',
     from:'Official GIS',to:'NVIDIA',type:'verification_result',message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+(r.reason?' · '+clean(r.reason):''),
     parcelId:clean(r.parcelId),county:'MI-wayne',status:r.status==='published'?'success':r.status==='needs_review'?'warning':r.status==='retry_later'?'error':'info'});
   }
