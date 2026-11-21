@@ -5,6 +5,11 @@
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
  <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
  <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <div id="wayneRetryAlert" hidden style="padding:11px;margin:12px 0;border-radius:10px;border:1px solid #af9070;background:#3d302e">
+ <strong>Wayne County GIS retry needs review</strong>
+ <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
+ <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
+ </div>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
  <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
 </section><p><a href="/owner/brain/activity/" style="display:inline-block;padding:12px 16px;border:1px solid #75d0b1;border-radius:12px;background:#1a433e;font-weight:700">✦ NVIDIA Pulse Reactor · Live Activity</a></p><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. Official polygon verification currently supports Detroit. Other counties remain research leads until a verified connector is available.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
@@ -145,6 +150,14 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Unavailable');
    summary.textContent=d.unattendedProductionEnabled?'24/7 Wayne scheduler: ON':
     d.preview?'Preview mode · 24/7 schedule only on the published website':'24/7 Wayne scheduler: OFF';
+   const retryPanel=document.getElementById('wayneRetryAlert');
+   retryPanel.hidden=!d.worker.retryExhausted;
+   document.getElementById('wayneRetryDetail').textContent=d.worker.retryExhausted?
+    'Parcel '+d.worker.retryParcel+' · Attempts '+d.worker.retryAttempt+
+    ' · '+(d.worker.retryLastError||'Provider error')+
+    ' · Re-arming keeps the cursor and daily limit unchanged.':'';
+   document.getElementById('wayneRetryRearm').dataset.parcel=d.worker.retryParcel||'';
+   document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
@@ -152,6 +165,21 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     ' · Other counties blocked until verified GIS connectors are configured';
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}
  }
+ document.getElementById('wayneRetryRearm').onclick=async()=>{
+  const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);
+  if(!parcelId||!Number.isSafeInteger(cursor))return;
+  if(!confirm('Allow a fresh official GIS verification attempt for parcel '+parcelId+'? This does NOT skip it, reset the daily request limit, or publish anything automatically.'))return;
+  btn.disabled=true;
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-retry-review',{method:'POST',
+    credentials:'same-origin',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rearm-exhausted-parcel',confirmed:true,parcelId,cursor})});
+   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Retry review unsuccessful');
+   summary.textContent='Parcel '+parcelId+' re-armed for official GIS verification; no map change made';
+   await loadAutonomy();
+  }catch(e){summary.textContent='GIS retry review error: '+e.message;}
+  finally{btn.disabled=false;}
+ };
  document.getElementById('unattendedRefresh').onclick=loadAutonomy;
  document.getElementById('unattendedToggle').onclick=async()=>{
   const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
