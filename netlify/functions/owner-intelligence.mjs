@@ -1,6 +1,7 @@
 // Owner-only Intelligence Center. Never exposed to public member APIs or research releases.
 import crypto from 'node:crypto';
 import * as auth from '../lib/auth.mjs';
+import * as brain from '../lib/brain-auth.mjs';
 import * as keystore from '../lib/keystore.mjs';
 import {complete} from '../lib/llm.mjs';
 import {SOURCE_REGISTRY,sourceById,researchKey,safeScrapeExcerpt,compareSource,validateMark} from '../lib/owner-intelligence-sources.mjs';
@@ -37,7 +38,7 @@ async function firecrawlSource(url){
  if(data.success===false||!data.data?.markdown)throw Error('Firecrawl returned no page text');
  return safeScrapeExcerpt(data.data.markdown);
 }
-export default async function handler(request){
+async function handler(request){
  const user=await auth.userFromCookie(request.headers.get('cookie'));
  if(!user)return respond(401,{ok:false,error:'Sign in required'});
  if(!user.owner)return respond(403,{ok:false,error:'Owner only'});
@@ -66,6 +67,9 @@ export default async function handler(request){
    const value=validateMark(body.status);
    const saved={...prev,reviewStatus:value,reviewedAt:new Date().toISOString()};
    await auth.kvPut(key,saved);
+  const inbox=await brain.kvGet('brain-source-events-v1')||{entries:[]};
+  inbox.entries=[{sourceId:src.id,url:src.url,checkedAt:saved.checkedAt,changed:saved.changed,hash:saved.hash,status:'source_lead_only',note:'Source monitoring evidence; parcel identity and official polygon validation are still required.'},...inbox.entries.filter(e=>e.sourceId!==src.id)].slice(0,100);
+  await brain.kvPut('brain-source-events-v1',inbox);
    return respond(200,{ok:true,source:storeView(src,saved),privateOnly:true});
   }
   if(body.action!=='scan')return respond(400,{ok:false,error:'Unsupported action'});
@@ -110,6 +114,9 @@ export default async function handler(request){
    changed:comparison.changed,reviewStatus:comparison.status==='needs-review'?'needs-review':comparison.status,
    summary:aiSummary,aiStatus,error:null,previousCheckedAt:prev?.checkedAt||null};
   await auth.kvPut(key,saved);
+  const inbox=await brain.kvGet('brain-source-events-v1')||{entries:[]};
+  inbox.entries=[{sourceId:src.id,url:src.url,checkedAt:saved.checkedAt,changed:saved.changed,hash:saved.hash,status:'source_lead_only',note:'Source monitoring evidence; parcel identity and official polygon validation are still required.'},...inbox.entries.filter(e=>e.sourceId!==src.id)].slice(0,100);
+  await brain.kvPut('brain-source-events-v1',inbox);
   // Keep a bounded private audit record. Never call public research releases.
   const auditKey='owner-intel-audit-'+src.id+'-'+monthKey();
   const old=await auth.kvGet(auditKey);
@@ -124,3 +131,5 @@ export default async function handler(request){
   return respond(503,{ok:false,error:'Source check unavailable: '+String(error?.message||'Unknown error').slice(0,120)});
  }
 }
+
+export default brain.withBrainStore(handler);

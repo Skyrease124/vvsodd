@@ -6,8 +6,8 @@
   const response=await window.PPABrainRequest(endpoint,{credentials:'same-origin',cache:'no-store'});
   const state=await response.json();if(!response.ok||!state.isolated)return;
   const panel=document.createElement('section');panel.className='panel';
-  const title=document.createElement('h2');title.textContent='Isolated preview test — 90 Chandler';
-  const help=document.createElement('p');help.className='muted';help.textContent='Brain records in this deployment are separate from production. Fetch the official candidate, verify and approve it in the review queue, then publish here. No AI request is needed. A new deployment starts with an empty test store.';
+  const title=document.createElement('h2');title.textContent='Automatic preview — 90 Chandler';
+  const help=document.createElement('p');help.className='muted';help.textContent='The deployment agent retrieves the official GIS record, checks parcel identity, address and polygon, and fills the evidence and verification notes automatically. Its verified sample correction is published only in this isolated preview. No forms or AI requests are needed.';
   const note=document.createElement('p');note.setAttribute('role','status');
   const buttons=[];
   for(const [action,label] of [['prepare','1. Fetch official candidate'],['publish','2. Publish approved correction'],['rollback','3. Reverse preview correction']]){
@@ -24,7 +24,7 @@
     }catch(e){note.textContent=e.message;}finally{buttons.forEach(b=>b.disabled=false);}
    };
   }
-  panel.append(title,help,...buttons,note);
+  const diagnostics=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Diagnostic controls';diagnostics.append(summary,...buttons,note);panel.append(title,help,diagnostics);
   for(const [label,url] of [['Open test parcel on map','/map/?c=MI-wayne&p=01002263'],['Open MapTiler preview','/owner/maptiler/']]){
    const link=document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener';link.style.marginRight='16px';panel.append(link);
   }

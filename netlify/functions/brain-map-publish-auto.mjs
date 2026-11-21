@@ -43,7 +43,7 @@ async function handler(){
   const source=new Map((county.recs||[]).map(r=>[r.i,r]));
   const key='brain-map-county-v1-MI-wayne';
   const saved=await auth.kvGet(key)||{version:0,records:{}};
-  for(const a of approved.slice(0,5)){
+  for(const a of approved.filter(a=>!saved.records[a.recordId]).slice(0,5)){
    if(saved.records[a.recordId])continue;
    const lat=a.proposedPosition?.lat,lon=a.proposedPosition?.lon;
    if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<42.2||lat>42.5||lon< -83.4||lon> -82.8){skipped++;continue;}
@@ -79,6 +79,12 @@ async function handler(){
    const history=await auth.kvGet('brain-map-history-v1')||{entries:[]};
    history.entries=[{dataset:'MI-wayne',recordId:a.recordId,parcelId:a.parcelId,action:'published',source:'official Detroit current parcel GIS',reviewCase:a.caseKey,at:stamp},...(history.entries||[])].slice(0,300);
    await auth.kvPut('brain-map-history-v1',history);
+   const decisions=await auth.kvGet(APPROVALS);
+   const decision=decisions?.entries?.find(e=>e.caseKey===a.caseKey);
+   if(decision){decision.publishStatus='published';decision.publishedAt=stamp;await auth.kvPut(APPROVALS,decisions);}
+   const queue=await auth.kvGet('owner-brain-scanner-v1');
+   const item=queue?.queue?.find(r=>r.dataset==='MI-wayne'&&r.recordId===a.recordId);
+   if(item?.review){item.review.publishStatus='published';await auth.kvPut('owner-brain-scanner-v1',queue);}
    passed++;
   }
   status.published=(status.published||0)+passed;

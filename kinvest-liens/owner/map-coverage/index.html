@@ -37,4 +37,4 @@ async function selectCounty(d){
 }
 async function start(){try{const r=await fetch('/.netlify/functions/owner-map-coverage',{credentials:'same-origin',cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Unavailable');if(!d.totals||!Array.isArray(d.datasets))throw Error('Map coverage returned incomplete data.');datasets=d.datasets;for(const [element,key] of [['total','records'],['mapped','mapped'],['missing','missing'],['counties','counties']])$(element).textContent=Number(d.totals[key]||0).toLocaleString();const states=[...new Set(d.datasets.map(x=>x.state))].sort();for(const code of states){const o=n('option',code);o.value=code;$('state').append(o)}$('state').addEventListener('change',render);$('filter').addEventListener('change',render);render();$('gate').remove();$('app').hidden=false;}catch(e){$('app').hidden=true;$('gate').textContent=e.message||'Map coverage failed to load.';}}
 start();
-</script></body></html>
+</script><script src="/owner/pipeline.js" defer></script></body></html>
