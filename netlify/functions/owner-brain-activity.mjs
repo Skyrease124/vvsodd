@@ -21,16 +21,25 @@ async function handler(req){
     message:(h.action==='published'?'Verified polygon published':'Map event')+' · '+clean(h.dataset)+' · parcel '+clean(h.parcelId),
     parcelId:clean(h.parcelId),county:clean(h.dataset),status:h.action==='published'?'success':'info'});
   }
-  const recent=Array.isArray(worker?.recent)?worker.recent.slice(0,25):[];
-  for(const [i,r] of recent.entries()){
-   // The worker stores latest batch timestamp, not per-parcel timestamps.
-   // Mark that time as approximate rather than inventing event timestamps.
-   const precise=date(r.checkedAt);
-   const at=precise||date(worker?.lastCompleted||worker?.lastStarted);
+  const recent=Array.isArray(worker?.recent)?worker.recent.slice(0,40):[];
+  const recentIds=new Set();
+  for(const r of recent){
+   // Legacy records have no per-attempt timestamp. Do not restamp and replay them.
+   const at=date(r.checkedAt);
    if(!at)continue;
-   events.push({id:'gis-'+clean(r.parcelId)+'-'+clean(r.status)+'-'+at,at,approximateTime:!precise,agent:'Official GIS',
-    from:'Official GIS',to:'NVIDIA',type:'verification_result',message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+(r.reason?' · '+clean(r.reason):''),
-    parcelId:clean(r.parcelId),county:'MI-wayne',status:r.status==='published'?'success':r.status==='needs_review'?'warning':r.status==='retry_later'?'error':'info'});
+   const stage=clean(r.failedStage||r.gisTrace?.at(-1)?.stage||'');
+   const trace=(Array.isArray(r.gisTrace)?r.gisTrace:[]).slice(0,5).map(t=>({
+    stage:clean(t.stage),status:clean(t.status),durationMs:Number(t.durationMs||0),at:date(t.at)
+   }));
+   const id='gis-'+clean(r.parcelId)+'-'+clean(r.status)+'-'+at;
+   if(recentIds.has(id))continue;
+   recentIds.add(id);
+   events.push({id,at,approximateTime:false,agent:'Official GIS',
+    from:'Official GIS',to:'NVIDIA',type:'verification_result',
+    message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+
+      (stage?' · stage '+stage:'')+(r.reason?' · '+clean(r.reason):''),
+    parcelId:clean(r.parcelId),county:'MI-wayne',trace,failedStage:stage,
+    status:r.status==='published'?'success':r.status==='needs_review'?'warning':r.status==='retry_later'?'error':'info'});
   }
   const sources=[['Photon',photon],['Geoapify',geo],['GIS Agent',automatic],['Publisher',publication]];
   for(const [name,s] of sources){
@@ -53,6 +62,7 @@ async function handler(req){
     state==='complete'?'Available source records scanned':'Waiting for next batch',
     retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
     retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
+    failedStage:clean(retry?.failedStage||''),lastGisTrace:(retry?.gisTrace||[]).slice(0,5),
     lastCompleted:date(worker?.lastCompleted),dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30};
   return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',health,
    capturedAt:new Date().toISOString(),county:'Wayne, Michigan',
