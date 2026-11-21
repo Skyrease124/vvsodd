@@ -10,6 +10,8 @@
  <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
  <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
  </div>
+ <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Wayne Test Batch</button>
+ <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
  <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
 </section><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. The current scheduled worker covers free Detroit GIS only; nationwide automation is not yet implemented.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
@@ -144,6 +146,10 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     ' · Re-arming keeps the cursor and daily limit unchanged.':'';
    document.getElementById('wayneRetryRearm').dataset.parcel=d.worker.retryParcel||'';
    document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
+   const testButton=document.getElementById('wayneTestBatch');
+   testButton.hidden=!d.preview;
+   testButton.disabled=d.worker.paused||d.worker.retryExhausted||d.worker.dailyUsed>=d.worker.dailyLimit;
+   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.retryExhausted?'Review exhausted retry first':d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
@@ -165,6 +171,26 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    await loadAutonomy();
   }catch(e){summary.textContent='GIS retry review error: '+e.message;}
   finally{btn.disabled=false;}
+ };
+ document.getElementById('wayneTestBatch').onclick=async()=>{
+  const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
+  if(!confirm('Run one Wayne County official GIS test batch (up to 3 parcels) in this isolated PR #453 preview? This uses free official GIS requests, may publish verified polygons to preview maps, and will not change production.'))return;
+  btn.disabled=true;out.hidden=false;out.textContent='Running official GIS verification in preview…';
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-run',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),
+    signal:AbortSignal.timeout(60000)
+   });
+   const d=await r.json();
+   if(!r.ok||!d.ok)throw Error(d.error||'Test batch unavailable');
+   out.textContent='Batch '+(d.state||'completed').replaceAll('_',' ')+' · Cursor '+(d.cursor??'?')+
+    ' · Attempted '+(d.attempted??0)+' · Verified '+(d.verified??0)+
+    ' · Published '+(d.published??0)+' · GIS requests '+(d.dailyUsed??'?')+'/'+(d.dailyLimit??30)+
+    (d.retry?.nextAt?' · Next retry '+new Date(d.retry.nextAt).toLocaleTimeString():'')+
+    (d.rows?.[0]?.reason?' · '+d.rows[0].reason:'');
+  }catch(e){out.textContent='Test batch failed: '+e.message;}
+  finally{await loadAutonomy();btn.disabled=false;}
  };
  document.getElementById('unattendedRefresh').onclick=loadAutonomy;
  document.getElementById('unattendedToggle').onclick=async()=>{
