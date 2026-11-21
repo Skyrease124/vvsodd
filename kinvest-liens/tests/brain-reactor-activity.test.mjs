@@ -46,3 +46,27 @@ test('UI retains V12-style 256 flowing fibers and shows only genuine events',()=
  assert.doesNotMatch(page,/Extracted parcel IDs · 86 records|DEMO<\/small>/);
  assert.match(brain,/href="\/owner\/brain\/activity\/"/);
 });
+test('reactor uses distinct event pulses and never replays historical events at first load',()=>{
+ assert.match(page,/function classifyEvent\(ev\)/);
+ assert.match(page,/pulse-publish/);
+ assert.match(page,/pulse-verify/);
+ assert.match(page,/pulse-error/);
+ assert.match(page,/if\(!active\)\{seenEvents=current;return;\}/);
+ assert.match(page,/events\.filter\(e=>!seenEvents\.has\(e\.id\)\)/);
+ assert.match(page,/signalQueue\.push/);
+ assert.match(page,/body\.classList\.contains\('still'\)/);
+ assert.match(page,/prefers-reduced-motion:reduce/);
+ assert.match(page,/aria-live="polite"/);
+ assert.match(page,/event-reactor/);
+ assert.match(page,/event-beam/);
+ assert.match(page,/event-wave/);
+});
+test('worker timestamps individual GIS outcomes instead of inventing exact event time',()=>{
+ const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+ assert.match(worker,/status:'needs_review',checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(worker,/status:'retry_later',checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(worker,/status:success\?'published':'publish_pending',checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(source,/const precise=date\(r\.checkedAt\)/);
+ assert.match(source,/approximateTime:!precise/);
+ assert.match(source,/type:'verification_result'/);
+});
