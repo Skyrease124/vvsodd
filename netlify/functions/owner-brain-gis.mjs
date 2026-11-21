@@ -17,7 +17,7 @@ export default async function handler(req){
  if(!queue?.queue||queue.status==='paused')return j(409,{ok:false,error:'Queue unavailable or paused'});
  const item=queue.queue.find(x=>x.dataset===body.dataset&&x.recordId===body.recordId);
  if(!item)return j(404,{ok:false,error:'Case not found'});
- if(item.state!=='MI'||item.county!=='Wayne County')return j(400,{ok:false,error:'Phase 3 pilot supports Wayne County, Michigan only; other county connectors are coming.'});
+ if(item.state!=='MI'||!/^(Wayne|Wayne County)$/i.test(item.county))return j(400,{ok:false,error:'Phase 3 pilot supports Wayne County, Michigan only; other county connectors are coming.'});
  const id=short(item.parcelId,32);
  if(!/^[0-9A-Za-z.-]{4,32}$/.test(id))return j(422,{ok:false,error:'Parcel identifier is not suitable for exact-match GIS lookup'});
  if(item.gis?.status==='candidate_found')return j(200,{ok:true,match:item.gis,note:'Saved GIS candidate returned; no new lookup used.'});

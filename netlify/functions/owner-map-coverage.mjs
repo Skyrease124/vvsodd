@@ -11,7 +11,7 @@ const root='https://pricepocketasset.com';
 const plain=s=>String(s||'').slice(0,250);
 async function readStatic(path) {
   const response=await fetch(root+path,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
-  if(!response.ok)throw Error('Static map data unavailable');
+  if(!response.ok)throw Error('Static map HTTP '+response.status);
   const body=await response.text();
   // The nationwide map index now exceeds the original 500 KB guard. Keep a bounded payload limit.
   const maxBytes=path==='/map/index.json'?8_000_000:12_000_000;
@@ -82,9 +82,9 @@ export default async req=>{
       }else searchNote='Tavily research reached its configured 30-day request cap.';
     }
     const prompt=JSON.stringify({state:d.state,county:d.county,missing:Math.max(0,d.records-d.mapped),availableSourceUrls:urls,tavilySearchResults:webSources,searchNote,task:'How to investigate missing parcels using official sources and available search excerpts without overwriting verified records?'});
-    const out=await complete(cfg,system,prompt,{maxTokens:420,timeoutMs:16000});
+    let out;try{out=await complete(cfg,system,prompt,{maxTokens:420,timeoutMs:16000});}catch(e){console.error('County AI model error:',plain(e?.message));return json(502,{error:'NVIDIA county research could not complete. Published coverage is still available; no parcel was changed.',stage:'ai_model',researchSearchNote:searchNote,webSearched});}
     return json(200,{ok:true,model:out.model,analysis:out.text,verified:false,webSearched,webSources,searchNote,geometryWritten:false,
       warning:'AI planning only. URLs and matches must be independently verified against official county sources.'});
   }catch(e){console.error('Owner map coverage:',String(e?.message||e).slice(0,150));
-    return json(503,{error:'Map coverage is temporarily unavailable. No map data was changed.'});}
+    return json(503,{error:'County research encountered a temporary server or map-data error. No map data was changed.',stage:'coverage_server'});}
 };
