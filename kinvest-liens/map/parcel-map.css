@@ -451,25 +451,38 @@ body.ppa-map-home .pm{
 .pm .pm-spatial-check:disabled{opacity:.6;cursor:wait}
 .pm .pm-spatial-check:focus-visible{outline:3px solid #b1fff2;outline-offset:2px}
 
-/* Responsive collapsible map toolbar. Existing property and parcel layers are untouched. */
-.pm-stack{z-index:12}
-.pm-stack .pm-menu-toggle{display:flex!important;align-items:center;justify-content:center;min-width:42px;min-height:42px;border:1px solid #6aa99c;border-radius:13px;background:#103f3d;color:#fff;box-shadow:0 6px 22px #0007}
-.pm-stack > :not(.pm-menu-toggle):not(.pm-aib){visibility:hidden;opacity:0;pointer-events:none;max-height:0;overflow:hidden;transform:translateY(-6px);transition:opacity .2s ease,transform .2s ease,max-height .25s ease,visibility .25s ease}
-.pm-stack.pm-menu-open > :not(.pm-menu-toggle):not(.pm-aib){visibility:visible;opacity:1;pointer-events:auto;max-height:180px;overflow:visible;transform:none}
-.pm-stack .pm-menu-tools{display:flex;flex-direction:column;gap:4px}
-.pm-stack .pm-gis-toggle:disabled{opacity:.5;cursor:not-allowed}
-.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"search" "canvas" "extra"}
-.ppa-map-home .pm-home-rail{position:absolute;z-index:15;right:8px;top:112px;width:48px;max-height:calc(100% - 120px);padding:0;background:transparent;border:0;overflow:visible;pointer-events:none}
-.ppa-map-home .pm-home-rail .pm-stack{pointer-events:auto;display:flex;flex-direction:column;align-items:stretch;gap:4px}
-.ppa-map-home .pm-home-rail .pm-stack.pm-menu-open{background:#0b2330f2;padding:5px;border:1px solid #4f847e;border-radius:14px;box-shadow:0 10px 28px #0008;max-height:min(55vh,390px);overflow-y:auto}
-.ppa-map-home .pm-home-rail .pm-stack .pm-ib{min-height:40px}
-.ppa-map-home .pm-home-rail .pm-stack > .pm-aib{display:none}
-.ppa-map-home .pm-home-rail .pm-menu-tools{gap:3px}
-@media(max-width:700px){.pmbody:not(.ppa-map-home) .pm-stack{position:fixed;right:12px;top:calc(176px + env(safe-area-inset-top));max-height:calc(100dvh - 320px);overflow-y:auto}.ppa-map-home .pm-home-rail{top:112px}}
-@media(prefers-reduced-motion:reduce){.pm-stack > :not(.pm-menu-toggle):not(.pm-aib){transition:none}}
 
-/* Only the unified floating menu owns these actions; the hidden native geolocate remains callable. */
-.pm-map .maplibregl-ctrl-geolocate,.pm-map .maplibregl-ctrl-zoom-in,.pm-map .maplibregl-ctrl-zoom-out{display:none!important}
-.ppa-map-home .pm-home-rail .pm-stack.pm-menu-open{width:156px;transform:translateX(-108px)}
-.ppa-map-home .pm-home-rail .pm-stack.pm-menu-open .pm-gis-toggle{white-space:normal!important;font-size:11px!important;line-height:1.2}
-.pm-stack .pm-menu-toggle:focus-visible,.pm-stack .pm-ib:focus-visible,.pm-stack .pm-gis-toggle:focus-visible{outline:2px solid #a8fbe0;outline-offset:2px}
+/* Single mobile-friendly map tool dock; native MapLibre zoom/location controls stay functional. */
+.pm-tool-dock{position:relative;z-index:15;pointer-events:auto}
+.pm-tool-trigger{display:flex!important;align-items:center;justify-content:center;gap:6px;width:48px;min-height:46px;border-radius:16px!important;background:#102f37ef!important;border:1px solid #65aa9e!important;color:#e8fff7!important}
+.pm-tool-trigger-label{font-weight:750;font-size:12px}
+.pm-tool-trigger svg{width:19px;height:19px}
+.pm-tool-trigger[aria-expanded=true]{background:#176752!important}
+.pm-tool-menu{position:absolute;top:calc(100% + 8px);right:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:202px;max-height:min(65dvh,490px);overflow:auto;padding:10px;border:1px solid #56887d;border-radius:17px;background:#0a2732f5;box-shadow:0 14px 35px #0007;opacity:0;visibility:hidden;transform:translateY(-7px) scale(.97);transform-origin:top right;transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1),visibility .22s;pointer-events:none}
+.pm-tool-dock.open .pm-tool-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto}
+.pm-tool-menu .pm-ib,.pm-tool-menu .pm-gis-toggle,.pm-tool-menu .pm-tools button{width:100%!important;min-height:44px!important;height:auto!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0!important;border-radius:11px!important;font-size:12px!important;background:#173c47!important;border:1px solid #456875!important;color:#efffff!important;padding:6px!important;box-shadow:none}
+.pm-tool-menu .pm-control-label{display:inline!important;font-size:11px!important}
+.pm-tool-menu .pm-tools{display:contents!important}
+.pm-tool-menu .pm-seg{position:static!important;grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:center;gap:4px;padding:4px}
+.pm-tool-menu .pm-seg[hidden]{display:none!important}
+.pm-tool-menu .pm-seg button{flex:1;min-height:36px;font-size:12px}
+.pm-native-map-controls{grid-column:1/-1;display:flex;justify-content:center;gap:8px}
+.pm-native-map-controls .maplibregl-ctrl-group{display:flex;float:none!important;margin:0!important;background:#173c47;border:1px solid #456875;border-radius:11px;overflow:hidden}
+.pm-native-map-controls button{width:42px!important;height:42px!important}
+.pm-native-map-controls .maplibregl-ctrl-icon{filter:invert(1)}
+.pm-tool-menu :focus-visible,.pm-tool-trigger:focus-visible{outline:2px solid #8ef1c6;outline-offset:2px}
+.ppa-map-home .pm-home-rail{overflow:visible;position:relative;z-index:17}
+.ppa-map-home .pm-home-rail .pm-stack{display:block!important;width:100%}
+.ppa-map-home .pm-home-rail .pm-tool-trigger{width:100%!important;min-height:42px;height:44px!important;padding:4px 0!important;border-radius:12px!important;flex-direction:column;gap:0}
+.ppa-map-home .pm-tool-trigger-label{font-size:10px}
+.ppa-map-home .pm-tool-menu{right:calc(100% + 8px);top:0;transform-origin:top right;max-height:300px}
+.ppa-map-home .pm-tool-dock.open .pm-tool-menu{transform:none}
+.ppa-map-home .pm-home-rail .pm-tool-menu .pm-ib,.ppa-map-home .pm-home-rail .pm-tool-menu .pm-gis-toggle,.ppa-map-home .pm-home-rail .pm-tool-menu .pm-tools button{width:100%!important;min-height:42px!important;display:flex!important}
+.ppa-map-home .pm-tool-menu .pm-control-label{display:block!important;font-size:11px!important}
+@media(max-width:979px){
+  body:not(.ppa-map-home) .pm-stack{top:125px;right:8px}
+  body:not(.ppa-map-home) .pm-tool-menu{right:0;top:calc(100% + 8px)}
+  body:not(.ppa-map-home) .pm-tool-trigger{width:49px!important;min-height:48px!important;padding:4px!important}
+  body:not(.ppa-map-home) .pm-tool-trigger-label{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.pm-tool-menu{transition:none}}
