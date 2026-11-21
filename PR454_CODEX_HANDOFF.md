@@ -37,3 +37,10 @@ Previously observed in isolated PR #453 user screenshots: Wayne cursor 3, verifi
 ## Handoff rule
 
 All subsequent coding/analysis must begin by inspecting **PR #454 HEAD**, and must commit further work to `integration/brain-map-452-453-preserve` (same PR #454). PR #452 and #453 are historical comparisons only. Report which tests truly passed, which UI interactions were actually checked, which files changed, what remains unverified, and any production blockers. Avoid unnecessary Netlify builds/credits. There is **no green-light for production** yet.
+
+## 2026-11-21 preview discovery / CI update
+
+- GitHub Actions run **44963263868** completed **SUCCESS** on head `e310488c1a508ee6ea3ed8b6f9a626ef65eff01b` before this note. All 17 Node test steps passed, including county progress, activity log, Wayne worker, internal publishing, isolated preview and MapTiler contract tests. This verifies automated simulations and static contracts, not live site UI.
+- PR #454 originally targeted `brain-to-map-pipeline`, which Netlify did not show in its Deploy Previews; its base was changed to `claude/engineering-workspace` (production *branch*, NOT production deployment), leaving PR **DRAFT** to enable Netlify to discover the isolated #454 Deploy Preview. Never merge PR #454 without explicit owner approval.
+- Netlify's latest five deployments at inspection were all PR #453, so **PR #454 preview has NOT yet been confirmed deployed**. Check for an actual #454 Netlify deployment before sharing a working preview link.
+- This handoff commit also prompts Netlify/GitHub build hooks to refresh the PR head. Keep production scheduling OFF. Existing PR #452/#453 saved data remain separate from PR #454 preview Blob namespace.
