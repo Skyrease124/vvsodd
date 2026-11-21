@@ -85,7 +85,23 @@
       const row = mk('div', 'row'), save = mk('button', 'btn small', 'Save key'), test = mk('button', 'btn small ghost', 'Test it'), clr = mk('button', 'btn small ghost', 'Remove');
       const out = mk('pre', ''); save.type = test.type = clr.type = 'button';
       save.onclick = async () => { if (!inp.value.trim()) return; save.disabled = true; const r = await api({name: k.name, value: inp.value}); inp.value = ''; save.disabled = false; if (!r.ok) { out.textContent = r.error; out.className = 'bad'; } else draw(r); };
-      test.onclick = async () => { if(k.name==='FLORIDA_PROPERTY_API_KEY' && !confirm('Florida Property API may charge 1 trial credit for this connection test. Continue?')) return;if(k.name==='GEOCODE_MAPS_CO_API_KEY' && !confirm('Test Geocode.maps.co with one geocoding request? This can count toward your free usage allowance.')) return; out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name], ...(k.name==='FLORIDA_PROPERTY_API_KEY'?{allowTrialCredit:true}:{})});
+      test.onclick = async () => { 
+        if(k.name==='MAPTILER_API_KEY'){
+          out.className='';out.textContent='Testing your MapTiler key from this website…';
+          try{
+            const configResponse=await fetch('/.netlify/functions/owner-maptiler-preview',{credentials:'same-origin',cache:'no-store'});
+            const config=await configResponse.json();
+            if(!configResponse.ok||!config.ok||!config.configured||!config.key)throw Error(config.error||'MapTiler key not available. Save it first.');
+            const url='https://api.maptiler.com/maps/streets-v4/style.json?'+new URLSearchParams({key:config.key});
+            const response=await fetch(url,{referrerPolicy:'strict-origin-when-cross-origin',cache:'no-store'});
+            if(!response.ok)throw Error('MapTiler returned HTTP '+response.status+'. Verify your API key and allowed HTTP origins.');
+            const style=await response.json();
+            if(!style||style.version!==8||!Array.isArray(style.layers))throw Error('MapTiler did not return a valid map style.');
+            out.className='good';out.textContent='MapTiler connected! Streets style loaded successfully from pricepocketasset.com. Open the private MapTiler preview to test satellite and 3D terrain.';
+          }catch(e){out.className='bad';out.textContent='MapTiler test failed: '+(e.message||'Network error')+'. Check allowed HTTP origins (pricepocketasset.com) and your MapTiler plan.';}
+          return;
+        }
+        if(k.name==='FLORIDA_PROPERTY_API_KEY' && !confirm('Florida Property API may charge 1 trial credit for this connection test. Continue?')) return;if(k.name==='GEOCODE_MAPS_CO_API_KEY' && !confirm('Test Geocode.maps.co with one geocoding request? This can count toward your free usage allowance.')) return; out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name], ...(k.name==='FLORIDA_PROPERTY_API_KEY'?{allowTrialCredit:true}:{})});
         if (!r.ok) { out.className = 'bad'; out.textContent = 'Test failed: ' + (r.error || 'unknown'); return; }
         if (r.nlr) { out.className = 'good'; out.textContent = ({GEOCODE_MAPS_CO_API_KEY:'Geocode.maps.co', WEATHERAPI_KEY: 'WeatherAPI', DATAGOV_KEY: 'api.data.gov', GOOGLE_VISION_KEY: 'Google', RENTCAST_KEY: 'RentCast', CENSUS_KEY: 'Census', BLS_KEY: 'BLS', LIVEKIT_URL: 'LiveKit', LIVEKIT_API_KEY: 'LiveKit', LIVEKIT_API_SECRET: 'LiveKit', CONGRESS_API_KEY: 'Congress.gov', ONESIGNAL_REST_API_KEY: 'OneSignal'}[k.name] || 'NLR') + ' answered: key works. ' + r.text; return; }
         if (r.firms) { out.className = 'good'; out.textContent = 'NASA FIRMS answered: key works. ' + r.fires + ' fire detection(s) in the last 2 days within 50 miles of a test spot in central California' + (r.partial ? ' (one satellite feed did not answer)' : '') + '.'; return; }
