@@ -7,7 +7,7 @@ const scope=new AsyncLocalStorage();
 // File-based build uploads target the default deploy store, not a named store.
 // Isolated from production by a dedicated, fixed preview-only namespace.
 // Unlike a deploy store, a site-level store survives newer PR #452 previews.
-const previewStore=()=>getStore({name:'ppa-brain-preview-pr452',consistency:'strong'});
+const previewStore=()=>getStore({name:'ppa-brain-preview-integration',consistency:'strong'});
 const previewSeed=()=>getDeployStore({consistency:'strong'});
 const SEEDED=new Set(['brain-source-events-v1','owner-brain-approvals-v1',
  'brain-map-county-v1-MI-wayne','brain-map-history-v1','brain-map-publication-status-v1']);
