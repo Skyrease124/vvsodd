@@ -30,6 +30,15 @@
     <label for="tavilyCap">Tavily research search limit per 30-day window</label>
     <input id="tavilyCap" type="number" min="0" max="1000" value="500">
     <p class="st">The cap applies to automated county research searches, not the key connection test. Other providers require separate integration before fallback can be enabled.</p>
+    <hr style="border:0;border-top:1px solid #2a3c66;margin:18px 0">
+    <h2>Groq — Fast Parcel Processor</h2>
+    <p class="st">Save and test your key above. Groq is an optional NVIDIA specialist; connecting the key does not yet enable automatic parcel processing.</p>
+    <label><input id="groqEnabled" type="checkbox" checked style="width:auto"> Enable Groq brain cell</label>
+    <label for="groqDailyCap">Groq daily request cap (0–1000)</label>
+    <input id="groqDailyCap" type="number" min="0" max="1000" value="800" inputmode="numeric">
+    <label for="groqMinuteCap">Groq per-minute request cap (1–30)</label>
+    <input id="groqMinuteCap" type="number" min="1" max="30" value="20" inputmode="numeric">
+    <p class="st">Caps apply to this owner's Groq connection tests now, and must also be enforced by the future NVIDIA-to-Groq processing integration. Other Groq model/token limits may be stricter. Use a Groq Free account to prevent paid usage.</p>
     <button id="saveResearchControls" class="btn small" type="button">Save research limits</button>
     <p id="researchStatus" class="st" role="status"></p>
   </section>
@@ -37,10 +46,10 @@
 <script>
 (function () {
   const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-  const TEST = {TAVILY_API_KEY:'tavily',GA511_KEY: 'ga', AZ511_KEY: 'az', WI511_KEY: 'wi', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', CONGRESS_API_KEY: 'congress', LIVEKIT_URL: 'livekit', LIVEKIT_API_KEY: 'livekit', LIVEKIT_API_SECRET: 'livekit', ONESIGNAL_REST_API_KEY: 'onesignal'};
+  const TEST = {GROQ_API_KEY:'groq',TAVILY_API_KEY:'tavily',GA511_KEY: 'ga', AZ511_KEY: 'az', WI511_KEY: 'wi', FIRMS_MAP_KEY: 'firms', NLR_API_KEY: 'nlr', WEATHERAPI_KEY: 'wx', DATAGOV_KEY: 'gov', GOOGLE_VISION_KEY: 'vision', RENTCAST_KEY: 'rentcast', CENSUS_KEY: 'census', BLS_KEY: 'bls', CONGRESS_API_KEY: 'congress', LIVEKIT_URL: 'livekit', LIVEKIT_API_KEY: 'livekit', LIVEKIT_API_SECRET: 'livekit', ONESIGNAL_REST_API_KEY: 'onesignal'};
   async function api(body) { const r = await fetch('/.netlify/functions/ownerkeys', body ? {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)} : {}); return r.json().catch(() => ({ok: false, error: 'No answer.'})); }
   function draw(d) {
-    if(d.researchControls){$('tavilyEnabled').checked=!!d.researchControls.tavilyEnabled;$('tavilyCap').value=d.researchControls.tavilyMonthlyCap;}
+    if(d.researchControls){$('tavilyEnabled').checked=!!d.researchControls.tavilyEnabled;$('tavilyCap').value=d.researchControls.tavilyMonthlyCap;$('groqEnabled').checked=!!d.researchControls.groqEnabled;$('groqDailyCap').value=d.researchControls.groqDailyCap;$('groqMinuteCap').value=d.researchControls.groqMinuteCap;}
     const box = $('list'); box.textContent = '';
     if (!d.ok) { box.appendChild(mk('p', 'notice', d.error || 'Could not load.')); return; }
     d.keys.forEach(k => {
@@ -60,7 +69,7 @@
       row.append(save, test); if (k.set && k.source === 'Saved here') row.append(clr); c.append(row, out); box.appendChild(c);
     });
   }
-  $('saveResearchControls').onclick=async()=>{const cap=Number($('tavilyCap').value);if(!Number.isInteger(cap)||cap<0||cap>1000){$('researchStatus').textContent='Choose a whole number from 0 to 1000.';return;}const r=await api({action:'researchControls',tavilyEnabled:$('tavilyEnabled').checked,tavilyMonthlyCap:cap});$('researchStatus').textContent=r.ok?'Saved on the server.':'Could not save: '+(r.error||'Unknown error');};
+  $('saveResearchControls').onclick=async()=>{const cap=Number($('tavilyCap').value);if(!Number.isInteger(cap)||cap<0||cap>1000){$('researchStatus').textContent='Choose a whole number from 0 to 1000.';return;}const groqDay=Number($('groqDailyCap').value),groqMinute=Number($('groqMinuteCap').value);if(!Number.isInteger(groqDay)||groqDay<0||groqDay>1000||!Number.isInteger(groqMinute)||groqMinute<1||groqMinute>30){$('researchStatus').textContent='Groq limits must be whole numbers: 0–1000 daily and 1–30 per minute.';return;}const r=await api({action:'researchControls',tavilyEnabled:$('tavilyEnabled').checked,tavilyMonthlyCap:cap,groqEnabled:$('groqEnabled').checked,groqDailyCap:groqDay,groqMinuteCap:groqMinute});$('researchStatus').textContent=r.ok?'Saved on the server.':'Could not save: '+(r.error||'Unknown error');};
   api().then(draw);
 })();
 </script>

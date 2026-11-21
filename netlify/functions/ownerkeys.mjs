@@ -26,16 +26,39 @@ export default async function handler(req) {
   await KEYS.load(true);
   const list = () => Object.keys(KEYS.NAMES).map(n => { const env = !!process.env[n], k = KEYS.keyOf(n); return { name: n, label: KEYS.NAMES[n], set: !!k, hint: k ? '…' + k.slice(-4) : '', source: env ? 'Netlify setting' : k ? 'Saved here' : '' }; });
   const configKey='owner-ai-research-api-controls';
-  const controls=async()=>({tavilyEnabled:true,tavilyMonthlyCap:500,...(await auth.kvGet(configKey)||{})});
+  const controls=async()=>({tavilyEnabled:true,tavilyMonthlyCap:500,groqEnabled:true,groqDailyCap:800,groqMinuteCap:20,...(await auth.kvGet(configKey)||{})});
   if (req.method === 'GET') return json(200, { ok: true, keys: list(), researchControls: await controls() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
   if (b.action === 'researchControls') {
     const current=await controls();
     const next={tavilyEnabled:typeof b.tavilyEnabled==='boolean'?b.tavilyEnabled:current.tavilyEnabled,
-      tavilyMonthlyCap:Number.isInteger(b.tavilyMonthlyCap)&&b.tavilyMonthlyCap>=0&&b.tavilyMonthlyCap<=1000?b.tavilyMonthlyCap:current.tavilyMonthlyCap};
+      tavilyMonthlyCap:Number.isInteger(b.tavilyMonthlyCap)&&b.tavilyMonthlyCap>=0&&b.tavilyMonthlyCap<=1000?b.tavilyMonthlyCap:current.tavilyMonthlyCap,
+      groqEnabled:typeof b.groqEnabled==='boolean'?b.groqEnabled:current.groqEnabled,
+      groqDailyCap:Number.isInteger(b.groqDailyCap)&&b.groqDailyCap>=0&&b.groqDailyCap<=1000?b.groqDailyCap:current.groqDailyCap,
+      groqMinuteCap:Number.isInteger(b.groqMinuteCap)&&b.groqMinuteCap>=1&&b.groqMinuteCap<=30?b.groqMinuteCap:current.groqMinuteCap};
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
+  }
+  if (b.test === 'groq') {
+    const key=KEYS.keyOf('GROQ_API_KEY');
+    if (!key) return json(200,{ok:false,error:'Save a Groq API key first.'});
+    const settings=await controls();
+    if (!settings.groqEnabled) return json(200,{ok:false,error:'Groq is switched off in AI Research Controls.'});
+    if (!settings.groqDailyCap) return json(200,{ok:false,error:'Groq daily cap is 0. Increase it to test.'});
+    // Include connection tests in both rate counters, so testing cannot bypass the owner-configured limits.
+    if (!(await RL.hit('owner-groq-daily',settings.groqDailyCap,86400000)).ok) return json(200,{ok:false,error:'Groq daily request cap reached.'});
+    if (!(await RL.hit('owner-groq-minute',settings.groqMinuteCap,60000)).ok) return json(200,{ok:false,error:'Groq per-minute request cap reached.'});
+    try {
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
+        body:JSON.stringify({model:'openai/gpt-oss-120b',messages:[{role:'user',content:'Reply with exactly OK.'}],max_completion_tokens:32}),
+        signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return json(200,{ok:false,error:'Groq connection test returned HTTP '+r.status+(r.status===429?' (account model limit reached).':'')});
+      const data=await r.json();
+      const answer=String(data.choices?.[0]?.message?.content||'').trim().slice(0,90);
+      return json(200,{ok:true,nlr:true,text:'Groq connected (GPT-OSS 120B).'+(answer?' Test reply: '+answer:'')+' This test consumes a free-tier request if available.'});
+    } catch(e){console.warn('Groq connection test failed:',String(e?.message||e).slice(0,80));return json(200,{ok:false,error:'Groq did not respond. Check the key and try later.'});}
   }
   if (b.test === 'tavily') {
     const key=KEYS.keyOf('TAVILY_API_KEY');
