@@ -34,6 +34,30 @@
    const c=d.current;
    status.textContent='County '+c.position+' of '+c.total+': '+c.county+', '+c.state+' · '+d.state.replaceAll('_',' ');
    details.append(line('Records: '+c.records.toLocaleString()+' · Baseline mapped: '+c.baselineMapped.toLocaleString()+' · Verified correction entries: '+c.verifiedCorrections.toLocaleString()+' · Estimated remaining: '+c.estimatedRemaining.toLocaleString()));
+   // Use only existing mapped records and verified published polygon corrections.
+   // A partial percentage remains visible as 0.02% rather than rounding to zero.
+   const total=Math.max(0,Number(c.records)||0);
+   const completed=Math.min(total,Math.max(0,(Number(c.baselineMapped)||0)+(Number(c.verifiedCorrections)||0)));
+   const percent=total?completed/total*100:0;
+   const progress=document.createElement('div');
+   progress.style.cssText='margin:14px 0 18px';
+   const progressLabel=document.createElement('div');
+   progressLabel.style.cssText='display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px;font-weight:700';
+   const title=document.createElement('span');title.textContent='County mapping progress';
+   const value=document.createElement('span');value.style.color='#79e2c2';value.style.fontVariantNumeric='tabular-nums';
+   value.textContent=(percent>0&&percent<1?percent.toFixed(2):percent.toFixed(1))+'%';
+   progressLabel.append(title,value);
+   const track=document.createElement('div');
+   track.setAttribute('role','progressbar');track.setAttribute('aria-label','Verified county mapping progress');
+   track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',percent.toFixed(4));
+   track.style.cssText='height:12px;background:#304858;border-radius:999px;overflow:hidden';
+   const fill=document.createElement('div');
+   fill.style.cssText='height:100%;width:'+percent.toFixed(4)+'%;background:linear-gradient(90deg,#35cfa8,#80edc8);border-radius:999px;transition:width .4s ease';
+   track.append(fill);
+   const foot=document.createElement('p');foot.style.cssText='color:#a7c7d0;font-size:13px;margin:8px 0 0';
+   foot.textContent=completed.toLocaleString()+' of '+total.toLocaleString()+' mapped or verified · '+(total-completed).toLocaleString()+' remaining (estimated)';
+   progress.append(progressLabel,track,foot);
+   details.append(progress);
    details.append(line('Queue: '+d.queue.cases+' cases · '+d.queue.staged+' staged · '+d.queue.needsReview+' needing review · '+d.queue.publishedHistory+' publication history entries'));
    details.append(line('Agent activity: Official GIS '+d.agents.official.state+' · Photon '+d.agents.photon.state+' · Geoapify '+d.agents.geoapify.state+' · Publisher '+d.agents.publisher.state));
    if(c.blocker){const warning=line('Blocked: '+c.blocker);warning.style.color='#f0cb86';details.append(warning);}
