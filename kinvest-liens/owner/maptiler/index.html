@@ -42,6 +42,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 'use strict';
 const $=id=>document.getElementById(id);
 let key='',map=null,terrain=false,currentData=null,detail=null;
+let previewUpdateRunning=false;
 const msg=(text,isError=false)=>{$('status').textContent=text;$('status').className=isError?'error':'muted'};
 const styleUrl=id=>'https://api.maptiler.com/maps/'+id+'/style.json?key='+encodeURIComponent(key);
 const terrainUrl=()=>'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key='+encodeURIComponent(key);
@@ -76,6 +77,18 @@ async function loadData(){
  const data=JSON.parse(raw);if(!Array.isArray(data.recs))throw Error('No parcel records in dataset');
  if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data).catch(()=>{});}return data;
 }
+// Update the same parcel overlays while the private preview remains open.
+async function refreshCurrentPreview(){
+ if(document.hidden||previewUpdateRunning||!currentData||!map||!window.PPABrainMap)return;
+ previewUpdateRunning=true;
+ try{
+  const result=await window.PPABrainMap.apply(currentData);
+  if(result.changed&&map?.isStyleLoaded())overlay();
+ }catch(_){/* Existing verified data is retained if the feed is temporarily unreachable. */}
+ finally{previewUpdateRunning=false;}
+}
+setInterval(refreshCurrentPreview,120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCurrentPreview()});
 function readyMap(){
  if(!map)return;
  overlay();

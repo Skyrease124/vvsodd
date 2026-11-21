@@ -1295,9 +1295,9 @@
     try { IDX = await api('/map/index.json'); } catch (e) { ($('pmResults') || $('pmAiBox')).textContent = 'The map data could not be loaded. Please try again.'; return; }
     const account = (embedded ? window.parent.ppaAccount : window.ppaAccount) || fetch('/.netlify/functions/account', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d?.user || null);
     account.then(u => { signedIn = !!u; paid = !!(u && (u.owner || u.paid)); acctDone = true; if (sel) popup(sel); afterAccount(); loadResearch(); }).catch(() => { acctDone = true; afterAccount(); loadResearch(); });
-    if (workspace) return;
     setInterval(refreshVerifiedOverlays,120000);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVerifiedOverlays();});
+    if (workspace) return;
     buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => openAi()); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
     try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
   }
