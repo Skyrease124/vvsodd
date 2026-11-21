@@ -14,8 +14,8 @@ async function read(url,max=12000000){
  return data;
 }
 function eligible(r){
- return r?.i&&/^[0-9]{8}\\.?$/.test(String(r.p||''))&&!r.g&&!r.cx&&
-  /^\\s*\\d{1,6}\\s+[A-Za-z0-9][^,]{2,75},?\\s+Detroit\\b/i.test(String(r.a||''));
+ return r?.i&&/^[0-9]{8}\.?$/.test(String(r.p||''))&&!r.g&&!r.cx&&
+  /^\s*\d{1,6}\s+[A-Za-z0-9][^,]{2,75},?\s+Detroit\b/i.test(String(r.a||''));
 }
 async function handler(req,context){
  if(context?.deploy?.context!=='deploy-preview'||!auth.isBrainPreview())return json(404,{ok:false,error:'Preview only'});
@@ -36,7 +36,7 @@ async function handler(req,context){
   const selected=records.filter(r=>eligible(r)&&!saved.records?.[r.i]).slice(0,3);
   const results=[];
   for(const record of selected){
-   const id=String(record.p).replace(/\\.$/,'');
+   const id=String(record.p).replace(/\.$/,'');
    const where="parcel_number IN ('"+id+"','"+id+".')";
    const url=DETROIT_GIS+'/query?'+new URLSearchParams({f:'json',where,
     outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
