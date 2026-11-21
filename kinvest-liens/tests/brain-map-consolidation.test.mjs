@@ -120,8 +120,8 @@ test('owner re-arms exact exhausted parcel without moving cursor or resetting qu
 
 test('integration candidate preserves PR 452 preview blob namespace separate from production',()=>{
  const auth=fs.readFileSync('netlify/lib/brain-auth.mjs','utf8');
- assert.match(auth,/ppa-brain-preview-pr452/);
- assert.doesNotMatch(auth,/ppa-brain-preview-pr453/);
+ assert.match(auth,/ppa-brain-preview-integration/);
+ assert.doesNotMatch(auth,/ppa-brain-preview-pr452|ppa-brain-preview-pr453/);
  assert.match(auth,/context\.deploy\.context==='deploy-preview'/);
  assert.match(auth,/if\(!isolated\(k\)\)return auth\.kvGet\(k\)/);
 });
@@ -131,7 +131,7 @@ test('release queue pause controls never access production store on preview',()=
  const auth=fs.readFileSync('netlify/lib/brain-auth.mjs','utf8');
  assert.match(queue,/import \* as auth from '\.\.\/lib\/brain-auth\.mjs'/);
  assert.match(queue,/export default auth\.withBrainStore\(handler\)/);
- assert.match(auth,/ppa-brain-preview-pr452/);
+ assert.match(auth,/ppa-brain-preview-integration/);
  const seeded=auth.match(/const SEEDED=new Set\(\[([\s\S]*?)\]\)/)?.[1]||'';
  assert.doesNotMatch(seeded,/owner-brain-scanner-v1/);
  assert.match(queue,/if\(action==='pause'\|\|action==='resume'\)/);
