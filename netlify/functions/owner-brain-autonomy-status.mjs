@@ -7,7 +7,8 @@ async function handler(req,context){
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user?.owner)return reply(user?403:401,{ok:false,error:'Owner access required'});
  const preview=auth.isBrainPreview();
- const configured=typeof Netlify!=='undefined'&&Netlify.env.get('PPA_WAYNE_AUTORUN_ENABLED')==='true';
+ const configuredState=await auth.kvGet('owner-brain-wayne-scheduler-control-v1');
+ const configured=configuredState?.enabled===true&&configuredState?.approvedForProduction===true;
  const [worker,control,audit]=await Promise.all([
   auth.kvGet('owner-brain-wayne-worker-v1'),
   auth.kvGet('owner-brain-scanner-v1'),
@@ -22,7 +23,7 @@ async function handler(req,context){
  ];
  return reply(200,{ok:true,preview,environment:context?.deploy?.context||'unknown',
   unattendedProductionEnabled:!preview&&configured,scheduledFrequencyMinutes:30,
-  previewRequiresOpenDashboard:true,
+  previewRequiresOpenDashboard:true,websiteControlledSchedule:true,
   worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),state:String(worker?.state||'not_started'),
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
    lastCompleted:worker?.lastCompleted||null,dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30},
