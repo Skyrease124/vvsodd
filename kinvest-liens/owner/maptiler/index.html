@@ -74,7 +74,7 @@ async function loadData(){
  if(!response.ok)throw Error('Parcel dataset unavailable');
  const raw=await response.text();if(raw.length>12000000)throw Error('Dataset exceeds preview size limit');
  const data=JSON.parse(raw);if(!Array.isArray(data.recs))throw Error('No parcel records in dataset');
- if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data);}return data;
+ if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data).catch(()=>{});}return data;
 }
 function readyMap(){
  if(!map)return;
