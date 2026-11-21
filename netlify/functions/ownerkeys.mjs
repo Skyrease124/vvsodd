@@ -40,6 +40,22 @@ export default async function handler(req) {
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
   }
+  if(b.test==='geoapify'){
+   const key=KEYS.keyOf('GEOAPIFY_API_KEY');
+   if(!key)return json(200,{ok:false,error:'Save Geoapify key first.'});
+   const day=new Date().toISOString().slice(0,10),usageKey='owner-brain-geoapify-usage-v1';
+   let usage=await auth.kvGet(usageKey)||{day,used:0};
+   if(usage.day!==day)usage={day,used:0};
+   if(usage.used>=300)return json(200,{ok:false,error:'Geoapify daily budget reached.'});
+   usage.used++;await auth.kvPut(usageKey,usage);
+   try{
+    const url='https://api.geoapify.com/v1/geocode/search?'+new URLSearchParams({text:'90 Chandler, Detroit MI 48202',limit:'1',filter:'countrycode:us',apiKey:key});
+    const response=await fetch(url,{signal:AbortSignal.timeout(8500)});
+    if(!response.ok)return json(200,{ok:false,error:'Geoapify HTTP '+response.status+' (check key, quota and restrictions).'});
+    const body=await response.json();if(!Array.isArray(body.features))throw Error();
+    return json(200,{ok:true,nlr:true,text:'Geoapify responded. '+body.features.length+' result(s); this test used one call from the 300/day safety budget.'});
+   }catch{return json(200,{ok:false,error:'Geoapify connection test failed or timed out.'});}
+  }
   if (b.test === 'geocodemaps') {
     const key=KEYS.keyOf('GEOCODE_MAPS_CO_API_KEY');
     if(!key)return json(200,{ok:false,error:'Save the Geocode.maps.co API key first.'});
