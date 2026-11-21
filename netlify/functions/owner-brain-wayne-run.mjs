@@ -15,8 +15,8 @@ const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const today=()=>new Date().toISOString().slice(0,10);
 const valid=r=>r?.i&&/^[0-9]{8}\.?$/.test(String(r.p||''))&&!r.g&&!r.cx&&
   /^\s*\d{1,6}\s+[A-Za-z0-9][^,]{2,75},?\s+Detroit\b/i.test(String(r.a||''));
-async function get(url,max=12000000){
- const res=await fetch(url,{signal:AbortSignal.timeout(8500)});
+async function get(url,max=12000000,timeout=8500){
+ const res=await fetch(url,{signal:AbortSignal.timeout(timeout)});
  if(!res.ok)throw Error('Source HTTP '+res.status);
  const raw=await res.text();
  if(Buffer.byteLength(raw)>max)throw Error('Source too large');
@@ -78,6 +78,29 @@ async function handler(req,context){
   // Netlify scheduled invocations have a shorter 30-second limit.
   // Keep their batch to one parcel, using exactly the same verification path.
   const maxThisRun=scheduled?1:MAX_ATTEMPTS;
+  // Charge every actual GIS HTTP request, including fallback, to the daily cap.
+  async function officialGet(url,recordIndex,timeout=6500){
+   if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
+   if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
+   s.dailyUsed++;
+   await auth.kvPut(STORE,{...s,cursor:recordIndex});
+   return get(url,1000000,timeout);
+  }
+  function queryUrl(params){return DETROIT_GIS+'/query?'+new URLSearchParams({f:'json',outFields:'parcel_number,address,object_id',...params});}
+  async function lookupWithObjectId(parcelId,recordIndex){
+   // Lightweight identifier-only request, then indexed geometry lookup.
+   // Never choose an arbitrary object ID or fallback to coordinates/geocoding.
+   const bare=parcelId.replace(/\.$/,'');
+   const ids=await officialGet(queryUrl({where:"parcel_number IN ('"+bare+"','"+bare+".')",returnIdsOnly:'true',returnGeometry:'false'}),recordIndex,5500);
+   const objectIds=ids.objectIds;
+   if(!Array.isArray(objectIds)||objectIds.length!==1||!Number.isSafeInteger(objectIds[0])||objectIds[0]<=0)
+    throw Object.assign(Error('Official object ID missing or ambiguous'),{code:'AMBIGUOUS'});
+   const official=await officialGet(queryUrl({objectIds:String(objectIds[0]),returnGeometry:'true',outSR:'4326',resultRecordCount:'2'}),recordIndex,6500);
+   if(!Array.isArray(official.features)||official.features.length!==1||
+      official.features[0]?.attributes?.object_id!==objectIds[0])
+    throw Object.assign(Error('Official object ID lookup mismatch'),{code:'AMBIGUOUS'});
+   return official;
+  }
   while(i<rows.length&&result.attempted<maxThisRun&&s.dailyUsed<MAX_PER_DAY){
    const controlNow=await auth.kvGet(CONTROL);
    if(controlNow?.status==='paused'){s.state='paused';break;}
@@ -85,16 +108,31 @@ async function handler(req,context){
    if(!valid(r)||overlay.records?.[r?.i]){i++;continue;}
    const id=String(r.p).replace(/\.$/,'');
    if(s.retry&&(s.retry.parcelId!==id||s.retry.cursor!==i))s.retry=null;
-   // Reserve the quota before each remote request. Advance cursor only after
-   // a completed match/mismatch, never after transient HTTP/provider failures.
-   s.dailyUsed++;result.attempted++;
-   await auth.kvPut(STORE,{...s,cursor:i});
-   const url=DETROIT_GIS+'/query?'+new URLSearchParams({f:'json',where:"parcel_number IN ('"+id+"','"+id+".')",
-    outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
-   let official,verified;
+   // Count one parcel attempt; GIS request usage is counted separately.
+   result.attempted++;
+   const url=queryUrl({where:"parcel_number IN ('"+id+"','"+id+".')",
+    returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
+   let official,verified,method='direct';
    try{
-    official=await get(url,1000000);
+    try{
+     official=await officialGet(url,i,6500);
+    }catch(primary){
+     if(primary.code==='PAUSED'||primary.code==='QUOTA')throw primary;
+     // Only a provider timeout triggers the extra official object-ID lookup.
+     if(primary.name!=='TimeoutError'&&primary.name!=='AbortError'&&!/timed?\s*out|aborted/i.test(String(primary.message)))
+      throw primary;
+     method='indexed_object_id';
+     official=await lookupWithObjectId(id,i);
+    }
    }catch(e){
+    if(e.code==='PAUSED'){s.state='paused';break;}
+    if(e.code==='QUOTA'){s.state='quota_reached';break;}
+    if(e.code==='AMBIGUOUS'){
+     result.needsReview++;i++;
+     result.rows.push({parcelId:id,status:'needs_review',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110)});
+     s.retry=null;
+     continue;
+    }
     result.failures++;
     const attempts=(s.retry?.parcelId===id?s.retry.attempts:0)+1;
     const exhausted=attempts>=3;
@@ -133,7 +171,7 @@ async function handler(req,context){
    await publish(req,context);
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const success=published.records?.[r.i]?.verifiedGeometry===true;
-   result.rows.push({parcelId:id,status:success?'published':'publish_pending',checkedAt:new Date().toISOString()});
+   result.rows.push({parcelId:id,status:success?'published':'publish_pending',lookupMethod:method,checkedAt:new Date().toISOString()});
    if(success)result.published++;
    else {s.state='publish_pending';break;}
    i++;
