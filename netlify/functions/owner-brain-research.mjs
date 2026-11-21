@@ -1,13 +1,13 @@
 // Owner-confirmed Groq triage for one queued parcel; never writes to published map data.
 // No source browsing or GIS verification: this produces a checklist, not parcel coordinates.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 const STORE='owner-brain-scanner-v1';
 const CFG='owner-ai-research-api-controls';
 const j=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const clean=s=>String(s??'').slice(0,240);
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='POST')return j(405,{ok:false,error:'POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return j(me?403:401,{ok:false,error:'Owner access required'});
@@ -55,3 +55,5 @@ export default async function handler(req){
  await auth.kvPut(STORE,current);
  return j(200,{ok:true,triage,recordId:r.recordId,dataset:r.dataset});
 }
+
+export default auth.withBrainStore(handler);

@@ -1,12 +1,12 @@
 // Owner-confirmed Florida Property API exact ID lookup. Private review candidate only.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1';
 const j=(code,data)=>new Response(JSON.stringify(data),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const trim=(s,n=200)=>String(s??'').slice(0,n);
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='POST')return j(405,{ok:false,error:'POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return j(me?403:401,{ok:false,error:'Owner only'});
@@ -51,3 +51,5 @@ export default async function handler(req){
  latest.updatedAt=new Date().toISOString();await auth.kvPut(STORE,latest);
  return j(200,{ok:true,match});
 }
+
+export default auth.withBrainStore(handler);

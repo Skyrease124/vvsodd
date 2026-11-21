@@ -2,7 +2,7 @@
 // Five address lookups per scheduled run, 30 request hard ceiling per UTC day.
 // Research candidates are saved to dedicated Netlify Blobs; NO map, parcel, queue,
 // ownership, GIS, or publication writes. The service may rate-limit any volume.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const ROOT='https://pricepocketasset.com',STATUS='owner-brain-photon-status-v1',USAGE='photon-owner-search-usage-v1';
 const FILE_PREFIX='owner-brain-photon-dataset-v1-',MAX_CALLS=5,DAILY_LIMIT=30,MAX_FILES=5;
 const clean=s=>String(s??'').replace(/\s+/g,' ').trim();
@@ -36,7 +36,7 @@ async function search(address){
  const data=JSON.parse(raw);if(!Array.isArray(data.features))throw Error('Invalid Photon response');
  return {results:data.features.slice(0,3).map(summarize).filter(Boolean)};
 }
-export default async function(){
+async function handler(){
  const day=new Date().toISOString().slice(0,10);
  const prev=await auth.kvGet(STATUS)||{runs:0,checked:0,candidateGroups:0,nextDataset:0,recent:[]};
  const status={...prev,runs:(prev.runs||0)+1,lastStarted:new Date().toISOString(),state:'running',lastError:null};
@@ -116,3 +116,5 @@ export default async function(){
  }
 }
 export const config={schedule:'45 */4 * * *'};
+
+export default auth.withBrainStore(handler);

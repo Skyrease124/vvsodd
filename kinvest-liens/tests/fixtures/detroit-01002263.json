@@ -1,0 +1,37 @@
+{
+  "source": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0",
+  "retrievedAt": "2026-11-21T15:59:58.531Z",
+  "feature": {
+    "attributes": {
+      "parcel_number": "01002263.",
+      "address": "90 CHANDLER",
+      "object_id": 279374
+    },
+    "geometry": {
+      "rings": [
+        [
+          [
+            -83.0742092,
+            42.3745529
+          ],
+          [
+            -83.0740273,
+            42.37462
+          ],
+          [
+            -83.0737827999999,
+            42.3742694000001
+          ],
+          [
+            -83.0739647999999,
+            42.3742013
+          ],
+          [
+            -83.0742092,
+            42.3745529
+          ]
+        ]
+      ]
+    }
+  }
+}

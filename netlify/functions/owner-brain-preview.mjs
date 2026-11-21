@@ -1,7 +1,7 @@
 // Phase 6 — strict, read-only map repair dry run.
 // No provider API calls, no GitHub writes, no Netlify writes, and no changes to published maps.
 import crypto from 'node:crypto';
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const ROOT='https://pricepocketasset.com';
 const LEDGER='owner-brain-approvals-v1';
 const snap=s=>String(s??'').slice(0,240);
@@ -15,7 +15,7 @@ async function jsonFile(path,max){
  if(Buffer.byteLength(raw,'utf8')>max)throw new Error('Map data exceeds maximum read size');
  return {data:JSON.parse(raw),sha256:hash(raw),bytes:Buffer.byteLength(raw,'utf8')};
 }
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='POST')return result(405,{ok:false,error:'POST only'});
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user?.owner)return result(user?403:401,{ok:false,error:'Owner access required'});
@@ -47,3 +47,5 @@ export default async function handler(req){
    return result(200,{ok:true,preview:true,readyForPublication:false,source:{state:entry.state,county:entry.county,parcelId:entry.parcelId,evidenceUrl:entry.evidenceUrl,verifiedBy:'owner',reviewedAt:entry.reviewedAt,provider:entry.sourceProvider},patch,guards:{exactRecordId:true,exactParcelId:true,countyMatches:true,existingGeometryProtected:true,coordinateBoundsChecked:true,sourceFileHashCaptured:true},warning:'DRY RUN ONLY. No records, maps, or approval ledger were modified. A separate, deliberate publishing implementation and independent QA are required.'});
  }catch(e){console.error('Brain preview:',snap(e.message));return result(503,{ok:false,error:'Could not read published map records. No changes made.'});}
 }
+
+export default auth.withBrainStore(handler);

@@ -1,7 +1,7 @@
 // Geoapify: nationwide automatic address candidate discovery, not GIS verification.
 // Up to 50 records every four hours; 300 API calls daily shared with owner key test.
 // Source-specific progress and results persist in dedicated Netlify Blobs.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 const ROOT='https://pricepocketasset.com', STATUS='owner-brain-geoapify-status-v1', USAGE='owner-brain-geoapify-usage-v1', PREFIX='owner-brain-geoapify-dataset-v1-';
 const clean=s=>String(s??'').replace(/\s+/g,' ').trim();
@@ -31,7 +31,7 @@ async function search(address,key){
   return {lat,lon,formatted:clean(p.formatted).slice(0,180),street:clean(p.street).slice(0,90),housenumber:clean(p.housenumber).slice(0,15),city:clean(p.city).slice(0,90),state:clean(p.state).slice(0,90),postcode:clean(p.postcode).slice(0,15)};
  }).filter(Boolean)};
 }
-export default async function(){
+async function handler(){
  const date=new Date().toISOString().slice(0,10);
  let usage=await auth.kvGet(USAGE)||{day:date,used:0};
  if(usage.day!==date)usage={day:date,used:0};
@@ -93,3 +93,5 @@ export default async function(){
  finally{status.dailyUsage=usage.used;status.dailyLimit=300;status.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,status);}
 }
 export const config={schedule:'20 */4 * * *'};
+
+export default auth.withBrainStore(handler);

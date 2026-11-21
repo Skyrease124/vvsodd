@@ -37,10 +37,12 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Only polygon boundaries already present in the published county data are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js" crossorigin></script>
+<script src="/map/brain-map-merge.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
 let key='',map=null,terrain=false,currentData=null,detail=null;
+let previewUpdateRunning=false;
 const msg=(text,isError=false)=>{$('status').textContent=text;$('status').className=isError?'error':'muted'};
 const styleUrl=id=>'https://api.maptiler.com/maps/'+id+'/style.json?key='+encodeURIComponent(key);
 const terrainUrl=()=>'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key='+encodeURIComponent(key);
@@ -73,8 +75,20 @@ async function loadData(){
  if(!response.ok)throw Error('Parcel dataset unavailable');
  const raw=await response.text();if(raw.length>12000000)throw Error('Dataset exceeds preview size limit');
  const data=JSON.parse(raw);if(!Array.isArray(data.recs))throw Error('No parcel records in dataset');
- return data;
+ if(window.PPABrainMap){const dict=data.dict||{};for(const r of data.recs){for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];}await window.PPABrainMap.apply(data).catch(()=>{});}return data;
 }
+// Update the same parcel overlays while the private preview remains open.
+async function refreshCurrentPreview(){
+ if(document.hidden||previewUpdateRunning||!currentData||!map||!window.PPABrainMap)return;
+ previewUpdateRunning=true;
+ try{
+  const result=await window.PPABrainMap.apply(currentData);
+  if(result.changed&&map?.isStyleLoaded())overlay();
+ }catch(_){/* Existing verified data is retained if the feed is temporarily unreachable. */}
+ finally{previewUpdateRunning=false;}
+}
+setInterval(refreshCurrentPreview,120000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshCurrentPreview()});
 function readyMap(){
  if(!map)return;
  overlay();
@@ -90,7 +104,7 @@ $('load').onclick=async()=>{
  try{
   const index=window.__datasets||[];detail=index.find(x=>x.id===$('county').value);
   if(!detail)throw Error('Select a county');
-  if(!detail.mapped)throw Error('This county has no verified map boundaries yet. Choose another county for the satellite overlay.');
+  // Allow dynamic approved overlays even when static county count is zero.
   currentData=await loadData();
   $('map').hidden=false;
   map=new maplibregl.Map({container:'map',style:styleUrl($('style').value),center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});

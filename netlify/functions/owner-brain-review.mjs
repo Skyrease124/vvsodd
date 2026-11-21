@@ -1,6 +1,6 @@
 // Phase 5: owner evidence review and private approval ledger. Does NOT update published maps.
 import crypto from 'node:crypto';
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const QUEUE='owner-brain-scanner-v1';
 const LEDGER='owner-brain-approvals-v1';
 const json=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
@@ -10,7 +10,7 @@ const norm=(s)=>trim(s,120).toUpperCase().replace(/[^A-Z0-9]/g,'');
 const idFor=(d,r)=>crypto.createHash('sha256').update(d+'\n'+r).digest('hex').slice(0,28);
 const safeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'&&u.username===''&&u.password===''&&u.hostname.length>3&&u.href.length<=1000?u.href:null;}catch{return null}};
 const summary=r=>({dataset:r.dataset,recordId:r.recordId,state:r.state,county:r.county,parcelId:r.parcelId});
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='GET'&&req.method!=='POST')return json(405,{ok:false,error:'GET or POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return json(me?403:401,{ok:false,error:'Owner access required'});
@@ -47,3 +47,5 @@ export default async function handler(req){
  if(target){target.review={decision:entry.decision,reviewedAt:stamp,caseKey:key};current.updatedAt=stamp;await auth.kvPut(QUEUE,current);}
  return json(200,{ok:true,entry,notice:'Stored privately; public parcel maps are unchanged.'});
 };
+
+export default auth.withBrainStore(handler);

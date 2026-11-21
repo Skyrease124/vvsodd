@@ -1,6 +1,9 @@
 [build]
   publish = "kinvest-liens"
 
+[context.deploy-preview]
+  command = "node scripts/prepare-brain-preview.mjs"
+
 [functions]
   directory = "netlify/functions"
   # The question box answers only from our own state data files.

@@ -1,6 +1,6 @@
 // Owner-only, read-only first-stage brain queue. No AI calls, parcel writes, or public publication.
 // Explicit scan creates up to 50 missing-position cases, saved in Netlify Blobs.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const ROOT='https://pricepocketasset.com';
 const STORE='owner-brain-scanner-v1';
 const LIMIT=50;
@@ -15,12 +15,12 @@ async function readStatic(path,maxBytes){
 }
 const empty=()=>({status:'idle',built:null,createdAt:null,updatedAt:null,processed:0,queue:[],nextDataset:0,lastError:null});
 async function snapshot(){const value=await auth.kvGet(STORE);return value&&Array.isArray(value.queue)?value:empty();}
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='GET'&&req.method!=='POST')return json(405,{ok:false,error:'Method not allowed'});
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user)return json(401,{ok:false,error:'Owner sign-in required'});
  if(!user.owner)return json(403,{ok:false,error:'Owner access only'});
- if(req.method==='GET')return json(200,{ok:true,...await snapshot(),automation:(await auth.kvGet('owner-brain-automatic-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},geocodeAutomation:(await auth.kvGet('owner-brain-geocode-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},elevationAutomation:(await auth.kvGet('owner-brain-topo-status-v1'))||{state:'awaiting_first_run',runs:0,filled:0},crosscheckAutomation:(await auth.kvGet('owner-brain-crosscheck-status-v1'))||{state:'awaiting_first_run',runs:0,candidates:0},photonAutomation:(await auth.kvGet('owner-brain-photon-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0,candidateGroups:0,recent:[]},geoapifyAutomation:(await auth.kvGet('owner-brain-geoapify-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0,found:0,recent:[]}});
+ if(req.method==='GET')return json(200,{ok:true,previewMode:auth.isBrainPreview(),...await snapshot(),automation:(await auth.kvGet('owner-brain-automatic-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},geocodeAutomation:(await auth.kvGet('owner-brain-geocode-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},elevationAutomation:(await auth.kvGet('owner-brain-topo-status-v1'))||{state:'awaiting_first_run',runs:0,filled:0},crosscheckAutomation:(await auth.kvGet('owner-brain-crosscheck-status-v1'))||{state:'awaiting_first_run',runs:0,candidates:0},photonAutomation:(await auth.kvGet('owner-brain-photon-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0,candidateGroups:0,recent:[]},geoapifyAutomation:(await auth.kvGet('owner-brain-geoapify-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0,found:0,recent:[]}});
  const url=new URL(req.url);
  if(req.headers.get('origin')!==url.origin)return json(403,{ok:false,error:'Invalid request origin'});
  let body={};
@@ -70,3 +70,5 @@ export default async function handler(req){
    return json(503,{ok:false,error:'Published map data unavailable. No changes made.'});
  }
 };
+
+export default auth.withBrainStore(handler);

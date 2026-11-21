@@ -64,7 +64,7 @@ body,main,#ownerMain,#workspace{color:#eff9fd!important}
 <div><strong id="pendingCount">0</strong><span>Changes for review</span></div>
 </div>
 <div class="card"><h2>Private research controls</h2>
-<p class="muted">Choose a source and scan it. The first successful check records a baseline; later changes enter your private review queue. Research is never published automatically.</p>
+<p class="muted">The scheduled agent rotates through the three official sources, checking each approximately every six hours. It saves baselines and changes, then links explicitly identified parcels to Brain cases when the county and ID match exactly. Controls below are optional diagnostics. Source findings still need official polygon verification before any boundary can be published.</p>
 <div class="controls">
 <label>Research method <select id="provider">
 <option value="official">Official source direct (free)</option>
@@ -146,4 +146,4 @@ async function act(input){
 }
 reload().catch(()=>{window.location.replace('/owner/');});
 </script>
-</body></html>
+<script src="/owner/pipeline.js" defer></script></body></html>
