@@ -11,7 +11,7 @@ const approval=()=>({decision:'approved_for_staging',dataset:'MI-wayne',state:'M
  recordId:'test-record',parcelId:'01002263',independentlyChecked:true,
  evidenceUrl:GIS,caseKey:'test-review',proposedPosition:{lat:42.3005,lon:-83.0995}});
 const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.301],[-83.1,42.3]];
-async function harness({review=approval(),features,record,offline=false}={}){
+async function harness({review=approval(),features,record,offline=false,pauseDuringGIS=false}={}){
  const store=new Map([['owner-brain-approvals-v1',{entries:[review]}]]);
  const county={id:'MI-wayne',recs:[record||{i:'test-record',p:'01002263',why:'missing'}]};
  const calls=[];
@@ -20,10 +20,11 @@ async function harness({review=approval(),features,record,offline=false}={}){
    const u=new URL(url);calls.push(u);
    if(u.hostname==='pricepocketasset.com'&&u.pathname==='/map/data/MI-wayne.json')return Response.json(county);
    assert.equal(u.origin+u.pathname,GIS+'/query');
-   assert.equal(u.searchParams.get('where'),"parcel_number IN ('01002263','01002263.')");
+   assert.equal(u.searchParams.get('where'),review.officialObjectId?'object_id='+review.officialObjectId:"parcel_number IN ('01002263','01002263.')");
    assert.equal(u.searchParams.get('outSR'),'4326');
-   assert.equal(u.searchParams.get('geometryType'),'esriGeometryEnvelope');
+   assert.equal(u.searchParams.get('geometryType'),review.officialObjectId?null:'esriGeometryEnvelope');
    if(offline)throw Error('Simulated GIS outage');
+   if(pauseDuringGIS)store.set('owner-brain-scanner-v1',{status:'paused',queue:[]});
    return Response.json({features:features??[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring]}}]});
   }});
  const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore'],function(){
@@ -83,4 +84,29 @@ test('captured official Detroit parcel with trailing period publishes under the 
  await h.publish();
  assert.equal(h.store.get(KEY)?.records['test-record'].p,'01002263');
  assert.deepEqual(h.store.get(KEY).records['test-record'].g,fixture.feature.geometry.rings);
+});
+
+test('verified object ID is used for indexed publication and rechecked against official identity',async()=>{
+ const h=await harness({review:{...approval(),officialObjectId:279374},
+  features:[{attributes:{parcel_number:'01002263.',object_id:279374},geometry:{rings:[ring]}}]});
+ await h.publish();
+ assert.equal(h.store.get(KEY).version,1);
+ assert.ok(h.calls.some(u=>u.searchParams.get('where')==='object_id=279374'));
+ const mismatch=await harness({review:{...approval(),officialObjectId:279374},
+  features:[{attributes:{parcel_number:'01002263.',object_id:279375},geometry:{rings:[ring]}}]});
+ await mismatch.publish();
+ assert.equal(mismatch.store.has(KEY),false);
+});
+test('a pause during GIS response blocks all correction and history writes',async()=>{
+ const h=await harness({pauseDuringGIS:true});
+ await h.publish();
+ assert.equal(h.store.get('brain-map-publication-status-v1').state,'paused');
+ assert.equal(h.store.has(KEY),false);
+ assert.equal(h.store.has('brain-map-history-v1'),false);
+});
+test('invalid staged official object ID never reaches GIS or publication',async()=>{
+ const h=await harness({review:{...approval(),officialObjectId:'279374 OR 1=1'}});
+ await h.publish();
+ assert.equal(h.store.has(KEY),false);
+ assert.equal(h.calls.filter(u=>u.hostname==='services2.arcgis.com').length,0);
 });
