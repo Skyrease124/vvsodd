@@ -3,6 +3,7 @@
 // Source-specific progress and results persist in dedicated Netlify Blobs.
 import * as auth from '../lib/brain-auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
+import {activeCounty} from '../lib/brain-county-sequence.mjs';
 const ROOT='https://pricepocketasset.com', STATUS='owner-brain-geoapify-status-v1', USAGE='owner-brain-geoapify-usage-v1', PREFIX='owner-brain-geoapify-dataset-v1-';
 const clean=s=>String(s??'').replace(/\s+/g,' ').trim();
 async function read(url,max=14000000){
@@ -47,19 +48,23 @@ async function handler(){
   if(brain?.status==='paused'){status.state='paused';return;}
   if(usage.used>=300){status.state='daily_cap';return;}
   const index=await read(ROOT+'/map/index.json',8000000);
-  const datasets=(index.datasets||[]).filter(d=>/^[A-Za-z0-9_-]+$/.test(d.id||'')&&/^[A-Za-z0-9_-]+\.json$/.test(d.file||'')&&d.records>d.mapped);
-  if(!datasets.length){status.state='nothing_missing';return;}
-  let pos=(Number.isInteger(status.nextDataset)?status.nextDataset:0)%datasets.length;
-  if(status.runs===1){const wayne=datasets.findIndex(d=>d.id==='MI-wayne');if(wayne>=0)pos=wayne;}
+  const active=await activeCounty(index,auth,d=>read(ROOT+'/map/data/'+d.file));
+  if(!active.dataset){status.state='all_counties_complete';return;}
+  const datasets=[active.dataset],pos=0;
+  status.activeCounty=active.dataset.id;
+  status.countyPosition=active.orderPosition;
+  status.countyTotal=active.orderTotal;
+  status.remaining=active.remaining;
+  status.blocker=active.blocker;
   const limit=Math.min(50,300-usage.used);
-  while(calls<limit&&visited<8){
+  while(calls<limit&&visited<1){
    const d=datasets[pos],ledgerKey=PREFIX+d.id;
    let data,ledger;
    try{data=await read(ROOT+'/map/data/'+d.file);ledger=await auth.kvGet(ledgerKey)||{cursor:0,records:{},built:index.built};}
-   catch(e){status.lastWarning=d.id+': '+clean(e.message).slice(0,85);visited++;pos=(pos+1)%datasets.length;continue;}
+   catch(e){status.lastWarning=d.id+': '+clean(e.message).slice(0,85);status.state='source_unavailable';break;}
    if(ledger.built!==index.built)ledger={cursor:0,records:{},built:index.built};
    const records=Array.isArray(data.recs)?data.recs:[];
-   if(!records.length){visited++;pos=(pos+1)%datasets.length;continue;}
+   if(!records.length){status.state='source_empty';break;}
    let cursor=(ledger.cursor||0)%records.length,scanned=0;
    while(scanned<records.length&&calls<limit){
     const r=records[cursor];cursor=(cursor+1)%records.length;scanned++;
@@ -82,10 +87,10 @@ async function handler(){
    }
    ledger.cursor=cursor;await auth.kvPut(ledgerKey,ledger);
    if(status.state==='provider_limited')break;
-   if(scanned===records.length){visited++;pos=(pos+1)%datasets.length;}
+   if(scanned===records.length){visited++;status.state='county_research_exhausted';}
    else break;
   }
-  status.nextDataset=pos;
+  status.nextDataset=0; // Shared county order owns progression, not this research worker.
   status.checked=(status.checked||0)+checked;status.found=(status.found||0)+found;
   status.lastBatch={calls,checked,found,datasetsVisited:visited};
   if(status.state==='running')status.state='idle';
