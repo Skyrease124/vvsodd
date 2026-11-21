@@ -74,7 +74,7 @@ export default async req=>{
         try {
           const q=d.county+' County '+d.state+' official parcel GIS property appraiser tax assessor parcel search';
           const response=await fetch('https://api.tavily.com/search',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+APIKEYS.keyOf('TAVILY_API_KEY')},body:JSON.stringify({query:q,search_depth:'basic',max_results:4}),signal:AbortSignal.timeout(10000)});
-          if(response.ok){const data=await response.json();webSources=(data.results||[]).slice(0,4).filter(x=>/^https:\\/\\//.test(x.url||'')).map(x=>({title:plain(x.title),url:plain(x.url),excerpt:plain(x.content)}));webSearched=true;searchNote='Search excerpts found; not independently verified.';}
+          if(response.ok){const data=await response.json();webSources=(data.results||[]).slice(0,4).filter(x=>String(x.url||'').startsWith('https://')).map(x=>({title:plain(x.title),url:plain(x.url),excerpt:plain(x.content)}));webSearched=true;searchNote='Search excerpts found; not independently verified.';}
           else searchNote='Tavily search unavailable (HTTP '+response.status+').';
         }catch{searchNote='Tavily search timed out or failed.';}
       }else searchNote='Tavily research reached its configured 30-day request cap.';
