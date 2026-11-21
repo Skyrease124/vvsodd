@@ -14,6 +14,7 @@ window.ppaAccount.then(user => {
     ['API keys','Manage service credentials','/owner/keys/','lock'],
     ['Read a county PDF','Extract county records','/owner/ocr/','file'],
     ['Usage','Review AI activity and limits','/usage/','chart'],
+    ['Payments & Revenue','Animated Stripe payments, Pro revenue and donations','/owner/payments/','chart'],
     ['Billing setup','Manage billing configuration','/billing/','file']
   ];
   tools.forEach(([name, note, url, icon]) => {
