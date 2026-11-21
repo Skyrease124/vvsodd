@@ -28,7 +28,10 @@ function officialPolygon(rings){
  if((maxX-minX)<1e-7||(maxY-minY)<1e-7)return null;
  return {g:[coords],bb:[minX,minY,maxX,maxY],cx:[(minX+maxX)/2,(minY+maxY)/2]};
 }
-async function handler(){
+async function handler(req,context){
+ // Only the guarded Wayne worker may invoke publication. Public function requests cannot publish.
+ if(context?.waynePublisherInternal!==true||typeof context.chargeWayneGisRequest!=='function')
+  return new Response(JSON.stringify({ok:false,error:'Publisher is internal to guarded Wayne worker'}),{status:403,headers:{'Content-Type':'application/json'}});
  const last=await auth.kvGet(STATUS)||{runs:0,published:0,skipped:0};
  const status={...last,runs:(last.runs||0)+1,lastStarted:new Date().toISOString(),state:'running',lastError:null};
  await auth.kvPut(STATUS,status);
@@ -69,7 +72,11 @@ async function handler(){
    }
    const url=GIS+'/query?'+new URLSearchParams(params);
    let result;
-   try{result=await json(url,1000000)}catch(e){status.lastError=String(e.message).slice(0,120);break;}
+   try{
+    // Charge before dispatch, including failed GIS requests. The worker owns the shared daily cap.
+    await context.chargeWayneGisRequest();
+    result=await json(url,1000000);
+   }catch(e){status.lastError=String(e.message).slice(0,120);break;}
    // A pause can happen while awaiting the remote provider. Nothing may
    // publish after the pause, even if the GIS request succeeds.
    const latestControl=await auth.kvGet('owner-brain-scanner-v1');
