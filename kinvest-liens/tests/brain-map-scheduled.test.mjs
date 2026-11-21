@@ -117,3 +117,11 @@ test('owner re-arms exact exhausted parcel without moving cursor or resetting qu
  assert.equal(saved.lastOwnerRecovery.exhaustedAttempts,3);
  assert.equal((await h.invoke(body)).status,409);
 });
+
+test('release candidate keeps separate preview blob namespace from PR 452 and production',()=>{
+ const auth=fs.readFileSync('netlify/lib/brain-auth.mjs','utf8');
+ assert.match(auth,/ppa-brain-preview-pr453/);
+ assert.doesNotMatch(auth,/ppa-brain-preview-pr452/);
+ assert.match(auth,/context\.deploy\.context==='deploy-preview'/);
+ assert.match(auth,/if\(!isolated\(k\)\)return auth\.kvGet\(k\)/);
+});
