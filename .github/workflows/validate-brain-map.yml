@@ -55,6 +55,7 @@ jobs:
       - run: node kinvest-liens/tests/brain-map-sequence.test.mjs
       - run: node kinvest-liens/tests/brain-map-county-progress.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-agent-dry-run.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-batch-test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs
       - run: node kinvest-liens/tests/brain-map-requests.test.mjs
