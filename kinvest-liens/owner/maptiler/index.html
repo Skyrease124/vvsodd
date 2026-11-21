@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow"><title>Private MapTiler Preview | PricePocketAsset</title>
+<meta name="robots" content="noindex,nofollow"><meta http-equiv="Cache-Control" content="no-store"><title>Private MapTiler Preview | PricePocketAsset</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css" crossorigin>
 <style>
 :root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#081621;color:#e8f4ff}
@@ -23,8 +23,8 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <div class="panel"><b>MapTiler testing only</b><p class="muted">MapTiler free access is not licensed for commercial production. Each map load and style switch may use your MapTiler quota. Only open this preview when you want to test it. Restrict your key to pricepocketasset.com in MapTiler Cloud.</p>
 <p id="status" role="status">Checking owner access…</p><p id="setup" hidden><a href="/owner/keys/">Save your MapTiler API key in Owner API Keys first.</a></p>
 <div id="controls" hidden><div class="controls">
-<div><label for="state">State</label><select id="state" aria-label="Choose state"></select></div>
-<div><label for="county">County</label><select id="county" aria-label="Choose county"></select></div>
+<div><label for="state">State</label><select id="state" aria-label="Choose state"><option value="">Loading states…</option></select></div>
+<div><label for="county">County</label><select id="county" aria-label="Choose county" disabled><option value="">Choose a state first</option></select></div>
 <div><label for="style">MapTiler appearance</label><select id="style">
 <option value="satellite-v4">Satellite</option>
 <option value="streets-v4">Streets</option>
@@ -50,6 +50,7 @@ function selectState(){
  county.replaceChildren();
  const counties=(window.__datasets||[]).filter(x=>x.state===state).sort((a,b)=>a.county.localeCompare(b.county));
  for(const ds of counties){const option=document.createElement('option');option.value=ds.id;option.textContent=ds.county+' · '+ds.mapped+' mapped'+(ds.mapped===0?' (no boundaries yet)':'');county.append(option);}
+ if(!counties.length){const no=document.createElement('option');no.value='';no.textContent='No county datasets';county.append(no);}
  county.disabled=!counties.length;
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
@@ -118,14 +119,18 @@ $('terrain').onclick=()=>{
   key=d.key;
   const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
   const index=await indexResponse.json();
-  window.__datasets=(index.datasets||[]).filter(x=>/^[A-Za-z0-9_-]+\.json$/.test(x.file||''));
+  if(!Array.isArray(index.datasets)||!index.datasets.length)throw Error('No county datasets returned from map index.');
+  window.__datasets=index.datasets.filter(x=>x&&typeof x.state==='string'&&typeof x.county==='string'&&typeof x.id==='string'&&typeof x.file==='string'&&x.file.endsWith('.json'));
+  if(!window.__datasets.length)throw Error('County dataset list could not be parsed.');
   const states=[...new Set(window.__datasets.map(x=>x.state))].sort();
+  $('state').replaceChildren();
   for(const state of states){const o=document.createElement('option');o.value=state;o.textContent=(index.states?.[state]?.n||state)+' ('+state+')';$('state').append(o);}
   $('state').value=states.includes(preferredState)?preferredState:states[0]||'';
   $('state').addEventListener('change',selectState);
   $('county').addEventListener('change',()=>{if(map)reset();msg('County changed. Load the preview to show the selected county.');});
   selectState();
   $('controls').hidden=false;
- }catch(e){msg('Preview unavailable: '+e.message,true);}
+  msg('Loaded '+states.length+' states and '+window.__datasets.length+' county datasets. Choose a county and load the private map preview.');
+ }catch(e){$('state').replaceChildren(new Option('State data unavailable',''));$('county').replaceChildren(new Option('County data unavailable',''));$('county').disabled=true;$('load').disabled=true;msg('Preview unavailable: '+e.message,true);}
 })();
 </script></body></html>
