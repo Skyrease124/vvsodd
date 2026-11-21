@@ -34,7 +34,19 @@ async function patches(id){
  if(!response.ok)throw Error('Verified correction feed unavailable');
  return (await response.json()).records||{};
 }
-async function liveSynopsis(d){const out=synopsis(d),records=await patches(d.id);const added=Object.keys(records).length;out.mapped=Math.min(out.records,out.mapped+added);out.missing=out.records-out.mapped;out.verifiedCorrections=added;return out;}
+async function liveSynopsis(d){
+ const out=synopsis(d),records=await patches(d.id);
+ if(d.id!=='MI-wayne'){out.verifiedCorrections=0;return out;}
+ // Count only corrections for existing, previously unmapped source records.
+ // A stale/orphaned patch or an already mapped parcel must not inflate coverage.
+ const ds=await readStatic('/map/data/'+d.file);
+ const corrected=new Set(Object.keys(records));
+ const added=(ds.recs||[]).filter(r=>r?.i&&corrected.has(r.i)&&!r.g&&!r.cx).length;
+ out.mapped=Math.min(out.records,out.mapped+added);
+ out.missing=out.records-out.mapped;
+ out.verifiedCorrections=added;
+ return out;
+}
 async function datasetDetail(d) {
   const ds=await readStatic('/map/data/'+d.file);
   // Show source identifiers for owner investigation, not unverified coordinates.
