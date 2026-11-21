@@ -29,7 +29,7 @@ test('coverage refreshes automatically and force run respects guarded preview en
  assert.match(frontend,/20000/);
  assert.match(frontend,/visibilitychange/);
  assert.match(frontend,/ppa:brain-map-updated/);
- assert.match(frontend,/force\.hidden=!?\(/);
+ assert.match(frontend,/force\.hidden=!autoAllowed/);
  assert.match(frontend,/d\.preview&&c\.id==='MI-wayne'/);
  assert.match(frontend,/owner-brain-wayne-run/);
  assert.match(frontend,/action:'run-wayne-batch',confirmed:true/);
