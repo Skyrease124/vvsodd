@@ -1,0 +1,29 @@
+name: Validate Brain-to-Map pipeline
+on:
+  push:
+    branches: [brain-to-map-pipeline]
+    paths:
+      - 'kinvest-liens/map/**'
+      - 'kinvest-liens/ai/workshop.js'
+      - 'kinvest-liens/owner/maptiler/**'
+      - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'netlify/functions/brain-map-*.mjs'
+      - '.github/workflows/validate-brain-map.yml'
+  pull_request:
+    paths:
+      - 'kinvest-liens/map/**'
+      - 'kinvest-liens/ai/workshop.js'
+      - 'kinvest-liens/owner/maptiler/**'
+      - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'netlify/functions/brain-map-*.mjs'
+      - '.github/workflows/validate-brain-map.yml'
+jobs:
+  offline-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node kinvest-liens/tests/brain-map-contract.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs

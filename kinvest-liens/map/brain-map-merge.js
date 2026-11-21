@@ -27,8 +27,9 @@ async function apply(ds){
   const p=body.records?.[r.i];
   const previous=!!r.__brainMap;
   if(validPatch(p,r)){
+   const different=!previous||JSON.stringify([r.g,r.cx,r.bb])!==JSON.stringify([p.g,p.cx,p.bb]);
    r.g=p.g;r.cx=p.cx;r.bb=p.bb;r.why=null;r.__brainMap=true;
-   if(!previous)count++;
+   if(different)count++;
   }else{
    // Rollback: a removed/invalid correction restores the original unmapped parcel.
    if(previous){r.g=base.g;r.cx=base.cx;r.bb=base.bb;r.why=base.why;delete r.__brainMap;count++;}
@@ -38,3 +39,4 @@ async function apply(ds){
  return {changed:count>0,count,version:body.version};
 }
 window.PPABrainMap={apply};})();
+
