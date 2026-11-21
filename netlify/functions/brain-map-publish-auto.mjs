@@ -56,15 +56,26 @@ async function handler(){
    const parcel=String(a.parcelId);
    if(!/^[0-9]{8}\.?$/.test(parcel)){skipped++;continue;}
    const bare=parcel.replace(/\.$/,'');
-   const clause="parcel_number IN ('"+bare+"','"+bare+".')";
-   // Restrict the unindexed parcel lookup to the previously reviewed area.
-   // Identity, ambiguity and distance checks below still apply to the result.
-   const envelope=JSON.stringify({xmin:lon-0.002,ymin:lat-0.002,xmax:lon+0.002,ymax:lat+0.002,spatialReference:{wkid:4326}});
-   const url=GIS+'/query?'+new URLSearchParams({f:'json',where:clause,geometry:envelope,geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
+   // Prefer the indexed object ID already established by the independent
+   // verifier. Old owner-reviewed approvals still use the bounded legacy query.
+   const objectId=a.officialObjectId;
+   const indexed=Number.isSafeInteger(objectId)&&objectId>0;
+   if(objectId!=null&&!indexed){skipped++;continue;}
+   const clause=indexed?'object_id='+objectId:"parcel_number IN ('"+bare+"','"+bare+".')";
+   const params={f:'json',where:clause,outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'};
+   if(!indexed){
+    const envelope=JSON.stringify({xmin:lon-0.002,ymin:lat-0.002,xmax:lon+0.002,ymax:lat+0.002,spatialReference:{wkid:4326}});
+    Object.assign(params,{geometry:envelope,geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects'});
+   }
+   const url=GIS+'/query?'+new URLSearchParams(params);
    let result;
    try{result=await json(url,1000000)}catch(e){status.lastError=String(e.message).slice(0,120);break;}
+   // A pause can happen while awaiting the remote provider. Nothing may
+   // publish after the pause, even if the GIS request succeeds.
+   const latestControl=await auth.kvGet('owner-brain-scanner-v1');
+   if(latestControl?.status==='paused'){status.state='paused';break;}
    const fs=result.features||[];
-   if(fs.length!==1||norm(fs[0].attributes?.parcel_number)!==norm(a.parcelId)){skipped++;continue;}
+   if(fs.length!==1||norm(fs[0].attributes?.parcel_number)!==norm(a.parcelId)||indexed&&fs[0].attributes?.object_id!==objectId){skipped++;continue;}
    const poly=officialPolygon(fs[0].geometry?.rings);
    if(!poly){skipped++;continue;}
    // Owner's previously reviewed GIS position must be close to the freshly retrieved official polygon.
@@ -72,6 +83,8 @@ async function handler(){
    const stamp=new Date().toISOString();
    const record={i:a.recordId,p:String(a.parcelId),...poly,verifiedGeometry:true,verifiedAt:stamp,evidenceUrl:GIS,caseKey:a.caseKey};
    // Reload before write to avoid overwriting other functions' published records.
+   const preWriteControl=await auth.kvGet('owner-brain-scanner-v1');
+   if(preWriteControl?.status==='paused'){status.state='paused';break;}
    const current=await auth.kvGet(key)||{version:0,records:{}};
    if(current.records[a.recordId])continue;
    const updated={...current,version:(current.version||0)+1,updatedAt:stamp,records:{...current.records,[a.recordId]:record}};
