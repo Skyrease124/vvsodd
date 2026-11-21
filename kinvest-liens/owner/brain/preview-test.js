@@ -71,6 +71,26 @@
    finally{batchButton.disabled=false;}
   };
   panel.append(batchButton,batchResults);
+  const publishThree=document.createElement('button');publishThree.type='button';
+  publishThree.textContent='Publish 3 verified Wayne parcels to preview';
+  const publishThreeResult=document.createElement('div');publishThreeResult.setAttribute('role','status');
+  publishThreeResult.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
+  publishThree.onclick=async()=>{
+   if(!confirm('Reverify parcels 01002754, 01002830 and 01003357 against official GIS, then publish confirmed polygons ONLY to this isolated Netlify preview? This cannot change production.'))return;
+   publishThree.disabled=true;publishThreeResult.textContent='Reverifying official GIS and publishing eligible preview corrections…';
+   try{
+    const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-batch-publish',{
+     method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({action:'publish-three-wayne',confirmed:true})});
+    const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Publication failed');
+    publishThreeResult.replaceChildren();
+    const headline=document.createElement('p');headline.textContent=d.message+' ('+d.published+'/3 published)';publishThreeResult.append(headline);
+    for(const row of d.results||[]){const p=document.createElement('p');p.textContent='Parcel '+row.parcelId+' — '+(row.published?'Published to preview':'Not published');publishThreeResult.append(p);}
+    if(typeof load==='function')await load();
+   }catch(e){publishThreeResult.textContent='Preview publication unavailable: '+e.message;}
+   finally{publishThree.disabled=false;}
+  };
+  panel.append(publishThree,publishThreeResult);
   const diagnostics=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Diagnostic controls';diagnostics.append(summary,...buttons,note);panel.append(title,help,diagnostics);
   for(const [label,url] of [['Open test parcel on map','/map/?c=MI-wayne&p=01002263'],['Open MapTiler preview','/owner/maptiler/']]){
    const link=document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener';link.style.marginRight='16px';panel.append(link);
