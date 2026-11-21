@@ -11,7 +11,7 @@ async function setup(){
   const m=new vm.SyntheticModule(Object.keys(exports),function(){for(const [k,v] of Object.entries(exports))this.setExport(k,v);},{context});cache.set(key,m);return m;
  }
  synthetic('node:async_hooks',{AsyncLocalStorage});
- synthetic('@netlify/blobs',{getStore:options=>{assert.equal(options.name,'ppa-brain-preview-pr452');return {get:async k=>preview.get(k),setJSON:async(k,v)=>preview.set(k,v),delete:async k=>preview.delete(k),list:async()=>({blobs:[...preview.keys()].map(key=>({key}))})};},getDeployStore:options=>{assert.equal(options.name,undefined);return {get:async k=>seed.get(k),setJSON:async(k,v)=>seed.set(k,v),delete:async k=>seed.delete(k),list:async()=>({blobs:[...seed.keys()].map(key=>({key}))})};}});
+ synthetic('@netlify/blobs',{getStore:options=>{assert.equal(options.name,'ppa-brain-preview-integration');return {get:async k=>preview.get(k),setJSON:async(k,v)=>preview.set(k,v),delete:async k=>preview.delete(k),list:async()=>({blobs:[...preview.keys()].map(key=>({key}))})};},getDeployStore:options=>{assert.equal(options.name,undefined);return {get:async k=>seed.get(k),setJSON:async(k,v)=>seed.set(k,v),delete:async k=>seed.delete(k),list:async()=>({blobs:[...seed.keys()].map(key=>({key}))})};}});
  synthetic('./auth.mjs',{userFromCookie:async()=>user,kvGet:async k=>prod.get(k),kvPut:async(k,v)=>prod.set(k,v),kvDel:async k=>prod.delete(k),kvList:async()=>[...prod.keys()]});
  const auth=new vm.SourceTextModule(fs.readFileSync('netlify/lib/brain-auth.mjs','utf8'),{context});
  await auth.link(s=>cache.get(s));await auth.evaluate();
