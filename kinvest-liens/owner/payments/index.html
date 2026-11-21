@@ -1,0 +1,74 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><title>Payments & Revenue | PricePocketAsset Owner</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui,-apple-system,sans-serif;background:#071521;color:#ecf9f5}
+*{box-sizing:border-box}body{margin:0}a{color:#7df4ba}button,select{font:inherit}button{cursor:pointer}.wrap{max-width:1160px;margin:auto;padding:20px 16px 50px}header{border-bottom:1px solid #2b4352;background:#0b1b2b}.bar{max-width:1160px;margin:auto;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.brand{font-weight:800;font-size:18px}.brand span{color:#65e7a7}.back{font-size:13px}.sub{color:#a0b3c1;font-size:13px}h1{font-size:clamp(25px,4vw,36px);letter-spacing:-.04em;margin:7px 0}h2{font-size:17px;margin:0 0 12px}.head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:22px}.pill{color:#86e8b9;background:#123d34;border:1px solid #287b5e;border-radius:20px;padding:7px 11px;font-size:12px}.panel{background:linear-gradient(145deg,#142b3a,#0c1d2d);border:1px solid #294354;border-radius:17px;padding:18px}.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:13px}.label{color:#9fb2c1;font-size:11px;font-weight:700;letter-spacing:.065em}.big{font-weight:800;font-size:clamp(21px,3vw,31px);letter-spacing:-.05em;margin:10px 0 6px}.green{color:#67e9ac}.gold{color:#efc877}.chart-top{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;align-items:center}.buttons{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.buttons button{border:1px solid #314759;border-radius:9px;background:#0b1d2b;padding:9px 12px;color:#b1c5d1}.buttons button[aria-pressed=true]{border-color:#268d70;background:#15423c;color:#78f4bc}.chartbox{position:relative}.chartbox svg{width:100%;height:auto;display:block;touch-action:pan-y}.point{cursor:pointer;outline:none}.point:focus{stroke:#fff;stroke-width:3}.lower{display:grid;grid-template-columns:1.3fr 1fr;gap:13px;margin-top:13px}.item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #273e4f}.item:last-child{border:0}.tag{font-size:11px;color:#9fb2c1}.hint{color:#a8b9c6;font-size:12px;margin:9px 0;line-height:1.5}.warn{background:#3d301e;border:1px solid #8b6d36;color:#f9d998;border-radius:10px;padding:12px;font-size:13px;margin:12px 0}.error{background:#3a2430;border:1px solid #99526c;color:#ffc5d4;border-radius:10px;padding:12px;margin:12px 0}.breakdown{display:grid;gap:12px;margin-top:17px}.meter{height:9px;border-radius:20px;background:#253a49;overflow:hidden}.meter>div{height:100%;width:0;transition:width .6s ease}.foot{border-top:1px solid #294354;padding-top:15px;margin-top:20px;color:#94aabd;font-size:12px}#tip{min-height:22px;color:#c9ffdc;font-size:12px;text-align:center;margin:3px}button:focus-visible,a:focus-visible{outline:3px solid #82f3b6;outline-offset:3px}
+@media(max-width:690px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.lower{grid-template-columns:1fr}.panel{padding:14px}.buttons button{padding:8px 10px;font-size:12px}.wrap{padding:15px 11px 40px}}@media(prefers-reduced-motion:reduce){.meter>div{transition:none}}
+</style></head><body>
+<header><div class="bar"><div class="brand">PricePocket<span>Asset</span> <span style="font-size:11px;color:#a3b8c8">OWNER</span></div><a class="back" href="/owner/">← Owner Dashboard</a></div></header>
+<main class="wrap" id="app" hidden>
+<div class="head"><div><div class="label">PRIVATE STRIPE ANALYTICS</div><h1>Payments & Revenue</h1><div class="sub">Live transaction trends, Pro payments, and donations</div></div><div class="pill" id="mode">Connecting to Stripe…</div></div>
+<div class="cards">
+<div class="panel"><div class="label">TOTAL COLLECTED</div><div class="big" id="total">—</div><div class="sub">Gross USD payments</div></div>
+<div class="panel"><div class="label">PRO PAYMENTS</div><div class="big green" id="pro">—</div><div class="sub">Identified subscriptions</div></div>
+<div class="panel"><div class="label">DONATIONS</div><div class="big gold" id="donations">—</div><div class="sub">Identified contributions</div></div>
+<div class="panel"><div class="label">REFUNDS</div><div class="big" id="refunds">—</div><div class="sub">Refunded USD</div></div>
+</div>
+<section class="panel"><div class="chart-top"><div><h2>Revenue performance</h2><div class="sub">Select a graph point to inspect daily payments</div></div><div class="buttons" id="ranges" aria-label="Time period"><button data-days="7">7D</button><button data-days="30" aria-pressed="true">30D</button><button data-days="90">90D</button><button data-days="365">1Y</button></div></div>
+<div class="buttons" id="modes" aria-label="Revenue type"><button data-kind="all" aria-pressed="true">All payments</button><button data-kind="pro">Pro revenue</button><button data-kind="donations">Donations</button></div>
+<div id="tip" role="status" aria-live="polite"></div>
+<div class="chartbox"><svg id="chart" viewBox="0 0 690 260" role="img" aria-label="Revenue by day"><defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#57e9aa" stop-opacity=".35"/><stop offset="100%" stop-color="#57e9aa" stop-opacity="0"/></linearGradient></defs><g id="grid"></g><path id="area" fill="url(#fill)"></path><path id="line" fill="none" stroke="#5ceeb5" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"></path><g id="dots"></g><g id="labels"></g></svg></div><div class="hint">Gross successful USD charges. Refunds and Stripe fees are separate. Unknown payment categories remain in All payments.</div></section>
+<div id="notice" role="status"></div>
+<div class="lower"><section class="panel"><h2>Recent payments</h2><div class="sub">Most recent successful charges in your selected period</div><div id="recent"></div></section>
+<section class="panel"><h2>Revenue breakdown</h2><div class="sub">Subscriptions and donations tracked separately</div><div class="breakdown"><div><div class="item"><span>Pro subscriptions</span><strong class="green" id="proPct">—</strong></div><div class="meter"><div id="proBar" style="background:#5ceeb5"></div></div></div><div><div class="item"><span>Donations</span><strong class="gold" id="donPct">—</strong></div><div class="meter"><div id="donBar" style="background:#eac578"></div></div></div><div><div class="item"><span>Other / unclassified</span><strong id="otherPct">—</strong></div><div class="meter"><div id="otherBar" style="background:#789ed8"></div></div></div></div><div class="hint">Amounts may include pending settlement; check Stripe for final payouts and fees.</div></section></div>
+<div class="foot">Owner-only report • Read-only Stripe integration • No payment details or secret keys stored in your browser</div></main>
+<div id="gate" style="max-width:600px;margin:40px auto;padding:18px" role="status">Checking Owner access…</div>
+<script src="/auth-nav.js"></script>
+<script>
+'use strict';
+const $=x=>document.getElementById(x);
+let current=null,days=30,kind='all';
+const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(c/100);
+const node=(name,attrs={},content='')=>{const n=document.createElementNS('http://www.w3.org/2000/svg',name);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,String(v));if(content)n.textContent=content;return n};
+const label=k=>k==='pro'?'Pro membership':k==='donations'?'Donation':'Other payment';
+function render(){
+ if(!current)return;
+ const t=current.totals;const gross=t.pro+t.donations+t.other;
+ $('total').textContent=money(gross);$('pro').textContent=money(t.pro);$('donations').textContent=money(t.donations);$('refunds').textContent=money(t.refunds);
+ for(const [k,v] of [['pro',t.pro],['don',t.donations],['other',t.other]]){const p=gross?100*v/gross:0;$(k+'Pct').textContent=p.toFixed(1)+'%';$(k+'Bar').style.width=p+'%'}
+ $('recent').replaceChildren();
+ for(const r of current.recent){const el=document.createElement('div');el.className='item';const left=document.createElement('div');const nm=document.createElement('strong');nm.textContent=label(r.kind);const dt=document.createElement('div');dt.className='tag';dt.textContent=r.date+(r.refunded?' · Refund '+money(r.refunded):'');left.append(nm,dt);const right=document.createElement('strong');right.textContent=money(r.amount);right.className=r.kind==='donations'?'gold':'green';el.append(left,right);$('recent').append(el)}
+ if(!current.recent.length)$('recent').textContent='No successful payments in this period.';
+ draw();
+}
+function draw(){
+ const series=current.series, values=series.map(d=>kind==='all'?d.pro+d.donations+d.other:d[kind]);
+ const n=values.length,top=Math.max(100,...values)*1.15,left=48,right=663,y0=211,yTop=20;
+ const xy=values.map((v,i)=>[left+(right-left)*i/Math.max(1,n-1),y0-(v/top)*(y0-yTop)]);
+ $('grid').replaceChildren();$('dots').replaceChildren();$('labels').replaceChildren();
+ for(let i=0;i<=4;i++){const y=y0-(y0-yTop)*i/4;$('grid').append(node('line',{x1:left,x2:right,y1:y,y2:y,stroke:'#2b4252','stroke-dasharray':'3 5'}),node('text',{x:3,y:y+4,fill:'#96aabb','font-size':11},money(Math.round(top*i/4))))}
+ const d=xy.map(([x,y],i)=>(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)).join(' ');
+ $('line').setAttribute('d',d);$('area').setAttribute('d',d+' L'+right+' '+y0+' L'+left+' '+y0+' Z');
+ const spacing=Math.max(1,Math.ceil(n/7));
+ xy.forEach(([x,y],i)=>{
+  if(i%spacing===0||i===n-1)$('labels').append(node('text',{x,y:242,fill:'#95aaba','font-size':11,'text-anchor':'middle'},series[i].date.slice(5)));
+  if(i%spacing===0||i===n-1){const dot=node('circle',{cx:x,cy:y,r:5,fill:'#64efb5',stroke:'#0a1f2c','stroke-width':2,tabindex:0,role:'button','aria-label':series[i].date+' '+money(values[i])});const show=()=>{$('tip').textContent=series[i].date+' • '+money(values[i])};dot.addEventListener('click',show);dot.addEventListener('focus',show);dot.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();show()}});$('dots').append(dot)}
+ });
+ const path=$('line');const len=path.getTotalLength();path.style.transition='none';path.style.strokeDasharray=len;path.style.strokeDashoffset=len;requestAnimationFrame(()=>{path.style.transition='stroke-dashoffset 900ms ease';path.style.strokeDashoffset=0});
+ $('tip').textContent='Select a date point to inspect the '+(kind==='all'?'total':label(kind).toLowerCase())+' amount.';
+}
+async function load(){
+ $('notice').textContent='Loading Stripe payments…';
+ try{
+ const r=await fetch('/.netlify/functions/owner-payments?days='+days,{credentials:'same-origin',cache:'no-store'});
+ const d=await r.json();if(!r.ok)throw Error(d.error||'Unable to load Stripe payments');
+ current=d;$('mode').textContent=(d.mode==='live'?'● LIVE STRIPE':'◉ STRIPE TEST MODE');
+ $('notice').textContent='';
+ if(d.partial){$('notice').className='warn';$('notice').textContent='Large account: reporting capped at 1,000 charges. Totals are partial for this period.'}
+ if(d.totals.other){$('notice').className='warn';$('notice').textContent+=' Some payments could not be classified as Pro or donations; these remain visible under Other.'}
+ render();
+ }catch(e){current=null;$('notice').className='error';$('notice').textContent=e.message;['total','pro','donations','refunds'].forEach(x=>$(x).textContent='—');$('recent').textContent='Payment data unavailable';$('chart').style.visibility='hidden'}
+}
+document.querySelectorAll('[data-days]').forEach(b=>b.addEventListener('click',()=>{days=Number(b.dataset.days);document.querySelectorAll('[data-days]').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));load()}));
+document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>{kind=b.dataset.kind;document.querySelectorAll('[data-kind]').forEach(c=>c.setAttribute('aria-pressed',String(c===b)));if(current)draw()}));
+(async()=>{try{const r=await fetch('/.netlify/functions/account',{credentials:'same-origin'});const d=await r.json();const u=d.user||d;if(!u.owner)throw Error('Owner access required.');$('gate').remove();$('app').hidden=false;load()}catch(e){$('gate').textContent='Owner sign-in required. Open this page from your Owner Dashboard.'}})();
+</script></body></html>
