@@ -70,3 +70,17 @@ test('worker timestamps individual GIS outcomes instead of inventing exact event
  assert.match(source,/approximateTime:!precise/);
  assert.match(source,/type:'verification_result'/);
 });
+
+test('activity health distinguishes retrying, active, paused, idle and attention',()=>{
+ assert.match(source,/const health=\{state,detail:/);
+ assert.match(source,/retry\?\.exhausted/);
+ assert.match(source,/state==='retry_wait'/);
+ assert.match(source,/nextRetryAt:date\(retry\?\.nextAt\)/);
+ assert.match(source,/control\?\.status==='paused'/);
+ assert.match(page,/Official GIS Agent Health/);
+ assert.match(page,/id="healthState"/);
+ assert.match(page,/id="healthMeta"/);
+ assert.match(page,/health\.state\.replaceAll/);
+ assert.match(page,/health\.nextRetryAt/);
+ assert.match(page,/GIS requests today:/);
+});
