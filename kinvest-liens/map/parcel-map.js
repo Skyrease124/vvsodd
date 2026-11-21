@@ -753,6 +753,19 @@
       setTimeout(() => { const old = wrap.querySelector('.cambar .tool[aria-label^="Nearby Cameras"]'); if (old) { const nb = old.cloneNode(true); old.replaceWith(nb); nb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); } }, 400);
     }).catch(() => { const n = wrap.querySelector('.note'); if (n) n.textContent = 'Tools could not load. Check your connection and try again.'; });
   }
+  function addSavedElevation(host,r,d){
+    if(!r?.i||!d?.id||!r.cx)return;
+    const note=mk('p','note','Elevation: checking saved terrain data…');
+    host.appendChild(note);
+    const key=r.i;
+    fetch('/.netlify/functions/map-elevation?'+new URLSearchParams({dataset:d.id,record:key}),{cache:'default'})
+      .then(x=>x.ok?x.json():Promise.reject(Error('Unavailable')))
+      .then(v=>{
+        if(!note.isConnected)return;
+        if(!v.found){note.textContent='Elevation: not yet researched';return;}
+        note.textContent='Approximate ground elevation: '+v.feet.toLocaleString()+' ft ('+v.meters+' m) · '+v.dataset+' · checked '+v.checkedAt.slice(0,10)+'. Not a survey or flood assessment.';
+      }).catch(()=>{if(note.isConnected)note.textContent='Elevation: temporarily unavailable';});
+  }
   function homeParcelCard(card, r, d) {
     const info = mk('div', 'pm-home-parcel-info');
     const county = /\b(county|parish|borough|city)\b/i.test(d.county) ? d.county : d.county + ' County';
@@ -762,6 +775,7 @@
       if (fact) facts.append(mk('span', '', fact));
     }
     info.append(facts);
+    addSavedElevation(info,r,d);
     info.appendChild(spatialPanel(r,d));
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
@@ -792,7 +806,8 @@
       row(dl, 'Category', cat.n); row(dl, 'Record status', r.t); row(dl, 'Tax year', r.ty); if (r.amt != null) row(dl, r.al || 'Amount on the list', money(r.amt)); row(dl, 'Interest or penalty on the list', r.rt); row(dl, r.sl || 'Sale date', r.sd); if (S && S.red && (r.c === 'tax_lien' || r.c === 'tax_deed')) row(dl, 'Redemption (state rule)', S.red); if (r.ct) row(dl, 'Certificate', r.ct);
       if (S && S.sys) dl.appendChild(mk('p', 'note', d.state + ' rules (' + S.sys + ')' + (S.rate ? ': ' + S.rate + '. ' : '. ') + (S.verify ? 'Sources differ for this state: verify with the county. ' : '') + 'A lien and a deed are not the same thing.')); (r.w || []).forEach(w => { if (!/^We could not tell|^No official source/.test(w)) dl.appendChild(mk('p', 'note', w)); }); }));
     bd.appendChild(group('Property', false, dl => { row(dl, 'Parcel ID', r.p); row(dl, 'Address', r.a || 'No street address on the record'); row(dl, 'Acreage', acres(r) || 'Not on file'); row(dl, 'Square footage', sqft(r) || 'Not on file'); row(dl, 'Zoning', r.zn || 'Not on file'); row(dl, 'Land', r.va ? 'Vacant land' : (r.us || 'Not stated')); row(dl, 'Market value', r.mv == null ? 'Market value unavailable' : money(r.mv)); row(dl, 'Assessed value', r.av == null ? null : money(r.av)); row(dl, 'HOA status', hoaText(r.hoa));
-      row(dl, 'Flood zone (FEMA)', r.fz ? r.fz.z + (r.fz.sfha != null ? (r.fz.sfha > 0 ? ' · ' + r.fz.sfha + '% in a high-risk zone' : ' · none in a high-risk zone') : '') : 'Not checked'); row(dl, 'Wetlands (NWI)', r.wt != null ? (r.wt > 0 ? r.wt + '% of the lot touches mapped wetlands' : 'None mapped') : 'Not checked'); row(dl, 'Elevation', 'Not on file'); }));
+      row(dl, 'Flood zone (FEMA)', r.fz ? r.fz.z + (r.fz.sfha != null ? (r.fz.sfha > 0 ? ' · ' + r.fz.sfha + '% in a high-risk zone' : ' · none in a high-risk zone') : '') : 'Not checked'); row(dl, 'Wetlands (NWI)', r.wt != null ? (r.wt > 0 ? r.wt + '% of the lot touches mapped wetlands' : 'None mapped') : 'Not checked'); row(dl, 'Elevation', 'Automatic terrain estimate shown below when available'); }));
+    addSavedElevation(bd,r,d);
     bd.appendChild(group('Sources', false, dl => { const src = mk('p', 'note'); src.appendChild(document.createTextNode('Official list: ')); if (r.su) { const a = mk('a', '', 'county list'); a.href = r.su; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); src.appendChild(document.createTextNode(r.ck ? ' (checked ' + r.ck + ')' : '')); } else src.appendChild(document.createTextNode((r.src || 'see the county') + (r.ck ? ' (checked ' + r.ck + ')' : ''))); dl.appendChild(src); if (d.gis) { const g = mk('p', 'note'); g.appendChild(document.createTextNode('County map: ')); const a = mk('a', '', d.gis.name); a.href = d.gis.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; g.appendChild(a); dl.appendChild(g); } }));
     const brief = mk('div', 'pm-brief');
     brief.append(mk('span', '', d.county + ', ' + d.state + ' · Parcel ' + r.p));
