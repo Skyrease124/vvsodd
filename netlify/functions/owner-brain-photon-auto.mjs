@@ -3,6 +3,7 @@
 // Research candidates are saved to dedicated Netlify Blobs; NO map, parcel, queue,
 // ownership, GIS, or publication writes. The service may rate-limit any volume.
 import * as auth from '../lib/brain-auth.mjs';
+import {activeCounty} from '../lib/brain-county-sequence.mjs';
 const ROOT='https://pricepocketasset.com',STATUS='owner-brain-photon-status-v1',USAGE='photon-owner-search-usage-v1';
 const FILE_PREFIX='owner-brain-photon-dataset-v1-',MAX_CALLS=5,DAILY_LIMIT=30,MAX_FILES=5;
 const clean=s=>String(s??'').replace(/\s+/g,' ').trim();
@@ -49,22 +50,25 @@ async function handler(){
   const brain=await auth.kvGet('owner-brain-scanner-v1');
   if(brain?.status==='paused'){status.state='paused';return;}
   const index=await getJson(ROOT+'/map/index.json',8_000_000);
-  const all=(index.datasets||[]).filter(d=>validFile(d.file)&&/^[A-Za-z0-9_-]{2,90}$/.test(d.id||'')&&d.records>d.mapped);
-  if(!all.length){status.state='no_missing_datasets';return;}
-  // Prioritize the existing Wayne cases to establish continuity with the AI Brain.
-  // Afterwards move across counties in the nationwide index rather than stopping at 50.
-  let pos=Number.isInteger(status.nextDataset)?status.nextDataset%all.length:0;
-  if(status.runs===1){const wayne=all.findIndex(d=>d.id==='MI-wayne');if(wayne>=0)pos=wayne;}
+  const active=await activeCounty(index,auth,d=>getJson(ROOT+'/map/data/'+d.file));
+  if(!active.dataset){status.state='all_counties_complete';return;}
+  const all=[active.dataset];
+  let pos=0;
+  status.activeCounty=active.dataset.id;
+  status.countyPosition=active.orderPosition;
+  status.countyTotal=active.orderTotal;
+  status.remaining=active.remaining;
+  status.blocker=active.blocker;
   const maxRequests=Math.min(MAX_CALLS,Math.max(0,DAILY_LIMIT-usage.count));
   if(!maxRequests){status.state='daily_cap';status.note='30 public Photon calls already reserved today. Waiting for UTC reset.';return;}
-  while(requests<maxRequests&&filesChecked<MAX_FILES){
+  while(requests<maxRequests&&filesChecked<1){
    const d=all[pos],key=FILE_PREFIX+d.id;
    let src,save;
    try{src=await getJson(ROOT+'/map/data/'+d.file);save=await auth.kvGet(key)||{cursor:0,records:{},sourceBuilt:index.built};}
-   catch(e){status.lastWarning=d.id+': '+clean(e.message).slice(0,80);pos=(pos+1)%all.length;filesChecked++;continue;}
+   catch(e){status.lastWarning=d.id+': '+clean(e.message).slice(0,80);status.state='source_unavailable';break;}
    if(save.sourceBuilt!==index.built){save={cursor:0,records:{},sourceBuilt:index.built};}
    const records=Array.isArray(src.recs)?src.recs:[];
-   if(!records.length){pos=(pos+1)%all.length;filesChecked++;continue;}
+   if(!records.length){status.state='source_empty';break;}
    let cursor=(save.cursor||0)%records.length,scanned=0,foundEligible=false;
    while(scanned<records.length&&requests<maxRequests){
     const r=records[cursor];cursor++;scanned++;
@@ -94,16 +98,16 @@ async function handler(){
    }
    save.cursor=cursor;await auth.kvPut(key,save);
    if(blocked)break;
-   if(scanned===records.length){pos=(pos+1)%all.length;filesChecked++;}
+   if(scanned===records.length){filesChecked++;status.state='county_research_exhausted';}
    else if(foundEligible){ // Keep reading this county next cycle before moving to another.
     break;
-   }else{pos=(pos+1)%all.length;filesChecked++;}
+   }else{filesChecked++;status.state='county_research_exhausted';}
    if(pos===status.nextDataset&&filesChecked)break;
   }
-  status.nextDataset=pos;
+  status.nextDataset=0; // Strict shared county order controls progression.
   status.checked=(status.checked||0)+checked;
   status.candidateGroups=(status.candidateGroups||0)+groups;
-  status.state=blocked?'provider_limited':requests>=maxRequests?'idle':filesChecked>=MAX_FILES?'awaiting_next_run':'idle';
+  status.state=blocked?'provider_limited':status.state==='county_research_exhausted'?'county_research_exhausted':status.state==='source_unavailable'||status.state==='source_empty'?status.state:requests>=maxRequests?'idle':'awaiting_next_run';
   status.note='Independent address discovery only: '+checked+' parcels checked, '+groups+' with candidate addresses; no map changes.';
   status.lastBatch={requests,checked,candidateGroups:groups,filesChecked};
   completed=true;
