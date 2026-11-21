@@ -1,0 +1,32 @@
+name: Validate Wayne County isolated release
+on:
+  push:
+    branches: [release/wayne-autonomy-pilot]
+  pull_request:
+    paths:
+      - 'netlify/functions/brain-wayne-scheduled.mjs'
+      - 'netlify/functions/owner-brain-wayne-*.mjs'
+      - 'netlify/functions/owner-brain-autonomy-status.mjs'
+      - 'netlify/functions/owner-brain-scheduler-control.mjs'
+      - 'netlify/functions/brain-map-*.mjs'
+      - 'netlify/lib/brain-*.mjs'
+      - 'kinvest-liens/map/brain-map-merge.js'
+      - 'kinvest-liens/map/index.html'
+      - 'kinvest-liens/map/parcel-map.js'
+      - 'kinvest-liens/owner/brain/index.html'
+      - 'kinvest-liens/tests/brain-map-scheduled.test.mjs'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check netlify/functions/owner-brain-wayne-run.mjs
+      - run: node --check netlify/functions/brain-wayne-scheduled.mjs
+      - run: node --check netlify/functions/owner-brain-scheduler-control.mjs
+      - run: node --check netlify/functions/owner-brain-wayne-retry-review.mjs
+      - run: node --check netlify/functions/owner-brain-autonomy-status.mjs
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-scheduled.test.mjs

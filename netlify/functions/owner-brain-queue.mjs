@@ -1,6 +1,6 @@
 // Owner-only, read-only first-stage brain queue. No AI calls, parcel writes, or public publication.
 // Explicit scan creates up to 50 missing-position cases, saved in Netlify Blobs.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const ROOT='https://pricepocketasset.com';
 const STORE='owner-brain-scanner-v1';
 const LIMIT=50;
@@ -15,7 +15,7 @@ async function readStatic(path,maxBytes){
 }
 const empty=()=>({status:'idle',built:null,createdAt:null,updatedAt:null,processed:0,queue:[],nextDataset:0,lastError:null});
 async function snapshot(){const value=await auth.kvGet(STORE);return value&&Array.isArray(value.queue)?value:empty();}
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='GET'&&req.method!=='POST')return json(405,{ok:false,error:'Method not allowed'});
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user)return json(401,{ok:false,error:'Owner sign-in required'});
@@ -70,3 +70,5 @@ export default async function handler(req){
    return json(503,{ok:false,error:'Published map data unavailable. No changes made.'});
  }
 };
+
+export default auth.withBrainStore(handler);

@@ -1,5 +1,20 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>AI Brain Control Center | PricePocketAsset</title><style>
-:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}} </style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. The current scheduled worker covers free Detroit GIS only; nationwide automation is not yet implemented.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
+:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}} </style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
+<section id="unattendedStatus" style="margin:14px 0;padding:16px;border:1px solid #537675;border-radius:14px;background:#142d32;color:#def6ed">
+ <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
+ <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
+ <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
+ <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <div id="wayneRetryAlert" hidden style="padding:11px;margin:12px 0;border-radius:10px;border:1px solid #af9070;background:#3d302e">
+ <strong>Wayne County GIS retry needs review</strong>
+ <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
+ <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
+ </div>
+ <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Wayne Test Batch</button>
+ <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
+ <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
+ <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
+</section><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. The current scheduled worker covers free Detroit GIS only; nationwide automation is not yet implemented.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
 <div class="stats"><div><div class="small">QUEUED</div><div class="num" id="count">0</div></div><div><div class="small">STATUS</div><div class="num" id="state">Idle</div></div><div><div class="small">SOURCE</div><div class="num" id="built">—</div></div></div>
 <section class="panel"><h2>Automatic Research Monitor</h2><p class="muted">Independent background schedules: Detroit GIS every 4 hours; Geocode.maps.co every 6 hours (max 20 requests/day). Each pulls only eligible Wayne cases and skips reviewed or already checked records. Open Topo Data elevation runs every 12 hours across mapped US parcels. Automated GIS/geocoding comparison runs every 8 hours and flags candidates for owner review. Other states still need verified location-repair connectors. No paid APIs, automatic map edits, or owner approval bypass.</p><p id="autoState" role="status">Waiting for first scheduled run…</p><p class="small" id="autoSummary"></p><p class="small" id="autoGeocode"></p><p class="small" id="autoElevation"></p><p class="small" id="autoCrosscheck"></p><p class="small">Owner-only controls:</p><button id="pause" class="danger">Pause automation</button><button id="resume" class="secondary">Resume automation</button><p class="small" id="note" role="status"></p></section>
 <section class="panel"><h2>Photon — Automatic Address Discovery</h2><p class="muted">AI Brain searches up to five missing-location parcel addresses every four hours, stores results and continues through county datasets. Hard ceiling: 30 Photon public-service calls per UTC day. No manual search or Run button, no retries, and no map corrections. Parcels without a usable address stay with the official GIS research workers.</p><p class="small" id="photonStatus" role="status">Awaiting scheduled research…</p><div id="photonResults"></div></section>
@@ -114,4 +129,81 @@ async function action(which){if(which==='clear'&&!confirm('Clear all currently q
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
+</script><script>
+(async()=>{
+ const summary=document.getElementById('unattendedSummary'),checks=document.getElementById('unattendedChecks');
+ async function loadAutonomy(){
+  try{
+   const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+   const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Unavailable');
+   summary.textContent=d.unattendedProductionEnabled?'24/7 Wayne scheduler: ON':
+    d.preview?'Preview mode · 24/7 schedule only on the published website':'24/7 Wayne scheduler: OFF';
+   const retryPanel=document.getElementById('wayneRetryAlert');
+   retryPanel.hidden=!d.worker.retryExhausted;
+   document.getElementById('wayneRetryDetail').textContent=d.worker.retryExhausted?
+    'Parcel '+d.worker.retryParcel+' · Attempts '+d.worker.retryAttempt+
+    ' · '+(d.worker.retryLastError||'Provider error')+
+    ' · Re-arming keeps the cursor and daily limit unchanged.':'';
+   document.getElementById('wayneRetryRearm').dataset.parcel=d.worker.retryParcel||'';
+   document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
+   const testButton=document.getElementById('wayneTestBatch');
+   testButton.hidden=!d.preview;
+   testButton.disabled=d.worker.paused||d.worker.retryExhausted||d.worker.dailyUsed>=d.worker.dailyLimit;
+   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.retryExhausted?'Review exhausted retry first':d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
+   const toggle=document.getElementById('unattendedToggle');
+   toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
+   toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
+   checks.textContent='Wayne cursor '+d.worker.cursor+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
+    ' · Other counties blocked until verified GIS connectors are configured';
+  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}
+ }
+ document.getElementById('wayneRetryRearm').onclick=async()=>{
+  const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);
+  if(!parcelId||!Number.isSafeInteger(cursor))return;
+  if(!confirm('Allow a fresh official GIS verification attempt for parcel '+parcelId+'? This does NOT skip it, reset the daily request limit, or publish anything automatically.'))return;
+  btn.disabled=true;
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-retry-review',{method:'POST',
+    credentials:'same-origin',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rearm-exhausted-parcel',confirmed:true,parcelId,cursor})});
+   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Retry review unsuccessful');
+   summary.textContent='Parcel '+parcelId+' re-armed for official GIS verification; no map change made';
+   await loadAutonomy();
+  }catch(e){summary.textContent='GIS retry review error: '+e.message;}
+  finally{btn.disabled=false;}
+ };
+ document.getElementById('wayneTestBatch').onclick=async()=>{
+  const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
+  if(!confirm('Run one Wayne County official GIS test batch (up to 3 parcels) in this isolated PR #453 preview? This uses free official GIS requests, may publish verified polygons to preview maps, and will not change production.'))return;
+  btn.disabled=true;out.hidden=false;out.textContent='Running official GIS verification in preview…';
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-run',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),
+    signal:AbortSignal.timeout(60000)
+   });
+   const d=await r.json();
+   if(!r.ok||!d.ok)throw Error(d.error||'Test batch unavailable');
+   out.textContent='Batch '+(d.state||'completed').replaceAll('_',' ')+' · Cursor '+(d.cursor??'?')+
+    ' · Attempted '+(d.attempted??0)+' · Verified '+(d.verified??0)+
+    ' · Published '+(d.published??0)+' · GIS requests '+(d.dailyUsed??'?')+'/'+(d.dailyLimit??30)+
+    (d.retry?.nextAt?' · Next retry '+new Date(d.retry.nextAt).toLocaleTimeString():'')+
+    (d.rows?.[0]?.reason?' · '+d.rows[0].reason:'');
+  }catch(e){out.textContent='Test batch failed: '+e.message;}
+  finally{await loadAutonomy();btn.disabled=false;}
+ };
+ document.getElementById('unattendedRefresh').onclick=loadAutonomy;
+ document.getElementById('unattendedToggle').onclick=async()=>{
+  const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
+  if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
+  btn.disabled=true;
+  try{
+   const res=await fetch('/.netlify/functions/owner-brain-scheduler-control',{method:'POST',credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({action:enable?'enable':'disable',confirmed:true,scope:'wayne-verified-gis-only'})});
+   const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Control unavailable');
+   await loadAutonomy();
+  }catch(e){summary.textContent='Could not update scheduler: '+e.message;}finally{btn.disabled=false;}
+ };
+ await loadAutonomy();
+})();
 </script></body></html>
