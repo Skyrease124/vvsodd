@@ -65,7 +65,7 @@ test('worker timestamps individual GIS outcomes instead of inventing exact event
  const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
  assert.match(worker,/status:'needs_review',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:'retry_later',checkedAt:new Date\(\)\.toISOString\(\)/);
- assert.match(worker,/status:success\?'published':'publish_pending',checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(worker,/status:success\?'published':'publish_pending',lookupMethod:method,checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(source,/const precise=date\(r\.checkedAt\)/);
  assert.match(source,/approximateTime:!precise/);
  assert.match(source,/type:'verification_result'/);
