@@ -37,7 +37,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 .health[data-state="processing"] .health-pill{color:#c1fce4;box-shadow:0 0 16px #39e8b644}
 .health-detail{margin:11px 0 5px;color:#bfd2df;font-size:12px;line-height:1.5}
 .health-meta{color:#98b9c5;font-size:11px}
-</style></head>
+.gis-trace{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.gis-stage{font-size:10px;padding:3px 6px;border:1px solid #56717b;border-radius:7px;color:#d5eaf1;background:#203345}</style></head>
 <body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
 <div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
 <h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · genuine agent activity</div>
@@ -125,7 +125,8 @@ function render(d){
  text($('healthState'),health.state.replaceAll('_',' ').toUpperCase());
  text($('healthDetail'),health.detail||'No current worker activity');
  const retry=health.nextRetryAt?' · Next retry '+time(health.nextRetryAt)+' · Attempt '+health.retryAttempt+'/'+health.retryMaximum:'';
- text($('healthMeta'),'GIS requests today: '+(health.dailyUsed??'—')+'/'+(health.dailyLimit??30)+retry+
+ const failed=health.failedStage?' · Failed stage '+health.failedStage:'';
+ text($('healthMeta'),'GIS requests today: '+(health.dailyUsed??'—')+'/'+(health.dailyLimit??30)+retry+failed+
   (health.lastCompleted?' · Last batch '+time(health.lastCompleted):' · No completed batch yet'));
  text($('connection'),d.summary.paused?'PAUSED':'CONNECTED');
  text($('verified'),String(d.summary.verified));text($('published'),String(d.summary.published));text($('cursor'),String(d.summary.cursor));
@@ -139,7 +140,17 @@ function render(d){
   const heading=document.createElement('b');heading.textContent=ev.from+' → '+ev.to;
   const description=document.createElement('span');description.textContent=ev.message;
   const tm=document.createElement('small');tm.textContent=(ev.approximateTime?'≈ ':'')+time(ev.at);
-  body.append(heading,description);box.append(led,body,tm);live.append(box);
+  body.append(heading,description);
+  if(ev.trace?.length){
+   const stages=document.createElement('div');stages.className='gis-trace';
+   for(const t of ev.trace){
+    const item=document.createElement('span');item.className='gis-stage';
+    item.textContent=t.stage.replaceAll('_',' ')+' · '+t.status.replaceAll('_',' ')+' · '+t.durationMs+'ms';
+    stages.append(item);
+   }
+   body.append(stages);
+  }
+  box.append(led,body,tm);live.append(box);
  }
  const transfers=events.filter(e=>e.type==='published').slice(0,15);
  if(!transfers.length){const p=document.createElement('span');p.className='empty';p.textContent='No published polygon receipts recorded yet';ticker.append(p);return;}
