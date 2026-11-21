@@ -127,6 +127,37 @@
   };
   panel.append(continueButton,continueStatus);
   await showWayneState();
+  const polygonButton=document.createElement('button');polygonButton.type='button';
+  polygonButton.textContent='Check 4 parcel boundaries (no MapTiler)';
+  const polygonResults=document.createElement('div');polygonResults.setAttribute('role','status');
+  polygonResults.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
+  polygonButton.onclick=async()=>{
+   polygonButton.disabled=true;polygonResults.textContent='Checking published official polygons…';
+   try{
+    const res=await fetch('/.netlify/functions/brain-map-county?dataset=MI-wayne',{cache:'no-store'});
+    const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Correction feed unavailable');
+    const ids=['01002263','01002754','01002830','01003357'];
+    const published=Object.values(d.records||{});
+    polygonResults.replaceChildren();
+    let confirmed=0;
+    for(const id of ids){
+     const p=published.find(x=>String(x.p).replace(/\.$/,'')===id);
+     const ring=p?.g?.[0];
+     const valid=!!p&&p.verifiedGeometry===true&&Array.isArray(ring)&&ring.length>=4&&
+      ring[0][0]===ring[ring.length-1][0]&&ring[0][1]===ring[ring.length-1][1]&&
+      Array.isArray(p.bb)&&p.bb.length===4&&Array.isArray(p.cx)&&p.cx.length===2;
+     if(valid)confirmed++;
+     const row=document.createElement('p');
+     row.textContent='Parcel '+id+' — '+(valid?'official boundary polygon present':'boundary missing or invalid');
+     polygonResults.append(row);
+    }
+    const result=document.createElement('p');
+    result.textContent=confirmed+'/4 polygons confirmed in the preview correction feed. Map display requires separate visual inspection.';
+    polygonResults.prepend(result);
+   }catch(e){polygonResults.textContent='Boundary check unavailable: '+e.message;}
+   finally{polygonButton.disabled=false;}
+  };
+  panel.append(polygonButton,polygonResults);
   const diagnostics=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Diagnostic controls';diagnostics.append(summary,...buttons,note);panel.append(title,help,diagnostics);
   for(const [label,url] of [['Open test parcel on map','/map/?c=MI-wayne&p=01002263'],['Open MapTiler preview','/owner/maptiler/']]){
    const link=document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener';link.style.marginRight='16px';panel.append(link);
