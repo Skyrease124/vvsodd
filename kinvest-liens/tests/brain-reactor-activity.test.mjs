@@ -66,8 +66,9 @@ test('worker timestamps individual GIS outcomes instead of inventing exact event
  assert.match(worker,/status:'needs_review',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:'retry_later',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:success\?'published':'publish_pending',lookupMethod:method,checkedAt:new Date\(\)\.toISOString\(\)/);
- assert.match(source,/const precise=date\(r\.checkedAt\)/);
- assert.match(source,/approximateTime:!precise/);
+ assert.match(source,/const at=date\(r\.checkedAt\)/);
+ assert.match(source,/if\(!at\)continue/);
+ assert.match(source,/approximateTime:false/);
  assert.match(source,/type:'verification_result'/);
 });
 
@@ -83,4 +84,14 @@ test('activity health distinguishes retrying, active, paused, idle and attention
  assert.match(page,/health\.state\.replaceAll/);
  assert.match(page,/health\.nextRetryAt/);
  assert.match(page,/GIS requests today:/);
+});
+
+test('activity audit preserves exact retry times and displays GIS stages',()=>{
+ assert.match(source,/const recentIds=new Set\(\)/);
+ assert.match(source,/recentIds\.has\(id\)/);
+ assert.match(source,/gisTrace/);
+ assert.match(source,/failedStage/);
+ assert.match(page,/className='gis-trace'/);
+ assert.match(page,/durationMs\+'ms'/);
+ assert.match(page,/Failed stage/);
 });
