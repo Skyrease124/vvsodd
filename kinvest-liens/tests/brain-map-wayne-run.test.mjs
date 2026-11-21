@@ -139,7 +139,7 @@ test('owner UI explicitly exposes next bounded preview run',()=>{
  assert.match(ui,/owner-brain-wayne-run/);
  assert.match(code,/MAX_PER_DAY=30/);
  assert.match(code,/controlNow\?\.status==='paused'/);
- assert.match(code,/await publish\(req,context\)/);
+ assert.match(code,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
 });
 
 test('index-first request path keeps strict verification and fallback boundary',()=>{
