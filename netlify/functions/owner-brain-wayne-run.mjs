@@ -86,7 +86,7 @@ async function handler(req,context){
     official=await get(url,1000000);
    }catch(e){
     result.failures++;s.state='provider_error';
-    result.rows.push({parcelId:id,status:'retry_later',reason:String(e.message).slice(0,110)});
+    result.rows.push({parcelId:id,status:'retry_later',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110)});
     break;
    }
    try{
@@ -94,7 +94,7 @@ async function handler(req,context){
     if(!Number.isSafeInteger(verified.officialObjectId)||verified.officialObjectId<=0)throw Error('Official object ID unavailable');
    }catch(e){
     result.needsReview++;i++;
-    result.rows.push({parcelId:id,status:'needs_review',reason:String(e.message).slice(0,110)});
+    result.rows.push({parcelId:id,status:'needs_review',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110)});
     continue;
    }
    result.verified++;
@@ -116,7 +116,7 @@ async function handler(req,context){
    await publish(req,context);
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const success=published.records?.[r.i]?.verifiedGeometry===true;
-   result.rows.push({parcelId:id,status:success?'published':'publish_pending'});
+   result.rows.push({parcelId:id,status:success?'published':'publish_pending',checkedAt:new Date().toISOString()});
    if(success)result.published++;
    else {s.state='publish_pending';break;}
    i++;
