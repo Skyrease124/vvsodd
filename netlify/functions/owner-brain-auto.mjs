@@ -1,6 +1,7 @@
 // Netlify scheduled automation. No user traffic or page required.
 // Runs free Detroit assessor checks on existing queued Wayne records. Never publishes or buys credits.
 import * as auth from '../lib/auth.mjs';
+import * as KEYS from '../lib/apikeys.mjs';
 const STORE='owner-brain-scanner-v1', STATUS='owner-brain-automatic-status-v1';
 const ROOT='https://pricepocketasset.com', LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -35,6 +36,75 @@ async function address(item,rec){
  const candidates=(data.features||[]).map(f=>f.attributes||{}).filter(x=>tidy(x.address).startsWith(prefix+' ')||tidy(x.address)===prefix).slice(0,8).map(x=>({parcelId:limit(x.parcel_number,50),address:limit(x.address),zipCode:limit(x.zip_code,12)}));
  return {status:candidates.length?'address_candidates_unverified':'no_address_match',sourceAddress:limit(a),streetSearched:prefix,candidates,sourceUrl:LAYER,checkedAt:new Date().toISOString(),verified:false,approvable:false,note:'Automated address search only. Parcel identifiers must be checked; no location inferred.'};
 }
+
+const GEOCODE_USAGE='owner-brain-geocode-usage-v1';
+const GEOCODE_DAILY_CAP=20;
+async function geocodeBatch(){
+  await KEYS.load(true);
+  const apiKey=KEYS.keyOf('GEOCODE_MAPS_CO_API_KEY');
+  if(!apiKey)return {state:'no_key',count:0,candidates:0,note:'Save a Geocode.maps.co key in Owner API Keys'};
+  const q=await auth.kvGet(STORE);
+  if(q?.status==='paused'||!Array.isArray(q?.queue))return {state:'paused',count:0,candidates:0};
+  // Pilot only: Wayne County records whose exact official GIS match is not already verified.
+  const items=q.queue.filter(x=>x.state==='MI'&&/^(Wayne|Wayne County)$/i.test(x.county)&&!x.review&&x.detroit?.status!=='candidate_found'&&!x.geocode?.checkedAt).slice(0,2);
+  if(!items.length)return {state:'idle',count:0,candidates:0,note:'All eligible Wayne addresses already checked'};
+  const data=await fetchJson(ROOT+'/map/data/MI-wayne.json',8000);
+  const rows=new Map((data.recs||[]).map(r=>[r.i,r]));
+  let checked=0,candidates=0,errors=0;
+  for(const it of items){
+    const live=await auth.kvGet(STORE);
+    if(live?.status==='paused')break;
+    const parcel=live?.queue?.find(x=>x.dataset===it.dataset&&x.recordId===it.recordId);
+    if(!parcel||parcel.review||parcel.geocode?.checkedAt)continue;
+    const original=rows.get(it.recordId);
+    if(!original||original.p!==it.parcelId||original.cx||original.g)continue;
+    const a=String(original.a||'').trim();
+    // No fallback to city-level coordinates: a full street address is mandatory.
+    if(!/^\d{1,6}\s+[A-Za-z0-9][A-Za-z0-9 .'-]{2,100},?\s+Detroit\b/i.test(a)){
+      parcel.geocode={status:'address_unavailable',verified:false,approvable:false,checkedAt:new Date().toISOString(),note:'Street-level address missing or unsupported'};
+    }else{
+      const day=new Date().toISOString().slice(0,10);
+      const usage=await auth.kvGet(GEOCODE_USAGE)||{day,used:0};
+      if(usage.day!==day){usage.day=day;usage.used=0;}
+      if(usage.used>=GEOCODE_DAILY_CAP)return {state:'daily_cap',count:checked,candidates,errors,note:'Daily safety cap reached ('+GEOCODE_DAILY_CAP+')'};
+      // Record usage BEFORE calling provider; avoid repeat spending if a call fails.
+      usage.used+=1;await auth.kvPut(GEOCODE_USAGE,usage);
+      try{
+        const query=new URLSearchParams({q:a.replace(/\s+MI\b/i,', Michigan')+', USA',limit:'3',addressdetails:'1'});
+        const response=await fetch('https://geocode.maps.co/search?'+query,{headers:{Authorization:'Bearer '+apiKey,Accept:'application/json'},signal:AbortSignal.timeout(9500)});
+        if(response.status===429||response.status===403||response.status===401){
+          return {state:'provider_limited',count:checked,candidates,errors:errors+1,note:'Provider rejected or rate-limited request (HTTP '+response.status+'). Automatic calls paused for this run.'};
+        }
+        if(!response.ok)throw Error('Geocoding HTTP '+response.status);
+        const values=await response.json();
+        if(!Array.isArray(values))throw Error('Unexpected geocoding response');
+        const options=values.slice(0,3).map(v=>({
+          lat:Number(v.lat),lon:Number(v.lon),
+          displayName:limit(v.display_name,190),
+          type:limit(v.type,50),
+          addressStreet:limit(v.address?.road,100),
+          houseNumber:limit(v.address?.house_number,20),
+          city:limit(v.address?.city||v.address?.town||v.address?.municipality,80),
+          state:limit(v.address?.state,80),
+          countryCode:limit(v.address?.country_code,3)
+        })).filter(v=>Number.isFinite(v.lat)&&Number.isFinite(v.lon)&&v.lat>42.2&&v.lat<42.5&&v.lon> -83.4&&v.lon< -82.8&&v.countryCode.toLowerCase()==='us');
+        parcel.geocode={status:options.length?'address_candidates_unverified':'no_address_match',verified:false,approvable:false,sourceAddress:limit(a,160),candidates:options,sourceUrl:'https://geocode.maps.co/',checkedAt:new Date().toISOString(),note:'OpenStreetMap-based address geocoding only. Candidate points are NOT verified property boundaries or county GIS matches.'};
+        if(options.length)candidates++;
+      }catch(e){
+        errors++;
+        parcel.geocode={status:'provider_error',verified:false,approvable:false,sourceAddress:limit(a,160),checkedAt:new Date().toISOString(),note:'Geocoding request failed. No location inferred.'};
+      }
+    }
+    const update=await auth.kvGet(STORE);
+    if(update?.status==='paused')break;
+    const found=update?.queue?.find(x=>x.dataset===parcel.dataset&&x.recordId===parcel.recordId);
+    if(!found||found.review||found.geocode?.checkedAt)continue;
+    found.geocode=parcel.geocode;update.updatedAt=new Date().toISOString();await auth.kvPut(STORE,update);
+    checked++;
+  }
+  return {state:errors?'partial_error':'idle',count:checked,candidates,errors,note:'Address candidates for private review only. Zero public map changes.'};
+}
+
 export default async function handler(){
  const started=new Date().toISOString();
  const prior=await auth.kvGet(STATUS)||{runs:0,checked:0};
@@ -44,8 +114,13 @@ export default async function handler(){
   const q=await auth.kvGet(STORE);
   if(q?.status==='paused'){state.state='paused';state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);return}
   if(!Array.isArray(q?.queue)||!q.queue.length){state.state='waiting_for_queue';state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);return}
+  // Geocoding is a separate, tightly capped background pass even when prior GIS checks are complete.
+  let geocodeResult;
+  try{geocodeResult=await geocodeBatch();}catch(e){geocodeResult={state:'error',count:0,candidates:0,note:'Geocoder unavailable'};}
+  state.geocode={...geocodeResult,updatedAt:new Date().toISOString()};
+  await auth.kvPut(STATUS,state);
   const eligible=q.queue.filter(r=>r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)&&!r.review&&r.detroit?.status!=='candidate_found'&&(!r.detroit?.foundAt||!r.detroitAddress?.checkedAt));
-  if(!eligible.length){state.state='idle';state.note='No more eligible Wayne cases; other county connectors not yet configured';state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);return}
+  if(!eligible.length){state.state='idle';state.note='No remaining Wayne GIS candidates for this pass. Geocoder: '+geocodeResult.state;state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);return}
   const ds=await fetchJson(ROOT+'/map/data/MI-wayne.json',8000);
   const index=new Map((ds.recs||[]).map(r=>[r.i,r]));
   let processed=0,found=0,errors=0;
@@ -72,7 +147,7 @@ export default async function handler(){
   }
   state.checked=(state.checked||0)+processed;state.candidates=(state.candidates||0)+found;state.errors=(state.errors||0)+errors;
   state.state=errors?'partial_error':'idle';state.lastCompleted=new Date().toISOString();
-  state.note=processed+' automatic free GIS check(s), '+found+' new candidate(s) this run. Paid API disabled. No publication.';
+  state.note=processed+' free GIS checks, '+found+' GIS candidate(s), '+geocodeResult.count+' geocoding checks. No public map changes.';
   await auth.kvPut(STATUS,state);
  }catch(e){state.state='error';state.lastError=limit(e.message,140);state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);}
 }
