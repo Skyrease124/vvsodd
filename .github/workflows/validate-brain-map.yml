@@ -59,7 +59,7 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-batch-test.mjs
       - run: node kinvest-liens/tests/brain-map-batch-publish.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-wayne-run.test.mjs
-      - run: node kinvest-liens/tests/brain-map-scheduled.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-scheduled.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-reactor-activity.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs
