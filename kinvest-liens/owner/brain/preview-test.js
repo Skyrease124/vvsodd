@@ -91,6 +91,42 @@
    finally{publishThree.disabled=false;}
   };
   panel.append(publishThree,publishThreeResult);
+  const continueButton=document.createElement('button');continueButton.type='button';
+  continueButton.textContent='Run next Wayne batch (up to 3)';
+  const continueStatus=document.createElement('div');continueStatus.setAttribute('role','status');
+  continueStatus.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
+  async function showWayneState(){
+   try{
+    const r=await window.PPABrainRequest('/.netlify/functions/owner-brain-wayne-run',
+     {credentials:'same-origin',cache:'no-store'});
+    const d=await r.json();if(!r.ok)throw Error(d.error||'Status unavailable');
+    continueStatus.textContent='Wayne cursor: '+d.cursor+
+     ' · GIS calls today: '+d.dailyUsed+'/'+d.dailyLimit+
+     ' · Published by batch worker: '+d.published+
+     ' · Review: '+d.needsReview+' · State: '+(d.state||'idle');
+   }catch(e){continueStatus.textContent='Wayne batch status unavailable: '+e.message;}
+  }
+  continueButton.onclick=async()=>{
+   if(!confirm('Process up to 3 more Detroit-address Wayne parcels, save the cursor and publish only officially verified polygons in this isolated preview? No paid AI calls.'))return;
+   continueButton.disabled=true;continueStatus.textContent='Running bounded official GIS checks…';
+   try{
+    const r=await window.PPABrainRequest('/.netlify/functions/owner-brain-wayne-run',{
+     method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({action:'run-wayne-batch',confirmed:true})});
+    const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Batch failed');
+    continueStatus.replaceChildren();
+    const p=document.createElement('p');p.textContent='Cursor '+d.cursor+' · '+d.attempted+
+     ' GIS lookups · '+d.published+' published · '+d.needsReview+' needing review · '+d.failures+' failures';
+    continueStatus.append(p);
+    for(const item of d.rows||[]){const row=document.createElement('p');
+     row.textContent='Parcel '+item.parcelId+' — '+item.status.replaceAll('_',' ')+(item.reason?' · '+item.reason:'');
+     continueStatus.append(row);}
+    if(typeof load==='function')await load();
+   }catch(e){continueStatus.textContent='Batch stopped: '+e.message;}
+   finally{continueButton.disabled=false;}
+  };
+  panel.append(continueButton,continueStatus);
+  await showWayneState();
   const diagnostics=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Diagnostic controls';diagnostics.append(summary,...buttons,note);panel.append(title,help,diagnostics);
   for(const [label,url] of [['Open test parcel on map','/map/?c=MI-wayne&p=01002263'],['Open MapTiler preview','/owner/maptiler/']]){
    const link=document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener';link.style.marginRight='16px';panel.append(link);
