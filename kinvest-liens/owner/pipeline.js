@@ -7,7 +7,7 @@
   const counts=document.createElement('p');counts.textContent=state.sources+' source records · '+state.queued+' parcel cases · '+state.verified+' verified decisions · '+state.published+' published corrections';
   const flow=document.createElement('p');flow.textContent='Coverage gaps → source evidence → Brain verification → all maps → updated coverage';
   const note=document.createElement('p');note.textContent=state.scope;
-  panel.append(heading,counts,flow,note);
+  const monitor=document.createElement('p');const status=state.sourceMonitor||{};monitor.textContent=state.preview?'Preview sample is prepared automatically. Scheduled source scans run after production deployment.':'Source agent: '+(status.state||'awaiting first run').replaceAll('_',' ')+' · Last completed: '+(status.lastCompleted||'not yet')+' · Linked research cases: '+(state.linkedResearchCases||0)+(status.lastError?' · '+status.lastError:'');panel.append(heading,counts,flow,monitor,note);
   for(const [label,url] of [['Intelligence Center','/owner/intelligence/'],['AI Brain','/owner/brain/'],['Map Coverage & Repair','/owner/map-coverage/'],['MapTiler Preview','/owner/maptiler/']]){
    const a=document.createElement('a');a.href=url;a.textContent=label;a.style.cssText='color:#86e7cd;display:inline-block;margin:5px 15px 5px 0';panel.append(a);
   }

@@ -353,7 +353,9 @@
   const fitPad = () => homeMap ? {top:18,bottom:28,left:14,right:14} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
   // The box to zoom to: the county's records, ignoring a few far-away strays (bad addresses) so the view lands on where the parcels really are.
   function fitBB(ds) {
-    const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx); if (!d.bb || pts.length < 8) return d.bb;
+    const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx);
+    if(!d.bb){const boxes=ds.recs.filter(r=>r.bb&&r.cx).map(r=>r.bb);return boxes.length?[Math.min(...boxes.map(b=>b[0])),Math.min(...boxes.map(b=>b[1])),Math.max(...boxes.map(b=>b[2])),Math.max(...boxes.map(b=>b[3]))]:null;}
+    if (pts.length < 8) return d.bb;
     const xs = pts.map(p => p[0]).sort((a, b) => a - b), ys = pts.map(p => p[1]).sort((a, b) => a - b), q = (a, p) => a[Math.floor((a.length - 1) * p)];
     const core = [q(xs, .02), q(ys, .02), q(xs, .98), q(ys, .98)], full = Math.max(d.bb[2] - d.bb[0], d.bb[3] - d.bb[1]), cw = Math.max(core[2] - core[0], core[3] - core[1], 1e-4);
     if (full / cw < 2.5) return d.bb; const pad = cw * 0.06; return [core[0] - pad, core[1] - pad, core[2] + pad, core[3] + pad];
@@ -566,8 +568,9 @@
     const ds = await load(id); if (!ds) return; curCounty = id; const d = ds.meta; if (window.__pm) { window.__pm.stSel.value = d.state; curState = d.state; fillCounties(window.__pm.coSel); window.__pm.coSel.value = id; }
     F.query = null; active = new Set([id]); F.inView = false; syncGISButton(); { const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); a.hidden = true; } }
     refresh(); closePop(); showTab('list', false); aiRefresh(); if (isMobile()) setSnap('peek'); // collapse the sheet so the county is in view; pull it up for the list
-    if (d.bb) fitTo(fitBB(ds)); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
-    if (announce && d.mapped && d.mapped < d.records) setTimeout(() => say(d.mapped.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'), 1500);
+    const correctedBounds=fitBB(ds),mappedCount=ds.recs.filter(r=>r.g||r.cx).length;
+    if (correctedBounds) fitTo(correctedBounds); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
+    if (announce && mappedCount && mappedCount < d.records) setTimeout(() => say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'), 1500);
     setMapUrl(id);
     if (remember && locationContext) rememberArea(locationContext.countyArea(d));
   }
@@ -1258,7 +1261,18 @@
       locationContext.subscribe((area, source) => { if (source === 'chosen') showArea(area); });
     }
   }
-  function loadLib() { return new Promise((res, rej) => { if (window.maplibregl) return res(); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = () => rej(new Error('map library')); document.head.appendChild(s); }); }
+  async function loadLib() {
+    if(window.maplibregl?.Map)return;
+    for(const url of ['https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js','https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js']){
+      try{await new Promise((resolve,reject)=>{
+        const script=document.createElement('script');let timer;
+        const done=error=>{clearTimeout(timer);script.onload=script.onerror=null;if(error){script.remove();reject(error);}else resolve();};
+        script.src=url;script.crossOrigin='anonymous';script.onload=()=>done(window.maplibregl?.Map?null:Error('Map library did not initialize'));script.onerror=()=>done(Error('Map library download failed'));
+        timer=setTimeout(()=>done(Error('Map library download timed out')),9000);document.head.appendChild(script);
+      });return;}catch(error){console.warn('Parcel map library:',error.message);}
+    }
+    throw Error('Map library could not be downloaded');
+  }
   function afterAccount() {
     buildAi();
     const ask = $('pmAsk');
@@ -1299,7 +1313,10 @@
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVerifiedOverlays();});
     if (workspace) return;
     buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => openAi()); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
-    try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
+    try { await loadLib(); initMap(); } catch (e) { console.error('Parcel map initialization failed:',e);mapReady=false;
+      try{await start2();}catch(error){console.error('Parcel detail fallback failed:',error);}
+      say(window.maplibregl?.Map?'The map could not start in this browser. Parcel details are still available.':'The map library could not be downloaded. Parcel details are still available.', true);
+    }
   }
   function refresh0() { renderResults([]); }
   window.addEventListener('keydown', e => { if (e.key !== 'Escape' || workspace) return;

@@ -15,7 +15,8 @@ on:
       - 'scripts/prepare-brain-preview.mjs'
       - 'netlify.toml'
       - 'netlify/functions/owner-map-coverage.mjs'
-      - 'netlify/functions/owner-intelligence.mjs'
+      - 'netlify/functions/owner-intelligence*.mjs'
+      - 'netlify/lib/brain-source-leads.mjs'
       - 'kinvest-liens/owner/pipeline.js'
       - 'kinvest-liens/owner/brain/**'
       - '.github/workflows/validate-brain-map.yml'
@@ -33,7 +34,8 @@ on:
       - 'scripts/prepare-brain-preview.mjs'
       - 'netlify.toml'
       - 'netlify/functions/owner-map-coverage.mjs'
-      - 'netlify/functions/owner-intelligence.mjs'
+      - 'netlify/functions/owner-intelligence*.mjs'
+      - 'netlify/lib/brain-source-leads.mjs'
       - 'kinvest-liens/owner/pipeline.js'
       - 'kinvest-liens/owner/brain/**'
       - '.github/workflows/validate-brain-map.yml'
@@ -50,3 +52,4 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs
       - run: node kinvest-liens/tests/brain-map-requests.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-autonomous.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-source-pipeline.test.mjs

@@ -51,11 +51,11 @@ async function handler(){
   if(q?.status==='paused'){state.state='paused';state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);return}
   const ds=await fetchJson(ROOT+'/map/data/MI-wayne.json',8000);
   for(const r of ds.recs||[])for(const [k,dict] of Object.entries(ds.dict||{}))if(r[k]!=null)r[k]=dict[r[k]];
-  if(!(q.queue||[]).some(r=>!r.review)){
+  if(!(q.queue||[]).some(r=>r.dataset==='MI-wayne'&&!r.review)){
    const saved=await auth.kvGet('brain-map-county-v1-MI-wayne')||{records:{}};
    const queue=[];let cursor=q.nextRecord||0;
    while(cursor<ds.recs.length&&queue.length<50){const r=ds.recs[cursor++];if(r.g||r.cx||saved.records?.[r.i])continue;queue.push({dataset:'MI-wayne',state:'MI',county:'Wayne',recordId:r.i,parcelId:r.p,issue:'Missing verified geometry'});}
-   q={...q,queue,nextRecord:cursor,updatedAt:new Date().toISOString()};await auth.kvPut(STORE,q);
+   q={...q,queue:[...(q.queue||[]).filter(r=>r.dataset!=='MI-wayne').slice(0,50),...queue],nextRecord:cursor,updatedAt:new Date().toISOString()};await auth.kvPut(STORE,q);
   }
   if(!q.queue.length){state.state='scan_complete';return;}
   const eligible=q.queue.filter(r=>r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)&&!r.review&&!r.verification?.checkedAt&&(r.detroit?.status==='candidate_found'||!r.detroit?.foundAt||!r.detroitAddress?.checkedAt));
