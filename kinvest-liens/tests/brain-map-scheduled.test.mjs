@@ -151,3 +151,14 @@ test('Wayne test batch is explicit preview-only and reports real GIS results',()
  assert.match(worker,/const user=await auth\.userFromCookie/);
  assert.match(worker,/if\(!user\?\.owner\)/);
 });
+
+test('publisher cannot be invoked directly and counts each official GIS lookup against Wayne daily cap',()=>{
+ const publisher=fs.readFileSync('netlify/functions/brain-map-publish-auto.mjs','utf8');
+ const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+ assert.match(publisher,/waynePublisherInternal!==true/);
+ assert.match(publisher,/typeof context\.chargeWayneGisRequest!=='function'/);
+ assert.match(publisher,/await context\.chargeWayneGisRequest\(\);\s*result=await json\(url,1000000\)/);
+ assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
+ assert.match(worker,/if\(s\.dailyUsed>=MAX_PER_DAY\)throw Object\.assign\(Error\('Daily GIS request limit reached'\)/);
+ assert.match(worker,/s\.dailyUsed\+\+;\s*await auth\.kvPut\(STORE,\{\.\.\.s,cursor:i\}\)/);
+});
