@@ -36,3 +36,15 @@ test('website scheduler toggle is owner-only, same-origin and production-only',(
  assert.match(ownerPage,/toggle\.hidden=!!d\.preview/);
  assert.match(ready,/websiteControlledSchedule:true/);
 });
+
+test('map coverage counter is authoritative, worker total is separately labeled',()=>{
+ const status=fs.readFileSync('netlify/functions/owner-brain-autonomy-status.mjs','utf8');
+ const page=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
+ assert.match(status,/verifiedOverlayCount=Object.values\(overlay\?\.records\|\|\{\}\)/);
+ assert.match(status,/r\?\.verifiedGeometry===true/);
+ assert.match(status,/publicationCountMeaning/);
+ assert.match(page,/Verified map polygons/);
+ assert.match(page,/Worker-published/);
+ assert.match(status,/waynePilotReady/);
+ assert.match(status,/nationwideReady:false/);
+});
