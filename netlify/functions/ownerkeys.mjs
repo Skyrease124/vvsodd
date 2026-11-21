@@ -40,6 +40,23 @@ export default async function handler(req) {
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
   }
+  if (b.test === 'floridaproperty') {
+    const key=KEYS.keyOf('FLORIDA_PROPERTY_API_KEY');
+    if (!key) return json(200,{ok:false,error:'Save the Florida Property API key first.'});
+    if (b.allowTrialCredit !== true) return json(200,{ok:false,error:'Connection test requires confirmation: it may consume one trial credit.'});
+    // This is an explicitly authorized, one-time owner test; it never launches a bulk parcel job.
+    // Free-trial quota is enforced by the provider; the app does not purchase or top up credits.
+    try {
+      const r=await fetch('https://api.floridapropertyapi.com/v1/account/usage',{
+        headers:{'X-API-Key':key},signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return json(200,{ok:false,error:'Florida Property API returned HTTP '+r.status+(r.status===401?' (key rejected).':r.status===402?' (trial credits depleted or expired).':'')});
+      const d=await r.json().catch(()=>({}));
+      const data=d.data||{};
+      const quota=data.quota??data.monthly_quota??null;
+      const used=data.usage??data.used??data.requests??null;
+      return json(200,{ok:true,nlr:true,text:'Florida Property API authenticated. Usage endpoint responded.'+(quota!=null?' Quota: '+String(quota).slice(0,24)+'.':'')+(used!=null?' Usage: '+String(used).slice(0,24)+'.':'')+' The test may count toward your remaining trial credits.'});
+    }catch{return json(200,{ok:false,error:'Florida Property API did not respond. No automatic retry will occur.'});}
+  }
   if (b.test === 'gemini') {
     const key=KEYS.keyOf('GEMINI_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save a Gemini API key first.'});
