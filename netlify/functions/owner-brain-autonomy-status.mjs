@@ -12,7 +12,8 @@ async function handler(req,context){
  const [worker,control,audit,overlay]=await Promise.all([
   auth.kvGet('owner-brain-wayne-worker-v1'),
   auth.kvGet('owner-brain-scanner-v1'),
-  auth.kvGet('owner-brain-wayne-schedule-audit-v1')
+  auth.kvGet('owner-brain-wayne-schedule-audit-v1'),
+  auth.kvGet('brain-map-county-v1-MI-wayne')
  ]);
  const verifiedOverlayCount=Object.values(overlay?.records||{}).filter(r=>r?.verifiedGeometry===true&&r?.i&&Array.isArray(r.g)&&r.g.length).length;
  const steps=[
@@ -27,6 +28,7 @@ async function handler(req,context){
   previewRequiresOpenDashboard:true,websiteControlledSchedule:true,
   worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),verifiedOverlayCount,publicationCountMeaning:'worker total excludes earlier pilot and other confirmed overlay entries',state:String(worker?.state||'not_started'),
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
+   retryParcel:worker?.retry?.parcelId||null,retryAttempt:Number(worker?.retry?.attempts||0),retryLastError:worker?.retry?.lastError||null,
    lastCompleted:worker?.lastCompleted||null,dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30},
   lastScheduledRun:audit?.last||null,scheduledRuns:Number(audit?.runs||0),
   nextCountyAutomatic:false,allCountiesConfigured:false,checks:steps,
