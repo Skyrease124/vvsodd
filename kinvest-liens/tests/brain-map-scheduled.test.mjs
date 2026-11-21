@@ -125,3 +125,14 @@ test('release candidate keeps separate preview blob namespace from PR 452 and pr
  assert.match(auth,/context\.deploy\.context==='deploy-preview'/);
  assert.match(auth,/if\(!isolated\(k\)\)return auth\.kvGet\(k\)/);
 });
+
+test('release queue pause controls never access production store on preview',()=>{
+ const queue=fs.readFileSync('netlify/functions/owner-brain-queue.mjs','utf8');
+ const auth=fs.readFileSync('netlify/lib/brain-auth.mjs','utf8');
+ assert.match(queue,/import \* as auth from '\.\.\/lib\/brain-auth\.mjs'/);
+ assert.match(queue,/export default auth\.withBrainStore\(handler\)/);
+ assert.match(auth,/ppa-brain-preview-pr453/);
+ const seeded=auth.match(/const SEEDED=new Set\(\[([\s\S]*?)\]\)/)?.[1]||'';
+ assert.doesNotMatch(seeded,/owner-brain-scanner-v1/);
+ assert.match(queue,/if\(action==='pause'\|\|action==='resume'\)/);
+});
