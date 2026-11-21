@@ -21,7 +21,7 @@ const entry={caseKey,dataset:'MI-wayne',recordId:id,parcelId:record.p,state:'MI'
 const patch={i:id,p:record.p,g:verified.g,bb:verified.bb,cx:verified.cx,verifiedGeometry:true,verifiedAt:at,evidenceUrl:sourceUrl,caseKey};
 const store={
  'brain-source-events-v1':{entries:[{sourceId:'detroit-official-parcel-01002263',url:sourceUrl,checkedAt:at,changed:false,status:'verified_official_polygon'}]},
- 'owner-brain-scanner-v1':{status:'idle',updatedAt:at,queue:[{dataset:'MI-wayne',recordId:id,parcelId:record.p,state:'MI',county:'Wayne',issue:'Verified automatically from official GIS',verification:entry,review:{decision:entry.decision,reviewedAt:at,caseKey,publishStatus:'published'}}]},
+ 'owner-brain-scanner-v1':{status:'idle',built:ds.built||at,updatedAt:at,queue:[{dataset:'MI-wayne',recordId:id,parcelId:record.p,state:'MI',county:'Wayne',issue:'Verified automatically from official GIS',verification:entry,review:{decision:entry.decision,reviewedAt:at,caseKey,publishStatus:'published'}}]},
  'owner-brain-approvals-v1':{entries:[entry]},
  'brain-map-county-v1-MI-wayne':{version:1,updatedAt:at,records:{[id]:patch}},
  'brain-map-history-v1':{entries:[{dataset:'MI-wayne',recordId:id,parcelId:record.p,action:'published',source:'automated official Detroit GIS verification',reviewCase:caseKey,at}]},

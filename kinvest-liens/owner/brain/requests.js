@@ -19,7 +19,7 @@
   byId('state').textContent='Preview ready';
   byId('autoState').textContent='Scheduled workers are disabled in this preview.';
   const explanation=byId('autoState').parentElement.querySelector('p.muted');
-  if(explanation)explanation.textContent='Waiting longer will not start background research here. This preview uses an isolated test store. The official parcel test runs through the preview controls above; it does not need AI research.';
+  if(explanation)explanation.textContent='Background schedules do not run in this preview. The deployment agent automatically prepares the verified official sample in an isolated test store. Its saved evidence and publication status appear below; no AI research or form entry is needed.';
   for(const id of ['autoSummary','autoGeocode','autoElevation','autoCrosscheck','photonStatus','geoStatus'])byId(id).textContent='Not scheduled in this preview. No background request is loading.';
   byId('pause').disabled=true;byId('resume').disabled=true;
   byId('note').textContent='Preview queue last updated: '+(data.updatedAt||'not yet');

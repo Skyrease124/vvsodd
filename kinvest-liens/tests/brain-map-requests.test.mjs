@@ -30,7 +30,7 @@ test('successful and rejected HTTP responses retain status and JSON for existing
 test('preview status explicitly says schedules are disabled and removes waiting labels',()=>{
  const h=setup();h.api.PPABrainPreviewStatus({previewMode:true,updatedAt:'today'});
  assert.match(h.element('autoState').textContent,/disabled in this preview/);
- assert.match(h.element('explanation').textContent,/Waiting longer will not start/);
+ assert.match(h.element('explanation').textContent,/automatically prepares the verified official sample/);
  assert.equal(h.element('pause').disabled,true);
  assert.equal(h.element('resume').disabled,true);
  assert.match(h.element('autoGeocode').textContent,/No background request is loading/);
