@@ -9,11 +9,12 @@ async function handler(req,context){
  const preview=auth.isBrainPreview();
  const configuredState=await auth.kvGet('owner-brain-wayne-scheduler-control-v1');
  const configured=configuredState?.enabled===true&&configuredState?.approvedForProduction===true;
- const [worker,control,audit]=await Promise.all([
+ const [worker,control,audit,overlay]=await Promise.all([
   auth.kvGet('owner-brain-wayne-worker-v1'),
   auth.kvGet('owner-brain-scanner-v1'),
   auth.kvGet('owner-brain-wayne-schedule-audit-v1')
  ]);
+ const verifiedOverlayCount=Object.values(overlay?.records||{}).filter(r=>r?.verifiedGeometry===true&&r?.i&&Array.isArray(r.g)&&r.g.length).length;
  const steps=[
   {key:'preview_validation',name:'Preview GIS and publisher verified',ready:!!worker?.published&&!!worker?.cursor},
   {key:'safety',name:'30-request daily cap and owner pause',ready:true},
@@ -24,11 +25,12 @@ async function handler(req,context){
  return reply(200,{ok:true,preview,environment:context?.deploy?.context||'unknown',
   unattendedProductionEnabled:!preview&&configured,scheduledFrequencyMinutes:30,
   previewRequiresOpenDashboard:true,websiteControlledSchedule:true,
-  worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),state:String(worker?.state||'not_started'),
+  worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),verifiedOverlayCount,publicationCountMeaning:'worker total excludes earlier pilot and other confirmed overlay entries',state:String(worker?.state||'not_started'),
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
    lastCompleted:worker?.lastCompleted||null,dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30},
   lastScheduledRun:audit?.last||null,scheduledRuns:Number(audit?.runs||0),
   nextCountyAutomatic:false,allCountiesConfigured:false,checks:steps,
-  releaseReady:steps.every(x=>x.ready)});
+  waynePilotReady:steps.filter(x=>['preview_validation','safety'].includes(x.key)).every(x=>x.ready),
+  nationwideReady:false,releaseReady:steps.every(x=>x.ready)});
 }
 export default auth.withBrainStore(handler);
