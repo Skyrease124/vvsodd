@@ -118,7 +118,7 @@ $('terrain').onclick=()=>{
   key=d.key;
   const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
   const index=await indexResponse.json();
-  window.__datasets=(index.datasets||[]).filter(x=>/^[A-Za-z0-9_-]+\\.json$/.test(x.file||''));
+  window.__datasets=(index.datasets||[]).filter(x=>/^[A-Za-z0-9_-]+\.json$/.test(x.file||''));
   const states=[...new Set(window.__datasets.map(x=>x.state))].sort();
   for(const state of states){const o=document.createElement('option');o.value=state;o.textContent=(index.states?.[state]?.n||state)+' ('+state+')';$('state').append(o);}
   $('state').value=states.includes(preferredState)?preferredState:states[0]||'';
