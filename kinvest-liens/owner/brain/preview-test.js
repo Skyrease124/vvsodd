@@ -19,6 +19,7 @@
      const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
      const d=await r.json();if(!r.ok)throw Error(d.error||'Preview test failed');
      note.textContent=d.message;
+     if(action==='publish'||action==='rollback')window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne'}}));
      // Existing dashboard functions refresh the review queue and publication monitor.
      if(typeof load==='function')await load();
     }catch(e){note.textContent=e.message;}finally{buttons.forEach(b=>b.disabled=false);}
@@ -86,6 +87,7 @@
     publishThreeResult.replaceChildren();
     const headline=document.createElement('p');headline.textContent=d.message+' ('+d.published+'/3 published)';publishThreeResult.append(headline);
     for(const row of d.results||[]){const p=document.createElement('p');p.textContent='Parcel '+row.parcelId+' — '+(row.published?'Published to preview':'Not published');publishThreeResult.append(p);}
+    window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:d.published}}));
     if(typeof load==='function')await load();
    }catch(e){publishThreeResult.textContent='Preview publication unavailable: '+e.message;}
    finally{publishThree.disabled=false;}
@@ -121,6 +123,7 @@
     for(const item of d.rows||[]){const row=document.createElement('p');
      row.textContent='Parcel '+item.parcelId+' — '+item.status.replaceAll('_',' ')+(item.reason?' · '+item.reason:'');
      continueStatus.append(row);}
+    window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:d.published}}));
     if(typeof load==='function')await load();
    }catch(e){continueStatus.textContent='Batch stopped: '+e.message;}
    finally{continueButton.disabled=false;}
