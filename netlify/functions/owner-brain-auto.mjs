@@ -151,4 +151,4 @@ export default async function handler(){
   await auth.kvPut(STATUS,state);
  }catch(e){state.state='error';state.lastError=limit(e.message,140);state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);}
 }
-export const config={schedule:'*/30 * * * *'};
+export const config={schedule:'0 */2 * * *'};
