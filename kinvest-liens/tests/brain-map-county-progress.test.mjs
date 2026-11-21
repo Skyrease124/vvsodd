@@ -14,3 +14,12 @@ test('owner progress view shows active work and explicit connector blockers',()=
  for(const phrase of ['County Agent Progress','Estimated remaining','Blocked: ','staged','Publisher','Refresh county status'])assert.ok(frontend.includes(phrase),phrase);
  assert.match(frontend,/owner-brain-county-progress/);
 });
+
+test('county progress bar is accessible and uses precise verified percentage',()=>{
+ assert.match(frontend,/role','progressbar'/);
+ assert.match(frontend,/aria-valuenow/);
+ assert.match(frontend,/percent\.toFixed\(2\)/);
+ assert.match(frontend,/c\.baselineMapped/);
+ assert.match(frontend,/c\.verifiedCorrections/);
+ assert.match(frontend,/County mapping progress/);
+});
