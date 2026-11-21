@@ -40,6 +40,20 @@ export default async function handler(req) {
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
   }
+  if (b.test === 'geocodemaps') {
+    const key=KEYS.keyOf('GEOCODE_MAPS_CO_API_KEY');
+    if(!key)return json(200,{ok:false,error:'Save the Geocode.maps.co API key first.'});
+    // One explicitly requested server-side test only. No automated requests.
+    // Bearer header keeps the secret out of URL query strings and client code.
+    try{
+      const u='https://geocode.maps.co/search?'+new URLSearchParams({q:'1600 Pennsylvania Avenue NW, Washington, DC',limit:'1'});
+      const r=await fetch(u,{headers:{Authorization:'Bearer '+key,Accept:'application/json'},signal:AbortSignal.timeout(12000)});
+      if(!r.ok)return json(200,{ok:false,error:'Geocode.maps.co test returned HTTP '+r.status+(r.status===401||r.status===403?' (check key or account).':r.status===429?' (provider limit reached).':'')});
+      const results=await r.json();
+      if(!Array.isArray(results))return json(200,{ok:false,error:'Geocode.maps.co did not return the expected array of geocoding results.'});
+      return json(200,{ok:true,nlr:true,text:'Geocode.maps.co responded. '+results.length+' geocoding candidate(s) returned for the test address. One request may count toward your free quota. Background integration is not enabled yet.'});
+    }catch{return json(200,{ok:false,error:'Geocode.maps.co test timed out or failed. No automatic retry.'})}
+  }
   if (b.test === 'floridaproperty') {
     const key=KEYS.keyOf('FLORIDA_PROPERTY_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save the Florida Property API key first.'});
