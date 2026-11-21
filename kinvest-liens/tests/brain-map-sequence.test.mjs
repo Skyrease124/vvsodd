@@ -21,7 +21,7 @@ test('address research and unverified point candidates do not complete a county'
  assert.equal(current.blocked,false);
 });
 test('verified patches cannot advance without complete original-record reconciliation',async()=>{
- const h=store(),i={datasets:[dataset('MI-wayne',2,1),dataset('MS-hinds',5)]};
+ const h=store(),i={datasets:[dataset('MI-wayne',2,1),dataset('MS-hinds',1)]};
  h.m.set('brain-map-county-v1-MI-wayne',{records:{b:{i:'b',verifiedGeometry:true,g:[[[1,2]]]}}});
  assert.equal((await activeCounty(i,h)).dataset.id,'MI-wayne');
  assert.equal((await activeCounty(i,h,async()=>({recs:[{i:'a',g:[[[1,2]]]},{i:'b'}]}))).dataset.id,'MS-hinds');
