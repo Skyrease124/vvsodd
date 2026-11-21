@@ -3,6 +3,7 @@
 //   POST {name, value}          -> save      POST {name, remove:true} -> clear
 //   POST {test:'ga'|'az'|'wi'}       -> server-side check: camera count, one sample camera, and whether its image loads (the key is never returned)
 import * as auth from '../lib/auth.mjs';
+import * as RL from '../lib/ratelimit.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 import { APP_ID as OSAPP, postAny as OSPOST, candidates as OSKEYS } from '../lib/onesignal.mjs';
 import { PROVIDERS } from './cameras.mjs';
@@ -24,9 +25,27 @@ export default async function handler(req) {
   if (!me.owner) return json(403, { ok: false, error: 'Owner only.' });
   await KEYS.load(true);
   const list = () => Object.keys(KEYS.NAMES).map(n => { const env = !!process.env[n], k = KEYS.keyOf(n); return { name: n, label: KEYS.NAMES[n], set: !!k, hint: k ? '…' + k.slice(-4) : '', source: env ? 'Netlify setting' : k ? 'Saved here' : '' }; });
-  if (req.method === 'GET') return json(200, { ok: true, keys: list() });
+  const configKey='owner-ai-research-api-controls';
+  const controls=async()=>({tavilyEnabled:true,tavilyMonthlyCap:500,...(await auth.kvGet(configKey)||{})});
+  if (req.method === 'GET') return json(200, { ok: true, keys: list(), researchControls: await controls() });
   if (req.method !== 'POST') return json(405, { ok: false });
   let b; try { b = await req.json(); } catch (e) { return json(400, { ok: false, error: 'Bad request.' }); }
+  if (b.action === 'researchControls') {
+    const current=await controls();
+    const next={tavilyEnabled:typeof b.tavilyEnabled==='boolean'?b.tavilyEnabled:current.tavilyEnabled,
+      tavilyMonthlyCap:Number.isInteger(b.tavilyMonthlyCap)&&b.tavilyMonthlyCap>=0&&b.tavilyMonthlyCap<=1000?b.tavilyMonthlyCap:current.tavilyMonthlyCap};
+    await auth.kvPut(configKey,next);
+    return json(200,{ok:true,keys:list(),researchControls:next});
+  }
+  if (b.test === 'tavily') {
+    const key=KEYS.keyOf('TAVILY_API_KEY');
+    if (!key) return json(200,{ok:false,error:'Save a Tavily key first.'});
+    try {
+      const r=await fetch('https://api.tavily.com/search',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({query:'site:usa.gov property parcel GIS',search_depth:'basic',max_results:1}),signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return json(200,{ok:false,error:'Tavily test returned HTTP '+r.status+'.'});
+      return json(200,{ok:true,nlr:true,text:'Tavily web search connected. Test used API credits according to your plan.'});
+    } catch {return json(200,{ok:false,error:'Tavily did not respond.'});}
+  }
   if (b.test === 'onesignal') {
     // Checks the key without sending anyone a notification: the target is an external id nobody has, so a valid key gets "no recipients".
     if (!(await OSKEYS()).length) return json(200, { ok: false, error: 'No key saved yet.' });
