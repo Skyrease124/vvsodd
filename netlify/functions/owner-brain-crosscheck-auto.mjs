@@ -1,7 +1,7 @@
 // Scheduled cross-verification, Detroit pilot. Compare a unique official parcel address/ID
 // and official parcel polygon with a prior independent geocoded address point.
 // Private candidate only; DOES NOT edit published maps, skip owner review or purchase API credits.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const QUEUE='owner-brain-scanner-v1', STATUS='owner-brain-crosscheck-status-v1';
 const ROOT='https://pricepocketasset.com';
 const LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
@@ -50,7 +50,7 @@ async function evaluate(item,record){
  if(matches.length>1&&matches[1].distance-matches[0].distance<25)return fail('ambiguous','Multiple geocoding candidates within 25 meters of one another');
  return {status:'candidate_found',verified:false,approvable:false,matchedId:trim(feature.attributes.parcel_number,80),address:trim(feature.attributes.address,120),centroidApprox:{lat:Number(lat.toFixed(6)),lon:Number(lon.toFixed(6))},geocodePosition:{lat:matches[0].p.lat,lon:matches[0].p.lon},distanceMeters:Math.round(matches[0].distance),geometryPoints:points.length,sourceUrl:LAYER,sourceType:'City of Detroit Assessor GIS + Geocode.maps.co',checkedAt:now,note:'Automated cross-check found a matching parcel ID and street address; GIS polygon and geocoded point are within 100m. Independently verify official current records before approval. No map edits.'};
 }
-export default async function(){
+async function handler(){
  const previous=await auth.kvGet(STATUS)||{runs:0,checked:0,candidates:0};
  const status={...previous,runs:(previous.runs||0)+1,state:'running',lastStarted:new Date().toISOString(),lastError:null};
  await auth.kvPut(STATUS,status);
@@ -87,3 +87,5 @@ export default async function(){
  finally{status.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,status);}
 };
 export const config={schedule:'0 1,9,17 * * *'};
+
+export default auth.withBrainStore(handler);

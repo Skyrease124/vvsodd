@@ -1,5 +1,5 @@
 // Read-only exact-ID lookup using the City of Detroit Office of Assessor's public parcel dataset.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1';
 const LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
@@ -7,7 +7,7 @@ const out=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Con
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const small=(s,n=160)=>String(s??'').slice(0,n);
 const validId=s=>/^[0-9A-Za-z.-]{4,32}$/.test(s);
-export default async req=>{
+const handler=async req=>{
  if(req.method!=='POST')return out(405,{error:'POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return out(me?403:401,{error:'Owner only'});
@@ -50,3 +50,5 @@ export default async req=>{
  latest.updatedAt=new Date().toISOString();await auth.kvPut(STORE,latest);
  return out(200,{ok:true,match:result});
 };
+
+export default auth.withBrainStore(handler);

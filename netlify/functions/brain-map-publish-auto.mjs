@@ -1,7 +1,7 @@
 // Guarded owner-approved Brain-to-Map publication pilot for Detroit city parcels.
 // Uses official current GIS polygon (not geocoded positions) and explicit staging review.
 // Writes only the dynamic map overlay store, not static parcel data / tax sale status.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const APPROVALS='owner-brain-approvals-v1',STATUS='brain-map-publication-status-v1';
 const ROOT='https://pricepocketasset.com';
 const GIS='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
@@ -28,7 +28,7 @@ function officialPolygon(rings){
  if((maxX-minX)<1e-7||(maxY-minY)<1e-7)return null;
  return {g:[coords],bb:[minX,minY,maxX,maxY],cx:[(minX+maxX)/2,(minY+maxY)/2]};
 }
-export default async function(){
+async function handler(){
  const last=await auth.kvGet(STATUS)||{runs:0,published:0,skipped:0};
  const status={...last,runs:(last.runs||0)+1,lastStarted:new Date().toISOString(),state:'running',lastError:null};
  await auth.kvPut(STATUS,status);
@@ -90,3 +90,5 @@ export default async function(){
 }
 export const config={schedule:'35 */4 * * *'};
 
+
+export default auth.withBrainStore(handler);

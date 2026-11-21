@@ -1,12 +1,12 @@
 // Read-only address search for Detroit parcel candidates. Address results are NEVER approvable automatically.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1',LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const ROOT='https://pricepocketasset.com';
 const j=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const short=(s,n=150)=>String(s??'').slice(0,n);
 const clean=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-export default async req=>{
+const handler=async req=>{
  if(req.method!=='POST')return j(405,{error:'POST only'});
  const owner=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!owner?.owner)return j(owner?403:401,{error:'Owner only'});
@@ -50,3 +50,5 @@ export default async req=>{
  target.detroitAddress=result;latest.updatedAt=new Date().toISOString();await auth.kvPut(STORE,latest);
  return j(200,{ok:true,match:result});
 };
+
+export default auth.withBrainStore(handler);

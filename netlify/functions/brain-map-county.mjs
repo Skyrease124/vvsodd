@@ -1,9 +1,9 @@
 // Public, strictly read-only dynamic parcel corrections for all three map surfaces.
 // Enforce identity/shape validation at the publication boundary as a second safety net.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const output=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Access-Control-Allow-Origin':'https://pricepocketasset.com'}});
 const valid=coords=>Array.isArray(coords)&&coords.length===2&&coords.every(Number.isFinite)&&coords[0]>=-180&&coords[0]<=-60&&coords[1]>=18&&coords[1]<=72;
-export default async function(req){
+async function handler(req){
  if(req.method!=='GET')return output(405,{ok:false,error:'Read-only endpoint'});
  const url=new URL(req.url),dataset=url.searchParams.get('dataset');
  if(!/^[A-Z]{2}-[a-z0-9_-]{2,80}$/.test(dataset||''))return output(400,{ok:false,error:'Invalid dataset'});
@@ -22,3 +22,5 @@ export default async function(req){
  }
  return output(200,{ok:true,dataset,version:Number.isInteger(saved.version)?saved.version:0,records});
 }
+
+export default auth.withBrainStore(handler);

@@ -28,10 +28,10 @@ const context=vm.createContext({URL,URLSearchParams,Response,AbortSignal,Buffer,
   evidence.push({url:String(url),durationMs:Date.now()-start,body});
   return new Response(raw);
  }});
-const auth=new vm.SyntheticModule(['kvGet','kvPut'],function(){this.setExport('kvGet',kvGet);this.setExport('kvPut',kvPut);},{context});
+const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore'],function(){this.setExport('withBrainStore',handler=>handler);this.setExport('kvGet',kvGet);this.setExport('kvPut',kvPut);},{context});
 async function module(filename){
  const m=new vm.SourceTextModule(fs.readFileSync(filename,'utf8'),{context});
- await m.link(specifier=>{assert.equal(specifier,'../lib/auth.mjs');return auth;});
+ await m.link(specifier=>{assert.equal(specifier,'../lib/brain-auth.mjs');return auth;});
  await m.evaluate();return m.namespace.default;
 }
 const recordId='MI|Wayne|'+parcel+'|';

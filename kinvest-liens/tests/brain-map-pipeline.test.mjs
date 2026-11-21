@@ -26,13 +26,13 @@ async function harness({review=approval(),features,record,offline=false}={}){
    if(offline)throw Error('Simulated GIS outage');
    return Response.json({features:features??[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring]}}]});
   }});
- const auth=new vm.SyntheticModule(['kvGet','kvPut'],function(){
-  this.setExport('kvGet',async key=>structuredClone(store.get(key)));
+ const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore'],function(){
+  this.setExport('withBrainStore',handler=>handler);this.setExport('kvGet',async key=>structuredClone(store.get(key)));
   this.setExport('kvPut',async(key,value)=>store.set(key,structuredClone(value)));
  },{context});
  async function module(path){
   const m=new vm.SourceTextModule(fs.readFileSync(path,'utf8'),{context});
-  await m.link(specifier=>{assert.equal(specifier,'../lib/auth.mjs');return auth;});
+  await m.link(specifier=>{assert.equal(specifier,'../lib/brain-auth.mjs');return auth;});
   await m.evaluate();return m.namespace.default;
  }
  const publish=await module('netlify/functions/brain-map-publish-auto.mjs');

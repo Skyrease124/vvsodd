@@ -9,6 +9,9 @@ on:
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
       - 'kinvest-liens/tests/fixtures/detroit-*.json'
       - 'netlify/functions/brain-map-*.mjs'
+      - 'netlify/functions/owner-brain-*.mjs'
+      - 'netlify/lib/brain-auth.mjs'
+      - 'kinvest-liens/owner/brain/**'
       - '.github/workflows/validate-brain-map.yml'
   pull_request:
     paths:
@@ -18,6 +21,9 @@ on:
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
       - 'kinvest-liens/tests/fixtures/detroit-*.json'
       - 'netlify/functions/brain-map-*.mjs'
+      - 'netlify/functions/owner-brain-*.mjs'
+      - 'netlify/lib/brain-auth.mjs'
+      - 'kinvest-liens/owner/brain/**'
       - '.github/workflows/validate-brain-map.yml'
 jobs:
   offline-pipeline:
@@ -29,3 +35,4 @@ jobs:
           node-version: '22'
       - run: node kinvest-liens/tests/brain-map-contract.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs

@@ -1,7 +1,7 @@
 // Background terrain enrichment: scheduled, budget-bounded and read-only for parcel geometry.
 // Only published records with stored, valid polygon geometry and centroid are eligible.
 // Cached elevation records are visible to maps without requiring a new site deploy.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const INDEX='https://pricepocketasset.com/map/index.json',BASE='https://pricepocketasset.com/map/data/';
 const STATUS='owner-brain-topo-status-v1';
 const KEY=d=>'topo-elevation-v1-'+d;
@@ -15,7 +15,7 @@ async function getFile(url,bytes=12_000_000){
  return JSON.parse(raw);
 }
 async function saveStatus(s){await auth.kvPut(STATUS,s);}
-export default async function handler(){
+async function handler(){
  const start=new Date().toISOString();
  const old=await auth.kvGet(STATUS)||{runs:0,lookups:0,filled:0,nextDataset:0};
  const status={...old,lastStarted:start,state:'running',runs:(old.runs||0)+1,error:null};
@@ -81,3 +81,5 @@ export default async function handler(){
  finally{status.lastCompleted=new Date().toISOString();await saveStatus(status);}
 }
 export const config={schedule:'15 */12 * * *'};
+
+export default auth.withBrainStore(handler);

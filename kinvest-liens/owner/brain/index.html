@@ -127,4 +127,4 @@ async function action(which){if(which==='clear'&&!confirm('Clear all currently q
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
-</script></body></html>
+</script><script src="preview-test.js" defer></script></body></html>

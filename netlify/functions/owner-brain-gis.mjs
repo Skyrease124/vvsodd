@@ -1,12 +1,12 @@
 // Read-only candidate GIS lookup for the Wayne County, MI pilot. No third-party AI or paid API calls.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1';
 const LAYER='https://services1.arcgis.com/b6rkZNtCd6Mx2gvB/ArcGIS/rest/services/Wayne_County_Parcels/FeatureServer/0';
 const j=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const short=(v,n=200)=>String(v??'').slice(0,n);
 function normalized(v){return String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='POST')return j(405,{ok:false,error:'POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return j(me?403:401,{ok:false,error:'Owner only'});
@@ -51,3 +51,5 @@ export default async function handler(req){
  await auth.kvPut(STORE,latest);
  return j(200,{ok:true,match:result});
 }
+
+export default auth.withBrainStore(handler);

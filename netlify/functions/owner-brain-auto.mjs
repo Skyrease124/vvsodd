@@ -1,6 +1,6 @@
 // Netlify scheduled automation. No user traffic or page required.
 // Runs free Detroit assessor checks on existing queued Wayne records. Never publishes or buys credits.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const STORE='owner-brain-scanner-v1', STATUS='owner-brain-automatic-status-v1';
 const ROOT='https://pricepocketasset.com', LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -37,7 +37,7 @@ async function address(item,rec){
 }
 
 
-export default async function handler(){
+async function handler(){
  const started=new Date().toISOString();
  const prior=await auth.kvGet(STATUS)||{runs:0,checked:0};
  const state={...prior,lastStarted:started,runs:(prior.runs||0)+1,state:'running',lastError:null};
@@ -79,3 +79,5 @@ export default async function handler(){
  }catch(e){state.state='error';state.lastError=limit(e.message,140);state.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,state);}
 }
 export const config={schedule:'0 */4 * * *'};
+
+export default auth.withBrainStore(handler);
