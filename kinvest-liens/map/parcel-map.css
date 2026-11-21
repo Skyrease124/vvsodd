@@ -467,3 +467,9 @@ body.ppa-map-home .pm{
 .ppa-map-home .pm-home-rail .pm-menu-tools{gap:3px}
 @media(max-width:700px){.pmbody:not(.ppa-map-home) .pm-stack{position:fixed;right:12px;top:calc(176px + env(safe-area-inset-top));max-height:calc(100dvh - 320px);overflow-y:auto}.ppa-map-home .pm-home-rail{top:112px}}
 @media(prefers-reduced-motion:reduce){.pm-stack > :not(.pm-menu-toggle):not(.pm-aib){transition:none}}
+
+/* Only the unified floating menu owns these actions; the hidden native geolocate remains callable. */
+.pm-map .maplibregl-ctrl-geolocate,.pm-map .maplibregl-ctrl-zoom-in,.pm-map .maplibregl-ctrl-zoom-out{display:none!important}
+.ppa-map-home .pm-home-rail .pm-stack.pm-menu-open{width:156px;transform:translateX(-108px)}
+.ppa-map-home .pm-home-rail .pm-stack.pm-menu-open .pm-gis-toggle{white-space:normal!important;font-size:11px!important;line-height:1.2}
+.pm-stack .pm-menu-toggle:focus-visible,.pm-stack .pm-ib:focus-visible,.pm-stack .pm-gis-toggle:focus-visible{outline:2px solid #a8fbe0;outline-offset:2px}
