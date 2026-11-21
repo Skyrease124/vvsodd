@@ -1,0 +1,114 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><title>Private MapTiler Preview | PricePocketAsset</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.css" crossorigin>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#081621;color:#e8f4ff}
+*{box-sizing:border-box}body{margin:0}.wrap{max-width:1050px;margin:auto;padding:16px}
+a{color:#97f3cc}h1{font-size:clamp(23px,5vw,35px);margin:18px 0 8px}p{line-height:1.5;color:#afc5d4}
+.panel{padding:16px;border-radius:18px;border:1px solid #3b506b;background:#122139;margin:14px 0}
+button,select{font:inherit;border-radius:10px;border:1px solid #688299;padding:11px 12px;background:#192b45;color:#fff}
+button{font-weight:700;cursor:pointer}button:disabled{opacity:.45;cursor:default}
+label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
+.controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.primary{background:#165f4b;border-color:#58bd96}
+#map{width:100%;height:min(68vh,640px);min-height:360px;border-radius:14px;overflow:hidden;background:#13283a}
+#map[hidden]{display:none}.muted{font-size:13px;color:#9eb8c6}.error{color:#ffb9b9}
+#detail{white-space:pre-wrap;overflow-wrap:anywhere;color:#b6d8ec}
+@media(max-width:600px){.controls{grid-template-columns:1fr}#map{height:56vh;min-height:340px}}
+</style></head><body><div class="wrap">
+<a href="/owner/">← Owner Dashboard</a>
+<h1>MapTiler — Private Map Preview</h1>
+<p>Test satellite imagery, terrain and your current verified parcel boundaries. Nothing here changes PricePocketAsset's public maps or publishes new properties.</p>
+<div class="panel"><b>MapTiler testing only</b><p class="muted">MapTiler free access is not licensed for commercial production. Each map load and style switch may use your MapTiler quota. Only open this preview when you want to test it. Restrict your key to pricepocketasset.com in MapTiler Cloud.</p>
+<p id="status" role="status">Checking owner access…</p><p id="setup" hidden><a href="/owner/keys/">Save your MapTiler API key in Owner API Keys first.</a></p>
+<div id="controls" hidden><div class="controls">
+<div><label for="county">Parcel dataset</label><select id="county"></select></div>
+<div><label for="style">MapTiler appearance</label><select id="style">
+<option value="satellite-v4">Satellite</option>
+<option value="streets-v4">Streets</option>
+<option value="outdoor-v4">Outdoor terrain</option>
+<option value="aquarelle-v4">Aquarelle watercolor</option>
+</select></div></div>
+<div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div></div>
+</div>
+<div id="map" hidden aria-label="Private interactive map with parcel boundaries"></div>
+<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Only polygon boundaries already present in the published county data are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js" crossorigin></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let key='',map=null,terrain=false,currentData=null,detail=null;
+const msg=(text,isError=false)=>{$('status').textContent=text;$('status').className=isError?'error':'muted'};
+const styleUrl=id=>'https://api.maptiler.com/maps/'+id+'/style.json?key='+encodeURIComponent(key);
+const terrainUrl=()=>'https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key='+encodeURIComponent(key);
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function reset(){if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
+function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
+function overlay(){
+ if(!map||!currentData)return;
+ const feats=currentData.recs.filter(x=>x.g&&x.cx).slice(0,250).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??null,category:r.c},geometry:geometry(r)})).filter(f=>f.geometry);
+ const fc={type:'FeatureCollection',features:feats};
+ if(map.getSource('owner-parcels'))map.getSource('owner-parcels').setData(fc);
+ else{map.addSource('owner-parcels',{type:'geojson',data:fc});map.addLayer({id:'owner-fill',type:'fill',source:'owner-parcels',paint:{'fill-color':'#00c9af','fill-opacity':0.2}});map.addLayer({id:'owner-outline',type:'line',source:'owner-parcels',paint:{'line-color':'#70ffe0','line-width':2}});}
+ const bb=feats[0]?.geometry.coordinates?.[0];if(bb?.length){const bounds=new maplibregl.LngLatBounds();for(const p of bb){bounds.extend(p);}map.fitBounds(bounds,{padding:60,maxZoom:16,duration:0});}
+ $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' existing mapped parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview capped at 250 polygons.';
+}
+async function loadData(){
+ const d=detail;
+ const response=await fetch('/map/data/'+encodeURIComponent(d.file),{cache:'no-store'});
+ if(!response.ok)throw Error('Parcel dataset unavailable');
+ const raw=await response.text();if(raw.length>12000000)throw Error('Dataset exceeds preview size limit');
+ const data=JSON.parse(raw);if(!Array.isArray(data.recs))throw Error('No parcel records in dataset');
+ return data;
+}
+function readyMap(){
+ if(!map)return;
+ overlay();
+ map.on('click','owner-fill',e=>{
+  const p=e.features?.[0]?.properties;if(!p)return;
+  new maplibregl.Popup({closeButton:true}).setLngLat(e.lngLat)
+   .setHTML('<b>Parcel '+esc(p.parcelId)+'</b><div>Category: '+esc(p.category)+'</div><div>Acreage: '+(p.acreage??'Not available')+'</div><div>Existing GIS boundary (preview)</div>').addTo(map);
+ });
+}
+$('load').onclick=async()=>{
+ if(!key)return msg('Save your MapTiler API key first.',true);
+ reset();$('load').disabled=true;
+ try{
+  const index=window.__datasets||[];detail=index.find(x=>x.id===$('county').value);
+  if(!detail)throw Error('Select a county');
+  currentData=await loadData();
+  $('map').hidden=false;
+  map=new maplibregl.Map({container:'map',style:styleUrl($('style').value),center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});
+  map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
+  map.on('load',()=>{readyMap();$('terrain').disabled=false;msg('Private preview loaded. Zoom into the existing parcel outlines.');});
+  map.on('error',e=>{msg('MapTiler loading error: check API key, plan, domain restrictions, and network connection.',true);});
+  $('close').disabled=false;
+ }catch(e){reset();msg('Preview could not load: '+e.message,true)}
+ finally{$('load').disabled=false}
+};
+$('close').onclick=()=>{reset();msg('Private map preview closed. Your public maps were not changed.')};
+$('style').onchange=()=>{if(!map)return;terrain=false;$('terrain').textContent='Enable 3D terrain';map.setStyle(styleUrl($('style').value));map.once('style.load',()=>{overlay();$('terrain').disabled=false;});};
+$('terrain').onclick=()=>{
+ if(!map||!map.isStyleLoaded())return;
+ try{
+  if(terrain){map.setTerrain(null);terrain=false;map.easeTo({pitch:0,duration:600});$('terrain').textContent='Enable 3D terrain';return;}
+  if(!map.getSource('maptiler-dem'))map.addSource('maptiler-dem',{type:'raster-dem',url:terrainUrl(),tileSize:256});
+  map.setTerrain({source:'maptiler-dem',exaggeration:1.4});terrain=true;map.easeTo({pitch:65,duration:800});$('terrain').textContent='Disable 3D terrain';
+ }catch(e){msg('Terrain unavailable with this style or plan: '+e.message,true)}
+};
+(async()=>{
+ try{
+  const response=await fetch('/.netlify/functions/owner-maptiler-preview',{credentials:'same-origin',cache:'no-store'});
+  const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Owner access required');
+  if(!d.configured){$('setup').hidden=false;msg('MapTiler key not saved yet.');return;}
+  key=d.key;
+  const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
+  const index=await indexResponse.json();
+  window.__datasets=(index.datasets||[]).filter(x=>x.mapped>0&&/^[A-Za-z0-9_-]+\.json$/.test(x.file||'')).sort((a,b)=>b.mapped-a.mapped);
+  for(const ds of window.__datasets){const o=document.createElement('option');o.value=ds.id;o.textContent=ds.state+' · '+ds.county+' ('+ds.mapped+' mapped)';$('county').append(o);}
+  $('controls').hidden=false;msg('Ready for private testing. The map is not loaded until you choose Load private map preview.');
+ }catch(e){msg('Preview unavailable: '+e.message,true);}
+})();
+</script></body></html>

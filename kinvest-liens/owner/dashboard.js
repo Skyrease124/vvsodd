@@ -9,6 +9,7 @@ window.ppaAccount.then(user => {
     ['Imports & review','Review incoming county data','/admin/imports/','layers'],
     ['Intelligence Center','Owner-only source monitoring, Firecrawl research and private findings','/owner/intelligence/','search'],
     ['AI Brain Control Center','Automatically monitor free GIS research and owner-only verification queue','/owner/brain/','search'],
+    ['MapTiler Preview','Private satellite, 3D terrain and existing parcel boundary overlays','/owner/maptiler/','map'],
     ['Map Coverage & Repair','Find missing parcel locations across every map; read-only owner research','/owner/map-coverage/','map'],
     ['Certificate Review','Review Florida tax certificates and record decisions','/owner/certificates/','file'],
     ['Research Releases','Give Pro members 48-hour early access to approved lien and land updates','/owner/research-releases/','layers'],
