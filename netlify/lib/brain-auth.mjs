@@ -4,7 +4,8 @@ import { getDeployStore } from '@netlify/blobs';
 import * as auth from './auth.mjs';
 export * from './auth.mjs';
 const scope=new AsyncLocalStorage();
-const previewStore=()=>getDeployStore({name:'brain-preview',consistency:'strong'});
+// File-based build uploads target the default deploy store, not a named store.
+const previewStore=()=>getDeployStore({consistency:'strong'});
 export const isBrainPreview=()=>scope.getStore()?.preview===true;
 // API budgets and provider controls remain shared; a preview must not reset them.
 const isolated=k=>isBrainPreview()&&!k.includes('usage')&&k!=='owner-ai-research-api-controls';

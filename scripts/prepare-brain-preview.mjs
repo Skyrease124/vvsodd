@@ -27,6 +27,6 @@ const store={
  'brain-map-history-v1':{entries:[{dataset:'MI-wayne',recordId:id,parcelId:record.p,action:'published',source:'automated official Detroit GIS verification',reviewCase:caseKey,at}]},
  'brain-map-publication-status-v1':{state:'idle',runs:1,published:1,skipped:0,lastCompleted:at,lastBatch:{published:1,skipped:0},mode:'autonomous-preview',checks:verified.checks}
 };
-const dir='.netlify/blobs/deploy/brain-preview';fs.mkdirSync(dir,{recursive:true});
+const dir='.netlify/blobs/deploy';fs.mkdirSync(dir,{recursive:true});
 for(const [key,value] of Object.entries(store))fs.writeFileSync(path.join(dir,key),JSON.stringify(value));
 console.log('Autonomous preview: official parcel '+record.p+' verified; source URL, notes, decision, correction and history saved to deploy-specific storage.');
