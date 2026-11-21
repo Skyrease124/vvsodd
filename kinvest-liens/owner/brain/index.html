@@ -148,7 +148,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
-   checks.textContent='Wayne cursor '+d.worker.cursor+' · Published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
+   checks.textContent='Wayne cursor '+d.worker.cursor+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
     ' · Other counties blocked until verified GIS connectors are configured';
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}
  }
