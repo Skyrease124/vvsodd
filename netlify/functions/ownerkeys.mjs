@@ -40,6 +40,17 @@ export default async function handler(req) {
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
   }
+  if (b.test === 'openai') {
+    const key=KEYS.keyOf('OPENAI_API_KEY');
+    if (!key) return json(200,{ok:false,error:'Save an OpenAI API key first.'});
+    // A key-authenticated models listing does not run inference or consume model tokens.
+    // It confirms authentication, not account balance, project model access, or billing status.
+    try {
+      const r=await fetch('https://api.openai.com/v1/models',{headers:{Authorization:'Bearer '+key},signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return json(200,{ok:false,error:'OpenAI key test returned HTTP '+r.status+(r.status===401?' (invalid or revoked key).':r.status===403?' (project access denied).':'')});
+      return json(200,{ok:true,nlr:true,text:'OpenAI API key authenticated. No model inference was requested and no text-generation tokens were spent. This does not verify your prepaid balance.'});
+    } catch {return json(200,{ok:false,error:'OpenAI did not respond. Try again later.'});}
+  }
   if (b.test === 'groq') {
     const key=KEYS.keyOf('GROQ_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save a Groq API key first.'});
