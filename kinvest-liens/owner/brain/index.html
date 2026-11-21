@@ -22,6 +22,14 @@ if(r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)){
  if(d){const panel=el('div',undefined,'triage');panel.append(el('b',d.status==='candidate_found'?'Detroit assessor GIS · Unverified candidate':'Detroit assessor GIS · No unique match'),el('p',d.note,'small'));if(d.address)panel.append(el('p','City assessor address: '+d.address+' · Acreage: '+(d.acreage??'not supplied'),'small'));if(d.centroidApprox)panel.append(el('p','Approximate point: '+d.centroidApprox.lat+', '+d.centroidApprox.lon,'small'));if(d.sourceUrl){const a=el('a','City of Detroit assessor parcel layer');a.href=d.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';panel.append(a);}item.append(panel);}
  if(!d||d.status!=='candidate_found'){const b=el('button','Check Detroit Assessor GIS','secondary');b.disabled=data.status==='paused';b.onclick=()=>lookupDetroit(r,b);item.append(b);}
 }
+if(r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)){
+ const found=r.detroitAddress,block=el('div',undefined,'triage');
+ if(found){block.append(el('b','Detroit address search · '+(found.candidates?.length||0)+' unverified candidates'),el('p','Website address: '+found.sourceAddress+' · '+found.note,'small'));
+  for(const candidate of found.candidates||[])block.append(el('p','GIS parcel '+candidate.parcelId+' · '+candidate.address+' · '+candidate.zipCode,'small'));
+ }
+ if(!found){const btn=el('button','Search by street address','secondary');btn.disabled=data.status==='paused';btn.onclick=()=>lookupDetroitAddress(r,btn);block.append(btn);}
+ if(found||!r.detroit||r.detroit.status!=='candidate_found')item.append(block);
+}
 if(r.state==='FL'){
  const f=r.florida;
  if(f){const d=el('div',undefined,'triage');d.append(el('b',f.status==='candidate_found'?'Florida Property API candidate · Unverified':'Florida API: No exact match'),el('p',f.note,'small'));if(f.status==='candidate_found'){d.append(el('p','Address: '+(f.address||'unavailable')+' · City: '+(f.city||'unavailable'),'small'),el('p','Map centroid: '+(f.centroid?f.centroid.lat+', '+f.centroid.lng:'unavailable')+' · Boundary data: '+(f.geometryPresent?'present':'not supplied'),'small'));}item.append(d);}
@@ -63,6 +71,12 @@ async function reviewCase(r,decision,url,notes,checked,btn){
  btn.disabled=true;
  try{const res=await fetch('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
  catch(e){$('note').textContent=e.message;btn.disabled=false;}
+}
+async function lookupDetroitAddress(r,btn){
+ if(!confirm('Search Detroit official parcel data using the street address recorded in your published property list? Only unverified candidates will be shown; no map changes.'))return;
+ btn.disabled=true;btn.textContent='Searching street address…';
+ try{const response=await fetch('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
+ catch(e){btn.disabled=false;btn.textContent='Search by street address';$('note').textContent=e.message;}
 }
 async function lookupDetroit(r,btn){
  if(!confirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
