@@ -39,7 +39,7 @@ export default async function handler(req){
  if(q.queue.length>=LIMIT)return json(200,{ok:true,...q,note:'Queue full (50 cases). Review or clear it before another scan.'});
  try{
    const index=await readStatic('/map/index.json',8_000_000);
-   const datasets=(index.datasets||[]).filter(d=>/^[A-Z]{2}-[A-Za-z0-9_-]+$/.test(d.id||'')&&/^[A-Za-z0-9_-]+\\.json$/.test(d.file||'')&&d.records>d.mapped)
+   const datasets=(index.datasets||[]).filter(d=>/^[A-Z]{2}-[A-Za-z0-9_-]+$/.test(d.id||'')&&/^[A-Za-z0-9_-]+\.json$/.test(d.file||'')&&d.records>d.mapped)
      .sort((a,b)=>(b.records-b.mapped)-(a.records-a.mapped));
    if(q.built!==index.built){q=empty();q.built=index.built||null;}
    const seen=new Set(q.queue.map(r=>r.dataset+'|'+r.recordId));
