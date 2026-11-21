@@ -5,8 +5,10 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0}={}){
  const store=new Map();
+ if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
+ if(cursor)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed:0,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
  if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
  const rows=[{i:'r1',p:'01002754',a:'100 Test St, Detroit MI'},{i:'r2',p:'01002830',a:'102 Test St, Detroit MI'},
  {i:'r3',p:'01003357',a:'104 Test St, Detroit MI'},{i:'r4',p:'01004444',a:'106 Test St, Detroit MI'}];
@@ -71,6 +73,23 @@ test('one run advances completed records, saves review failures, publishes only 
  const second=await (await h.invoke()).json();
  assert.equal(second.attempted,1);assert.equal(second.cursor,4);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,4);
+});
+test('existing published polygons skip duplicate GIS requests and do not republish',async()=>{
+ const h=await setup({existing:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.attempted,1);
+ assert.equal(result.cursor,4);
+ assert.equal(result.published,0);
+ assert.equal(h.reads(),1);
+ assert.equal(h.store.get('brain-map-county-v1-MI-wayne').records.r1.verifiedGeometry,true);
+});
+test('saved cursor resumes later source row rather than reprocessing earlier parcels',async()=>{
+ const h=await setup({existing:true,cursor:3});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.attempted,1);
+ assert.equal(result.cursor,4);
+ assert.equal(h.reads(),1);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').runs,3);
 });
 test('transient GIS outage holds cursor for retry and never publishes',async()=>{
  const h=await setup({failedGIS:true});const result=await (await h.invoke()).json();
