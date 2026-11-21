@@ -66,7 +66,10 @@ async function handler(req,context){
   });
   const overlay=await auth.kvGet(OVERLAY)||{records:{}};
   let i=Math.min(s.cursor,rows.length);
-  while(i<rows.length&&result.attempted<MAX_ATTEMPTS&&s.dailyUsed<MAX_PER_DAY){
+  // Netlify scheduled invocations have a shorter 30-second limit.
+  // Keep their batch to one parcel, using exactly the same verification path.
+  const maxThisRun=scheduled?1:MAX_ATTEMPTS;
+  while(i<rows.length&&result.attempted<maxThisRun&&s.dailyUsed<MAX_PER_DAY){
    const controlNow=await auth.kvGet(CONTROL);
    if(controlNow?.status==='paused'){s.state='paused';break;}
    const r=rows[i];
