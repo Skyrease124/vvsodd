@@ -3,7 +3,7 @@
  const root=document.getElementById('app');
  const endpoint='/.netlify/functions/owner-brain-preview-test';
  try{
-  const response=await fetch(endpoint,{credentials:'same-origin',cache:'no-store'});
+  const response=await window.PPABrainRequest(endpoint,{credentials:'same-origin',cache:'no-store'});
   const state=await response.json();if(!response.ok||!state.isolated)return;
   const panel=document.createElement('section');panel.className='panel';
   const title=document.createElement('h2');title.textContent='Isolated preview test — 90 Chandler';
@@ -16,7 +16,7 @@
     if(!confirm(label+' in this isolated preview?'))return;
     buttons.forEach(b=>b.disabled=true);note.textContent='Working…';
     try{
-     const r=await fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
+     const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
      const d=await r.json();if(!r.ok)throw Error(d.error||'Preview test failed');
      note.textContent=d.message;
      // Existing dashboard functions refresh the review queue and publication monitor.

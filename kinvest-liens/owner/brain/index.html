@@ -10,7 +10,7 @@
 <section class="panel"><h2>Correction review ledger</h2><p class="muted">Only independently checked matches can be approved. Select Preview Map Repair on an approved decision to see the exact record-level proposed point correction. No updates are applied.</p><div id="ledger" class="small">Loading decisions…</div></section>
 <section class="panel"><h2>Review queue <span id="queueCount" class="small"></span></h2><label for="filter">Filter by state</label><input id="filter" placeholder="Example: FL" maxlength="2"><div id="cases"></div></section>
 <p class="muted">Phase 3 GIS pilot: Wayne, Michigan, up to 15 lookup requests/hour. A separate City of Detroit assessor layer is now available for exact-ID lookups; all matches still require independent official verification. GIS candidate matches remain unverified, require current official county confirmation, and never publish automatically. Florida lookups require confirmation and have a strict pilot cap of 10 attempts total. No retries or purchases. Other county connectors and NVIDIA routing are still pending.</p></section></main>
-<script>
+<script src="requests.js"></script><script>
 'use strict';
 const $=id=>document.getElementById(id),endpoint='/.netlify/functions/owner-brain-queue';
 let data={queue:[]};
@@ -18,7 +18,7 @@ const el=(tag,txt,cls)=>{const e=document.createElement(tag);if(txt!==undefined)
 function draw(d){data=d;loadLedger();$('app').hidden=false;$('gate').hidden=true;$('count').textContent=d.queue.length;$('state').textContent=d.status==='paused'?'Paused':'Idle';$('built').textContent=d.built||'—';$('pause').disabled=d.status==='paused';$('resume').disabled=d.status!=='paused';$('autoState').textContent='Background: '+(d.status==='paused'?'Paused':(d.automation?.state||'Awaiting first run')).replaceAll('_',' ');$('autoSummary').textContent='Runs: '+(d.automation?.runs||0)+' · Checked: '+(d.automation?.checked||0)+' · Candidates: '+(d.automation?.candidates||0)+' · Last completed: '+(d.automation?.lastCompleted||'not yet')+(d.automation?.lastError?' · Error: '+d.automation.lastError:'');$('autoGeocode').textContent='Geocode.maps.co (every 6h): '+(d.geocodeAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Runs: '+(d.geocodeAutomation?.runs||0)+' · Checked: '+(d.geocodeAutomation?.checked||0)+' · Candidate groups: '+(d.geocodeAutomation?.candidates||0)+' · Last completed: '+(d.geocodeAutomation?.lastCompleted||'not yet')+'. Max 20 requests/day; unverified.';$('autoElevation').textContent='Open Topo Data (every 12h): '+(d.elevationAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Runs: '+(d.elevationAutomation?.runs||0)+' · Elevation points saved: '+(d.elevationAutomation?.filled||0)+' · Last batch: '+(d.elevationAutomation?.lastBatch?.filled||0)+' · Last completed: '+(d.elevationAutomation?.lastCompleted||'not yet')+' · Estimate only.';$('autoCrosscheck').textContent='Parcel cross-verification (every 8h): '+(d.crosscheckAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Checked: '+(d.crosscheckAutomation?.checked||0)+' · Private candidates: '+(d.crosscheckAutomation?.candidates||0)+' · Last completed: '+(d.crosscheckAutomation?.lastCompleted||'not yet');
 const geo=d.geoapifyAutomation||{},geoList=$('geoResults');$('geoStatus').textContent='Geoapify: '+(geo.state||'awaiting first run').replaceAll('_',' ')+' · Runs '+(geo.runs||0)+' · Saved '+(geo.checked||0)+' · Candidate groups '+(geo.found||0)+' · Daily usage '+(geo.dailyUsage||0)+'/300 · Last '+(geo.lastCompleted||'not yet')+(geo.lastError?' · Error '+geo.lastError:'');geoList.replaceChildren();for(const r of (geo.recent||[]).slice(0,12)){const p=el('div',undefined,'case');p.append(el('b',r.county+', '+r.state+' · Parcel '+r.parcelId),el('p',r.address+' · '+r.status.replaceAll('_',' ')+' · '+r.checkedAt,'small'));for(const candidate of (r.candidates||[]))p.append(el('p',(candidate.formatted||'Possible address')+' · '+candidate.lat+', '+candidate.lon+' (unverified)','small'));geoList.append(p);}
 const photon=d.photonAutomation||{},photonList=$('photonResults');$('photonStatus').textContent='Photon (every 4h): '+(photon.state||'awaiting first run').replaceAll('_',' ')+' · Runs '+(photon.runs||0)+' · Parcels checked '+(photon.checked||0)+' · Candidate groups '+(photon.candidateGroups||0)+' · Daily API usage '+(photon.dailyUsage||0)+'/30 · Last completed '+(photon.lastCompleted||'not yet')+(photon.lastWarning?' · '+photon.lastWarning:'');
-photonList.replaceChildren();for(const item of (photon.recent||[]).slice(0,10)){const p=el('div',undefined,'case');p.append(el('b',item.county+', '+item.state+' · Parcel '+item.parcelId),el('p',item.address+' · '+item.status.replaceAll('_',' ')+' · '+item.checkedAt,'small'));for(const match of (item.candidates||[]).slice(0,3)){p.append(el('p',[match.housenumber,match.street,match.city,match.state,match.postcode].filter(Boolean).join(' ')+' · '+match.lat+', '+match.lon+' (unverified address candidate)','small'));}photonList.append(p);}$('note').textContent=d.note||d.lastError||('Last scan: '+(d.updatedAt||'not started'));render();}
+photonList.replaceChildren();for(const item of (photon.recent||[]).slice(0,10)){const p=el('div',undefined,'case');p.append(el('b',item.county+', '+item.state+' · Parcel '+item.parcelId),el('p',item.address+' · '+item.status.replaceAll('_',' ')+' · '+item.checkedAt,'small'));for(const match of (item.candidates||[]).slice(0,3)){p.append(el('p',[match.housenumber,match.street,match.city,match.state,match.postcode].filter(Boolean).join(' ')+' · '+match.lat+', '+match.lon+' (unverified address candidate)','small'));}photonList.append(p);}$('note').textContent=d.note||d.lastError||('Last scan: '+(d.updatedAt||'not started'));render();window.PPABrainPreviewStatus(d);}
 function render(){const s=$('filter').value.trim().toUpperCase(),items=(data.queue||[]).filter(r=>!s||r.state===s);$('queueCount').textContent=items.length+' shown';const c=$('cases');c.replaceChildren();for(const r of items){const item=el('div',undefined,'case');item.append(el('b',(r.county||'County')+', '+r.state+' · parcel '+(r.parcelId||'unknown')),el('div','Status: Needs official verification','small'),el('div','Record: '+r.recordId,'small'),el('div','Issue: '+r.issue,'small'));if(r.gisUrl){const a=el('a','GIS reference');a.href=r.gisUrl;a.rel='noopener noreferrer';a.target='_blank';item.append(a);}
 if(r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)){
 const g=r.gis;
@@ -60,7 +60,7 @@ else if((r.crosscheck?.status==='candidate_found')||(r.detroit?.status==='candid
 if(r.triage?.status==='complete'){const d=el('div',undefined,'triage');d.append(el('b','Groq triage · Unverified'),el('p',r.triage.summary,'small'));const list=el('ol');for(const step of r.triage.checks||[])list.append(el('li',step));d.append(list,el('p',r.triage.limitations,'small'));item.append(d);}
 c.append(item);}if(!items.length)c.append(el('p','No queued cases in this filter.','muted'));}
 async function loadLedger(){
- try{const res=await fetch('/.netlify/functions/owner-brain-review',{credentials:'same-origin',cache:'no-store'}),d=await res.json();if(!res.ok)throw Error(d.error||'Unavailable');
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-review',{credentials:'same-origin',cache:'no-store'}),d=await res.json();if(!res.ok)throw Error(d.error||'Unavailable');
  const area=$('ledger');area.replaceChildren(el('p',(d.entries||[]).length+' recorded decisions. None published to maps.','small'));
  for(const entry of (d.entries||[]).slice(0,20)){
  const block=el('div',undefined,'case');block.append(el('p',entry.state+' · '+entry.county+' · '+entry.parcelId+' — '+entry.decision.replaceAll('_',' ')+' ('+entry.reviewedAt.slice(0,10)+')','small'));
@@ -72,49 +72,49 @@ async function loadLedger(){
 }
 async function previewRepair(caseKey,btn,out){
  btn.disabled=true;out.textContent='Checking published parcel record…';
- try{const response=await fetch('/.netlify/functions/owner-brain-preview',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'preview',caseKey})}),d=await response.json();if(!response.ok)throw Error(d.error||'Preview failed');
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-preview',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'preview',caseKey})}),d=await response.json();if(!response.ok)throw Error(d.error||'Preview failed');
  out.textContent='DRY RUN — NOT PUBLISHED\nOriginal: '+JSON.stringify(d.patch.originalRecord)+'\nProposed: '+JSON.stringify(d.patch.proposedRecord)+'\nFile: '+d.patch.file+'\nDataset SHA256: '+d.patch.sourceDatasetHash+'\n'+d.warning;
  }catch(e){out.textContent='No changes made: '+e.message;}finally{btn.disabled=false;}
 }
 async function reviewCase(r,decision,url,notes,checked,btn){
  if(!confirm(decision==='approve'?'Confirm official evidence reviewed? This stages a PRIVATE correction only; public maps stay unchanged.':'Reject this candidate and retain the review record?'))return;
  btn.disabled=true;
- try{const res=await fetch('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
  catch(e){$('note').textContent=e.message;btn.disabled=false;}
 }
 async function lookupDetroitAddress(r,btn){
  if(!confirm('Search Detroit official parcel data using the street address recorded in your published property list? Only unverified candidates will be shown; no map changes.'))return;
  btn.disabled=true;btn.textContent='Searching street address…';
- try{const response=await fetch('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
  catch(e){btn.disabled=false;btn.textContent='Search by street address';$('note').textContent=e.message;}
 }
 async function lookupDetroit(r,btn){
  if(!confirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking Detroit GIS…';
- try{const response=await fetch('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Check Detroit Assessor GIS';$('note').textContent=e.message;}
 }
 async function lookupFlorida(r,btn){
  if(!confirm('Use 1 Florida Property API trial credit to look up this parcel by exact county and parcel ID? This may reduce your trial balance. No paid fallback and no map edits.'))return;
  btn.disabled=true;btn.textContent='Checking Florida API…';
- try{const response=await fetch('/.netlify/functions/owner-brain-florida',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'florida-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Florida API lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-florida',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'florida-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Florida API lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Florida API: Match parcel';$('note').textContent=e.message;}
 }
 async function lookupGIS(r,btn){
  if(!confirm('Search a public Wayne County GIS layer for an exact parcel-ID match? No paid API and no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking GIS…';
- try{const response=await fetch('/.netlify/functions/owner-brain-gis',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'gis-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'GIS lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-gis',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'gis-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'GIS lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Find exact GIS match';$('note').textContent=e.message;}
 }
 async function triageCase(r,btn){
  if(!confirm('Use 1 Groq free-tier API request to prepare an unverified research checklist for this parcel?'))return;
  btn.disabled=true;btn.textContent='Groq researching…';
- try{const res=await fetch('/.netlify/functions/owner-brain-research',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'groq-triage',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Groq failed');$('note').textContent='Groq checklist saved (unverified).';await load();}
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-research',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'groq-triage',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Groq failed');$('note').textContent='Groq checklist saved (unverified).';await load();}
  catch(e){btn.disabled=false;btn.textContent='Groq: Research this case';$('note').textContent=e.message;}
 }
 async function loadPublication(){
  try{
- const response=await fetch('/.netlify/functions/owner-brain-map-status',{credentials:'same-origin',cache:'no-store'});
+ const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-map-status',{credentials:'same-origin',cache:'no-store'});
  const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Unavailable');
  const s=d.status||{};$('pipelineStatus').textContent='Publisher: '+(s.state||'not started').replaceAll('_',' ')+' · Runs '+(s.runs||0)+' · Published '+(s.published||0)+' · Skipped '+(s.skipped||0)+' · Last run '+(s.lastCompleted||'not yet')+(s.lastError?' · Error: '+s.lastError:'');
  const box=$('pipelineHistory');box.replaceChildren();
@@ -122,8 +122,8 @@ async function loadPublication(){
  if(!d.history?.length)box.append(el('p','No verified parcel corrections have been published yet.','small'));
  }catch(e){$('pipelineStatus').textContent='Publication history unavailable: '+e.message;}
 }
-async function load(){loadPublication().catch(()=>{});try{const r=await fetch(endpoint,{credentials:'same-origin',cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'Access denied');draw(d)}catch(e){$('gate').textContent=e.message||'Unavailable';}}
-async function action(which){if(which==='clear'&&!confirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
+async function load(){loadPublication().catch(()=>{});try{const r=await window.PPABrainRequest(endpoint,{credentials:'same-origin',cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'Access denied');draw(d)}catch(e){$('gate').textContent=e.message||'Unavailable';$('note').textContent=e.message||'Status unavailable';}}
+async function action(which){if(which==='clear'&&!confirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
