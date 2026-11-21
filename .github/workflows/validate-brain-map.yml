@@ -11,6 +11,7 @@ on:
       - 'netlify/functions/brain-map-*.mjs'
       - 'netlify/functions/owner-brain-*.mjs'
       - 'netlify/lib/brain-auth.mjs'
+      - 'netlify/lib/brain-county-sequence.mjs'
       - 'netlify/lib/brain-official-verification.mjs'
       - 'scripts/prepare-brain-preview.mjs'
       - 'netlify.toml'
@@ -51,6 +52,7 @@ jobs:
           node-version: '22'
       - run: node kinvest-liens/tests/brain-map-contract.test.mjs
       - run: node kinvest-liens/tests/brain-map-coverage.test.mjs
+      - run: node kinvest-liens/tests/brain-map-sequence.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs
       - run: node kinvest-liens/tests/brain-map-requests.test.mjs
