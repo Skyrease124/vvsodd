@@ -20,7 +20,7 @@ export default async function handler(req){
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user)return json(401,{ok:false,error:'Owner sign-in required'});
  if(!user.owner)return json(403,{ok:false,error:'Owner access only'});
- if(req.method==='GET')return json(200,{ok:true,...await snapshot(),automation:(await auth.kvGet('owner-brain-automatic-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},geocodeAutomation:(await auth.kvGet('owner-brain-geocode-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},elevationAutomation:(await auth.kvGet('owner-brain-topo-status-v1'))||{state:'awaiting_first_run',runs:0,filled:0}});
+ if(req.method==='GET')return json(200,{ok:true,...await snapshot(),automation:(await auth.kvGet('owner-brain-automatic-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},geocodeAutomation:(await auth.kvGet('owner-brain-geocode-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0},elevationAutomation:(await auth.kvGet('owner-brain-topo-status-v1'))||{state:'awaiting_first_run',runs:0,filled:0},crosscheckAutomation:(await auth.kvGet('owner-brain-crosscheck-status-v1'))||{state:'awaiting_first_run',runs:0,candidates:0}});
  const url=new URL(req.url);
  if(req.headers.get('origin')!==url.origin)return json(403,{ok:false,error:'Invalid request origin'});
  let body={};
