@@ -46,6 +46,31 @@
    finally{agentButton.disabled=false;}
   };
   panel.append(agentButton,agentResults);
+  const batchButton=document.createElement('button');batchButton.type='button';
+  batchButton.textContent='Test 3 Wayne parcels (no AI credits)';
+  const batchResults=document.createElement('div');batchResults.setAttribute('role','status');
+  batchResults.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
+  batchButton.onclick=async()=>{
+   if(!confirm('Check up to three additional unmapped Wayne/Detroit parcels against official GIS? Read-only, no paid AI calls.'))return;
+   batchButton.disabled=true;batchResults.textContent='Checking up to 3 official parcel records…';
+   try{
+    const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-batch-test',{
+     method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({action:'test-wayne-batch',confirmed:true})});
+    const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Batch unavailable');
+    batchResults.replaceChildren();
+    const headline=document.createElement('p');
+    headline.textContent=d.attempted+' checked · '+d.verified+' verified · '+d.needsReview+' need review. No map changes.';
+    batchResults.append(headline);
+    for(const item of d.results||[]){
+     const p=document.createElement('p');
+     p.textContent='Parcel '+item.parcelId+' · '+item.status.replaceAll('_',' ')+(item.reason?' · '+item.reason:'');
+     batchResults.append(p);
+    }
+   }catch(e){batchResults.textContent='Batch test unavailable: '+e.message;}
+   finally{batchButton.disabled=false;}
+  };
+  panel.append(batchButton,batchResults);
   const diagnostics=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Diagnostic controls';diagnostics.append(summary,...buttons,note);panel.append(title,help,diagnostics);
   for(const [label,url] of [['Open test parcel on map','/map/?c=MI-wayne&p=01002263'],['Open MapTiler preview','/owner/maptiler/']]){
    const link=document.createElement('a');link.textContent=label;link.href=url;link.target='_blank';link.rel='noopener';link.style.marginRight='16px';panel.append(link);
