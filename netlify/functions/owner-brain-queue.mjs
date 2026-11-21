@@ -20,13 +20,13 @@ export default async function handler(req){
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user)return json(401,{ok:false,error:'Owner sign-in required'});
  if(!user.owner)return json(403,{ok:false,error:'Owner access only'});
- if(req.method==='GET')return json(200,{ok:true,...await snapshot()});
+ if(req.method==='GET')return json(200,{ok:true,...await snapshot(),automation:(await auth.kvGet('owner-brain-automatic-status-v1'))||{state:'awaiting_first_run',runs:0,checked:0}});
  const url=new URL(req.url);
  if(req.headers.get('origin')!==url.origin)return json(403,{ok:false,error:'Invalid request origin'});
  let body={};
  try{const s=await req.text();if(s.length>500)return json(413,{ok:false,error:'Request too large'});body=JSON.parse(s||'{}');}catch{return json(400,{ok:false,error:'Invalid JSON'})}
  const action=body.action;
- if(!['scan','pause','resume','clear'].includes(action))return json(400,{ok:false,error:'Unsupported action'});
+ if(!['pause','resume'].includes(action))return json(400,{ok:false,error:'Unsupported action'});
  let q=await snapshot();
  if(action==='pause'||action==='resume'){
    q.status=action==='pause'?'paused':'idle';q.updatedAt=new Date().toISOString();await auth.kvPut(STORE,q);
