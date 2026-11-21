@@ -91,11 +91,35 @@ test('saved cursor resumes later source row rather than reprocessing earlier par
  assert.equal(h.reads(),1);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').runs,3);
 });
-test('transient GIS outage holds cursor for retry and never publishes',async()=>{
+test('transient GIS outage schedules backoff without skipping or publishing',async()=>{
  const h=await setup({failedGIS:true});const result=await (await h.invoke()).json();
- assert.equal(result.state,'provider_error');assert.equal(result.cursor,0);
+ assert.equal(result.state,'retry_wait');assert.equal(result.cursor,0);
  assert.equal(result.failures,1);assert.equal(h.publications(),0);
+ assert.equal(result.retry.attempts,1);
+ assert.ok(Date.parse(result.retry.nextAt)>Date.now());
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,1);
+ const held=await (await h.invoke()).json();
+ assert.equal(held.state,'retry_wait');assert.equal(held.attempted,0);
+ assert.equal(held.cursor,0);assert.equal(h.reads(),1);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,1);
+});
+test('backoff retries three times with quota accounting and then stops for review',async()=>{
+ const h=await setup({failedGIS:true});
+ await h.invoke();
+ for(let attempt=2;attempt<=3;attempt++){
+  const saved=h.store.get('owner-brain-wayne-worker-v1');
+  saved.retry.nextAt=new Date(Date.now()-1000).toISOString();
+  h.store.set('owner-brain-wayne-worker-v1',saved);
+  const data=await (await h.invoke()).json();
+  assert.equal(data.retry.attempts,attempt);
+  assert.equal(data.cursor,0);
+ }
+ const terminal=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(terminal.retry.exhausted,true);
+ assert.equal(terminal.dailyUsed,3);
+ assert.equal(terminal.state,'provider_error');
+ assert.equal((await h.invoke()).status,409);
+ assert.equal(h.reads(),3);assert.equal(h.publications(),0);
 });
 test('owner UI explicitly exposes next bounded preview run',()=>{
  assert.match(ui,/Run next Wayne batch \(up to 3\)/);
