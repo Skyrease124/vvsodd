@@ -127,17 +127,19 @@ async function handler(req,context){
    trace=[];
    const url=queryUrl({where:"parcel_number IN ('"+id+"','"+id+".')",
     returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
-   let official,verified,method='direct';
+   let official,verified,method='indexed_object_id';
    try{
     try{
-     official=await officialGet(url,i,6500,'direct_polygon');
-    }catch(primary){
-     if(primary.code==='PAUSED'||primary.code==='QUOTA')throw primary;
-     // Only a provider timeout triggers the extra official object-ID lookup.
-     if(primary.name!=='TimeoutError'&&primary.name!=='AbortError'&&!/timed?\s*out|aborted/i.test(String(primary.message)))
-      throw primary;
-     method='indexed_object_id';
+     // Resolve the indexed official object ID first, avoiding a heavy polygon scan.
      official=await lookupWithObjectId(id,i);
+    }catch(primary){
+     if(primary.code==='PAUSED'||primary.code==='QUOTA'||primary.code==='AMBIGUOUS')throw primary;
+     // Fall back only for transient provider failures, never ambiguous identity.
+     if(primary.name!=='TimeoutError'&&primary.name!=='AbortError'&&
+        !/timed?\s*out|aborted|HTTP (429|5\d\d)/i.test(String(primary.message)))
+      throw primary;
+     method='direct';
+     official=await officialGet(url,i,6500,'direct_polygon');
     }
    }catch(e){
     if(e.code==='PAUSED'){s.state='paused';break;}
