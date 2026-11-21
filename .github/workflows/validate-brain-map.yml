@@ -7,6 +7,7 @@ on:
       - 'kinvest-liens/ai/workshop.js'
       - 'kinvest-liens/owner/maptiler/**'
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'kinvest-liens/tests/fixtures/detroit-*.json'
       - 'netlify/functions/brain-map-*.mjs'
       - '.github/workflows/validate-brain-map.yml'
   pull_request:
@@ -15,6 +16,7 @@ on:
       - 'kinvest-liens/ai/workshop.js'
       - 'kinvest-liens/owner/maptiler/**'
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'kinvest-liens/tests/fixtures/detroit-*.json'
       - 'netlify/functions/brain-map-*.mjs'
       - '.github/workflows/validate-brain-map.yml'
 jobs:

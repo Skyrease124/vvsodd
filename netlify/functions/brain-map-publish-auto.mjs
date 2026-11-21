@@ -44,13 +44,23 @@ export default async function(){
   const key='brain-map-county-v1-MI-wayne';
   const saved=await auth.kvGet(key)||{version:0,records:{}};
   for(const a of approved.slice(0,5)){
-   if(saved.records[a.recordId]||a.proposedPosition?.lat==null||a.proposedPosition?.lon==null)continue;
+   if(saved.records[a.recordId])continue;
+   const lat=a.proposedPosition?.lat,lon=a.proposedPosition?.lon;
+   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<42.2||lat>42.5||lon< -83.4||lon> -82.8){skipped++;continue;}
    const original=source.get(a.recordId);
    if(!original||original.g||original.cx||norm(original.p)!==norm(a.parcelId)){skipped++;continue;}
    if(!a.evidenceUrl||!/^https:\/\/(?:services2\.arcgis\.com|detroitmi\.gov|data\.detroitmi\.gov)\//i.test(a.evidenceUrl)){skipped++;continue;}
    if(a.independentlyChecked!==true){skipped++;continue;}
-   const clause="parcel_number = '"+String(a.parcelId).replace(/'/g,"''").slice(0,70)+"'";
-   const url=GIS+'/query?'+new URLSearchParams({f:'json',where:clause,outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
+   // Detroit GIS uses a trailing period on some tax parcel IDs. Accept only
+   // the exact identifier or that known variant; never use a prefix match.
+   const parcel=String(a.parcelId);
+   if(!/^[0-9]{8}\.?$/.test(parcel)){skipped++;continue;}
+   const bare=parcel.replace(/\.$/,'');
+   const clause="parcel_number IN ('"+bare+"','"+bare+".')";
+   // Restrict the unindexed parcel lookup to the previously reviewed area.
+   // Identity, ambiguity and distance checks below still apply to the result.
+   const envelope=JSON.stringify({xmin:lon-0.002,ymin:lat-0.002,xmax:lon+0.002,ymax:lat+0.002,spatialReference:{wkid:4326}});
+   const url=GIS+'/query?'+new URLSearchParams({f:'json',where:clause,geometry:envelope,geometryType:'esriGeometryEnvelope',inSR:'4326',spatialRel:'esriSpatialRelIntersects',outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
    let result;
    try{result=await json(url,1000000)}catch(e){status.lastError=String(e.message).slice(0,120);break;}
    const fs=result.features||[];
@@ -79,3 +89,4 @@ export default async function(){
  finally{status.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,status);}
 }
 export const config={schedule:'35 */4 * * *'};
+

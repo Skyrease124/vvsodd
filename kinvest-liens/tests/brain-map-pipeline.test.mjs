@@ -8,22 +8,23 @@ import vm from 'node:vm';
 const GIS='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const KEY='brain-map-county-v1-MI-wayne';
 const approval=()=>({decision:'approved_for_staging',dataset:'MI-wayne',state:'MI',county:'Wayne',
- recordId:'test-record',parcelId:'TEST-PARCEL',independentlyChecked:true,
+ recordId:'test-record',parcelId:'01002263',independentlyChecked:true,
  evidenceUrl:GIS,caseKey:'test-review',proposedPosition:{lat:42.3005,lon:-83.0995}});
 const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.301],[-83.1,42.3]];
 async function harness({review=approval(),features,record,offline=false}={}){
  const store=new Map([['owner-brain-approvals-v1',{entries:[review]}]]);
- const county={id:'MI-wayne',recs:[record||{i:'test-record',p:'TEST-PARCEL',why:'missing'}]};
+ const county={id:'MI-wayne',recs:[record||{i:'test-record',p:'01002263',why:'missing'}]};
  const calls=[];
  const context=vm.createContext({URL,URLSearchParams,Response,AbortSignal,Buffer,console,
   fetch:async url=>{
    const u=new URL(url);calls.push(u);
    if(u.hostname==='pricepocketasset.com'&&u.pathname==='/map/data/MI-wayne.json')return Response.json(county);
    assert.equal(u.origin+u.pathname,GIS+'/query');
-   assert.equal(u.searchParams.get('where'),"parcel_number = 'TEST-PARCEL'");
+   assert.equal(u.searchParams.get('where'),"parcel_number IN ('01002263','01002263.')");
    assert.equal(u.searchParams.get('outSR'),'4326');
+   assert.equal(u.searchParams.get('geometryType'),'esriGeometryEnvelope');
    if(offline)throw Error('Simulated GIS outage');
-   return Response.json({features:features??[{attributes:{parcel_number:'TEST-PARCEL'},geometry:{rings:[ring]}}]});
+   return Response.json({features:features??[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring]}}]});
   }});
  const auth=new vm.SyntheticModule(['kvGet','kvPut'],function(){
   this.setExport('kvGet',async key=>structuredClone(store.get(key)));
@@ -61,15 +62,25 @@ test('unreviewed candidates, wrong parcel identity, and ambiguous official resul
  for(const options of [
   {review:{...approval(),decision:'pending'}},
   {review:{...approval(),independentlyChecked:false}},
+  {review:{...approval(),proposedPosition:{lat:'invalid',lon:-83.1}}},
   {record:{i:'test-record',p:'OTHER'}},
   {features:[]},
   {features:[{attributes:{parcel_number:'OTHER'},geometry:{rings:[ring]}}]},
   {features:[{},{},{}]},
-  {features:[{attributes:{parcel_number:'TEST-PARCEL'},geometry:{rings:[ring,ring]}}]},
+  {features:[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring,ring]}}]},
   {offline:true}
  ]){
   const h=await harness(options);await h.publish();
   assert.equal(h.store.has(KEY),false);
   assert.equal(h.store.has('brain-map-history-v1'),false);
  }
+});
+test('captured official Detroit parcel with trailing period publishes under the county parcel ID',async()=>{
+ const fixture=JSON.parse(fs.readFileSync('kinvest-liens/tests/fixtures/detroit-01002263.json','utf8'));
+ assert.equal(fixture.feature.attributes.parcel_number,'01002263.');
+ assert.equal(fixture.feature.attributes.address,'90 CHANDLER');
+ const h=await harness({features:[fixture.feature],review:{...approval(),proposedPosition:{lat:42.37441065,lon:-83.073996}}});
+ await h.publish();
+ assert.equal(h.store.get(KEY)?.records['test-record'].p,'01002263');
+ assert.deepEqual(h.store.get(KEY).records['test-record'].g,fixture.feature.geometry.rings);
 });
