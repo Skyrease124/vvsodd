@@ -48,3 +48,22 @@ test('map coverage counter is authoritative, worker total is separately labeled'
  assert.match(status,/waynePilotReady/);
  assert.match(status,/nationwideReady:false/);
 });
+
+test('exhausted retry reviewer requires owner, exact parcel, cursor, origin and confirmation',()=>{
+ const recovery=fs.readFileSync('netlify/functions/owner-brain-wayne-retry-review.mjs','utf8');
+ const page=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
+ assert.match(recovery,/if\(!owner\?\.owner\)/);
+ assert.match(recovery,/req\.headers\.get\('origin'\)!==new URL\(req\.url\)\.origin/);
+ assert.match(recovery,/action\.confirmed!==true/);
+ assert.match(recovery,/action\.parcelId!==retry\.parcelId/);
+ assert.match(recovery,/action\.cursor!==worker\.cursor/);
+ assert.match(recovery,/retry\?\.exhausted/);
+ assert.match(recovery,/worker\?\.lockedUntil/);
+ assert.match(recovery,/control\?\.status==='paused'/);
+ assert.match(recovery,/retry:null/);
+ assert.match(recovery,/lastOwnerRecovery/);
+ assert.doesNotMatch(recovery,/dailyUsed\s*:\s*0|cursor\s*:\s*worker\.cursor\s*\+/);
+ assert.match(page,/id="wayneRetryAlert"/);
+ assert.match(page,/owner-brain-wayne-retry-review/);
+ assert.match(page,/Retry the same parcel/);
+});
