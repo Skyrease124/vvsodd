@@ -44,7 +44,7 @@
   async function load(id) {
     if (loaded[id]) return loaded[id]; const d = IDX.datasets.find(x => x.id === id); if (!d) return null;
     say('Loading ' + d.county + ', ' + d.state + '…', true); skeleton();
-    try { const ds = expand(await api('/map/data/' + d.file)); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
+    try { const ds = expand(await api('/map/data/' + d.file)); if(window.PPABrainMap)await window.PPABrainMap.apply(ds); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
   }
   const all = () => Object.values(loaded).flatMap(d => d.recs);
   // Only the county (or the counties in a "Search this area" view) you picked is drawn and listed; counties you opened earlier stay cached but are not mixed in.
