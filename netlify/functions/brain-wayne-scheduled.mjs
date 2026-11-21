@@ -3,14 +3,19 @@
 import * as auth from '../lib/brain-auth.mjs';
 import {runScheduledWayne} from './owner-brain-wayne-run.mjs';
 const KEY='owner-brain-wayne-schedule-audit-v1';
-const enabled=()=>typeof Netlify!=='undefined'&&Netlify.env.get('PPA_WAYNE_AUTORUN_ENABLED')==='true';
+const CONTROL='owner-brain-wayne-scheduler-control-v1';
+// In production the owner website controls this persistent toggle; missing means OFF.
+const enabled=async()=>{
+ const setting=await auth.kvGet(CONTROL);
+ return setting?.enabled===true && setting?.approvedForProduction===true;
+};
 export const config={schedule:'*/30 * * * *'};
 export default async function scheduled(req,context){
  if(context?.deploy?.context!=='production'||context.deploy.published!==true)return new Response(null,{status:204});
  const start=new Date().toISOString();
- const isEnabled=enabled();
+ const isEnabled=await enabled();
  // The schedule is deliberately inert until production release approval.
- if(!isEnabled){console.log('Scheduled Wayne worker disabled (PPA_WAYNE_AUTORUN_ENABLED is not true)');return new Response(null,{status:204});}
+ if(!isEnabled){console.log('Scheduled Wayne worker disabled by website owner control');return new Response(null,{status:204});}
  let info={at:start,status:'running',environment:'production'};
  try{
   const synthetic=new Request('https://pricepocketasset.com/.netlify/functions/owner-brain-wayne-run',{method:'POST'});
