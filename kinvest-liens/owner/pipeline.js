@@ -25,9 +25,17 @@
  const force=document.createElement('button');force.type='button';force.textContent='Force Auto Run';
  force.style.cssText='background:#19543f;color:#fff;border:1px solid #75d7b6;border-radius:10px;padding:10px 14px';
  force.hidden=true;
+ const autoButton=document.createElement('button');autoButton.type='button';
+ autoButton.style.cssText='background:#17334a;color:#d9f6eb;border:1px solid #5a988a;border-radius:10px;padding:10px 14px';
+ autoButton.hidden=true;
+ let autoEnabled=true,autoAllowed=false,runInProgress=false,autoStopped=false;
+ const setAutoLabel=()=>{autoButton.textContent=autoEnabled&&!autoStopped?'Auto Run: ON':'Auto Run: OFF';};
+ setAutoLabel();
+ autoButton.onclick=()=>{autoEnabled=!(autoEnabled&&!autoStopped);autoStopped=false;setAutoLabel();
+  forceResult.textContent=autoEnabled?'Automatic preview batches enabled while this dashboard is open.':'Automatic preview batches paused on this device.';};
  const updateInfo=document.createElement('span');updateInfo.style.cssText='color:#b4d1d6;font-size:13px';
  updateInfo.textContent='Auto updates every 20 seconds';
- controls.append(force,updateInfo);panel.append(controls);
+ controls.append(force,autoButton,updateInfo);panel.append(controls);
  const forceResult=document.createElement('p');forceResult.setAttribute('role','status');panel.append(forceResult);
  const parent=document.querySelector('#app')||main;parent.prepend(panel);
  function line(text){const p=document.createElement('p');p.textContent=text;return p;}
@@ -41,8 +49,10 @@
    details.replaceChildren();
    if(d.complete){status.textContent='Every county passed the stored completion gate.';return;}
    const c=d.current;
-   force.hidden=!(d.preview&&c.id==='MI-wayne'&&!d.queue.paused);
-   force.disabled=d.queue.paused;
+   autoAllowed=d.preview&&c.id==='MI-wayne'&&!d.queue.paused;
+   force.hidden=!autoAllowed;
+   autoButton.hidden=!autoAllowed;
+   force.disabled=d.queue.paused||runInProgress;
    status.textContent='County '+c.position+' of '+c.total+': '+c.county+', '+c.state+' · '+d.state.replaceAll('_',' ');
    details.append(line('Records: '+c.records.toLocaleString()+' · Baseline mapped: '+c.baselineMapped.toLocaleString()+' · Verified correction entries: '+c.verifiedCorrections.toLocaleString()+' · Estimated remaining: '+c.estimatedRemaining.toLocaleString()));
    // Use only existing mapped records and verified published polygon corrections.
@@ -80,24 +90,31 @@
   }
   finally{inFlight=false;}
  }
- force.onclick=async()=>{
-  if(!confirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
-  force.disabled=true;forceResult.textContent='Running guarded Wayne County batch…';
+ async function runBatch(manual){
+  if(runInProgress||!autoAllowed)return;
+  if(manual&&!confirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
+  runInProgress=true;force.disabled=true;autoButton.disabled=true;
+  forceResult.textContent=manual?'Running guarded Wayne County batch…':'Automatic Wayne County batch running…';
   try{
    const response=await fetch('/.netlify/functions/owner-brain-wayne-run',{
     method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),signal:AbortSignal.timeout(55000)});
    const data=await response.json();
-   if(!response.ok||!data.ok)throw Error(data.error||'Batch not completed');
-   forceResult.textContent='Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;
+   if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Batch not completed'),{status:response.status});
+   forceResult.textContent=(manual?'Force':'Auto')+' · Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;
    window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:data.published}}));
-  }catch(e){forceResult.textContent='Force run stopped: '+e.message;}
-  finally{force.disabled=false;await load();}
- };
+   if(['provider_error','error','publish_pending','paused','source_scanned'].includes(data.state)){autoStopped=true;setAutoLabel();}
+  }catch(e){
+   forceResult.textContent='Wayne batch stopped: '+e.message;
+   if(!manual){autoStopped=true;setAutoLabel();}
+  }finally{runInProgress=false;autoButton.disabled=false;force.disabled=false;await load();}
+ }
+ force.onclick=()=>runBatch(true);
+ const autoTimer=setInterval(()=>{if(autoEnabled&&!autoStopped&&autoAllowed&&!document.hidden&&!runInProgress)void runBatch(false);},300000);
  const onFocus=()=>{if(!document.hidden)void load();};
  document.addEventListener('visibilitychange',onFocus);
  window.addEventListener('ppa:brain-map-updated',onFocus);
  const timer=setInterval(()=>{if(!document.hidden)void load();},20000);
- window.addEventListener('pagehide',()=>{clearInterval(timer);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('ppa:brain-map-updated',onFocus);},{once:true});
+ window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(autoTimer);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('ppa:brain-map-updated',onFocus);},{once:true});
  await load();
 })();
