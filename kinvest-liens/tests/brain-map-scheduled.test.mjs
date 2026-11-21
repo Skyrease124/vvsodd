@@ -16,7 +16,7 @@ test('scheduled runner invokes same guarded worker as owner-triggered force butt
  assert.match(schedule,/import \{runScheduledWayne\} from '\.\/owner-brain-wayne-run\.mjs'/);
  assert.match(schedule,/await runScheduledWayne\(synthetic,context\)/);
  assert.match(worker,/export const runScheduledWayne=auth\.withBrainStore/);
- assert.match(worker,/await publish\(req,context\)/);
+ assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
  assert.match(worker,/MAX_ATTEMPTS=3, MAX_PER_DAY=30/);
  assert.match(worker,/controlNow\?\.status==='paused'/);
  assert.match(worker,/auth\.kvGet\(OVERLAY\)/);
