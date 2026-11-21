@@ -40,6 +40,18 @@ export default async function handler(req) {
     await auth.kvPut(configKey,next);
     return json(200,{ok:true,keys:list(),researchControls:next});
   }
+  if (b.test === 'gemini') {
+    const key=KEYS.keyOf('GEMINI_API_KEY');
+    if (!key) return json(200,{ok:false,error:'Save a Gemini API key first.'});
+    // Listing available models authenticates a Google AI Studio key without generating tokens.
+    // This does not guarantee free-tier eligibility, quota, or model access.
+    try {
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1',{
+        headers:{'x-goog-api-key':key},signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return json(200,{ok:false,error:'Gemini key test returned HTTP '+r.status+(r.status===400||r.status===403?' (check Google AI Studio key and API access).':'')});
+      return json(200,{ok:true,nlr:true,text:'Google AI Studio Gemini API key authenticated. No model generation was performed and no text-generation tokens were used. Free-tier availability must be checked for the selected model.'});
+    } catch {return json(200,{ok:false,error:'Gemini did not respond. Try again later.'});}
+  }
   if (b.test === 'openai') {
     const key=KEYS.keyOf('OPENAI_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save an OpenAI API key first.'});
