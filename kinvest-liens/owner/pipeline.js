@@ -29,13 +29,15 @@
  autoButton.style.cssText='background:#17334a;color:#d9f6eb;border:1px solid #5a988a;border-radius:10px;padding:10px 14px';
  autoButton.hidden=true;
  let autoEnabled=true,autoAllowed=false,runInProgress=false,autoStopped=false;
+ let nextAutoAt=Date.now()+300000,autoCooldownUntil=0,autoTimer=null;
  const setAutoLabel=()=>{autoButton.textContent=autoEnabled&&!autoStopped?'Auto Run: ON':'Auto Run: OFF';};
  setAutoLabel();
- autoButton.onclick=()=>{autoEnabled=!(autoEnabled&&!autoStopped);autoStopped=false;setAutoLabel();
+ autoButton.onclick=()=>{autoEnabled=!(autoEnabled&&!autoStopped);autoStopped=false;setAutoLabel();if(autoEnabled)scheduleAuto(1000);else if(autoTimer!==null){clearTimeout(autoTimer);autoTimer=null;}
   forceResult.textContent=autoEnabled?'Automatic preview batches enabled while this dashboard is open.':'Automatic preview batches paused on this device.';};
+ const autoTiming=document.createElement('span');autoTiming.style.cssText='color:#9ac7bd;font-size:13px';
  const updateInfo=document.createElement('span');updateInfo.style.cssText='color:#b4d1d6;font-size:13px';
  updateInfo.textContent='Auto updates every 20 seconds';
- controls.append(force,autoButton,updateInfo);panel.append(controls);
+ controls.append(force,autoButton,autoTiming,updateInfo);panel.append(controls);
  const forceResult=document.createElement('p');forceResult.setAttribute('role','status');panel.append(forceResult);
  const parent=document.querySelector('#app')||main;parent.prepend(panel);
  function line(text){const p=document.createElement('p');p.textContent=text;return p;}
@@ -90,6 +92,18 @@
   }
   finally{inFlight=false;}
  }
+ function scheduleAuto(delayMs=300000){
+  nextAutoAt=Date.now()+Math.max(1000,delayMs);
+  if(autoTimer!==null)clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>{autoTimer=null;if(autoEnabled&&!autoStopped&&autoAllowed&&!document.hidden)void runBatch(false);else scheduleAuto(20000);},Math.max(1000,delayMs));
+  refreshAutoTiming();
+ }
+ function refreshAutoTiming(){
+  if(!autoEnabled||autoStopped){autoTiming.textContent='Automatic batches paused';return;}
+  const seconds=Math.max(0,Math.ceil((nextAutoAt-Date.now())/1000));
+  autoTiming.textContent='Next Auto Run: '+(seconds<60?seconds+'s':Math.ceil(seconds/60)+' min')+
+   (autoCooldownUntil>Date.now()?' · GIS retry cooldown':'');
+ }
  async function runBatch(manual){
   if(runInProgress||!autoAllowed)return;
   if(manual&&!confirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
@@ -100,21 +114,47 @@
     method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),signal:AbortSignal.timeout(55000)});
    const data=await response.json();
-   if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Batch not completed'),{status:response.status});
-   forceResult.textContent=(manual?'Force':'Auto')+' · Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;
-   window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:data.published}}));
-   if(['provider_error','error','publish_pending','paused','source_scanned'].includes(data.state)){autoStopped=true;setAutoLabel();}
+   if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Batch not completed'),{status:response.status,data});
+   // Both controls share one operation and must respect persisted cooldowns.
+   if(data.state==='retry_wait'){
+    const until=Date.parse(data.retry?.nextAt||'');
+    autoCooldownUntil=Number.isFinite(until)?until:Date.now()+60000;
+    forceResult.textContent='GIS retry waiting · Cursor '+data.cursor+' · Next attempt '+new Date(autoCooldownUntil).toLocaleTimeString();
+    scheduleAuto(Math.max(1000,autoCooldownUntil-Date.now()+1000));
+   }else{
+    forceResult.textContent=(manual?'Force':'Auto')+' · Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;
+    window.dispatchEvent(new CustomEvent('ppa:brain-map-updated',{detail:{dataset:'MI-wayne',published:data.published}}));
+    if(['provider_error','error','publish_pending','paused','source_scanned','quota_reached'].includes(data.state)){
+     autoStopped=true;setAutoLabel();
+     forceResult.textContent+=' · Auto stopped: '+data.state.replaceAll('_',' ');
+    }else if(data.retry?.nextAt){
+     autoCooldownUntil=Date.parse(data.retry.nextAt)||0;
+     scheduleAuto(Math.max(1000,autoCooldownUntil-Date.now()+1000));
+    }else{
+     autoCooldownUntil=0;
+     scheduleAuto(300000);
+    }
+   }
   }catch(e){
-   forceResult.textContent='Wayne batch stopped: '+e.message;
-   if(!manual){autoStopped=true;setAutoLabel();}
-  }finally{runInProgress=false;autoButton.disabled=false;force.disabled=false;await load();}
+   const terminal=[401,403,404,409,429].includes(e.status);
+   const next=Date.parse(e.data?.retry?.nextAt||'');
+   if(!terminal){
+    // Network and temporary provider failures must not silently turn Auto Run off.
+    forceResult.textContent=(manual?'Force':'Auto')+' · Temporary request error: '+e.message+' · Auto will retry';
+    scheduleAuto(Number.isFinite(next)?Math.max(1000,next-Date.now()+1000):60000);
+   }else{
+    autoStopped=true;setAutoLabel();
+    forceResult.textContent='Worker stopped ('+e.status+'): '+e.message;
+   }
+  }finally{runInProgress=false;autoButton.disabled=false;force.disabled=false;refreshAutoTiming();await load();}
  }
  force.onclick=()=>runBatch(true);
- const autoTimer=setInterval(()=>{if(autoEnabled&&!autoStopped&&autoAllowed&&!document.hidden&&!runInProgress)void runBatch(false);},300000);
- const onFocus=()=>{if(!document.hidden)void load();};
+ scheduleAuto(300000);
+ const timingDisplay=setInterval(refreshAutoTiming,1000);
+ const onFocus=()=>{if(!document.hidden){void load();if(autoEnabled&&!autoStopped&&Date.now()>=nextAutoAt)scheduleAuto(1000);}};
  document.addEventListener('visibilitychange',onFocus);
  window.addEventListener('ppa:brain-map-updated',onFocus);
  const timer=setInterval(()=>{if(!document.hidden)void load();},20000);
- window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(autoTimer);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('ppa:brain-map-updated',onFocus);},{once:true});
+ window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(timingDisplay);if(autoTimer!==null)clearTimeout(autoTimer);document.removeEventListener('visibilitychange',onFocus);window.removeEventListener('ppa:brain-map-updated',onFocus);},{once:true});
  await load();
 })();
