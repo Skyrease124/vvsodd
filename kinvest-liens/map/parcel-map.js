@@ -162,18 +162,27 @@
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
+  function moveNativeMapControls(){
+    const menu=window.__pmDock?.menu;
+    if(!menu)return;
+    const source=$('pmMap').querySelector(homeMap?'.maplibregl-ctrl-top-right':'.maplibregl-ctrl-bottom-right');
+    if(!source)return;
+    const holder=mk('div','pm-native-map-controls');
+    [...source.children].filter(el=>el.classList.contains('maplibregl-ctrl-group')).forEach(el=>holder.append(el));
+    if(holder.childElementCount)menu.append(holder);
+  }
   function initMap() {
     map = window.__ppaMap = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: homeMap ? {top:16,bottom:22,left:12,right:12} : pickerMap ? {top:8,bottom:8,left:10,right:10} : embedded ? {top:90,bottom:46,left:10,right:10} : {top:150,bottom:150,left:12,right:12} }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
     if (embedded) map.scrollZoom.disable();
     const controlSide = homeMap ? 'top-right' : 'bottom-right';
     const locationControl = new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false });
     const navigationControl = new maplibregl.NavigationControl({ showCompass: false });
-    window.__ppaLocationControl=locationControl;
     if (homeMap) {
-      // Navigation controls are provided by the collapsible floating menu.
+      map.addControl(navigationControl, controlSide);
       map.addControl(locationControl, controlSide);
       map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
-      // Avoid relocating MapLibre's control container into the home toolbar.
+      // Keep MapLibre's original button handlers but place their controls inside the dock.
+      moveNativeMapControls();
       const repaint = () => {
         if (!document.hidden) requestAnimationFrame(() => { map.resize(); map.triggerRepaint(); });
       };
@@ -182,8 +191,9 @@
       window.addEventListener('pageshow', e => { if (e.persisted) repaint(); });
     } else {
       map.addControl(locationControl, controlSide);
-      // Floating menu supplies zoom controls; keep geolocation registered for its trigger.
+      map.addControl(navigationControl, controlSide);
     }
+    if(!homeMap&&!pickerMap)moveNativeMapControls();
     map.touchZoomRotate.disableRotation();
     map.on('load', () => {
       mapReady = true; ['parcels', 'near', 'sel', 'sel-point', 'pts', 'dots'].forEach(s => map.addSource(s, { type: 'geojson', data: empty }));
@@ -227,18 +237,6 @@
 
   // Optional official GIS reference outlines; never alter tax lien data or vacancy.
   let flGisOn=false,flGisRequest=0,flGisDebounce=null,flGisLastStatus='';
-  let gisButton=null;
-  function syncGisState(){
-    if(!gisButton)return;
-    const state=curState||'';
-    gisButton.textContent=state?(state+' GIS'+(state==='FL'?'':' · N/A')):'GIS · N/A';
-    const supported=state==='FL';
-    gisButton.disabled=!supported;
-    gisButton.setAttribute('aria-disabled',String(!supported));
-    gisButton.title=supported?'Palm Beach and Lee County official parcel outlines':'GIS overlay unavailable in '+(state||'the selected state')+'; Florida data will not be displayed.';
-    gisButton.setAttribute('aria-label',gisButton.title);
-    if(!supported){flGisOn=false;++flGisRequest;clearTimeout(flGisDebounce);clearFloridaGIS();gisButton.setAttribute('aria-pressed','false');const s=$('pmGisStatus');if(s)s.hidden=true;}
-  }
   const gisEmpty=()=>({type:'FeatureCollection',features:[]});
   function gisStatus(message){
     if(flGisLastStatus===message)return;
@@ -251,7 +249,7 @@
     for(const key of ['fl-gis-parcels','fl-gis-buildings'])map.getSource(key)?.setData(gisEmpty());
   }
   async function updateFloridaGIS(){
-    if(!flGisOn||!mapReady||curState!=='FL')return;
+    if(!flGisOn||!mapReady)return;
     const sequence=++flGisRequest;
     if(map.getZoom()<16){clearFloridaGIS();gisStatus('FL GIS: zoom closer to street level (16+) to load outlines.');return;}
     const b=map.getBounds(),w=b.getWest(),e=b.getEast(),s=b.getSouth(),n=b.getNorth();
@@ -283,11 +281,42 @@
   }
   function queueFloridaGIS(){
     ++flGisRequest;clearTimeout(flGisDebounce);
-    if(!flGisOn||curState!=='FL'){clearFloridaGIS();return;}
+    if(!flGisOn){clearFloridaGIS();return;}
     flGisDebounce=setTimeout(updateFloridaGIS,450);
   }
+  // GIS data is state-specific. Never serve Florida geometry for another state's selection.
+  function selectedGISCounty(){
+    return IDX?.datasets.find(d=>d.id===curCounty&&d.state===curState)||null;
+  }
+  function verifiedGISLink(){
+    const d=selectedGISCounty(), gis=d?.gis;
+    if(!gis || !/^https:\/\//i.test(gis.url||''))return null;
+    // A tax-department directory is not a parcel GIS viewer.
+    if(!/gis|parcel map|parcel viewer|property appraiser|interactive map|arcgis|geographic information/i.test(gis.name||''))return null;
+    return gis.url;
+  }
+  function syncGISButton(){
+    const btn=$('pmGisButton');
+    if(!btn)return;
+    const code=curState&&/^[A-Z]{2}$/.test(curState)?curState:'';
+    btn.textContent=code?code+' GIS':'GIS';
+    btn.setAttribute('aria-label',code?'Official '+code+' parcel GIS':'Choose a state for parcel GIS');
+    btn.title=code==='FL'?'Florida county GIS: Lee/Palm Beach overlays at street zoom':
+      verifiedGISLink()?'Open the verified county GIS resource':
+      (code?'GIS viewer not yet verified for this state or county':'Select a state to view GIS coverage');
+    if(code!=='FL'&&flGisOn){flGisOn=false;++flGisRequest;clearTimeout(flGisDebounce);clearFloridaGIS();flGisLastStatus='';}
+    btn.setAttribute('aria-pressed',String(code==='FL'&&flGisOn));
+    const node=$('pmGisStatus');if(node&&code!=='FL')node.hidden=true;
+  }
   function toggleFloridaGIS(button){
-    if(curState!=='FL'){syncGisState();return;}
+    syncGISButton();
+    if(curState!=='FL'){
+      const url=verifiedGISLink();
+      if(url){window.open(url,'_blank','noopener,noreferrer');return;}
+      const name=curState||'the selected state';
+      say((curState?name+' GIS':'GIS')+': no verified parcel GIS viewer for this county. Select a mapped county to check available links.',true);
+      return;
+    }
     flGisOn=!flGisOn;button.setAttribute('aria-pressed',String(flGisOn));
     const node=$('pmGisStatus');if(node)node.hidden=!flGisOn;
     flGisLastStatus='';
@@ -326,7 +355,7 @@
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
     IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
-    stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = '';syncGisState(); fillCounties(coSel); aiRefresh(); return; } focusState(stSel.value); });
+    stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = ''; fillCounties(coSel); syncGISButton(); aiRefresh(); return; } focusState(stSel.value); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
@@ -354,11 +383,12 @@
       }
     }
     const gisHud=mk('div','pm-gis-status');gisHud.id='pmGisStatus';gisHud.hidden=true;gisHud.setAttribute('role','status');gisHud.setAttribute('aria-live','polite');
-    const floridaBtn=mk('button','pm-gis-toggle','GIS');floridaBtn.type='button';gisButton=floridaBtn;
-    floridaBtn.setAttribute('aria-label','Toggle official Florida GIS parcel and building outlines');
+    const floridaBtn=mk('button','pm-gis-toggle','GIS');floridaBtn.type='button';floridaBtn.id='pmGisButton';
+    floridaBtn.setAttribute('aria-label','Choose a state for parcel GIS');
     floridaBtn.setAttribute('aria-pressed','false');
     floridaBtn.title='Official GIS visual reference, not tax-sale availability';
-    floridaBtn.addEventListener('click',()=>toggleFloridaGIS(floridaBtn));syncGisState();
+    floridaBtn.addEventListener('click',()=>toggleFloridaGIS(floridaBtn));
+    syncGISButton();
     const camb = iconBtn(ICON.cam, 'Live cameras', () => toggleCams()); camb.id = 'pmCamBtn'; const stack = mk('div', 'pm-stack'); const hzb = iconBtn(ICON.haz, 'Active hazards', () => toggleHaz()); hzb.id = 'pmHzBtn'; stack.append(lay, fb, floridaBtn, camb, hzb, aib, seg); t.append(gisHud);
     const area = mk('button', 'pm-area', 'Search this area'); area.type = 'button'; area.id = 'pmArea'; area.hidden = true; area.addEventListener('click', searchArea);
     aib.id = 'pmAsk';
@@ -400,16 +430,38 @@
       }
     });
     input.addEventListener(homeMap ? 'input' : 'search', () => { if (!asking && !input.value && F.query) { F.query = null; refresh(); } });
-    const tools=mk('div','pm-menu-tools');tools.append(camb,hzb);stack.insertBefore(tools,aib);
-    const plus=iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>','Zoom in',()=>map?.zoomIn());
-    const minus=iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>','Zoom out',()=>map?.zoomOut());
-    const locate=iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/></svg>','Use my location',()=>window.__ppaLocationControl?.trigger());
-    stack.append(plus,minus,locate);
-    const menuToggle=iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>','Open map tools',()=>{const on=stack.classList.toggle('pm-menu-open');menuToggle.setAttribute('aria-expanded',String(on));menuToggle.setAttribute('aria-label',on?'Close map tools':'Open map tools');},'pm-menu-toggle');
-    stack.id='pmFloatingTools';menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-controls','pmFloatingTools');stack.prepend(menuToggle);
-    stack.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.pm-menu-toggle')&&!e.target.closest('[aria-label="Layers"]')){stack.classList.remove('pm-menu-open');menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-label','Open map tools');}});
-
-    for (const [button, label] of [[lay, 'Layers'], [fb, 'Filters']]) button.appendChild(mk('span', 'pm-control-label', label));
+    // Compact floating control dock; reuses the existing action handlers and map controls.
+    const dock=mk('div','pm-tool-dock'), menu=mk('div','pm-tool-menu');
+    menu.id='pmToolMenu';menu.setAttribute('aria-label','Map tools');menu.inert=true;
+    const trigger=iconBtn(ICON.layers,'Open map tools',()=>setDock(!dock.classList.contains('open')),'pm-tool-trigger');
+    trigger.id='pmToolTrigger';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','pmToolMenu');
+    const triggerLabel=mk('span','pm-tool-trigger-label','Tools');trigger.append(triggerLabel);
+    function setDock(open){
+      dock.classList.toggle('open',!!open);trigger.setAttribute('aria-expanded',String(!!open));
+      trigger.setAttribute('aria-label',open?'Close map tools':'Open map tools');
+      menu.inert=!open;
+      if(!open)seg.hidden=true;
+    }
+    const tools=mk('div','pm-tools');tools.append(camb,hzb);
+    for(const [button,label] of [[lay,'Layers'],[fb,'Filters'],[camb,'Cameras'],[hzb,'Hazards']]){
+      button.appendChild(mk('span','pm-control-label',label));
+    }
+    menu.append(lay,fb,floridaBtn,tools);
+    dock.append(trigger,menu);
+    stack.replaceChildren(dock,aib);
+    menu.addEventListener('click',e=>{
+      const button=e.target.closest('button');
+      if(!button)return;
+      if(button===lay){return;} // Keep menu open while user chooses basemap.
+      if(button.closest('.pm-seg'))return;
+      setDock(false);
+    });
+    seg.addEventListener('click',e=>{if(e.target.closest('button'))setDock(false);});
+    document.addEventListener('pointerdown',e=>{
+      if(dock.classList.contains('open')&&!dock.contains(e.target))setDock(false);
+    });
+    window.addEventListener('keydown',e=>{if(e.key==='Escape')setDock(false);});
+    window.__pmDock={menu,close:()=>setDock(false)};
     if (homeMap) {
       const searchBar = mk('div', 'pm-home-search');
       go.innerHTML = ICON.pin;
@@ -424,7 +476,8 @@
       const results = iconBtn('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14"/></svg>', 'Properties', () => showTab('list', true), 'pm-home-results');
       results.append(mk('span', 'pm-control-label', 'Properties'));
       results.setAttribute('aria-controls','pmRight');
-      stack.insertBefore(results, seg);
+      menu.append(results);
+      results.addEventListener('click',()=>setDock(false));
       buildHomeDrawer(results);
       const scope = mk('div','pm-home-scope');
       scope.append(pill,area);
@@ -432,7 +485,7 @@
       const layout = $('pm'), rail = mk('div','pm-home-rail'), content = mk('div','pm-home-content');
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
-      rail.append(stack);
+      rail.append(stack);menu.append(seg);
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
@@ -442,11 +495,10 @@
       };
       new ResizeObserver(resizeFrame).observe(layout);
       resizeFrame();
-    } else t.append(form, stack, pill, area);
-    $('pmMap').addEventListener('pointerdown',()=>{stack.classList.remove('pm-menu-open');menuToggle.setAttribute('aria-expanded','false');},{passive:true});
+    } else { menu.append(seg); t.append(form,stack,pill,area); }
     $('pmCloseFilters').addEventListener('click', () => $('pmLeft').classList.remove('open'));
-    document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-stack')) seg.hidden = true; });
-    window.__pm = { stSel, coSel };
+    document.addEventListener('click', e => { if (!seg.hidden && !e.target.closest('.pm-tool-dock')) seg.hidden = true; });
+    window.__pm = { stSel, coSel };syncGISButton();
   }
   function buildHomeDrawer(trigger) {
     const panel = $('pmRight'), header = $('pmRH'), grip = $('pmGrip');
@@ -496,8 +548,8 @@
     else say('Choose a county to load its records.');
   }
   async function pickCounty(id, {announce = true, remember = true} = {}) {
-    const ds = await load(id); if (!ds) return; curCounty = id; const d = ds.meta;curState=d.state;syncGisState(); if (window.__pm) { window.__pm.stSel.value = d.state; curState = d.state; fillCounties(window.__pm.coSel); window.__pm.coSel.value = id; }
-    F.query = null; active = new Set([id]); F.inView = false; { const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); a.hidden = true; } }
+    const ds = await load(id); if (!ds) return; curCounty = id; const d = ds.meta; if (window.__pm) { window.__pm.stSel.value = d.state; curState = d.state; fillCounties(window.__pm.coSel); window.__pm.coSel.value = id; }
+    F.query = null; active = new Set([id]); F.inView = false; syncGISButton(); { const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); a.hidden = true; } }
     refresh(); closePop(); showTab('list', false); aiRefresh(); if (isMobile()) setSnap('peek'); // collapse the sheet so the county is in view; pull it up for the list
     if (d.bb) fitTo(fitBB(ds)); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
     if (announce && d.mapped && d.mapped < d.records) setTimeout(() => say(d.mapped.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'), 1500);
@@ -1091,9 +1143,9 @@
     map.addSource('states', { type: 'geojson', data: gj });
     const before = 'p-fill';
     map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], homeMap ? 0.20 : 0.62, homeMap ? 0.10 : 0.42], 6.5, homeMap ? 0.07 : 0.4, 8.5, 0] } }, before);
-    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, layout:{visibility:'none'}, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
+    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, layout: { visibility: 'none' }, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
     map.addLayer({ id: 'st-hl', type: 'line', source: 'states', filter: ['in', ['get', 'a'], ['literal', ['__none__']]], paint: { 'line-color': '#22d3ee', 'line-width': 3.2 } }, before);
-    map.addLayer({ id: 'st-sel', type: 'line', source: 'states', layout:{visibility:'none'}, filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
+    map.addLayer({ id: 'st-sel', type: 'line', source: 'states', layout: { visibility: 'none' }, filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
     map.on('mouseenter', 'st-fill', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'st-fill', () => { map.getCanvas().style.cursor = ''; });
     map.on('click', 'st-fill', e => { if (map.getZoom() > 7.5 || map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) return; const f = e.features && e.features[0]; if (f) focusState(f.properties.a); });
     // small labels with how many counties have data
@@ -1102,8 +1154,8 @@
   }
   function stateBB(a) { if (!mapReady || !map.getSource('states')) return null; const src = map.getSource('states')._data; const f = src && src.features.find(x => x.properties.a === a); if (!f) return null; const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { if (c[0] > -170) { xs.push(c[0]); ys.push(c[1]); } })); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
-    if (!a) return; curState = a;syncGisState(); curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
-    active = new Set(['__none__']); F.inView = false; refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
+    if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
+    active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
     const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
     if (panel) { stateCard(a, !homeMap); if (homeMap) openRight(false); }
     aiRefresh();
@@ -1144,8 +1196,8 @@
       focusState(area.state, {remember:false, panel:false, zoom:!pointed});
     }
     if (pointed && !area.state) {
-      curState = '';syncGisState(); curCounty = ''; closePop();
-      active = new Set(['__none__']); F.inView = false; window.__pm.stSel.value = ''; fillCounties(window.__pm.coSel); refresh(); aiRefresh();
+      curState = ''; curCounty = ''; closePop();
+      active = new Set(['__none__']); F.inView = false; window.__pm.stSel.value = ''; fillCounties(window.__pm.coSel); syncGISButton(); refresh(); aiRefresh();
     }
     if (pointed) map.easeTo({center:[area.lng,area.lat], zoom:9.5, duration:REDUCED ? 0 : 240});
   }

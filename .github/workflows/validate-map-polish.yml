@@ -1,0 +1,43 @@
+name: Validate map polish mobile and desktop
+on:
+  push:
+    branches:
+      - feature/map-polish-toolbar-gis
+      - claude/engineering-workspace
+    paths:
+      - kinvest-liens/map/parcel-map.js
+      - kinvest-liens/map/parcel-map.css
+      - tests/map_polish.test.mjs
+      - tests/map_polish.browser.cjs
+      - .github/workflows/validate-map-polish.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check kinvest-liens/map/parcel-map.js
+      - run: node --test tests/map_polish.test.mjs
+      - run: node --test tests/test_all_three_map_modes.mjs
+      - run: node --test tests/test_research_map_overlay.mjs
+  browser-smoke:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix /tmp/ppa-browser --no-save --no-package-lock playwright@1.56.1
+      - name: Run responsive map interactions
+        run: |
+          node tests/map_polish.static-server.cjs >/tmp/ppa-serve.log 2>&1 &
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_polish.browser.cjs
