@@ -28,7 +28,7 @@ async function handler(req){
    const at=date(worker?.lastCompleted||worker?.lastStarted);
    if(!at)continue;
    events.push({id:'gis-'+i+'-'+clean(r.parcelId),at,approximateTime:true,agent:'Official GIS',
-    from:'Official GIS',to:'NVIDIA',type:clean(r.status),message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+(r.reason?' · '+clean(r.reason):''),
+    from:'Official GIS',to:'NVIDIA',type:'verification_result',message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+(r.reason?' · '+clean(r.reason):''),
     parcelId:clean(r.parcelId),county:'MI-wayne',status:r.status==='published'?'success':r.status==='needs_review'?'warning':r.status==='retry_later'?'error':'info'});
   }
   const sources=[['Photon',photon],['Geoapify',geo],['GIS Agent',automatic],['Publisher',publication]];
