@@ -136,3 +136,18 @@ test('release queue pause controls never access production store on preview',()=
  assert.doesNotMatch(seeded,/owner-brain-scanner-v1/);
  assert.match(queue,/if\(action==='pause'\|\|action==='resume'\)/);
 });
+
+test('Wayne test batch is explicit preview-only and reports real GIS results',()=>{
+ const page=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
+ const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+ assert.match(page,/id="wayneTestBatch"/);
+ assert.match(page,/testButton.hidden=!d.preview/);
+ assert.match(page,/Run one Wayne County official GIS test batch/);
+ assert.match(page,/action:'run-wayne-batch',confirmed:true/);
+ assert.match(page,/owner-brain-wayne-run/);
+ assert.match(page,/d\.dailyUsed/);
+ assert.match(page,/d\.published/);
+ assert.match(worker,/context\?\.deploy\?\.context!=='deploy-preview'/);
+ assert.match(worker,/const user=await auth\.userFromCookie/);
+ assert.match(worker,/if\(!user\?\.owner\)/);
+});
