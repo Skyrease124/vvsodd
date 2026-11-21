@@ -107,7 +107,7 @@ async function handler(){
  }catch(e){status.state='error';status.lastError=String(e.message).slice(0,140);}
  finally{status.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,status);}
 }
-export const config={schedule:'35 */4 * * *'};
+// No independent production schedule: publish only as part of a verified Wayne worker batch.
 
 
 export default auth.withBrainStore(handler);
