@@ -4,7 +4,7 @@
 <section class="panel"><h2>Scanner controls</h2><p class="muted">Scan published nationwide map datasets and queue up to 50 parcels missing map locations. A scan reads up to 3 county files, and never consumes paid API credits.</p><button id="scan">Start scan</button><button id="pause" class="secondary">Pause</button><button id="resume" class="secondary">Resume</button><button id="clear" class="danger">Clear queue</button><p class="small" id="note" role="status"></p></section>
 <section class="panel"><h2>Correction review ledger</h2><p class="muted">Only independently checked matches can be approved. Select Preview Map Repair on an approved decision to see the exact record-level proposed point correction. No updates are applied.</p><div id="ledger" class="small">Loading decisions…</div></section>
 <section class="panel"><h2>Review queue <span id="queueCount" class="small"></span></h2><label for="filter">Filter by state</label><input id="filter" placeholder="Example: FL" maxlength="2"><div id="cases"></div></section>
-<p class="muted">Phase 3 GIS pilot: Wayne, Michigan, up to 15 lookup requests/hour. The available ArcGIS parcel layer is historical (last edited 2017), so treat matches as leads only, not current ownership or current boundaries. GIS candidate matches remain unverified, require current official county confirmation, and never publish automatically. Florida lookups require confirmation and have a strict pilot cap of 10 attempts total. No retries or purchases. Other county connectors and NVIDIA routing are still pending.</p></section></main>
+<p class="muted">Phase 3 GIS pilot: Wayne, Michigan, up to 15 lookup requests/hour. A separate City of Detroit assessor layer is now available for exact-ID lookups; all matches still require independent official verification. GIS candidate matches remain unverified, require current official county confirmation, and never publish automatically. Florida lookups require confirmation and have a strict pilot cap of 10 attempts total. No retries or purchases. Other county connectors and NVIDIA routing are still pending.</p></section></main>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),endpoint='/.netlify/functions/owner-brain-queue';
@@ -17,13 +17,18 @@ const g=r.gis;
 if(g){const d=el('div',undefined,'triage');d.append(el('b',g.status==='candidate_found'?'GIS candidate found · Unverified':g.status==='ambiguous'?'GIS results ambiguous':'No exact GIS match'),el('p',g.note,'small'));if(g.centroidApprox)d.append(el('p','Approximate candidate location: '+g.centroidApprox.lat+', '+g.centroidApprox.lon+' · Acreage: '+(g.acreage??'not supplied'),'small'));if(g.sourceUrl){const a=el('a','View public GIS layer');a.href=g.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';d.append(a);}item.append(d);}
 if(!g||g.status!=='candidate_found'){const b=el('button','Find exact GIS match','secondary');b.disabled=data.status==='paused';b.addEventListener('click',()=>lookupGIS(r,b));item.append(b);}
 }
+if(r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)){
+ const d=r.detroit;
+ if(d){const panel=el('div',undefined,'triage');panel.append(el('b',d.status==='candidate_found'?'Detroit assessor GIS · Unverified candidate':'Detroit assessor GIS · No unique match'),el('p',d.note,'small'));if(d.address)panel.append(el('p','City assessor address: '+d.address+' · Acreage: '+(d.acreage??'not supplied'),'small'));if(d.centroidApprox)panel.append(el('p','Approximate point: '+d.centroidApprox.lat+', '+d.centroidApprox.lon,'small'));if(d.sourceUrl){const a=el('a','City of Detroit assessor parcel layer');a.href=d.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';panel.append(a);}item.append(panel);}
+ if(!d||d.status!=='candidate_found'){const b=el('button','Check Detroit Assessor GIS','secondary');b.disabled=data.status==='paused';b.onclick=()=>lookupDetroit(r,b);item.append(b);}
+}
 if(r.state==='FL'){
  const f=r.florida;
  if(f){const d=el('div',undefined,'triage');d.append(el('b',f.status==='candidate_found'?'Florida Property API candidate · Unverified':'Florida API: No exact match'),el('p',f.note,'small'));if(f.status==='candidate_found'){d.append(el('p','Address: '+(f.address||'unavailable')+' · City: '+(f.city||'unavailable'),'small'),el('p','Map centroid: '+(f.centroid?f.centroid.lat+', '+f.centroid.lng:'unavailable')+' · Boundary data: '+(f.geometryPresent?'present':'not supplied'),'small'));}item.append(d);}
  if(!f||f.status!=='candidate_found'){const b=el('button','Florida API: Match parcel','secondary');b.disabled=data.status==='paused';b.addEventListener('click',()=>lookupFlorida(r,b));item.append(b);}
 }
 if(r.review){item.append(el('p','Owner decision: '+r.review.decision.replaceAll('_',' ')+' · Not published','small'));}
-else if((r.gis?.status==='candidate_found')||(r.florida?.status==='candidate_found')){
+else if((r.detroit?.status==='candidate_found')||(r.gis?.status==='candidate_found')||(r.florida?.status==='candidate_found')){
  const block=el('details'),heading=el('summary','Review candidate for approval / rejection');block.append(heading);
  const form=el('form'),title=el('p','Check the current OFFICIAL county property appraiser / assessor / GIS record before approving. The source is not checked automatically.','small');
  const l1=el('label','Official county source URL (HTTPS)'),link=el('input');link.type='url';link.placeholder='https://official-county-site.example/parcel';link.required=true;link.maxLength=1000;
@@ -58,6 +63,12 @@ async function reviewCase(r,decision,url,notes,checked,btn){
  btn.disabled=true;
  try{const res=await fetch('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
  catch(e){$('note').textContent=e.message;btn.disabled=false;}
+}
+async function lookupDetroit(r,btn){
+ if(!confirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
+ btn.disabled=true;btn.textContent='Checking Detroit GIS…';
+ try{const response=await fetch('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
+ catch(e){btn.disabled=false;btn.textContent='Check Detroit Assessor GIS';$('note').textContent=e.message;}
 }
 async function lookupFlorida(r,btn){
  if(!confirm('Use 1 Florida Property API trial credit to look up this parcel by exact county and parcel ID? This may reduce your trial balance. No paid fallback and no map edits.'))return;

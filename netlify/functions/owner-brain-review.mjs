@@ -23,7 +23,7 @@ export default async function handler(req){
  if(!q?.queue||q.status==='paused')return json(409,{ok:false,error:'Queue empty or paused'});
  const r=q.queue.find(x=>x.dataset===b.dataset&&x.recordId===b.recordId);
  if(!r)return json(404,{ok:false,error:'Parcel is not in queue'});
- const candidate=r.state==='FL'?r.florida:(r.state==='MI'&&r.county==='Wayne County'?r.gis:null);
+ const candidate=r.state==='FL'?r.florida:(r.state==='MI'?(r.detroit?.status==='candidate_found'?r.detroit:r.gis):null);
  if(!candidate||candidate.status!=='candidate_found')return json(409,{ok:false,error:'A matching GIS/API candidate is required before review'});
  const matching=r.state==='FL'?candidate.matchedId:candidate.matchedId;
  if(norm(matching)!==norm(r.parcelId))return json(409,{ok:false,error:'Candidate ID does not match queued parcel'});
@@ -38,7 +38,7 @@ export default async function handler(req){
  const prior=(log.entries||[]).find(e=>e.caseKey===key);
  if(prior)return json(409,{ok:false,error:'This case already has a recorded decision. Reviews are immutable in this pilot.'});
  const stamp=new Date().toISOString();
- const entry={caseKey:key,decision:b.action==='approve'?'approved_for_staging':'rejected',...summary(r),reviewedAt:stamp,reviewedBy:'owner',notes,evidenceUrl,independentlyChecked:b.action==='approve',sourceProvider:r.state==='FL'?'Florida Property API':'Wayne County GIS',sourceMatchId:trim(candidate.matchedId,100),proposedPosition:candidateLocation?{lat:Number(candidateLocation.lat),lon:Number(candidateLocation.lng??candidateLocation.lon)}:null,sourceAcreage:r.state==='MI'&&Number.isFinite(candidate.acreage)?candidate.acreage:null,publishStatus:'not_published',sourceSnapshotAt:candidate.foundAt||null};
+ const entry={caseKey:key,decision:b.action==='approve'?'approved_for_staging':'rejected',...summary(r),reviewedAt:stamp,reviewedBy:'owner',notes,evidenceUrl,independentlyChecked:b.action==='approve',sourceProvider:r.state==='FL'?'Florida Property API':(candidate===r.detroit?'City of Detroit Assessor':'Wayne County GIS'),sourceMatchId:trim(candidate.matchedId,100),proposedPosition:candidateLocation?{lat:Number(candidateLocation.lat),lon:Number(candidateLocation.lng??candidateLocation.lon)}:null,sourceAcreage:r.state==='MI'&&Number.isFinite(candidate.acreage)?candidate.acreage:null,publishStatus:'not_published',sourceSnapshotAt:candidate.foundAt||null};
  log.entries=(log.entries||[]).concat(entry).slice(-250);
  await auth.kvPut(LEDGER,log);
  // The ledger is authoritative; queue state is for convenience only.
