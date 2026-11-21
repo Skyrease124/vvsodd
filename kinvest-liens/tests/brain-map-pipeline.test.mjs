@@ -38,7 +38,12 @@ async function harness({review=approval(),features,record,offline=false,pauseDur
  }
  const publish=await module('netlify/functions/brain-map-publish-auto.mjs');
  const feed=await module('netlify/functions/brain-map-county.mjs');
- return {store,county,publish,feed,calls};
+ // The publisher is now internal-only; tests must use the same guarded context as the Wayne worker.
+ const guardedPublish=()=>publish(new Request('https://preview.test/.netlify/functions/brain-map-publish-auto'),{
+  waynePublisherInternal:true,
+  chargeWayneGisRequest:async()=>{const used=store.get('test-gis-usage')||0;if(used>=30)throw Error('Daily GIS request limit reached');store.set('test-gis-usage',used+1);}
+ });
+ return {store,county,publish:guardedPublish,feed,calls};
 }
 test('publication flows through saved feed to three independent map datasets, with history and idempotency',async()=>{
  const h=await harness();await h.publish();
