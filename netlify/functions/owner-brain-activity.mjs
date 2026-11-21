@@ -39,7 +39,22 @@ async function handler(req){
     message:name+' · '+clean(s.state||'completed')+' · '+Number(s.checked||s.published||0)+' checked/published total',status:s.state==='error'?'error':'info'});
   }
   events.sort((a,b)=>b.at.localeCompare(a.at));
-  return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',
+  const now=Date.now(), retry=worker?.retry||null;
+  const running=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
+  const cooling=!!retry?.nextAt&&Date.parse(retry.nextAt)>now&&!retry.exhausted;
+  const state=control?.status==='paused'?'paused':
+   running?'processing':cooling||worker?.state==='retry_wait'?'retrying':
+   retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?'attention':
+   worker?.state==='source_scanned'?'complete':'idle';
+  const health={state,detail:state==='paused'?'County automation paused':
+    state==='processing'?'Official GIS batch running':
+    state==='retrying'?'Waiting to retry parcel '+clean(retry?.parcelId):
+    state==='attention'?clean(retry?.lastError||worker?.lastError||'Worker needs review'):
+    state==='complete'?'Available source records scanned':'Waiting for next batch',
+    retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
+    retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
+    lastCompleted:date(worker?.lastCompleted),dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30};
+  return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',health,
    capturedAt:new Date().toISOString(),county:'Wayne, Michigan',
    summary:{cursor:Number(worker?.cursor||0),runs:Number(worker?.runs||0),verified:Number(worker?.verified||0),published:Number(worker?.published||0),
     needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30,
