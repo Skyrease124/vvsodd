@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 const schedule=fs.readFileSync('netlify/functions/brain-wayne-scheduled.mjs','utf8');
 const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 test('published scheduled runner defaults off and requires explicit Netlify env opt in',()=>{
@@ -66,4 +67,53 @@ test('exhausted retry reviewer requires owner, exact parcel, cursor, origin and 
  assert.match(page,/id="wayneRetryAlert"/);
  assert.match(page,/owner-brain-wayne-retry-review/);
  assert.match(page,/Retry the same parcel/);
+});
+
+async function retryHarness({owner=true,paused=false,exhausted=true}={}){
+ const store=new Map();
+ store.set('owner-brain-wayne-worker-v1',{
+  cursor:11,day:'2026-11-21',dailyUsed:23,lockedUntil:null,
+  retry:exhausted?{parcelId:'01006446',cursor:11,attempts:3,exhausted:true,lastError:'GIS timed out'}:null
+ });
+ store.set('owner-brain-scanner-v1',{status:paused?'paused':'active'});
+ const ctx=vm.createContext({Response,Request,URL,Date});
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore'],function(){
+  this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
+  this.setExport('kvGet',async k=>structuredClone(store.get(k)));
+  this.setExport('kvPut',async(k,v)=>{store.set(k,structuredClone(v));});
+  this.setExport('withBrainStore',fn=>fn);
+ },{context:ctx});
+ const source=fs.readFileSync('netlify/functions/owner-brain-wayne-retry-review.mjs','utf8');
+ const mod=new vm.SourceTextModule(source,{context:ctx});await mod.link(()=>auth);await mod.evaluate();
+ const invoke=(body,{origin='https://preview.test',deploy='deploy-preview',method='POST'}={})=>
+  mod.namespace.default(new Request('https://preview.test/.netlify/functions/owner-brain-wayne-retry-review',{
+   method,headers:{origin},...(method==='POST'?{body:JSON.stringify(body)}:{})
+  }),{deploy:{context:deploy}});
+ return {store,invoke};
+}
+test('live recovery handler rejects nonowner, forged origin, stale parcel and paused worker',async()=>{
+ const body={action:'rearm-exhausted-parcel',confirmed:true,parcelId:'01006446',cursor:11};
+ const guest=await retryHarness({owner:false});
+ assert.equal((await guest.invoke(body)).status,401);
+ const h=await retryHarness();
+ assert.equal((await h.invoke(body,{origin:'https://attacker.test'})).status,403);
+ assert.equal((await h.invoke({...body,parcelId:'01099999'})).status,409);
+ assert.equal((await h.invoke({...body,cursor:12})).status,409);
+ assert.equal((await h.invoke({...body,confirmed:false})).status,400);
+ const paused=await retryHarness({paused:true});
+ assert.equal((await paused.invoke(body)).status,409);
+ assert.equal(paused.store.get('owner-brain-wayne-worker-v1').retry.exhausted,true);
+});
+test('owner re-arms exact exhausted parcel without moving cursor or resetting quota',async()=>{
+ const h=await retryHarness(),body={action:'rearm-exhausted-parcel',confirmed:true,parcelId:'01006446',cursor:11};
+ const result=await h.invoke(body),d=await result.json();
+ assert.equal(result.status,200);
+ assert.equal(d.rearmed,true);
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(saved.cursor,11);
+ assert.equal(saved.dailyUsed,23);
+ assert.equal(saved.retry,null);
+ assert.equal(saved.lastOwnerRecovery.parcelId,'01006446');
+ assert.equal(saved.lastOwnerRecovery.exhaustedAttempts,3);
+ assert.equal((await h.invoke(body)).status,409);
 });
