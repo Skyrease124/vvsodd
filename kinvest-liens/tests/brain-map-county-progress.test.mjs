@@ -37,3 +37,16 @@ test('coverage refreshes automatically and force run respects guarded preview en
  const preview=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
  assert.match(preview,/dispatchEvent\(new CustomEvent\('ppa:brain-map-updated'/);
 });
+
+test('automatic runner and force button share exactly one guarded batch operation',()=>{
+ assert.match(frontend,/async function runBatch\(manual\)/);
+ assert.match(frontend,/force\.onclick=\(\)=>runBatch\(true\)/);
+ assert.match(frontend,/runBatch\(false\)/);
+ assert.match(frontend,/setInterval\(\(\)=>/);
+ assert.match(frontend,/300000/);
+ assert.match(frontend,/document\.hidden/);
+ assert.match(frontend,/autoAllowed=d\.preview&&c\.id==='MI-wayne'/);
+ assert.match(frontend,/autoStopped=true/);
+ assert.match(frontend,/Auto Run: ON/);
+ assert.match(frontend,/Auto Run: OFF/);
+});
