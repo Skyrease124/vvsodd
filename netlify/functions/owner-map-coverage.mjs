@@ -13,7 +13,9 @@ async function readStatic(path) {
   const response=await fetch(root+path,{headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
   if(!response.ok)throw Error('Static map data unavailable');
   const body=await response.text();
-  if(body.length>500000)throw Error('Map index too large');
+  // The nationwide map index now exceeds the original 500 KB guard. Keep a bounded payload limit.
+  const maxBytes=path==='/map/index.json'?8_000_000:12_000_000;
+  if(Buffer.byteLength(body,'utf8')>maxBytes)throw Error('Map JSON exceeds safe payload limit');
   return JSON.parse(body);
 }
 function validDatasets(index) {
