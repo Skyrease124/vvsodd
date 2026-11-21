@@ -9,7 +9,8 @@ const scope=new AsyncLocalStorage();
 // Unlike a deploy store, a site-level store survives newer PR #452 previews.
 const previewStore=()=>getStore({name:'ppa-brain-preview-pr453',consistency:'strong'});
 const previewSeed=()=>getDeployStore({consistency:'strong'});
-const SEEDED=new Set(['brain-source-events-v1','owner-brain-scanner-v1','owner-brain-approvals-v1',
+// Keep scanner pause and queue in dedicated preview state only; never inherit a seeded/production pause.
+const SEEDED=new Set(['brain-source-events-v1','owner-brain-approvals-v1',
  'brain-map-county-v1-MI-wayne','brain-map-history-v1','brain-map-publication-status-v1']);
 export const isBrainPreview=()=>scope.getStore()?.preview===true;
 // API budgets and provider controls remain shared; a preview must not reset them.
