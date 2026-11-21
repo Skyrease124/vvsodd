@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false}={}){
  const store=new Map();
  if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
  if(cursor)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed:0,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
@@ -17,7 +17,9 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  fetch:async u=>{
   const url=new URL(u);if(url.hostname==='pricepocketasset.com')return Response.json({recs:rows});
   calls++;if(failedGIS)throw Error('Simulated provider outage');
-  const id=(url.searchParams.get('where').match(/010[0-9]{5}/)||[])[0];
+  if(timeoutFirst&&calls===1)throw Object.assign(Error('The operation was aborted due to timeout'),{name:'TimeoutError'});
+  if(url.searchParams.get('returnIdsOnly')==='true')return Response.json({objectIds:[100]});
+  const id=(url.searchParams.get('where')||'01002754').match(/010[0-9]{5}/)?.[0]||'01002754';
   return Response.json({features:[{attributes:{parcel_number:id+'.',address:'100 TEST ST',object_id:100},geometry:{rings:[[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]]]}}]});
  }});
  const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore','isBrainPreview'],function(){
@@ -90,6 +92,17 @@ test('saved cursor resumes later source row rather than reprocessing earlier par
  assert.equal(result.cursor,4);
  assert.equal(h.reads(),1);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').runs,3);
+});
+test('timed-out parcel lookup falls back to official object ID, preserves verification, and charges all three GIS requests',async()=>{
+ const h=await setup({timeoutFirst:true});
+ const d=await (await h.invoke()).json();
+ assert.equal(d.attempted,3);
+ assert.equal(d.verified,1);
+ assert.equal(d.published,1);
+ assert.equal(d.rows[0].lookupMethod,'indexed_object_id');
+ assert.equal(h.reads(),5);
+ assert.equal(d.dailyUsed,5);
+ assert.equal(h.publications(),1);
 });
 test('transient GIS outage schedules backoff without skipping or publishing',async()=>{
  const h=await setup({failedGIS:true});const result=await (await h.invoke()).json();
