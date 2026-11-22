@@ -257,7 +257,7 @@
       let requestedProfile = false, returnFocus = null;
       p.setAttribute('aria-modal','true');
       const openSheet = () => {
-        returnFocus = document.activeElement; backdrop.hidden = false; p.hidden = false; b.setAttribute('aria-expanded', 'true'); close.focus({preventScroll:true});
+        returnFocus = document.activeElement; backdrop.hidden = false; p.hidden = false; p.scrollTop = 0; b.setAttribute('aria-expanded', 'true'); close.focus({preventScroll:true});
         if (requestedProfile) return;
         requestedProfile = true;
         fetch('/.netlify/functions/community?me=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(data => {
