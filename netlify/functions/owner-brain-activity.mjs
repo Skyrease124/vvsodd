@@ -13,6 +13,16 @@ async function handler(req){
    'owner-brain-scanner-v1','owner-brain-photon-status-v1','owner-brain-geoapify-status-v1',
    'owner-brain-automatic-status-v1'].map(k=>auth.kvGet(k)));
   const events=[];
+  const research=auth.isBrainPreview()?await auth.kvGet('brain-reconciliation-research-v1-CO-larimer'):null;
+  const researchIds=new Set();
+  for(const entry of (Array.isArray(research?.events)?research.events:[]).slice(-50)){
+   const at=date(entry?.at);
+   if(!at||typeof entry.id!=='string'||!['document','missing','restricted','unavailable'].includes(entry.outcome)||researchIds.has(entry.id))continue;
+   researchIds.add(entry.id);
+   events.push({id:'research-'+clean(entry.id),at,agent:'Parcel research',from:'Official records',to:'NVIDIA',
+    type:'parcel_research',message:'Larimer research · '+clean(entry.sourceId)+' · '+entry.outcome,
+    county:'CO-larimer',status:entry.outcome==='document'?'success':entry.outcome==='unavailable'?'error':'info'});
+  }
   // Publication history is the authoritative receipt. Never claim an AI model
   // performed the work when the record identifies only official GIS.
   for(const [i,h] of (history?.entries||[]).slice(0,100).entries()){

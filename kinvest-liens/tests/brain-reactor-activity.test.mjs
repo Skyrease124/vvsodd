@@ -5,11 +5,12 @@ import vm from 'node:vm';
 const source=fs.readFileSync('netlify/functions/owner-brain-activity.mjs','utf8');
 const page=fs.readFileSync('kinvest-liens/owner/brain/activity/index.html','utf8');
 const brain=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
-async function create(owner){
+async function create(owner,research=null){
  const store=new Map([
   ['owner-brain-wayne-worker-v1',{cursor:7,runs:2,verified:5,published:5,needsReview:0,failures:0,dailyUsed:5,state:'idle',lastCompleted:'2026-11-21T20:00:00.000Z',recent:[{parcelId:'01002754',status:'published'}]}],
   ['brain-map-history-v1',{entries:[{dataset:'MI-wayne',parcelId:'01002754',action:'published',source:'official GIS',at:'2026-11-21T20:00:00.000Z'}]}],
  ]);
+ if(research)store.set('brain-reconciliation-research-v1-CO-larimer',research);
  const context=vm.createContext({Response,console,Date});
  const auth=new vm.SyntheticModule(['userFromCookie','kvGet','withBrainStore','isBrainPreview'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
@@ -94,4 +95,14 @@ test('activity audit preserves exact retry times and displays GIS stages',()=>{
  assert.match(page,/className='gis-trace'/);
  assert.match(page,/durationMs\+'ms'/);
  assert.match(page,/Failed stage/);
+});
+
+
+test('Reactor uses only persisted research receipts and deduplicates them',async()=>{
+ const receipt={id:'case|recorder|1',at:'2026-11-22T01:00:00Z',sourceId:'recorder',outcome:'restricted'};
+ const run=await create(true,{events:[receipt,receipt,{...receipt,id:'invented',outcome:'simulated'}]});
+ const body=await (await run(new Request('https://preview.test/activity'))).json();
+ assert.equal(body.events.filter(e=>e.type==='parcel_research').length,1);
+ assert.match(body.events.find(e=>e.type==='parcel_research').message,/restricted/);
+ assert.equal(body.summary.cursor,7);
 });

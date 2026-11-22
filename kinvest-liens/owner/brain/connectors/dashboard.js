@@ -169,6 +169,8 @@ async function showTrial(request){
       entry.append(heading,identifiers,need,references);section.append(entry);
     }
     details.append(section);
+    await showResearch(request);
+    if(request!==selection)return;
   }
   if(result.canRunAddressDiagnostic){
     const diagnostic=document.createElement('button');
@@ -201,4 +203,60 @@ async function showTrial(request){
     };
     details.append(summary,evidence,review,button);
   }else details.append(summary,evidence,button);
+}
+
+
+async function showResearch(request){
+  const url='/.netlify/functions/owner-brain-reconciliation-research';
+  const panel=document.createElement('section');
+  const title=document.createElement('h2');
+  title.textContent='Parcel history research';
+  panel.append(title);
+  try{
+    const data=await read(url);
+    if(request!==selection)return;
+    const add=text=>{
+      const line=document.createElement('p');
+      line.textContent=text;
+      panel.append(line);
+    };
+    add('Research workspace: '+data.status+' · '+(data.paused?'Paused':'Resumed')+' · Automatic research disabled');
+    add('Recorded plat: '+(data.recordedDocument||'Not obtained')+' · Relationship: '+(data.relationship||'Unresolved')+
+      ' · Evidence: '+(data.evidenceComplete?'Complete for review':'Incomplete')+
+      (data.conflicting?' · Conflicting records need review':''));
+    add('Last research attempt: '+(data.lastAttempt?data.lastAttempt.at+' · '+data.lastAttempt.outcome:'None recorded by this workflow'));
+    if(data.missing.length)add('Missing: '+data.missing.join('; '));
+    const refs=document.createElement('ul');
+    for(const item of data.sources){
+      const li=document.createElement('li'),link=document.createElement('a');
+      link.href=item.url;
+      link.textContent=item.authority;
+      li.append(link);
+      refs.append(li);
+    }
+    panel.append(refs);
+    for(const entry of data.evidence){
+      const document=entry.document;
+      add(entry.at+' · '+entry.authority+' · '+entry.outcome+
+        (document?' · Reference '+document.reference+(document.legalDescription?' · '+document.legalDescription:''):''));
+    }
+    const button=document.createElement('button');
+    const action=data.paused?'resume':'pause';
+    button.textContent=data.paused?'Resume research queue':'Pause research queue';
+    button.onclick=async()=>{
+      if(!confirm('Save '+action+' for the preview research queue? No research requests will run.'))return;
+      button.disabled=true;
+      try{
+        await read(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
+        await showCounty();
+      }catch(error){statusLine.textContent=error.message;}
+    };
+    panel.append(button);
+  }catch(error){
+    if(request!==selection)return;
+    const failure=document.createElement('p');
+    failure.textContent=error.message;
+    panel.append(failure);
+  }
+  details.append(panel);
 }
