@@ -56,3 +56,17 @@ test('preview and production use the same persistent Wayne quota namespace', asy
  assert.match(source,/k\.startsWith\('brain-wayne-gis-quota-v1-'\)/);
  assert.match(source,/!sharedBudgetKey\(k\)/);
 });
+
+
+test('owner preview quota activation cannot dispatch GIS and requires confirmation',()=>{
+ 
+ const endpoint=fs.readFileSync('netlify/functions/owner-brain-wayne-quota-activate.mjs','utf8');
+ const dashboard=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
+ assert.match(endpoint,/context\?\.deploy\?\.context!=='deploy-preview'/);
+ assert.match(endpoint,/!user\?\.owner/);
+ assert.match(endpoint,/body\?\.confirmed!==true/);
+ assert.match(endpoint,/auth\.kvPutVersioned\(KEY,\{day\},null\)/);
+ assert.doesNotMatch(endpoint,/fetch\(/);
+ assert.match(dashboard,/id="wayneQuotaActivate"/);
+ assert.match(dashboard,/owner-brain-wayne-quota-activate/);
+});
