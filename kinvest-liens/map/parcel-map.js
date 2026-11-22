@@ -1234,51 +1234,89 @@
     showTab('list', open);
   }
 
-  // Unified Radar overlays: state-level official county aggregates, not parcel pins.
-  // The source provides state/county identifiers but not verified auction coordinates.
-  let radarOverlay={tab:'opp',month:'',counties:[]},radarPins=[];
+  // Unified Radar: county-level markers use named county polygons, never guessed parcel pins.
+  // Plotly's county geometry is derived from the US Census; geometry failure falls back
+  // to clearly labelled state aggregates rather than invented county coordinates.
+  const STATE_FIPS={AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
+  let radarOverlay={tab:'opp',month:-1,counties:[]},radarPins=[],radarCounties=null,radarGeometryLoading=false;
+  const radarNorm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of)\\b/g,'').replace(/[^a-z0-9]/g,'');
   const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
-    t==='cal'?(c.sale?.kind==='scheduled'||c.sale?.kind==='tentative'):
-    (c.sale?.kind==='past'||c.sale?.kind==='completed');
+    t==='cal'?(c.group!=='county-held'&&c.group!=='state-held'&&
+      (c.sale?.kind==='scheduled'||(c.sale?.kind==='tentative'&&radarOverlay.month<0))):
+    !!c.history;
   function clearRadarPins(){radarPins.forEach(p=>p.remove());radarPins=[];}
+  async function loadRadarCounties(){
+    if(radarCounties||radarGeometryLoading)return;
+    radarGeometryLoading=true;
+    try{
+      const response=await fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json');
+      if(!response.ok)throw Error('County geometry unavailable');
+      const gj=await response.json(),by=new Map();
+      for(const f of gj.features||[]){
+        const code=String(f.id||f.properties?.GEO_ID||'').slice(0,5);
+        const name=f.properties?.NAME;
+        if(code.length===5&&name)by.set(code.slice(0,2)+':'+radarNorm(name),f);
+      }
+      radarCounties=by;
+    }catch(e){console.warn('Radar county outlines unavailable; using state aggregates',e);}
+    finally{radarGeometryLoading=false;drawRadarPins();}
+  }
+  function radarBounds(g){
+    const xy=[];
+    const scan=a=>{if(typeof a?.[0]==='number'&&typeof a[1]==='number'){xy.push(a);return;}if(Array.isArray(a))a.forEach(scan);};
+    scan(g.coordinates);if(!xy.length)return null;
+    const xs=xy.map(v=>v[0]).filter(v=>v>=-170&&v<=-65),ys=xy.map(v=>v[1]).filter(v=>v>=17&&v<=72);
+    if(!xs.length||!ys.length)return null;
+    return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+  }
   function drawRadarPins(){
     if(!homeMap||!mapReady||!map.getSource('states'))return;
     clearRadarPins();
-    const src=map.getSource('states')._data;
-    if(!src?.features)return;
-    const grouped=new Map();
+    const src=map.getSource('states')._data;if(!src?.features)return;
+    const byState=new Map(),fallback=new Map();
     for(const c of radarOverlay.counties){
-      if(!/^[A-Z]{2}$/.test(c.state||'')||!radarKind(c,radarOverlay.tab))continue;
-      if(radarOverlay.tab==='cal'&&radarOverlay.month&&
-        !String(c.sale?.date||'').startsWith(radarOverlay.month))continue;
-      const arr=grouped.get(c.state)||[];arr.push(c);grouped.set(c.state,arr);
+      if(!STATE_FIPS[c.state]||!radarKind(c,radarOverlay.tab))continue;
+      if(radarOverlay.tab==='cal'&&radarOverlay.month>=0&&
+        (!c.sale?.date||Number(c.sale.date.slice(5,7))-1!==radarOverlay.month))continue;
+      const key=STATE_FIPS[c.state]+':'+radarNorm(c.county);
+      const feature=radarCounties?.get(key);
+      if(feature){const arr=byState.get(key)||{feature,rows:[]};arr.rows.push(c);byState.set(key,arr);}
+      else{const arr=fallback.get(c.state)||[];arr.push(c);fallback.set(c.state,arr);}
     }
     const colors={opp:'#3be6a2',cal:'#f6ba49',hist:'#b49aff'};
-    for(const feature of src.features){
-      const state=feature.properties?.a,rows=grouped.get(state);
-      if(!rows?.length)continue;
-      const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
+    const makePin=(point,rows,state,county,countyBounds)=>{
       const el=mk('button','ppa-radar-pin',String(rows.length));
-      el.type='button';el.style.cssText='width:34px;height:34px;border-radius:50%;border:2px solid white;background:'+colors[radarOverlay.tab]+';color:#10222d;font:800 13px system-ui;box-shadow:0 5px 18px #0009;cursor:pointer;transform:translateZ(0);transition:transform .25s';
-      el.title=rows.length+' county records in '+state+' ('+radarOverlay.tab+'); state-level aggregate, not parcel coordinates';
+      el.type='button';el.style.cssText='min-width:34px;height:34px;padding:0 6px;border-radius:20px;border:2px solid white;background:'+colors[radarOverlay.tab]+';color:#10222d;font:800 13px system-ui;box-shadow:0 5px 18px #0009;cursor:pointer;transition:transform .25s';
+      const area=county?county+', '+state:state;
+      el.title=rows.length+' Radar record(s) in '+area+'; '+(county?'county location':'state aggregate')+', not parcel coordinates';
       el.setAttribute('aria-label',el.title);
       el.addEventListener('click',()=>{
-        focusState(state,{remember:false,panel:false});
-        window.parent.postMessage({type:'ppa:radar-overlay-select',state,tab:radarOverlay.tab},location.origin);
+        if(countyBounds)fitTo(countyBounds,fitPad());else focusState(state,{remember:false,panel:false});
+        window.parent.postMessage({type:'ppa:radar-overlay-select',state,county,tab:radarOverlay.tab},location.origin);
       });
-      radarPins.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2]).addTo(map));
+      radarPins.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map));
+    };
+    for(const [key,entry] of byState){
+      const bb=radarBounds(entry.feature.geometry);if(!bb)continue;
+      const state=entry.rows[0].state,county=entry.rows[0].county;
+      makePin([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2],entry.rows,state,county,bb);
+    }
+    for(const [state,rows] of fallback){
+      const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
+      makePin([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2],rows,state,'',null);
     }
   }
   if(homeMap)window.addEventListener('message',event=>{
     if(event.origin!==location.origin||event.source!==window.parent)return;
     const d=event.data;
     if(d?.type!=='ppa:radar-overlay'||!['opp','cal','hist'].includes(d.tab)||!Array.isArray(d.counties)||d.counties.length>3000)return;
-    radarOverlay={tab:d.tab,month:typeof d.month==='string'&&/^\\d{4}-\\d{2}$/.test(d.month)?d.month:'',
+    radarOverlay={tab:d.tab,month:Number.isInteger(d.month)&&d.month>=-1&&d.month<=11?d.month:-1,
       counties:d.counties.filter(c=>c&&typeof c.state==='string'&&typeof c.county==='string').map(c=>({
-        state:c.state,county:c.county,open:Number(c.open)||0,
+        state:c.state,county:c.county,open:Number(c.open)||0,group:String(c.group||''),history:!!c.history,
         sale:{kind:String(c.sale?.kind||''),date:String(c.sale?.date||'')}
       }))};
     drawRadarPins();
+    if(!radarCounties&&!radarGeometryLoading)loadRadarCounties();
     if(mapReady)map.easeTo({pitch:REDUCED?0:38,duration:REDUCED?0:650});
   });
   // Verified Radar parcel handoff. Exact state + county + parcel ID must match
