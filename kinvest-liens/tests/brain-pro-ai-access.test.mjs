@@ -64,3 +64,29 @@ test('report and primary AI routes share strict Pro requirement',()=>{
  assert.doesNotMatch(report,/auth\.isPaid\(me\)/);
  assert.match(ai,/if \(!auth\.isPro\(me\)\) return json\(402/);
 });
+
+
+test('primary PricePocket AI route denies non-Pro POST before models or portfolio access',async()=>{
+ const source=fs.readFileSync('netlify/functions/ai.mjs','utf8');
+ const start=source.indexOf('async function handle(event) {');
+ const end=source.indexOf('\nasync function toEvent(',start);
+ assert.ok(start>=0&&end>start,'AI request handler boundaries found');
+ const handlerSource=source.slice(start,end);
+ for(const [role,me] of Object.entries(roles)){
+  let configReads=0;
+  const scope={
+   keystore:{getConfig:async()=>{configReads++;return {enabled:true};}},
+   auth:{userFromCookie:async()=>me,isPro},
+   FILES:{Wayne:'MI-wayne.json'},
+   json:(statusCode,body)=>({statusCode,body}),
+  };
+  const handle=vm.runInNewContext(handlerSource+'\nhandle',scope);
+  const denied=!['pro','owner'].includes(role);
+  // An empty payload is rejected at input validation for authorized members;
+  // unauthorized members must be rejected earlier, before question handling.
+  const result=await handle({httpMethod:'POST',headers:{cookie:'ignored'},body:'{}'});
+  assert.equal(result.statusCode,role==='anonymous'?401:denied?402:400,role);
+  assert.equal(configReads,1);
+  if(denied)assert.equal(result.body.needPaid,role!=='anonymous');
+ }
+});
