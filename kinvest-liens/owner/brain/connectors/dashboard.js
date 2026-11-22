@@ -145,6 +145,31 @@ async function showTrial(request){
     row.append(title,summary,sources,next);
     evidence.append(row);
   }
+  if(Array.isArray(result.reconciliationCases)&&result.reconciliationCases.length){
+    const section=document.createElement('section'),title=document.createElement('h2');
+    title.textContent='Parcel identity reconciliation queue';
+    const description=document.createElement('p');
+    description.textContent='Research-only cases. Address matches do not establish legal parcel identity or authorize publication.';
+    section.append(title,description);
+    for(const item of result.reconciliationCases){
+      const entry=document.createElement('div'),heading=document.createElement('strong');
+      heading.textContent=item.dataset+' · '+item.status.replaceAll('_',' ')+' · No publication';
+      const identifiers=document.createElement('p');
+      identifiers.textContent='Treasurer '+item.original.parcelId+' / '+(item.original.schedule||'unknown')+
+        ' → GIS lead '+item.candidate.parcelId+' / '+(item.candidate.schedule||'unknown');
+      const need=document.createElement('p');
+      need.textContent='Next evidence required: '+item.missingEvidence.join('; ');
+      const references=document.createElement('ul');
+      for(const src of item.sources){
+        const li=document.createElement('li'),link=document.createElement('a');
+        link.href=src.url;link.textContent=src.authority||'Official record';
+        link.rel='noopener noreferrer';link.target='_blank';
+        li.append(link,document.createTextNode(' · '+src.finding));references.append(li);
+      }
+      entry.append(heading,identifiers,need,references);section.append(entry);
+    }
+    details.append(section);
+  }
   if(result.canRunAddressDiagnostic){
     const diagnostic=document.createElement('button');
     diagnostic.textContent='Run final address diagnostic';
