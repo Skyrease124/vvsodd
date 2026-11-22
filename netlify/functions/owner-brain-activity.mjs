@@ -131,7 +131,7 @@ async function handler(req){
     state==='source_paused'?'Official GIS source paused until '+worker.sourcePause.nextAt:
     state==='retrying'?'Waiting to retry parcel '+clean(retry?.parcelId):
     state==='attention'?clean(retry?.lastError||worker?.lastError||'Worker needs review'):
-    state==='quota_wait'?(quota.resumeAt?'Shared GIS budget cutover · resumes '+quota.resumeAt:!quota.active?'Shared GIS budget not activated · no requests permitted':'Daily shared GIS budget exhausted'):
+    state==='quota_wait'?(quota.resumeAt?'Shared GIS budget cutover · resumes '+quota.resumeAt:!quota.active?'Shared GIS budget awaiting first owner-confirmed pilot request · first attempt starts UTC cutover; no GIS dispatch until the following UTC day':'Daily shared GIS budget exhausted'):
     state==='complete'?'Available source records scanned':'Waiting for next batch',
     retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
     retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
