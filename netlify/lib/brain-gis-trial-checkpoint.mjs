@@ -32,3 +32,26 @@ export async function runConnectorTrial({environment,dataset,revision,records,st
   if(!await storage.write(key,{...state,lockUntil:null},lease))throw Error('Trial checkpoint changed');
   return {status:state.retry?'retry_hold':state.cursor===(snapshot?.data?.cursor??0)?'budget_hold':'recorded',cursor:state.cursor,retry:state.retry};
 }
+
+/**
+ * Explicit owner-review release of one failed preview parcel. No GIS request,
+ * budget change, cursor advance, or publication occurs here. Conditional write
+ * rejects races with other reviewer/worker actions.
+ */
+export async function rearmConnectorTrial({environment,dataset,revision,recordId,storage,now=()=>new Date()}) {
+  if(environment!=='deploy-preview'||connectorFor(dataset)?.mode!=='test-only')throw Error('Preview trial only');
+  if(typeof revision!=='string'||!revision||typeof recordId!=='string'||!recordId)throw Error('Exact trial identity required');
+  const key='brain-gis-trial-v1-'+dataset;
+  const snapshot=await storage.read(key);
+  const state=snapshot?.data;
+  if(!snapshot?.etag||!state||state.revision!==revision)throw Error('Trial checkpoint unavailable or source changed');
+  const hold=state.retry;
+  if(!hold?.exhausted||hold.recordId!==recordId)throw Error('Exact exhausted review checkpoint required');
+  if(!Number.isSafeInteger(state.cursor)||state.cursor<0)throw Error('Invalid trial cursor');
+  if(state.lockUntil&&state.lockUntil>now().getTime())throw Error('Trial worker currently locked');
+  const previous={recordId,attempts:hold.attempts,reason:hold.reason,diagnostics:hold.diagnostics??null,
+    rearmedAt:now().toISOString()};
+  const updated={...state,retry:null,lastOwnerRecovery:previous};
+  if(!await storage.write(key,updated,snapshot.etag))throw Error('Trial checkpoint changed during review');
+  return {rearmed:true,recordId,cursor:state.cursor,previousAttemptCount:hold.attempts};
+}
