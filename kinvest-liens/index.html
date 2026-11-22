@@ -25,6 +25,14 @@
 .app-map.app-map-unified #home-radar .dhero{padding-top:0}
 .app-map.app-map-unified #home-radar .rfind{margin-top:12px}
 .app-map.app-map-unified #home-radar .rpanel{max-width:100%;overflow-wrap:anywhere}
+#home-parcels{position:relative}
+#home-radar-map-controls[hidden]{display:none!important}
+#home-radar-map-controls{position:absolute;right:7px;top:85px;width:clamp(83px,13%,110px);z-index:4}
+#home-radar-map-controls .rtabs{display:flex;flex-direction:column;gap:6px;padding:0;background:transparent;border:0;box-shadow:none}
+#home-radar-map-controls .rtabs button{display:block;width:100%;min-height:46px;padding:8px 4px;border:1px solid rgba(126,218,200,.5);border-radius:12px;background:#10343d;color:#d6eee9;font:700 11px/1.2 system-ui,sans-serif;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+#home-radar-map-controls .rtabs button[aria-selected=true]{background:#15765c;color:white;border-color:#8de9c3}
+#home-radar-map-controls .rtabs button:focus-visible{outline:3px solid #ffe17b;outline-offset:2px}
+@media(min-width:900px){#home-radar-map-controls{top:95px;width:118px}#home-radar-map-controls .rtabs button{font-size:12px}}
 </style>
 </head>
 <body class="ppa-home">
@@ -65,6 +73,7 @@
     <p class="app-map-combined-note" id="home-combined-note" hidden>Explore verified parcel locations and tax-sale opportunities together. Radar records are not automatically parcel-verified; confirm sale details with the county.</p>
     <p id="home-radar-match-status" role="status" class="app-map-combined-note" hidden></p>
     <div id="home-parcels">
+    <div id="home-radar-map-controls" aria-label="Tax Sale Radar map controls" hidden></div>
     <script src="/app-location.js"></script>
     <iframe src="/map/?embed=1&home=1" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
     <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span><a data-open-map href="/map/">Open full map →</a></div>
