@@ -50,6 +50,32 @@ test('corrections refresh, roll back, and preserve existing mapped boundaries',a
  assert.equal((await scope.window.PPABrainMap.apply(surfaces[0])).changed,false);
  assert.equal(surfaces[0].recs[0].g,null);
 });
+test('three map consumers update when publication recovery changes visible feed without version bump',async()=>{
+ const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]];
+ const approved={i:'r1',p:'01002263',verifiedGeometry:true,g:[ring],
+  cx:[-83.0995,42.3005],bb:[-83.1,42.3,-83.099,42.301],evidenceUrl:'https://example.gov/parcel'};
+ let body={ok:true,dataset:'MI-wayne',version:13,records:{}};
+ const scope={window:{},URL,URLSearchParams,fetch:async()=>({ok:true,json:async()=>body})};
+ vm.runInNewContext(merge,scope);
+ const consumers=Array.from({length:3},()=>({id:'MI-wayne',recs:[{i:'r1',p:'01002263',why:'missing'}]}));
+ for(const dataset of consumers)assert.equal((await scope.window.PPABrainMap.apply(dataset)).changed,false);
+ // An unfinished publication is hidden by the server. Once recovery clears its
+ // marker, the server can expose it even though polygon version 13 is unchanged.
+ body={...body,records:{r1:approved}};
+ for(const dataset of consumers){
+  const updated=await scope.window.PPABrainMap.apply(dataset);
+  assert.equal(updated.version,13);
+  assert.equal(updated.changed,true);
+  assert.deepEqual(dataset.recs[0].g,[ring]);
+  assert.equal((await scope.window.PPABrainMap.apply(dataset)).changed,false);
+ }
+ body={...body,records:{}};
+ for(const dataset of consumers){
+  assert.equal((await scope.window.PPABrainMap.apply(dataset)).changed,true);
+  assert.equal(dataset.recs[0].g,null);
+ }
+});
+
 test('read-only map endpoint and official approval gate',()=>{
  assert.match(fn,/req\.method!=='GET'/);
  assert.match(publish,/approved_for_staging/);
