@@ -4,6 +4,19 @@
   const tabs = [...document.querySelectorAll('.work-tabs button')];
   const selected = $('work-state'), county = $('work-county');
   const map = $('work-geo').querySelector('iframe');
+  const mapParcel=$('work-map-parcel');
+  addEventListener('ppa:workshop-parcel',event=>{
+    const parcel=event.detail;
+    if(!parcel?.parcelId)return;
+    mapParcel.textContent='Parcel '+parcel.parcelId+' · '+parcel.county+', '+parcel.state+
+      (Number.isFinite(parcel.acres)?' · '+(parcel.estimated?'Estimated acreage ':'Acreage ')+parcel.acres.toFixed(2):'');
+    if(typeof parcel.source==='string'&&/^https:\/\//.test(parcel.source)){
+      const official=mk('a','Official GIS boundary source');
+      official.href=parcel.source;official.target='_blank';official.rel='noopener noreferrer';
+      mapParcel.append(document.createTextNode(' · '),official);
+    }
+    mapParcel.hidden=false;
+  });
   const history = [], files = new Map();
   let index, composer, resultVersion = 0;
   const datasetCounty = text => String(text || '').toLowerCase().replace(/ county$/, '');
@@ -15,6 +28,7 @@
   const scope = () => ({states:selected.value ? [selected.value] : [], county:countyMeta()?.county || null});
   window.ppaWorkshopScope = scope;
   const browse = () => {
+    mapParcel.hidden=true;
     const q = new URLSearchParams({embed:'1',picker:'1'});
     if (county.value) q.set('c',county.value);
     else if (selected.value) q.set('s',selected.value);

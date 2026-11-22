@@ -858,6 +858,12 @@
   function select(r, o) {
     sel = r; near = null; popup(r);
     const dataset = IDX.datasets.find(x => x.id === r._d);
+    if (embedded&&pickerMap&&dataset){
+      window.parent.dispatchEvent(new CustomEvent('ppa:workshop-parcel',{detail:{
+       parcelId:r.p,county:dataset.county,state:dataset.state,acres:r.ac??r.__brainEvidence?.estimatedAcres??null,
+       estimated:r.ac==null,source:r.__brainEvidence?.source??null
+      }}));
+    }
     if (dataset && locationContext && o?.remember !== false) rememberArea(locationContext.countyArea(dataset, r));
     if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); if (homeMap) map.getSource('sel-point').setData(r.cx ? {type:'Feature',geometry:{type:'Point',coordinates:r.cx},properties:{}} : empty); }
     if (homeMap && o?.fly && r.bb && mapReady) {
