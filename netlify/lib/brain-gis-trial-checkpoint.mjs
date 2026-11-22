@@ -25,7 +25,8 @@ export async function runConnectorTrial({environment,dataset,revision,records,st
       const attempts=(state.retry?.attempts??0)+1;
       state={...state,retry:{recordId:record.i,attempts,
         exhausted:!error.retryable||attempts>=3,nextAt:now().getTime()+60000*attempts,
-        checkedAt:now().toISOString(),source:connectorFor(dataset).source,reason:String(error.message).slice(0,140)}};
+        checkedAt:error.diagnostics?.checkedAt??now().toISOString(),source:connectorFor(dataset).source,
+        reason:String(error.message).slice(0,140),diagnostics:error.diagnostics??null}};
     }
   }
   if(!await storage.write(key,{...state,lockUntil:null},lease))throw Error('Trial checkpoint changed');

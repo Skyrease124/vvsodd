@@ -74,26 +74,69 @@ export async function verifyTrial({dataset,record,reserve,fetcher=fetch,now=()=>
   const fields=[config.parcelField,config.addressField,config.objectField];
   const query=new URLSearchParams({f:'json',where:config.parcelField+" = '"+id+"'",outFields:fields.join(','),
     outSR:'4326',returnGeometry:'true',resultRecordCount:'2'});
-  await reserve(config.id);
+  const diagnostic={stage:'source_record',reasonCode:null,httpStatus:null,arcgisStatus:null,
+    resultCount:null,returnedParcelIds:[],transferLimit:null,checkedAt:null};
+  const snapshot=()=>({...diagnostic,checkedAt:now().toISOString()});
+  const reject=(reasonCode,message,retryable=false)=>{
+    diagnostic.reasonCode=reasonCode;
+    throw Object.assign(Error(message),{retryable,diagnostics:snapshot()});
+  };
+  try{await reserve(config.id);}catch(error){
+    if(error?.code==='QUOTA')throw error;
+    reject('budget_unavailable','Trial budget unavailable',true);
+  }
+  diagnostic.stage='provider_response';
   let response, raw;
   try{
     response=await fetcher(config.source+'/query?'+query,{redirect:'error',signal:AbortSignal.timeout(8000)});
+    diagnostic.httpStatus=response.status;
     if(response.ok)raw=await response.text();
-  }catch(error){throw Object.assign(Error('GIS transport unavailable',{cause:error}),{retryable:true});}
-  if(!response.ok)throw Object.assign(Error('GIS HTTP '+response.status),{retryable:response.status===429||response.status>=500});
-  if(raw.length>1_000_000)throw Error('GIS response too large');
-  const data=JSON.parse(raw);
-  if(data.error)throw Object.assign(Error('GIS provider error'),{retryable:true});
-  if(data.exceededTransferLimit||!Array.isArray(data.features)||data.features.length!==1)throw Error('Missing or ambiguous parcel match');
-  if((data.spatialReference?.latestWkid??data.spatialReference?.wkid)!==4326)throw Error('Unexpected GIS coordinate system');
-  const feature=data.features[0],attributes=feature?.attributes;
-  if(parcelId(attributes?.[config.parcelField])!==id)throw Error('Parcel identity mismatch');
-  if(address(attributes?.[config.addressField])!==address(record.a))throw Error('Situs address mismatch');
+  }catch{reject('transport_unavailable','GIS transport unavailable',true);}
+  if(!response.ok)reject('http_error','GIS HTTP '+response.status,response.status===429||response.status>=500);
+  if(raw.length>1_000_000)reject('response_too_large','GIS response too large');
+  let data;
+  try{data=JSON.parse(raw);}catch{reject('invalid_json','Invalid GIS response JSON');}
+  const features=Array.isArray(data?.features)?data.features:null;
+  diagnostic.resultCount=features?.length??null;
+  diagnostic.transferLimit=Boolean(data?.exceededTransferLimit);
+  diagnostic.arcgisStatus=Number.isSafeInteger(data?.error?.code)?data.error.code:null;
+  if(features){
+    for(const feature of features.slice(0,2)){
+      const value=feature?.attributes?.[config.parcelField];
+      // Keep the provider's formatting, but only for bounded cadastral IDs.
+      if(typeof value==='string'&&/^[0-9][0-9.-]{0,19}$/.test(value)&&config.parcelPattern.test(parcelId(value))){
+        diagnostic.returnedParcelIds.push(value);
+      }
+    }
+  }
+  diagnostic.stage='match_count';
+  if(diagnostic.transferLimit)reject('transfer_limit','ArcGIS transfer limit exceeded; results may be incomplete');
+  if(data?.error){
+    diagnostic.stage='provider_response';
+    reject('arcgis_error','GIS provider error',true);
+  }
+  if(!features)reject('missing_feature_array','GIS response has no feature array');
+  if(features.length===0)reject('zero_results','No official parcel matched the exact query');
+  if(features.length!==1)reject('multiple_matches','Multiple official parcels matched the exact query');
+  diagnostic.stage='coordinate_system';
+  if((data.spatialReference?.latestWkid??data.spatialReference?.wkid)!==4326)reject('wrong_coordinate_system','Unexpected GIS coordinate system');
+  const feature=features[0],attributes=feature?.attributes;
+  diagnostic.stage='parcel_identity';
+  if(parcelId(attributes?.[config.parcelField])!==id)reject('parcel_id_mismatch','Parcel identity mismatch');
+  diagnostic.stage='situs_address';
+  if(address(attributes?.[config.addressField])!==address(record.a))reject('address_mismatch','Situs address mismatch');
   const objectId=attributes[config.objectField];
-  if(!Number.isSafeInteger(objectId)||objectId<=0)throw Error('Missing official object ID');
-  const geometry=polygonEvidence(feature.geometry?.rings,config.bounds);
+  diagnostic.stage='official_object';
+  if(!Number.isSafeInteger(objectId)||objectId<=0)reject('missing_object_id','Missing official object ID');
+  diagnostic.stage='polygon';
+  let geometry;
+  try{geometry=polygonEvidence(feature.geometry?.rings,config.bounds);}catch(error){
+    reject('invalid_polygon',error.message);
+  }
+  diagnostic.stage='verified';
+  const diagnostics=snapshot();
   return {kind:'connector_trial',dataset,recordId:record.i,parcelId:id,objectId,source:config.source,
-    officialAddress:attributes[config.addressField],sourceAddress:record.a,wkid:4326,checkedAt:now().toISOString(),geometry};
+    officialAddress:attributes[config.addressField],sourceAddress:record.a,wkid:4326,checkedAt:diagnostics.checkedAt,geometry,diagnostics};
 }
 
 // AI Brain discovery input. This pure function never probes or activates a source.

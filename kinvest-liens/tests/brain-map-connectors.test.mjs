@@ -25,8 +25,8 @@ test('registered pilot is disabled and records exact, scoped evidence only',asyn
 test('trials reject wrong county, missing IDs, ambiguous responses, and bad evidence',async()=>{
  await assert.rejects(verify(layer(),{...record,i:'CO|Boulder|9701400014|'}),/Wrong county/);
  await assert.rejects(verify(layer(),{...record,p:''}),/invalid parcel ID/);
- await assert.rejects(verify(layer([])),/ambiguous/);
- await assert.rejects(verify(layer([feature,feature])),/ambiguous/);
+ await assert.rejects(verify(layer([])),/No official parcel/);
+ await assert.rejects(verify(layer([feature,feature])),/Multiple official parcels/);
  await assert.rejects(verify(layer([feature],2876)),/coordinate/);
  await assert.rejects(verify(layer([{...feature,geometry:{rings:[ring.slice(0,4)]}}])),/Open polygon/);
  await assert.rejects(verify(layer([{...feature,attributes:{...feature.attributes,LOCADDRESS:'742 LINDENMEIER RD'}}])),/address mismatch/);
@@ -149,4 +149,45 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
  assert.equal(runs,3);
  assert.equal(writes.get(budgetKey).data.reserved,3);
  assert.equal(writes.has(trialKey),false); // This harness mocks the runner; the runner's checkpoint is tested above.
+});
+
+
+test('Larimer response diagnostics separate four lookup outcomes and drop unapproved data',async()=>{
+ const sensitive='session=secret-value';
+ const badFeature={...feature,attributes:{PARCELNUM:sensitive,LOCADDRESS:sensitive,token:sensitive}};
+ const cases=[
+  [{features:[]},'zero_results',0,[],false],
+  [{features:[feature,badFeature]},'multiple_matches',2,[record.p],false],
+  [{note:sensitive},'missing_feature_array',null,[],false],
+  [{features:[feature],exceededTransferLimit:true},'transfer_limit',1,[record.p],true]
+ ];
+ for(const [body,reasonCode,resultCount,returnedParcelIds,transferLimit] of cases){
+  await assert.rejects(verify(Response.json(body,{headers:{'X-Session':sensitive}})),error=>{
+   assert.equal(error.retryable,false);
+   const {checkedAt,...fields}=error.diagnostics;
+   assert.ok(Number.isFinite(Date.parse(checkedAt)));
+   assert.deepEqual(fields,{stage:'match_count',reasonCode,httpStatus:200,arcgisStatus:null,
+    resultCount,returnedParcelIds,transferLimit});
+   assert.ok(!JSON.stringify(error).includes(sensitive));
+   return true;
+  });
+ }
+});
+
+test('trial persists diagnostics without advancing or re-running a held parcel',async()=>{
+ let saved=null,epoch=0,reserved=0;
+ const storage={read:async()=>structuredClone(saved),write:async(key,data,etag)=>{
+  assert.equal(key,'brain-gis-trial-v1-CO-larimer');
+  if((saved?.etag??null)!==etag)return null;
+  const next=String(++epoch);saved={data,etag:next};return next;
+ }};
+ const args={environment:'deploy-preview',dataset,revision:'review-fixture',records:[record],storage,
+  reserve:async()=>{reserved++;},fetcher:async()=>layer([])};
+ const result=await runConnectorTrial(args);
+ assert.equal(result.cursor,0);
+ assert.equal(saved.data.retry.exhausted,true);
+ assert.equal(saved.data.retry.diagnostics.reasonCode,'zero_results');
+ assert.equal(saved.data.evidence.length,0);
+ assert.equal((await runConnectorTrial(args)).status,'retry_hold');
+ assert.equal(reserved,1);
 });

@@ -70,15 +70,33 @@ async function showTrial(request){
   const summary=document.createElement('p');
   summary.textContent='Larimer research trial: '+result.used+'/'+result.limit+' requests reserved. '+result.cursor+' exact matches recorded.';
   const evidence=document.createElement('ul');
+  function showDiagnostics(row,item){
+    if(item.source){
+      const source=document.createElement('p');
+      source.textContent='Official source: '+item.source+' · '+item.checkedAt;
+      row.append(source);
+    }
+    const d=item.diagnostics;
+    const outcome=document.createElement('p');
+    outcome.textContent=d?
+      'Stage: '+d.stage+' · Result: '+(d.reasonCode||'verified')+' · HTTP: '+(d.httpStatus??'Unavailable')+
+      ' · ArcGIS status: '+(d.arcgisStatus??'None')+' · Results: '+(d.resultCount??'Unavailable')+
+      ' · Returned parcel IDs: '+(d.returnedParcelIds.join(', ')||'None recorded')+
+      ' · Transfer limit: '+(d.transferLimit===null?'Unknown':d.transferLimit?'Yes':'No'):
+      'Detailed provider diagnostics were not saved for this attempt.';
+    row.append(outcome);
+  }
   for(const item of result.evidence){
     const row=document.createElement('li');
     row.textContent=item.parcelId+' · '+item.officialAddress+' · Object '+item.objectId+' · '+item.checkedAt;
+    showDiagnostics(row,item);
     evidence.append(row);
   }
   if(result.retry){
     const row=document.createElement('li');
     row.textContent=result.retry.recordId+' · '+result.retry.reason+(result.retry.exhausted?' · Owner review required':
       ' · Retry after '+new Date(result.retry.nextAt).toLocaleString());
+    showDiagnostics(row,result.retry);
     evidence.append(row);
   }
   const button=document.createElement('button');
