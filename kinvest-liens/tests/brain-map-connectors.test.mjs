@@ -305,6 +305,11 @@ test('subdivision evidence and a saved address match leave the parcel identifier
  assert.deepEqual(result.candidate,{parcelId:'9701484001',schedule:'1688587',objectId:5665923});
  assert.equal(result.sources.at(-1).date,diagnostic.checkedAt);
  assert.match(result.sources[1].finding,/BDR240012/);
+ assert.match(result.sources[1].finding,/136 feet west, 43 north/);
+ assert.equal(result.sources[2].url,'https://www.larimer.gov/clerk/recording/easy-access');
+ assert.equal(result.sources[3].url,'https://www.larimer.gov/assessor/search');
+ assert.match(result.nextEvidence,/reception number/);
+ assert.match(result.explanation,/whole-parcel renumbering.*a split.*different legal parcel/);
  assert.deepEqual(diagnostic,before);
  assert.equal(larimerReconciliation({...diagnostic,status:'ambiguous'}),null);
  assert.equal(larimerReconciliation({...diagnostic,transferLimit:true}),null);

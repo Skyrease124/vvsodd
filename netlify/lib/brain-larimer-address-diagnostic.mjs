@@ -61,7 +61,17 @@ const reconciliationSources=Object.freeze([
   Object.freeze({
     authority:'City of Fort Collins Planning', date:'2024-11-13', reviewedAt:'2026-11-22T02:09:07Z',
     url:'https://accela-aca.fcgov.com/CitizenAccess/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&agencyCode=FTCOLLINS&capID1=24CAP&capID2=00000&capID3=00142',
-    finding:'Glover Estate review BDR240012 approved a minor subdivision with plat at this address and identifies parcel 9701400014. The public project summary does not identify the new parcel or schedule number.'
+    finding:'Glover Estate review BDR240012 approved a minor subdivision with plat at this address and identifies parcel 9701400014. The original parcel description starts from offsets near the southeast corner of Section 1, Township 7, Range 69 and runs 136 feet west, 43 north, 136 east and 43 south. This is the planning record’s description of the original tract; it supplies no Recorder reception number or current parcel cross-reference.'
+  }),
+  Object.freeze({
+    authority:'Larimer County Clerk & Recorder', date:'2026-11-22',
+    url:'https://www.larimer.gov/clerk/recording/easy-access',
+    finding:'Easy Access provides a recorded-document index. Anonymous users cannot view document images. No recorded Glover Estate plat or reception number was located in the publicly accessible sources reviewed.'
+  }),
+  Object.freeze({
+    authority:'Larimer County Assessor', date:'2026-11-22',
+    url:'https://www.larimer.gov/assessor/search',
+    finding:'The Assessor offers parcel and schedule searches. No Assessor parcel-history record linking these two identifier pairs was located in the publicly accessible sources reviewed.'
   })
 ]);
 
@@ -76,11 +86,11 @@ export function larimerReconciliation(diagnostic) {
     status:'unresolved',
     original:{parcelId:'9701400014',schedule:'0155675'},
     candidate:{parcelId:row.parcelId,schedule:row.schedule,objectId:row.objectId},
-    explanation:'The city approved a minor subdivision for the original parcel. The current GIS address match is consistent with that history, but a recorded plat or Assessor parcel-history cross-reference has not linked both identifier pairs.',
+    explanation:'The planning approval documents a subdivision proposal and the original tract description. It does not distinguish a whole-parcel renumbering, a split affecting only part of that tract, or a different legal parcel sharing the address.',
     sources:[...reconciliationSources,{
       authority:'Larimer County Tax Parcels GIS', date:diagnostic.checkedAt, url:source,
       finding:'The stored address query returned parcel 9701484001, schedule 1688587, and object 5665923 at the same situs address.'
     }],
-    nextEvidence:'Obtain the recorded Glover Estate plat and the Assessor parcel split or renumbering history linking both parcel and schedule pairs. Keep on owner review until confirmed.'
+    nextEvidence:'Obtain the recorded Glover Estate plat image, reception number, and date. Compare its parent description and recorded lots with the original tract, then obtain the Assessor split or renumbering history linking each parcel and schedule to a recorded lot. Keep on owner review until confirmed.'
   };
 }
