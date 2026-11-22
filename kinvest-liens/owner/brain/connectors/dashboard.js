@@ -113,5 +113,19 @@ async function showTrial(request){
       await showCounty();
     }catch(error){statusLine.textContent=error.message+' Refresh before trying again.';}
   };
-  details.append(summary,evidence,button);
+  if(result.retry?.exhausted===true&&result.used<result.limit){
+    const review=document.createElement('button');
+    review.textContent='Approve retry of same Larimer parcel';
+    review.onclick=async()=>{
+      if(!confirm('Re-arm ONLY parcel '+result.retry.recordId+' for one additional owner-confirmed GIS request later? This does NOT send a GIS request now. The existing '+result.used+'/'+result.limit+' reservation stays unchanged.'))return;
+      review.disabled=true;
+      statusLine.textContent='Re-arming the same saved review checkpoint…';
+      try{
+        await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'rearm-larimer-review',confirmed:true,recordId:result.retry.recordId})});
+        await showCounty();
+      }catch(error){statusLine.textContent=error.message+' Refresh and inspect the held parcel.';}
+    };
+    details.append(summary,evidence,review,button);
+  }else details.append(summary,evidence,button);
 }
