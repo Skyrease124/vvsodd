@@ -139,9 +139,9 @@
     const d=event.data;
     if(d?.type!=='ppa:radar-parcel-result'||d.requestId!==radarParcelRequest)return;
     const status=document.getElementById('home-radar-match-status');
-    if(status)status.textContent=d.matched
+    if(status){status.hidden=false;status.textContent=d.matched
       ?'Exact parcel ID matched a verified GIS polygon. Property opened on the map.'
-      :'No exact verified polygon match found. The Radar record remains available below; no location was invented.';
+      :'No exact verified polygon match found. The Radar record remains available below; no location was invented.';}
   });
   window.addEventListener('ppa:radar-map-state', event => {
     const stateCode = event.detail?.state;
