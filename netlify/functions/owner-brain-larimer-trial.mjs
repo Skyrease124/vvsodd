@@ -5,6 +5,7 @@ import * as auth from '../lib/brain-auth.mjs';
 import { runConnectorTrial, rearmConnectorTrial } from '../lib/brain-gis-trial-checkpoint.mjs';
 
 import { canDiagnoseLarimer, lookupLarimerAddress, larimerReconciliation } from '../lib/brain-larimer-address-diagnostic.mjs';
+import { reconciliationCase, reconciliationQueue } from '../lib/brain-parcel-reconciliation.mjs';
 
 const hostname='deploy-preview-454--pricepocketasset.netlify.app';
 const dataset='CO-larimer';
@@ -37,9 +38,17 @@ async function handler(req,context) {
       const [trial,budget,diagnostic]=await Promise.all([
         auth.kvGetVersioned(trialKey),auth.kvGetVersioned(budgetKey),auth.kvGetVersioned(diagnosticKey)
       ]);
+      const finding=larimerReconciliation(diagnostic?.data);
+      const cases=reconciliationQueue(finding?[reconciliationCase({
+        dataset,recordId:'CO|Larimer|9701400014|',
+        original:finding.original,candidate:finding.candidate,
+        sources:finding.sources,checkedAt:diagnostic?.data?.checkedAt
+      })]:[]);
       return reply(200,{used:count(budget),limit,cursor:trial?.data?.cursor??0,
         retry:trial?.data?.retry??null,evidence:trial?.data?.evidence??[],parcelIds:ids,
-        addressDiagnostic:diagnostic?.data??null,reconciliation:larimerReconciliation(diagnostic?.data),canRunAddressDiagnostic:canDiagnoseLarimer(trial?.data,count(budget),diagnostic)});
+        addressDiagnostic:diagnostic?.data??null,reconciliation:finding,
+        reconciliationCases:cases,
+        canRunAddressDiagnostic:canDiagnoseLarimer(trial?.data,count(budget),diagnostic)});
     }
     const raw=await req.text();
     let body;
