@@ -34,7 +34,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div></div>
 </div>
 <div id="map" hidden aria-label="Private interactive map with parcel boundaries"></div>
-<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
+<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><div class="actions"><label for="parcelFocus">Inspect a verified parcel <select id="parcelFocus" aria-label="Choose parcel to inspect"></select></label><button type="button" id="focusParcel">Zoom to selected parcel</button></div><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js" crossorigin></script>
 <script src="/map/brain-map-merge.js"></script>
@@ -42,7 +42,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-let key='',map=null,terrain=false,currentData=null,detail=null,boundaryOnly=false;
+let key='',map=null,terrain=false,currentData=null,detail=null,boundaryOnly=false,focusedDataset=null;
 let previewUpdateRunning=false,correctionCounts={},loadTimer;
 const utils=window.PPAMapTilerPreview;
 function updateCountyCount(id,count){const option=[...$('county').options].find(o=>o.value===id),dataset=(window.__datasets||[]).find(d=>d.id===id);if(dataset){correctionCounts[id]=Math.max(0,count-(Number(dataset.mapped)||0));if(option)option.textContent=dataset.county+' · '+count+' mapped'+(count===0?' (no verified boundaries yet)':'');}}
@@ -65,15 +65,33 @@ function selectState(){
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
 }
-function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;boundaryOnly=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
+function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;boundaryOnly=false;focusedDataset=null;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
+function focusSelectedParcel(features){
+ if(!map)return;
+ const id=$('parcelFocus').value;
+ const f=(features||utils.visibleParcels(currentData?.recs||[]).map(r=>({properties:{recordId:r.i},geometry:geometry(r)}))).find(row=>String(row.properties.recordId)===id);
+ const ring=f?.geometry?.coordinates?.[0];if(!ring?.length)return;
+ const bounds=new maplibregl.LngLatBounds();
+ for(const xy of ring)bounds.extend(xy);
+ map.fitBounds(bounds,{padding:55,maxZoom:19,duration:0});
+}
+$('focusParcel').onclick=()=>focusSelectedParcel();
+$('parcelFocus').onchange=()=>focusSelectedParcel();
 function overlay(){
  if(!map||!currentData)return;
  const feats=utils.visibleParcels(currentData.recs).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??r.__brainEvidence?.estimatedAcres??null,estimated:r.ac==null,source:r.__brainEvidence?.source??null,category:r.c,county:detail.county,state:detail.state},geometry:geometry(r)})).filter(f=>f.geometry);
  const fc={type:'FeatureCollection',features:feats};
  if(map.getSource('owner-parcels'))map.getSource('owner-parcels').setData(fc);
  else{map.addSource('owner-parcels',{type:'geojson',data:fc});map.addLayer({id:'owner-fill',type:'fill',source:'owner-parcels',paint:{'fill-color':'#00c9af','fill-opacity':0.2}});map.addLayer({id:'owner-outline',type:'line',source:'owner-parcels',paint:{'line-color':'#70ffe0','line-width':2}});}
- const bb=feats[0]?.geometry.coordinates?.[0];if(bb?.length){const bounds=new maplibregl.LngLatBounds();for(const p of bb){bounds.extend(p);}map.fitBounds(bounds,{padding:60,maxZoom:16,duration:0});}
+ const select=$('parcelFocus'),previous=select.value;
+ select.replaceChildren();
+ for(const feature of feats){const option=new Option('Parcel '+String(feature.properties.parcelId||feature.properties.recordId),String(feature.properties.recordId));select.add(option);}
+ if(feats.some(f=>String(f.properties.recordId)===previous))select.value=previous;
+ else if(feats.length)select.selectedIndex=0;
+ $('focusParcel').disabled=!feats.length;
+ // Focus exactly one small parcel on initial load; never jump the camera during feed refresh.
+ if(focusedDataset!==currentData){focusedDataset=currentData;focusSelectedParcel(feats);}
  $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' verified parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview includes every verified correction and samples the original boundaries.';
 }
 async function loadData(){
