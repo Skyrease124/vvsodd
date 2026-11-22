@@ -93,3 +93,15 @@ test('parcel inspector identifies original versus Brain-corrected geometry for c
  assert.match(page,/Public and Workshop maps use the same county dataset and correction feed/);
  assert.match(page,/selectedParcelEvidence\(\);/);
 });
+
+
+test('owner can run read-only automatic county parcel parity check with explicit limits',()=>{
+ const page=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
+ assert.match(page,/id="auditCounty"/);
+ assert.match(page,/async function auditCounty\(\)/);
+ assert.match(page,/await window\.PPABrainMap\.apply\(fresh\)/);
+ assert.match(page,/const fields=\['p','g','cx','bb','__brainMap'\]/);
+ assert.match(page,/Wayne 01002263:/);
+ assert.match(page,/not each remote map rendering/);
+ assert.match(page,/\$\('auditCounty'\)\.onclick=auditCounty/);
+});
