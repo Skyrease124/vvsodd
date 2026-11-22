@@ -6,6 +6,9 @@ import { planningSource, planningTestStatus, runOnePlanningTest } from '../lib/b
 
 import { sourceDescriptors, collectSourceMetadata } from '../lib/brain-reconciliation-source-adapters.mjs';
 
+import { auditResearchSources } from '../lib/brain-reconciliation-audit.mjs';
+import { larimerDocumentPlans } from '../lib/brain-reconciliation-document-plans.mjs';
+
 const response=(status,body)=>Response.json(body,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 async function handler(req,context){
  const url=new URL(req.url);
@@ -17,7 +20,8 @@ async function handler(req,context){
  try{
   if(req.method==='GET'){
    const state=(await auth.kvGetVersioned(researchKey))?.data??newResearchState();
-   return response(200,{pilot,sources:[planningSource,...sourceDescriptors],paused:state.paused,executionEnabled:false,planningTestStatus:planningTestStatus(state),
+   const sources=[planningSource,...sourceDescriptors];
+   return response(200,{pilot,sources,audit:auditResearchSources(state,sources),documentPlans:larimerDocumentPlans(),paused:state.paused,executionEnabled:false,planningTestStatus:planningTestStatus(state),
     nextSource:nextResearchSource(state),retryAt:state.retryAt??null,
     sourceProgress:{reviewed:nextResearchSource(state)?.index??larimerSources.length,total:larimerSources.length},
     researchBusy:(state.lockUntil??0)>Date.now(),events:state.events,evidence:state.evidence,...summarizeResearch(pilot,state.evidence,state.lastAttempt)});

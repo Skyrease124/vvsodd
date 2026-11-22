@@ -353,7 +353,8 @@ async function showResearch(request){
       };
       controls.prepend(next);
     }else add('The approved sources have been checked or their budgets are exhausted.');
-    panel.append(controls,sourceSection,savedSection,timelineSection);
+    panel.append(controls,renderResearchAudit(data.audit||[]),renderDocumentPlans(data.documentPlans||[]),
+      sourceSection,savedSection,timelineSection);
   }catch(error){
     if(request!==selection)return;
     const failure=document.createElement('p');
@@ -361,4 +362,64 @@ async function showResearch(request){
     panel.append(failure);
   }
   details.append(panel);
+}
+
+
+function renderResearchAudit(sources){
+  const list=document.createElement('ul');
+  for(const source of sources){
+    const item=document.createElement('li');
+    const title=document.createElement('strong');
+    title.textContent=source.authority+' · '+source.reserved+' reserved · '+source.completed+
+      ' completed · '+source.upstreamResponses+' upstream responses · '+source.remaining+' slots left';
+    const endpoint=document.createElement('a');
+    endpoint.href=source.endpoint;
+    endpoint.textContent='Configured endpoint';
+    item.append(title,document.createElement('br'),endpoint);
+    if(source.lastReservedAt){
+      const at=document.createElement('p');
+      at.textContent='Last reservation: '+source.lastReservedAt;
+      item.append(at);
+    }
+    const outcomes=document.createElement('ul');
+    for(const receipt of source.receipts){
+      const row=document.createElement('li');
+      const link=document.createElement('a');
+      link.href=receipt.endpoint;
+      link.textContent=receipt.endpointRecorded?'Saved endpoint':'Configured endpoint';
+      const reference=receipt.document?.reference;
+      const http=receipt.httpStatus;
+      row.append(link,document.createTextNode(' · '+receipt.at+' · '+receipt.outcome.replaceAll('_',' ')+
+        ' · '+(http!==null?'HTTP '+http:'No upstream HTTP status saved')+
+        ' · '+receipt.dataType.replaceAll('_',' ')+(reference?' · Record '+reference:'')+' · '+receipt.usefulness));
+      outcomes.append(row);
+    }
+    if(!source.receipts.length){
+      const row=document.createElement('li');
+      row.textContent='No completed receipt recorded for this source.';
+      outcomes.append(row);
+    }
+    const next=document.createElement('p');
+    next.textContent='Next: '+source.nextAction;
+    item.append(outcomes,next);
+    list.append(item);
+  }
+  return disclose('Research audit · saved receipts',list);
+}
+
+function renderDocumentPlans(plans){
+  const body=document.createElement('div');
+  const note=document.createElement('p');
+  note.textContent='Prepared lookups only. Automated execution is disabled pending owner approval and source-access review.';
+  const list=document.createElement('ul');
+  for(const plan of plans){
+    const row=document.createElement('li');
+    const link=document.createElement('a');
+    link.href=plan.url;
+    link.textContent=plan.authority;
+    row.append(link,document.createTextNode(' · Search '+plan.field+' '+plan.term+' · '+plan.evidence+' · '+plan.restriction));
+    list.append(row);
+  }
+  body.append(note,list);
+  return disclose('Parcel Document Search · disabled',body);
 }

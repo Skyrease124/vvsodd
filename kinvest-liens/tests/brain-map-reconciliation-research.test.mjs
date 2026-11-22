@@ -1,3 +1,5 @@
+import * as audit from '../../netlify/lib/brain-reconciliation-audit.mjs';
+import * as documentPlans from '../../netlify/lib/brain-reconciliation-document-plans.mjs';
 import { randomUUID } from 'node:crypto';
 import * as sourceAdapters from '../../netlify/lib/brain-reconciliation-source-adapters.mjs';
 import * as planning from '../../netlify/lib/brain-reconciliation-planning-test.mjs';
@@ -95,7 +97,8 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
   assert.equal(confirmed,true);assert.equal(environment,'deploy-preview');manualRuns++;return {status:'completed',outcome:'document'};
  }});
  const adaptersModule=synthetic(sourceAdapters),cryptoModule=synthetic({randomUUID});
- await mod.link(path=>path==='node:crypto'?cryptoModule:path.includes('source-adapters')?adaptersModule:
+ const auditModule=synthetic(audit),plansModule=synthetic(documentPlans);
+ await mod.link(path=>path==='node:crypto'?cryptoModule:path.includes('audit')?auditModule:path.includes('document-plans')?plansModule:path.includes('source-adapters')?adaptersModule:
   path.includes('brain-auth')?auth:path.includes('planning-test')?planningModule:researchModule);await mod.evaluate();
  const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
  const invoke=(method='GET',action='resume',deploy='deploy-preview',from=origin,confirmed=true)=>
@@ -103,6 +106,10 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
    ...(method==='POST'?{body:JSON.stringify({confirmed,action,sourceId:'assessor',used:0})}:{})}),{deploy:{context:deploy}});
  assert.equal((await invoke()).status,401);
  owner=true;
+ const readback=await (await invoke()).json();
+ assert.equal(readback.audit.length,4);
+ assert.equal(readback.documentPlans.every(plan=>!plan.executionEnabled),true);
+ assert.equal((await invoke('POST','run-document-search')).status,400);
  assert.equal((await invoke('POST','resume','production')).status,404);
  assert.equal((await invoke('POST','resume','deploy-preview','https://example.test')).status,403);
  assert.equal((await invoke('POST','run')).status,400);
@@ -247,4 +254,61 @@ test('saved research document cannot shadow the browser DOM in the evidence loop
  assert.doesNotMatch(loop,/\b(?:const|let|var)\s+document\b/);
  assert.match(loop,/document\.createElement\('li'\)/);
  assert.match(loop,/recordDocument\.reference/);
+});
+
+
+test('audit keeps reservations, upstream results, and parcel evidence distinct',()=>{
+ const at='2026-11-22T03:49:36Z';
+ const sources=[planning.planningSource,...sourceAdapters.sourceDescriptors];
+ const state={
+  cursor:3,planningTest:{reservedAt:at,completedAt:at},reservations:{assessor:2,treasurer:1,recorder:1},
+  evidence:[
+   {sourceId:'fort_collins_planning',at,outcome:'document',httpStatus:200,url:planning.planningSource.url,document:{type:'planning_record',reference:'BDR240012'}},
+   {sourceId:'treasurer',at,outcome:'metadata',httpStatus:200,url:larimerSources[1].url,metadata:{title:'Public access'}}
+  ],
+  events:[
+   {id:'r-start',sourceId:'recorder',outcome:'started',at},
+   {id:'a-result',sourceId:'assessor',outcome:'unavailable',at,httpStatus:null},
+   {id:'t-result',sourceId:'treasurer',outcome:'metadata',at,httpStatus:200},
+   {id:'t-result',sourceId:'treasurer',outcome:'metadata',at,httpStatus:200}
+ ]};
+ const [city,assessor,treasurer,recorder]=audit.auditResearchSources(state,sources);
+ assert.equal(city.receipts[0].dataType,'planning_record');
+ assert.match(city.receipts[0].usefulness,/no parcel history/);
+ assert.equal(assessor.reserved,2);
+ assert.equal(assessor.completed,1);
+ assert.equal(assessor.upstreamResponses,0);
+ assert.equal(treasurer.completed,1);
+ assert.equal(treasurer.receipts[0].dataType,'public_access_metadata');
+ assert.equal(treasurer.remaining,1);
+ assert.equal(recorder.lastReservedAt,at);
+ assert.equal(recorder.completed,0);
+ assert.equal(recorder.upstreamResponses,0);
+});
+
+test('document plans validate county identifiers and never authorize execution',()=>{
+ const all=documentPlans.larimerDocumentPlans();
+ assert.equal(new Set(all.map(p=>p.id)).size,all.length);
+ assert.ok(all.every(p=>p.approvalRequired&&!p.executionEnabled&&!p.publicationAllowed));
+ assert.equal(documentPlans.prepareDocumentSearch('assessor','parcel','97014-00-014').term,'9701400014');
+ assert.equal(documentPlans.prepareDocumentSearch('assessor','schedule','0155675').term,'0155675');
+ assert.throws(()=>documentPlans.prepareDocumentSearch('assessor','parcel',"9701400014' OR 1=1"),/ten-digit/);
+ assert.throws(()=>documentPlans.prepareDocumentSearch('recorder','parcel','9701400014'),/unavailable/);
+ assert.throws(()=>documentPlans.prepareDocumentSearch('https://evil.example','address','741 Lindenmeier Rd'),/unavailable/);
+ assert.match(all.find(p=>p.source==='recorder').restriction,/Authorized access/);
+});
+
+
+test('record evidence accepts exact official provenance and rejects mismatches',()=>{
+ const p=documentPlans.prepareDocumentSearch('assessor','schedule','0155675');
+ const raw={outcome:'found',matchedTerm:'0155675',sourceUrl:p.url,checkedAt:'2026-11-22T03:00:00Z',
+  legalIdentityApproved:true,ownerToken:'do-not-store'};
+ const result=documentPlans.reviewDocumentResult(p,raw);
+ assert.equal(result.classification,'research_candidate');
+ assert.equal(result.publicationAllowed,false);
+ assert.doesNotMatch(JSON.stringify(result),/do-not-store|legalIdentityApproved/);
+ assert.throws(()=>documentPlans.reviewDocumentResult(p,{...raw,matchedTerm:'1688587'}),/does not match/);
+ assert.throws(()=>documentPlans.reviewDocumentResult(p,{...raw,sourceUrl:'https://unrelated.example'}),/Unapproved/);
+ assert.throws(()=>documentPlans.reviewDocumentResult(p,{...raw,sourceUrl:p.url+'?token=secret'}),/Unapproved/);
+ assert.equal(documentPlans.reviewDocumentResult(p,{...raw,outcome:'restricted',matchedTerm:null}).outcome,'restricted');
 });

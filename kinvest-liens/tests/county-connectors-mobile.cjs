@@ -21,6 +21,11 @@ const research = {
   {authority:'Prior preview result',url:county.source,at,outcome:'metadata',metadata:{title:'Access instructions'},document:null}
  ],
  events:[{at,sourceId:'fort_collins_planning',outcome:'document',httpStatus:200}],
+ audit:[{authority:'Fort Collins Planning',reserved:1,completed:1,upstreamResponses:1,remaining:0,endpoint:county.source,
+  nextAction:'Recorded plat needed',receipts:[{endpoint:county.source,at,outcome:'document',httpStatus:200,
+   dataType:'planning_record',document:{reference:'BDR240012'},usefulness:'Planning evidence only'}]}],
+ documentPlans:[{authority:'Larimer County Recorder',url:county.source,field:'subdivision',term:'Glover Estate',
+  evidence:'Recorded plat index',restriction:'Authorized access required for images'}],
  nextSource:{id:'assessor',authority:'Larimer County Assessor',used:0,limit:2}
 };
 const original={parcelId:'9701400014',schedule:'0155675'};
@@ -73,12 +78,14 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    assert.equal(await page.getByRole('button',{name:'Run One Research Test'}).count(),0);
    assert.equal(posts.length,0,'page load may only read existing status');
    assert.equal(await page.locator('#status').textContent(),'');
-   for(const label of ['Official research sources','Saved research evidence','Research activity','9701400014 · Owner review','GIS evidence and diagnostics']){
+   for(const label of ['Research audit · saved receipts','Parcel Document Search · disabled','Official research sources','Saved research evidence','Research activity','9701400014 · Owner review','GIS evidence and diagnostics']){
     const disclosure=page.locator('summary').filter({hasText:label});
     await disclosure.click();
    }
    assert.equal(await page.getByText(/Larimer County Assessor.*Budget: 2/).count(),1);
    assert.equal(await page.getByText(/Reference BDR240012/).count(),1);
+   assert.equal(await page.getByText(/1 reserved · 1 completed · 1 upstream responses/).count(),1);
+   assert.equal(await page.getByText(/Search subdivision Glover Estate/).count(),1);
    assert.equal(await page.locator('.timeline').getByText(/fort_collins_planning/).count(),1);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'horizontal overflow');
    await run.click();
