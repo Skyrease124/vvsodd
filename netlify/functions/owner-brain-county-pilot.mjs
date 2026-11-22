@@ -22,8 +22,10 @@ async function handler(req,context){
  const active=config.enabled&&config.sourceTermsReviewed&&config.approval?.day===today;
  try{
   const root=join(process.env.LAMBDA_TASK_ROOT||process.cwd(),'kinvest-liens','map','data');
-  const data=JSON.parse(await readFile(join(root,config.id+'.json'),'utf8'));
-  const rows=eligiblePilotRows(config,data);
+  let data=null;
+  try{data=JSON.parse(await readFile(join(root,config.id+'.json'),'utf8'));}
+  catch(error){if(error.code!=='ENOENT')throw error;}
+  const rows=data?eligiblePilotRows(config,data):[];
   const revision=createHash('sha256').update(JSON.stringify(rows)).digest('hex');
   const saved=await storage.read(key),state=saved?.data;
   const cursor=state?.cursor??0;
@@ -41,7 +43,8 @@ async function handler(req,context){
   if(cooling)blockers.push('County source cooldown is active');
   if(running)blockers.push('County worker already running');
   if(state&&state.revision!==revision)blockers.push('Saved checkpoint differs from the current dataset');
-  if(rows[cursor]?.p!==config.firstFolio)blockers.push('First folio is unavailable at the saved cursor');
+  if(!data)blockers.push('No approved county parcel dataset is loaded');
+  else if(!config.firstFolio||rows[cursor]?.p!==config.firstFolio)blockers.push('First folio is unavailable at the saved cursor');
   if(sharedRemaining<2||countyRemaining<2||pilotUsed!==null&&pilotUsed>0)blockers.push('Two research requests must be available under a fresh pilot approval');
   if(req.method==='GET'){
    const overlay=await auth.kvGet('brain-map-county-v1-'+config.id);
@@ -50,7 +53,7 @@ async function handler(req,context){
    const records=Object.values(state?.evidence||{});
    const validated=records.find(row=>row.outputWkid===4326&&row.parcelId===config.firstFolio);
    return reply(200,{active,runAllowed:blockers.length===0,cursor,eligible:rows.length,processed:cursor,
-    pilotFolio:config.firstFolio,source:config.source,terms:config.terms,sourceTermsReviewed:config.sourceTermsReviewed,
+    pilotFolio:config.firstFolio,county:config.county,attribution:config.attribution??null,datasetAvailable:!!data,source:config.source,terms:config.terms,sourceTermsReviewed:config.sourceTermsReviewed,
     schemaAt:state?.discovery?.schema?.compatible?state.discovery.observedAt:null,
     nativeWkid:state?.discovery?.capabilities?.nativeWkid??config.nativeWkid,
     datumTransformation:state?.discovery?.capabilities?.datumTransformation??null,
@@ -68,7 +71,7 @@ async function handler(req,context){
   try{body=JSON.parse(raw);}catch{return reply(400,{error:'Invalid request'});}
   if(body?.confirmed!==true||!['run','pause','resume','retry'].includes(body.action))
    return reply(400,{error:'Explicit owner confirmation required'});
-  if(!active)return reply(409,{error:'County pilot awaits explicit approval and activation'});
+  if(!active||!data)return reply(409,{error:'County pilot awaits explicit approval and activation'});
   if(body.cursor!==cursor||state&&state.revision!==revision)
    return reply(409,{error:'Saved county checkpoint changed'});
   if(['pause','resume'].includes(body.action)){

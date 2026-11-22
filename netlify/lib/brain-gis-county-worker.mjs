@@ -105,7 +105,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
    }catch(error){
     if(error.scope!=='parcel')throw error;
     const prior=data.review[index];
-    data.review[index]={recordId:record?.i??null,parcelId:record?.p??null,status:'skipped',
+    data.review[index]={recordId:record?.i??null,parcelId:record?.p??null,status:'skipped',source:config.source,
      reason:error.message,code:error.code,checkedAt:iso(now()),
      ...(prior?{previous:[...(prior.previous||[]),{reason:prior.reason,code:prior.code,checkedAt:prior.checkedAt}]}:{})};
     recordEvent({status:'skipped',parcelId:record?.p??null,reason:error.message});

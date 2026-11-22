@@ -14,6 +14,8 @@ const wayne={id:'MI-wayne',state:'MI',county:'Wayne',status:'Verified',source:'h
  operation:{mode:'existing-worker'}};
 const miami={id:'FL-miami-dade',state:'FL',county:'Miami-Dade',status:'Researching',source:'https://gis.example/miami',
  operation:{mode:'pilot-prepared'}};
+const broward={id:'FL-broward',state:'FL',county:'Broward',status:'Researching',source:'https://gis.example/broward',
+ operation:{mode:'pilot-prepared',attribution:'Broward County Property Appraiser'}};
 county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
@@ -60,11 +62,15 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
     if(path===api+'owner-brain-connectors'){
-     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami]}});
-     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:county;
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:county;
      return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
       progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
     }
+    if(path===api+'owner-brain-county-pilot'&&url.searchParams.get('dataset')==='FL-broward')
+     return route.fulfill({json:{county:'Broward',eligible:0,processed:0,verifiedEvidence:0,published:0,active:false,
+      runAllowed:false,sharedRemaining:30,countyRemaining:3,pilotLimit:3,nativeWkid:6439,
+      blockers:['No approved county parcel dataset is loaded'],review:{}}});
     if(path===api+'owner-brain-county-pilot')return route.fulfill({json:{eligible:10,processed:3,verifiedEvidence:1,published:0,
      active:false,sharedRemaining:28,countyRemaining:1,pilotLimit:3,
      blockers:['Owner approval for a live pilot is pending'],review:{0:{parcelId:'0007',reason:'No official match',checkedAt:at}}}});
@@ -87,6 +93,13 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    await page.goto(origin+'/owner/brain/connectors/');
    const state=page.locator('#county-state'),mode=page.locator('#county-mode');
    await state.selectOption('FL');
+   await page.locator('#county').selectOption('FL-broward');
+   await page.getByText('No approved county parcel dataset is loaded',{exact:true}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Run Live Broward Pilot'}).isDisabled(),true);
+   await page.getByRole('button',{name:'Check Readiness'}).click();
+   await page.getByText(/Native EPSG:6439/).waitFor();
+   assert.deepEqual(posts,[]);
+   await page.locator('#county').selectOption('FL-miami-dade');
    await page.getByRole('heading',{name:'County pilot controls'}).waitFor();
    assert.equal(await page.getByRole('button',{name:'Run Live Miami-Dade Pilot'}).isDisabled(),true);
    assert.match(await page.getByText(/Verified map polygons 0/).textContent(),/Eligible 10 · Processed 3/);

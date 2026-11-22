@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import * as auth from '../lib/brain-auth.mjs';
 import { connectorFor, connectorReadiness, connectorCoverage } from '../lib/brain-gis-connectors.mjs';
 
-import {countyOperation} from '../lib/brain-gis-universal.mjs';
+import {countyOperation,operationCountyIds} from '../lib/brain-gis-universal.mjs';
 import {countyCheckpointKey,readCountyBudget,SHARED_COUNTY_DAILY_LIMIT} from '../lib/brain-gis-county-worker.mjs';
 
 const reply=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
@@ -17,8 +17,16 @@ async function handler(req) {
   try{
     const {datasets}=await read('index.json');
     const id=new URL(req.url).searchParams.get('dataset');
-    if(!id)return reply(200,{counties:datasets.map(d=>({...connectorReadiness(d),operation:countyOperation(d.id)}))});
+    const pending=operationCountyIds().map(countyOperation).filter(operation=>
+      operation.mode==='pilot-prepared'&&!datasets.some(dataset=>dataset.id===operation.id));
+    const unlisted=operation=>({id:operation.id,state:operation.state,county:operation.county,status:'Researching',
+      source:operation.source,connector:operation.format,automationEnabled:false,operation,
+      reason:'Official source documented. No approved county parcel dataset is loaded.'});
+    if(!id)return reply(200,{counties:[...datasets.map(d=>({...connectorReadiness(d),operation:countyOperation(d.id)})),...pending.map(unlisted)]});
     const dataset=datasets.find(d=>d.id===id);
+    const preparing=pending.find(operation=>operation.id===id);
+    if(!dataset&&preparing)return reply(200,{county:unlisted(preparing),
+      coverage:{available:0,mapped:0,verified:0,remaining:0,completion:null},operation:preparing});
     if(!dataset||!/^[-A-Za-z0-9_]+\.json$/.test(dataset.file))return reply(404,{error:'County dataset unavailable'});
     const [data,overlay,trial]=await Promise.all([
       read('data/'+dataset.file), auth.kvGet('brain-map-county-v1-'+id),

@@ -95,6 +95,12 @@ test('deployed dashboard enforces owner reads and never writes or probes GIS',as
  const data=await response.json();
  assert.equal(data.county.automationEnabled,false);
  assert.equal(data.operation.mode,'research-only');
+ const broward=await handler.namespace.default(new Request('https://preview.test/api?dataset=FL-broward'));
+ assert.equal(broward.status,200);
+ const planned=await broward.json();
+ assert.equal(planned.county.automationEnabled,false);
+ assert.equal(planned.coverage.available,0);
+ assert.equal(planned.operation.mode,'pilot-prepared');
 });
 
 test('Larimer trial gates owner, origin and deployment and caps preview reservations at three',async()=>{

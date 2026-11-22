@@ -275,7 +275,7 @@ test('county pilot endpoint is owner-only and denies dispatch before activation'
  await mod.link(specifier=>modules[specifier]);
  await mod.evaluate();
  const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
- const get=(method='GET',deploy='deploy-preview')=>mod.namespace.default(new Request(origin+'/.netlify/functions/owner-brain-county-pilot?dataset=FL-miami-dade',{
+ const get=(method='GET',deploy='deploy-preview',county='FL-miami-dade')=>mod.namespace.default(new Request(origin+'/.netlify/functions/owner-brain-county-pilot?dataset='+county,{
   method,...(method==='POST'?{headers:{origin},body:JSON.stringify({confirmed:true,action:'run',cursor:0})}:{})
  }),{deploy:{context:deploy}});
  assert.equal((await get()).status,401);
@@ -289,6 +289,10 @@ test('county pilot endpoint is owner-only and denies dispatch before activation'
  assert.equal(status.runAllowed,false);assert.equal(status.pilotRemaining,null);
  assert.equal(status.schemaAt,null);assert.equal(status.wgs84ValidatedAt,null);
  assert.equal((await get('POST')).status,409);
+ const {blockers,datasetAvailable,eligible,runAllowed}=await (await get('GET','deploy-preview','FL-broward')).json();
+ assert.equal(datasetAvailable,false);assert.equal(eligible,0);assert.equal(runAllowed,false);
+ assert.ok(blockers.includes('No approved county parcel dataset is loaded'));
+ assert.equal((await get('POST','deploy-preview','FL-broward')).status,409);
  assert.equal(writes,0);
 });
 
@@ -317,4 +321,105 @@ test('Miami-Dade requires explicit CRS and validates actual longitude/latitude',
  await assert.rejects(c.verify(record,discovery),{code:'invalid_polygon'});
  metadata={...miamiMeta,extent:{spatialReference:{wkid:3857}}};
  await assert.rejects(c.discover(),{code:'native_crs_mismatch'});
+});
+
+
+const broward=countyPilotDefinition('FL-broward');
+const browardMeta={...arcMeta,extent:{spatialReference:{wkid:102967,latestWkid:6439}},fields:[
+ {name:'PARCELNO',type:'esriFieldTypeString',length:254},{name:'PHY_ADDR1',type:'esriFieldTypeString'},
+ {name:'CO_NO',type:'esriFieldTypeDouble'}]};
+const browardShape=[[-80.3,26.1],[-80.299,26.1],[-80.299,26.101],[-80.3,26.1]];
+const browardId='001234567890';
+const browardRows=eligiblePilotRows(broward,{id:broward.id,recs:[
+ {i:'b1',p:browardId,a:'100 Main Street'},
+ {i:'b2',p:'001234567891',a:'100 Main Street'},
+ {i:'b3',p:1234567890,a:'100 Main Street'}
+]});
+const browardResult=(id=browardId,county=16,ring=browardShape)=>({
+ spatialReference:{wkid:4326},features:[{attributes:{PARCELNO:id,PHY_ADDR1:'100 MAIN ST',CO_NO:county},geometry:{rings:[ring]}}]});
+test('Broward preserves all twelve folio digits and enforces situs, county and reply CRS',async()=>{
+ let result=browardResult(),calls=0;
+ const connector=createCountyConnector(broward,{reserve:async()=>{calls++;},fetcher:async url=>{
+  if(!url.pathname.endsWith('/query'))return Response.json(browardMeta);
+  assert.equal(url.searchParams.get('where'),"PARCELNO = '001234567890' AND CO_NO = 16");
+  assert.equal(url.searchParams.get('outFields'),'PARCELNO,PHY_ADDR1,CO_NO');
+  assert.equal(url.searchParams.get('outSR'),'4326');
+  return Response.json(result);
+ }});
+ assert.equal(browardRows.length,2);
+ const discovery=await connector.discover();
+ assert.equal(discovery.capabilities.nativeWkid,6439);
+ const evidence=await connector.verify(browardRows[0],discovery);
+ assert.equal(evidence.parcelId,browardId);
+ assert.equal(evidence.outputWkid,4326);
+ result=browardResult('1234567890');
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'id_mismatch'});
+ result=browardResult(browardId,15);
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'county_mismatch'});
+ result=browardResult();
+ result.features[0].attributes.PHY_ADDR1='200 MAIN ST';
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'address_mismatch'});
+ result=browardResult(browardId,16,browardShape.slice(1));
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'invalid_polygon'});
+ result=browardResult();
+ result.spatialReference={wkid:6439};
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'unsupported_crs'});
+ result=browardResult();
+ result.features.push(result.features[0]);
+ await assert.rejects(connector.verify(browardRows[0],discovery),{code:'duplicate'});
+ assert.equal(calls,8);
+});
+
+test('Broward preserves skip evidence through source backoff and restart',async()=>{
+ const storage=memory();
+ let tick=now(), outage=true, calls=0;
+ const fetcher=async url=>{
+  calls++;
+  if(!url.pathname.endsWith('/query'))return Response.json(browardMeta);
+  const first=url.searchParams.get('where').includes(browardId);
+  if(first&&outage)return Response.json({features:[]});
+  if(outage)return new Response(null,{status:503});
+  return Response.json(browardResult(first?browardId:'001234567891'));
+ };
+ const opts={storage,rows:browardRows,revision:'broward-fixture',fetcher,now:()=>tick,
+  config:{...broward,enabled:true,operationMode:'fixture',requestLimit:12},
+  authorization:{owner:true,preview:true,confirmed:true,dataset:broward.id}};
+ const first=await runCountyResearch(opts);
+ assert.equal(first.cursor,1);
+ assert.equal(first.review[0].source,broward.source);
+ assert.equal(first.review[0].parcelId,browardId);
+ assert.equal(first.review[0].code,'missing');
+ assert.equal(first.review[0].checkedAt,new Date(tick).toISOString());
+ assert.equal(first.sourceHealth.status,'source_paused');
+ const reserved=calls;
+ await runCountyResearch(opts);
+ assert.equal(calls,reserved);
+ tick+=60001;outage=false;
+ const restarted=await runCountyResearch(opts);
+ assert.equal(restarted.cursor,2);
+ assert.deepEqual(restarted.review[0],first.review[0]);
+ const retried=await runCountyResearch({...opts,retry:{index:0,parcelId:browardId,checkedAt:first.review[0].checkedAt}});
+ assert.equal(retried.cursor,2);
+ assert.equal(retried.evidence[0].publicationAllowed,false);
+ assert.ok(retried.review[0].resolvedAt);
+ assert.equal(await storage.read('brain-map-county-v1-'+broward.id),null);
+});
+
+test('one independently checked Broward fixture feeds the three shared map consumers',async()=>{
+ const storage=memory(),record=browardRows[0],at=new Date(now()).toISOString();
+ const cfg={...broward,enabled:true,mode:'preview-publication',operationMode:'fixture'};
+ const evidence={type:'county_research_evidence',dataset:cfg.id,recordId:record.i,parcelId:record.p,source:cfg.source,checkedAt:at};
+ const approval={owner:true,preview:true,confirmed:true,dataset:cfg.id,recordId:record.i,parcelId:record.p,evidenceAt:at};
+ await publishCountyCorrection({config:cfg,record,evidence,authorization:approval,storage,now,
+  fetcher:async url=>Response.json(url.pathname.endsWith('/query')?browardResult():browardMeta)});
+ const {data}=await storage.read('brain-map-county-v1-'+cfg.id);
+ const merger=await fs.readFile('kinvest-liens/map/brain-map-merge.js','utf8');
+ const context={window:{},URL,URLSearchParams,fetch:async()=>Response.json({ok:true,dataset:cfg.id,...data})};
+ vm.runInNewContext(merger,context);
+ for(const map of ['Public','Workshop','MapTiler']){
+  const ds={id:cfg.id,recs:[{...record}]};
+  assert.equal((await context.window.PPABrainMap.apply(ds)).count,1,map);
+  assert.equal(ds.recs[0].p,browardId,map);
+  assert.equal(ds.recs[0].__brainEvidence.source,broward.source,map);
+ }
 });

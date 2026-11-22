@@ -40,6 +40,7 @@ function render(county,coverage,operation){
     link.textContent='Open official GIS source';
     add('Official GIS source',link);
   }else add('Official GIS source','Awaiting review');
+  if(operation?.attribution)add('Source attribution',operation.attribution);
   if(county.scope)add('Scope',county.scope);
   add('Verification compatibility',county.compatibility||'Not yet reviewed');
   add('Last successful connector test',county.lastTest||'No full connector trial recorded');
@@ -472,7 +473,7 @@ async function showCountyPilot(id,selectionAtLoad){
  const percentage=state.eligible?Math.round(100*state.processed/state.eligible):0;
  note.textContent='Eligible '+state.eligible+' · Processed '+state.processed+' ('+percentage+'%) · Evidence saved '+state.verifiedEvidence+
   ' · Verified map polygons '+state.published+' ('+(state.eligible?Math.round(100*state.published/state.eligible):0)+'%)'+
-  ' · Shared requests remaining '+state.sharedRemaining+' · County requests remaining '+state.countyRemaining+
+  ' · Pending '+Math.max(0,state.eligible-state.processed)+' · Shared requests remaining '+state.sharedRemaining+' · County requests remaining '+state.countyRemaining+
   ' · Pilot requests remaining '+(state.pilotRemaining??'No active permit')+' · Maximum '+state.pilotLimit;
  panel.append(note);
  const checks=document.createElement('p');
@@ -484,7 +485,7 @@ async function showCountyPilot(id,selectionAtLoad){
  if(state.terms){
   const terms=document.createElement('a');
   terms.href=state.terms;
-  terms.textContent='Property Appraiser access terms';
+  terms.textContent='Source access terms';
   panel.append(terms);
  }
  const health=document.createElement('p');
@@ -519,13 +520,18 @@ async function showCountyPilot(id,selectionAtLoad){
  check.type='button';
  check.textContent='Check Readiness';
  check.onclick=()=>showCounty();
- panel.append(check,action('Run Live Miami-Dade Pilot','run'));
+ panel.append(check,action('Run Live '+(state.county||(id==='FL-broward'?'Broward':'Miami-Dade'))+' Pilot','run'));
 
  const list=document.createElement('ul');
  for(const [index,row] of Object.entries(state.review||{})){
   if(row.resolvedAt)continue;
   const item=document.createElement('li');
-  item.textContent=row.parcelId+' · Skipped · Needs Review · '+row.reason+' ';
+  item.textContent=row.parcelId+' · Skipped · Needs Review · '+row.reason+
+   (row.checkedAt?' · '+new Date(row.checkedAt).toLocaleString():'')+' ';
+  if(typeof row.source==='string'&&/^https:\/\//.test(row.source)){
+   const citation=document.createElement('a');
+   citation.href=row.source;citation.textContent='Official source';item.append(citation,document.createTextNode(' '));
+  }
   item.append(action('Retry parcel','retry',{index:Number(index),parcelId:row.parcelId,checkedAt:row.checkedAt}));
   list.append(item);
  }

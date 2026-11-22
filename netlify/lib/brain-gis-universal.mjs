@@ -1,6 +1,6 @@
 // Connector transport is injected. The owner dashboard never invokes it.
 import {connectorFor,polygonEvidence} from './brain-gis-connectors.mjs';
-import {countyPilotDefinition,pilotCountyIds,publishableIdentifier} from './brain-gis-pilot-registry.mjs';
+import {countyPilotDefinition,pilotCountyIds,pilotIdentifier} from './brain-gis-pilot-registry.mjs';
 
 const aliases={
  parcel:['parcelnumber','parcelnum','parcelno','parcelid','propertyid','apn','pin'],
@@ -17,7 +17,7 @@ export const operationCountyIds=()=>[...Object.keys(registry),...pilotCountyIds(
 
 export function countyOperation(id){
  const pilot=countyPilotDefinition(id);
- if(pilot)return {id,mode:pilot.operationMode,source:pilot.source,authority:pilot.authority,format:pilot.format,
+ if(pilot)return {id,county:pilot.county,state:pilot.state,attribution:pilot.attribution??null,mode:pilot.operationMode,source:pilot.source,authority:pilot.authority,format:pilot.format,
   nativeWkid:pilot.nativeWkid,enabled:pilot.enabled,pilotLimit:3};
  const config=Object.hasOwn(registry,id)?registry[id]:null,existing=connectorFor(id);
  return config?{id,...config,source:existing.source,enabled:false}:null;
@@ -104,8 +104,10 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
     ||!config.reviewedOrigin||source.origin!==config.reviewedOrigin)
   throw Error('Source origin requires explicit review');
  const isArc=arcgis.has(config.format);
- const canonical=config.identifierFormat==='miami-folio'?
-  value=>publishableIdentifier(value)?value.replaceAll('-',''):'':identity;
+ const canonical=config.identifierFormat?value=>pilotIdentifier(config.identifierFormat,value):identity;
+ const jurisdiction=config.jurisdiction;
+ if(jurisdiction&&(!isArc||!/^\w+$/.test(jurisdiction.field)||!Number.isSafeInteger(jurisdiction.value)))
+  throw Error('A valid county discriminator is required');
  if(isArc&&!new RegExp('/'+(config.format==='feature-server'?'FeatureServer':'MapServer')+'/[0-9]+$','i').test(source.pathname))
   throw Error('Expected a specific ArcGIS layer');
  const bounded=Array.isArray(config.bounds)&&config.bounds.length===4&&config.bounds.every(Number.isFinite)&&
@@ -143,19 +145,20 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
    throw connectorError('unsupported_schema','Official layer does not expose queryable parcels','source');
   const native=data?.extent?.spatialReference??data?.spatialReference;
   const reported=[native?.wkid,native?.latestWkid].filter(value=>value!=null);
-  const expected=config.nativeWkid===2236?[2236,102658]:[config.nativeWkid];
+  const expected=config.nativeWkid===2236?[2236,102658]:[config.nativeWkid,...(config.nativeAliases||[])];
   if(config.nativeWkid&&(!reported.length||reported.some(value=>!expected.includes(value))))
    throw connectorError('native_crs_mismatch','Layer did not declare its reviewed native spatial reference','source');
   const names=isArc?data.fields.map(field=>field.name).filter(name=>typeof name==='string'):
    [...new Set(data.flatMap(row=>Object.keys(row.attributes||{})))];
   const schema=inspectFields(names,config.fields);
   if(isArc&&(!data.fields.some(field=>field.name===schema.fields.parcel&&field.type==='esriFieldTypeString'&&
-    (!config.identifierFormat||field.length===13))||
+    (!config.identifierFormat||field.length===(config.parcelFieldLength??13)))||
     (config.identifierFormat&&!data.fields.some(field=>field.name===schema.fields.address&&field.type==='esriFieldTypeString'))))
    schema.compatible=false;
+  if(jurisdiction&&!data.fields.some(field=>field.name===jurisdiction.field&&['esriFieldTypeDouble','esriFieldTypeInteger','esriFieldTypeSmallInteger'].includes(field.type)))schema.compatible=false;
   return {dataset:config.id,source:source.href,authority:official.href,observedAt:now().toISOString(),
    reliability:schema.compatible?'reachable_candidate':'owner_review',schema,
-   capabilities:{nativeWkid:reported.includes(2236)?2236:reported[0]??null,datumTransformation:data?.supportsDatumTransformation===true,
+   capabilities:{nativeWkid:native?.latestWkid??native?.wkid??null,datumTransformation:data?.supportsDatumTransformation===true,
     geometry:isArc?'esriGeometryPolygon':config.format==='geojson'?'GeoJSON Polygon':schema.fields.geometry||null,
     pagination:isArc&&data.advancedQueryCapabilities?.supportsPagination===true,
     maxRecordCount:isArc&&Number.isSafeInteger(data.maxRecordCount)?data.maxRecordCount:null,
@@ -171,7 +174,9 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   if(isArc){
    if(!Object.values(fields).every(field=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(field)))
     throw connectorError('unsupported_fields','Source field names need review','source');
-   const query=new URLSearchParams({f:'json',where:fields.parcel+" = '"+canonical(record.p)+"'",outFields:Object.values(fields).join(','),
+   const where=fields.parcel+" = '"+canonical(record.p)+"'"+(jurisdiction?' AND '+jurisdiction.field+' = '+jurisdiction.value:'');
+   const outFields=[...new Set([...Object.values(fields),...(jurisdiction?[jurisdiction.field]:[])])].join(',');
+   const query=new URLSearchParams({f:'json',where,outFields,
     returnGeometry:'true',outSR:'4326',resultRecordCount:'2'});
    const data=await request(new URL(source.href+'/query?'+query),json,'parcel_verification');
    if(data.error||data.exceededTransferLimit||!Array.isArray(data.features))
@@ -190,6 +195,8 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   if(matches.length!==1)
    throw connectorError(matches.length?'duplicate':'missing',matches.length?'Multiple official parcel matches':'No official parcel matched the identifier');
   const selected=matches[0];
+  if(jurisdiction&&selected.attributes?.[jurisdiction.field]!==jurisdiction.value)
+   throw connectorError('county_mismatch','Official response does not identify the intended county');
   if(canonical(selected.attributes?.[fields.parcel])!==canonical(record.p))throw connectorError('id_mismatch','Official parcel identifier differs');
   return selected;
  }
