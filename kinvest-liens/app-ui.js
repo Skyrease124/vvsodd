@@ -71,30 +71,18 @@
   const radarTabHome = radarTabs.parentNode;
   const radarTabNext = radarTabs.nextSibling;
   const radarDock = document.getElementById('home-radar-map-controls');
+  // No instructional banners: the three categories select the Radar dataset below.
   const radarStatus = document.getElementById('home-radar-match-status');
-  const radarDescriptions = {
-    opp:'Opportunities selected. Radar opportunities and county records are shown below. Only exact GIS-verified parcels can be located on the map.',
-    cal:'Auction Calendar selected. Calendar data is shown below; auctions without verified parcel geometry cannot appear as map markers.',
-    hist:'Sale History selected. Historical sale records are shown below; historical records are not automatically verified parcel locations.'
-  };
-  function updateRadarTabStatus(){
-    if(!mapWorkspace.classList.contains('app-map-unified'))return;
-    const selected=radarTabs.querySelector('[aria-selected="true"]');
-    const tab=selected?.dataset.tab||'opp';
-    if(radarStatus){radarStatus.hidden=false;radarStatus.textContent=radarDescriptions[tab];}
-  }
-  radarTabs.addEventListener('click',()=>queueMicrotask(updateRadarTabStatus));
+  if(radarStatus){radarStatus.hidden=true;radarStatus.textContent='';}
   function dockRadarTabs(enabled){
     if(enabled){
       if(radarTabs.parentNode!==radarDock)radarDock.appendChild(radarTabs);
       radarDock.hidden=false;
-      updateRadarTabStatus();
+
     }else{
       radarDock.hidden=true;
       if(radarTabs.parentNode!==radarTabHome)radarTabHome.insertBefore(radarTabs,radarTabNext);
-      if(radarStatus && Object.values(radarDescriptions).includes(radarStatus.textContent)){
-        radarStatus.hidden=true;radarStatus.textContent='';
-      }
+
     }
   }
   function showMapView(view) {
