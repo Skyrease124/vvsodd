@@ -434,3 +434,10 @@ test('concurrent pilot confirmations share the worker lease',async()=>{
  assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);
  assert.ok(h.reads()<=3);
 });
+
+
+test('manual Wayne worker rejects cross-site browser requests',()=>{
+ const source=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+ assert.match(source,/!scheduled&&req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
+ assert.match(source,/return response\(403,\{ok:false,error:'Cross-site request denied'\}\)/);
+});
