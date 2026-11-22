@@ -53,7 +53,7 @@ test('hazard alerts live above homepage maps and use existing hazard endpoint',(
  assert.match(css,/\.app-home-hazard:empty\{display:none\}/);
 });
 
-test('Radar categories render state-level markers on existing satellite map with 3D tilt',()=>{
+test('Radar categories render verified county-area markers with fallback and 3D tilt',()=>{
  const radar=fs.readFileSync('kinvest-liens/radar.js','utf8');
  const app=fs.readFileSync('kinvest-liens/app-ui.js','utf8');
  const map=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
@@ -63,6 +63,11 @@ test('Radar categories render state-level markers on existing satellite map with
  assert.match(map,/drawRadarPins\(\)/);
  assert.match(map,/new maplibregl\.Marker/);
  assert.match(map,/map\.easeTo\(\{pitch:REDUCED\?0:38/);
- assert.match(map,/state-level aggregate, not parcel coordinates/);
+ assert.match(map,/county location/);
+ assert.match(map,/state aggregate/);
+ assert.match(map,/radarCounties/);
+ assert.match(map,/radarOverlay.month/);
+ assert.match(map,/!!c.history/);
+ assert.match(app,/month:data.month/);
  assert.match(map,/ppa:radar-overlay-select/);
 });
