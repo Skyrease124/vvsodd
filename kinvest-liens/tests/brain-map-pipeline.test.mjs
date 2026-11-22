@@ -134,6 +134,10 @@ test('recovery repairs any interrupted publication metadata write without GIS or
   await h.publish();
   const first=h.store.get(KEY);
   assert.equal(first.records['test-record'].publicationPending,true);
+  // A geometry write alone is not a completed publication. All map consumers
+  // use this feed, so pending records must stay private until recovery finishes.
+  const pendingFeed=await h.feed(new Request('https://preview.test/.netlify/functions/brain-map-county?dataset=MI-wayne'));
+  assert.deepEqual((await pendingFeed.json()).records,{});
   assert.equal(h.store.get('brain-map-publication-status-v1').state,'error');
   const calls=h.calls.length;
   await Promise.all([h.publish(true),h.publish(true)]);
@@ -142,6 +146,8 @@ test('recovery repairs any interrupted publication metadata write without GIS or
   assert.equal(saved.version,first.version);
   assert.deepEqual(saved.records['test-record'].g,first.records['test-record'].g);
   assert.equal(saved.records['test-record'].publicationPending,undefined);
+  const readyFeed=await h.feed(new Request('https://preview.test/.netlify/functions/brain-map-county?dataset=MI-wayne'));
+  assert.ok((await readyFeed.json()).records['test-record']);
   assert.equal(h.store.get('brain-map-history-v1').entries.length,1);
   assert.equal(h.store.get('owner-brain-approvals-v1').entries[0].publishStatus,'published');
   assert.equal(h.store.get('owner-brain-scanner-v1').queue[0].review.publishStatus,'published');
