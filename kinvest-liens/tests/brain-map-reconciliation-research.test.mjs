@@ -239,3 +239,12 @@ test('County Connectors layout uses compact metrics, sticky navigation and colla
  assert.match(js,/GIS verification/);
  assert.match(js,/Research activity/);
 });
+
+test('saved research document cannot shadow the browser DOM in the evidence loop',async()=>{
+ const js=await fs.readFile('kinvest-liens/owner/brain/connectors/dashboard.js','utf8');
+ const loop=js.slice(js.indexOf('for(const entry of data.evidence'),js.indexOf('const savedSection='));
+ assert.match(loop,/const recordDocument=entry\.document/);
+ assert.doesNotMatch(loop,/\b(?:const|let|var)\s+document\b/);
+ assert.match(loop,/document\.createElement\('li'\)/);
+ assert.match(loop,/recordDocument\.reference/);
+});

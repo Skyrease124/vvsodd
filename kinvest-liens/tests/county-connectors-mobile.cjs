@@ -1,0 +1,103 @@
+// Optional real-browser regression: requires Playwright and Chromium.
+// Run from the repository root: node kinvest-liens/tests/county-connectors-mobile.cjs
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const { chromium } = require('playwright');
+
+const root = 'kinvest-liens/owner/brain/connectors/';
+const origin = 'https://deploy-preview-454--pricepocketasset.netlify.app';
+const api = '/.netlify/functions/';
+const at = '2026-11-22T02:00:00Z';
+const long = 'Recorded descriptions need to wrap: ' + 'x'.repeat(450);
+const county = {id:'CO-larimer',state:'CO',county:'Larimer',status:'Testing',source:'https://records.example/'+long};
+const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
+const research = {
+ paused:false,status:'Document Found',recordedDocument:null,relationship:null,evidenceComplete:false,
+ planningTestStatus:'completed',researchBusy:false,sourceProgress:{reviewed:0,total:3},
+ missing:['Recorded plat and Assessor history'],
+ sources:[{url:county.source,authority:'Larimer County Assessor',limit:2,data:'Parcel and account search'}],
+ evidence:[
+  {authority:'Fort Collins Planning',url:county.source,at,outcome:'document',document:{reference:'BDR240012',decision:'approved',decisionDate:'11/13/2024',legalDescription:long}},
+  {authority:'Prior preview result',url:county.source,at,outcome:'metadata',metadata:{title:'Access instructions'},document:null}
+ ],
+ events:[{at,sourceId:'fort_collins_planning',outcome:'document',httpStatus:200}],
+ nextSource:{id:'assessor',authority:'Larimer County Assessor',used:0,limit:2}
+};
+const original={parcelId:'9701400014',schedule:'0155675'};
+const candidate={parcelId:'9701484001',schedule:'1688587'};
+const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:{
+ recordId:original.parcelId,reason:'No exact match',exhausted:true,source:county.source,checkedAt:at,
+ diagnostics:{stage:'match count',resultCount:0}
+},reconciliationCases:[{dataset:'CO-larimer',status:'unresolved_owner_review',original,candidate,
+ sources:[{authority:'Official record',url:county.source,finding:long}],missingEvidence:['Recorded plat']}]};
+
+(async()=>{
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',
+  headless:true,timeout:15000,args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-networking']});
+ try{
+  for(const width of [320,375,390,430]){
+   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,deviceScaleFactor:2,hasTouch:true});
+   const page=await context.newPage();
+   const posts=[],unexpected=[],errors=[];
+   let paused=false,used=0,approve=false;
+   page.on('pageerror',error=>errors.push(error.message));
+   page.on('dialog',dialog=>approve?dialog.accept():dialog.dismiss());
+   await page.route('**/*',async route=>{
+    const request=route.request(),url=new URL(request.url()),path=url.pathname;
+    if(url.origin!==origin){unexpected.push(request.url());return route.abort();}
+    const base='/owner/brain/connectors/';
+    if(path===base)return route.fulfill({contentType:'text/html',body:await fs.readFile(root+'index.html','utf8')});
+    if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
+    if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
+    if(path===api+'owner-brain-connectors')return route.fulfill({json:url.search?{county,coverage}:{counties:[county]}});
+    if(path===api+'owner-brain-larimer-trial'&&request.method()==='GET')return route.fulfill({json:trial});
+    if(path===api+'owner-brain-reconciliation-research'){
+     if(request.method()==='POST'){
+      const body=request.postDataJSON();posts.push(body);
+      if(body.action==='pause')paused=true;
+      else if(body.action==='resume')paused=false;
+      else if(body.action==='run-next-source')used++;
+      else unexpected.push(body.action);
+      return route.fulfill({json:{status:'metadata'}});
+     }
+     return route.fulfill({json:{...research,paused,nextSource:{...research.nextSource,used},
+      events:used?[...research.events,{at,sourceId:'assessor',outcome:'metadata',httpStatus:200}]:research.events}});
+    }
+    if(path!=='/favicon.ico')unexpected.push(path);
+    return route.fulfill({status:404});
+   });
+   await page.goto(origin+'/owner/brain/connectors/');
+   const run=page.getByRole('button',{name:'Run Next Research Source'});
+   await run.waitFor();
+   assert.equal(await run.isEnabled(),true);
+   assert.equal(await page.getByRole('button',{name:'Run One Research Test'}).count(),0);
+   assert.equal(posts.length,0,'page load may only read existing status');
+   assert.equal(await page.locator('#status').textContent(),'');
+   for(const label of ['Official research sources','Saved research evidence','Research activity','9701400014 · Owner review','GIS evidence and diagnostics']){
+    const disclosure=page.locator('summary').filter({hasText:label});
+    await disclosure.click();
+   }
+   assert.equal(await page.getByText(/Larimer County Assessor.*Budget: 2/).count(),1);
+   assert.equal(await page.getByText(/Reference BDR240012/).count(),1);
+   assert.equal(await page.locator('.timeline').getByText(/fort_collins_planning/).count(),1);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),'horizontal overflow');
+   await run.click();
+   assert.equal(posts.length,0,'cancelled confirmation must not dispatch');
+   approve=true;
+   await run.click();
+   await page.getByText(/1\/2 requests reserved/).waitFor();
+   assert.deepEqual(posts,[{action:'run-next-source',confirmed:true,sourceId:'assessor',used:0}]);
+   await page.getByRole('button',{name:'Pause research queue'}).click();
+   await page.getByRole('button',{name:'Resume research queue'}).waitFor();
+   assert.equal(await run.isDisabled(),true);
+   await page.getByRole('button',{name:'Resume research queue'}).click();
+   await page.getByRole('button',{name:'Pause research queue'}).waitFor();
+   assert.equal(await run.isEnabled(),true);
+   assert.deepEqual(posts.map(p=>p.action),['run-next-source','pause','resume']);
+   assert.deepEqual(errors,[]);
+   assert.deepEqual(unexpected,[]);
+   console.log(width+'px PASS: saved evidence, source budget, timeline, zero load writes, confirm/cancel, pause/resume, no overflow');
+   await context.close();
+  }
+ }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

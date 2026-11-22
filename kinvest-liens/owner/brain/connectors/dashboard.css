@@ -30,3 +30,9 @@ progress{width:100%;height:.65rem;accent-color:var(--accent)}
 .timeline li::marker{color:var(--accent)}
 @media(max-width:30rem){nav{gap:.6rem}nav a{font-size:.9rem}button{width:100%;margin-inline:0}}
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+.research-controls{display:flex;flex-wrap:wrap;gap:.55rem;margin:.75rem 0 1rem}
+.research-controls button{margin:0}
+section>details{background:#0f202b;margin-block:.65rem;padding:.7rem .85rem}
+section>details>ul,section>details>ol{margin-block:.45rem}
+@media(max-width:30rem){.research-controls{display:grid;grid-template-columns:minmax(0,1fr)}}

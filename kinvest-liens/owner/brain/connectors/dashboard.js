@@ -18,8 +18,9 @@ function grouped(label,...nodes){
 }
 const read = async (url,options={}) => {
   const response = await fetch(url,{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(12000),...options});
-  const data = await response.json();
-  if(!response.ok)throw Error(data.error||'County data unavailable');
+  let data;
+  try{data=await response.json();}catch{throw Error('County data unavailable');}
+  if(!response.ok||!data||typeof data!=='object')throw Error(data?.error||'County data unavailable');
   return data;
 };
 function render(county,coverage){
@@ -116,7 +117,7 @@ async function showTrial(request){
     outcome.textContent=d?
       'Stage: '+d.stage+' · Result: '+(d.reasonCode||'verified')+' · HTTP: '+(d.httpStatus??'Unavailable')+
       ' · ArcGIS status: '+(d.arcgisStatus??'None')+' · Results: '+(d.resultCount??'Unavailable')+
-      ' · Returned parcel IDs: '+(d.returnedParcelIds.join(', ')||'None recorded')+
+      ' · Returned parcel IDs: '+((d.returnedParcelIds||[]).join(', ')||'None recorded')+
       ' · Transfer limit: '+(d.transferLimit===null?'Unknown':d.transferLimit?'Yes':'No'):
       'Detailed provider diagnostics were not saved for this attempt.';
     row.append(outcome);
@@ -262,7 +263,7 @@ async function showResearch(request){
       ' · Evidence: '+(data.evidenceComplete?'Complete for review':'Incomplete')+
       (data.conflicting?' · Conflicting records need review':''));
     add('Last research attempt: '+(data.lastAttempt?data.lastAttempt.at+' · '+data.lastAttempt.outcome:'None recorded by this workflow'));
-    if(data.missing.length)add('Missing: '+data.missing.join('; '));
+    if(data.missing?.length)add('Missing: '+data.missing.join('; '));
     if(data.sourceProgress){
       const progress=document.createElement('progress');
       progress.max=data.sourceProgress.total;
@@ -272,7 +273,7 @@ async function showResearch(request){
       panel.append(progress);
     }
     const refs=document.createElement('ul');
-    for(const item of data.sources){
+    for(const item of data.sources||[]){
       const li=document.createElement('li'),link=document.createElement('a');
       link.href=item.url;
       link.textContent=item.authority;
@@ -280,19 +281,19 @@ async function showResearch(request){
         (item.restriction?' · '+item.restriction:'')+(typeof item.limit==='number'?' · Budget: '+item.limit:'')));
       refs.append(li);
     }
-    panel.append(disclose('Official research sources',refs));
+    const sourceSection=disclose('Official research sources',refs);
     const saved=document.createElement('ul');
-    for(const entry of data.evidence){
-      const document=entry.document;
+    for(const entry of data.evidence||[]){
+      const recordDocument=entry.document;
       const row=document.createElement('li'),link=document.createElement('a');
       link.href=entry.url;
       link.textContent=entry.authority;
       row.append(link,document.createTextNode(' · '+entry.at+' · '+entry.outcome+
-        (entry.metadata?' · '+entry.metadata.title+' · Image access: '+entry.metadata.imageAccess.replaceAll('_',' '):'')+
-        (document?' · Reference '+document.reference+(document.decision?' · '+document.decision+' '+(document.decisionDate||''):'')+(document.legalDescription?' · '+document.legalDescription:''):'')));
+        (entry.metadata?' · '+entry.metadata.title+' · Image access: '+(entry.metadata.imageAccess||'not recorded').replaceAll('_',' '):'')+
+        (recordDocument?' · Reference '+recordDocument.reference+(recordDocument.decision?' · '+recordDocument.decision+' '+(recordDocument.decisionDate||''):'')+(recordDocument.legalDescription?' · '+recordDocument.legalDescription:''):'')));
       saved.append(row);
     }
-    panel.append(disclose('Saved research evidence',saved));
+    const savedSection=disclose('Saved research evidence',saved);
     const timeline=document.createElement('ol');
     timeline.className='timeline';
     for(const event of [...(data.events||[])].reverse()){
@@ -300,7 +301,9 @@ async function showResearch(request){
       row.textContent=event.at+' · '+event.sourceId+' · '+event.outcome+(event.httpStatus?' · HTTP '+event.httpStatus:'');
       timeline.append(row);
     }
-    panel.append(disclose('Research activity',timeline));
+    const timelineSection=disclose('Research activity',timeline);
+    const controls=document.createElement('div');
+    controls.className='research-controls';
     const button=document.createElement('button');
     const action=data.paused?'resume':'pause';
     button.textContent=data.paused?'Resume research queue':'Pause research queue';
@@ -312,7 +315,7 @@ async function showResearch(request){
         await showCounty();
       }catch(error){statusLine.textContent=error.message;}
     };
-    panel.append(button);
+    controls.append(button);
     add('One-time Fort Collins planning test: '+data.planningTestStatus);
     const run=document.createElement('button');
     run.textContent='Run One Research Test';
@@ -327,13 +330,18 @@ async function showResearch(request){
         await showCounty();
       }catch(error){statusLine.textContent=error.message+' Refresh to inspect the saved reservation.';}
     };
-    panel.append(run);
+    if(data.planningTestStatus==='available')controls.append(run);
     if(data.nextSource){
       const source=data.nextSource;
       add('Next source: '+source.authority+' · '+source.used+'/'+source.limit+' requests reserved');
       const next=document.createElement('button');
       next.textContent='Run Next Research Source';
       next.disabled=data.paused||data.researchBusy||data.planningTestStatus!=='completed'||Number(data.retryAt)>Date.now();
+      if(next.disabled){
+        add(data.paused?'Resume the queue to enable the next source.':data.researchBusy?'A research request is in progress.':
+          data.planningTestStatus!=='completed'?'Complete the one-time planning test first.':
+          'Next retry after '+new Date(data.retryAt).toLocaleString()+'.');
+      }
       next.onclick=async()=>{
         if(!confirm('Send one public metadata request to '+source.authority+'? No forms, document images or parcel GIS will be requested.'))return;
         next.disabled=true;
@@ -343,8 +351,9 @@ async function showResearch(request){
           await showCounty();
         }catch(error){statusLine.textContent=error.message+' Refresh to inspect the saved checkpoint.';}
       };
-      panel.append(next);
+      controls.prepend(next);
     }else add('The approved sources have been checked or their budgets are exhausted.');
+    panel.append(controls,sourceSection,savedSection,timelineSection);
   }catch(error){
     if(request!==selection)return;
     const failure=document.createElement('p');
