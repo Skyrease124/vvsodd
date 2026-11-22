@@ -228,3 +228,9 @@ test('mobile activity cards constrain long GIS receipts and transfer width',()=>
  assert.match(page,/\.transfer\{flex:0 0 min\(78vw,290px\)/);
  assert.match(page,/\.log-entry\{display:grid;grid-template-columns:8px minmax\(0,1fr\)/);
 });
+
+
+test('quota wait tells owner about first confirmed run and UTC cutover',()=>{
+ assert.match(source,/first owner-confirmed pilot request/);
+ assert.match(source,/no GIS dispatch until the following UTC day/);
+});
