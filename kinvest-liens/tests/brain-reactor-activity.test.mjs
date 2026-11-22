@@ -175,3 +175,12 @@ test('finished Putnam receipt uses only recorded time and charges quota once in 
  assert.ok(events.some(event=>event.type==='geometry_validated'));
  assert.ok(events.some(event=>event.status==='warning'));
 });
+
+
+test('replay and simulation retain periodic owner authorization checks',()=>{
+ assert.match(page,/if\(document\.hidden\|\|refresh\.busy\)return;refresh\.busy=true;/);
+ assert.doesNotMatch(page,/refresh\.busy\|\|mode\(\)!=='live'/);
+ assert.match(page,/if\(r\.status===401\|\|r\.status===403\)\{\s*pauseReplay\(\)/);
+ assert.match(page,/Owner session expired\. Sign in again/);
+ assert.match(page,/if\(mode\(\)==='live'\)render\(d\)/);
+});
