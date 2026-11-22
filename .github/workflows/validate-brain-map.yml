@@ -18,6 +18,8 @@ on:
       - 'tools/florida-gis/**'
       - 'tools/florida-land/**'
       - 'netlify/lib/brain-florida-land.mjs'
+      - 'netlify/lib/data/florida-land-discovery-audit.json'
+      - 'tests/test_pro_first_research.mjs'
       - 'kinvest-liens/owner/brain/connectors/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
@@ -48,6 +50,8 @@ on:
       - 'tools/florida-gis/**'
       - 'tools/florida-land/**'
       - 'netlify/lib/brain-florida-land.mjs'
+      - 'netlify/lib/data/florida-land-discovery-audit.json'
+      - 'tests/test_pro_first_research.mjs'
       - 'kinvest-liens/owner/brain/connectors/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
@@ -95,3 +99,4 @@ jobs:
       - run: node kinvest-liens/tests/brain-map-florida-registry.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-florida-land.test.mjs
       - run: python3 tools/florida-land/test_prepare.py
+      - run: node tests/test_pro_first_research.mjs

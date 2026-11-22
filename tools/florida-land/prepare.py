@@ -91,7 +91,7 @@ def prepare(args):
         fields = {"PARCEL_ID", "PARCELNO", "CO_NO", "GEOID", "FDOR_CODE",
                   "PHY_ADDR1", "SITUS_ADDRESS", "CLASSIFICATION", "LEGAL_REFERENCE",
                   "ACREAGE", "ZONING", "VACANT", "EVIDENCE_URL", "LISTING_ID", "EVENT_ID",
-                  "STATUS", "AVAILABLE", "AUCTION_AT", "DEADLINE", "ASKING_PRICE",
+                  "STATUS", "AVAILABLE", "AVAILABLE_FROM", "AUCTION_AT", "DEADLINE", "ASKING_PRICE",
                   "OPENING_BID", "MINIMUM_BID"}
         if isinstance(row, dict):
             attrs = row.get("attributes", row.get("properties", row))
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("output", type=Path)
     parser.add_argument("--format", choices=("csv", "geojson", "arcgis", "shapefile"), required=True)
     parser.add_argument("--source", choices=("fdor-nal", "floridagio", "miami-surplus",
-                                           "palm-beach-tax-deed", "florida-dep-surplus"), required=True)
+                                           "palm-beach-tax-deed", "florida-dep-surplus", "putnam-land-available"), required=True)
     parser.add_argument("--geoid", required=True)
     parser.add_argument("--retrieved-at", required=True)
     parser.add_argument("--fixture", action="store_true")

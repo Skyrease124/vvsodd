@@ -133,7 +133,13 @@ test('owner route checks preview, role, origin and CAS without provider or publi
  assert.equal((await get({deploy:{context:'production'}})).status,404);
  assert.equal((await get()).status,401);
  user={owner:false};assert.equal((await get()).status,403);
- user={owner:true,email:'owner@example.test'};assert.equal((await get()).status,200);
+ user={owner:true,email:'owner@example.test'};
+ const ownerResponse=await get();
+ assert.equal(ownerResponse.status,200);
+ const audit=(await ownerResponse.json()).discoveryAudit;
+ assert.deepEqual(audit.attempts.map(row=>row.county),['Palm Beach','Lee','Broward','Volusia','Citrus','Putnam']);
+ assert.equal(audit.attempts[3].outcome,'scheduled_pending_confirmation');
+ assert.equal(stored,null);
  assert.equal((await post({action:'import'},'https://wrong.test')).status,403);
  assert.equal((await post({action:'import'})).status,400);
  assert.equal((await post({action:'import',confirmed:true,batch:batch('floridagio',[parcel])})).status,422);
@@ -158,4 +164,18 @@ test('missing boundary blocks approval and source acreage stays separate from co
  assert.equal(matched.sourceAcreage,25.5);
  assert.ok(matched.geometryAcres>0);
  assert.notEqual(matched.geometryAcres,matched.sourceAcreage);
+});
+
+test('Putnam purchase eligibility uses exact certification and never activates before the public start date',()=>{
+ const id='04-10-24-6450-0060-0240', geoid='12107';
+ const cadastral={...parcel,attributes:{...parcel.attributes,PARCELNO:id,CO_NO:64}};
+ const offer={...sale,PARCEL_ID:id,GEOID:geoid,FDOR_CODE:'64',LISTING_ID:'2019-0003179',AVAILABLE_FROM:'2026-11-23T00:00:00-05:00',
+  EVIDENCE_URL:'https://apps.putnam-fl.com/coc/taxdeeds/public/public_certification.php?certnum=20190003179'};
+ const options={geoid,fixture:false};
+ let state=apply(null,'floridagio',[cadastral],options);
+ state=apply(state,'putnam-land-available',[{...offer,EVIDENCE_URL:offer.EVIDENCE_URL+'&other=1'},{...offer,LISTING_ID:'2019-0003180'},offer],options);
+ assert.deepEqual(state.skipped.map(r=>r.reason),['unapproved_evidence_url','missing_purchase_eligibility']);
+ assert.equal(summary(state).records[0].reason,'inactive_sale');
+ assert.equal(landSummary(state,Date.parse('2026-11-23T05:00:00Z')).records[0].eligible,true);
+ assert.equal(summary(state).published,0);
 });

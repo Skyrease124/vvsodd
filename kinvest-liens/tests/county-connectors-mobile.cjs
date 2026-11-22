@@ -20,6 +20,7 @@ const palm={id:'FL-palm-beach',state:'FL',county:'Palm Beach',status:'Researchin
  operation:{mode:'pilot-prepared',attribution:'Palm Beach County Property Appraiser'}};
 const santa={...palm,id:'FL-santa-rosa',county:'Santa Rosa'};
 const registry=require('../../netlify/lib/data/florida-gis-registry.json');
+const landAudit=require('../../netlify/lib/data/florida-land-discovery-audit.json');
 const example=registry.counties.find(row=>row.name==='Calhoun');
 const directoryCounty={id:'FL-calhoun',state:'FL',county:'Calhoun',status:'Source validated',
  florida:{county:example,source:registry.sources[example.sourceId],reviewedOn:registry.reviewedOn,
@@ -72,7 +73,7 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===api+'owner-brain-florida-land')return route.fulfill({json:{
      records:[{item:{parcelId:'001',status:'scheduled',type:'tax-deed',evidence:{url:'https://gov.example/notice',agency:'Fixture',retrievedAt:at,fixture:true}},
       eligible:false,verifiedPolygon:false,versions:1,reason:'missing_verified_polygon'}],
-     matched:0,unmatched:1,approved:0,expiredOrCanceled:0,ingested:1,published:0,sources:[],receipts:[],skipped:[]}
+     matched:0,unmatched:1,approved:0,expiredOrCanceled:0,ingested:1,published:0,sources:[],receipts:[],skipped:[],discoveryAudit:landAudit}
     });
     if(path===api+'owner-brain-connectors'){
      if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa,directoryCounty]}});
@@ -130,6 +131,8 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    assert.deepEqual(posts,[]);
    await page.locator('#county').selectOption('FL-calhoun');
    await page.getByRole('heading',{name:'Unified Land Discovery'}).waitFor();
+   await page.getByText('Florida discovery checks',{exact:true}).click();
+   await page.getByText('Volusia · Volusia County Clerk',{exact:true}).waitFor();
    await page.getByText('001 · scheduled · Fixture').click();
    assert.equal(await page.getByRole('button',{name:'Approve for review'}).isDisabled(),true);
    await page.getByText('Import approved offline evidence',{exact:true}).click();

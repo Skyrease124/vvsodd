@@ -1,0 +1,48 @@
+{
+  "checkedOn": "2026-11-22",
+  "attempts": [
+    {
+      "county": "Palm Beach",
+      "authority": "Palm Beach County Clerk",
+      "url": "https://www.mypalmbeachclerk.com/departments/courts/tax-deeds/sale-information",
+      "outcome": "source_inaccessible",
+      "detail": "The sale instructions were accessible. The linked auction host returned HTTP 403 to the research tool."
+    },
+    {
+      "county": "Lee",
+      "authority": "Lee County Clerk",
+      "url": "https://www.leeclerk.org/departments/courts/foreclosure-tax-deed-sales",
+      "outcome": "source_inaccessible",
+      "detail": "The Clerk identifies the auction provider. The auction host returned HTTP 403 to the research tool."
+    },
+    {
+      "county": "Broward",
+      "authority": "Broward County Records, Taxes and Treasury",
+      "url": "https://www.broward.org/RECORDSTAXESTREASURY",
+      "outcome": "source_inaccessible",
+      "detail": "The county identifies its tax deed auction provider. The auction host returned HTTP 403 to the research tool."
+    },
+    {
+      "county": "Volusia",
+      "authority": "Volusia County Clerk",
+      "url": "https://www.clerk.org/tax-deeds.aspx",
+      "outcome": "scheduled_pending_confirmation",
+      "detail": "A parcel-specific future tax deed notice and matching appraisal record were located. Current bidding or redemption status and permission to reuse the record remain unconfirmed."
+    },
+    {
+      "county": "Citrus",
+      "authority": "Citrus County Clerk",
+      "url": "https://search.citrusclerk.org/TaxSmartWeb/Home/Image/148555",
+      "outcome": "scheduled_pending_confirmation",
+      "detail": "A parcel-specific future tax deed notice was found. Current status, opening bid, and parcel classification were not confirmed."
+    },
+    {
+      "county": "Putnam",
+      "authority": "Putnam County Clerk",
+      "url": "https://apps.putnam-fl.com/coc/taxdeeds/public/public_LAFT.php",
+      "outcome": "listed_available",
+      "detail": "The live county list shows case 2019-0003179, parcel 04-10-24-6450-0060-0240, Oak Hills Estates Block F Lot 24, available since November 17, 2026 at an estimated $1,599.54. The Clerk certification corroborates the parcel and legal lot. Confirm the exact amount and obtain parcel evidence before import."
+    }
+  ],
+  "nextAction": "For Putnam case 2019-0003179, obtain a permitted Property Appraiser extract and single-parcel cadastral boundary with stated CRS. Confirm current availability and final charges with the Clerk before relying on the estimate."
+}

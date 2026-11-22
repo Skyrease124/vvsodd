@@ -300,3 +300,26 @@ polygon-derived acreage separately from source-reported acreage.
 The standalone Pro release test expects a reviewed-certificates link on the homepage
 that is absent from the PR baseline. The reviewed certificates page and owner release
 menu exist. No current requirement to restore that particular homepage placement was found.
+
+### Multi-county Florida discovery (2026-11-22)
+
+[The discovery audit](netlify/lib/data/florida-land-discovery-audit.json) records the official sources
+checked across Palm Beach, Lee, Broward, Volusia, and Citrus. It appears only on the authenticated
+preview endpoint and does not create opportunities, reserve GIS requests, or change checkpoints.
+An inaccessible auction portal is recorded as a source issue. Research continued in the next county.
+
+Volusia produced the strongest affordable scheduled lead. Its Clerk notice and embedded appraisal
+record agreed on the parcel. Live bidding and redemption status could not be independently confirmed.
+The [Clerk inquiry gateway](https://app02.clerk.org/or_td/) restricts access and redistribution.
+No Clerk extracts were copied into application storage. Confirm current status and obtain a permitted
+notice, assessment extract, and single-parcel cadastral boundary with declared CRS before import.
+
+The reviewed-certificates navigation test now checks the link on the owner release page, where it
+is provided. It still verifies that the homepage retains its general land link.
+
+Putnam yielded a listing explicitly available for purchase. The Clerk's list reports an estimated
+$1,599.54 for Oak Hills Estates Block F Lot 24, case 2019-0003179, parcel 04-10-24-6450-0060-0240,
+available from November 17, 2026. The Clerk certification corroborates the parcel and legal lot.
+Availability evidence is recorded as a discovery receipt, outside imported listings. No GIS,
+assessment, or owner storage write was performed. The existing offline importer now accepts the
+Putnam source with exact certification URL validation and a required public eligibility date.

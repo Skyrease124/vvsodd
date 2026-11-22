@@ -1,3 +1,4 @@
+export {default as LAND_DISCOVERY_AUDIT} from './data/florida-land-discovery-audit.json' with {type:'json'};
 import {createHash} from 'node:crypto';
 import registry from './data/florida-gis-registry.json' with {type:'json'};
 import {polygonEvidence} from './brain-gis-connectors.mjs';
@@ -14,6 +15,9 @@ export const LAND_SOURCES=Object.freeze({
  'palm-beach-tax-deed':{kind:'sale',geoid:'12099',type:'tax-deed',
   url:'https://www.mypalmbeachclerk.com/departments/courts/tax-deeds/sale-information',
   agency:'Palm Beach County Clerk',evidenceOrigins:['https://taxdeed.mypalmbeachclerk.com'],format:['csv'],restrictions:'Approved offline notice extracts. Public search and auction participation have separate rules.'},
+ 'putnam-land-available':{kind:'sale',geoid:'12107',type:'land-available-for-taxes',
+  url:'https://apps.putnam-fl.com/coc/taxdeeds/public/public_LAFT.php',
+  agency:'Putnam County Clerk',format:['csv'],restrictions:'Approved offline extracts of the public list and exact certification. Confirm availability and total payable with the Clerk.'},
  'florida-dep-surplus':{kind:'sale',type:'government-owned-offering',
   url:'https://floridadep.gov/lands/bureau-real-estate-services/content/surplus-properties-sale',
   agency:'Florida Department of Environmental Protection',format:['csv'],
@@ -46,8 +50,11 @@ function canonicalId(county,value,classification){
 
 function evidenceUrl(source,value){
  const url=new URL(value);
+ const putnamCertificate=source.type==='land-available-for-taxes'&&
+  url.pathname==='/coc/taxdeeds/public/public_certification.php'&&
+  /^\?certnum=\d{11}$/.test(url.search);
  const allowed=new URL(source.url);
- if(url.protocol!=='https:'||![allowed.origin,...(source.evidenceOrigins||[])].includes(url.origin)||url.username||url.password||url.search||url.hash)
+ if(url.protocol!=='https:'||![allowed.origin,...(source.evidenceOrigins||[])].includes(url.origin)||url.username||url.password||(url.search&&!putnamCertificate)||url.hash)
   throw Error('unapproved_evidence_url');
  if(!['sale','assessment'].includes(source.kind)&&url.pathname!==allowed.pathname)throw Error('unapproved_evidence_path');
  return url.href;
@@ -76,9 +83,13 @@ function record(source,row,county,receipt){
   if(!identifier(listingId)||!identifier(eventId)||!['scheduled','available','postponed','canceled','sold','expired'].includes(status)||
     !attributes.EVIDENCE_URL||result.evidence.url===source.url)throw Error('missing_sale_evidence');
   const auctionAt=time(attributes.AUCTION_AT),deadline=time(attributes.DEADLINE);
+  const availableFrom=time(attributes.AVAILABLE_FROM);
+  if(source.type==='land-available-for-taxes'&&(!availableFrom||
+    !/^\d{4}-\d{7}$/.test(listingId)||
+    new URL(result.evidence.url).searchParams.get('certnum')!==listingId.replace('-','')))throw Error('missing_purchase_eligibility');
   if((source.type==='tax-deed'&&status==='scheduled'&&!auctionAt)||
     (attributes.DEADLINE&&!deadline)||(attributes.AUCTION_AT&&!auctionAt))throw Error('invalid_sale_dates');
-  return {...result,type:source.type,listingId,eventId,status,available,auctionAt,deadline,
+  return {...result,type:source.type,listingId,eventId,status,available,auctionAt,deadline,...(availableFrom?{availableFrom}:{}),
    askingPrice:amount(attributes.ASKING_PRICE),openingBid:amount(attributes.OPENING_BID),minimumBid:amount(attributes.MINIMUM_BID)};
  }
  let geometry=null,geometryAcres=null;
@@ -109,7 +120,7 @@ export function matchLand(state,sale,now=Date.now()){
   sale.legalReference===parcel.legalReference&&assessments.some(p=>p.classification==='surface'&&p.legalReference===sale.legalReference);
  if(!confirmedAddress&&!documentedVacant)return {reason:'insufficient_identity_evidence'};
  const closing=sale.deadline||sale.auctionAt;
- const active=sale.available&&['available','scheduled'].includes(sale.status)&&(!closing||Date.parse(closing)>now);
+ const active=sale.available&&(!sale.availableFrom||Date.parse(sale.availableFrom)<=now)&&['available','scheduled'].includes(sale.status)&&(!closing||Date.parse(closing)>now);
  return {parcel,evidenceHash:digest([parcel,assessments]),verified:true,active,reason:active?null:'inactive_sale'};
 }
 

@@ -1,5 +1,5 @@
 import * as auth from '../lib/brain-auth.mjs';
-import {approveLandReview,importLandBatch,landSummary,LAND_SOURCES} from '../lib/brain-florida-land.mjs';
+import {approveLandReview,importLandBatch,landSummary,LAND_SOURCES,LAND_DISCOVERY_AUDIT} from '../lib/brain-florida-land.mjs';
 
 const preview='https://deploy-preview-454--pricepocketasset.netlify.app';
 const response=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie'}});
@@ -35,7 +35,7 @@ export function createHandler(store){
    if(req.method==='GET'){
     const existing=await store.kvGet(key);
     const summary=landSummary(existing||{parcels:[],ingested:0,sales:{},receipts:{},skipped:[]});
-    return response(200,{...summary,sources:Object.entries(LAND_SOURCES)
+    return response(200,{...summary,discoveryAudit:LAND_DISCOVERY_AUDIT,sources:Object.entries(LAND_SOURCES)
       .filter(([,source])=>!source.geoid||source.geoid===geoid).map(([id,source])=>({id,...source}))});
    }
    if(req.headers.get('origin')!==preview)return response(403,{error:'Invalid origin'});

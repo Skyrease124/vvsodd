@@ -600,6 +600,19 @@ async function showFloridaLand(florida,request){
    card.append(number,caption);counts.append(card);
   }
   panel.append(counts,line('Last completed import: '+(data.lastIngestion||'None saved')));
+  if(data.discoveryAudit){
+   const audit=data.discoveryAudit,list=document.createElement('ul'),body=document.createElement('div');
+   for(const attempt of audit.attempts){
+    const item=document.createElement('li'),link=document.createElement('a');
+    link.href=attempt.url;link.textContent=attempt.county+' · '+attempt.authority;
+    item.append(link,line(attempt.detail));list.append(item);
+   }
+   body.append(line('Checked '+audit.checkedOn+' · '+audit.attempts.length+' counties · '+
+    audit.attempts.filter(row=>row.outcome==='listed_available').length+' listed available · '+
+    audit.attempts.filter(row=>row.outcome==='scheduled_pending_confirmation').length+' scheduled leads pending confirmation'),
+    list,line(audit.nextAction));
+   panel.append(disclose('Florida discovery checks',body));
+  }
   const sources=document.createElement('ul');
   for(const source of data.sources){
    const entry=document.createElement('li'),link=document.createElement('a');
@@ -627,6 +640,7 @@ async function showFloridaLand(florida,request){
   kind.setAttribute('aria-label','Filter government opportunities');
   kind.add(new Option('All government opportunities',''));
   kind.add(new Option('Tax Deed Auctions','tax-deed'));
+  kind.add(new Option('Lands Available for Taxes','land-available-for-taxes'));
   kind.add(new Option('Surplus Land','surplus'));
   kind.add(new Option('Public Land Sales','government-owned-offering'));
   const pages=line('');
@@ -653,6 +667,7 @@ async function showFloridaLand(florida,request){
      evidence.append(line([row.parcelEvidence.agency,row.parcelEvidence.crs,row.parcelEvidence.situs||
       row.parcelEvidence.legalReference,row.parcelEvidence.retrievedAt].filter(Boolean).join(' · ')),parcelLink);
     }
+    if(item.availableFrom)evidence.append(line('Available from: '+item.availableFrom));
     if(item.deadline)evidence.append(line('Deadline: '+item.deadline));
     if(row.reason)evidence.append(line(row.reason.replaceAll('_',' ')));
     const approve=document.createElement('button');
