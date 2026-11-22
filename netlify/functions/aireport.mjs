@@ -10,7 +10,7 @@ const json = (code, body, h = {}) => new Response(JSON.stringify(body), { status
 export default async (req) => {
   const me = await auth.userFromCookie(req.headers.get('cookie') || '');
   if (!me) return json(401, { error: 'Sign in to build a report.' });
-  if (!auth.isPaid(me)) return json(402, { error: 'Research reports are for Pro members.', needPaid: true });
+  if (!auth.isPro(me)) return json(402, { error: 'Research reports are for Pro members.', needPaid: true });
   if (!(await RL.hit('aireport:' + me.email, 60, 3600e3)).ok) return json(429, { error: 'Too many reports this hour. Please wait.' });
   const u = new URL(req.url), county = String(u.searchParams.get('county') || ''), parcel = String(u.searchParams.get('parcel') || '');
   if (!FILES[county]) return json(404, { error: 'We do not carry a list for that county.' });
