@@ -644,8 +644,9 @@ async function showFloridaLand(florida,request){
     link.href=item.evidence.url;link.textContent='Open official listing evidence';
     evidence.append(line(item.evidence.agency+' · '+item.evidence.retrievedAt+' · '+row.versions+' saved revision(s)'),
      line(item.auctionAt?'Auction: '+item.auctionAt:'Auction date unavailable'),
-     line('Price or bid: '+(item.askingPrice??item.openingBid??item.minimumBid??'Unavailable')+
-      ' · Acres: '+(row.acreage??'Unavailable')),link);
+     line('Price or bid: '+(item.askingPrice??item.openingBid??item.minimumBid??'Unavailable')),
+     line('Polygon-derived acres: '+(Number.isFinite(row.geometryAcres)?row.geometryAcres.toFixed(4):'Unavailable')+
+      ' · Source-reported acres: '+(row.sourceAcreage??'Unavailable')),link);
     if(row.parcelEvidence){
      const parcelLink=document.createElement('a');
      parcelLink.href=row.parcelEvidence.url;parcelLink.textContent='Open official parcel source';

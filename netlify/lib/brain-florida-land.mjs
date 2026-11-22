@@ -176,7 +176,8 @@ export function landSummary(state,now=Date.now()){
   const parcelEvidence=match.parcel?{...match.parcel.evidence,situs:match.parcel.situs,
    legalReference:match.parcel.legalReference,crs:match.parcel.crs}:null;
   return {id,revision,reviewToken,item,parcelEvidence,reason:match.reason,verifiedPolygon:match.verified===true,
-   acreage:match.parcel?.acreage??match.parcel?.geometryAcres??null,vacant:match.parcel?.vacant??false,
+   acreage:match.parcel?.acreage??match.parcel?.geometryAcres??null,
+   sourceAcreage:match.parcel?.acreage??null,geometryAcres:match.parcel?.geometryAcres??null,vacant:match.parcel?.vacant??false,
    eligible,approved:eligible&&approval?.evidenceHash===match.evidenceHash,versions:history.length};
  });
  const receipts=Object.values(state.receipts).sort((a,b)=>b.retrievedAt.localeCompare(a.retrievedAt));

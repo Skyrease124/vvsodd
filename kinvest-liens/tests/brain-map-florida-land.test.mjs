@@ -146,3 +146,16 @@ test('owner route checks preview, role, origin and CAS without provider or publi
   body:JSON.stringify({action:'import',confirmed:true,batch:batch('miami-surplus',[sale],{fixture:false})})});
  assert.equal((await racing(request,context)).status,409);
 });
+
+test('missing boundary blocks approval and source acreage stays separate from computed acreage',()=>{
+ let state=apply(null,'miami-surplus',[sale],{fixture:false});
+ const [unmatched]=summary(state).records;
+ assert.equal(unmatched.reason,'missing_verified_polygon');
+ assert.equal(unmatched.geometryAcres,null);
+ assert.throws(()=>approveLandReview(state,{...unmatched,reviewer:'test'},now),/stale_or_unverified/);
+ state=apply(state,'floridagio',[{...parcel,attributes:{...parcel.attributes,ACREAGE:'25.5'}}],{fixture:false});
+ const [matched]=summary(state).records;
+ assert.equal(matched.sourceAcreage,25.5);
+ assert.ok(matched.geometryAcres>0);
+ assert.notEqual(matched.geometryAcres,matched.sourceAcreage);
+});

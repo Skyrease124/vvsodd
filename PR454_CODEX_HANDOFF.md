@@ -278,3 +278,25 @@ scheduler, budget mutation, or publication path. Existing map and research-relea
 
 See [the offline operator guide](tools/florida-land/README.md) for source documentation, commands, review
 criteria, and supported formats.
+
+### Miami-Dade surplus pilot source check (2026-11-22)
+
+No active, parcel-specific public offer qualified from the sources checked. The
+[county surplus page](https://www.miamidade.gov/global/business/realestate/surplus-real-properties-for-sale.page)
+links to [GovDeals item 17256-8](https://www.govdeals.com/en/asset/8/17256). The
+[county notice](https://www.miamidade.gov/resources/legal-ads/county/procurement/2026/2026-07-20-73-west-flagler.pdf)
+gives folio 01-0111-050-1060, 73 West Flagler Street, a $35,410,000 minimum bid, and a
+July 27–August 28, 2026 advertised window with possible extension. Current open bidding
+could not be established. The county's [for-sale inventory](https://www.miamidade.gov/apps/ISD/RealEstate_Portal/CountyOwnedPropertiesForSale)
+directs users to a separate active-sales page whose linked legacy URL returned 404.
+Inventory folios stay research leads unless corroborated by a current public purchase notice.
+
+No real sale, assessment, or geometry was imported. No live GIS request was made.
+To resume, obtain a current official offer with an exact folio, a permitted Property
+Appraiser assessment extract, and a permitted cadastral boundary extract with explicit
+CRS. Use the owner preview for the private import. The owner dashboard labels
+polygon-derived acreage separately from source-reported acreage.
+
+The standalone Pro release test expects a reviewed-certificates link on the homepage
+that is absent from the PR baseline. The reviewed certificates page and owner release
+menu exist. No current requirement to restore that particular homepage placement was found.
