@@ -84,3 +84,14 @@ test('read-only map endpoint and official approval gate',()=>{
  assert.doesNotMatch(publish,/geoapify\.com|photon\.komoot\.io/);
 });
 
+
+
+test('shared public and Workshop maps rotate all loaded counties and isolate feed failures',()=>{
+ const source=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
+ assert.match(source,/let overlayRefreshRunning=false,overlayRefreshCursor=0/);
+ assert.match(source,/counties\[\(overlayRefreshCursor\+i\)%counties\.length\]/);
+ assert.match(source,/overlayRefreshCursor=\(overlayRefreshCursor\+8\)%counties\.length/);
+ assert.match(source,/for\(let i=0;i<Math\.min\(8,counties\.length\);i\+\+\)/);
+ assert.match(source,/catch\(_\)\{\/\* Keep existing polygons until the source recovers/);
+ assert.match(source,/setInterval\(refreshVerifiedOverlays,120000\)/);
+});
