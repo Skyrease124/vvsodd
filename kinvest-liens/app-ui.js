@@ -76,6 +76,22 @@
   if(radarStatus){radarStatus.hidden=true;radarStatus.textContent='';}
   const radarSummary=document.getElementById('home-radar-map-summary');
   let latestRadarCategory=null;
+  const radarFrame=document.querySelector('#home-parcels iframe');
+  function sendRadarOverlay(){
+    if(!mapWorkspace.classList.contains('app-map-unified')||!latestRadarCategory)return;
+    const data=latestRadarCategory;
+    const counties=(Array.isArray(data.counties)?data.counties:[]).map(c=>({
+      state:c.state,county:c.county,open:c.open,sale:{kind:c.sale?.kind,date:c.sale?.date}
+    }));
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:data.tab,counties},location.origin);
+  }
+  radarFrame.addEventListener('load',sendRadarOverlay);
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==radarFrame.contentWindow)return;
+    if(event.data?.type!=='ppa:radar-overlay-select'||!/^[A-Z]{2}$/.test(event.data.state||''))return;
+    window.TaxRadar?.openState(event.data.state);
+    document.getElementById('home-radar').scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
   function renderRadarSummary(){
     if(!radarSummary)return;
     const enabled=mapWorkspace.classList.contains('app-map-unified');
@@ -99,6 +115,7 @@
     if(!['opp','cal','hist'].includes(tab))return;
     latestRadarCategory={tab,counties:event.detail.counties};
     renderRadarSummary();
+    sendRadarOverlay();
   });
   function dockRadarTabs(enabled){
     if(enabled){
@@ -126,6 +143,7 @@
     mapWorkspace.classList.toggle('app-map-unified', both);
     dockRadarTabs(both);
     renderRadarSummary();
+    sendRadarOverlay();
   }
   for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
   showMapView('both');
