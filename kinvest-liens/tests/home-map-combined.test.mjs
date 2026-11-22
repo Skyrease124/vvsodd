@@ -41,3 +41,14 @@ test('exact Radar parcel handoff requires official change and verified GIS polyg
  assert.match(app,/ppa:radar-parcel-result/);
  assert.match(app,/no location was invented/);
 });
+
+test('hazard alerts live above homepage maps and use existing hazard endpoint',()=>{
+ const html=fs.readFileSync('kinvest-liens/index.html','utf8');
+ const ticker=fs.readFileSync('kinvest-liens/hazard-ticker.js','utf8');
+ const css=fs.readFileSync('kinvest-liens/styles.css','utf8');
+ assert.ok(html.indexOf('id="home-hazard-alerts"')<html.indexOf('class="app-map" id="map"'));
+ assert.match(ticker,/document\.getElementById\('home-hazard-alerts'\)/);
+ assert.match(ticker,/host\.inside\) host\.el\.appendChild\(box\)/);
+ assert.match(ticker,/\.netlify\/functions\/hazards\?major=1/);
+ assert.match(css,/\.app-home-hazard:empty\{display:none\}/);
+});
