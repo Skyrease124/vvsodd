@@ -13,6 +13,9 @@ async function handler(req,context){
   enabled:production&&current.enabled===true&&current.approvedForProduction===true,
   scheduledMinutes:30,updatedAt:current.updatedAt||null,blockedReason:production?null:'Deploy Preview cannot control the production schedule'});
  if(!production)return reply(403,{ok:false,error:'Production owner dashboard only. Preview cannot enable 24/7 processing.'});
+ // Browser fetch metadata provides an independent CSRF signal. Older clients
+ // may omit it, but a browser explicitly marking cross-site is never trusted.
+ if(req.headers.get('sec-fetch-site')==='cross-site')return reply(403,{ok:false,error:'Cross-site request denied'});
  if(req.headers.get('origin')!==new URL(req.url).origin)return reply(403,{ok:false,error:'Invalid request origin'});
  let body;try{const raw=await req.text();if(raw.length>200)throw Error();body=JSON.parse(raw);}catch{return reply(400,{ok:false,error:'Invalid request'});}
  if(!['enable','disable'].includes(body?.action)||body.confirmed!==true)return reply(400,{ok:false,error:'Explicit enable or disable confirmation required'});
