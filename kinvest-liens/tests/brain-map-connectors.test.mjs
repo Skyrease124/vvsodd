@@ -119,7 +119,7 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
   'node:crypto':synthetic({createHash}),
   '../lib/brain-auth.mjs':synthetic({...storage,withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,
    kvGet:async key=>{assert.equal(key,'brain-map-county-v1-CO-larimer');return null;}}),
-  '../lib/brain-gis-trial-checkpoint.mjs':synthetic({runConnectorTrial:async params=>{
+  '../lib/brain-gis-trial-checkpoint.mjs':synthetic({rearmConnectorTrial:async()=>{throw Error('Unexpected review action');},runConnectorTrial:async params=>{
    assert.equal(params.environment,'deploy-preview');
    assert.equal(params.dataset,'CO-larimer');
    assert.deepEqual(Array.from(params.records,r=>r.p),['9701400014','8510310018','8510339002']);
