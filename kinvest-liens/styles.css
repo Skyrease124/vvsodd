@@ -1706,3 +1706,10 @@ body.loginpg #msg:empty{display:none}
 
 /* map: the hazard line sits inside the bottom panel (under the tabs), so it never covers the map */
 .hztick.hz-sheet{position:static;margin:2px 12px 8px;width:auto;max-width:none;border-radius:14px;padding:8px 12px;font-size:.78rem;background:rgba(255,255,255,.06);-webkit-backdrop-filter:none;backdrop-filter:none}.hztick.hz-sheet .hz-tx{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+
+/* Unified homepage map mode: preserve both existing maps and their data sources. */
+.app-map-views{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.app-map-views [data-home-map-view]{min-width:0;padding-inline:5px;overflow-wrap:anywhere}
+.app-map-combined-note{margin:12px 14px;padding:11px 13px;border:1px solid rgba(115,208,177,.45);border-radius:12px;background:#102f37;color:#c9e8df;font-size:13px;line-height:1.5}
+#home-parcels[hidden],#home-radar[hidden],#home-combined-note[hidden]{display:none!important}
