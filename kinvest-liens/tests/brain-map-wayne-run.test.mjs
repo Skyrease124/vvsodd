@@ -342,6 +342,8 @@ test('official-response fixtures survive an interruption between guarded publica
  const interrupted=await h.invoke();
  assert.equal(interrupted.status,502);
  assert.equal(h.store.get(key).cursor,4);
+ assert.equal(h.store.get(key).recent.filter(row=>row.status==='skipped').length,3);
+ assert.equal(h.store.get(key).recent.filter(row=>row.status==='published'&&row.parcelId==='01004444').length,1);
  const saved=h.store.get(overlayKey).records.r4;
  assert.equal(saved.verifiedGeometry,true);
  assert.equal(saved.publicationPending,undefined);

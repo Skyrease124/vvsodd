@@ -5,18 +5,19 @@ import vm from 'node:vm';
 const source=fs.readFileSync('netlify/functions/owner-brain-activity.mjs','utf8');
 const page=fs.readFileSync('kinvest-liens/owner/brain/activity/index.html','utf8');
 const brain=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
-async function create(owner,research=null){
+async function create(owner,research=null,quota={active:true,count:21}){
  const store=new Map([
   ['owner-brain-wayne-worker-v1',{cursor:7,runs:2,verified:5,published:5,needsReview:0,failures:0,dailyUsed:5,state:'idle',lastCompleted:'2026-11-21T20:00:00.000Z',recent:[{parcelId:'01002754',status:'published'}]}],
   ['brain-map-history-v1',{entries:[{dataset:'MI-wayne',parcelId:'01002754',action:'published',source:'official GIS',at:'2026-11-21T20:00:00.000Z'}]}],
  ]);
  if(research)store.set('brain-reconciliation-research-v1-CO-larimer',research);
  const context=vm.createContext({Response,console,Date});
- const auth=new vm.SyntheticModule(['userFromCookie','kvGet','withBrainStore','isBrainPreview'],function(){
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','withBrainStore','isBrainPreview','readWayneGisQuota'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
   this.setExport('kvGet',async k=>structuredClone(store.get(k)));
   this.setExport('withBrainStore',fn=>fn);
   this.setExport('isBrainPreview',()=>true);
+  this.setExport('readWayneGisQuota',async()=>quota);
  },{context});
  const mod=new vm.SourceTextModule(source,{context});
  await mod.link(()=>auth);await mod.evaluate();
@@ -26,6 +27,7 @@ test('owner alone reads actual saved worker and publication events',async()=>{
  const run=await create(true),res=await run(new Request('https://preview.test/.netlify/functions/owner-brain-activity'));
  const d=await res.json();
  assert.equal(res.status,200);assert.equal(d.summary.cursor,7);
+ assert.equal(d.health.dailyUsed,21);assert.equal(d.health.remaining,9);assert.equal(d.summary.processed,null);
  assert.equal(d.events.filter(e=>e.type==='published').length,1);
  assert.equal(d.events[0].parcelId,'01002754');
  assert.equal(d.agents.Gemini,'no_recorded_activity');
@@ -76,7 +78,7 @@ test('worker timestamps individual GIS outcomes instead of inventing exact event
 test('activity health distinguishes retrying, active, paused, idle and attention',()=>{
  assert.match(source,/const health=\{state,detail:/);
  assert.match(source,/retry\?\.exhausted/);
- assert.match(source,/state==='retry_wait'/);
+ assert.match(source,/cooling\?'retrying'/);
  assert.match(source,/nextRetryAt:date\(retry\?\.nextAt\)/);
  assert.match(source,/control\?\.status==='paused'/);
  assert.match(page,/Official GIS Agent Health/);
@@ -117,4 +119,12 @@ test('source reservation and actual HTTP metadata receipts are distinct Reactor 
  assert.equal(rows.length,2);
  assert.doesNotMatch(rows.find(e=>e.id==='research-start').message,/HTTP|saved/);
  assert.match(rows.find(e=>e.id==='research-finish').message,/HTTP 200.*Metadata saved/);
+});
+
+
+test('inactive shared quota is shown as unknown even with a historical worker counter',async()=>{
+ const run=await create(true,null,{active:false,count:0});
+ const d=await (await run(new Request('https://preview.test/activity'))).json();
+ assert.equal(d.health.dailyUsed,null);
+ assert.equal(d.health.remaining,null);
 });

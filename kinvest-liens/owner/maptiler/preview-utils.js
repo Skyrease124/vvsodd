@@ -14,7 +14,16 @@
   if(error?.name==='AbortError'||error?.name==='TimeoutError')return 'The MapTiler request timed out. No map was confirmed loaded.';
   return 'Map preview could not load: '+message.slice(0,220);
  }
- const api={count,errorMessage};
+ function visibleParcels(records){
+  const corrections=[],baseline=[];
+  for(const record of records){
+   if(!record.g||!record.cx)continue;
+   if(record.__brainMap)corrections.push(record);
+   else if(baseline.length<250)baseline.push(record);
+  }
+  return [...corrections,...baseline.slice(0,Math.max(0,250-corrections.length))];
+ }
+ const api={count,errorMessage,visibleParcels};
  if(typeof module!=='undefined')module.exports=api;
  root.PPAMapTilerPreview=api;
 })(typeof window!=='undefined'?window:globalThis);

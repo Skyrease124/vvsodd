@@ -36,3 +36,14 @@ test('owner configuration returns validated feed counts in the same deployment c
 test('MapTiler configuration rejects non-owners before reading correction data',async()=>{
  for(const user of [null,{owner:false}]){const h=await endpoint(user);assert.equal((await h.handler(new Request('https://preview.test/config'))).status,user?403:401);assert.equal(h.reads(),0);}
 });
+
+
+test('MapTiler includes verified corrections beyond the static drawing cap',()=>{
+ const {visibleParcels}=scope.module.exports;
+ const baseline=Array.from({length:300},(_,i)=>({i,g:[[i]],cx:[i,0]}));
+ const correction={i:'verified',g:[[[1,2]]],cx:[1,2],__brainMap:true};
+ const more=Array.from({length:251},(_,i)=>({...correction,i:'c'+i}));
+ assert.equal(visibleParcels([...baseline,correction]).length,250);
+ assert.equal(visibleParcels([...baseline,correction])[0],correction);
+ assert.equal(visibleParcels([...baseline,...more]).length,251);
+});

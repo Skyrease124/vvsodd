@@ -70,7 +70,7 @@ function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
 function overlay(){
  if(!map||!currentData)return;
- const feats=currentData.recs.filter(x=>x.g&&x.cx).slice(0,250).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??null,category:r.c},geometry:geometry(r)})).filter(f=>f.geometry);
+ const feats=utils.visibleParcels(currentData.recs).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??null,category:r.c},geometry:geometry(r)})).filter(f=>f.geometry);
  const fc={type:'FeatureCollection',features:feats};
  if(map.getSource('owner-parcels'))map.getSource('owner-parcels').setData(fc);
  else{map.addSource('owner-parcels',{type:'geojson',data:fc});map.addLayer({id:'owner-fill',type:'fill',source:'owner-parcels',paint:{'fill-color':'#00c9af','fill-opacity':0.2}});map.addLayer({id:'owner-outline',type:'line',source:'owner-parcels',paint:{'line-color':'#70ffe0','line-width':2}});}

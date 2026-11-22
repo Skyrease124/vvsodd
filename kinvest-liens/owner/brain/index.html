@@ -1,10 +1,24 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>AI Brain Control Center | PricePocketAsset</title><style>
-:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}} </style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
+:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}}
+.wayne-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.wayne-metrics div{background:#102429;border:1px solid #41656a;border-radius:10px;padding:9px;overflow-wrap:anywhere}
+.wayne-metrics dt{font-size:12px;color:#b4d3cb}.wayne-metrics dd{margin:3px 0 0;font-weight:750}
+#wayneReviewQueue summary{cursor:pointer;padding:10px 0}#wayneReviewEntries{padding-inline-start:1.15rem}
+#wayneReviewEntries li{margin-block:8px}#wayneReviewEntries button{min-height:44px}
+@media(max-width:500px){.wayne-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
 <section id="unattendedStatus" style="margin:14px 0;padding:16px;border:1px solid #537675;border-radius:14px;background:#142d32;color:#def6ed">
  <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
  <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
  <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <dl class="wayne-metrics">
+  <div><dt>Processing complete</dt><dd id="wayneComplete">—</dd></div>
+  <div><dt>Verified coverage</dt><dd id="wayneCoverage">—</dd></div>
+  <div><dt>Shared GIS requests left</dt><dd id="wayneRemaining">—</dd></div>
+ </dl>
+ <p id="wayneReadiness" role="status"></p>
+ <p id="wayneTiming" class="small"></p>
  <p id="wayneQueueProgress" aria-live="polite"></p>
  <details id="wayneReviewQueue">
   <summary>Skipped parcels needing review</summary>
@@ -190,15 +204,27 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    document.getElementById('wayneQueueProgress').textContent=(progress?
     'Detroit GIS queue · Total eligible '+progress.total+' · Processed '+(progress.total-progress.pending)+' · Verified '+progress.verified+' · Skipped '+progress.skipped+
     ' · Failed after retries '+progress.failed+' · Pending '+progress.pending+
-    (progress.legacyProcessed?' · Earlier outcomes unavailable '+progress.legacyProcessed:'')+
-    ' · Processing complete '+progress.processingPercent+'% · Verified coverage '+progress.verifiedPercent+'%':
+    (progress.legacyProcessed?' · Earlier outcomes unavailable '+progress.legacyProcessed:''):
     'Detroit GIS queue totals will appear after the next bounded batch.')+
     (sourceCooling?' · Source paused until '+new Date(d.worker.sourcePause.nextAt).toLocaleString()+' · '+d.worker.sourcePause.reason:'');
+   document.getElementById('wayneComplete').textContent=progress?progress.processingPercent+'%':'—';
+   document.getElementById('wayneCoverage').textContent=progress?progress.verifiedPercent+'%':'—';
+   const readiness=d.pilotReadiness;
+   document.getElementById('wayneRemaining').textContent=readiness?.remaining??'Unavailable';
+   document.getElementById('wayneReadiness').textContent=readiness?.eligible?
+    'Pilot checks passed · awaiting explicit owner confirmation':
+    readiness?'Pilot blocked · '+readiness.blockers.join(' · '):'Pilot readiness unavailable';
+   const status=d.worker.paused?'paused':Date.parse(d.worker.lockedUntil)>Date.now()?'running':
+    sourceCooling||Date.parse(d.worker.retryNextAt)>Date.now()?'waiting':(d.worker.state||'idle').replaceAll('_',' ');
+   document.getElementById('wayneTiming').textContent='Worker '+status+
+    ' · Last successful batch '+(d.worker.lastSuccessfulBatch?new Date(d.worker.lastSuccessfulBatch).toLocaleString():'unrecorded')+
+    (readiness?.nextEligibleAt?' · Recheck after '+new Date(readiness.nextEligibleAt).toLocaleString():'')+
+    (d.worker.lastError?' · '+d.worker.lastError:'');
    const entries=document.getElementById('wayneReviewEntries');
    entries.replaceChildren();
    for(const entry of d.worker.reviewQueue||[]){
     const row=document.createElement('li');
-    row.textContent=entry.parcelId+' · Skipped · Needs Review · '+entry.reason+' ';
+    row.textContent=entry.parcelId+' · Skipped · Needs Review · '+entry.reason+(entry.checkedAt?' · '+new Date(entry.checkedAt).toLocaleString():'')+' ';
     if(d.preview){
      const retry=document.createElement('button');
      retry.type='button';
@@ -235,7 +261,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     d.worker.retryExhausted?'Review the exhausted retry before running':
     sourceCooling||Date.parse(d.worker.retryNextAt)>Date.now()?'Wait for the saved GIS cooldown':
     Date.parse(d.worker.lockedUntil)>Date.now()?'Another batch is in progress':
-    remaining===null||remaining<3?'Three available shared GIS requests are required':'';
+    remaining===null||remaining<3?'Three available shared GIS requests are required':readiness?.blockers[0]||'';
    testButton.disabled=pilotRunning||!!hold;
    testButton.title=hold||'Run one preview pilot using at most three official GIS requests, including publication';
    testButton.dataset.cursor=String(d.worker.cursor);
@@ -250,7 +276,8 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     (d.worker.quotaActive?' · Shared GIS requests remaining '+remaining+'/'+d.worker.dailyLimit:'')+
     ' · Other counties blocked until verified GIS connectors are configured';
    return true;
-  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;return false;}
+  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;
+   document.getElementById('wayneReadiness').textContent='Pilot readiness blocked · '+e.message;return false;}
  }
  document.getElementById('wayneRetryRearm').onclick=async()=>{
   const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);

@@ -98,8 +98,14 @@ async function handler(req,context){
   version=await auth.kvPutVersioned(STORE,value,version);
   if(!version)throw Error('Batch lost its lease');
  }
- let pilotRequests=0;
+ let pilotRequests=0, savedRows=0;
  const result={attempted:0,verified:0,published:0,needsReview:0,failures:0,rows:[]};
+ function saveRecent(){
+  const fresh=result.rows.slice(savedRows);
+  if(!fresh.length)return;
+  s.recent=[...fresh.reverse(),...(s.recent||[]).filter(row=>row.checkedAt)].slice(0,40);
+  savedRows=result.rows.length;
+ }
  try{
   if(recoveryPending){
    await publish(req,{...context,waynePublisherInternal:true,wayneRecoveryOnly:true,
@@ -134,6 +140,7 @@ async function handler(req,context){
    return response(409,{ok:false,error:'Dataset row changed; review the parcel before retrying'});
   async function checkpoint(){
    if(!review)s.cursor=i;
+   saveRecent();
    await saveProgress(s);
   }
   async function skip(r,id,reason,stage,trace,failed=false){
@@ -349,10 +356,10 @@ async function handler(req,context){
   s.lastBatch=result;
   // Persist each completed request outcome as its own immutable event.
   // The prior implementation restamped historic results with lastCompleted.
-  const oldRecent=(s.recent||[]).filter(x=>x.checkedAt);
-  s.recent=[...result.rows,...oldRecent].slice(0,40);
+  saveRecent();
   if(s.state==='running')s.state=s.cursor>=rows.length?'source_scanned':pilot&&pilotRequests===PILOT_REQUEST_LIMIT?'pilot_limit':'idle';
   s.lastCompleted=new Date().toISOString();
+  if(result.published+result.needsReview>0)s.lastSuccessfulBatch=s.lastCompleted;
   if(pilot)s.lastPilot={at:s.lastCompleted,state:s.state,cursor:s.cursor,requests:pilotRequests,requestLimit:PILOT_REQUEST_LIMIT,
    remaining:Math.max(0,MAX_PER_DAY-s.dailyUsed),source:DETROIT_GIS,mapVersion:finalOverlay?.version??0,
    attempted:result.attempted,processed:result.published+result.needsReview,verified:result.verified,

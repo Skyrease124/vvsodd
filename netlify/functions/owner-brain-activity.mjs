@@ -8,10 +8,10 @@ async function handler(req){
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user?.owner)return respond(user?403:401,{ok:false,error:'Owner access required'});
  try{
-  const [worker,history,publication,control,photon,geo,automatic]=await Promise.all([
+  const [[worker,history,publication,control,photon,geo,automatic,overlay],quota]=await Promise.all([Promise.all([
    'owner-brain-wayne-worker-v1','brain-map-history-v1','brain-map-publication-status-v1',
    'owner-brain-scanner-v1','owner-brain-photon-status-v1','owner-brain-geoapify-status-v1',
-   'owner-brain-automatic-status-v1'].map(k=>auth.kvGet(k)));
+   'owner-brain-automatic-status-v1','brain-map-county-v1-MI-wayne'].map(k=>auth.kvGet(k))),auth.readWayneGisQuota()]);
   const events=[];
   const research=auth.isBrainPreview()?await auth.kvGet('brain-reconciliation-research-v1-CO-larimer'):null;
   const researchIds=new Set();
@@ -26,9 +26,13 @@ async function handler(req){
   }
   // Publication history is the authoritative receipt. Never claim an AI model
   // performed the work when the record identifies only official GIS.
-  for(const [i,h] of (history?.entries||[]).slice(0,100).entries()){
+  const publicationIds=new Set();
+  for(const h of (history?.entries||[]).slice(0,100)){
    const at=date(h.at);if(!at)continue;
-   events.push({id:'pub-'+clean(h.dataset)+'-'+clean(h.recordId||h.parcelId)+'-'+at,at,agent:'Mapping',from:'GIS Publisher',to:'Mapping',type:h.action==='published'?'published':'publication',
+   const id='pub-'+clean(h.dataset)+'-'+clean(h.recordId||h.parcelId)+'-'+at;
+   if(publicationIds.has(id))continue;
+   publicationIds.add(id);
+   events.push({id,at,agent:'Mapping',from:'GIS Publisher',to:'Mapping',type:h.action==='published'?'published':'publication',
     message:(h.action==='published'?'Verified polygon published':'Map event')+' · '+clean(h.dataset)+' · parcel '+clean(h.parcelId),
     parcelId:clean(h.parcelId),county:clean(h.dataset),status:h.action==='published'?'success':'info'});
   }
@@ -71,25 +75,32 @@ async function handler(req){
   const running=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
   const cooling=!!retry?.nextAt&&Date.parse(retry.nextAt)>now&&!retry.exhausted;
   const state=control?.status==='paused'?'paused':
-   running?'processing':Date.parse(worker?.sourcePause?.nextAt)>now?'source_paused':cooling||worker?.state==='retry_wait'?'retrying':
+   running?'processing':Date.parse(worker?.sourcePause?.nextAt)>now?'source_paused':cooling?'retrying':
    retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?'attention':
-   worker?.state==='source_scanned'?'complete':'idle';
+   worker?.state==='source_scanned'?'complete':!quota.active||quota.count>=30?'quota_wait':'idle';
+  const dailyUsed=quota.active?quota.count:null;
+  const remaining=dailyUsed===null?null:Math.max(0,30-dailyUsed);
+  const pendingReview=Object.values(worker?.reviewQueue||{}).filter(entry=>!entry.resolvedAt&&overlay?.records?.[entry.recordId]?.verifiedGeometry!==true).length;
+  const progress=worker?.progress;
+  const verifiedPolygons=Object.values(overlay?.records||{}).filter(row=>row?.verifiedGeometry===true&&!row.publicationPending&&Array.isArray(row.g)&&row.g.length).length;
   const health={state,detail:state==='paused'?'County automation paused':
     state==='processing'?'Official GIS batch running':
     state==='source_paused'?'Official GIS source paused until '+worker.sourcePause.nextAt:
     state==='retrying'?'Waiting to retry parcel '+clean(retry?.parcelId):
     state==='attention'?clean(retry?.lastError||worker?.lastError||'Worker needs review'):
+    state==='quota_wait'?'Waiting for shared GIS budget':
     state==='complete'?'Available source records scanned':'Waiting for next batch',
     retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
     retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
     failedStage:clean(retry?.failedStage||''),lastGisTrace:(retry?.gisTrace||[]).slice(0,5),
-    lastCompleted:date(worker?.lastCompleted),dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30};
+    lastCompleted:date(worker?.lastCompleted),dailyUsed,remaining,dailyLimit:30};
   return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',health,
    capturedAt:new Date().toISOString(),county:'Wayne, Michigan',
-   summary:{cursor:Number(worker?.cursor||0),runs:Number(worker?.runs||0),verified:Number(worker?.verified||0),published:Number(worker?.published||0),
-    needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30,
+   summary:{verifiedPolygons,processed:progress?progress.total-progress.pending:null,skipped:progress?.skipped??null,pendingReview,
+    verifiedCoverage:progress?.verifiedPercent??null,processingCompletion:progress?.processingPercent??null,cursor:Number(worker?.cursor||0),runs:Number(worker?.runs||0),verified:Number(worker?.verified||0),published:Number(worker?.published||0),
+    needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed,remaining,dailyLimit:30,
     state:clean(worker?.state||'not_started'),paused:control?.status==='paused',
-    lastCompleted:date(worker?.lastCompleted)},
+    lastSuccessfulBatch:date(worker?.lastSuccessfulBatch),lastCompleted:date(worker?.lastCompleted)},
    agents:{'Official GIS':automatic?.state||worker?.state||'not_started',Photon:photon?.state||'not_started',Geoapify:geo?.state||'not_started',
     Mapping:publication?.state||'not_started',Gemini:'no_recorded_activity',OpenAI:'no_recorded_activity',Groq:'no_recorded_activity',NVIDIA:'orchestration_display'},
    events:events.slice(0,90)});
