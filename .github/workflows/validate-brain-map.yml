@@ -79,3 +79,4 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-maptiler.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-connectors.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-reconciliation-research.test.mjs
+      - run: node kinvest-liens/tests/brain-map-universal.test.mjs

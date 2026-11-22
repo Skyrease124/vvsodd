@@ -1,5 +1,7 @@
 // Private read-only event feed derived solely from persisted agent state.
 import * as auth from '../lib/brain-auth.mjs';
+import {countyOperation,operationCountyIds} from '../lib/brain-gis-universal.mjs';
+import {countyCheckpointKey} from '../lib/brain-gis-county-worker.mjs';
 const respond=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const clean=s=>String(s??'').slice(0,160);
 const date=s=>{const t=Date.parse(s||'');return Number.isFinite(t)?new Date(t).toISOString():null};
@@ -23,6 +25,22 @@ async function handler(req){
     type:'parcel_research',message:'Larimer research · '+clean(entry.sourceId)+' · '+entry.outcome+(Number.isInteger(entry.httpStatus)?' · HTTP '+entry.httpStatus:'')+
     (entry.outcome==='metadata'?' · Metadata saved · Owner review required':entry.outcome==='conflict'?' · Conflicting records · Owner review required':''),
     county:'CO-larimer',status:entry.outcome==='document'?'success':entry.outcome==='unavailable'?'error':'info'});
+  }
+  if(auth.isBrainPreview()){
+   const ids=operationCountyIds().filter(id=>countyOperation(id).mode!=='existing-worker');
+   const operations=await Promise.all(ids.map(id=>auth.kvGet(countyCheckpointKey(id))));
+   for(const [index,checkpoint] of operations.entries()){
+    const county=ids[index];
+    for(const event of (checkpoint?.events||[]).slice(-25)){
+     const at=date(event.at);
+     if(!at||!['evidence_saved','skipped','source_paused','quota_wait'].includes(event.status))continue;
+     events.push({id:'county-operation-'+county+'-'+(event.id??[at,event.parcelId,event.status].join('-')),
+      at,agent:'County connectors',from:'Official source',to:'NVIDIA',type:'county_research',
+      county,parcelId:clean(event.parcelId),status:event.status==='evidence_saved'?'info':'warning',
+      message:county+' · '+event.status.replaceAll('_',' ')+(event.parcelId?' · '+clean(event.parcelId):'')+
+       (event.reason?' · '+clean(event.reason):'')});
+    }
+   }
   }
   // Publication history is the authoritative receipt. Never claim an AI model
   // performed the work when the record identifies only official GIS.

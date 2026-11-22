@@ -10,6 +10,9 @@ const api = '/.netlify/functions/';
 const at = '2026-11-22T02:00:00Z';
 const long = 'Recorded descriptions need to wrap: ' + 'x'.repeat(450);
 const county = {id:'CO-larimer',state:'CO',county:'Larimer',status:'Testing',source:'https://records.example/'+long};
+const wayne={id:'MI-wayne',state:'MI',county:'Wayne',status:'Verified',source:'https://gis.example/wayne',
+ operation:{mode:'existing-worker'}};
+county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
  paused:false,status:'Document Found',recordedDocument:null,relationship:null,evidenceComplete:false,
@@ -54,7 +57,12 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base)return route.fulfill({contentType:'text/html',body:await fs.readFile(root+'index.html','utf8')});
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
-    if(path===api+'owner-brain-connectors')return route.fulfill({json:url.search?{county,coverage}:{counties:[county]}});
+    if(path===api+'owner-brain-connectors'){
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:county;
+     return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
+      progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
+    }
     if(path===api+'owner-brain-larimer-trial'&&request.method()==='GET')return route.fulfill({json:trial});
     if(path===api+'owner-brain-reconciliation-research'){
      if(request.method()==='POST'){
@@ -72,6 +80,16 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     return route.fulfill({status:404});
    });
    await page.goto(origin+'/owner/brain/connectors/');
+   const state=page.locator('#county-state'),mode=page.locator('#county-mode');
+   await state.selectOption('MI');
+   await page.getByRole('heading',{name:'MI · Wayne'}).waitFor();
+   await mode.selectOption('research-only');
+   await page.getByText('No counties match these filters.').waitFor();
+   await state.selectOption('CO');
+   const countyName=page.locator('#county-name');
+   await countyName.fill('larimer');
+   await countyName.press('Tab');
+   await page.getByRole('heading',{name:'CO · Larimer'}).waitFor();
    const run=page.getByRole('button',{name:'Run Next Research Source'});
    await run.waitFor();
    assert.equal(await run.isEnabled(),true);

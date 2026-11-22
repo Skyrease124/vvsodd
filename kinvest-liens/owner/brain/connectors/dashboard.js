@@ -23,7 +23,7 @@ const read = async (url,options={}) => {
   if(!response.ok||!data||typeof data!=='object')throw Error(data?.error||'County data unavailable');
   return data;
 };
-function render(county,coverage){
+function render(county,coverage,operation){
   const list=document.createElement('dl');
   function add(name,value){
     const term=document.createElement('dt'), description=document.createElement('dd');
@@ -49,6 +49,21 @@ function render(county,coverage){
   add('Verified Brain corrections',coverage.verified);
   add('Remaining unmapped records',coverage.remaining);
   add('Correction completion',coverage.completion===null?'No unmapped records in the original dataset':coverage.completion.toFixed(2)+'% of original unmapped records');
+  if(operation){
+    add('Processing status',operation.mode==='existing-worker'?(operation.state||'Not started').replaceAll('_',' '):'Research only · disabled');
+    const progress=operation.progress;
+    add('Eligible and processed',progress?(progress.total-progress.pending)+' of '+progress.total:'No saved operation totals');
+    add('Processing completion',progress?progress.processingPercent+'%':'Unavailable');
+    add('Verified coverage',progress?progress.verified+' · '+progress.verifiedPercent+'%':'Unavailable');
+    add('Skipped records awaiting review',operation.pendingReview??'Unavailable');
+    add('Last successful processing',operation.lastSuccessfulAt?new Date(operation.lastSuccessfulAt).toLocaleString():'Unrecorded');
+    if(operation.quota)add('Shared GIS requests remaining',operation.quota.used===null?
+      'Unavailable'+(operation.quota.resumeAt?' · Reopens '+new Date(operation.quota.resumeAt).toLocaleString():''):
+      Math.max(0,operation.quota.limit-operation.quota.used)+' of '+operation.quota.limit);
+    if(operation.sourceHealth?.reason)add('Source health',operation.sourceHealth.reason+
+      (operation.sourceHealth.nextAt?' · Recheck '+new Date(operation.sourceHealth.nextAt).toLocaleString():''));
+    if(operation.publicationPending)add('Recovery','Saved publication recovery required');
+  }
   const cards=document.createElement('div');
   cards.className='metrics';
   for(const [label,value] of [['Available',coverage.available],['Originally mapped',coverage.mapped],
@@ -76,9 +91,10 @@ async function showCounty(){
   statusLine.textContent='Checking county coverage…';
   details.replaceChildren();
   try{
-    const {county,coverage}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
+    if(!picker.value){statusLine.textContent='No counties match these filters.';return;}
+    const {county,coverage,operation}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
-    render(county,coverage);
+    render(county,coverage,operation);
     if(county.id==='CO-larimer'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showTrial(request);
     if(request===selection)statusLine.textContent='';
   }catch(error){if(request===selection)statusLine.textContent=error.message;}
@@ -87,12 +103,27 @@ picker.addEventListener('change',showCounty);
 (async()=>{
   try{
     const {counties}=await read(api);
-    for(const county of counties.sort((a,b)=>(a.state+a.county).localeCompare(b.state+b.county))){
-      picker.add(new Option(county.state+' · '+county.county+' · '+county.status,county.id));
+    counties.sort((a,b)=>(a.state+a.county).localeCompare(b.state+b.county));
+    const state=document.getElementById('county-state'),name=document.getElementById('county-name'),mode=document.getElementById('county-mode');
+    for(const code of [...new Set(counties.map(county=>county.state))].sort())state.add(new Option(code,code));
+    function updatePicker(preferred=picker.value){
+      const query=name.value.trim().toLowerCase();
+      picker.replaceChildren();
+      for(const county of counties){
+        if(state.value&&state.value!==county.state||
+           query&&!county.county.toLowerCase().includes(query)||
+           mode.value&&mode.value!==(county.operation?.mode||'unconfigured'))continue;
+        picker.add(new Option(county.state+' · '+county.county+' · '+county.status,county.id));
+      }
+      if([...picker.options].some(option=>option.value===preferred))picker.value=preferred;
+      picker.disabled=!picker.options.length;
+      return showCounty();
     }
-    if(counties.some(county=>county.id==='CO-larimer'))picker.value='CO-larimer';
+    state.addEventListener('change',()=>updatePicker());
+    name.addEventListener('change',()=>updatePicker());
+    mode.addEventListener('change',()=>updatePicker());
     document.getElementById('dashboard').hidden=false;
-    await showCounty();
+    await updatePicker('CO-larimer');
   }catch(error){statusLine.textContent=error.message;}
 })();
 

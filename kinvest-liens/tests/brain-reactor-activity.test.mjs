@@ -20,7 +20,12 @@ async function create(owner,research=null,quota={active:true,count:21}){
   this.setExport('readWayneGisQuota',async()=>quota);
  },{context});
  const mod=new vm.SourceTextModule(source,{context});
- await mod.link(()=>auth);await mod.evaluate();
+ const operations=new vm.SyntheticModule(['countyOperation','operationCountyIds','countyCheckpointKey'],function(){
+  this.setExport('countyOperation',()=>({mode:'research-only'}));
+  this.setExport('operationCountyIds',()=>['CO-larimer']);
+  this.setExport('countyCheckpointKey',id=>'brain-gis-operations-v1-'+id);
+ },{context});
+ await mod.link(specifier=>specifier.includes('brain-auth')?auth:operations);await mod.evaluate();
  return mod.namespace.default;
 }
 test('owner alone reads actual saved worker and publication events',async()=>{

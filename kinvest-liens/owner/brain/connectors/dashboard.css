@@ -36,3 +36,8 @@ progress{width:100%;height:.65rem;accent-color:var(--accent)}
 section>details{background:#0f202b;margin-block:.65rem;padding:.7rem .85rem}
 section>details>ul,section>details>ol{margin-block:.45rem}
 @media(max-width:30rem){.research-controls{display:grid;grid-template-columns:minmax(0,1fr)}}
+
+.county-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;margin-bottom:12px}
+.county-filters label{min-width:0}
+.county-filters input,.county-filters select{box-sizing:border-box;width:100%;max-width:100%;min-height:44px}
+.county-filters input{background:#10242f;color:inherit;border:1px solid #527278;border-radius:8px;padding:9px}

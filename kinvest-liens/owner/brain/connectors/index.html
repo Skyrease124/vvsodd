@@ -20,6 +20,15 @@
  </div>
  <p id="status" role="status">Checking owner access…</p>
  <section id="dashboard" hidden>
+  <h2>Nationwide County Operations</h2>
+  <div class="county-filters">
+   <label>State <select id="county-state"><option value="">All states</option></select></label>
+   <label>County name <input id="county-name" type="search" placeholder="Filter counties"></label>
+   <label>Processing status <select id="county-mode">
+    <option value="">All statuses</option><option value="existing-worker">Existing worker</option>
+    <option value="research-only">Research only</option><option value="unconfigured">Unconfigured</option>
+   </select></label>
+  </div>
   <label for="county">County dataset</label>
   <select id="county"></select>
   <div id="details"></div>
