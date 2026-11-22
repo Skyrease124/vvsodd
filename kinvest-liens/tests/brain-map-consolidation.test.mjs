@@ -148,16 +148,16 @@ test('release queue pause controls never access production store on preview',()=
  assert.match(queue,/if\(action==='pause'\|\|action==='resume'\)/);
 });
 
-test('Wayne test batch is explicit preview-only and reports real GIS results',()=>{
+test('Wayne pilot is explicit preview-only and reports real GIS results',()=>{
  const page=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
  const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
  assert.match(page,/id="wayneTestBatch"/);
  assert.match(page,/testButton.hidden=!d.preview/);
- assert.match(page,/Run one Wayne County official GIS test batch/);
- assert.match(page,/action:'run-wayne-batch',confirmed:true/);
+ assert.match(page,/Run Live Wayne Pilot/);
+ assert.match(page,/action:'run-live-wayne-pilot',confirmed:true/);
  assert.match(page,/owner-brain-wayne-run/);
- assert.match(page,/d\.dailyUsed/);
- assert.match(page,/d\.published/);
+ assert.match(page,/p.remaining/);
+ assert.match(page,/p.published/);
  assert.match(worker,/context\?\.deploy\?\.context!=='deploy-preview'/);
  assert.match(worker,/const user=await auth\.userFromCookie/);
  assert.match(worker,/if\(!user\?\.owner\)/);
@@ -171,7 +171,7 @@ test('publisher cannot be invoked directly and counts each official GIS lookup a
  assert.match(publisher,/await context\.chargeWayneGisRequest\(\);\s*result=await json\(url,1000000,'error'\)/);
  assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
  assert.match(worker,/if\(quota\.active&&s\.dailyUsed>=MAX_PER_DAY\)throw Object\.assign\(Error\('Daily GIS request limit reached'\)/);
- assert.match(worker,/await saveProgress\(\{\.\.\.s,cursor:review\?s\.cursor:i\}\);\s*s\.dailyUsed=await auth\.reserveWayneGisRequest\(\)/);
+ assert.match(worker,/await saveProgress\(\{\.\.\.s,cursor:review\?s\.cursor:recordIndex\}\);\s*s\.dailyUsed=await auth\.reserveWayneGisRequest\(\)/);
 });
 
 test('concurrent re-arm requests cannot both write the same worker snapshot',async()=>{

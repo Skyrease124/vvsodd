@@ -29,6 +29,8 @@ async function handler(req,context){
   previewRequiresOpenDashboard:true,websiteControlledSchedule:true,
   worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),verifiedOverlayCount,publicationCountMeaning:'worker total excludes earlier pilot and other confirmed overlay entries',state:String(worker?.state||'not_started'),
    publicationPending:Object.values(overlay?.records||{}).some(r=>r?.publicationPending===true),
+   lastStarted:worker?.lastStarted||null,lockedUntil:worker?.lockedUntil||null,
+   mapVersion:overlay?.version??0,lastPilot:worker?.lastPilot||null,
    progress:worker?.progress||null,sourcePause:worker?.sourcePause||null,
    reviewQueue:Object.entries(worker?.reviewQueue||{})
     .filter(([,entry])=>!entry.resolvedAt&&overlay?.records?.[entry.recordId]?.verifiedGeometry!==true)

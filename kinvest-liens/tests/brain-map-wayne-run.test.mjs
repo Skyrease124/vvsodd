@@ -369,3 +369,66 @@ test('official-response fixtures survive an interruption between guarded publica
  await restarted.invoke();
  assert.equal(restarted.reads(),done);
 });
+
+const pilotRequest=(cursor=0,lastStarted=null)=>({action:'run-live-wayne-pilot',confirmed:true,cursor,lastStarted});
+const runPilot=(h,body=pilotRequest())=>h.invoke('POST',undefined,'deploy-preview',body);
+test('live pilot includes independent publisher in its three-request ceiling',async()=>{
+ const h=await setup({liveShapeFixture:true,cursor:3});
+ const response=await runPilot(h,pilotRequest(3));
+ assert.equal(response.status,200);
+ const {pilot}=await response.json();
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.published,1);
+ assert.equal(pilot.cursor,4);
+ assert.equal(pilot.mapVersion,1);
+ assert.equal(pilot.remaining,27);
+ assert.deepEqual(h.upstreamIds,['01004444','01004444','01004444']);
+ assert.equal((await runPilot(h,pilotRequest(3))).status,409);
+ assert.equal(h.reads(),3);
+});
+
+test('pilot continues past skipped parcels and retains the cursor when the request ceiling interrupts a lookup',async()=>{
+ const h=await setup({liveShapeFixture:true});
+ const response=await runPilot(h);
+ const {pilot}=await response.json();
+ assert.equal(pilot.state,'pilot_limit');
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.skipped,2);
+ assert.equal(pilot.cursor,2);
+ assert.equal(pilot.published,0);
+ assert.equal(h.reads(),3);
+});
+
+test('live pilot refuses cutover, low budget, recovery, pause, and stale or unconfirmed requests',async()=>{
+ for(const [options,expected,body] of [
+  [{cutover:true},429], [{dailyUsed:28},429], [{pending:true},409], [{paused:true},409],
+  [{},400,{...pilotRequest(),confirmed:false}], [{},409,pilotRequest(1)], [{owner:false},401]
+ ]){
+  const h=await setup(options);
+  assert.equal((await runPilot(h,body)).status,expected);
+  assert.equal(h.reads(),0);
+ }
+ const h=await setup({failedGIS:true});
+ await h.invoke();
+ const s=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal((await runPilot(h,pilotRequest(s.cursor,s.lastStarted))).status,409);
+ assert.equal(h.reads(),1);
+});
+
+test('live pilot stops before the publisher when parcel checks use all three slots',async()=>{
+ const h=await setup({missingFirst:true,chargePublisher:true});
+ const {pilot}=await (await runPilot(h)).json();
+ assert.equal(pilot.state,'pilot_limit');
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.cursor,1);
+ assert.equal(pilot.published,0);
+ assert.equal(h.reads(),3);
+ assert.equal(h.publications(),0);
+});
+
+test('concurrent pilot confirmations share the worker lease',async()=>{
+ const h=await setup({liveShapeFixture:true,cursor:3});
+ const attempts=await Promise.all([runPilot(h,pilotRequest(3)),runPilot(h,pilotRequest(3))]);
+ assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);
+ assert.ok(h.reads()<=3);
+});

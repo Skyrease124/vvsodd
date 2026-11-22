@@ -102,7 +102,7 @@ async function handler(req,context){
   const heldRecords=context.wayneHeldRecords;
   const eligible=approved.filter(a=>!saved.records[a.recordId]&&!heldRecords?.has(a.recordId));
   const current=eligible.find(a=>a.recordId===context.wayneCurrentRecord);
-  const candidates=current?[current,...eligible.filter(a=>a!==current)]:eligible;
+  const candidates=context.wayneCurrentOnly?(current?[current]:[]):current?[current,...eligible.filter(a=>a!==current)]:eligible;
   for(const a of candidates.slice(0,5)){
    const reject=reason=>{skipped++;context.wayneRecordRejected?.(a.recordId,reason);};
    if(saved.records[a.recordId])continue;

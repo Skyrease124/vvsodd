@@ -10,6 +10,7 @@ const STORE='owner-brain-wayne-worker-v1', OVERLAY='brain-map-county-v1-MI-wayne
 const CONTROL='owner-brain-scanner-v1', APPROVALS='owner-brain-approvals-v1';
 const MAX_ATTEMPTS=3, MAX_PER_DAY=30, LEASE_MS=90000;
 const RETRY_DELAYS_MS=[60000,180000];
+const PILOT_REQUEST_LIMIT=3;
 const SOURCE_COOLDOWN_MS=15*60000;
 const response=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const today=()=>new Date().toISOString().slice(0,10);
@@ -29,7 +30,7 @@ function state(value){
  {cursor:0,day:today(),dailyUsed:0,runs:0,verified:0,published:0,needsReview:0,failures:0,recent:[]};
 }
 async function handler(req,context){
- let reviewRequest=null;
+ let reviewRequest=null,pilot=null;
  const scheduled=context?.internalScheduled===true;
  if(scheduled){
   if(context?.deploy?.context!=='production')return response(404,{ok:false,error:'Scheduled execution requires published production deployment'});
@@ -47,8 +48,13 @@ async function handler(req,context){
  if(!scheduled&&req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
  if(!scheduled){
   let body;try{const raw=await req.text();if(raw.length>500)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
-  if(body?.confirmed!==true||!['run-wayne-batch','retry-skipped-parcel'].includes(body.action))
+  if(body?.confirmed!==true||!['run-wayne-batch','retry-skipped-parcel','run-live-wayne-pilot'].includes(body.action))
    return response(400,{ok:false,error:'Explicit confirmation required'});
+  if(body.action==='run-live-wayne-pilot'){
+   if(!Number.isSafeInteger(body.cursor)||body.cursor<0||!(body.lastStarted===null||typeof body.lastStarted==='string'))
+    return response(400,{ok:false,error:'Refresh the saved pilot checkpoint before confirming'});
+   pilot=body;
+  }
   if(body.action==='retry-skipped-parcel'){
    if(!Number.isSafeInteger(body.index)||body.index<0||typeof body.parcelId!=='string'||typeof body.checkedAt!=='string')
     return response(400,{ok:false,error:'Select an exact saved review entry'});
@@ -65,6 +71,14 @@ async function handler(req,context){
  if(quota.active)s.dailyUsed=quota.count;
  const existingOverlay=await auth.kvGet(OVERLAY)||{records:{}};
  const recoveryPending=Object.values(existingOverlay.records||{}).some(record=>record?.publicationPending===true);
+ if(pilot){
+  if(pilot.cursor!==s.cursor||pilot.lastStarted!==(s.lastStarted||null))
+   return response(409,{ok:false,error:'Pilot checkpoint changed; refresh before confirming'});
+  if(recoveryPending||s.retry?.exhausted||[s.sourcePause?.nextAt,s.retry?.nextAt].some(at=>Date.parse(at)>Date.now()))
+   return response(409,{ok:false,error:'Resolve the publication or retry hold before the live pilot'});
+  if(!quota.active||MAX_PER_DAY-quota.count<PILOT_REQUEST_LIMIT)
+   return response(429,{ok:false,error:'The live pilot needs three available shared GIS requests'});
+ }
  if(!recoveryPending&&quota.active&&s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
  const review=reviewRequest&&s.reviewQueue?.[reviewRequest.index];
  if(reviewRequest&&(!review||review.resolvedAt||review.parcelId!==reviewRequest.parcelId||review.checkedAt!==reviewRequest.checkedAt))
@@ -84,6 +98,7 @@ async function handler(req,context){
   version=await auth.kvPutVersioned(STORE,value,version);
   if(!version)throw Error('Batch lost its lease');
  }
+ let pilotRequests=0;
  const result={attempted:0,verified:0,published:0,needsReview:0,failures:0,rows:[]};
  try{
   if(recoveryPending){
@@ -142,11 +157,16 @@ async function handler(req,context){
   // Diagnostics record the stage, duration and outcome, never request URLs or private keys.
   // A request is counted before dispatch; its outcome is preserved with the batch.
   let trace=[];
-  async function officialGet(url,recordIndex,timeout=6500,stage='direct_polygon'){
+  async function charge(recordIndex,stage){
+   if(pilot&&pilotRequests>=PILOT_REQUEST_LIMIT)throw Object.assign(Error('Live pilot GIS request limit reached'),{code:'QUOTA',quotaState:'pilot_limit',stage});
    if(quota.active&&s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA',stage});
    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED',stage});
    await saveProgress({...s,cursor:review?s.cursor:recordIndex});
    s.dailyUsed=await auth.reserveWayneGisRequest();
+   if(pilot)pilotRequests++;
+  }
+  async function officialGet(url,recordIndex,timeout=6500,stage='direct_polygon'){
+   await charge(recordIndex,stage);
    const started=Date.now();
    try{
     const data=await get(url,1000000,timeout,'error');
@@ -177,7 +197,7 @@ async function handler(req,context){
     throw Object.assign(Error('Official object ID lookup mismatch'),{code:'AMBIGUOUS'});
    return official;
   }
-  while(i<rows.length&&result.attempted<maxThisRun&&(!quota.active||s.dailyUsed<MAX_PER_DAY)&&(!review||i===reviewRequest.index)){
+  while(i<rows.length&&result.attempted<maxThisRun&&(!quota.active||s.dailyUsed<MAX_PER_DAY)&&(!review||i===reviewRequest.index)&&(!pilot||pilotRequests<PILOT_REQUEST_LIMIT)){
    const controlNow=await auth.kvGet(CONTROL);
    if(controlNow?.status==='paused'){s.state='paused';break;}
    const r=rows[i];
@@ -273,16 +293,15 @@ async function handler(req,context){
    }
    // Existing guarded publisher independently checks the official polygon and
    // the shared pause switch; the saved overlay is authoritative for success.
-   let publicationRejection,publicationUnavailable=false;
+   let publicationRejection,publicationUnavailable=false,publicationHold;
    const wayneHeldRecords=new Set(Object.values(s.reviewQueue).filter(entry=>!entry.resolvedAt&&entry.recordId!==r.i).map(entry=>entry.recordId));
    await publish(req,{...context,wayneCurrentRecord:r.i,wayneHeldRecords,
     waynePublicationUnavailable:()=>{publicationUnavailable=true;},
     wayneRecordRejected:(recordId,reason)=>{if(recordId===r.i)publicationRejection=reason;},
+    wayneCurrentOnly:!!pilot,
     waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
-    if(quota.active&&s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
-    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
-    await saveProgress({...s,cursor:review?s.cursor:i});
-    s.dailyUsed=await auth.reserveWayneGisRequest();
+     try{await charge(i,'independent_publication_check');}
+     catch(error){publicationHold=error;throw error;}
    }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const saved=published.records?.[r.i];
@@ -297,7 +316,7 @@ async function handler(req,context){
     if(review)s.reviewQueue[i]={...review,resolvedAt:now};
    }
    else {
-    s.state='publish_pending';
+    s.state=pilot&&publicationHold?(publicationHold.quotaState||(publicationHold.code==='PAUSED'?'paused':'quota_reached')):'publish_pending';
     if(publicationUnavailable&&!saved?.publicationPending){
      s.sourcePause={nextAt:new Date(Date.now()+SOURCE_COOLDOWN_MS).toISOString(),reason:'Independent GIS publication check unavailable'};
      s.state='source_paused';
@@ -308,7 +327,8 @@ async function handler(req,context){
    await checkpoint();
   }
   if(!review)s.cursor=i;
-  const records=(await auth.kvGet(OVERLAY))?.records||{};
+  const finalOverlay=await auth.kvGet(OVERLAY);
+  const records=finalOverlay?.records||{};
   let total=0,verifiedCount=0,skipped=0,failed=0,legacyProcessed=0;
   rows.forEach((record,index)=>{
    if(!valid(record))return;
@@ -331,9 +351,14 @@ async function handler(req,context){
   // The prior implementation restamped historic results with lastCompleted.
   const oldRecent=(s.recent||[]).filter(x=>x.checkedAt);
   s.recent=[...result.rows,...oldRecent].slice(0,40);
-  if(s.state==='running')s.state=s.cursor>=rows.length?'source_scanned':'idle';
+  if(s.state==='running')s.state=s.cursor>=rows.length?'source_scanned':pilot&&pilotRequests===PILOT_REQUEST_LIMIT?'pilot_limit':'idle';
   s.lastCompleted=new Date().toISOString();
+  if(pilot)s.lastPilot={at:s.lastCompleted,state:s.state,cursor:s.cursor,requests:pilotRequests,requestLimit:PILOT_REQUEST_LIMIT,
+   remaining:Math.max(0,MAX_PER_DAY-s.dailyUsed),source:DETROIT_GIS,mapVersion:finalOverlay?.version??0,
+   attempted:result.attempted,processed:result.published+result.needsReview,verified:result.verified,
+   skipped:result.needsReview,published:result.published,rows:result.rows};
   return response(200,{ok:true,previewOnly:true,cursor:s.cursor,sourceRecords:rows.length,
+   ...(pilot?{pilot:s.lastPilot}:{}),
    dailyUsed:quota.active?s.dailyUsed:null,legacyDailyUsed:quota.active?undefined:s.dailyUsed,quotaActive:quota.active,dailyLimit:MAX_PER_DAY,state:s.state,retry:activeRetry()||null,sourcePause:s.sourcePause,progress:s.progress,...result,
    message:scheduled?'Scheduled bounded official GIS batch; no paid AI calls':'Owner-triggered preview batch; no paid AI calls or production writes'});
  }catch(e){

@@ -52,6 +52,14 @@ async function handler(req){
     parcelId:clean(r.parcelId),county:'MI-wayne',trace,failedStage:stage,
     status:r.status==='published'?'success':['needs_review','skipped'].includes(r.status)?'warning':r.status==='retry_later'?'error':'info'});
   }
+  const pilot=worker?.lastPilot;
+  const pilotAt=date(pilot?.at);
+  if(pilotAt)events.push({id:'wayne-pilot-'+pilotAt,at:pilotAt,agent:'Official GIS',from:'Official GIS',to:'NVIDIA',
+   type:'run_complete',county:'MI-wayne',status:pilot.state==='source_paused'||pilot.state==='retry_wait'?'warning':'info',
+   message:'Live Wayne pilot · '+clean(pilot.state).replaceAll('_',' ')+' · Cursor '+pilot.cursor+
+    ' · Attempted '+pilot.attempted+' · Processed '+pilot.processed+' · Verified '+pilot.verified+' · Skipped '+pilot.skipped+
+    ' · GIS requests '+pilot.requests+'/'+pilot.requestLimit+' · Shared remaining '+pilot.remaining+' · Map version '+pilot.mapVersion,
+   source:pilot.source});
   const sources=[['Photon',photon],['Geoapify',geo],['GIS Agent',automatic],['Publisher',publication]];
   for(const [name,s] of sources){
    const at=date(s?.lastCompleted);if(!at)continue;

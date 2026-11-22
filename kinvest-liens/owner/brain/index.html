@@ -15,7 +15,7 @@
  <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
  <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
  </div>
- <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Wayne Test Batch</button>
+ <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Live Wayne Pilot</button>
  <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
  <p id="unattendedRefreshStatus" role="status" class="small"></p>
@@ -152,6 +152,25 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
 </script><script src="preview-test.js" defer></script><script src="/owner/pipeline.js" defer></script><script>
 (async()=>{
  const summary=document.getElementById('unattendedSummary'),checks=document.getElementById('unattendedChecks');
+ let pilotRunning=false;
+ function showPilot(p){
+  const out=document.getElementById('wayneBatchResult');
+  out.hidden=false;
+  out.textContent='Pilot '+p.state.replaceAll('_',' ')+' · '+p.at+' · Cursor '+p.cursor+
+   ' · Attempted '+p.attempted+' · Processed '+p.processed+' · Verified '+p.verified+' · Skipped '+p.skipped+
+   ' · Published '+p.published+' · Map version '+p.mapVersion+' · GIS requests '+p.requests+'/'+p.requestLimit+
+   ' · Shared requests remaining '+p.remaining;
+  const source=document.createElement('a');
+  source.href=p.source;
+  source.textContent='Official Detroit GIS';
+  out.append(document.createTextNode(' · '),source);
+  for(const row of p.rows||[]){
+   const detail=document.createElement('span');
+   detail.style.display='block';
+   detail.textContent=row.parcelId+' · '+row.status.replaceAll('_',' ')+' · '+row.checkedAt+(row.reason?' · '+row.reason:'');
+   out.append(detail);
+  }
+ }
  async function loadAutonomy(){
   try{
    const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
@@ -210,15 +229,25 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    }
    const testButton=document.getElementById('wayneTestBatch');
    testButton.hidden=!d.preview;
-   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(sourceCooling||(d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit)||Date.parse(d.worker.quotaResumeAt)>Date.now()));
-   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':sourceCooling?'Official GIS source is cooling down':Date.parse(d.worker.quotaResumeAt)>Date.now()?'Shared GIS budget is waiting for UTC rollover':d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
+   const remaining=d.worker.quotaActive?Math.max(0,d.worker.dailyLimit-d.worker.dailyUsed):null;
+   const hold=d.worker.paused?'Resume preview automation before running':
+    d.worker.publicationPending?'Finish saved publication recovery before running':
+    d.worker.retryExhausted?'Review the exhausted retry before running':
+    sourceCooling||Date.parse(d.worker.retryNextAt)>Date.now()?'Wait for the saved GIS cooldown':
+    Date.parse(d.worker.lockedUntil)>Date.now()?'Another batch is in progress':
+    remaining===null||remaining<3?'Three available shared GIS requests are required':'';
+   testButton.disabled=pilotRunning||!!hold;
+   testButton.title=hold||'Run one preview pilot using at most three official GIS requests, including publication';
+   testButton.dataset.cursor=String(d.worker.cursor);
+   testButton.dataset.lastStarted=d.worker.lastStarted||'';
+   if(d.worker.lastPilot&&document.getElementById('wayneBatchResult').hidden)showPilot(d.worker.lastPilot);
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
-   checks.textContent='Wayne cursor '+d.worker.cursor+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
+   checks.textContent='Wayne cursor '+d.worker.cursor+' · Map version '+d.worker.mapVersion+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
     (d.worker.publicationPending?' · Saved publication needs recovery':'')+
     (d.worker.quotaActive===false?(d.worker.quotaResumeAt?' · Shared GIS budget opens '+new Date(d.worker.quotaResumeAt).toISOString().replace('T',' ').slice(0,16)+' UTC':' · First batch request initializes the shared GIS budget. It opens the following UTC day.'):'')+
-    (d.worker.quotaActive?' · Shared GIS requests '+d.worker.dailyUsed+'/'+d.worker.dailyLimit:'')+
+    (d.worker.quotaActive?' · Shared GIS requests remaining '+remaining+'/'+d.worker.dailyLimit:'')+
     ' · Other counties blocked until verified GIS connectors are configured';
    return true;
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;return false;}
@@ -240,25 +269,21 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  };
  document.getElementById('wayneTestBatch').onclick=async()=>{
   const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
-  if(!confirm('Run one Wayne County official GIS test batch (up to 3 parcels) in this isolated development preview? This uses free official GIS requests, may publish verified polygons to preview maps, and will not change production.'))return;
-  btn.disabled=true;out.hidden=false;out.textContent='Running official GIS verification in preview…';
+  if(!confirm('Run one live Detroit GIS pilot in this preview? Up to three official GIS requests, including the independent publisher, count against the shared daily quota. Verified polygons may publish to the preview maps.'))return;
+  pilotRunning=true;
+  btn.disabled=true;out.hidden=false;out.textContent='Running the live Wayne pilot…';
   try{
    const r=await fetch('/.netlify/functions/owner-brain-wayne-run',{
     method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:'run-wayne-batch',confirmed:true}),
+    body:JSON.stringify({action:'run-live-wayne-pilot',confirmed:true,cursor:Number(btn.dataset.cursor),
+     lastStarted:btn.dataset.lastStarted||null}),
     signal:AbortSignal.timeout(60000)
    });
    const d=await r.json();
-   if(!r.ok||!d.ok)throw Error(d.error||'Test batch unavailable');
-   out.textContent='Batch '+(d.state||'completed').replaceAll('_',' ')+' · Cursor '+(d.cursor??'?')+
-    ' · Attempted '+(d.attempted??0)+' · Verified '+(d.verified??0)+
-    ' · Published '+(d.published??0)+
-    (d.quotaActive===false?' · Shared GIS budget inactive'+(d.legacyDailyUsed==null?'':' · Historical worker counter '+d.legacyDailyUsed):
-     ' · GIS requests '+(d.dailyUsed??'?')+'/'+(d.dailyLimit??30))+
-    (d.retry?.nextAt?' · Next retry '+new Date(d.retry.nextAt).toLocaleTimeString():'')+
-    (d.rows?.[0]?.reason?' · '+d.rows[0].reason:'');
-  }catch(e){out.textContent='Test batch failed: '+e.message;}
-  finally{await loadAutonomy();btn.disabled=false;}
+   if(!r.ok||!d.pilot)throw Error(d.error||'Pilot did not start');
+   showPilot(d.pilot);
+  }catch(e){out.textContent='Pilot: '+e.message;}
+  finally{pilotRunning=false;await loadAutonomy();}
  };
  const readinessButton=document.getElementById('unattendedRefresh');
  const readinessFeedback=document.getElementById('unattendedRefreshStatus');
