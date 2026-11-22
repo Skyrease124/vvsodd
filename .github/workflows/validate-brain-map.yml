@@ -12,6 +12,7 @@ on:
       - 'netlify/functions/brain-wayne-scheduled.mjs'
       - 'netlify/functions/owner-brain-*.mjs'
       - 'netlify/lib/brain-auth.mjs'
+      - 'netlify/lib/brain-gis-*.mjs'
       - 'netlify/lib/brain-county-sequence.mjs'
       - 'netlify/lib/brain-official-verification.mjs'
       - 'scripts/prepare-brain-preview.mjs'
@@ -33,6 +34,7 @@ on:
       - 'netlify/functions/brain-map-*.mjs'
       - 'netlify/functions/owner-brain-*.mjs'
       - 'netlify/lib/brain-auth.mjs'
+      - 'netlify/lib/brain-gis-*.mjs'
       - 'netlify/lib/brain-official-verification.mjs'
       - 'scripts/prepare-brain-preview.mjs'
       - 'netlify.toml'
@@ -69,3 +71,4 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-autonomous.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-source-pipeline.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-maptiler.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-connectors.test.mjs

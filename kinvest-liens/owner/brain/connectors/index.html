@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>County Connectors | PricePocketAsset</title>
+<style>
+:root{color-scheme:dark;font:16px/1.55 system-ui;background:#0b1724;color:#ecf5f4}
+body{max-width:54rem;margin:2rem auto;padding:0 1rem}a{color:#a2e7ce}h1{line-height:1.15}
+section{background:#142b31;border:1px solid #577477;border-radius:.8rem;padding:1.2rem;margin:1rem 0}
+select{font:inherit;max-width:100%;padding:.55rem;background:#122530;color:inherit;border:1px solid #89abaf;border-radius:.35rem}
+label,dt{font-weight:650}dd{margin:0 0 .65rem;overflow-wrap:anywhere}p{max-width:64ch}
+</style>
+<script src="./dashboard.js" defer></script>
+</head>
+<body>
+<a href="/owner/brain/">← AI Brain</a>
+<h1>County Connectors</h1>
+<p>Review official GIS sources and parcel coverage. Connector readiness and parcel completion are measured separately.</p>
+<p id="status" role="status">Checking owner access…</p>
+<section id="dashboard" hidden>
+<label for="county">County dataset</label>
+<select id="county"></select>
+<div id="details"></div>
+</section>
+</body>
+</html>
