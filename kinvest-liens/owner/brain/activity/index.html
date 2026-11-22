@@ -71,7 +71,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 <label>Agent <select id="eventAgent"><option value="">All agents</option></select></label>
 <label>Parcel <input id="eventParcel" type="search" placeholder="Parcel ID"></label>
 <button id="replayToggle" type="button" hidden>Play replay</button>
-</div><div class="activity-window"  id="activity" role="log" aria-live="off"><p class="empty">Loading recorded activity…</p></div></section>
+</div><div id="eventWindow" class="update" role="status">Showing recent recorded events only · historical archive not yet verified</div><div class="activity-window"  id="activity" role="log" aria-live="off"><p class="empty">Loading recorded activity…</p></div></section>
 <div class="foot">The reactor pathways are a visual representation, not evidence of calls to Gemini, OpenAI or Groq. Only recorded worker and publication events appear in this activity feed. New records refresh automatically while this page is visible.</div>
 </div></main>
 <script>
@@ -173,6 +173,10 @@ function playSignal(){
 }
 function render(d){
  recorded=[...new Map((d.events||[]).map(e=>[e.id,e])).values()].sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id));
+ const windowInfo=d.eventWindow||{};
+ const shown=Number.isInteger(windowInfo.returnedCount)?windowInfo.returnedCount:recorded.length;
+ const capped=windowInfo.truncated?' · Additional records omitted from this response':'';
+ text($('eventWindow'),'Showing '+shown+' recent saved events · Historical archive not yet verified'+capped);
  if(mode()==='live')signalFromEvents(recorded);
  document.body.classList.add('authorized');$('gate').hidden=true;active=true;
  const health=d.health||{state:'idle',detail:'Health details unavailable'};
@@ -285,6 +289,7 @@ async function refresh(){
    document.body.classList.remove('authorized');$('gate').hidden=false;active=false;
    text($('gate'),'Owner session expired. Sign in again to view recorded activity.');
    recorded=[];replay=[];replayShown=[];signalQueue=[];seenEvents.clear();lastEventPayload=null;
+   text($('eventWindow'),'Owner authorization required to inspect recorded events');
    $('activity').replaceChildren();$('ticker').replaceChildren();
   }
   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Owner activity unavailable');
