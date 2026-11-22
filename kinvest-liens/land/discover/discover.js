@@ -7,7 +7,7 @@ async function showMississippiParcels(){
  const request=++msRequest;target.replaceChildren(text('p','Loading Mississippi parcel records from the shared map…','muted'));
  try{
   if(!msIndex){const r=await fetch('/map/index.json');if(!r.ok)throw Error('Map index unavailable');msIndex=(await r.json()).datasets.filter(d=>d.state==='MS'&&d.cats?.land_bank);}
-  const selected=msIndex.filter(d=>!county.value||normalize(d.county)===normalize(county.value));
+  const selected=msIndex.filter(d=>!county.value||String(d.county).toLowerCase().replace(/county/g,'').replace(/[^a-z]/g,'')===String(county.value).toLowerCase().replace(/county/g,'').replace(/[^a-z]/g,''));
   const found=[];let total=0;
   for(const d of selected){
    let data=msCache.get(d.file);
@@ -24,7 +24,7 @@ async function showMississippiParcels(){
    const card=text('article','','landcard');
    const parcel=String(p.p||p.i?.split('|')[2]||'');
    card.append(text('h2','Parcel '+parcel),text('p',d.county+', Mississippi'));
-   const acres=p.ac??p.acres??p.a;
+   const acres=p.acres;
    if(Number.isFinite(Number(acres))&&acres!==undefined&&acres!==null)card.append(text('p','Acreage: '+acres));
    const value=p.mv??p.av;
    if(value!==undefined&&value!==null)card.append(text('p','County value (not purchase price): records.filter(c=>(!state.value||c.state===state.value)&&(!county.value||c.county===county.value)).sort((a,b)=>(Number(b.open)||0)-(Number(a.open)||0));results.replaceChildren();refreshMississippiParcels();const maxPrice=Number(document.getElementById('maxprice').value),minAcres=Number(document.getElementById('minacres').value);if(maxPrice||minAcres){status.textContent='Price and acreage filters require verified parcel-level records; no qualifying individual parcel data is available in this source index.';results.append(text('p','Individual parcels with verified price and acreage have not been imported. Clear those filters to browse county inventory sources.','empty'));return;}status.textContent=visible.length+' government land inventory sources found'+(state.value?' for '+state.options[state.selectedIndex].text:'')+'. Availability not confirmed.';if(!visible.length){results.append(text('p','No state-held land records are currently tracked for this selection. This does not mean no land is for sale.','empty'));return;}for(const c of visible.slice(0,100)){const card=text('article','', 'landcard');card.append(text('h2',label(c)),text('p',format(c.open)+' records on the last indexed government list'),text('p','Source checked: '+(c.checked||'date unavailable'),'muted'));if(c.priceLabel)card.append(text('p',c.priceLabel,'muted'));if(/^https:\/\//.test(c.source||'')){const a=text('a','Open official government source');a.href=c.source;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}results.append(card);}if(visible.length>100)results.append(text('p','Showing first 100 sources. Select a state or county to narrow the list.','muted'));}const stateFips={AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
