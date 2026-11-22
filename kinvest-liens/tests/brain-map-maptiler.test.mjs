@@ -70,3 +70,16 @@ test('boundary-only map provides parcel-specific camera and does not jump on ref
  assert.match(page,/if\(focusedDataset!==currentData\)/);
  assert.match(page,/\$\('focusParcel'\)\.onclick=/);
 });
+
+
+test('parcel selection is above the interactive map and hidden until parcels load',()=>{
+ const html=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
+ const controls=html.indexOf('id="parcelControls"');
+ const map=html.indexOf('id="map"');
+ const detail=html.indexOf('id="details"');
+ assert.ok(controls>0&&controls<map&&map<detail);
+ assert.match(html,/id="parcelControls" class="panel" hidden/);
+ assert.match(html,/\$\('parcelControls'\)\.hidden=!feats\.length/);
+ assert.match(html,/\$\('parcelControls'\)\.hidden=true/);
+ assert.equal((html.match(/id="parcelFocus"/g)||[]).length,1);
+});
