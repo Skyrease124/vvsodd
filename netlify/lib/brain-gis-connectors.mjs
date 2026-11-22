@@ -93,7 +93,7 @@ export async function verifyTrial({dataset,record,reserve,fetcher=fetch,now=()=>
   if(!Number.isSafeInteger(objectId)||objectId<=0)throw Error('Missing official object ID');
   const geometry=polygonEvidence(feature.geometry?.rings,config.bounds);
   return {kind:'connector_trial',dataset,recordId:record.i,parcelId:id,objectId,source:config.source,
-    checkedAt:now().toISOString(),geometry};
+    officialAddress:attributes[config.addressField],sourceAddress:record.a,wkid:4326,checkedAt:now().toISOString(),geometry};
 }
 
 // AI Brain discovery input. This pure function never probes or activates a source.

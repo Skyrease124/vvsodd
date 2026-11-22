@@ -1,7 +1,7 @@
 import { connectorFor, verifyTrial } from './brain-gis-connectors.mjs';
 
 // Explicit preview trial only, with caller-supplied versioned storage and budget.
-// No deployed endpoint invokes this runner. Trial evidence is separate from the map overlay.
+// The owner-only trial endpoint supplies the isolated budget and storage.
 export async function runConnectorTrial({environment,dataset,revision,records,storage,reserve,fetcher,now=()=>new Date()}) {
   if(environment!=='deploy-preview'||connectorFor(dataset)?.mode!=='test-only')throw Error('Preview trial only');
   if(typeof revision!=='string'||!revision||typeof reserve!=='function')throw Error('Trial revision and budget required');
@@ -25,7 +25,7 @@ export async function runConnectorTrial({environment,dataset,revision,records,st
       const attempts=(state.retry?.attempts??0)+1;
       state={...state,retry:{recordId:record.i,attempts,
         exhausted:!error.retryable||attempts>=3,nextAt:now().getTime()+60000*attempts,
-        reason:String(error.message).slice(0,140)}};
+        checkedAt:now().toISOString(),source:connectorFor(dataset).source,reason:String(error.message).slice(0,140)}};
     }
   }
   if(!await storage.write(key,{...state,lockUntil:null},lease))throw Error('Trial checkpoint changed');

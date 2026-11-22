@@ -90,3 +90,63 @@ test('deployed dashboard enforces owner reads and never writes or probes GIS',as
  const response=await request();assert.equal(response.status,200);
  assert.equal((await response.json()).county.automationEnabled,false);
 });
+
+test('Larimer trial gates owner, origin and deployment and caps preview reservations at three',async()=>{
+ const {join}=await import('node:path');
+ const {createHash}=await import('node:crypto');
+ const context=vm.createContext({Response,URL,process});
+ const synthetic=exports=>new vm.SyntheticModule(Object.keys(exports),function(){
+  for(const [key,val] of Object.entries(exports))this.setExport(key,val);
+ },{context});
+ const budgetKey='brain-gis-trial-budget-v1-CO-larimer';
+ const trialKey='brain-gis-trial-v1-CO-larimer';
+ const writes=new Map();
+ let user=null,reads=0,runs=0;
+ const storage={
+  kvGetVersioned:async key=>{reads++;return writes.get(key)??null;},
+  kvPutVersioned:async(key,data,etag)=>{
+   assert.equal(key,budgetKey);
+   if((writes.get(key)?.etag??null)!==etag)return null;
+   const next=String(data.reserved);
+   writes.set(key,{data,etag:next});
+   return next;
+  }
+ };
+ const handler=new vm.SourceTextModule(await fs.readFile('netlify/functions/owner-brain-larimer-trial.mjs','utf8'),{context});
+ const modules={
+  'node:fs/promises':synthetic({readFile:fs.readFile}),
+  'node:path':synthetic({join}),
+  'node:crypto':synthetic({createHash}),
+  '../lib/brain-auth.mjs':synthetic({...storage,withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,
+   kvGet:async key=>{assert.equal(key,'brain-map-county-v1-CO-larimer');return null;}}),
+  '../lib/brain-gis-trial-checkpoint.mjs':synthetic({runConnectorTrial:async params=>{
+   assert.equal(params.environment,'deploy-preview');
+   assert.equal(params.dataset,'CO-larimer');
+   assert.deepEqual(Array.from(params.records,r=>r.p),['9701400014','8510310018','8510339002']);
+   await params.reserve();
+   runs++;
+   return {status:'recorded'};
+  }})
+ };
+ await handler.link(s=>modules[s]);await handler.evaluate();
+ const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
+ const invoke=({method='POST',deploy='deploy-preview',host=origin,from=origin,confirmed=true}={})=>
+  handler.namespace.default(new Request(host+'/trial',{method,headers:{origin:from},
+   ...(method==='POST'?{body:JSON.stringify({action:'verify-next-larimer',confirmed})}:{})}),{deploy:{context:deploy}});
+ assert.equal((await invoke()).status,401);
+ user={owner:false};assert.equal((await invoke()).status,403);
+ user={owner:true};
+ assert.equal((await invoke({deploy:'production'})).status,404);
+ assert.equal((await invoke({host:'https://deploy-preview-453--pricepocketasset.netlify.app'})).status,404);
+ assert.equal((await invoke({from:'https://unrelated.example'})).status,403);
+ assert.equal((await invoke({confirmed:false})).status,400);
+ assert.equal(reads,0);
+ assert.equal(writes.size,0);
+ assert.equal((await (await invoke({method:'GET'})).json()).used,0);
+ assert.equal(writes.size,0);
+ for(let i=0;i<3;i++)assert.equal((await invoke()).status,200);
+ assert.equal((await invoke()).status,429);
+ assert.equal(runs,3);
+ assert.equal(writes.get(budgetKey).data.reserved,3);
+ assert.equal(writes.has(trialKey),false); // This harness mocks the runner; the runner's checkpoint is tested above.
+});

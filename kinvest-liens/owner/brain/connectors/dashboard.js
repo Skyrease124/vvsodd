@@ -4,8 +4,8 @@ const picker = document.getElementById('county');
 const statusLine = document.getElementById('status');
 const details = document.getElementById('details');
 let selection = 0;
-const read = async (url) => {
-  const response = await fetch(url,{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(10000)});
+const read = async (url,options={}) => {
+  const response = await fetch(url,{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(12000),...options});
   const data = await response.json();
   if(!response.ok)throw Error(data.error||'County data unavailable');
   return data;
@@ -46,6 +46,7 @@ async function showCounty(){
     const {county,coverage}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
     render(county,coverage);
+    if(county.id==='CO-larimer'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showTrial(request);
     statusLine.textContent='';
   }catch(error){if(request===selection)statusLine.textContent=error.message;}
 }
@@ -61,3 +62,38 @@ picker.addEventListener('change',showCounty);
     await showCounty();
   }catch(error){statusLine.textContent=error.message;}
 })();
+
+async function showTrial(request){
+  const url='/.netlify/functions/owner-brain-larimer-trial';
+  const result=await read(url);
+  if(request!==selection)return;
+  const summary=document.createElement('p');
+  summary.textContent='Larimer research trial: '+result.used+'/'+result.limit+' requests reserved. '+result.cursor+' exact matches recorded.';
+  const evidence=document.createElement('ul');
+  for(const item of result.evidence){
+    const row=document.createElement('li');
+    row.textContent=item.parcelId+' · '+item.officialAddress+' · Object '+item.objectId+' · '+item.checkedAt;
+    evidence.append(row);
+  }
+  if(result.retry){
+    const row=document.createElement('li');
+    row.textContent=result.retry.recordId+' · '+result.retry.reason+(result.retry.exhausted?' · Owner review required':
+      ' · Retry after '+new Date(result.retry.nextAt).toLocaleString());
+    evidence.append(row);
+  }
+  const button=document.createElement('button');
+  button.textContent='Verify next Larimer parcel';
+  button.disabled=result.used>=result.limit||result.cursor>=result.parcelIds.length||
+    result.retry?.exhausted===true||Number(result.retry?.nextAt)>Date.now();
+  button.onclick=async()=>{
+    if(!confirm('Send one request to Larimer County GIS and save the result in preview research?'))return;
+    button.disabled=true;
+    statusLine.textContent='Checking the official parcel…';
+    try{
+      await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'verify-next-larimer',confirmed:true})});
+      await showCounty();
+    }catch(error){statusLine.textContent=error.message+' Refresh before trying again.';}
+  };
+  details.append(summary,evidence,button);
+}
