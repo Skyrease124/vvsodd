@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import fs from 'node:fs/promises';
 import { connectorFor, connectorReadiness, connectorCoverage, verifyTrial } from '../../netlify/lib/brain-gis-connectors.mjs';
-import { runConnectorTrial } from '../../netlify/lib/brain-gis-trial-checkpoint.mjs';
+import { runConnectorTrial, rearmConnectorTrial } from '../../netlify/lib/brain-gis-trial-checkpoint.mjs';
 
 const dataset='CO-larimer';
 const record={i:'CO|Larimer|9701400014|',p:'9701400014',a:'741 Lindenmeier Rd, Fort Collins, CO 80524'};
@@ -190,4 +190,49 @@ test('trial persists diagnostics without advancing or re-running a held parcel',
  assert.equal(saved.data.evidence.length,0);
  assert.equal((await runConnectorTrial(args)).status,'retry_hold');
  assert.equal(reserved,1);
+});
+
+test('exact owner-approved Larimer re-arm preserves cursor, evidence and budget while rejecting stale review',async()=>{
+  let writes=0,revision='review-fixture',budget=1;
+  let snapshot={etag:'v1',data:{revision,cursor:0,lockUntil:null,evidence:[],
+    retry:{recordId:record.i,exhausted:true,attempts:1,reason:'Missing or ambiguous parcel match',
+      diagnostics:null}}};
+  const storage={
+    read:async()=>structuredClone(snapshot),
+    write:async(key,value,etag)=>{
+      assert.equal(key,'brain-gis-trial-v1-CO-larimer');
+      if(snapshot.etag!==etag)return null;
+      writes++;snapshot={etag:'v'+(writes+1),data:structuredClone(value)};
+      return snapshot.etag;
+    }
+  };
+  const args={environment:'deploy-preview',dataset,revision,recordId:record.i,storage};
+  await assert.rejects(rearmConnectorTrial({...args,recordId:'CO|Larimer|DIFFERENT|'}),/Exact exhausted/);
+  await assert.rejects(rearmConnectorTrial({...args,revision:'other'}),/source changed/);
+  await assert.rejects(rearmConnectorTrial({...args,environment:'production'}),/Preview trial/);
+  assert.equal(writes,0);
+  const result=await rearmConnectorTrial(args);
+  assert.equal(result.rearmed,true);
+  assert.equal(result.cursor,0);
+  assert.equal(result.previousAttemptCount,1);
+  assert.equal(snapshot.data.cursor,0);
+  assert.equal(snapshot.data.retry,null);
+  assert.equal(snapshot.data.lastOwnerRecovery.recordId,record.i);
+  assert.equal(budget,1);
+  assert.equal(writes,1);
+  await assert.rejects(rearmConnectorTrial(args),/Exact exhausted/);
+  assert.equal(writes,1);
+});
+
+test('Larimer re-arm uses two separate owner confirmations and never dispatches GIS during checkpoint release',async()=>{
+ const endpoint=await fs.readFile('netlify/functions/owner-brain-larimer-trial.mjs','utf8');
+ const frontend=await fs.readFile('kinvest-liens/owner/brain/connectors/dashboard.js','utf8');
+ assert.match(endpoint,/rearm-larimer-review/);
+ assert.match(endpoint,/body\.recordId!==records\[cursor\]\.i/);
+ assert.match(endpoint,/snapshot\?\.data\?\.retry\?\.exhausted!==true/);
+ assert.match(endpoint,/rearmConnectorTrial\(\{environment:/);
+ assert.match(frontend,/Approve retry of same Larimer parcel/);
+ assert.match(frontend,/does NOT send a GIS request now/);
+ assert.match(frontend,/action:'rearm-larimer-review',confirmed:true/);
+ assert.match(frontend,/action:'verify-next-larimer',confirmed:true/);
 });
