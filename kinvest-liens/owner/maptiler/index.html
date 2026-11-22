@@ -42,7 +42,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-let key='',map=null,terrain=false,currentData=null,detail=null;
+let key='',map=null,terrain=false,currentData=null,detail=null,boundaryOnly=false;
 let previewUpdateRunning=false,correctionCounts={},loadTimer;
 const utils=window.PPAMapTilerPreview;
 function updateCountyCount(id,count){const option=[...$('county').options].find(o=>o.value===id),dataset=(window.__datasets||[]).find(d=>d.id===id);if(dataset){correctionCounts[id]=Math.max(0,count-(Number(dataset.mapped)||0));if(option)option.textContent=dataset.county+' · '+count+' mapped'+(count===0?' (no verified boundaries yet)':'');}}
@@ -65,7 +65,7 @@ function selectState(){
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
 }
-function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
+function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;boundaryOnly=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
 function overlay(){
  if(!map||!currentData)return;
@@ -122,7 +122,6 @@ function readyMap(){
  });
 }
 $('load').onclick=async()=>{
- if(!key)return msg('Save your MapTiler API key first.',true);
  reset();$('load').disabled=true;msg('Loading verified parcel data…');
  try{
   const index=window.__datasets||[];detail=index.find(x=>x.id===$('county').value);
@@ -130,22 +129,33 @@ $('load').onclick=async()=>{
   // Allow dynamic approved overlays even when static county count is zero.
   currentData=await loadData();
   msg('Checking MapTiler style access for '+location.origin+'…');
-  const style=await checkedStyle();
+  let style;
+  try{
+   if(!key){const missing=Error('MapTiler key not configured');missing.status=401;throw missing;}
+   style=await checkedStyle();
+  }catch(error){
+   // Inspect verified boundaries without bypassing provider key restrictions.
+   // Local background style makes no MapTiler tile requests.
+   if(error.status!==401&&error.status!==403&&error.status!==429)throw error;
+   boundaryOnly=true;
+   style={version:8,sources:{},layers:[{id:'base',type:'background',paint:{'background-color':'#10263a'}}]};
+   msg('MapTiler style unavailable (HTTP '+error.status+'). Showing parcel boundaries without satellite imagery or paid tiles.');
+  }
   if(!window.maplibregl?.Map)throw Error('Map rendering library did not load');
   $('map').hidden=false;
   map=new maplibregl.Map({container:'map',style,center:[-82,27],zoom:4,attributionControl:true,pitch:0,maxPitch:75});
   map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'top-right');
   loadTimer=setTimeout(()=>{if(map&&!map.loaded())msg('MapTiler tiles have not finished loading after 20 seconds. Check the provider access message or close the preview.',true);},20000);
-  map.on('load',()=>{clearTimeout(loadTimer);readyMap();$('terrain').disabled=false;msg('Private preview loaded. Zoom into the existing parcel outlines.');});
+  map.on('load',()=>{clearTimeout(loadTimer);readyMap();$('terrain').disabled=boundaryOnly;msg(boundaryOnly?'Boundary-only map loaded. Satellite and terrain require authorized MapTiler access.':'Private preview loaded. Zoom into the existing parcel outlines.');});
   map.on('error',e=>{clearTimeout(loadTimer);msg(utils.errorMessage(e.error,location.origin,key),true);});
   $('close').disabled=false;
  }catch(e){reset();msg(utils.errorMessage(e,location.origin,key),true)}
  finally{$('load').disabled=false}
 };
 $('close').onclick=()=>{reset();msg('Private map preview closed. Your public maps were not changed.')};
-$('style').onchange=async()=>{if(!map)return;try{const style=await checkedStyle();if(!map)return;terrain=false;$('terrain').textContent='Enable 3D terrain';map.setStyle(style);map.once('style.load',()=>{overlay();$('terrain').disabled=false;});}catch(e){msg(utils.errorMessage(e,location.origin,key),true);}};
+$('style').onchange=async()=>{if(!map||!key)return;try{const style=await checkedStyle();if(!map)return;boundaryOnly=false;terrain=false;$('terrain').textContent='Enable 3D terrain';map.setStyle(style);map.once('style.load',()=>{overlay();$('terrain').disabled=false;});}catch(e){msg(utils.errorMessage(e,location.origin,key),true);}};
 $('terrain').onclick=()=>{
- if(!map||!map.isStyleLoaded())return;
+ if(boundaryOnly||!map||!map.isStyleLoaded())return;
  try{
   if(terrain){map.setTerrain(null);terrain=false;map.easeTo({pitch:0,duration:600});$('terrain').textContent='Enable 3D terrain';return;}
   if(!map.getSource('maptiler-dem'))map.addSource('maptiler-dem',{type:'raster-dem',url:terrainUrl(),tileSize:256});
@@ -156,8 +166,8 @@ $('terrain').onclick=()=>{
  try{
   const response=await fetch('/.netlify/functions/owner-maptiler-preview',{credentials:'same-origin',cache:'no-store'});
   const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Owner access required');
-  if(!d.configured){$('setup').hidden=false;msg('MapTiler key not saved yet.');return;}
-  key=d.key;correctionCounts=d.correctionCounts||{};
+  if(!d.configured){$('setup').hidden=false;msg('MapTiler key not configured. Boundary-only inspection remains available.');}
+  key=d.key||'';correctionCounts=d.correctionCounts||{};
   const indexResponse=await fetch('/map/index.json',{cache:'no-store'});if(!indexResponse.ok)throw Error('Parcel index unavailable');
   const index=await indexResponse.json();
   if(!Array.isArray(index.datasets)||!index.datasets.length)throw Error('No county datasets returned from map index.');
