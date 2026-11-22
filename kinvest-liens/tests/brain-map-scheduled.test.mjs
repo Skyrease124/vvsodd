@@ -71,16 +71,27 @@ test('exhausted retry reviewer requires owner, exact parcel, cursor, origin and 
 
 async function retryHarness({owner=true,paused=false,exhausted=true}={}){
  const store=new Map();
+ const versions=new Map();
  store.set('owner-brain-wayne-worker-v1',{
   cursor:11,day:'2026-11-21',dailyUsed:23,lockedUntil:null,
   retry:exhausted?{parcelId:'01006446',cursor:11,attempts:3,exhausted:true,lastError:'GIS timed out'}:null
  });
  store.set('owner-brain-scanner-v1',{status:paused?'paused':'active'});
  const ctx=vm.createContext({Response,Request,URL,Date});
- const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore'],function(){
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
   this.setExport('kvGet',async k=>structuredClone(store.get(k)));
   this.setExport('kvPut',async(k,v)=>{store.set(k,structuredClone(v));});
+  this.setExport('kvGetVersioned',async key=>store.has(key)
+   ? {data:structuredClone(store.get(key)),etag:versions.get(key)||'initial'} : null);
+  this.setExport('kvPutVersioned',async (key,value,expected)=>{
+   const current=store.has(key)?versions.get(key)||'initial':null;
+   if(current!==expected)return null;
+   const next=(versions.get(key)||'initial')+'-updated';
+   versions.set(key,next);
+   store.set(key,structuredClone(value));
+   return next;
+  });
   this.setExport('withBrainStore',fn=>fn);
  },{context:ctx});
  const source=fs.readFileSync('netlify/functions/owner-brain-wayne-retry-review.mjs','utf8');

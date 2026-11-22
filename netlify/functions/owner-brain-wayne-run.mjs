@@ -49,7 +49,8 @@ async function handler(req,context){
  }
  const control=await auth.kvGet(CONTROL);
  if(control?.status==='paused')return response(409,{ok:false,error:'Automation paused'});
- let s=state(await auth.kvGet(STORE));
+ const snapshot=await auth.kvGetVersioned(STORE);
+ let s=state(snapshot?.data);
  if(s.lockedUntil&&Date.parse(s.lockedUntil)>Date.now())return response(409,{ok:false,error:'Another batch run is in progress'});
  if(s.day!==today())s={...s,day:today(),dailyUsed:0};
  if(s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
@@ -63,7 +64,13 @@ async function handler(req,context){
  });
  const token=crypto.randomUUID();
  s={...s,token,lockedUntil:new Date(Date.now()+LEASE_MS).toISOString(),lastStarted:new Date().toISOString(),state:'running'};
- await auth.kvPut(STORE,s);
+ let version=await auth.kvPutVersioned(STORE,s,snapshot ? snapshot.etag : null);
+ if(!version)return response(409,{ok:false,error:'Worker state changed; refresh before running'});
+ async function saveProgress(value){
+  if(Date.parse(s.lockedUntil)<=Date.now())throw Error('Batch lease expired');
+  version=await auth.kvPutVersioned(STORE,value,version);
+  if(!version)throw Error('Batch lost its lease');
+ }
  const result={attempted:0,verified:0,published:0,needsReview:0,failures:0,rows:[]};
  try{
   const ds=await get(DATA);
@@ -86,7 +93,7 @@ async function handler(req,context){
    if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA',stage});
    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED',stage});
    s.dailyUsed++;
-   await auth.kvPut(STORE,{...s,cursor:recordIndex});
+   await saveProgress({...s,cursor:recordIndex});
    const started=Date.now();
    try{
     const data=await get(url,1000000,timeout);
@@ -189,7 +196,7 @@ async function handler(req,context){
     if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
     if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
     s.dailyUsed++;
-    await auth.kvPut(STORE,{...s,cursor:i});
+    await saveProgress({...s,cursor:i});
    }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const success=published.records?.[r.i]?.verifiedGeometry===true;
@@ -216,10 +223,7 @@ async function handler(req,context){
   return response(502,{ok:false,error:'Batch interrupted: '+s.lastError,cursor:s.cursor});
  }finally{
   // Release only this run's lease. Preview uses its isolated persistent store.
-  const latest=await auth.kvGet(STORE);
-  if(latest?.token===token){
-   await auth.kvPut(STORE,{...s,token:null,lockedUntil:null});
-  }
+  if(version)await auth.kvPutVersioned(STORE,{...s,token:null,lockedUntil:null},version);
  }
 }
 export default auth.withBrainStore(handler);

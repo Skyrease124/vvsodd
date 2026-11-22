@@ -8,7 +8,8 @@ async function handler(req,context){
  if(!['deploy-preview','production'].includes(context?.deploy?.context||''))return response(404,{ok:false,error:'Published site or preview only'});
  const owner=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!owner?.owner)return response(owner?403:401,{ok:false,error:'Owner only'});
- const worker=await auth.kvGet(KEY);
+ const snapshot=await auth.kvGetVersioned(KEY);
+ const worker=snapshot?.data;
  const retry=worker?.retry;
  if(req.method==='GET')return response(200,{ok:true,exhausted:retry?.exhausted===true,
   parcelId:retry?.parcelId||null,cursor:Number(worker?.cursor||0),attempts:Number(retry?.attempts||0),
@@ -27,7 +28,8 @@ async function handler(req,context){
  const updated={...worker,state:'idle',retry:null,
   lastOwnerRecovery:{at:new Date().toISOString(),parcelId:retry.parcelId,cursor:retry.cursor,
    exhaustedAttempts:retry.attempts,reason:retry.lastError||null,action:'rearmed_same_parcel'}};
- await auth.kvPut(KEY,updated);
+ if(!await auth.kvPutVersioned(KEY,updated,snapshot.etag))
+  return response(409,{ok:false,error:'Worker changed; refresh before re-arming'});
  return response(200,{ok:true,rearmed:true,parcelId:retry.parcelId,cursor:updated.cursor,
   dailyUsed:Number(updated.dailyUsed||0),dailyLimit:30,message:'Same parcel re-armed; no request or publication performed'});
 }

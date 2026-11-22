@@ -5,10 +5,11 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false}={}){
  const store=new Map();
+ const versions=new Map();
  if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
- if(cursor)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed:0,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
+ if(cursor||dailyUsed)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
  if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
  const rows=[{i:'r1',p:'01002754',a:'100 Test St, Detroit MI'},{i:'r2',p:'01002830',a:'102 Test St, Detroit MI'},
  {i:'r3',p:'01003357',a:'104 Test St, Detroit MI'},{i:'r4',p:'01004444',a:'106 Test St, Detroit MI'}];
@@ -22,10 +23,20 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
   const id=(url.searchParams.get('where')||'01002754').match(/010[0-9]{5}/)?.[0]||'01002754';
   return Response.json({features:[{attributes:{parcel_number:id+'.',address:'100 TEST ST',object_id:100},geometry:{rings:[[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]]]}}]});
  }});
- const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore','isBrainPreview'],function(){
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore','isBrainPreview'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
   this.setExport('kvGet',async k=>structuredClone(store.get(k)));
   this.setExport('kvPut',async(k,v)=>store.set(k,structuredClone(v)));
+  this.setExport('kvGetVersioned',async key=>store.has(key)
+   ? {data:structuredClone(store.get(key)),etag:versions.get(key)||'initial'} : null);
+  this.setExport('kvPutVersioned',async (key,value,expected)=>{
+   const current=store.has(key)?versions.get(key)||'initial':null;
+   if(current!==expected)return null;
+   const next=(versions.get(key)||'initial')+'-updated';
+   versions.set(key,next);
+   store.set(key,structuredClone(value));
+   return next;
+  });
   this.setExport('withBrainStore',fn=>fn);
   this.setExport('isBrainPreview',()=>preview);
  },{context});
@@ -38,7 +49,14 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
   });
  },{context});
  const publisher=new vm.SyntheticModule(['default'],function(){
-  this.setExport('default',async()=>{
+  this.setExport('default',async(_req,context)=>{
+   if(chargePublisher){
+    try{await context.chargeWayneGisRequest();}catch(error){
+     if(error.code==='QUOTA')return;
+     throw error;
+    }
+    calls++;
+   }
    publications++;
    const approvals=store.get('owner-brain-approvals-v1')?.entries||[];
    const map=store.get('brain-map-county-v1-MI-wayne')||{records:{}};
@@ -148,4 +166,25 @@ test('index-first request path keeps strict verification and fallback boundary',
  assert.match(code,/official=await officialGet\(url,i,6500,'direct_polygon'\)/);
  assert.match(code,/primary.code==='AMBIGUOUS'/);
  assert.match(code,/verifyOfficial\(r,official.features\)/);
+});
+
+test('overlapping owner requests share one worker lease and charge one batch',async()=>{
+ const h=await setup({chargePublisher:true});
+ const responses=await Promise.all([h.invoke(),h.invoke()]);
+ assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(saved.runs,1);
+ assert.equal(saved.cursor,3);
+ assert.equal(saved.dailyUsed,h.reads());
+ assert.equal(h.publications(),1);
+});
+test('publisher cannot dispatch after verification spends the final quota slot',async()=>{
+ const h=await setup({dailyUsed:28,chargePublisher:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.dailyUsed,30);
+ assert.equal(result.cursor,0);
+ assert.equal(result.state,'publish_pending');
+ assert.equal(h.reads(),2);
+ assert.equal(h.publications(),0);
+ assert.equal((await h.invoke()).status,429);
 });

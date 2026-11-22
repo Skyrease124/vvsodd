@@ -33,3 +33,17 @@ export async function kvList(prefix){
  if(!isolated(prefix))return auth.kvList(prefix);
  return (await previewStore().list({prefix})).blobs.map(b=>b.key);
 }
+
+// Versioned reads intentionally skip deploy seeds. Only live state is writable.
+const versionedStore = key => isolated(key)
+  ? previewStore()
+  : auth.accountBlobStore();
+export const kvGetVersioned = key => versionedStore(key).getWithMetadata(key, { type: 'json' });
+export async function kvPutVersioned(key, value, etag) {
+  if (etag !== null && !etag) throw new Error('Missing storage version');
+  const result = await versionedStore(key).setJSON(key, value,
+    etag === null ? { onlyIfNew: true } : { onlyIfMatch: etag });
+  if (!result.modified) return null;
+  if (!result.etag) throw new Error('Missing write version');
+  return result.etag;
+}

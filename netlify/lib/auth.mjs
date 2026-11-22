@@ -7,7 +7,8 @@ import { getStore } from '@netlify/blobs';
 
 const COOKIE = 'ppa_s', DAYS = 30;
 const CODE_HASH = process.env.SETUP_CODE_HASH || '7bcea3ec427a6a4ee2a7a7320f380be5ab648b3659bb38ca3420e92b17e7ae7b';
-const store = () => getStore({ name: 'pricepocketasset-users', consistency: 'strong' });
+export const accountBlobStore = () => getStore({ name: 'pricepocketasset-users', consistency: 'strong' });
+const store = accountBlobStore;
 const dirFile = k => path.join(process.env.USERS_DIR, k.replace(/[^a-z0-9_-]/gi, '_') + '.json');
 async function get(k) {
   if (process.env.USERS_DIR) { try { return JSON.parse(fs.readFileSync(dirFile(k), 'utf8')); } catch (e) { return null; } }
