@@ -31,7 +31,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <option value="outdoor-v4">Outdoor terrain</option>
 <option value="aquarelle-v4">Aquarelle watercolor</option>
 </select></div></div>
-<div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div><div id="parcelControls" class="panel" hidden><b>Inspect a verified parcel</b><div class="actions"><label for="parcelFocus">Parcel <select id="parcelFocus" aria-label="Choose parcel to inspect"></select></label><button type="button" id="focusParcel">Zoom to selected parcel</button></div><p id="parcelEvidence" class="muted" role="status">Select a parcel to inspect its boundary evidence.</p></div></div>
+<div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div><div id="parcelControls" class="panel" hidden><b>Inspect a verified parcel</b><div class="actions"><label for="parcelFocus">Parcel <select id="parcelFocus" aria-label="Choose parcel to inspect"></select></label><button type="button" id="focusParcel">Zoom to selected parcel</button><button type="button" id="auditCounty">Check county boundaries</button></div><p id="auditReport" class="muted" role="status">Read-only consistency check available after loading the map.</p><p id="parcelEvidence" class="muted" role="status">Select a parcel to inspect its boundary evidence.</p></div></div>
 </div>
 <div id="map" hidden aria-label="Private interactive map with parcel boundaries"></div>
 <div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
@@ -75,6 +75,38 @@ function selectedParcelEvidence(){
  const source=record.__brainEvidence?.source||'No per-parcel official source URL in this dataset';
  $('parcelEvidence').textContent='Parcel '+record.p+' · Record '+record.i+' · '+origin+' · '+coordinates.length+' boundary vertices · Source: '+source+'. Public and Workshop maps use the same county dataset and correction feed.';
 }
+async function auditCounty(){
+ if(!currentData||!detail||!window.PPABrainMap)return;
+ const button=$('auditCounty');button.disabled=true;
+ $('auditReport').textContent='Comparing loaded parcels with a fresh read of the shared county boundary feed…';
+ try{
+  const res=await fetch('/map/data/'+encodeURIComponent(detail.file),{cache:'no-store'});
+  if(!res.ok)throw Error('County source unavailable (HTTP '+res.status+')');
+  const raw=await res.text();if(raw.length>12000000)throw Error('County source exceeds size limit');
+  const fresh=JSON.parse(raw);
+  if(!Array.isArray(fresh.recs)||fresh.id!==currentData.id)throw Error('County dataset identity mismatch');
+  const dict=fresh.dict||{};
+  for(const r of fresh.recs)for(const k in dict)if(r[k]!=null)r[k]=dict[k][r[k]];
+  await window.PPABrainMap.apply(fresh);
+  // Independently loaded county data and the same read-only correction feed.
+  // This is a source-consistency audit, not proof that three remote browsers rendered.
+  const current=new Map(currentData.recs.map(r=>[String(r.i),r]));
+  const mismatches=[];let compared=0;
+  for(const expected of fresh.recs){
+   const actual=current.get(String(expected.i));
+   if(!actual){mismatches.push(String(expected.p||expected.i)+': missing record');continue;}
+   compared++;
+   const fields=['p','g','cx','bb','__brainMap'];
+   if(fields.some(k=>JSON.stringify(actual[k]??null)!==JSON.stringify(expected[k]??null)))mismatches.push(String(expected.p||expected.i)+': boundary or approval mismatch');
+  }
+  if(current.size!==fresh.recs.length)mismatches.push('Record count differs');
+  const target=fresh.recs.find(r=>String(r.p)==='01002263');
+  const targetStatus=target?' · Wayne 01002263: '+(mismatches.some(x=>x.startsWith('01002263:'))?'MISMATCH':'matching source data'):' · Wayne 01002263: not in dataset';
+  $('auditReport').textContent=(mismatches.length?'ATTENTION: '+mismatches.length+' differences':'PASS: shared source matches loaded data')+' · '+compared+' parcels checked'+(detail.id==='MI-wayne'?targetStatus:'')+(mismatches.length?' · '+mismatches.slice(0,5).join('; '):'')+'. This checks the common data pipeline, not each remote map rendering.';
+ }catch(error){$('auditReport').textContent='Audit unavailable: '+error.message+'. No records were changed.';}
+ finally{button.disabled=false;}
+}
+$('auditCounty').onclick=auditCounty;
 function focusSelectedParcel(features){
  if(!map)return;
  const id=$('parcelFocus').value;
@@ -99,6 +131,7 @@ function overlay(){
  if(feats.some(f=>String(f.properties.recordId)===previous))select.value=previous;
  else if(feats.length)select.selectedIndex=0;
  $('focusParcel').disabled=!feats.length;
+ $('auditCounty').disabled=!feats.length;
  if(feats.length)selectedParcelEvidence();else $('parcelEvidence').textContent='No verified boundaries available for this county.';
  // Focus exactly one small parcel on initial load; never jump the camera during feed refresh.
  if(focusedDataset!==currentData){focusedDataset=currentData;focusSelectedParcel(feats);}
