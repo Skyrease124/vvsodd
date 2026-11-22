@@ -600,6 +600,7 @@ async function showFloridaLand(florida,request){
    card.append(number,caption);counts.append(card);
   }
   panel.append(counts,line('Last completed import: '+(data.lastIngestion||'None saved')));
+  if(florida.county.geoid==='12107')void showPutnamVerification(panel,line,request);
   if(data.discoveryAudit){
    const audit=data.discoveryAudit,list=document.createElement('ul'),body=document.createElement('div');
    for(const attempt of audit.attempts){
@@ -709,4 +710,47 @@ async function showFloridaLand(florida,request){
   intake.append(label,file,upload);
   panel.append(disclose('Import approved offline evidence',intake));
  }catch(error){if(request===selection)status.textContent=error.message;}
+}
+
+async function showPutnamVerification(panel,line,request){
+ const endpoint='/.netlify/functions/owner-brain-putnam-verification';
+ const note=line('Checking Putnam verification readiness…');
+ note.setAttribute('role','status');
+ const content=document.createElement('div');
+ panel.append(grouped('Verify Putnam Parcel',note,content));
+ const labels={ready:'Ready for owner approval',quota_unavailable:'Quota unavailable',in_progress:'Request in progress',
+  verified:'Verified',no_exact_match:'No exact match',ambiguous_match:'Ambiguous match',invalid_geometry:'Invalid geometry',
+  needs_review:'Needs owner review',source_unavailable:'Source unavailable'};
+ function render(state){
+  if(request!==selection)return;
+  note.textContent=labels[state.status]||'Verification status unavailable';
+  const link=document.createElement('a');link.href=state.source;link.textContent='FloridaGIO cadastral layer';
+  content.replaceChildren(line('Oak Hills Estates · Block F · Lot 24 · '+state.parcelId),link,
+   line('Shared requests remaining: '+(state.remaining??'Unavailable')+' / '+state.limit+' · Maximum cost: '+state.cost));
+  if(state.certificate){
+   const certificate=document.createElement('a');
+   certificate.href=state.certificate;certificate.textContent='Clerk certification · Case 2019-0003179';
+   content.append(certificate);
+  }
+  if(state.checkedAt)content.append(line('Checked '+state.checkedAt));
+  if(state.reason)content.append(line(state.reason));
+  if(state.result?.geometryValid)content.append(line('Boundary checked in '+state.result.crs+
+   ' · Polygon-derived acres: '+state.result.polygonAcres.toFixed(4)+' · GIS source acres: '+
+   (state.result.sourceAcres??'Unavailable')+' · Clerk-reported acres: '+state.clerkAcres));
+  if(state.result?.legalDescription)content.append(line(state.result.legalDescription));
+  const button=document.createElement('button');
+  button.type='button';button.textContent='Verify Putnam Parcel';button.disabled=!state.canRun;
+  button.onclick=async()=>{
+   if(!confirm('Reserve one shared GIS request for '+state.parcelId+' and verify it in this private preview?'))return;
+   button.disabled=true;note.textContent='Request in progress';
+   try{
+    render(await read(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(25000),
+     body:JSON.stringify({confirmed:true,requestId:state.requestId})}));
+   }catch(error){
+    try{render(await read(endpoint));}catch{note.textContent=error.message;}
+   }
+  };
+  content.append(button);
+ }
+ try{render(await read(endpoint));}catch(error){note.textContent=error.message;}
 }

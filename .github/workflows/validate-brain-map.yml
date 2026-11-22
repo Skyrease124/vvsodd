@@ -100,3 +100,4 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-florida-land.test.mjs
       - run: python3 tools/florida-land/test_prepare.py
       - run: node tests/test_pro_first_research.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-putnam-verification.test.mjs

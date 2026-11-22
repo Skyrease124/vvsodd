@@ -323,3 +323,17 @@ available from November 17, 2026. The Clerk certification corroborates the parce
 Availability evidence is recorded as a discovery receipt, outside imported listings. No GIS,
 assessment, or owner storage write was performed. The existing offline importer now accepts the
 Putnam source with exact certification URL validation and a required public eligibility date.
+
+### Putnam owner-only exact parcel verification
+
+The canonical PR #454 preview's County Operations → Putnam panel reads the existing county GIS
+budget. An authenticated owner must explicitly confirm the fixed parcel request. The server
+uses the existing shared quota reservation with a one-request Putnam cap and a durable
+request fingerprint. No client-supplied GIS URLs, fields, or identifiers are accepted.
+
+The private checkpoint records the reservation, response, legal comparison, and geometry.
+After a timeout or interrupted dispatch, the same action cannot run again. A definite quota
+rejection before reservation can be retried when quota becomes available. No quota refund
+is applied to an uncertain or dispatched request. A verified geometry is available from
+the same owner-only endpoint with `?geometry=1` for isolated integration work. Public map feeds,
+release rules, and existing county checkpoints have no write path from this action.

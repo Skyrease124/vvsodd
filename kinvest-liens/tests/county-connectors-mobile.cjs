@@ -25,6 +25,8 @@ const example=registry.counties.find(row=>row.name==='Calhoun');
 const directoryCounty={id:'FL-calhoun',state:'FL',county:'Calhoun',status:'Source validated',
  florida:{county:example,source:registry.sources[example.sourceId],reviewedOn:registry.reviewedOn,
   evidence:registry.evidence,eligible:0,blockers:['No eligible candidate in the current dataset']}};
+const putnam={...directoryCounty,id:'FL-putnam',county:'Putnam',
+ florida:{...directoryCounty.florida,county:registry.counties.find(row=>row.name==='Putnam')}};
 county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
@@ -60,7 +62,7 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    const context=await browser.newContext({viewport:{width,height:844},isMobile:width<500,deviceScaleFactor:2,hasTouch:true});
    const page=await context.newPage();
    const posts=[],unexpected=[],errors=[];
-   let paused=false,used=0,approve=false;
+   let paused=false,used=0,approve=false,putnamPosts=0;
    page.on('pageerror',error=>errors.push(error.message));
    page.on('dialog',dialog=>approve?dialog.accept():dialog.dismiss());
    await page.route('**/*',async route=>{
@@ -70,14 +72,23 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base)return route.fulfill({contentType:'text/html',body:await fs.readFile(root+'index.html','utf8')});
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
+    if(path===api+'owner-brain-putnam-verification'){
+     if(request.method()==='POST'){
+      assert.deepEqual(request.postDataJSON(),{confirmed:true,requestId:'fixture'});
+      putnamPosts++;
+     }
+     return route.fulfill({json:{status:putnamPosts?'no_exact_match':'ready',canRun:!putnamPosts,
+      parcelId:'04-10-24-6450-0060-0240',source:'https://gis.example/putnam',requestId:'fixture',
+      remaining:30-putnamPosts,limit:30,cost:1}});
+    }
     if(path===api+'owner-brain-florida-land')return route.fulfill({json:{
      records:[{item:{parcelId:'001',status:'scheduled',type:'tax-deed',evidence:{url:'https://gov.example/notice',agency:'Fixture',retrievedAt:at,fixture:true}},
       eligible:false,verifiedPolygon:false,versions:1,reason:'missing_verified_polygon'}],
      matched:0,unmatched:1,approved:0,expiredOrCanceled:0,ingested:1,published:0,sources:[],receipts:[],skipped:[],discoveryAudit:landAudit}
     });
     if(path===api+'owner-brain-connectors'){
-     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa,directoryCounty]}});
-     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:url.searchParams.get('dataset')==='FL-calhoun'?directoryCounty:county;
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa,directoryCounty,putnam]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:url.searchParams.get('dataset')==='FL-calhoun'?directoryCounty:url.searchParams.get('dataset')==='FL-putnam'?putnam:county;
      return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
       progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
     }
@@ -139,6 +150,18 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    assert.equal(await page.getByRole('button',{name:'Import offline evidence'}).isDisabled(),true);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth));
    assert.deepEqual(posts,[]);
+   await page.locator('#county').selectOption('FL-putnam');
+   const putnamButton=page.getByRole('button',{name:'Verify Putnam Parcel'});
+   await page.getByText('Ready for owner approval',{exact:true}).waitFor();
+   await putnamButton.click();
+   assert.equal(putnamPosts,0);
+   approve=true;
+   await putnamButton.click();
+   await page.getByText('No exact match',{exact:true}).waitFor();
+   assert.equal(putnamPosts,1);
+   assert.equal(await putnamButton.isDisabled(),true);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth));
+   approve=false;
    await page.locator('#county').selectOption('FL-broward');
    await page.getByText('No approved county parcel dataset is loaded',{exact:true}).waitFor();
    assert.equal(await page.getByRole('button',{name:'Run Live Broward Pilot'}).isDisabled(),true);
