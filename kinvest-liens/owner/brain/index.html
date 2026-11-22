@@ -13,6 +13,7 @@
  <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Wayne Test Batch</button>
  <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
+ <p id="unattendedRefreshStatus" role="status" class="small"></p>
  <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
 </section><p><a href="/owner/brain/activity/" style="display:inline-block;padding:12px 16px;border:1px solid #75d0b1;border-radius:12px;background:#1a433e;font-weight:700">✦ NVIDIA Pulse Reactor · Live Activity</a></p><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. Official polygon verification currently supports Detroit. Other counties remain research leads until a verified connector is available.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
 <div class="stats"><div><div class="small">QUEUED</div><div class="num" id="count">0</div></div><div><div class="small">STATUS</div><div class="num" id="state">Idle</div></div><div><div class="small">SOURCE</div><div class="num" id="built">—</div></div></div>
@@ -171,7 +172,8 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     (d.worker.publicationPending?' · Saved publication needs recovery':'')+
     (d.worker.quotaActive===false?' · Shared GIS budget starts after the first request’s UTC day':'')+
     ' · Other counties blocked until verified GIS connectors are configured';
-  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}
+   return true;
+  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;return false;}
  }
  document.getElementById('wayneRetryRearm').onclick=async()=>{
   const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);
@@ -208,7 +210,16 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
   }catch(e){out.textContent='Test batch failed: '+e.message;}
   finally{await loadAutonomy();btn.disabled=false;}
  };
- document.getElementById('unattendedRefresh').onclick=loadAutonomy;
+ const readinessButton=document.getElementById('unattendedRefresh');
+ const readinessFeedback=document.getElementById('unattendedRefreshStatus');
+ readinessButton.onclick=async()=>{
+  readinessButton.disabled=true;
+  readinessFeedback.textContent='Checking readiness…';
+  try{
+   const ok=await loadAutonomy();
+   readinessFeedback.textContent=ok?'Checked at '+new Date().toLocaleTimeString():'Readiness check failed. See the message above.';
+  }finally{readinessButton.disabled=false;}
+ };
  document.getElementById('unattendedToggle').onclick=async()=>{
   const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
   if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
