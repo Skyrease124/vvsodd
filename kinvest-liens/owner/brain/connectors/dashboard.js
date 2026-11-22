@@ -113,6 +113,33 @@ async function showTrial(request){
       await showCounty();
     }catch(error){statusLine.textContent=error.message+' Refresh before trying again.';}
   };
+  if(result.addressDiagnostic){
+    const diagnostic=result.addressDiagnostic;
+    const row=document.createElement('li');
+    const candidates=diagnostic.rows.map(entry=>
+      'Parcel '+(entry.parcelId||'unavailable')+', schedule '+(entry.schedule||'unavailable')+
+      ', object '+(entry.objectId??'unavailable')).join(' | ');
+    row.textContent='Address diagnostic (research only) · '+diagnostic.status.replaceAll('_',' ')+
+      ' · Results: '+(diagnostic.resultCount??'unavailable')+' · HTTP: '+(diagnostic.httpStatus??'unavailable')+
+      ' · '+diagnostic.checkedAt+(candidates?' · '+candidates:'');
+    evidence.append(row);
+  }
+  if(result.canRunAddressDiagnostic){
+    const diagnostic=document.createElement('button');
+    diagnostic.textContent='Run final address diagnostic';
+    diagnostic.onclick=async()=>{
+      if(!confirm('Use the final Larimer request for 741 Lindenmeier Rd, Fort Collins? This saves research only and keeps the parcel on review.'))return;
+      diagnostic.disabled=true;
+      statusLine.textContent='Checking the address with Larimer County…';
+      try{
+        await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'diagnose-larimer-address',confirmed:true})});
+        await showCounty();
+      }catch(error){statusLine.textContent=error.message+' Refresh and inspect the saved trial budget.';}
+    };
+    details.append(summary,evidence,diagnostic);
+    return;
+  }
   if(result.retry?.exhausted===true&&result.used<result.limit){
     const review=document.createElement('button');
     review.textContent='Approve retry of same Larimer parcel';

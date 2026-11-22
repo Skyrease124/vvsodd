@@ -1,3 +1,4 @@
+import { canDiagnoseLarimer, lookupLarimerAddress } from '../../netlify/lib/brain-larimer-address-diagnostic.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -101,13 +102,14 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
  const budgetKey='brain-gis-trial-budget-v1-CO-larimer';
  const trialKey='brain-gis-trial-v1-CO-larimer';
  const writes=new Map();
- let user=null,reads=0,runs=0;
+ let user=null,reads=0,runs=0,diagnoses=0;
+ const diagnosticKey='brain-gis-address-diagnostic-v1-CO-larimer';
  const storage={
   kvGetVersioned:async key=>{reads++;return writes.get(key)??null;},
   kvPutVersioned:async(key,data,etag)=>{
-   assert.equal(key,budgetKey);
+   assert.ok([budgetKey,diagnosticKey].includes(key));
    if((writes.get(key)?.etag??null)!==etag)return null;
-   const next=String(data.reserved);
+   const next=String(data.reserved??'diagnostic');
    writes.set(key,{data,etag:next});
    return next;
   }
@@ -119,6 +121,9 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
   'node:crypto':synthetic({createHash}),
   '../lib/brain-auth.mjs':synthetic({...storage,withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,
    kvGet:async key=>{assert.equal(key,'brain-map-county-v1-CO-larimer');return null;}}),
+  '../lib/brain-larimer-address-diagnostic.mjs':synthetic({canDiagnoseLarimer,lookupLarimerAddress:async()=>{
+   diagnoses++;return {kind:'address_research_only',status:'research_lead'};
+  }}),
   '../lib/brain-gis-trial-checkpoint.mjs':synthetic({rearmConnectorTrial:async()=>{throw Error('Unexpected review action');},runConnectorTrial:async params=>{
    assert.equal(params.environment,'deploy-preview');
    assert.equal(params.dataset,'CO-larimer');
@@ -130,9 +135,9 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
  };
  await handler.link(s=>modules[s]);await handler.evaluate();
  const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
- const invoke=({method='POST',deploy='deploy-preview',host=origin,from=origin,confirmed=true}={})=>
+ const invoke=({method='POST',deploy='deploy-preview',host=origin,from=origin,confirmed=true,action='verify-next-larimer'}={})=>
   handler.namespace.default(new Request(host+'/trial',{method,headers:{origin:from},
-   ...(method==='POST'?{body:JSON.stringify({action:'verify-next-larimer',confirmed})}:{})}),{deploy:{context:deploy}});
+   ...(method==='POST'?{body:JSON.stringify({action,confirmed})}:{})}),{deploy:{context:deploy}});
  assert.equal((await invoke()).status,401);
  user={owner:false};assert.equal((await invoke()).status,403);
  user={owner:true};
@@ -148,7 +153,24 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
  assert.equal((await invoke()).status,429);
  assert.equal(runs,3);
  assert.equal(writes.get(budgetKey).data.reserved,3);
- assert.equal(writes.has(trialKey),false); // This harness mocks the runner; the runner's checkpoint is tested above.
+ assert.equal(writes.has(trialKey),false); // The runner's checkpoint is tested separately.
+ const held={etag:'held',data:{cursor:0,retry:{recordId:record.i,exhausted:true,diagnostics:{reasonCode:'zero_results'}},evidence:[]}};
+ writes.set(trialKey,held);
+ writes.set(budgetKey,{etag:'two',data:{reserved:2}});
+ const action='diagnose-larimer-address';
+ assert.equal((await invoke({action,confirmed:false})).status,400);
+ assert.equal((await invoke({action,deploy:'production'})).status,404);
+ assert.equal((await invoke({action,from:'https://unrelated.example'})).status,403);
+ assert.equal((await (await invoke({method:'GET'})).json()).canRunAddressDiagnostic,true);
+ assert.equal(diagnoses,0);
+ const results=await Promise.all([invoke({action}),invoke({action})]);
+ assert.equal(results.filter(r=>r.status===200).length,1);
+ assert.equal(diagnoses,1);
+ assert.equal(writes.get(budgetKey).data.reserved,3);
+ assert.deepEqual(writes.get(trialKey),held);
+ assert.equal(writes.get(diagnosticKey).data.kind,'address_research_only');
+ assert.equal((await invoke({action})).status,409);
+ assert.equal(diagnoses,1);
 });
 
 
@@ -235,4 +257,38 @@ test('Larimer re-arm uses two separate owner confirmations and never dispatches 
  assert.match(frontend,/does NOT send a GIS request now/);
  assert.match(frontend,/action:'rearm-larimer-review',confirmed:true/);
  assert.match(frontend,/action:'verify-next-larimer',confirmed:true/);
+});
+
+
+test('address diagnostic sends a fixed two-row attributes-only query and records research leads',async()=>{
+ const attrs={PARCELNUM:'1234567890',SCHEDNUM:'0155675',LOCADDRESS:'741 LINDENMEIER RD',LOCCITY:'FORT COLLINS',
+  OBJECTID_1:42,NAME:'private-name',TOKEN:'session-token'};
+ let calls=0;
+ const result=await lookupLarimerAddress({fetcher:async(url,options)=>{
+  calls++;
+  const query=new URL(url);
+  assert.equal(query.origin,'https://maps1.larimer.org');
+  assert.equal(query.pathname,'/arcgis/rest/services/MapServices/Parcels/MapServer/3/query');
+  assert.equal(query.searchParams.get('where'),"LOCADDRESS = '741 LINDENMEIER RD' AND LOCCITY = 'FORT COLLINS'");
+  assert.equal(query.searchParams.get('outFields'),'PARCELNUM,SCHEDNUM,LOCADDRESS,LOCCITY,OBJECTID_1');
+  assert.equal(query.searchParams.get('returnGeometry'),'false');
+  assert.equal(query.searchParams.get('resultRecordCount'),'2');
+  assert.equal(options.redirect,'error');
+  return Response.json({features:[{attributes:attrs,geometry:{secret:'discard'}}]});
+ }});
+ assert.equal(calls,1);
+ assert.equal(result.status,'research_lead');
+ assert.equal(result.kind,'address_research_only');
+ assert.deepEqual(result.rows,[{parcelId:'1234567890',schedule:'0155675',address:'741 LINDENMEIER RD',city:'FORT COLLINS',objectId:42}]);
+ assert.doesNotMatch(JSON.stringify(result),/private-name|session-token|geometry|verifiedGeometry/);
+ for(const [body,status] of [
+  [{features:[]},'no_results'],
+  [{features:[{attributes:attrs},{attributes:attrs}]},'ambiguous'],
+  [{features:[{attributes:attrs}],exceededTransferLimit:true},'incomplete'],
+  [{features:[{attributes:{...attrs,LOCADDRESS:'742 LINDENMEIER RD'}}]},'address_mismatch']
+ ]){
+  const check=await lookupLarimerAddress({fetcher:async()=>Response.json(body)});
+  assert.equal(check.status,status);
+  assert.equal(check.kind,'address_research_only');
+ }
 });

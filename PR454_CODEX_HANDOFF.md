@@ -99,3 +99,11 @@ The first live attempt for Larimer parcel 9701400014 (741 Lindenmeier Rd, Fort C
 New attempts record safe diagnostic fields alongside the existing source and reason: stage, reason code, HTTP status, numeric ArcGIS error code, result count, up to two format-checked parcel IDs, transfer-limit flag, and UTC timestamp. The owner dashboard also explains when an older attempt has no diagnostics. Raw bodies, headers, provider messages, credentials, and session data are excluded. Fixtures cover the four lookup outcomes, sensitive field exclusion, and persistence of the held cursor without another reservation. All 104 local workflow tests passed.
 
 No live GIS request or research-state write was made. The original hold and 1/3 reservation remain intact. A new request would need separately approved recovery of this same checkpoint, or a separately obtained copy of the original provider response could resolve the old failure without a request. Do not skip to the next record.
+
+### Final Larimer address diagnostic
+
+The repeat exact PARCELNUM query for 9701400014 returned HTTP 200, zero rows, and no transfer-limit flag. The Treasurer import preserves 9701400014 as PARCEL NO and 0155675 separately as SCHEDULE. The reason the live layer returned zero remains unknown.
+
+Layer metadata confirms Query capability, standardized SQL, pagination, and PARCELNUM, SCHEDNUM, LOCADDRESS, LOCCITY, and OBJECTID_1. The new owner-confirmed action uses fixed exact address and city predicates, those five fields only, a two-row limit, and no geometry. It is available only on the canonical PR #454 preview with two slots reserved and the original zero-result parcel on exhausted review. It uses an atomic reservation of the same final slot and saves sanitized evidence under its own research key. It does not release or advance the checkpoint, alter evidence, or write map corrections. A matching address is only a research lead and needs Assessor parcel history or a documented Treasurer-to-Assessor cross-reference before any identity change.
+
+Local verification: 107 tests passed, including fixed query shape, sanitization, incomplete/ambiguous responses, explicit confirmation, preview and origin guards, concurrent attempts, and unchanged review state. No live parcel query was sent. Any live request requires separate owner confirmation in County Connectors.

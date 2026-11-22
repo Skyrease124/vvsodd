@@ -4,19 +4,22 @@ import { createHash } from 'node:crypto';
 import * as auth from '../lib/brain-auth.mjs';
 import { runConnectorTrial, rearmConnectorTrial } from '../lib/brain-gis-trial-checkpoint.mjs';
 
+import { canDiagnoseLarimer, lookupLarimerAddress } from '../lib/brain-larimer-address-diagnostic.mjs';
+
 const hostname='deploy-preview-454--pricepocketasset.netlify.app';
 const dataset='CO-larimer';
 const trialKey='brain-gis-trial-v1-'+dataset;
+const diagnosticKey='brain-gis-address-diagnostic-v1-'+dataset;
 const budgetKey='brain-gis-trial-budget-v1-'+dataset;
 const limit=3;
 const ids=['9701400014','8510310018','8510339002'];
 const reply=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const count=snapshot=>snapshot?.data?.reserved??0;
 
-async function reserve() {
+async function reserve(expectedUsed) {
   const current=await auth.kvGetVersioned(budgetKey);
   const used=count(current);
-  if(!Number.isSafeInteger(used)||used<0||used>=limit||
+  if(!Number.isSafeInteger(used)||used<0||used>=limit||(expectedUsed!==undefined&&used!==expectedUsed)||
      !await auth.kvPutVersioned(budgetKey,{reserved:used+1},current?.etag??null)) {
     throw Object.assign(Error('Larimer trial budget is exhausted or busy'),{code:'QUOTA'});
   }
@@ -31,14 +34,30 @@ async function handler(req,context) {
   if(req.method==='POST'&&req.headers.get('origin')!==url.origin)return reply(403,{error:'Invalid origin'});
   try{
     if(req.method==='GET'){
-      const [trial,budget]=await Promise.all([auth.kvGetVersioned(trialKey),auth.kvGetVersioned(budgetKey)]);
+      const [trial,budget,diagnostic]=await Promise.all([
+        auth.kvGetVersioned(trialKey),auth.kvGetVersioned(budgetKey),auth.kvGetVersioned(diagnosticKey)
+      ]);
       return reply(200,{used:count(budget),limit,cursor:trial?.data?.cursor??0,
-        retry:trial?.data?.retry??null,evidence:trial?.data?.evidence??[],parcelIds:ids});
+        retry:trial?.data?.retry??null,evidence:trial?.data?.evidence??[],parcelIds:ids,
+        addressDiagnostic:diagnostic?.data??null,canRunAddressDiagnostic:canDiagnoseLarimer(trial?.data,count(budget),diagnostic)});
     }
     const raw=await req.text();
     let body;
     try{if(raw.length>128)throw Error();body=JSON.parse(raw);}catch{return reply(400,{error:'Invalid trial request'});}
-    if(!['verify-next-larimer','rearm-larimer-review'].includes(body?.action)||body.confirmed!==true)return reply(400,{error:'Explicit trial confirmation required'});
+    if(!['verify-next-larimer','rearm-larimer-review','diagnose-larimer-address'].includes(body?.action)||body.confirmed!==true)return reply(400,{error:'Explicit trial confirmation required'});
+    if(body.action==='diagnose-larimer-address'){
+      const [trial,budget,saved]=await Promise.all([
+        auth.kvGetVersioned(trialKey),auth.kvGetVersioned(budgetKey),auth.kvGetVersioned(diagnosticKey)
+      ]);
+      if(!canDiagnoseLarimer(trial?.data,count(budget),saved))return reply(409,{error:'Final address diagnostic requires the original zero-result review and exactly one remaining slot'});
+      try{await reserve(2);}catch(error){
+        if(error.code==='QUOTA')return reply(429,{error:'Larimer trial slot unavailable'});
+        throw error;
+      }
+      const diagnostic=await lookupLarimerAddress();
+      if(!await auth.kvPutVersioned(diagnosticKey,diagnostic,null))throw Error('Diagnostic storage unavailable');
+      return reply(200,{addressDiagnostic:diagnostic});
+    }
     if(count(await auth.kvGetVersioned(budgetKey))>=limit)return reply(429,{error:'Larimer trial budget is exhausted'});
     const root=process.env.LAMBDA_TASK_ROOT||process.cwd();
     const data=JSON.parse(await readFile(join(root,'kinvest-liens/map/data/CO-larimer.json'),'utf8'));
@@ -66,7 +85,7 @@ async function handler(req,context) {
         return reply(200,released);
       }catch{return reply(409,{error:'Review checkpoint changed or unavailable. Refresh status.'});}
     }
-    const result=await runConnectorTrial({environment:context.deploy.context,dataset,revision,records,reserve,
+    const result=await runConnectorTrial({environment:context.deploy.context,dataset,revision,records,reserve:()=>reserve(),
       storage:{read:auth.kvGetVersioned,write:auth.kvPutVersioned}});
     return reply(200,result);
   }catch{
