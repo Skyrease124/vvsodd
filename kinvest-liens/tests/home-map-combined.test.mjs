@@ -26,3 +26,18 @@ test('Radar official changes hand off state only, without inventing parcel marke
  assert.match(app,/select\.dispatchEvent\(new Event\('change'/);
  assert.doesNotMatch(radar,/ppa:radar-map-parcel/);
 });
+
+test('exact Radar parcel handoff requires official change and verified GIS polygon',()=>{
+ const radar=fs.readFileSync('kinvest-liens/radar.js','utf8');
+ const map=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
+ const app=fs.readFileSync('kinvest-liens/app-ui.js','utf8');
+ assert.match(radar,/c\.official === true/);
+ assert.match(radar,/c\.type !== 'missing'/);
+ assert.match(radar,/ppa:radar-map-parcel/);
+ assert.match(map,/event\.origin !== location\.origin/);
+ assert.match(map,/event\.source !== window\.parent/);
+ assert.match(map,/String\(r\.p\)\.trim\(\)===d\.parcel\.trim\(\) && r\.g/);
+ assert.match(map,/hits\.length===1/);
+ assert.match(app,/ppa:radar-parcel-result/);
+ assert.match(app,/no location was invented/);
+});
