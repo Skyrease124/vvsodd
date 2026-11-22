@@ -71,8 +71,12 @@
     for (const control of mapViews) {
       const selected = control.dataset.homeMapView === view;
       control.setAttribute('aria-pressed', String(selected));
-      document.getElementById(control.getAttribute('aria-controls')).hidden = !selected;
+
     }
+    const both = view === 'both';
+    document.getElementById('home-parcels').hidden = !(both || view === 'parcels');
+    document.getElementById('home-radar').hidden = !(both || view === 'radar');
+    document.getElementById('home-combined-note').hidden = !both;
   }
   for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
   const openRadarLink = event => {
