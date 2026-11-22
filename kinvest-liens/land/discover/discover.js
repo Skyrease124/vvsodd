@@ -38,8 +38,8 @@ async function drawVerifiedParcels(){
  if(state.value!=='MS'||map.getZoom()<8)return;
  try{
   if(!parcelIndex){const r=await fetch('/map/index.json');if(!r.ok)throw Error('index');parcelIndex=(await r.json()).datasets.filter(d=>d.state==='MS'&&d.cats?.land_bank);}
-  const visible=parcelIndex.filter(d=>!county.value||normalize(d.county)===normalize(county.value));
-  const layer=L.featureGroup(),viewport=map.getBounds();let drawn=0;
+  const viewport=map.getBounds();const visible=parcelIndex.filter(d=>(!county.value||normalize(d.county)===normalize(county.value))&&(!d.bb||viewport.intersects(L.latLngBounds([[d.bb[1],d.bb[0]],[d.bb[3],d.bb[2]]]))));
+  const layer=L.featureGroup();let drawn=0;
   for(const d of visible){
    if(token!==parcelRequest)return;
    let data=parcelData.get(d.file);
