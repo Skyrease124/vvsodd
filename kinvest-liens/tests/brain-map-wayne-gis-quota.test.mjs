@@ -58,8 +58,8 @@ test('preview and production use the same persistent Wayne quota namespace', asy
 });
 
 
-test('owner preview quota activation cannot dispatch GIS and requires confirmation',()=>{
- 
+test('owner preview quota activation cannot dispatch GIS and requires confirmation',async()=>{
+ const fs=await import('node:fs');
  const endpoint=fs.readFileSync('netlify/functions/owner-brain-wayne-quota-activate.mjs','utf8');
  const dashboard=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
  assert.match(endpoint,/context\?\.deploy\?\.context!=='deploy-preview'/);
