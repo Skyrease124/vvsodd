@@ -19,6 +19,25 @@ const methods=Object.freeze({
 });
 const trimmed=value=>typeof value==='string'?value.trim():'';
 
+const larimerAccountCsv='https://storage.googleapis.com/lc-public/asr/assessor-public-account.csv';
+const larimerAccountObservation=Object.freeze({
+ sourceUrl:larimerAccountCsv, checkedAt:'2026-11-22T04:25:13Z',
+ generation:'1795252332533535', csvLine:59825,
+ parcel:'9701484001', schedule:'1688587', account:'R1688587',
+ shortLegalDescription:'LOT 1, GLOVER ESTATE, FTC (20260006626)'
+});
+
+// Each source must supply its own field mapping and reference format.
+// Extraction produces a search lead; only an official index can confirm it.
+export function extractAssessorDocumentLead(observation){
+ if(observation?.sourceUrl!==larimerAccountCsv)return null;
+ const description=trimmed(observation.shortLegalDescription);
+ const match=/^LOT [^,]+, [^()]+ \((\d{11})\)$/.exec(description);
+ if(!match)return null;
+ return {reference:match[1],classification:'document_reference_candidate',sourceUrl:larimerAccountCsv};
+}
+
+
 export function prepareDocumentSearch(source,field,value){
  if(!Object.hasOwn(methods,source)||!methods[source].fields.includes(field))throw Error('Search field unavailable for this source');
  const raw=trimmed(value);
@@ -38,7 +57,11 @@ export function prepareDocumentSearch(source,field,value){
 }
 
 export function larimerDocumentPlans(){
+ const lead=extractAssessorDocumentLead(larimerAccountObservation);
  return [
+  {...prepareDocumentSearch('recorder','reception',lead.reference),lead:{...larimerAccountObservation,...lead},
+   evidence:'Check exact Reception Number in Document Search. Capture document type, recording date and indexed legal description if available.',
+   requestUsage:'One owner-approved manual index search after opening the portal. Zero application research reservations and zero GIS requests.'},
   prepareDocumentSearch('recorder','subdivision','Glover Estate'),
   ...['9701400014','9701484001'].map(id=>prepareDocumentSearch('assessor','parcel',id)),
   ...['0155675','1688587'].map(id=>prepareDocumentSearch('assessor','schedule',id)),
@@ -64,4 +87,27 @@ export function reviewDocumentResult(plan,result){
  }
  return {planId:expected.id,sourceUrl:observed.href,checkedAt,outcome:result.outcome,
   classification:'research_candidate',publicationAllowed:false};
+}
+
+
+// The source adapter supplies only exact index rows. Multiple exact rows
+// require review even when some of their public metadata agrees.
+export function reviewRecorderReference(plan,result){
+ const reviewed=reviewDocumentResult(plan,result);
+ if(plan.source!=='recorder'||plan.field!=='reception')throw Error('Expected an exact Recorder reference plan');
+ const decision={...reviewed,referenceConfirmed:false,relationshipStatus:'unresolved'};
+ if(result.outcome!=='found')return decision;
+ if(!Array.isArray(result.rows)||!result.rows.length)throw Error('Missing Recorder index rows');
+ if(result.rows.some(row=>trimmed(row?.receptionNumber)!==plan.term))throw Error('Conflicting Recorder references');
+ if(result.rows.length!==1)return {...decision,classification:'conflicting_index_evidence'};
+ const row=result.rows[0];
+ const documentType=trimmed(row.documentType);
+ const recordingDate=trimmed(row.recordingDate);
+ const date=new Date(recordingDate);
+ if(!documentType||documentType.length>100||!/^\d{4}-\d{2}-\d{2}$/.test(recordingDate)||
+    !Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==recordingDate){
+  return {...decision,classification:'incomplete_index_evidence'};
+ }
+ return {...decision,classification:'official_index_entry',referenceConfirmed:true,
+  receptionNumber:plan.term,documentType,recordingDate,legalDescription:trimmed(row.legalDescription).slice(0,2000)};
 }

@@ -418,6 +418,13 @@ function renderDocumentPlans(plans){
     link.href=plan.url;
     link.textContent=plan.authority;
     row.append(link,document.createTextNode(' · Search '+plan.field+' '+plan.term+' · '+plan.evidence+' · '+plan.restriction));
+    if(plan.lead){
+      const citation=document.createElement('a');
+      citation.href=plan.lead.sourceUrl;
+      citation.textContent='Larimer Assessor Account CSV';
+      row.append(document.createTextNode(' · Unverified reference in '+plan.lead.shortLegalDescription+
+        ' · '+plan.requestUsage+' · CSV observed '+plan.lead.checkedAt+' · '),citation);
+    }
     list.append(row);
   }
   body.append(note,list);

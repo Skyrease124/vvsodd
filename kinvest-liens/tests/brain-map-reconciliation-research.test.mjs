@@ -312,3 +312,32 @@ test('record evidence accepts exact official provenance and rejects mismatches',
  assert.throws(()=>documentPlans.reviewDocumentResult(p,{...raw,sourceUrl:p.url+'?token=secret'}),/Unapproved/);
  assert.equal(documentPlans.reviewDocumentResult(p,{...raw,outcome:'restricted',matchedTerm:null}).outcome,'restricted');
 });
+
+test('Larimer Assessor legal description produces a disabled exact Recorder lookup',()=>{
+ const [plan]=documentPlans.larimerDocumentPlans();
+ assert.equal(plan.term,'20260006626');
+ assert.equal(plan.field,'reception');
+ assert.equal(plan.lead.classification,'document_reference_candidate');
+ assert.equal(plan.lead.csvLine,59825);
+ assert.equal(plan.executionEnabled,false);
+ assert.equal(documentPlans.extractAssessorDocumentLead({...plan.lead,sourceUrl:'https://other.example/accounts.csv'}),null);
+ assert.equal(documentPlans.extractAssessorDocumentLead({...plan.lead,shortLegalDescription:'METES AND BOUNDS (20260006626)'}),null);
+ assert.equal(documentPlans.extractAssessorDocumentLead({...plan.lead,shortLegalDescription:'LOT 1, GLOVER ESTATE (2026)'}),null);
+});
+
+test('exact Recorder index metadata never establishes parcel succession',()=>{
+ const [plan]=documentPlans.larimerDocumentPlans();
+ const row={receptionNumber:plan.term,documentType:'Synthetic plat',recordingDate:'2025-04-03'};
+ const response={sourceUrl:plan.url,checkedAt:'2026-11-22T05:00:00Z',outcome:'found',matchedTerm:plan.term,rows:[row]};
+ const observed=documentPlans.reviewRecorderReference(plan,response);
+ assert.equal(observed.referenceConfirmed,true);
+ assert.equal(observed.relationshipStatus,'unresolved');
+ assert.equal(observed.publicationAllowed,false);
+ assert.equal(observed.documentType,row.documentType);
+ assert.equal(documentPlans.reviewRecorderReference(plan,{...response,outcome:'restricted'}).referenceConfirmed,false);
+ assert.equal(documentPlans.reviewRecorderReference(plan,{...response,rows:[row,row]}).classification,'conflicting_index_evidence');
+ assert.equal(documentPlans.reviewRecorderReference(plan,{...response,rows:[{...row,recordingDate:'2025-02-30'}]}).referenceConfirmed,false);
+ assert.throws(()=>documentPlans.reviewRecorderReference(plan,{...response,rows:[]}),/Missing Recorder index rows/);
+ assert.throws(()=>documentPlans.reviewRecorderReference(plan,{...response,rows:[{...row,receptionNumber:'20260006627'}]}),/Conflicting Recorder references/);
+ assert.throws(()=>documentPlans.reviewRecorderReference(plan,{...response,sourceUrl:plan.url+'?session=secret'}),/Unapproved/);
+});
