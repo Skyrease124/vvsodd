@@ -67,6 +67,36 @@
   } catch(e) { /* optional storage */ }
   const mapWorkspace = document.getElementById('map');
   const mapViews = [...mapWorkspace.querySelectorAll('[data-home-map-view]')];
+  const radarTabs = document.querySelector('#home-radar .rtabs');
+  const radarTabHome = radarTabs.parentNode;
+  const radarTabNext = radarTabs.nextSibling;
+  const radarDock = document.getElementById('home-radar-map-controls');
+  const radarStatus = document.getElementById('home-radar-match-status');
+  const radarDescriptions = {
+    opp:'Opportunities selected. Radar opportunities and county records are shown below. Only exact GIS-verified parcels can be located on the map.',
+    cal:'Auction Calendar selected. Calendar data is shown below; auctions without verified parcel geometry cannot appear as map markers.',
+    hist:'Sale History selected. Historical sale records are shown below; historical records are not automatically verified parcel locations.'
+  };
+  function updateRadarTabStatus(){
+    if(!mapWorkspace.classList.contains('app-map-unified'))return;
+    const selected=radarTabs.querySelector('[aria-selected="true"]');
+    const tab=selected?.dataset.tab||'opp';
+    if(radarStatus){radarStatus.hidden=false;radarStatus.textContent=radarDescriptions[tab];}
+  }
+  radarTabs.addEventListener('click',()=>queueMicrotask(updateRadarTabStatus));
+  function dockRadarTabs(enabled){
+    if(enabled){
+      if(radarTabs.parentNode!==radarDock)radarDock.appendChild(radarTabs);
+      radarDock.hidden=false;
+      updateRadarTabStatus();
+    }else{
+      radarDock.hidden=true;
+      if(radarTabs.parentNode!==radarTabHome)radarTabHome.insertBefore(radarTabs,radarTabNext);
+      if(radarStatus && Object.values(radarDescriptions).includes(radarStatus.textContent)){
+        radarStatus.hidden=true;radarStatus.textContent='';
+      }
+    }
+  }
   function showMapView(view) {
     for (const control of mapViews) {
       const selected = control.dataset.homeMapView === view;
@@ -80,6 +110,7 @@
     // In combined mode keep Radar's records, tabs, state search and panels,
     // but use the verified Parcel Map as the single geographic canvas.
     mapWorkspace.classList.toggle('app-map-unified', both);
+    dockRadarTabs(both);
   }
   for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
   showMapView('both');
