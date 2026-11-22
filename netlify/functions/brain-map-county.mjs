@@ -18,7 +18,8 @@ async function handler(req){
   const bounds=[Math.min(...ring.map(p=>p[0])),Math.min(...ring.map(p=>p[1])),Math.max(...ring.map(p=>p[0])),Math.max(...ring.map(p=>p[1]))];
   if(bounds.some((v,i)=>Math.abs(v-r.bb[i])>0.000001))continue;
   if(r.cx[0]<bounds[0]||r.cx[0]>bounds[2]||r.cx[1]<bounds[1]||r.cx[1]>bounds[3])continue;
-  records[id]={i:r.i,p:r.p,g:r.g,cx:r.cx,bb:r.bb,verifiedGeometry:true,verifiedAt:r.verifiedAt||null,evidenceUrl:r.evidenceUrl};
+  records[id]={i:r.i,p:r.p,g:r.g,cx:r.cx,bb:r.bb,verifiedGeometry:true,verifiedAt:r.verifiedAt||null,evidenceUrl:r.evidenceUrl,
+   ...(Number.isFinite(r.estimatedAcres)&&r.estimatedAcres>0?{estimatedAcres:r.estimatedAcres}:{})};
  }
  return output(200,{ok:true,dataset,version:Number.isInteger(saved.version)?saved.version:0,records});
 }

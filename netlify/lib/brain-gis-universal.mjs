@@ -1,5 +1,6 @@
 // Connector transport is injected. The owner dashboard never invokes it.
 import {connectorFor,polygonEvidence} from './brain-gis-connectors.mjs';
+import {countyPilotDefinition,pilotCountyIds,publishableIdentifier} from './brain-gis-pilot-registry.mjs';
 
 const aliases={
  parcel:['parcelnumber','parcelnum','parcelno','parcelid','propertyid','apn','pin'],
@@ -12,9 +13,12 @@ const registry=Object.freeze({
  'MI-wayne':{mode:'existing-worker',format:'feature-server'},
  'CO-larimer':{mode:'research-only',format:'map-server'}
  });
-export const operationCountyIds=()=>Object.keys(registry);
+export const operationCountyIds=()=>[...Object.keys(registry),...pilotCountyIds()];
 
 export function countyOperation(id){
+ const pilot=countyPilotDefinition(id);
+ if(pilot)return {id,mode:pilot.operationMode,source:pilot.source,authority:pilot.authority,format:pilot.format,
+  nativeWkid:pilot.nativeWkid,enabled:pilot.enabled,pilotLimit:3};
  const config=Object.hasOwn(registry,id)?registry[id]:null,existing=connectorFor(id);
  return config?{id,...config,source:existing.source,enabled:false}:null;
 }
@@ -100,6 +104,8 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
     ||!config.reviewedOrigin||source.origin!==config.reviewedOrigin)
   throw Error('Source origin requires explicit review');
  const isArc=arcgis.has(config.format);
+ const canonical=config.identifierFormat==='miami-folio'?
+  value=>publishableIdentifier(value)?value.replaceAll('-',''):'':identity;
  if(isArc&&!new RegExp('/'+(config.format==='feature-server'?'FeatureServer':'MapServer')+'/[0-9]+$','i').test(source.pathname))
   throw Error('Expected a specific ArcGIS layer');
  const bounded=Array.isArray(config.bounds)&&config.bounds.length===4&&config.bounds.every(Number.isFinite)&&
@@ -148,7 +154,7 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
     configuredRequestLimit:config.requestLimit??null}};
  }
  async function match(record,discovery){
-  if(record.dataset!==config.id||!identity(record.p)||!record.i)throw connectorError('invalid_identity','Invalid dataset parcel identity');
+  if(record.dataset!==config.id||!canonical(record.p)||!record.i)throw connectorError('invalid_identity','Invalid dataset parcel identity');
   const schema=discovery?.schema;
   if(discovery?.dataset!==config.id||discovery?.source!==source.href||!schema?.compatible)
    throw connectorError('unreviewed_schema','Source fields need owner review','source');
@@ -157,7 +163,7 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   if(isArc){
    if(!Object.values(fields).every(field=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(field)))
     throw connectorError('unsupported_fields','Source field names need review','source');
-   const query=new URLSearchParams({f:'json',where:fields.parcel+" = '"+record.p+"'",outFields:Object.values(fields).join(','),
+   const query=new URLSearchParams({f:'json',where:fields.parcel+" = '"+canonical(record.p)+"'",outFields:Object.values(fields).join(','),
     returnGeometry:'true',outSR:'4326',resultRecordCount:'2'});
    const data=await request(new URL(source.href+'/query?'+query),json);
    if(data.error||data.exceededTransferLimit||!Array.isArray(data.features))
@@ -169,7 +175,7 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   if(matches.length!==1)
    throw connectorError(matches.length?'duplicate':'missing',matches.length?'Multiple official parcel matches':'No official parcel matched the identifier');
   const selected=matches[0];
-  if(selected.attributes?.[fields.parcel]!==record.p)throw connectorError('id_mismatch','Official parcel identifier differs');
+  if(canonical(selected.attributes?.[fields.parcel])!==canonical(record.p))throw connectorError('id_mismatch','Official parcel identifier differs');
   return selected;
  }
  async function verify(record,discovery){

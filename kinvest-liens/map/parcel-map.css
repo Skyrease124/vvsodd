@@ -220,7 +220,7 @@ body.ppa-map-embed .pm{position:fixed;inset:0;height:auto;margin:0}
 .ppa-map-embed .pm-stack #pmAsk.pm-aib{font-size:.65rem;line-height:1.1;padding-inline:5px}
 .ppa-map-embed .pm-search{max-width:540px;margin-bottom:3px;padding:2px;border-radius:12px}.ppa-map-embed .pm-search input{font-size:16px;padding:4px}.ppa-map-embed .pm-search button{min-height:31px;font-size:.72rem;padding-inline:5px}.ppa-map-embed .pm-stack .pm-ib,.ppa-map-embed .pm-tools summary,.ppa-map-embed .pm-stack #pmAsk.pm-aib{height:33px;min-height:33px}
 .ppa-map-embed .pm-pill,.ppa-map-embed .pm-pill select{min-height:33px;height:33px}.ppa-map-embed .pm-pill{max-width:330px}.ppa-map-embed .pm-brief{padding:4px 8px;font-size:.7rem}.ppa-map-embed .pm-msg{bottom:56px}.ppa-map-embed .pm-pop{bottom:5px;max-height:68%;border-radius:13px}.ppa-map-embed .pm-pop .hd{padding:4px 7px}.ppa-map-embed .pm-pop .hd b{font-size:.82rem}.ppa-map-embed .pm-pop .abar{padding:3px;gap:3px}.ppa-map-embed .pm-pop .abar a,.ppa-map-embed .pm-pop .abar button{min-height:32px;font-size:.65rem}.ppa-map-embed .pm-pop .abar .ab.main{color:#e9fff2;background:#096649;border:1px solid #66d89c}
-.ppa-picker .pm-top,.ppa-picker .pm-right,.ppa-picker .pm-left,.ppa-picker .pm-pop,.ppa-picker .pm-area,.ppa-picker .pm-msg,.ppa-picker #ppaBar,.ppa-picker .pp-top{display:none!important}
+.ppa-picker .pm-top,.ppa-picker .pm-right,.ppa-picker .pm-left,.ppa-picker .pm-area,.ppa-picker .pm-msg,.ppa-picker #ppaBar,.ppa-picker .pp-top{display:none!important}
 
 /* The homepage map uses floating controls and opens the full panels on demand. */
 body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}

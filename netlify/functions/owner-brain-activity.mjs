@@ -33,7 +33,7 @@ async function handler(req){
     const county=ids[index];
     for(const event of (checkpoint?.events||[]).slice(-25)){
      const at=date(event.at);
-     if(!at||!['evidence_saved','skipped','source_paused','quota_wait'].includes(event.status))continue;
+     if(!at||!['evidence_saved','skipped','source_paused','quota_wait','owner_paused','owner_resumed'].includes(event.status))continue;
      events.push({id:'county-operation-'+county+'-'+(event.id??[at,event.parcelId,event.status].join('-')),
       at,agent:'County connectors',from:'Official source',to:'NVIDIA',type:'county_research',
       county,parcelId:clean(event.parcelId),status:event.status==='evidence_saved'?'info':'warning',

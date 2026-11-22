@@ -65,17 +65,16 @@ function selectState(){
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
 }
-const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
 function overlay(){
  if(!map||!currentData)return;
- const feats=utils.visibleParcels(currentData.recs).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??null,category:r.c},geometry:geometry(r)})).filter(f=>f.geometry);
+ const feats=utils.visibleParcels(currentData.recs).map(r=>({type:'Feature',properties:{parcelId:r.p,recordId:r.i,acreage:r.ac??r.__brainEvidence?.estimatedAcres??null,estimated:r.ac==null,source:r.__brainEvidence?.source??null,category:r.c,county:detail.county,state:detail.state},geometry:geometry(r)})).filter(f=>f.geometry);
  const fc={type:'FeatureCollection',features:feats};
  if(map.getSource('owner-parcels'))map.getSource('owner-parcels').setData(fc);
  else{map.addSource('owner-parcels',{type:'geojson',data:fc});map.addLayer({id:'owner-fill',type:'fill',source:'owner-parcels',paint:{'fill-color':'#00c9af','fill-opacity':0.2}});map.addLayer({id:'owner-outline',type:'line',source:'owner-parcels',paint:{'line-color':'#70ffe0','line-width':2}});}
  const bb=feats[0]?.geometry.coordinates?.[0];if(bb?.length){const bounds=new maplibregl.LngLatBounds();for(const p of bb){bounds.extend(p);}map.fitBounds(bounds,{padding:60,maxZoom:16,duration:0});}
- $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' verified parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview capped at 250 polygons.';
+ $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' verified parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview includes every verified correction and samples the original boundaries.';
 }
 async function loadData(){
  const d=detail;
@@ -103,8 +102,23 @@ function readyMap(){
  overlay();
  map.on('click','owner-fill',e=>{
   const p=e.features?.[0]?.properties;if(!p)return;
-  new maplibregl.Popup({closeButton:true}).setLngLat(e.lngLat)
-   .setHTML('<b>Parcel '+esc(p.parcelId)+'</b><div>Category: '+esc(p.category)+'</div><div>Acreage: '+(p.acreage??'Not available')+'</div><div>Existing GIS boundary (preview)</div>').addTo(map);
+  const content=document.createElement('div');
+  const title=document.createElement('b');
+  title.textContent='Parcel '+p.parcelId;
+  const location=document.createElement('div');
+  location.textContent=p.county+', '+p.state;
+  const category=document.createElement('div');
+  category.textContent='Category: '+(p.category??'Unavailable');
+  const acreage=document.createElement('div');
+  const acres=typeof p.acreage==='number'?p.acreage:NaN;
+  acreage.textContent=Number.isFinite(acres)?(p.estimated?'Estimated acreage: ':'Acreage: ')+acres.toFixed(2):'Acreage: unavailable';
+  content.append(title,location,category,acreage);
+  if(typeof p.source==='string'&&/^https:\/\//.test(p.source)){
+   const source=document.createElement('a');
+   source.href=p.source;source.target='_blank';source.rel='noopener noreferrer';
+   source.textContent='Official GIS boundary source';content.append(source);
+  }
+  new maplibregl.Popup({closeButton:true}).setLngLat(e.lngLat).setDOMContent(content).addTo(map);
  });
 }
 $('load').onclick=async()=>{

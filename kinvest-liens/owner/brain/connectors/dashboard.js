@@ -34,9 +34,9 @@ function render(county,coverage,operation){
   }
   add('Connector status',county.status);
   add('Connector type',county.connector||'Unassigned');
-  if(county.source){
+  if(county.source||operation?.source){
     const link=document.createElement('a');
-    link.href=county.source;
+    link.href=county.source||operation.source;
     link.textContent='Open official GIS source';
     add('Official GIS source',link);
   }else add('Official GIS source','Awaiting review');
@@ -50,7 +50,7 @@ function render(county,coverage,operation){
   add('Remaining unmapped records',coverage.remaining);
   add('Correction completion',coverage.completion===null?'No unmapped records in the original dataset':coverage.completion.toFixed(2)+'% of original unmapped records');
   if(operation){
-    add('Processing status',operation.mode==='existing-worker'?(operation.state||'Not started').replaceAll('_',' '):'Research only · disabled');
+    add('Processing status',operation.mode==='existing-worker'?(operation.state||'Not started').replaceAll('_',' '):operation.mode==='pilot-prepared'?'Pilot prepared · Awaiting approval':'Research only · disabled');
     const progress=operation.progress;
     add('Eligible and processed',progress?(progress.total-progress.pending)+' of '+progress.total:'No saved operation totals');
     add('Processing completion',progress?progress.processingPercent+'%':'Unavailable');
@@ -95,6 +95,7 @@ async function showCounty(){
     const {county,coverage,operation}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
     render(county,coverage,operation);
+    if(operation?.mode==='pilot-prepared'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showCountyPilot(county.id,request);
     if(county.id==='CO-larimer'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showTrial(request);
     if(request===selection)statusLine.textContent='';
   }catch(error){if(request===selection)statusLine.textContent=error.message;}
@@ -460,4 +461,56 @@ function renderDocumentPlans(plans){
   }
   body.append(note,list);
   return disclose('Parcel Document Search · disabled',body);
+}
+
+
+async function showCountyPilot(id,selectionAtLoad){
+ const endpoint='/.netlify/functions/owner-brain-county-pilot?'+new URLSearchParams({dataset:id});
+ const state=await read(endpoint);
+ if(selection!==selectionAtLoad)return;
+ const panel=document.createElement('div'),note=document.createElement('p');
+ const percentage=state.eligible?Math.round(100*state.processed/state.eligible):0;
+ note.textContent='Eligible '+state.eligible+' · Processed '+state.processed+' ('+percentage+'%) · Evidence saved '+state.verifiedEvidence+
+  ' · Verified map polygons '+state.published+' ('+(state.eligible?Math.round(100*state.published/state.eligible):0)+'%)'+
+  ' · Shared requests remaining '+state.sharedRemaining+' · County requests remaining '+state.countyRemaining+
+  ' · Pilot maximum '+state.pilotLimit+' requests';
+ panel.append(note);
+ const health=document.createElement('p');
+ health.textContent=(state.paused?'Paused':state.sourceHealth?.status?.replaceAll('_',' ')||'No saved source activity')+
+  (state.sourceHealth?.reason?' · '+state.sourceHealth.reason:'')+
+  (state.lastSuccessfulAt?' · Last processed '+new Date(state.lastSuccessfulAt).toLocaleString():'');
+ panel.append(health);
+ if(state.blockers?.length){
+  const blockers=document.createElement('p');
+  blockers.textContent=state.blockers.join(' · ');
+  panel.append(blockers);
+ }
+ function action(label,kind,row=null){
+  const button=document.createElement('button');
+  button.type='button';
+  button.textContent=label;
+  button.disabled=!state.active;
+  button.onclick=async()=>{
+   if(!confirm(label+' for this county?'))return;
+   button.disabled=true;
+   try{
+    await read(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({action:kind,cursor:state.cursor,confirmed:true,...(row?{review:row}:{})})});
+    await showCounty();
+   }catch(error){statusLine.textContent=error.message;button.disabled=false;}
+  };
+  return button;
+ }
+ panel.append(action(state.paused?'Resume county':'Pause county',state.paused?'resume':'pause'));
+ panel.append(action('Run county pilot','run'));
+ const list=document.createElement('ul');
+ for(const [index,row] of Object.entries(state.review||{})){
+  if(row.resolvedAt)continue;
+  const item=document.createElement('li');
+  item.textContent=row.parcelId+' · Skipped · Needs Review · '+row.reason+' ';
+  item.append(action('Retry parcel','retry',{index:Number(index),parcelId:row.parcelId,checkedAt:row.checkedAt}));
+  list.append(item);
+ }
+ if(list.childElementCount)panel.append(disclose('Skipped parcels awaiting review',list));
+ details.append(grouped('County pilot controls',panel));
 }

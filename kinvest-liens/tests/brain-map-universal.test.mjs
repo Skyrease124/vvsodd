@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import vm from 'node:vm';
 import {countyOperation,createCountyConnector,inspectFields} from '../../netlify/lib/brain-gis-universal.mjs';
+import {countyPilotDefinition,eligiblePilotRows} from '../../netlify/lib/brain-gis-pilot-registry.mjs';
 import {publishCountyCorrection} from '../../netlify/lib/brain-gis-county-publication.mjs';
 import {countyCheckpointKey,reserveCountyRequest,runCountyResearch} from '../../netlify/lib/brain-gis-county-worker.mjs';
 
@@ -179,4 +180,112 @@ test('future publication requires separate approval, independently verifies, and
   assert.equal(dataset.recs[0].p,'0007',surface);
   assert.deepEqual(dataset.recs[0].g,[shape],surface);
  }
+});
+
+
+const miami=countyPilotDefinition('FL-miami-dade');
+const miamiMeta={...arcMeta,fields:[{name:'FOLIO',type:'esriFieldTypeString'},{name:'TRUE_SITE_ADDR',type:'esriFieldTypeString'}]};
+const miamiShape=[[-80.3,25.7],[-80.299,25.7],[-80.299,25.701],[-80.3,25.7]];
+const fixtureRaw={id:miami.id,recs:Array.from({length:10},(_,i)=>({
+ i:'m'+i,p:'00-1000-123-'+String(i+1).padStart(4,'0'),a:'100 Main Street'
+}))};
+const miamiRows=eligiblePilotRows(miami,fixtureRaw);
+function miamiResult(id,ring=miamiShape){
+ return {spatialReference:{wkid:4326},features:[{attributes:{FOLIO:id,TRUE_SITE_ADDR:'100 MAIN ST'},geometry:{rings:[ring]}}]};
+}
+test('ten Miami-Dade fixtures process through skip, source pause, retry and restart without publishing',async()=>{
+ const storage=memory();
+ let time=now(),firstTimeout=true;
+ const source=async url=>{
+  if(!url.pathname.endsWith('/query'))return Response.json(miamiMeta);
+  const id=url.searchParams.get('where').split("'")[1];
+  assert.match(id,/^001000123\d{4}$/);
+  switch(Number(id.slice(-4))){
+   case 1:return Response.json({spatialReference:{wkid:4326},features:[]});
+   case 2:return Response.json({...miamiResult(id),features:[...miamiResult(id).features,...miamiResult(id).features]});
+   case 3:return Response.json(miamiResult(id,miamiShape.slice(1)));
+   case 5:if(firstTimeout){firstTimeout=false;throw new Error('mock timeout');}break;
+  }
+  return Response.json(miamiResult(id));
+ };
+ const options={storage,rows:miamiRows,revision:'miami-fixture',fetcher:source,now:()=>time,
+  config:{...miami,enabled:true,requestLimit:20,operationMode:'fixture'},
+  authorization:{owner:true,preview:true,confirmed:true,dataset:miami.id}};
+ const first=await runCountyResearch(options);
+ assert.equal(first.cursor,3);
+ assert.deepEqual(Object.values(first.review).map(row=>row.code),['missing','duplicate','invalid_polygon']);
+ assert.equal((await runCountyResearch(options)).cursor,4);
+ assert.equal((await runCountyResearch(options)).sourceHealth.status,'source_paused');
+ time+=60001;
+ let last;
+ for(let i=0;i<2;i++)last=await runCountyResearch(options);
+ assert.equal(last.cursor,10);
+ assert.equal(Object.keys(last.evidence).length,7);
+ assert.equal(last.evidence[9].parcelId,miamiRows[9].p);
+ assert.equal(last.evidence[9].publicationAllowed,false);
+ assert.equal(await storage.read('brain-map-county-v1-'+miami.id),null);
+});
+
+test('one Miami pilot approval cap spans discovery, verification and independent publication',async()=>{
+ const storage=memory(),approval={id:'fixture-approval',day:'2026-11-22'};
+ const config={...miami,enabled:true,approval};
+ let calls=0;
+ const mock=async url=>{
+  calls++;
+  return Response.json(url.pathname.endsWith('/query')?miamiResult(url.searchParams.get('where').split("'")[1]):miamiMeta);
+ };
+ const authorization={owner:true,preview:true,confirmed:true,dataset:miami.id,permitId:approval.id,cursor:0};
+ const options={config,rows:miamiRows,revision:'miami-fixture',storage,authorization,fetcher:mock,now};
+ await assert.rejects(runCountyResearch({...options,config:miami}),{code:'not_authorized'});
+ const first=await runCountyResearch(options);
+ assert.equal(calls,2);
+ assert.equal(first.cursor,1);
+ assert.equal(first.sourceHealth.status,'quota_wait');
+ const record=miamiRows[0],evidence=first.evidence[0];
+ const publication={...options,config:{...config,mode:'preview-publication'},record,evidence,discovery:first.discovery,
+  authorization:{...authorization,recordId:record.i,parcelId:record.p,evidenceAt:evidence.checkedAt}};
+ await assert.rejects(publishCountyCorrection({...publication,authorization:{...publication.authorization,confirmed:false}}),{code:'publication_denied'});
+ assert.equal((await publishCountyCorrection(publication)).status,'published');
+ assert.equal(calls,3);
+ assert.equal((await publishCountyCorrection(publication)).status,'already_published');
+ const next=await runCountyResearch({...options,authorization:{...authorization,cursor:1}});
+ assert.equal(next.cursor,1);
+ assert.equal(calls,3);
+ await assert.rejects(reserveCountyRequest(storage,miami.id,{shared:30,county:3,
+  permit:{...approval,phase:'research'}},()=>now()+86400000),{code:'quota_reached'});
+});
+
+test('county pilot endpoint is owner-only and denies dispatch before activation',async()=>{
+ const context=vm.createContext({Response,URL,process});
+ const synthetic=exports=>new vm.SyntheticModule(Object.keys(exports),function(){
+  for(const [key,value] of Object.entries(exports))this.setExport(key,value);
+ },{context});
+ let user=null,writes=0;
+ const modules={
+  'node:crypto':synthetic(await import('node:crypto')),
+  'node:fs/promises':synthetic({readFile:fs.readFile}),
+  'node:path':synthetic(await import('node:path')),
+  '../lib/brain-auth.mjs':synthetic({withBrainStore:handler=>handler,isBrainPreview:()=>true,
+   userFromCookie:async()=>user,kvGet:async()=>null,kvGetVersioned:async()=>null,kvPutVersioned:async()=>{writes++;}}),
+  '../lib/brain-gis-pilot-registry.mjs':synthetic(await import('../../netlify/lib/brain-gis-pilot-registry.mjs')),
+  '../lib/brain-gis-county-worker.mjs':synthetic(await import('../../netlify/lib/brain-gis-county-worker.mjs'))
+ };
+ const source=await fs.readFile('netlify/functions/owner-brain-county-pilot.mjs','utf8');
+ const mod=new vm.SourceTextModule(source,{context});
+ await mod.link(specifier=>modules[specifier]);
+ await mod.evaluate();
+ const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
+ const get=(method='GET',deploy='deploy-preview')=>mod.namespace.default(new Request(origin+'/.netlify/functions/owner-brain-county-pilot?dataset=FL-miami-dade',{
+  method,...(method==='POST'?{headers:{origin},body:JSON.stringify({confirmed:true,action:'run',cursor:0})}:{})
+ }),{deploy:{context:deploy}});
+ assert.equal((await get()).status,401);
+ user={owner:false};
+ assert.equal((await get()).status,403);
+ user={owner:true};
+ assert.equal((await get('GET','production')).status,404);
+ const status=await (await get()).json();
+ assert.equal(status.eligible,10);
+ assert.equal(status.active,false);
+ assert.equal((await get('POST')).status,409);
+ assert.equal(writes,0);
 });

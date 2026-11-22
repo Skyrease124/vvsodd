@@ -826,6 +826,12 @@
     bd.appendChild(group('Property', false, dl => { row(dl, 'Parcel ID', r.p); row(dl, 'Address', r.a || 'No street address on the record'); row(dl, 'Acreage', acres(r) || 'Not on file'); row(dl, 'Square footage', sqft(r) || 'Not on file'); row(dl, 'Zoning', r.zn || 'Not on file'); row(dl, 'Land', r.va ? 'Vacant land' : (r.us || 'Not stated')); row(dl, 'Market value', r.mv == null ? 'Market value unavailable' : money(r.mv)); row(dl, 'Assessed value', r.av == null ? null : money(r.av)); row(dl, 'HOA status', hoaText(r.hoa));
       row(dl, 'Flood zone (FEMA)', r.fz ? r.fz.z + (r.fz.sfha != null ? (r.fz.sfha > 0 ? ' · ' + r.fz.sfha + '% in a high-risk zone' : ' · none in a high-risk zone') : '') : 'Not checked'); row(dl, 'Wetlands (NWI)', r.wt != null ? (r.wt > 0 ? r.wt + '% of the lot touches mapped wetlands' : 'None mapped') : 'Not checked'); row(dl, 'Elevation', 'Automatic terrain estimate shown below when available'); }));
     addSavedElevation(bd,r,d);
+    if(r.__brainEvidence?.source){
+      const source=mk('a','note','Official GIS boundary source');
+      source.href=r.__brainEvidence.source;
+      source.target='_blank';source.rel='noopener noreferrer';
+      bd.appendChild(source);
+    }
     bd.appendChild(group('Sources', false, dl => { const src = mk('p', 'note'); src.appendChild(document.createTextNode('Official list: ')); if (r.su) { const a = mk('a', '', 'county list'); a.href = r.su; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); src.appendChild(document.createTextNode(r.ck ? ' (checked ' + r.ck + ')' : '')); } else src.appendChild(document.createTextNode((r.src || 'see the county') + (r.ck ? ' (checked ' + r.ck + ')' : ''))); dl.appendChild(src); if (d.gis) { const g = mk('p', 'note'); g.appendChild(document.createTextNode('County map: ')); const a = mk('a', '', d.gis.name); a.href = d.gis.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; g.appendChild(a); dl.appendChild(g); } }));
     const brief = mk('div', 'pm-brief');
     brief.append(mk('span', '', d.county + ', ' + d.state + ' · Parcel ' + r.p));

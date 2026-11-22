@@ -12,6 +12,8 @@ const long = 'Recorded descriptions need to wrap: ' + 'x'.repeat(450);
 const county = {id:'CO-larimer',state:'CO',county:'Larimer',status:'Testing',source:'https://records.example/'+long};
 const wayne={id:'MI-wayne',state:'MI',county:'Wayne',status:'Verified',source:'https://gis.example/wayne',
  operation:{mode:'existing-worker'}};
+const miami={id:'FL-miami-dade',state:'FL',county:'Miami-Dade',status:'Researching',source:'https://gis.example/miami',
+ operation:{mode:'pilot-prepared'}};
 county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
@@ -58,11 +60,14 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
     if(path===api+'owner-brain-connectors'){
-     if(!url.search)return route.fulfill({json:{counties:[county,wayne]}});
-     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:county;
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:county;
      return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
       progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
     }
+    if(path===api+'owner-brain-county-pilot')return route.fulfill({json:{eligible:10,processed:3,verifiedEvidence:1,published:0,
+     active:false,sharedRemaining:28,countyRemaining:1,pilotLimit:3,
+     blockers:['Owner approval for a live pilot is pending'],review:{0:{parcelId:'0007',reason:'No official match',checkedAt:at}}}});
     if(path===api+'owner-brain-larimer-trial'&&request.method()==='GET')return route.fulfill({json:trial});
     if(path===api+'owner-brain-reconciliation-research'){
      if(request.method()==='POST'){
@@ -81,6 +86,12 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    });
    await page.goto(origin+'/owner/brain/connectors/');
    const state=page.locator('#county-state'),mode=page.locator('#county-mode');
+   await state.selectOption('FL');
+   await page.getByRole('heading',{name:'County pilot controls'}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Run county pilot'}).isDisabled(),true);
+   assert.match(await page.getByText(/Verified map polygons 0/).textContent(),/Eligible 10 · Processed 3/);
+   await page.getByText('Skipped parcels awaiting review').click();
+   assert.equal(await page.getByRole('button',{name:'Retry parcel',exact:true}).isDisabled(),true);
    await state.selectOption('MI');
    await page.getByRole('heading',{name:'MI · Wayne'}).waitFor();
    await mode.selectOption('research-only');

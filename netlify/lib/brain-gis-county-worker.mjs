@@ -9,19 +9,28 @@ const iso=ms=>new Date(ms).toISOString();
 export async function readCountyBudget(storage,now=Date.now){
  return (await storage.read(quotaKey+iso(now()).slice(0,10)))?.data??null;
 }
+export const COUNTY_PILOT_LIMIT=3;
 const quotaError=()=>connectorError('quota_reached','Shared or county GIS request limit reached','quota');
 
 export async function reserveCountyRequest(storage,county,limits,now=Date.now){
  if(!Number.isSafeInteger(limits.shared)||limits.shared<1||!Number.isSafeInteger(limits.county)||limits.county<1)
   throw quotaError();
  const day=iso(now()).slice(0,10),key=quotaKey+day;
+ const permit=limits.permit;
+ if(permit&&(!/^[A-Za-z0-9-]{8,80}$/.test(permit.id)||permit.day!==day||
+    !['research','publication'].includes(permit.phase)))throw quotaError();
+ const permitKey=permit?county+':'+permit.id:null;
  for(let attempt=0;attempt<5;attempt++){
   const saved=await storage.read(key);
   const value=saved?.data||{total:0,counties:{}};
   const used=value.counties[county]??0;
   if(!Number.isSafeInteger(value.total)||value.total<0||!Number.isSafeInteger(used)||used<0||
      value.total>=limits.shared||used>=limits.county)throw quotaError();
-  const next={total:value.total+1,counties:{...value.counties,[county]:used+1}};
+  const pilotUsed=permitKey?(value.pilots?.[permitKey]??0):0;
+  if(permit&&(!Number.isSafeInteger(pilotUsed)||pilotUsed<0||
+    pilotUsed>=(permit.phase==='research'?COUNTY_PILOT_LIMIT-1:COUNTY_PILOT_LIMIT)))throw quotaError();
+  const next={...value,total:value.total+1,counties:{...value.counties,[county]:used+1}};
+  if(permitKey)next.pilots={...value.pilots,[permitKey]:pilotUsed+1};
   if(await storage.write(key,next,saved?.etag??null)){
    if(iso(now()).slice(0,10)!==day)throw quotaError();
    return next;
@@ -34,9 +43,13 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
  if(config.mode!=='preview-research'||config.enabled!==true||authorization?.owner!==true||
     authorization?.preview!==true||authorization?.confirmed!==true||authorization.dataset!==config.id)
   throw connectorError('not_authorized','County research activation and owner confirmation are required','control');
+ const permit=config.approval?{...config.approval,phase:'research'}:null;
+ if(config.operationMode==='pilot-prepared'&&(!permit||authorization.permitId!==permit.id||
+   authorization.cursor===undefined))throw connectorError('approval_required','Explicit pilot approval is required','control');
  if(typeof revision!=='string'||!revision||!Array.isArray(rows))throw Error('A versioned county dataset is required');
  const key=countyCheckpointKey(config.id),snapshot=await storage.read(key);
  const data=snapshot?.data||{revision,cursor:0,review:{},evidence:{},retryHistory:[],events:[]};
+ if(permit&&authorization.cursor!==data.cursor)throw connectorError('stale_checkpoint','County cursor changed; refresh first','control');
  if(data.revision!==revision)throw connectorError('dataset_changed','Dataset revision changed; reconcile the checkpoint first','control');
  if(data.paused||Date.parse(data.lockedUntil)>now())
   throw connectorError('worker_held','County worker is paused or already running','control');
@@ -54,7 +67,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
  }
  const connector=createCountyConnector(config,{fetcher,now:()=>new Date(now()),reserve:async()=>{
   await save(); // Verify ownership before every request.
-  data.budget=await reserveCountyRequest(storage,config.id,{shared:SHARED_COUNTY_DAILY_LIMIT,county:config.requestLimit},now);
+  data.budget=await reserveCountyRequest(storage,config.id,{shared:SHARED_COUNTY_DAILY_LIMIT,county:config.requestLimit,permit},now);
  }});
  data.lockedUntil=iso(now()+75000);
  version=await storage.write(key,data,snapshot?.etag??null);
@@ -69,15 +82,17 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
    await save();
   }
   const counts=new Map(), ids=new Map();
+  const keyFor=row=>config.identifierFormat==='miami-folio'?row?.p?.replaceAll('-',''):row?.p;
   for(const row of rows){
-   counts.set(row?.p,(counts.get(row?.p)||0)+1);
+   const id=keyFor(row);
+   counts.set(id,(counts.get(id)||0)+1);
    ids.set(row?.i,(ids.get(row?.i)||0)+1);
   }
   const limit=Math.min(rows.length,data.cursor+3);
   for(let index=retry?.index??data.cursor;retry?index===retry.index:index<limit;index++){
    const record=rows[index];
    try{
-    if(!record?.i||ids.get(record.i)!==1||counts.get(record.p)!==1)
+    if(!record?.i||ids.get(record.i)!==1||counts.get(keyFor(record))!==1)
      throw connectorError('dataset_ambiguity','Missing or duplicate identifier in county dataset');
     if(!data.evidence[index])data.evidence[index]=await connector.verify(record,data.discovery);
     if(retry)data.review[index]={...data.review[index],resolvedAt:iso(now())};

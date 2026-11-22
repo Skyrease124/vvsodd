@@ -3,7 +3,7 @@
 import {createCountyConnector,connectorError} from './brain-gis-universal.mjs';
 import {reserveCountyRequest,SHARED_COUNTY_DAILY_LIMIT} from './brain-gis-county-worker.mjs';
 
-export async function publishCountyCorrection({config,record,evidence,authorization,storage,fetcher,now=Date.now}){
+export async function publishCountyCorrection({config,record,evidence,authorization,storage,discovery,fetcher,now=Date.now}){
  if(config.id==='MI-wayne'||config.id==='CO-larimer'||config.mode!=='preview-publication'||config.enabled!==true||
     authorization?.owner!==true||authorization?.preview!==true||authorization?.confirmed!==true||
     authorization.dataset!==config.id||authorization.recordId!==record?.i||authorization.parcelId!==record?.p||
@@ -13,6 +13,10 @@ export async function publishCountyCorrection({config,record,evidence,authorizat
     typeof evidence.checkedAt!=='string'||authorization.evidenceAt!==evidence.checkedAt)
   throw connectorError('publication_denied','Exact owner approval and separate county publication activation are required','control');
 
+ const permit=config.approval?{...config.approval,phase:'publication'}:null;
+ if(config.operationMode==='pilot-prepared'&&(!permit||authorization.permitId!==permit.id||
+    discovery?.dataset!==config.id||discovery?.source!==config.source))
+  throw connectorError('publication_denied','A saved pilot schema and separate approval are required','control');
  const key='brain-map-county-v1-'+config.id;
  const initial=await storage.read(key);
  if(initial?.data?.records?.[record.i])return {status:'already_published',version:initial.data.version};
@@ -26,13 +30,13 @@ export async function publishCountyCorrection({config,record,evidence,authorizat
   const connector=createCountyConnector(config,{fetcher,now:()=>new Date(now()),
    reserve:()=>{
     if(now()>=expires)throw connectorError('publication_expired','Publication lease expired','control');
-    return reserveCountyRequest(storage,config.id,{shared:SHARED_COUNTY_DAILY_LIMIT,county:config.requestLimit},now);
+    return reserveCountyRequest(storage,config.id,{shared:SHARED_COUNTY_DAILY_LIMIT,county:config.requestLimit,permit},now);
    }});
-  const fresh=await connector.verify(record,await connector.discover());
+  const fresh=await connector.verify(record,permit?discovery:await connector.discover());
   const {rings,bounds}=fresh.geometry;
   const [west,south,east,north]=bounds;
   const correction={i:record.i,p:record.p,g:rings,bb:bounds,cx:[(west+east)/2,(south+north)/2],
-   verifiedGeometry:true,verifiedAt:fresh.checkedAt,evidenceUrl:fresh.source};
+   verifiedGeometry:true,verifiedAt:fresh.checkedAt,evidenceUrl:fresh.source,estimatedAcres:fresh.geometry.acres};
   // Geometry and receipt commit together. CAS forbids duplicate publication
   // and preserves unrelated records if two different parcels finish at once.
   for(let attempt=0;attempt<5&&now()<expires;attempt++){

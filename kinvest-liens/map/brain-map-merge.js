@@ -11,6 +11,14 @@ function validPatch(p,r){
  const bounds=[Math.min(...ring.map(q=>q[0])),Math.min(...ring.map(q=>q[1])),Math.max(...ring.map(q=>q[0])),Math.max(...ring.map(q=>q[1]))];
  return bounds.every((v,i)=>Math.abs(v-p.bb[i])<0.000001)&&p.cx[0]>=bounds[0]&&p.cx[0]<=bounds[2]&&p.cx[1]>=bounds[1]&&p.cx[1]<=bounds[3];
 }
+function evidence(p){
+ let source=null;
+ try{
+  const url=new URL(p.evidenceUrl);
+  if(url.protocol==='https:'&&!url.username&&!url.password)source=url.href;
+ }catch{/* Older fixture or omitted source. */}
+ return {source,estimatedAcres:Number.isFinite(p.estimatedAcres)&&p.estimatedAcres>0?p.estimatedAcres:null};
+}
 async function apply(ds){
  if(!ds?.id||!Array.isArray(ds.recs))return {changed:false,count:0,version:0};
  const response=await fetch('/.netlify/functions/brain-map-county?'+new URLSearchParams({dataset:ds.id}),{cache:'no-store'});
@@ -27,12 +35,13 @@ async function apply(ds){
   const p=body.records?.[r.i];
   const previous=!!r.__brainMap;
   if(validPatch(p,r)){
-   const different=!previous||JSON.stringify([r.g,r.cx,r.bb])!==JSON.stringify([p.g,p.cx,p.bb]);
-   r.g=p.g;r.cx=p.cx;r.bb=p.bb;r.why=null;r.__brainMap=true;
+   const attribution=evidence(p);
+   const different=!previous||JSON.stringify([r.g,r.cx,r.bb,r.__brainEvidence])!==JSON.stringify([p.g,p.cx,p.bb,attribution]);
+   r.g=p.g;r.cx=p.cx;r.bb=p.bb;r.why=null;r.__brainMap=true;r.__brainEvidence=attribution;
    if(different)count++;
   }else{
    // Rollback: a removed/invalid correction restores the original unmapped parcel.
-   if(previous){r.g=base.g;r.cx=base.cx;r.bb=base.bb;r.why=base.why;delete r.__brainMap;count++;}
+   if(previous){r.g=base.g;r.cx=base.cx;r.bb=base.bb;r.why=base.why;delete r.__brainMap;delete r.__brainEvidence;count++;}
   }
  }
  state.version=body.version;
