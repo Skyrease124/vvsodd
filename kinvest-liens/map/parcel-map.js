@@ -1273,6 +1273,48 @@
     if(!xs.length||!ys.length)return null;
     return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
   }
+  // Choose an interior label point, not the bounding-box midpoint (which can be water).
+  function radarInteriorPoint(geometry){
+    if(!geometry)return null;
+    const polygons=geometry.type==='Polygon'?[geometry.coordinates]:
+      geometry.type==='MultiPolygon'?geometry.coordinates:[];
+    const inRing=(pt,ring)=>{
+      let inside=false;
+      for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+        const a=ring[i],b=ring[j];
+        if(((a[1]>pt[1])!==(b[1]>pt[1]))&&
+          pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+      }
+      return inside;
+    };
+    const inside=(pt,p)=>inRing(pt,p[0])&&!p.slice(1).some(h=>inRing(pt,h));
+    let best=null,bestScore=-1;
+    for(const poly of polygons){
+      const outer=poly[0];if(!outer?.length)continue;
+      const xs=outer.map(p=>p[0]),ys=outer.map(p=>p[1]);
+      const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+      // Dense enough for irregular coastal states, while cheap for the small state layer.
+      for(let i=0;i<24;i++)for(let j=0;j<24;j++){
+        const pt=[x0+(i+.5)*(x1-x0)/24,y0+(j+.5)*(y1-y0)/24];
+        if(!inside(pt,poly))continue;
+        let nearest=Infinity;
+        for(const ring of poly)for(let k=0;k<ring.length-1;k++){
+          const a=ring[k],b=ring[k+1],dx=b[0]-a[0],dy=b[1]-a[1];
+          const t=Math.max(0,Math.min(1,((pt[0]-a[0])*dx+(pt[1]-a[1])*dy)/(dx*dx+dy*dy||1)));
+          const d=Math.hypot(pt[0]-a[0]-t*dx,pt[1]-a[1]-t*dy);
+          nearest=Math.min(nearest,d);
+        }
+        const score=nearest*Math.cos(pt[1]*Math.PI/180);
+        if(score>bestScore){bestScore=score;best=pt;}
+      }
+    }
+    return best;
+  }
+  function radarStatePoint(state){
+    const src=map.getSource('states')?._data;
+    const feature=src?.features?.find(f=>f.properties?.a===state);
+    return radarInteriorPoint(feature?.geometry);
+  }
   function drawRadarPins(){
     if(!homeMap||!mapReady||!map.getSource('states'))return;
     clearRadarPins();
@@ -1304,7 +1346,8 @@
     if(!countyView){
       for(const [state,rows] of grouped){
         const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
-        makePin([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2],rows,state,'',null);
+        const point=radarStatePoint(state);
+        if(point)makePin(point,rows,state,'',null);
       }
       return;
     }
@@ -1326,7 +1369,8 @@
     for(const [state,rows] of grouped){
       if(mappedStates.has(state))continue;
       const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
-      place([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2],rows,state,'',null);
+      const point=radarStatePoint(state);
+      if(point)place(point,rows,state,'',null);
     }
   }
 
