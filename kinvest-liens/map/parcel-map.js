@@ -1233,6 +1233,29 @@
     showTab('list', open);
   }
 
+  // Verified Radar parcel handoff. Exact state + county + parcel ID must match
+  // an existing map dataset and a record with an official GIS geometry.
+  if (homeMap) window.addEventListener('message', async event => {
+    if (event.origin !== location.origin || event.source !== window.parent) return;
+    const d=event.data;
+    if (!d || d.type !== 'ppa:radar-parcel' || !/^[A-Z]{2}$/.test(d.state || '') ||
+        typeof d.county !== 'string' || d.county.length > 100 ||
+        typeof d.parcel !== 'string' || !d.parcel || d.parcel.length > 100) return;
+    const norm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough)\\b/g,'').replace(/[^a-z0-9]/g,'');
+    const datasets=IDX?.datasets.filter(x=>x.state===d.state && norm(x.county)===norm(d.county))||[];
+    let matched=null;
+    if(datasets.length===1){
+      const ds=await load(datasets[0].id);
+      const hits=ds?.recs.filter(r=>String(r.p).trim()===d.parcel.trim() && r.g)||[];
+      if(hits.length===1) matched={record:hits[0],dataset:datasets[0]};
+    }
+    if(matched){
+      await pickCounty(matched.dataset.id,{remember:false});
+      select(matched.record,{fly:true,remember:false});
+    }
+    window.parent.postMessage({type:'ppa:radar-parcel-result',requestId:d.requestId,
+      matched:!!matched,state:d.state,county:d.county,parcel:d.parcel},location.origin);
+  });
   // ---------- start ----------
   async function showArea(area) {
     if (!area) return;
