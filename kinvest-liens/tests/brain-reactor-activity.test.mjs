@@ -203,3 +203,21 @@ test('Activity UI explicitly labels historical replay as a recent-event window',
  assert.match(page,/windowInfo\.truncated/);
  assert.match(page,/Owner authorization required to inspect recorded events/);
 });
+
+
+test('all 256 thin Reactor fibers animate with original drag and reduced motion support',()=>{
+ assert.match(page,/\x27class\x27:\x27fiber moving\x27\+/);
+ assert.match(page,/for\(let i=0;i<64;i\+\+\)/);
+ assert.doesNotMatch(page,/\.fiber\.moving\.dense\{animation:none/);
+ assert.match(page,/prefers-reduced-motion:reduce/);
+ assert.match(page,/function bindNode\(node,position,paths\)/);
+});
+
+test('inactive shared quota is identified without falsely reporting available requests',async()=>{
+ const run=await create(true,null,{active:false,count:0,resumeAt:'2026-11-23T00:00:00.000Z'});
+ const d=await (await run(new Request('https://preview.test/activity'))).json();
+ assert.equal(d.health.dailyUsed,null);
+ assert.equal(d.health.quotaActive,false);
+ assert.equal(d.health.quotaResumeAt,'2026-11-23T00:00:00.000Z');
+ assert.match(d.health.detail,/cutover.*resumes/);
+});
