@@ -1198,7 +1198,7 @@
     if(homeMap)drawRadarPins();
     const before = 'p-fill';
     map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], homeMap ? 0.20 : 0.62, homeMap ? 0.10 : 0.42], 6.5, homeMap ? 0.07 : 0.4, 8.5, 0] } }, before);
-    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, layout: { visibility: 'none' }, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
+    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 12, layout: { visibility: 'visible' }, paint: { 'line-color': '#000000', 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.7, 7, 2.5, 11, 3.2] } }, before);
     map.addLayer({ id: 'st-hl', type: 'line', source: 'states', filter: ['in', ['get', 'a'], ['literal', ['__none__']]], paint: { 'line-color': '#22d3ee', 'line-width': 3.2 } }, before);
     map.addLayer({ id: 'st-sel', type: 'line', source: 'states', layout: { visibility: 'none' }, filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
     map.on('mouseenter', 'st-fill', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'st-fill', () => { map.getCanvas().style.cursor = ''; });
