@@ -45,6 +45,7 @@ async function handler(req,context){
   const quota=await auth.readWayneGisQuota();
   return response(200,{ok:true,previewOnly:true,...s,dailyUsed:quota.active?quota.count:null,legacyDailyUsed:quota.active?undefined:s.dailyUsed,quotaActive:quota.active,quotaResumeAt:quota.resumeAt,lockedUntil:s.lockedUntil||null,maxAttempts:MAX_ATTEMPTS,dailyLimit:MAX_PER_DAY});
  }
+ if(!scheduled&&req.headers.get('sec-fetch-site')==='cross-site')return response(403,{ok:false,error:'Cross-site request denied'});
  if(!scheduled&&req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
  if(!scheduled){
   let body;try{const raw=await req.text();if(raw.length>500)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
