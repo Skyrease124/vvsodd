@@ -195,6 +195,8 @@
     // claim that any sale record has been matched to a verified parcel.
     showMapView('both');
     const frame = document.querySelector('#home-parcels iframe');
+    const focus=()=>frame.contentWindow?.postMessage({type:'ppa:radar-focus-state',state:stateCode},location.origin);
+    if(frame.contentDocument?.readyState==='complete')focus();else frame.addEventListener('load',focus,{once:true});
     const selectState = () => {
       try {
         const select = frame.contentDocument?.querySelector('select[aria-label="State"]');
