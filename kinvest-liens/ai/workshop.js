@@ -174,6 +174,30 @@
     if (!e.detail) return;
     index = e.detail.index; composer = e.detail;
     [...index.allStates].sort((a,b) => a.n.localeCompare(b.n)).forEach(s => selected.append(new Option(s.n,s.a)));
+    // Use the same Radar inventory source as the homepage and full AI map.
+    fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();}).then(data=>{
+      const counts={};
+      for(const row of data.counties||[]){
+        if(!/^[A-Z]{2}$/.test(row.state||''))continue;
+        const n=counts[row.state]||(counts[row.state]={liens:0,deeds:0,land:0});
+        const amount=Math.max(0,Number(row.open)||0);
+        if(row.group==='county-held'||row.group==='lien-sale')n.liens+=amount;
+        else if(row.group==='deed')n.deeds+=amount;
+        else if(row.group==='state-held')n.land+=amount;
+      }
+      const mapped={};
+      for(const ds of index.datasets||[])mapped[ds.state]=(mapped[ds.state]||0)+1;
+      for(const option of selected.options){
+        if(!option.value)continue;
+        const n=counts[option.value]||{},parts=[];
+        if(mapped[option.value])parts.push(mapped[option.value]+' mapped counties');
+        if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
+        if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
+        if(n.land)parts.push(n.land.toLocaleString()+' land records');
+        const state=index.allStates.find(s=>s.a===option.value);
+        option.textContent=(state?.n||option.value)+(parts.length?' · '+parts.join(' · '):'');
+      }
+    }).catch(()=>{/* Preserve normal state selection when Radar is unavailable. */});
     selected.addEventListener('change',() => { fillCounties(); browse(); });
     county.addEventListener('change',browse);
     addEventListener('ppa:workshop-area',event => {
