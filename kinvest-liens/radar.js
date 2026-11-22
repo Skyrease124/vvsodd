@@ -278,7 +278,7 @@ window.TaxRadarOn = true;
       if (!opts.length) { const li = mk('li', 'none', 'No state matches that.'); list.appendChild(li); }
       list.hidden = false; input.setAttribute('aria-expanded', 'true');
     };
-    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
+    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); if (!document.querySelector('.app-map-unified')) $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
     input.addEventListener('input', () => { act = -1; draw(); }); input.addEventListener('focus', () => { input.select(); draw(); });
     input.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(act + 1, Math.min(opts.length, 60) - 1); draw(); }
