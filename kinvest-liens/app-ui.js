@@ -77,8 +77,12 @@
     document.getElementById('home-parcels').hidden = !(both || view === 'parcels');
     document.getElementById('home-radar').hidden = !(both || view === 'radar');
     document.getElementById('home-combined-note').hidden = !both;
+    // In combined mode keep Radar's records, tabs, state search and panels,
+    // but use the verified Parcel Map as the single geographic canvas.
+    mapWorkspace.classList.toggle('app-map-unified', both);
   }
   for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
+  showMapView('both');
   const openRadarLink = event => {
     event.preventDefault();
     showMapView('radar');
