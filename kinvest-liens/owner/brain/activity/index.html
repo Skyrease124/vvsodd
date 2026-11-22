@@ -41,7 +41,28 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 .health-meta{color:#98b9c5;font-size:11px}
  .fiber:not(.moving){animation:none;opacity:.3}
 @media(max-width:500px){.overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.gis-trace{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.gis-stage{font-size:10px;padding:3px 6px;border:1px solid #56717b;border-radius:7px;color:#d5eaf1;background:#203345}</style></head>
+.gis-trace{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.gis-stage{font-size:10px;padding:3px 6px;border:1px solid #56717b;border-radius:7px;color:#d5eaf1;background:#203345}
+/* iPhone preview: keep long GIS evidence readable and transfer cards inside viewport. */
+.log-entry{align-items:flex-start;min-width:0}
+.logbody{overflow-wrap:anywhere}
+.logbody small{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.5;margin-top:7px;color:#9fb0c2}
+.log-entry>small{flex:0 0 auto;max-width:35%;overflow-wrap:anywhere}
+.transfer{min-width:0}
+.transfer>div{min-width:0}
+.transfer b,.transfer small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:600px){
+ main{padding-left:12px;padding-right:12px}
+ .ticker{padding:10px 0;overflow:hidden}
+ .tickerTrack{gap:10px}
+ .transfer{flex:0 0 min(78vw,290px);max-width:calc(100vw - 56px)}
+ .activity-window{padding:6px}
+ .log-entry{display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;padding:12px}
+ .log-entry>small{grid-column:2;max-width:100%;text-align:left;margin-top:0}
+ .logbody b{font-size:13px}
+ .logbody span{font-size:12px;line-height:1.5}
+ .logbody small{font-size:11px}
+}
+</style></head>
 <body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
 <div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
 <h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · genuine agent activity</div>
