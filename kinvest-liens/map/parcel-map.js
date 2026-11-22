@@ -43,7 +43,7 @@
   let overlayRefreshRunning=false,overlayRefreshCursor=0;
   async function refreshVerifiedOverlays(){
     if(document.hidden||overlayRefreshRunning||!window.PPABrainMap)return;
-    overlayRefreshRunning=true;let changed=false;
+    overlayRefreshRunning=true;let visibleChanged=false;
     try{
       const counties=Object.values(loaded);
       // Rotate bounded batches so the ninth and later loaded counties are never starved.
@@ -52,11 +52,13 @@
         const ds=counties[(overlayRefreshCursor+i)%counties.length];
         try{
           const result=await window.PPABrainMap.apply(ds);
-          if(result.changed)changed=true;
+          // Cached offscreen counties still update, but do not trigger an
+          // expensive MapLibre redraw or rebuild the mobile result list.
+          if(result.changed&&(!active.size||active.has(ds.id)))visibleChanged=true;
         }catch(_){/* Keep existing polygons until the source recovers. */}
       }
       if(counties.length)overlayRefreshCursor=(overlayRefreshCursor+8)%counties.length;
-      if(changed){refresh();if(sel&&loaded[sel._d])popup(sel);}
+      if(visibleChanged){refresh();if(sel&&loaded[sel._d]&&(!active.size||active.has(sel._d)))popup(sel);}
     }finally{overlayRefreshRunning=false;}
   }
   // ---------- data ----------
