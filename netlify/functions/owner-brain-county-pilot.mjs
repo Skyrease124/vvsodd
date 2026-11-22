@@ -44,6 +44,7 @@ async function handler(req,context){
   if(running)blockers.push('County worker already running');
   if(state&&state.revision!==revision)blockers.push('Saved checkpoint differs from the current dataset');
   if(!data)blockers.push('No approved county parcel dataset is loaded');
+  else if(!rows.length)blockers.push('No eligible unmapped county parcel with a usable situs address');
   else if(!config.firstFolio||rows[cursor]?.p!==config.firstFolio)blockers.push('First folio is unavailable at the saved cursor');
   if(sharedRemaining<2||countyRemaining<2||pilotUsed!==null&&pilotUsed>0)blockers.push('Two research requests must be available under a fresh pilot approval');
   if(req.method==='GET'){

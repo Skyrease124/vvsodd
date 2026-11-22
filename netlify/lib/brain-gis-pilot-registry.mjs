@@ -12,28 +12,38 @@ const miami=Object.freeze({
  terms:'https://www.miamidadepa.gov/pa/disclaimer.page',sourceTermsReviewed:false,
  requestLimit:3,operationMode:'pilot-prepared',approval:null
 });
-const broward=Object.freeze({
- id:'FL-broward',county:'Broward',state:'FL',mode:'preview-research',enabled:false,
- source:'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0',
- authority:'https://geodata.floridagio.gov/',
- attribution:'Florida Geographic Information Office · Florida Department of Revenue · Broward County Property Appraiser',
- metadata:'https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2',
- reviewedOrigin:'https://services9.arcgis.com',format:'feature-server',nativeWkid:6439,nativeAliases:Object.freeze([102967]),
- fields:Object.freeze({parcel:'PARCELNO',address:'PHY_ADDR1'}),
- jurisdiction:Object.freeze({field:'CO_NO',value:16}),
- identifierFormat:'broward-folio',parcelFieldLength:254,
- bounds:Object.freeze([-80.9,25.95,-80.0,26.36]),firstFolio:null,
- terms:'https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2',
- sourceTermsReviewed:false,requestLimit:3,operationMode:'pilot-prepared',approval:null
-});
-const pilots=Object.freeze({[miami.id]:miami,[broward.id]:broward});
+function floridaCadastral({id,county,countyNumber,identifierFormat,bounds}){
+ const item='https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2';
+ return Object.freeze({
+  id,county,state:'FL',mode:'preview-research',enabled:false,
+  source:'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0',
+  authority:'https://geodata.floridagio.gov/',
+  attribution:'Florida Geographic Information Office · Florida Department of Revenue · '+county+' County Property Appraiser',
+  metadata:item,reviewedOrigin:'https://services9.arcgis.com',format:'feature-server',
+  nativeWkid:6439,nativeAliases:Object.freeze([102967]),
+  fields:Object.freeze({parcel:'PARCELNO',address:'PHY_ADDR1'}),
+  jurisdiction:Object.freeze({field:'CO_NO',value:countyNumber}),
+  identifierFormat,parcelFieldLength:254,bounds:Object.freeze(bounds),firstFolio:null,
+  terms:item,sourceTermsReviewed:false,requestLimit:3,operationMode:'pilot-prepared',approval:null
+ });
+}
+
+const broward=floridaCadastral({id:'FL-broward',county:'Broward',countyNumber:16,
+ identifierFormat:'broward-folio',bounds:[-80.9,25.95,-80.0,26.36]});
+const palmBeach=floridaCadastral({id:'FL-palm-beach',county:'Palm Beach',countyNumber:60,
+ identifierFormat:'palm-beach-pcn',bounds:[-80.90,26.31,-79.98,27.00]});
+const pilots=Object.freeze({[miami.id]:miami,[broward.id]:broward,[palmBeach.id]:palmBeach});
 export const pilotCountyIds=()=>Object.keys(pilots);
 export const countyPilotDefinition=id=>Object.hasOwn(pilots,id)?pilots[id]:null;
 
 export function pilotIdentifier(format,value){
  if(typeof value!=='string')return '';
  if(format==='broward-folio')return /^\d{12}$/.test(value)?value:'';
- return /^\d{13}$/.test(value)||/^\d{2}-\d{4}-\d{3}-\d{4}$/.test(value)?value.replaceAll('-',''):'';
+ if(format==='palm-beach-pcn')
+  return /^\d{17}$/.test(value)||/^(?:\d{2}-){5}\d{3}-\d{4}$/.test(value)?value.replaceAll('-',''):'';
+ if(format==='miami-folio')
+  return /^\d{13}$/.test(value)||/^\d{2}-\d{4}-\d{3}-\d{4}$/.test(value)?value.replaceAll('-',''):'';
+ return '';
 }
 
 export function eligiblePilotRows(config,raw){

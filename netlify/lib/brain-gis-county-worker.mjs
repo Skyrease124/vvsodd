@@ -1,5 +1,6 @@
 // Dormant by design. No endpoint or schedule invokes this worker. Only
 // reviewed deployment configuration may supply an activation.
+import {pilotIdentifier} from './brain-gis-pilot-registry.mjs';
 import {createCountyConnector,connectorError} from './brain-gis-universal.mjs';
 
 export const countyCheckpointKey=id=>'brain-gis-operations-v1-'+id;
@@ -87,7 +88,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
    await save();
   }
   const counts=new Map(), ids=new Map();
-  const keyFor=row=>config.identifierFormat==='miami-folio'?row?.p?.replaceAll('-',''):row?.p;
+  const keyFor=row=>config.identifierFormat?pilotIdentifier(config.identifierFormat,row?.p):row?.p;
   for(const row of rows){
    const id=keyFor(row);
    counts.set(id,(counts.get(id)||0)+1);

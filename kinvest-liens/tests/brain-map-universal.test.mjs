@@ -423,3 +423,91 @@ test('one independently checked Broward fixture feeds the three shared map consu
   assert.equal(ds.recs[0].__brainEvidence.source,broward.source,map);
  }
 });
+
+const palm=countyPilotDefinition('FL-palm-beach');
+const palmId='00-43-44-04-24-000-0243';
+const palmCompact='00434404240000243';
+const palmShape=[[-80.3,26.7],[-80.299,26.7],[-80.299,26.701],[-80.3,26.7]];
+const palmRecord={i:'fixture-palm-1',p:palmId,a:'100 Main Street',dataset:palm.id};
+const palmResult=(id=palmCompact,county=60,ring=palmShape)=>({
+ spatialReference:{wkid:4326},features:[{attributes:{PARCELNO:id,PHY_ADDR1:'100 MAIN ST',CO_NO:county},geometry:{rings:[ring]}}]});
+
+test('Palm Beach requires exact 17-digit PCN, situs, county and valid WGS84 polygon',async()=>{
+ let result=palmResult();
+ const connector=createCountyConnector(palm,{reserve:async()=>{},fetcher:async url=>{
+  if(!url.pathname.endsWith('/query'))return Response.json(browardMeta);
+  assert.equal(url.searchParams.get('where'),"PARCELNO = '00434404240000243' AND CO_NO = 60");
+  assert.equal(url.searchParams.get('outSR'),'4326');
+  return Response.json(result);
+ }});
+ const schema=await connector.discover();
+ assert.equal((await connector.verify(palmRecord,schema)).parcelId,palmId);
+ result=palmResult(palmCompact.slice(2));
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'id_mismatch'});
+ result=palmResult(palmCompact,16);
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'county_mismatch'});
+ result=palmResult();
+ result.features[0].attributes.PHY_ADDR1='200 MAIN ST';
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'address_mismatch'});
+ result=palmResult(palmCompact,60,palmShape.slice(1));
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'invalid_polygon'});
+ result=palmResult();
+ result.features[0].geometry.spatialReference={wkid:6439};
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'unsupported_crs'});
+ result=palmResult();
+ result.features.push(result.features[0]);
+ await assert.rejects(connector.verify(palmRecord,schema),{code:'duplicate'});
+ assert.equal(eligiblePilotRows(palm,{id:palm.id,recs:[palmRecord,{...palmRecord,i:'other',p:palmCompact}]}).length,0);
+ const raw=JSON.parse(await fs.readFile('kinvest-liens/map/data/FL-palm-beach.json','utf8'));
+ assert.equal(eligiblePilotRows(palm,raw).length,0);
+});
+
+test('Palm Beach skips safely, survives county outage, and stops at its daily reservation limit',async()=>{
+ const storage=memory();
+ let tick=now(),calls=0;
+ const second={...palmRecord,i:'fixture-palm-2',p:'00-43-44-04-24-000-0244'};
+ const opts={storage,rows:[palmRecord,second],revision:'palm-fixture',now:()=>tick,
+  config:{...palm,enabled:true,operationMode:'fixture',requestLimit:3},
+  authorization:{owner:true,preview:true,confirmed:true,dataset:palm.id},
+  fetcher:async url=>{
+   calls++;
+   if(!url.pathname.endsWith('/query'))return Response.json(browardMeta);
+   if(url.searchParams.get('where').includes(palmCompact))return Response.json({features:[]});
+   return new Response(null,{status:503});
+  }};
+ const stopped=await runCountyResearch(opts);
+ assert.equal(stopped.cursor,1);
+ assert.equal(stopped.review[0].source,palm.source);
+ assert.equal(stopped.review[0].parcelId,palmId);
+ assert.equal(stopped.sourceHealth.status,'source_paused');
+ assert.equal(calls,3);
+ await runCountyResearch(opts);
+ assert.equal(calls,3);
+ tick+=60001;
+ const restarted=await runCountyResearch(opts);
+ assert.equal(restarted.cursor,1);
+ assert.deepEqual(restarted.review,stopped.review);
+ assert.equal(restarted.sourceHealth.status,'quota_wait');
+ assert.equal(calls,3);
+ assert.equal(await storage.read('brain-map-county-v1-'+palm.id),null);
+});
+
+test('approved Palm Beach fixture has consistent geometry on the three map consumers',async()=>{
+ const storage=memory(),at=new Date(now()).toISOString();
+ const options={config:{...palm,enabled:true,mode:'preview-publication',operationMode:'fixture'},record:palmRecord,storage,now,
+  evidence:{type:'county_research_evidence',dataset:palm.id,recordId:palmRecord.i,parcelId:palmId,source:palm.source,checkedAt:at},
+  authorization:{owner:true,preview:true,confirmed:true,dataset:palm.id,recordId:palmRecord.i,parcelId:palmId,evidenceAt:at},
+  fetcher:async url=>Response.json(url.pathname.endsWith('/query')?palmResult():browardMeta)};
+ await assert.rejects(publishCountyCorrection({...options,authorization:{...options.authorization,confirmed:false}}),{code:'publication_denied'});
+ assert.equal((await publishCountyCorrection(options)).status,'published');
+ const {data}=await storage.read('brain-map-county-v1-'+palm.id);
+ const merger=await fs.readFile('kinvest-liens/map/brain-map-merge.js','utf8');
+ const context={window:{},URL,URLSearchParams,fetch:async()=>Response.json({ok:true,dataset:palm.id,...data})};
+ vm.runInNewContext(merger,context);
+ for(const map of ['Public','Workshop','MapTiler']){
+  const ds={id:palm.id,recs:[{...palmRecord}]};
+  assert.equal((await context.window.PPABrainMap.apply(ds)).count,1,map);
+  assert.deepEqual(ds.recs[0].g,[palmShape],map);
+  assert.equal(ds.recs[0].p,palmId,map);
+ }
+});
