@@ -22,6 +22,7 @@ async function handler(req,context){
  if(req.method!=='POST')return json(405,{ok:false,error:'POST only'});
  const user=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!user?.owner)return json(user?403:401,{ok:false,error:'Owner access required'});
+ if(req.headers.get('sec-fetch-site')==='cross-site')return json(403,{ok:false,error:'Cross-site request denied'});
  if(req.headers.get('origin')!==new URL(req.url).origin)return json(403,{ok:false,error:'Invalid origin'});
  let input;try{const raw=await req.text();if(raw.length>200)throw Error();input=JSON.parse(raw);}catch{return json(400,{ok:false,error:'Invalid JSON'});}
  if(input?.action!=='publish-three-wayne'||input.confirmed!==true)return json(400,{ok:false,error:'Confirmation required'});
