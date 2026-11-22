@@ -1,3 +1,4 @@
+import * as planning from '../../netlify/lib/brain-reconciliation-planning-test.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -78,17 +79,20 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
  const synthetic=exports=>new vm.SyntheticModule(Object.keys(exports),function(){
   for(const [key,val] of Object.entries(exports))this.setExport(key,val);
  },{context});
- let owner=false,writes=0;
+ let owner=false,writes=0,manualRuns=0;
  const auth=synthetic({withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>owner?{owner:true}:null,
   kvGetVersioned:async()=>null,kvPutVersioned:async key=>{assert.equal(key,researchKey);writes++;return 'v';}});
  const code=await fs.readFile('netlify/functions/owner-brain-reconciliation-research.mjs','utf8');
  const mod=new vm.SourceTextModule(code,{context});
  const researchModule=synthetic(research);
- await mod.link(path=>path.includes('brain-auth')?auth:researchModule);await mod.evaluate();
+ const planningModule=synthetic({...planning,runOnePlanningTest:async({confirmed,environment})=>{
+  assert.equal(confirmed,true);assert.equal(environment,'deploy-preview');manualRuns++;return {status:'completed',outcome:'document'};
+ }});
+ await mod.link(path=>path.includes('brain-auth')?auth:path.includes('planning-test')?planningModule:researchModule);await mod.evaluate();
  const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
- const invoke=(method='GET',action='resume',deploy='deploy-preview',from=origin)=>
+ const invoke=(method='GET',action='resume',deploy='deploy-preview',from=origin,confirmed=true)=>
   mod.namespace.default(new Request(origin+'/research',{method,headers:{origin:from},
-   ...(method==='POST'?{body:JSON.stringify({confirmed:true,action})}:{})}),{deploy:{context:deploy}});
+   ...(method==='POST'?{body:JSON.stringify({confirmed,action})}:{})}),{deploy:{context:deploy}});
  assert.equal((await invoke()).status,401);
  owner=true;
  assert.equal((await invoke('POST','resume','production')).status,404);
@@ -98,4 +102,74 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
  const res=await invoke('POST');
  assert.equal((await res.json()).executionEnabled,false);
  assert.equal(writes,1);
+ const action='run-one-planning-test';
+ assert.equal((await invoke('POST',action,'production')).status,404);
+ assert.equal((await invoke('POST',action,'deploy-preview','https://example.test')).status,403);
+ assert.equal((await invoke('POST',action,'deploy-preview',origin,false)).status,400);
+ assert.equal(manualRuns,0);
+ assert.equal((await invoke('POST',action)).status,200);
+ assert.equal(manualRuns,1);
+});
+
+
+const html='<main><h1>Project BDR240012</h1><p>Glover Estate</p><p>741 Lindenmeier RD</p>'+
+ '<p>Parcel 9701400014</p><p>Decision: Approved</p><p>Decision Date: 11/13/2024</p></main>';
+const page=(body=html)=>new Response(body,{headers:{'content-type':'text/html; charset=utf-8'}});
+test('planning adapter extracts limited metadata and classifies missing or restricted records',async()=>{
+ const result=await planning.collectPlanningRecord({fetcher:async(url,options)=>{
+  assert.equal(url,planning.planningSource.url);
+  assert.equal(options.redirect,'manual');
+  assert.equal(options.credentials,'omit');
+  return page(html+'<script>session_token=do-not-store</script>');
+ }});
+ assert.equal(result.document.reference,'BDR240012');
+ assert.equal(result.document.decisionDate,'11/13/2024');
+ assert.equal(result.document.relationship,null);
+ assert.doesNotMatch(JSON.stringify(result),/do-not-store/);
+ for(const [fetcher,outcome] of [
+  [async()=>page('<script>'+html+'</script>'),'missing'],
+  [async()=>page('<p>Sign in to view this record</p>'),'restricted'],
+  [async()=>new Response(null,{status:302,headers:{location:'https://example.test/private'}}),'restricted'],
+  [async()=>new Response(null,{status:404}),'missing'],
+  [async()=>page('x'.repeat(513*1024)),'unavailable'],
+  [async()=>{throw new DOMException('timeout','TimeoutError');},'unavailable']
+ ]) assert.equal((await planning.collectPlanningRecord({fetcher})).outcome,outcome);
+});
+
+test('one-time planning test permits one dispatch and persists one genuine receipt',async()=>{
+ let value={etag:'1',data:{...newResearchState(),paused:false}};
+ let calls=0;
+ const storage={read:async()=>structuredClone(value),write:async(key,data,expected)=>{
+  assert.equal(key,researchKey);
+  if(value.etag!==expected)return null;
+  const etag=String(Number(expected)+1);value={etag,data};return etag;
+ }};
+ const args={storage,environment:'deploy-preview',confirmed:true,fetcher:async()=>{calls++;return page();}};
+ await assert.rejects(planning.runOnePlanningTest({...args,confirmed:false}),/confirmed/);
+ await assert.rejects(planning.runOnePlanningTest({...args,environment:'production'}),/preview/);
+ assert.equal(calls,0);
+ const results=await Promise.all([planning.runOnePlanningTest(args),planning.runOnePlanningTest(args)]);
+ assert.deepEqual(results.map(x=>x.status).sort(),['busy','completed']);
+ assert.equal((await planning.runOnePlanningTest(args)).status,'completed');
+ assert.equal(calls,1);
+ assert.equal(value.data.cursor,0);
+ assert.equal(value.data.events.length,1);
+ assert.equal(value.data.events[0].outcome,'document');
+ assert.equal(summarizeResearch(pilot,value.data.evidence).status,'Document Found');
+ assert.equal(summarizeResearch(pilot,value.data.evidence).publicationAllowed,false);
+});
+
+test('interrupted one-time test keeps its reservation and cannot dispatch again',async()=>{
+ let value={etag:'1',data:{...newResearchState(),paused:false}},t=0,calls=0;
+ const storage={read:async()=>structuredClone(value),write:async(key,data,expected)=>{
+  if(expected==='2')return null;
+  value={etag:'2',data};return '2';
+ }};
+ const args={storage,environment:'deploy-preview',confirmed:true,now:()=>new Date(t),fetcher:async()=>{calls++;return page();}};
+ assert.equal((await planning.runOnePlanningTest(args)).status,'interrupted');
+ assert.equal(value.data.events.length,0);
+ assert.equal((await planning.runOnePlanningTest(args)).status,'running');
+ t=16000;
+ assert.equal((await planning.runOnePlanningTest(args)).status,'interrupted');
+ assert.equal(calls,1);
 });

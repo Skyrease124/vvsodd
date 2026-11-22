@@ -238,7 +238,7 @@ async function showResearch(request){
     for(const entry of data.evidence){
       const document=entry.document;
       add(entry.at+' · '+entry.authority+' · '+entry.outcome+
-        (document?' · Reference '+document.reference+(document.legalDescription?' · '+document.legalDescription:''):''));
+        (document?' · Reference '+document.reference+(document.decision?' · '+document.decision+' '+(document.decisionDate||''):'')+(document.legalDescription?' · '+document.legalDescription:''):''));
     }
     const button=document.createElement('button');
     const action=data.paused?'resume':'pause';
@@ -252,6 +252,21 @@ async function showResearch(request){
       }catch(error){statusLine.textContent=error.message;}
     };
     panel.append(button);
+    add('One-time Fort Collins planning test: '+data.planningTestStatus);
+    const run=document.createElement('button');
+    run.textContent='Run One Research Test';
+    run.disabled=data.paused||data.planningTestStatus!=='available';
+    run.onclick=async()=>{
+      if(!confirm('Send one read-only request to Fort Collins Planning for BDR240012? This saves research evidence only.'))return;
+      run.disabled=true;
+      statusLine.textContent='Checking the public Fort Collins planning record…';
+      try{
+        await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({action:'run-one-planning-test',confirmed:true})});
+        await showCounty();
+      }catch(error){statusLine.textContent=error.message+' Refresh to inspect the saved reservation.';}
+    };
+    panel.append(run);
   }catch(error){
     if(request!==selection)return;
     const failure=document.createElement('p');
