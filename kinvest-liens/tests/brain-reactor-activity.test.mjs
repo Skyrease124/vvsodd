@@ -106,3 +106,15 @@ test('Reactor uses only persisted research receipts and deduplicates them',async
  assert.match(body.events.find(e=>e.type==='parcel_research').message,/restricted/);
  assert.equal(body.summary.cursor,7);
 });
+
+
+test('source reservation and actual HTTP metadata receipts are distinct Reactor events',async()=>{
+ const base={at:'2026-11-22T01:00:00Z',sourceId:'assessor'};
+ const run=await create(true,{events:[{...base,id:'start',outcome:'started'},
+  {...base,id:'finish',outcome:'metadata',httpStatus:200}]});
+ const body=await (await run(new Request('https://preview.test/activity'))).json();
+ const rows=body.events.filter(event=>event.type==='parcel_research');
+ assert.equal(rows.length,2);
+ assert.doesNotMatch(rows.find(e=>e.id==='research-start').message,/HTTP|saved/);
+ assert.match(rows.find(e=>e.id==='research-finish').message,/HTTP 200.*Metadata saved/);
+});

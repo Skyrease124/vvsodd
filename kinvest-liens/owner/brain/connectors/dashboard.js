@@ -4,6 +4,18 @@ const picker = document.getElementById('county');
 const statusLine = document.getElementById('status');
 const details = document.getElementById('details');
 let selection = 0;
+function disclose(label,content){
+  const panel=document.createElement('details'),summary=document.createElement('summary');
+  summary.textContent=label;
+  panel.append(summary,content);
+  return panel;
+}
+function grouped(label,...nodes){
+  const panel=document.createElement('section'),heading=document.createElement('h2');
+  heading.textContent=label;
+  panel.append(heading,...nodes);
+  return panel;
+}
 const read = async (url,options={}) => {
   const response = await fetch(url,{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(12000),...options});
   const data = await response.json();
@@ -24,7 +36,7 @@ function render(county,coverage){
   if(county.source){
     const link=document.createElement('a');
     link.href=county.source;
-    link.textContent=county.source;
+    link.textContent='Open official GIS source';
     add('Official GIS source',link);
   }else add('Official GIS source','Awaiting review');
   if(county.scope)add('Scope',county.scope);
@@ -36,7 +48,27 @@ function render(county,coverage){
   add('Verified Brain corrections',coverage.verified);
   add('Remaining unmapped records',coverage.remaining);
   add('Correction completion',coverage.completion===null?'No unmapped records in the original dataset':coverage.completion.toFixed(2)+'% of original unmapped records');
-  details.replaceChildren(list);
+  const cards=document.createElement('div');
+  cards.className='metrics';
+  for(const [label,value] of [['Available',coverage.available],['Originally mapped',coverage.mapped],
+    ['Verified corrections',coverage.verified],['Unmapped',coverage.remaining]]){
+    const card=document.createElement('div'),number=document.createElement('strong'),name=document.createElement('span');
+    card.className='metric';
+    number.textContent=value;
+    name.textContent=label;
+    card.append(number,name);
+    cards.append(card);
+  }
+  const overview=grouped(county.state+' · '+county.county,cards);
+  if(coverage.completion!==null){
+    const progress=document.createElement('progress');
+    progress.max=100;
+    progress.value=coverage.completion;
+    progress.setAttribute('aria-label','Verified correction completion');
+    overview.append(progress);
+  }
+  overview.append(disclose('Connector and coverage details',list));
+  details.replaceChildren(overview);
 }
 async function showCounty(){
   const request=++selection;
@@ -47,7 +79,7 @@ async function showCounty(){
     if(request!==selection)return;
     render(county,coverage);
     if(county.id==='CO-larimer'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showTrial(request);
-    statusLine.textContent='';
+    if(request===selection)statusLine.textContent='';
   }catch(error){if(request===selection)statusLine.textContent=error.message;}
 }
 picker.addEventListener('change',showCounty);
@@ -73,7 +105,10 @@ async function showTrial(request){
   function showDiagnostics(row,item){
     if(item.source){
       const source=document.createElement('p');
-      source.textContent='Official source: '+item.source+' · '+item.checkedAt;
+      const link=document.createElement('a');
+      link.href=item.source;
+      link.textContent='Official source';
+      source.append(link,document.createTextNode(' · '+item.checkedAt));
       row.append(source);
     }
     const d=item.diagnostics;
@@ -143,7 +178,9 @@ async function showTrial(request){
     const next=document.createElement('p');
     next.textContent=item.nextEvidence;
     row.append(title,summary,sources,next);
-    evidence.append(row);
+    const entry=document.createElement('ul');
+    entry.append(row);
+    details.append(disclose('Treasurer-to-Assessor evidence',entry));
   }
   if(Array.isArray(result.reconciliationCases)&&result.reconciliationCases.length){
     const section=document.createElement('section'),title=document.createElement('h2');
@@ -166,7 +203,7 @@ async function showTrial(request){
         link.rel='noopener noreferrer';link.target='_blank';
         li.append(link,document.createTextNode(' · '+src.finding));references.append(li);
       }
-      entry.append(heading,identifiers,need,references);section.append(entry);
+      entry.append(heading,identifiers,need,references);section.append(disclose(item.original.parcelId+' · Owner review',entry));
     }
     details.append(section);
     await showResearch(request);
@@ -185,7 +222,7 @@ async function showTrial(request){
         await showCounty();
       }catch(error){statusLine.textContent=error.message+' Refresh and inspect the saved trial budget.';}
     };
-    details.append(summary,evidence,diagnostic);
+    details.append(grouped('GIS verification',summary,disclose('GIS evidence and diagnostics',evidence),diagnostic));
     return;
   }
   if(result.retry?.exhausted===true&&result.used<result.limit){
@@ -201,8 +238,8 @@ async function showTrial(request){
         await showCounty();
       }catch(error){statusLine.textContent=error.message+' Refresh and inspect the held parcel.';}
     };
-    details.append(summary,evidence,review,button);
-  }else details.append(summary,evidence,button);
+    details.append(grouped('GIS verification',summary,disclose('GIS evidence and diagnostics',evidence),review,button));
+  }else details.append(grouped('GIS verification',summary,disclose('GIS evidence and diagnostics',evidence),button));
 }
 
 
@@ -226,20 +263,44 @@ async function showResearch(request){
       (data.conflicting?' · Conflicting records need review':''));
     add('Last research attempt: '+(data.lastAttempt?data.lastAttempt.at+' · '+data.lastAttempt.outcome:'None recorded by this workflow'));
     if(data.missing.length)add('Missing: '+data.missing.join('; '));
+    if(data.sourceProgress){
+      const progress=document.createElement('progress');
+      progress.max=data.sourceProgress.total;
+      progress.value=data.sourceProgress.reviewed;
+      progress.setAttribute('aria-label','Approved sources checked or budget closed');
+      add(data.sourceProgress.reviewed+'/'+data.sourceProgress.total+' source checks finished or budget closed');
+      panel.append(progress);
+    }
     const refs=document.createElement('ul');
     for(const item of data.sources){
       const li=document.createElement('li'),link=document.createElement('a');
       link.href=item.url;
       link.textContent=item.authority;
-      li.append(link);
+      li.append(link,document.createTextNode(' · '+(item.data||'Planning record')+
+        (item.restriction?' · '+item.restriction:'')+(typeof item.limit==='number'?' · Budget: '+item.limit:'')));
       refs.append(li);
     }
-    panel.append(refs);
+    panel.append(disclose('Official research sources',refs));
+    const saved=document.createElement('ul');
     for(const entry of data.evidence){
       const document=entry.document;
-      add(entry.at+' · '+entry.authority+' · '+entry.outcome+
-        (document?' · Reference '+document.reference+(document.decision?' · '+document.decision+' '+(document.decisionDate||''):'')+(document.legalDescription?' · '+document.legalDescription:''):''));
+      const row=document.createElement('li'),link=document.createElement('a');
+      link.href=entry.url;
+      link.textContent=entry.authority;
+      row.append(link,document.createTextNode(' · '+entry.at+' · '+entry.outcome+
+        (entry.metadata?' · '+entry.metadata.title+' · Image access: '+entry.metadata.imageAccess.replaceAll('_',' '):'')+
+        (document?' · Reference '+document.reference+(document.decision?' · '+document.decision+' '+(document.decisionDate||''):'')+(document.legalDescription?' · '+document.legalDescription:''):'')));
+      saved.append(row);
     }
+    panel.append(disclose('Saved research evidence',saved));
+    const timeline=document.createElement('ol');
+    timeline.className='timeline';
+    for(const event of [...(data.events||[])].reverse()){
+      const row=document.createElement('li');
+      row.textContent=event.at+' · '+event.sourceId+' · '+event.outcome+(event.httpStatus?' · HTTP '+event.httpStatus:'');
+      timeline.append(row);
+    }
+    panel.append(disclose('Research activity',timeline));
     const button=document.createElement('button');
     const action=data.paused?'resume':'pause';
     button.textContent=data.paused?'Resume research queue':'Pause research queue';
@@ -267,6 +328,23 @@ async function showResearch(request){
       }catch(error){statusLine.textContent=error.message+' Refresh to inspect the saved reservation.';}
     };
     panel.append(run);
+    if(data.nextSource){
+      const source=data.nextSource;
+      add('Next source: '+source.authority+' · '+source.used+'/'+source.limit+' requests reserved');
+      const next=document.createElement('button');
+      next.textContent='Run Next Research Source';
+      next.disabled=data.paused||data.researchBusy||data.planningTestStatus!=='completed'||Number(data.retryAt)>Date.now();
+      next.onclick=async()=>{
+        if(!confirm('Send one public metadata request to '+source.authority+'? No forms, document images or parcel GIS will be requested.'))return;
+        next.disabled=true;
+        try{
+          await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({action:'run-next-source',confirmed:true,sourceId:source.id,used:source.used})});
+          await showCounty();
+        }catch(error){statusLine.textContent=error.message+' Refresh to inspect the saved checkpoint.';}
+      };
+      panel.append(next);
+    }else add('The approved sources have been checked or their budgets are exhausted.');
   }catch(error){
     if(request!==selection)return;
     const failure=document.createElement('p');

@@ -17,10 +17,11 @@ async function handler(req){
   const researchIds=new Set();
   for(const entry of (Array.isArray(research?.events)?research.events:[]).slice(-50)){
    const at=date(entry?.at);
-   if(!at||typeof entry.id!=='string'||!['document','missing','restricted','unavailable'].includes(entry.outcome)||researchIds.has(entry.id))continue;
+   if(!at||typeof entry.id!=='string'||!['document','missing','restricted','unavailable','metadata','started','paused','resumed','conflict'].includes(entry.outcome)||researchIds.has(entry.id))continue;
    researchIds.add(entry.id);
    events.push({id:'research-'+clean(entry.id),at,agent:'Parcel research',from:'Official records',to:'NVIDIA',
-    type:'parcel_research',message:'Larimer research · '+clean(entry.sourceId)+' · '+entry.outcome,
+    type:'parcel_research',message:'Larimer research · '+clean(entry.sourceId)+' · '+entry.outcome+(Number.isInteger(entry.httpStatus)?' · HTTP '+entry.httpStatus:'')+
+    (entry.outcome==='metadata'?' · Metadata saved · Owner review required':entry.outcome==='conflict'?' · Conflicting records · Owner review required':''),
     county:'CO-larimer',status:entry.outcome==='document'?'success':entry.outcome==='unavailable'?'error':'info'});
   }
   // Publication history is the authoritative receipt. Never claim an AI model

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+import * as sourceAdapters from '../../netlify/lib/brain-reconciliation-source-adapters.mjs';
 import * as planning from '../../netlify/lib/brain-reconciliation-planning-test.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -79,20 +81,26 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
  const synthetic=exports=>new vm.SyntheticModule(Object.keys(exports),function(){
   for(const [key,val] of Object.entries(exports))this.setExport(key,val);
  },{context});
- let owner=false,writes=0,manualRuns=0;
+ let owner=false,writes=0,manualRuns=0,sourceRuns=0,completed=false;
  const auth=synthetic({withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>owner?{owner:true}:null,
-  kvGetVersioned:async()=>null,kvPutVersioned:async key=>{assert.equal(key,researchKey);writes++;return 'v';}});
+  kvGetVersioned:async()=>completed?{data:{...newResearchState(),paused:false,planningTest:{completedAt:'2026-11-22T00:00:00Z'}}}:null,kvPutVersioned:async key=>{assert.equal(key,researchKey);writes++;return 'v';}});
  const code=await fs.readFile('netlify/functions/owner-brain-reconciliation-research.mjs','utf8');
  const mod=new vm.SourceTextModule(code,{context});
- const researchModule=synthetic(research);
+ const researchModule=synthetic({...research,runParcelResearch:async args=>{
+  assert.deepEqual({...args.expected},{id:'assessor',used:0});
+  sourceRuns++;
+  return {status:'metadata'};
+ }});
  const planningModule=synthetic({...planning,runOnePlanningTest:async({confirmed,environment})=>{
   assert.equal(confirmed,true);assert.equal(environment,'deploy-preview');manualRuns++;return {status:'completed',outcome:'document'};
  }});
- await mod.link(path=>path.includes('brain-auth')?auth:path.includes('planning-test')?planningModule:researchModule);await mod.evaluate();
+ const adaptersModule=synthetic(sourceAdapters),cryptoModule=synthetic({randomUUID});
+ await mod.link(path=>path==='node:crypto'?cryptoModule:path.includes('source-adapters')?adaptersModule:
+  path.includes('brain-auth')?auth:path.includes('planning-test')?planningModule:researchModule);await mod.evaluate();
  const origin='https://deploy-preview-454--pricepocketasset.netlify.app';
  const invoke=(method='GET',action='resume',deploy='deploy-preview',from=origin,confirmed=true)=>
   mod.namespace.default(new Request(origin+'/research',{method,headers:{origin:from},
-   ...(method==='POST'?{body:JSON.stringify({confirmed,action})}:{})}),{deploy:{context:deploy}});
+   ...(method==='POST'?{body:JSON.stringify({confirmed,action,sourceId:'assessor',used:0})}:{})}),{deploy:{context:deploy}});
  assert.equal((await invoke()).status,401);
  owner=true;
  assert.equal((await invoke('POST','resume','production')).status,404);
@@ -109,6 +117,13 @@ test('owner controls are preview-only and cannot dispatch research',async()=>{
  assert.equal(manualRuns,0);
  assert.equal((await invoke('POST',action)).status,200);
  assert.equal(manualRuns,1);
+ const next='run-next-source';
+ assert.equal((await invoke('POST',next)).status,409);
+ assert.equal(sourceRuns,0);
+ completed=true;
+ assert.equal((await invoke('POST',next,'deploy-preview',origin,false)).status,400);
+ assert.equal((await invoke('POST',next)).status,200);
+ assert.equal(sourceRuns,1);
 });
 
 
@@ -172,4 +187,55 @@ test('interrupted one-time test keeps its reservation and cannot dispatch again'
  t=16000;
  assert.equal((await planning.runOnePlanningTest(args)).status,'interrupted');
  assert.equal(calls,1);
+});
+
+
+test('public county adapters extract only source metadata and do not follow portals',async()=>{
+ const {collectSourceMetadata,sourceDescriptors}=sourceAdapters;
+ assert.deepEqual(sourceDescriptors.map(s=>s.id),['assessor','treasurer','recorder','planning','gis']);
+ for(const [index,title] of ['Free Property Search','Tax Lien Sale','Easy Access'].entries()){
+  const source=larimerSources[index];
+  const result=await collectSourceMetadata(source,pilot,{fetcher:async(url,options)=>{
+   assert.equal(url,source.url);assert.equal(options.redirect,'manual');assert.equal(options.credentials,'omit');
+   return page('<h1>'+title+'</h1><script>secret</script>');
+  }});
+  assert.equal(result.status,'metadata');
+  assert.equal(result.metadata.imageAccess,source.id==='recorder'?'authorized_access_required':'not_checked');
+  assert.doesNotMatch(JSON.stringify(result),/secret/);
+ }
+ await assert.rejects(collectSourceMetadata({id:'recorder',url:'https://example.test'},pilot,{fetcher:async()=>assert.fail('dispatched')}),/not approved/);
+ assert.equal((await collectSourceMetadata(larimerSources[2],pilot,{fetcher:async()=>new Response(null,{status:302})})).status,'restricted');
+});
+
+test('owner confirmation is bound to the next source and its reservation count',async()=>{
+ let state={etag:'1',data:{...newResearchState(),paused:false}},calls=0;
+ const storage={read:async()=>structuredClone(state),write:async(key,data,etag)=>{
+  assert.equal(key,researchKey);
+  if(state.etag!==etag)return null;
+  const next=String(Number(etag)+1);state={etag:next,data};return next;
+ }};
+ const params={environment:'deploy-preview',enabled:true,key:researchKey,record:pilot,sources:larimerSources,storage,
+  expected:{id:'assessor',used:0},collect:async()=>{calls++;return {status:'metadata',httpStatus:200,metadata:{title:'Free Property Search'}};}};
+ assert.equal((await runParcelResearch(params)).status,'metadata');
+ assert.equal((await runParcelResearch(params)).status,'stale');
+ assert.equal(calls,1);
+ assert.equal(state.data.events[0].outcome,'started');
+ assert.equal(state.data.events[1].outcome,'metadata');
+ assert.equal(state.data.events[1].httpStatus,200);
+ assert.equal(state.data.reservations.assessor,1);
+ assert.equal(state.data.reservations.recorder,undefined);
+ assert.equal(summarizeResearch(pilot,state.data.evidence,state.data.lastAttempt).status,'Unresolved');
+});
+
+test('County Connectors layout uses compact metrics, sticky navigation and collapsible sections',async()=>{
+ const [html,css,js]=await Promise.all(['index.html','dashboard.css','dashboard.js'].map(f=>fs.readFile('kinvest-liens/owner/brain/connectors/'+f,'utf8')));
+ assert.match(html,/width=device-width/);
+ assert.match(css,/position:sticky/);
+ assert.match(css,/min-height:44px/);
+ assert.match(css,/prefers-reduced-motion/);
+ assert.match(css,/overflow-wrap:anywhere/);
+ assert.match(css,/auto-fit,minmax/);
+ assert.match(js,/createElement\('details'\)/);
+ assert.match(js,/GIS verification/);
+ assert.match(js,/Research activity/);
 });

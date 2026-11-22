@@ -43,9 +43,15 @@ export function summarizeResearch(record,evidence=[],lastAttempt=null){
   evidenceComplete:supported,conflicting,lastAttempt,missing,ownerReview:true,publicationAllowed:false};
 }
 
-// Dormant runner. The deployment has no caller and supplies no source adapters.
-// Each adapter must be reviewed for its terms and prove document provenance.
-export async function runParcelResearch({environment,enabled=false,key,record,sources,storage,collect,now=()=>new Date()}){
+export function nextResearchSource(state,sources=larimerSources) {
+ let index=state.cursor;
+ while(sources[index]&&(state.reservations[sources[index].id]??0)>=sources[index].limit)index++;
+ const source=sources[index];
+ return source?{...source,index,used:state.reservations[source.id]??0}:null;
+}
+
+// One bounded action. Production and unattended callers cannot enable it.
+export async function runParcelResearch({environment,enabled=false,key,record,sources,storage,collect,expected,now=()=>new Date()}){
  if(environment!=='deploy-preview'||!enabled)throw Error('Preview research execution is disabled');
  if(!/^brain-reconciliation-research-v1-[A-Z]{2}-[a-z0-9-]+$/.test(key)||typeof collect!=='function')throw Error('Invalid research configuration');
  const snapshot=await storage.read(key);
@@ -54,33 +60,44 @@ export async function runParcelResearch({environment,enabled=false,key,record,so
  if(state.paused)return {status:'paused'};
  if(state.lockUntil>start)return {status:'busy'};
  if(state.retryAt>start)return {status:'backoff'};
- const source=sources[state.cursor];
+ const source=nextResearchSource(state,sources);
  if(!source)return {status:'complete'};
  const approved=larimerSources.find(item=>item.id===source.id&&item.url===source.url&&item.authority===source.authority);
  if(!approved||source.limit!==approved.limit||key!==researchKey||record.id!==pilot.id||!matches(record,pilot))throw Error('Source or record not approved');
  const url=new URL(source.url);
  if(url.protocol!=='https:'||url.username||url.password||!source.authority||
     !Number.isInteger(source.limit)||source.limit<1||source.limit>3)throw Error('Invalid reviewed source');
- const used=state.reservations[source.id]??0;
+ const used=source.used;
+ if(expected&&(expected.id!==source.id||expected.used!==used))return {status:'stale'};
  if(used>=source.limit)return {status:'source_limit'};
- const claimed={...state,lockUntil:start+60000,reservations:{...state.reservations,[source.id]:used+1}};
+ const eventId=record.id+'|'+source.id+'|'+(used+1);
+ const started=expected?[...state.events,{id:eventId+'|started',at:new Date(start).toISOString(),sourceId:source.id,outcome:'started'}].slice(-50):state.events;
+ const claimed={...state,events:started,cursor:source.index,lockUntil:start+60000,reservations:{...state.reservations,[source.id]:used+1}};
  const lease=await storage.write(key,claimed,snapshot?.etag??null);
  if(!lease)return {status:'busy'};
  let result;
  try{result=await collect(source,record,{signal:AbortSignal.timeout(8000)});}catch{result={status:'unavailable'};}
- const status=['document','missing','restricted','unavailable'].includes(result?.status)?result.status:'unavailable';
+ const status=['document','missing','restricted','unavailable','metadata'].includes(result?.status)?result.status:'unavailable';
  const document=status==='document'?documentFrom(source,result.document):null;
  const outcome=status==='document'&&!document?'missing':status;
  const at=now().toISOString();
- const evidence={sourceId:source.id,authority:source.authority,url:source.url,at,outcome,document};
+ const httpStatus=Number.isInteger(result?.httpStatus)&&result.httpStatus>=100&&result.httpStatus<=599?result.httpStatus:null;
+ const metadata=outcome==='metadata'?{
+  title:typeof result.metadata?.title==='string'?result.metadata.title.slice(0,80):null,
+  imageAccess:result.metadata?.imageAccess==='authorized_access_required'?'authorized_access_required':'not_checked'
+ }:null;
+ const evidence={sourceId:source.id,authority:source.authority,url:source.url,at,outcome,document,metadata,httpStatus};
  const duplicate=state.evidence.some(e=>e.sourceId===source.id&&e.document?.reference===document?.reference&&e.outcome===outcome&&
    JSON.stringify(e.document??null)===JSON.stringify(document));
- const event={id:record.id+'|'+source.id+'|'+(used+1),at,sourceId:source.id,outcome};
+ const event={id:eventId,at,sourceId:source.id,outcome,httpStatus};
  const retry=outcome==='unavailable'&&used+1<source.limit;
- const next={...claimed,lockUntil:null,cursor:retry?state.cursor:state.cursor+1,
+ const next={...claimed,lockUntil:null,cursor:retry?source.index:source.index+1,
   retryAt:retry?now().getTime()+60000*2**used:null,lastAttempt:evidence,
   evidence:duplicate?state.evidence:[...state.evidence,evidence].slice(-50),
-  events:[...state.events,event].slice(-50)};
+  events:[...claimed.events,event].slice(-50)};
+ if(expected&&document&&summarizeResearch(record,next.evidence).conflicting&&!summarizeResearch(record,state.evidence).conflicting){
+  next.events=[...next.events,{id:eventId+'|conflict',at,sourceId:source.id,outcome:'conflict'}].slice(-50);
+ }
  if(!await storage.write(key,next,lease))return {status:'checkpoint_changed'};
  return {status:outcome,cursor:next.cursor};
 }
