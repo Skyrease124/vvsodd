@@ -1,6 +1,6 @@
 // Connector transport is injected. The owner dashboard never invokes it.
 import {connectorFor,polygonEvidence} from './brain-gis-connectors.mjs';
-import {countyPilotDefinition,pilotCountyIds,pilotIdentifier} from './brain-gis-pilot-registry.mjs';
+import {countyPilotDefinition,pilotCountyIds,pilotIdentifier,pilotQueryIdentifiers} from './brain-gis-pilot-registry.mjs';
 
 const aliases={
  parcel:['parcelnumber','parcelnum','parcelno','parcelid','propertyid','apn','pin'],
@@ -174,7 +174,9 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   if(isArc){
    if(!Object.values(fields).every(field=>/^[A-Za-z_][A-Za-z0-9_]*$/.test(field)))
     throw connectorError('unsupported_fields','Source field names need review','source');
-   const where=fields.parcel+" = '"+canonical(record.p)+"'"+(jurisdiction?' AND '+jurisdiction.field+' = '+jurisdiction.value:'');
+   const ids=config.identifierFormat?pilotQueryIdentifiers(config.identifierFormat,record.p):[canonical(record.p)];
+   const exact=ids.length===1?fields.parcel+" = '"+ids[0]+"'":fields.parcel+" IN ('"+ids.join("','")+"')";
+   const where=exact+(jurisdiction?' AND '+jurisdiction.field+' = '+jurisdiction.value:'');
    const outFields=[...new Set([...Object.values(fields),...(jurisdiction?[jurisdiction.field]:[])])].join(',');
    const query=new URLSearchParams({f:'json',where,outFields,
     returnGeometry:'true',outSR:'4326',resultRecordCount:'2'});

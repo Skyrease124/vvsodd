@@ -511,3 +511,26 @@ test('approved Palm Beach fixture has consistent geometry on the three map consu
   assert.equal(ds.recs[0].p,palmId,map);
  }
 });
+
+test('Santa Rosa scopes compact and grouped surface IDs to county 67 and never substitutes a mineral folio',async()=>{
+ const config=countyPilotDefinition('FL-santa-rosa');
+ const grouped='01-1N-28-0000-00600-0000',compact='011N280000006000000';
+ const record={dataset:config.id,i:'santa-rosa-fixture',p:grouped,a:'100 Main ST'};
+ const shape=[[-87.1,30.6],[-87.099,30.6],[-87.099,30.601],[-87.1,30.6]];
+ const feature={attributes:{PARCELNO:compact,PHY_ADDR1:'100 MAIN ST',CO_NO:67},geometry:{rings:[shape]}};
+ let matches=[feature],calls=0;
+ const connector=createCountyConnector(config,{reserve:async()=>{calls++;},fetcher:async url=>{
+  if(!url.pathname.endsWith('/query'))return Response.json(browardMeta);
+  assert.equal(url.searchParams.get('where'),"PARCELNO IN ('011N280000006000000','01-1N-28-0000-00600-0000') AND CO_NO = 67");
+  return Response.json({spatialReference:{wkid:4326},features:matches});
+ }});
+ const schema=await connector.discover();
+ assert.equal((await connector.verify(record,schema)).parcelId,grouped);
+ matches=[feature,{...feature,attributes:{...feature.attributes,PARCELNO:grouped}}];
+ await assert.rejects(connector.verify(record,schema),{code:'duplicate'});
+ await assert.rejects(connector.verify({...record,p:compact+'M'},schema),{code:'invalid_identity'});
+ assert.equal(calls,3);
+ const raw=JSON.parse(await fs.readFile('kinvest-liens/map/data/FL-santa-rosa.json','utf8'));
+ assert.equal(eligiblePilotRows(config,raw).length,0);
+ assert.equal(config.enabled,false);
+});

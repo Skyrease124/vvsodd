@@ -18,6 +18,7 @@ const broward={id:'FL-broward',state:'FL',county:'Broward',status:'Researching',
  operation:{mode:'pilot-prepared',attribution:'Broward County Property Appraiser'}};
 const palm={id:'FL-palm-beach',state:'FL',county:'Palm Beach',status:'Researching',source:'https://gis.example/palm',
  operation:{mode:'pilot-prepared',attribution:'Palm Beach County Property Appraiser'}};
+const santa={...palm,id:'FL-santa-rosa',county:'Santa Rosa'};
 county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
@@ -64,13 +65,13 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
     if(path===api+'owner-brain-connectors'){
-     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm]}});
-     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:county;
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:county;
      return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
       progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
     }
-    if(path===api+'owner-brain-county-pilot'&&url.searchParams.get('dataset')==='FL-palm-beach')
-     return route.fulfill({json:{county:'Palm Beach',eligible:0,processed:0,verifiedEvidence:0,published:0,
+    if(path===api+'owner-brain-county-pilot'&&['FL-palm-beach','FL-santa-rosa'].includes(url.searchParams.get('dataset')))
+     return route.fulfill({json:{county:url.searchParams.get('dataset')==='FL-santa-rosa'?'Santa Rosa':'Palm Beach',eligible:0,processed:0,verifiedEvidence:0,published:0,
       active:false,runAllowed:false,sharedRemaining:30,countyRemaining:3,pilotLimit:3,nativeWkid:6439,
       blockers:['No eligible unmapped county parcel with a usable situs address'],review:{}}});
     if(path===api+'owner-brain-county-pilot'&&url.searchParams.get('dataset')==='FL-broward')
@@ -99,6 +100,12 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    await page.goto(origin+'/owner/brain/connectors/');
    const state=page.locator('#county-state'),mode=page.locator('#county-mode');
    await state.selectOption('FL');
+   await page.locator('#county').selectOption('FL-santa-rosa');
+   await page.getByRole('button',{name:'Run Live Santa Rosa Pilot'}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Run Live Santa Rosa Pilot'}).isDisabled(),true);
+   await page.getByRole('button',{name:'Check Readiness'}).click();
+   await page.getByText('No eligible unmapped county parcel with a usable situs address').waitFor();
+   assert.deepEqual(posts,[]);
    await page.locator('#county').selectOption('FL-palm-beach');
    await page.getByText('No eligible unmapped county parcel with a usable situs address').waitFor();
    assert.equal(await page.getByRole('button',{name:'Run Live Palm Beach Pilot'}).isDisabled(),true);

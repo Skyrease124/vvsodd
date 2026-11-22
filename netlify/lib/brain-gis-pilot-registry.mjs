@@ -32,7 +32,9 @@ const broward=floridaCadastral({id:'FL-broward',county:'Broward',countyNumber:16
  identifierFormat:'broward-folio',bounds:[-80.9,25.95,-80.0,26.36]});
 const palmBeach=floridaCadastral({id:'FL-palm-beach',county:'Palm Beach',countyNumber:60,
  identifierFormat:'palm-beach-pcn',bounds:[-80.90,26.31,-79.98,27.00]});
-const pilots=Object.freeze({[miami.id]:miami,[broward.id]:broward,[palmBeach.id]:palmBeach});
+const santaRosa=floridaCadastral({id:'FL-santa-rosa',county:'Santa Rosa',countyNumber:67,
+ identifierFormat:'santa-rosa-surface',bounds:[-87.37,30.30,-86.68,31.05]});
+const pilots=Object.freeze({[miami.id]:miami,[broward.id]:broward,[palmBeach.id]:palmBeach,[santaRosa.id]:santaRosa});
 export const pilotCountyIds=()=>Object.keys(pilots);
 export const countyPilotDefinition=id=>Object.hasOwn(pilots,id)?pilots[id]:null;
 
@@ -41,9 +43,21 @@ export function pilotIdentifier(format,value){
  if(format==='broward-folio')return /^\d{12}$/.test(value)?value:'';
  if(format==='palm-beach-pcn')
   return /^\d{17}$/.test(value)||/^(?:\d{2}-){5}\d{3}-\d{4}$/.test(value)?value.replaceAll('-',''):'';
+ if(format==='santa-rosa-surface'){
+  const grouped=/^\d{2}-[1-9][NS]-\d{2}-[A-Z0-9]{4}-[A-Z0-9]{5}-[A-Z0-9]{4}$/;
+  const compact=/^\d{2}[1-9][NS]\d{2}[A-Z0-9]{13}$/;
+  return grouped.test(value)||compact.test(value)?value.replaceAll('-',''):'';
+ }
  if(format==='miami-folio')
   return /^\d{13}$/.test(value)||/^\d{2}-\d{4}-\d{3}-\d{4}$/.test(value)?value.replaceAll('-',''):'';
  return '';
+}
+
+export function pilotQueryIdentifiers(format,value){
+ const id=pilotIdentifier(format,value);
+ if(!id)return [];
+ if(format!=='santa-rosa-surface')return [id];
+ return [id,[id.slice(0,2),id.slice(2,4),id.slice(4,6),id.slice(6,10),id.slice(10,15),id.slice(15)].join('-')];
 }
 
 export function eligiblePilotRows(config,raw){
