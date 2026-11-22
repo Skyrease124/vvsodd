@@ -97,6 +97,29 @@
     mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
     mapViews[0].focus({preventScroll:true});
   });
+  let radarParcelRequest=0;
+  window.addEventListener('ppa:radar-map-parcel', event => {
+    const {state,county,parcel}=event.detail||{};
+    if(!/^[A-Z]{2}$/.test(state||'')||typeof county!=='string'||typeof parcel!=='string')return;
+    showMapView('both');
+    const frame=document.querySelector('#home-parcels iframe');
+    const requestId=++radarParcelRequest;
+    const status=document.getElementById('home-radar-match-status');
+    if(status)status.textContent='Checking exact parcel ID against verified GIS boundaries…';
+    const send=()=>frame.contentWindow?.postMessage({type:'ppa:radar-parcel',state,county,parcel,requestId},location.origin);
+    if(frame.contentDocument?.readyState==='complete')send();
+    else frame.addEventListener('load',send,{once:true});
+    mapWorkspace.scrollIntoView({block:'start',behavior:'smooth'});
+  });
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==document.querySelector('#home-parcels iframe')?.contentWindow)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-parcel-result'||d.requestId!==radarParcelRequest)return;
+    const status=document.getElementById('home-radar-match-status');
+    if(status)status.textContent=d.matched
+      ?'Exact parcel ID matched a verified GIS polygon. Property opened on the map.'
+      :'No exact verified polygon match found. The Radar record remains available below; no location was invented.';
+  });
   window.addEventListener('ppa:radar-map-state', event => {
     const stateCode = event.detail?.state;
     if (typeof stateCode !== 'string' || !/^[A-Z]{2}$/.test(stateCode)) return;
