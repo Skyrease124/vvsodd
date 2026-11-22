@@ -65,6 +65,35 @@ function render(county,coverage,operation){
       (operation.sourceHealth.nextAt?' · Recheck '+new Date(operation.sourceHealth.nextAt).toLocaleString():''));
     if(operation.publicationPending)add('Recovery','Saved publication recovery required');
   }
+  if(county.florida){
+    const {county:identity,source,eligible,blockers,reviewedOn}=county.florida;
+    add('Census identifiers','FIPS '+identity.countyFips+' · GEOID '+identity.geoid);
+    add('FDOR county code',identity.fdorCode);
+    add('Statewide layer county filter',source.countyField+' = '+identity.sourceCountyValue);
+    add('Statewide source agency',source.agency);
+    add('Statewide source schema','Layer '+source.layerId+' · '+source.parcelField+' / '+source.situsField+
+      ' · EPSG:'+source.nativeWkid+' → EPSG:'+source.requiredOutputWkid+' · '+source.maxRecordCount+' records per response');
+    add('Statewide layer verification',source.validationScope+' · '+reviewedOn);
+    add('County parcel evidence',identity.countyEvidenceStatus);
+    add('Source restrictions',source.restrictions);
+    add('Eligible pilot rows',eligible??'Unverified');
+    add('Readiness blockers',blockers.join(' · '));
+    const links=document.createElement('span');
+    for(const [label,url] of [['FDOR-listed appraiser',identity.appraiserUrl],['Statewide GIS metadata',source.url],
+     ['Source use terms',source.termsUrl],['Census reference',county.florida.evidence.census],['FDOR code reference',county.florida.evidence.fdor]]){
+      if(links.childElementCount)links.append(document.createTextNode(' · '));
+      const link=document.createElement('a');
+      link.href=url;link.textContent=label;links.append(link);
+    }
+    add('Registry evidence',links);
+    for(const alternate of county.florida.alternates||[]){
+      const reference=document.createElement('a');
+      reference.href=alternate.url;
+      reference.textContent=alternate.agency+' · '+alternate.validationScope;
+      add('Alternate source',reference);
+      add('Alternate source restrictions',alternate.restrictions);
+    }
+  }
   const cards=document.createElement('div');
   cards.className='metrics';
   for(const [label,value] of [['Available',coverage.available],['Originally mapped',coverage.mapped],

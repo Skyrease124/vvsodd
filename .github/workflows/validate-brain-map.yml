@@ -14,6 +14,8 @@ on:
       - 'netlify/functions/owner-brain-*.mjs'
       - 'netlify/lib/brain-auth.mjs'
       - 'netlify/lib/brain-gis-*.mjs'
+      - 'netlify/lib/data/florida-gis-registry.json'
+      - 'tools/florida-gis/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
       - 'netlify/lib/brain-county-sequence.mjs'
@@ -39,6 +41,8 @@ on:
       - 'netlify/functions/owner-brain-*.mjs'
       - 'netlify/lib/brain-auth.mjs'
       - 'netlify/lib/brain-gis-*.mjs'
+      - 'netlify/lib/data/florida-gis-registry.json'
+      - 'tools/florida-gis/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
       - 'netlify/lib/brain-official-verification.mjs'
@@ -80,3 +84,6 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-connectors.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-reconciliation-research.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-universal.test.mjs
+      - run: python3 tools/florida-gis/build.py --check
+      - run: python3 tools/florida-gis/test_build.py
+      - run: node kinvest-liens/tests/brain-map-florida-registry.test.mjs

@@ -84,7 +84,9 @@ test('deployed dashboard enforces owner reads and never writes or probes GIS',as
   '../lib/brain-auth.mjs':synthetic({withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,kvGet:async()=>null}),
   '../lib/brain-gis-connectors.mjs':synthetic({connectorFor,connectorReadiness,connectorCoverage}),
   '../lib/brain-gis-universal.mjs':synthetic(await import('../../netlify/lib/brain-gis-universal.mjs')),
-  '../lib/brain-gis-county-worker.mjs':synthetic(await import('../../netlify/lib/brain-gis-county-worker.mjs'))
+  '../lib/brain-gis-county-worker.mjs':synthetic(await import('../../netlify/lib/brain-gis-county-worker.mjs')),
+  '../lib/brain-gis-florida-registry.mjs':synthetic(await import('../../netlify/lib/brain-gis-florida-registry.mjs')),
+  '../lib/brain-gis-pilot-registry.mjs':synthetic(await import('../../netlify/lib/brain-gis-pilot-registry.mjs'))
  };
  await handler.link(s=>modules[s]);await handler.evaluate();
  const request=(method='GET')=>handler.namespace.default(new Request('https://preview.test/api?dataset=CO-larimer',{method}));
@@ -101,6 +103,9 @@ test('deployed dashboard enforces owner reads and never writes or probes GIS',as
  assert.equal(planned.county.automationEnabled,false);
  assert.equal(planned.coverage.available,0);
  assert.equal(planned.operation.mode,'pilot-prepared');
+ assert.equal(planned.county.status,'Awaiting eligible parcel data');
+ const list=await (await handler.namespace.default(new Request('https://preview.test/api'))).json();
+ assert.equal(list.counties.filter(row=>row.state==='FL').length,67);
 });
 
 test('Larimer trial gates owner, origin and deployment and caps preview reservations at three',async()=>{

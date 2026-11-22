@@ -3,8 +3,11 @@ import { join } from 'node:path';
 import * as auth from '../lib/brain-auth.mjs';
 import { connectorFor, connectorReadiness, connectorCoverage } from '../lib/brain-gis-connectors.mjs';
 
-import {countyOperation,operationCountyIds} from '../lib/brain-gis-universal.mjs';
+import {countyOperation} from '../lib/brain-gis-universal.mjs';
 import {countyCheckpointKey,readCountyBudget,SHARED_COUNTY_DAILY_LIMIT} from '../lib/brain-gis-county-worker.mjs';
+
+import {floridaReadiness,withFloridaDirectory} from '../lib/brain-gis-florida-registry.mjs';
+import {countyPilotDefinition,eligiblePilotRows} from '../lib/brain-gis-pilot-registry.mjs';
 
 const reply=(status,data)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const root=()=>join(process.env.LAMBDA_TASK_ROOT||process.cwd(),'kinvest-liens','map');
@@ -15,18 +18,27 @@ async function handler(req) {
   const user=await auth.userFromCookie(req.headers.get('cookie')||'');
   if(!user?.owner)return reply(user?403:401,{error:'Owner access required'});
   try{
-    const {datasets}=await read('index.json');
+    const index=await read('index.json');
+    const datasets=withFloridaDirectory(index.datasets);
     const id=new URL(req.url).searchParams.get('dataset');
-    const pending=operationCountyIds().map(countyOperation).filter(operation=>
-      operation.mode==='pilot-prepared'&&!datasets.some(dataset=>dataset.id===operation.id));
-    const unlisted=operation=>({id:operation.id,state:operation.state,county:operation.county,status:'Researching',
-      source:operation.source,connector:operation.format,automationEnabled:false,operation,
-      reason:'Official source documented. No approved county parcel dataset is loaded.'});
-    if(!id)return reply(200,{counties:[...datasets.map(d=>({...connectorReadiness(d),operation:countyOperation(d.id)})),...pending.map(unlisted)]});
+    function project(dataset,trial=null,eligible=null){
+      const operation=countyOperation(dataset.id);
+      const florida=floridaReadiness(dataset,{implemented:!!countyPilotDefinition(dataset.id),eligible});
+      const county={...connectorReadiness(dataset,trial),operation};
+      if(florida){
+        county.status=florida.status;
+        county.florida=florida;
+      }
+      if(dataset.directoryOnly)county.reason='No approved county parcel dataset is loaded.';
+      return county;
+    }
+    if(!id)return reply(200,{counties:datasets.map(dataset=>{
+      const {florida,...county}=project(dataset);
+      return county;
+    })});
     const dataset=datasets.find(d=>d.id===id);
-    const preparing=pending.find(operation=>operation.id===id);
-    if(!dataset&&preparing)return reply(200,{county:unlisted(preparing),
-      coverage:{available:0,mapped:0,verified:0,remaining:0,completion:null},operation:preparing});
+    if(dataset?.directoryOnly)return reply(200,{county:project(dataset,null,0),
+      coverage:{available:0,mapped:0,verified:0,remaining:0,completion:null},operation:countyOperation(id)});
     if(!dataset||!/^[-A-Za-z0-9_]+\.json$/.test(dataset.file))return reply(404,{error:'County dataset unavailable'});
     const [data,overlay,trial]=await Promise.all([
       read('data/'+dataset.file), auth.kvGet('brain-map-county-v1-'+id),
@@ -58,7 +70,9 @@ async function handler(req) {
          quota:{used:budget?.total??null,limit:SHARED_COUNTY_DAILY_LIMIT}});
       }
     }
-    return reply(200,{county:connectorReadiness(dataset,trial),coverage,operation});
+    const pilot=countyPilotDefinition(id);
+    const eligible=pilot?eligiblePilotRows(pilot,data).length:null;
+    return reply(200,{county:project(dataset,trial,eligible),coverage,operation});
   }catch{
     return reply(503,{error:'County connector data unavailable'});
   }

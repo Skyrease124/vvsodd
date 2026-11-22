@@ -1,5 +1,7 @@
 // Activation requires a separately reviewed, server-owned approval window.
 // Only metadata has been reviewed. No parcel queries have run.
+import {reviewedFloridaSource} from './brain-gis-florida-registry.mjs';
+
 const miami=Object.freeze({
  id:'FL-miami-dade',county:'Miami-Dade',state:'FL',mode:'preview-research',enabled:false,
  source:'https://gisfs.miamidade.gov/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/6',
@@ -12,27 +14,28 @@ const miami=Object.freeze({
  terms:'https://www.miamidadepa.gov/pa/disclaimer.page',sourceTermsReviewed:false,
  requestLimit:3,operationMode:'pilot-prepared',approval:null
 });
-function floridaCadastral({id,county,countyNumber,identifierFormat,bounds}){
- const item='https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2';
+function floridaCadastral({id,county,identifierFormat,bounds}){
+ const {county:entry,source}=reviewedFloridaSource({state:'FL',county});
+ const item=source.termsUrl;
  return Object.freeze({
   id,county,state:'FL',mode:'preview-research',enabled:false,
-  source:'https://services9.arcgis.com/Gh9awoU677aKree0/arcgis/rest/services/Florida_Statewide_Cadastral/FeatureServer/0',
+  source:source.url,
   authority:'https://geodata.floridagio.gov/',
   attribution:'Florida Geographic Information Office · Florida Department of Revenue · '+county+' County Property Appraiser',
-  metadata:item,reviewedOrigin:'https://services9.arcgis.com',format:'feature-server',
-  nativeWkid:6439,nativeAliases:Object.freeze([102967]),
-  fields:Object.freeze({parcel:'PARCELNO',address:'PHY_ADDR1'}),
-  jurisdiction:Object.freeze({field:'CO_NO',value:countyNumber}),
+  metadata:item,reviewedOrigin:new URL(source.url).origin,format:'feature-server',
+  nativeWkid:source.nativeWkid,nativeAliases:Object.freeze([source.nativeAlias]),
+  fields:Object.freeze({parcel:source.parcelField,address:source.situsField}),
+  jurisdiction:Object.freeze({field:source.countyField,value:entry.sourceCountyValue}),
   identifierFormat,parcelFieldLength:254,bounds:Object.freeze(bounds),firstFolio:null,
   terms:item,sourceTermsReviewed:false,requestLimit:3,operationMode:'pilot-prepared',approval:null
  });
 }
 
-const broward=floridaCadastral({id:'FL-broward',county:'Broward',countyNumber:16,
+const broward=floridaCadastral({id:'FL-broward',county:'Broward',
  identifierFormat:'broward-folio',bounds:[-80.9,25.95,-80.0,26.36]});
-const palmBeach=floridaCadastral({id:'FL-palm-beach',county:'Palm Beach',countyNumber:60,
+const palmBeach=floridaCadastral({id:'FL-palm-beach',county:'Palm Beach',
  identifierFormat:'palm-beach-pcn',bounds:[-80.90,26.31,-79.98,27.00]});
-const santaRosa=floridaCadastral({id:'FL-santa-rosa',county:'Santa Rosa',countyNumber:67,
+const santaRosa=floridaCadastral({id:'FL-santa-rosa',county:'Santa Rosa',
  identifierFormat:'santa-rosa-surface',bounds:[-87.37,30.30,-86.68,31.05]});
 const pilots=Object.freeze({[miami.id]:miami,[broward.id]:broward,[palmBeach.id]:palmBeach,[santaRosa.id]:santaRosa});
 export const pilotCountyIds=()=>Object.keys(pilots);

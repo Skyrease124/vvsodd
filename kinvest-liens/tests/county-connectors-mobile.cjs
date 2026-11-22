@@ -19,6 +19,11 @@ const broward={id:'FL-broward',state:'FL',county:'Broward',status:'Researching',
 const palm={id:'FL-palm-beach',state:'FL',county:'Palm Beach',status:'Researching',source:'https://gis.example/palm',
  operation:{mode:'pilot-prepared',attribution:'Palm Beach County Property Appraiser'}};
 const santa={...palm,id:'FL-santa-rosa',county:'Santa Rosa'};
+const registry=require('../../netlify/lib/data/florida-gis-registry.json');
+const example=registry.counties.find(row=>row.name==='Calhoun');
+const directoryCounty={id:'FL-calhoun',state:'FL',county:'Calhoun',status:'Source validated',
+ florida:{county:example,source:registry.sources[example.sourceId],reviewedOn:registry.reviewedOn,
+  evidence:registry.evidence,eligible:0,blockers:['No eligible candidate in the current dataset']}};
 county.operation={mode:'research-only'};
 const coverage = {available:1831,mapped:1790,verified:0,remaining:41,completion:0};
 const research = {
@@ -65,8 +70,8 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
     if(path===api+'owner-brain-connectors'){
-     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa]}});
-     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:county;
+     if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa,directoryCounty]}});
+     const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:url.searchParams.get('dataset')==='FL-calhoun'?directoryCounty:county;
      return route.fulfill({json:{county:selected,coverage,operation:{...selected.operation,pendingReview:3,
       progress:{total:100,pending:10,verified:75,verifiedPercent:75,processingPercent:90},quota:{used:21,limit:30}}}});
     }
@@ -100,6 +105,12 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    await page.goto(origin+'/owner/brain/connectors/');
    const state=page.locator('#county-state'),mode=page.locator('#county-mode');
    await state.selectOption('FL');
+   await page.locator('#county').selectOption('FL-calhoun');
+   await page.locator('summary').filter({hasText:'Connector and coverage details'}).click();
+   await page.getByText('FIPS 013 · GEOID 12013').waitFor();
+   await page.getByRole('link',{name:'Statewide GIS metadata'}).waitFor();
+   assert.equal(await page.getByRole('button',{name:/Run Live.*Pilot/}).count(),0);
+   assert.deepEqual(posts,[]);
    await page.locator('#county').selectOption('FL-santa-rosa');
    await page.getByRole('button',{name:'Run Live Santa Rosa Pilot'}).waitFor();
    assert.equal(await page.getByRole('button',{name:'Run Live Santa Rosa Pilot'}).isDisabled(),true);
