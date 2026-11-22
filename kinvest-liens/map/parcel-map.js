@@ -1319,6 +1319,14 @@
     if(!radarCounties&&!radarGeometryLoading)loadRadarCounties();
     if(mapReady)map.easeTo({pitch:REDUCED?0:38,duration:REDUCED?0:650});
   });
+  // Explicit state focus avoids depending on embedded selector events or drawer state.
+  if(homeMap)window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-focus-state'||!/^[A-Z]{2}$/.test(d.state||''))return;
+    if(!IDX?.allStates?.some(s=>s.a===d.state))return;
+    focusState(d.state,{remember:false,panel:false,zoom:true});
+  });
   // Verified Radar parcel handoff. Exact state + county + parcel ID must match
   // an existing map dataset and a record with an official GIS geometry.
   if (homeMap) window.addEventListener('message', async event => {
