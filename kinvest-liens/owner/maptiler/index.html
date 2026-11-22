@@ -31,10 +31,10 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 <option value="outdoor-v4">Outdoor terrain</option>
 <option value="aquarelle-v4">Aquarelle watercolor</option>
 </select></div></div>
-<div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div></div>
+<div class="actions"><button id="load" class="primary">Load private map preview</button><button id="terrain" disabled>Enable 3D terrain</button><button id="close" disabled>Close map</button></div><div id="parcelControls" class="panel" hidden><b>Inspect a verified parcel</b><div class="actions"><label for="parcelFocus">Parcel <select id="parcelFocus" aria-label="Choose parcel to inspect"></select></label><button type="button" id="focusParcel">Zoom to selected parcel</button></div></div></div>
 </div>
 <div id="map" hidden aria-label="Private interactive map with parcel boundaries"></div>
-<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><div class="actions"><label for="parcelFocus">Inspect a verified parcel <select id="parcelFocus" aria-label="Choose parcel to inspect"></select></label><button type="button" id="focusParcel">Zoom to selected parcel</button></div><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
+<div class="panel" id="details" hidden><b>Parcel overlay</b><p id="detail" class="muted"></p><p class="muted">Published county boundaries and verified corrections from the shared Brain feed are drawn. The preview does not fill missing locations or validate sale availability.</p></div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js" crossorigin></script>
 <script src="/map/brain-map-merge.js"></script>
@@ -65,7 +65,7 @@ function selectState(){
  if(map)reset();
  msg(counties.length?counties.length+' county dataset(s) in '+state+'. Choose one and load the private map preview.':'No county data currently available for this state.');
 }
-function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;boundaryOnly=false;focusedDataset=null;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;}
+function reset(){clearTimeout(loadTimer);if(map){map.remove();map=null;}terrain=false;boundaryOnly=false;focusedDataset=null;$('map').hidden=true;$('close').disabled=true;$('terrain').disabled=true;$('terrain').textContent='Enable 3D terrain';$('details').hidden=true;$('parcelControls').hidden=true;}
 function geometry(r){if(!r?.g||!Array.isArray(r.g)||!r.g.length)return null;return {type:'Polygon',coordinates:r.g};}
 function focusSelectedParcel(features){
  if(!map)return;
@@ -92,6 +92,7 @@ function overlay(){
  $('focusParcel').disabled=!feats.length;
  // Focus exactly one small parcel on initial load; never jump the camera during feed refresh.
  if(focusedDataset!==currentData){focusedDataset=currentData;focusSelectedParcel(feats);}
+ $('parcelControls').hidden=!feats.length;
  $('details').hidden=false;$('detail').textContent='Displaying '+feats.length+' verified parcel boundaries from '+detail.county+', '+detail.state+'. Full dataset records: '+currentData.recs.length+'. Preview includes every verified correction and samples the original boundaries.';
 }
 async function loadData(){
