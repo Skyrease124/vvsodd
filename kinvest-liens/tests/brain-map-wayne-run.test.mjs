@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import crypto from 'node:crypto';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false,missingFirst=false,polygon404=false,rejectPublication=false}={}){
- const store=new Map();
+async function setup({liveShapeFixture=false,snapshot=null,interruptAfterValid=false,paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false,missingFirst=false,polygon404=false,rejectPublication=false}={}){
+ const store=new Map(snapshot?.entries||[]);
  const versions=new Map();
  if(pending)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{i:'r1',verifiedGeometry:true,verifiedAt:'2026-11-22T00:00:00Z',publicationPending:true}}});
  if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
@@ -14,11 +15,32 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
  const rows=[{i:'r1',p:'01002754',a:'100 Test St, Detroit MI'},{i:'r2',p:'01002830',a:'102 Test St, Detroit MI'},
  {i:'r3',p:'01003357',a:'104 Test St, Detroit MI'},{i:'r4',p:'01004444',a:'106 Test St, Detroit MI'}];
- let calls=0,publications=0,reserved=dailyUsed;
+ if(liveShapeFixture)rows.push({i:'r5',p:'01005555',a:'108 Test St, Detroit MI'});
+ let calls=0,publications=0,reserved=snapshot?.reserved??dailyUsed;
+ let networkFailure=true;
+ const upstreamIds=[];
+ const realVerifier=liveShapeFixture?await import('../../netlify/lib/brain-official-verification.mjs'):null;
  const context=vm.createContext({Response,Request,URL,URLSearchParams,AbortSignal,Buffer,Date,console,crypto:undefined,
  fetch:async u=>{
   const url=new URL(u);if(url.hostname==='pricepocketasset.com')return Response.json({recs:rows});
-  calls++;if(failedGIS)throw Error('Simulated provider outage');
+  calls++;
+  if(liveShapeFixture){
+   const where=url.searchParams.get('where')||'';
+   const idsOnly=url.searchParams.get('returnIdsOnly')==='true';
+   const index=idsOnly?rows.findIndex(row=>where.includes(row.p)):
+    Number(url.searchParams.get('objectIds')||where.replace('object_id=',''))-100;
+   if(index<0||!rows[index])throw Error('Unexpected official query');
+   const row=rows[index], objectId=100+index;
+   upstreamIds.push(row.p);
+   if(idsOnly){
+    if(index===4&&networkFailure){networkFailure=false;throw Error('Fixture connection reset');}
+    return Response.json({objectIds:index===0?[]:index===1?[objectId,999]:[objectId]});
+   }
+   const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],index===2?[-83.1,42.301]:[-83.1,42.3]];
+   return Response.json({features:[{attributes:{parcel_number:row.p,address:row.a.split(',')[0],object_id:objectId},
+    geometry:{rings:[ring]}}]});
+  }
+  if(failedGIS)throw Error('Simulated provider outage');
   if(timeoutFirst&&calls===1)throw Object.assign(Error('The operation was aborted due to timeout'),{name:'TimeoutError'});
   if(url.searchParams.get('returnIdsOnly')==='true'){
    if(missingFirst&&url.searchParams.get('where')?.includes('01002754'))return Response.json({objectIds:[]});
@@ -30,7 +52,11 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  }});
  const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','readWayneGisQuota','reserveWayneGisRequest','withBrainStore','isBrainPreview'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
-  this.setExport('kvGet',async k=>structuredClone(store.get(k)));
+  this.setExport('kvGet',async k=>{
+   if(interruptAfterValid&&k==='owner-brain-scanner-v1'&&store.get('owner-brain-wayne-worker-v1')?.cursor===4)
+    throw Error('Fixture interruption after cursor checkpoint');
+   return structuredClone(store.get(k));
+  });
   this.setExport('kvPut',async(k,v)=>store.set(k,structuredClone(v)));
   this.setExport('kvGetVersioned',async key=>store.has(key)
    ? {data:structuredClone(store.get(key)),etag:versions.get(key)||'initial'} : null);
@@ -53,13 +79,13 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  },{context});
  const verify=new vm.SyntheticModule(['verifyOfficial','DETROIT_GIS'],function(){
   this.setExport('DETROIT_GIS','https://services2.arcgis.com/example/FeatureServer/0');
-  this.setExport('verifyOfficial',(r,features)=>{
+  this.setExport('verifyOfficial',realVerifier?.verifyOfficial||((r,features)=>{
    if(!features.length||r.p!==(missingFirst||polygon404?'01002830':'01002754'))throw Error('No exact verified feature');
    return {officialObjectId:100,evidenceUrl:'https://services2.arcgis.com/example',notes:'Verified',checks:[],
     cx:[-83.0995,42.3005]};
-  });
+  }));
  },{context});
- const publisher=new vm.SyntheticModule(['default'],function(){
+ const publisher=liveShapeFixture?new vm.SourceTextModule(fs.readFileSync('netlify/functions/brain-map-publish-auto.mjs','utf8'),{context}):new vm.SyntheticModule(['default'],function(){
   this.setExport('default',async(_req,context)=>{
    if(context.wayneRecoveryOnly){
     const row=store.get('brain-map-county-v1-MI-wayne').records.r1;
@@ -85,7 +111,7 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
   });
  },{context});
  const cryptoModule=new vm.SyntheticModule(['default'],function(){
-  this.setExport('default',{randomUUID:()=>String('fixed-run'),createHash:()=>({update:()=>({digest:()=>String('a').repeat(32)})})});
+  this.setExport('default',{randomUUID:()=>String('fixed-run'),createHash:()=>({update:input=>({digest:()=>liveShapeFixture?crypto.createHash('sha256').update(input).digest('hex'):String('a').repeat(32)})})});
  },{context});
  const module=new vm.SourceTextModule(code,{context});
  await module.link(s=>s.includes('brain-auth')?auth:s.includes('brain-official')?verify:s.includes('publish-auto')?publisher:cryptoModule);
@@ -93,7 +119,8 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  const url='https://preview.test/.netlify/functions/owner-brain-wayne-run';
  const invoke=(method='POST',origin='https://preview.test',deploy='deploy-preview',body={action:'run-wayne-batch',confirmed:true})=>
   module.namespace.default(new Request(url,{method,headers:{origin},...(method==='POST'?{body:JSON.stringify(body)}:{})}),{deploy:{context:deploy}});
- return {store,invoke,reads:()=>calls,publications:()=>publications};
+ return {store,invoke,reads:()=>calls,publications:()=>publications,upstreamIds,
+  snapshot:()=>structuredClone({entries:[...store],reserved})};
 }
 test('preview-only owner and same-origin guards run before GIS queries',async()=>{
  const noOwner=await setup({owner:false});assert.equal((await noOwner.invoke()).status,401);assert.equal(noOwner.reads(),0);
@@ -302,4 +329,43 @@ test('an owner-approved skipped parcel cannot dispatch after the shared quota cl
  assert.equal(retry.status,429);
  assert.equal(h.reads(),before);
  assert.equal(h.publications(),0);
+});
+
+
+test('official-response fixtures survive an interruption between guarded publications',async()=>{
+ const key='owner-brain-wayne-worker-v1', overlayKey='brain-map-county-v1-MI-wayne';
+ const h=await setup({liveShapeFixture:true,interruptAfterValid:true});
+ const first=await (await h.invoke()).json();
+ assert.equal(first.cursor,3);
+ assert.deepEqual(first.rows.map(row=>row.reason),[
+  'Parcel missing from official GIS','Official object ID invalid or ambiguous','Open official polygon']);
+ const interrupted=await h.invoke();
+ assert.equal(interrupted.status,502);
+ assert.equal(h.store.get(key).cursor,4);
+ const saved=h.store.get(overlayKey).records.r4;
+ assert.equal(saved.verifiedGeometry,true);
+ assert.equal(saved.publicationPending,undefined);
+ const restarted=await setup({liveShapeFixture:true,snapshot:h.snapshot()});
+ // Force one transient failure in the restarted process, then expire only its test clock checkpoint.
+ const transient=await (await restarted.invoke()).json();
+ assert.equal(transient.state,'retry_wait');
+ assert.equal(transient.cursor,4);
+ assert.equal(transient.retry.attempts,1);
+ const before=restarted.reads();
+ assert.equal((await (await restarted.invoke()).json()).state,'retry_wait');
+ assert.equal(restarted.reads(),before);
+ const state=restarted.store.get(key);
+ state.retry.nextAt=new Date(Date.now()-1).toISOString();
+ restarted.store.set(key,state);
+ const final=await (await restarted.invoke()).json();
+ assert.equal(final.cursor,5);
+ assert.equal(final.published,1);
+ assert.deepEqual(final.progress,{total:5,verified:2,skipped:3,failed:0,legacyProcessed:0,pending:0,processingPercent:100,verifiedPercent:40});
+ assert.equal(Object.keys(restarted.store.get(key).reviewQueue).length,3);
+ assert.deepEqual(restarted.store.get(overlayKey).records.r4,saved);
+ assert.equal(restarted.store.get(overlayKey).records.r5.verifiedGeometry,true);
+ assert.ok(restarted.upstreamIds.every(id=>id==='01005555'));
+ const done=restarted.reads();
+ await restarted.invoke();
+ assert.equal(restarted.reads(),done);
 });

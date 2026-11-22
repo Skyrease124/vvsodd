@@ -169,7 +169,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    const progress=d.worker.progress;
    const sourceCooling=Date.parse(d.worker.sourcePause?.nextAt)>Date.now();
    document.getElementById('wayneQueueProgress').textContent=(progress?
-    'Detroit GIS queue · Total '+progress.total+' · Verified '+progress.verified+' · Skipped '+progress.skipped+
+    'Detroit GIS queue · Total eligible '+progress.total+' · Processed '+(progress.total-progress.pending)+' · Verified '+progress.verified+' · Skipped '+progress.skipped+
     ' · Failed after retries '+progress.failed+' · Pending '+progress.pending+
     (progress.legacyProcessed?' · Earlier outcomes unavailable '+progress.legacyProcessed:'')+
     ' · Processing complete '+progress.processingPercent+'% · Verified coverage '+progress.verifiedPercent+'%':
