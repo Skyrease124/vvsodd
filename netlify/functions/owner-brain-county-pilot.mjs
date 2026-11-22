@@ -18,7 +18,8 @@ async function handler(req,context){
  if(!config)return reply(404,{error:'County pilot unavailable'});
  const storage={read:auth.kvGetVersioned,write:auth.kvPutVersioned};
  const key=countyCheckpointKey(config.id);
- const active=config.enabled&&config.approval?.day===new Date().toISOString().slice(0,10);
+ const now=new Date(),today=now.toISOString().slice(0,10);
+ const active=config.enabled&&config.sourceTermsReviewed&&config.approval?.day===today;
  try{
   const root=join(process.env.LAMBDA_TASK_ROOT||process.cwd(),'kinvest-liens','map','data');
   const data=JSON.parse(await readFile(join(root,config.id+'.json'),'utf8'));
@@ -26,17 +27,39 @@ async function handler(req,context){
   const revision=createHash('sha256').update(JSON.stringify(rows)).digest('hex');
   const saved=await storage.read(key),state=saved?.data;
   const cursor=state?.cursor??0;
+  const quota=await readCountyBudget(storage);
+  const used=quota?.counties?.[config.id]??0;
+  const sharedRemaining=Math.max(0,SHARED_COUNTY_DAILY_LIMIT-(quota?.total??0));
+  const countyRemaining=Math.max(0,config.requestLimit-used);
+  const pilotUsed=config.approval?.day===today?(quota?.pilots?.[config.id+':'+config.approval.id]??0):null;
+  const cooling=Date.parse(state?.sourceHealth?.nextAt)>now.getTime();
+  const running=Date.parse(state?.lockedUntil)>now.getTime();
+  const blockers=[];
+  if(!config.sourceTermsReviewed)blockers.push('Confirm terms for programmatic source access');
+  if(!active)blockers.push('Owner approval for a live pilot is pending');
+  if(state?.paused)blockers.push('County paused by owner');
+  if(cooling)blockers.push('County source cooldown is active');
+  if(running)blockers.push('County worker already running');
+  if(state&&state.revision!==revision)blockers.push('Saved checkpoint differs from the current dataset');
+  if(rows[cursor]?.p!==config.firstFolio)blockers.push('First folio is unavailable at the saved cursor');
+  if(sharedRemaining<2||countyRemaining<2||pilotUsed!==null&&pilotUsed>0)blockers.push('Two research requests must be available under a fresh pilot approval');
   if(req.method==='GET'){
-   const [quota,overlay]=await Promise.all([readCountyBudget(storage),auth.kvGet('brain-map-county-v1-'+config.id)]);
+   const overlay=await auth.kvGet('brain-map-county-v1-'+config.id);
    const published=rows.filter(row=>{const patch=overlay?.records?.[row.i];
     return patch?.verifiedGeometry===true&&patch.i===row.i&&patch.p===row.p&&Array.isArray(patch.g)&&patch.g.length;}).length;
-   const used=quota?.counties?.[config.id]??0;
-   return reply(200,{active,cursor,eligible:rows.length,processed:cursor,
+   const records=Object.values(state?.evidence||{});
+   const validated=records.find(row=>row.outputWkid===4326&&row.parcelId===config.firstFolio);
+   return reply(200,{active,runAllowed:blockers.length===0,cursor,eligible:rows.length,processed:cursor,
+    pilotFolio:config.firstFolio,source:config.source,terms:config.terms,sourceTermsReviewed:config.sourceTermsReviewed,
+    schemaAt:state?.discovery?.schema?.compatible?state.discovery.observedAt:null,
+    nativeWkid:state?.discovery?.capabilities?.nativeWkid??config.nativeWkid,
+    datumTransformation:state?.discovery?.capabilities?.datumTransformation??null,
+    wgs84ValidatedAt:validated?.checkedAt??null,cooldownUntil:cooling?state.sourceHealth.nextAt:null,
+    skipped:Object.values(state?.review||{}).filter(row=>!row.resolvedAt).length,
     verifiedEvidence:Object.keys(state?.evidence||{}).length,published,review:state?.review||{},
     lastSuccessfulAt:state?.lastSuccessfulAt??null,sourceHealth:state?.sourceHealth??null,
-    paused:state?.paused===true,sharedRemaining:Math.max(0,SHARED_COUNTY_DAILY_LIMIT-(quota?.total??0)),
-    countyRemaining:Math.max(0,config.requestLimit-used),pilotLimit:3,
-    blockers:active?[]:['Owner approval for a live pilot is pending']});
+    paused:state?.paused===true,sharedRemaining,countyRemaining,pilotLimit:3,
+    pilotRemaining:pilotUsed===null?null:Math.max(0,3-pilotUsed),blockers});
   }
   if(req.headers.get('origin')!==url.origin)return reply(403,{error:'Invalid origin'});
   const raw=await req.text();
@@ -56,6 +79,7 @@ async function handler(req,context){
    if(!await storage.write(key,next,saved?.etag??null))return reply(409,{error:'Saved county checkpoint changed'});
    return reply(200,{paused:next.paused});
   }
+  if(body.action==='run'&&blockers.length)return reply(409,{error:blockers[0]});
   if(body.action==='retry'&&(!Number.isSafeInteger(body.review?.index)||typeof body.review?.parcelId!=='string'||
     typeof body.review?.checkedAt!=='string'))return reply(400,{error:'Exact review entry required'});
   const result=await runCountyResearch({config,rows,revision,storage,

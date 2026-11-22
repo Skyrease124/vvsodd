@@ -8,6 +8,8 @@ const miami=Object.freeze({
  reviewedOrigin:'https://gisfs.miamidade.gov',format:'map-server',nativeWkid:2236,
  fields:Object.freeze({parcel:'FOLIO',address:'TRUE_SITE_ADDR'}),
  identifierFormat:'miami-folio',bounds:Object.freeze([-80.88,25.12,-80.00,25.99]),
+ firstFolio:'30-3052-075-0060',
+ terms:'https://www.miamidadepa.gov/pa/disclaimer.page',sourceTermsReviewed:false,
  requestLimit:3,operationMode:'pilot-prepared',approval:null
 });
 export const pilotCountyIds=()=>[miami.id];

@@ -5,12 +5,13 @@ import vm from 'node:vm';
 const source=fs.readFileSync('netlify/functions/owner-brain-activity.mjs','utf8');
 const page=fs.readFileSync('kinvest-liens/owner/brain/activity/index.html','utf8');
 const brain=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
-async function create(owner,research=null,quota={active:true,count:21}){
+async function create(owner,research=null,quota={active:true,count:21},county=null){
  const store=new Map([
   ['owner-brain-wayne-worker-v1',{cursor:7,runs:2,verified:5,published:5,needsReview:0,failures:0,dailyUsed:5,state:'idle',lastCompleted:'2026-11-21T20:00:00.000Z',recent:[{parcelId:'01002754',status:'published'}]}],
   ['brain-map-history-v1',{entries:[{dataset:'MI-wayne',parcelId:'01002754',action:'published',source:'official GIS',at:'2026-11-21T20:00:00.000Z'}]}],
  ]);
  if(research)store.set('brain-reconciliation-research-v1-CO-larimer',research);
+ if(county)store.set('brain-gis-operations-v1-FL-miami-dade',county);
  const context=vm.createContext({Response,console,Date});
  const auth=new vm.SyntheticModule(['userFromCookie','kvGet','withBrainStore','isBrainPreview','readWayneGisQuota'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
@@ -22,7 +23,7 @@ async function create(owner,research=null,quota={active:true,count:21}){
  const mod=new vm.SourceTextModule(source,{context});
  const operations=new vm.SyntheticModule(['countyOperation','operationCountyIds','countyCheckpointKey'],function(){
   this.setExport('countyOperation',()=>({mode:'research-only'}));
-  this.setExport('operationCountyIds',()=>['CO-larimer']);
+  this.setExport('operationCountyIds',()=>['CO-larimer','FL-miami-dade']);
   this.setExport('countyCheckpointKey',id=>'brain-gis-operations-v1-'+id);
  },{context});
  await mod.link(specifier=>specifier.includes('brain-auth')?auth:operations);await mod.evaluate();
@@ -132,4 +133,20 @@ test('inactive shared quota is shown as unknown even with a historical worker co
  const d=await (await run(new Request('https://preview.test/activity'))).json();
  assert.equal(d.health.dailyUsed,null);
  assert.equal(d.health.remaining,null);
+});
+
+
+test('Miami-Dade Reactor events distinguish saved request reservations from verified publications',async()=>{
+ const at='2026-11-22T00:00:00Z';
+ const run=await create(true,null,{active:true,count:21},{events:[
+  {id:1,at,status:'request_reserved',stage:'schema',pilotUsed:1,sharedUsed:1},
+  {id:2,at,status:'skipped',parcelId:'30-3052-075-0060',reason:'Invalid polygon'},
+  {id:3,at,status:'fake_success',parcelId:'mock'}
+ ]});
+ const d=await (await run(new Request('https://preview.test/activity'))).json();
+ const events=d.events.filter(event=>event.county==='FL-miami-dade');
+ assert.equal(events.length,2);
+ assert.ok(events.some(event=>event.message.includes('1/3 pilot requests reserved')));
+ assert.ok(events.some(event=>event.message.includes('Invalid polygon')));
+ assert.ok(events.every(event=>event.type==='county_research'));
 });

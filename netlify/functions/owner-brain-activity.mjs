@@ -28,17 +28,28 @@ async function handler(req){
   }
   if(auth.isBrainPreview()){
    const ids=operationCountyIds().filter(id=>countyOperation(id).mode!=='existing-worker');
-   const operations=await Promise.all(ids.map(id=>auth.kvGet(countyCheckpointKey(id))));
-   for(const [index,checkpoint] of operations.entries()){
+   const operations=await Promise.all(ids.map(async id=>Promise.all([
+    auth.kvGet(countyCheckpointKey(id)),auth.kvGet('brain-map-county-v1-'+id)])));
+   for(const [index,[checkpoint,overlay]] of operations.entries()){
     const county=ids[index];
     for(const event of (checkpoint?.events||[]).slice(-25)){
      const at=date(event.at);
-     if(!at||!['evidence_saved','skipped','source_paused','quota_wait','owner_paused','owner_resumed'].includes(event.status))continue;
+     if(!at||!['schema_checked','request_reserved','evidence_saved','retry_verified','skipped','source_paused','quota_wait','owner_paused','owner_resumed'].includes(event.status))continue;
      events.push({id:'county-operation-'+county+'-'+(event.id??[at,event.parcelId,event.status].join('-')),
       at,agent:'County connectors',from:'Official source',to:'NVIDIA',type:'county_research',
       county,parcelId:clean(event.parcelId),status:event.status==='evidence_saved'?'info':'warning',
       message:county+' · '+event.status.replaceAll('_',' ')+(event.parcelId?' · '+clean(event.parcelId):'')+
+       (event.stage?' · '+clean(event.stage).replaceAll('_',' '):'')+
+       (Number.isInteger(event.sharedUsed)?' · '+event.sharedUsed+' shared requests reserved':'')+
+       (Number.isInteger(event.pilotUsed)?' · '+event.pilotUsed+'/3 pilot requests reserved':'')+
        (event.reason?' · '+clean(event.reason):'')});
+    }
+    for(const receipt of (overlay?.publicationHistory||[]).slice(0,25)){
+     const at=date(receipt?.at);
+     if(!at||receipt.dataset!==county||receipt.action!=='published'||!receipt.parcelId)continue;
+     events.push({id:'county-publication-'+county+'-'+receipt.version,at,agent:'Mapping',from:'GIS Publisher',
+      to:'Mapping',type:'published',county,parcelId:clean(receipt.parcelId),status:'success',
+      message:'Verified polygon published · '+county+' · parcel '+clean(receipt.parcelId)});
     }
    }
   }

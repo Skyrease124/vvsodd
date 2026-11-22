@@ -473,12 +473,25 @@ async function showCountyPilot(id,selectionAtLoad){
  note.textContent='Eligible '+state.eligible+' · Processed '+state.processed+' ('+percentage+'%) · Evidence saved '+state.verifiedEvidence+
   ' · Verified map polygons '+state.published+' ('+(state.eligible?Math.round(100*state.published/state.eligible):0)+'%)'+
   ' · Shared requests remaining '+state.sharedRemaining+' · County requests remaining '+state.countyRemaining+
-  ' · Pilot maximum '+state.pilotLimit+' requests';
+  ' · Pilot requests remaining '+(state.pilotRemaining??'No active permit')+' · Maximum '+state.pilotLimit;
  panel.append(note);
+ const checks=document.createElement('p');
+ checks.textContent='Folio '+(state.pilotFolio||'unavailable')+' · Skipped '+(state.skipped??'—')+
+  ' · Last verified schema '+(state.schemaAt?new Date(state.schemaAt).toLocaleString():'Not checked live')+
+  ' · Native EPSG:'+(state.nativeWkid??'—')+' · WGS84 '+
+   (state.wgs84ValidatedAt?'validated '+new Date(state.wgs84ValidatedAt).toLocaleString():'Not validated live');
+ panel.append(checks);
+ if(state.terms){
+  const terms=document.createElement('a');
+  terms.href=state.terms;
+  terms.textContent='Property Appraiser access terms';
+  panel.append(terms);
+ }
  const health=document.createElement('p');
  health.textContent=(state.paused?'Paused':state.sourceHealth?.status?.replaceAll('_',' ')||'No saved source activity')+
   (state.sourceHealth?.reason?' · '+state.sourceHealth.reason:'')+
-  (state.lastSuccessfulAt?' · Last processed '+new Date(state.lastSuccessfulAt).toLocaleString():'');
+  (state.lastSuccessfulAt?' · Last processed '+new Date(state.lastSuccessfulAt).toLocaleString():'')+
+  (state.cooldownUntil?' · Retry after '+new Date(state.cooldownUntil).toLocaleString():'');
  panel.append(health);
  if(state.blockers?.length){
   const blockers=document.createElement('p');
@@ -489,7 +502,7 @@ async function showCountyPilot(id,selectionAtLoad){
   const button=document.createElement('button');
   button.type='button';
   button.textContent=label;
-  button.disabled=!state.active;
+  button.disabled=kind==='run'?!state.runAllowed:!state.active;
   button.onclick=async()=>{
    if(!confirm(label+' for this county?'))return;
    button.disabled=true;
@@ -502,7 +515,12 @@ async function showCountyPilot(id,selectionAtLoad){
   return button;
  }
  panel.append(action(state.paused?'Resume county':'Pause county',state.paused?'resume':'pause'));
- panel.append(action('Run county pilot','run'));
+ const check=document.createElement('button');
+ check.type='button';
+ check.textContent='Check Readiness';
+ check.onclick=()=>showCounty();
+ panel.append(check,action('Run Live Miami-Dade Pilot','run'));
+
  const list=document.createElement('ul');
  for(const [index,row] of Object.entries(state.review||{})){
   if(row.resolvedAt)continue;

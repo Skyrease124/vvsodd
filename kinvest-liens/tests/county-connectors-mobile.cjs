@@ -45,8 +45,8 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',
   headless:true,timeout:15000,args:['--no-sandbox','--disable-dev-shm-usage','--disable-background-networking']});
  try{
-  for(const width of [320,375,390,430]){
-   const context=await browser.newContext({viewport:{width,height:844},isMobile:true,deviceScaleFactor:2,hasTouch:true});
+  for(const width of [320,375,390,430,1280]){
+   const context=await browser.newContext({viewport:{width,height:844},isMobile:width<500,deviceScaleFactor:2,hasTouch:true});
    const page=await context.newPage();
    const posts=[],unexpected=[],errors=[];
    let paused=false,used=0,approve=false;
@@ -88,8 +88,11 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    const state=page.locator('#county-state'),mode=page.locator('#county-mode');
    await state.selectOption('FL');
    await page.getByRole('heading',{name:'County pilot controls'}).waitFor();
-   assert.equal(await page.getByRole('button',{name:'Run county pilot'}).isDisabled(),true);
+   assert.equal(await page.getByRole('button',{name:'Run Live Miami-Dade Pilot'}).isDisabled(),true);
    assert.match(await page.getByText(/Verified map polygons 0/).textContent(),/Eligible 10 · Processed 3/);
+   await page.getByRole('button',{name:'Check Readiness'}).click();
+   await page.getByText(/WGS84 Not validated live/).waitFor();
+   assert.deepEqual(posts,[]);
    await page.getByText('Skipped parcels awaiting review').click();
    assert.equal(await page.getByRole('button',{name:'Retry parcel',exact:true}).isDisabled(),true);
    await state.selectOption('MI');

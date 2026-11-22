@@ -184,7 +184,7 @@ test('future publication requires separate approval, independently verifies, and
 
 
 const miami=countyPilotDefinition('FL-miami-dade');
-const miamiMeta={...arcMeta,fields:[{name:'FOLIO',type:'esriFieldTypeString'},{name:'TRUE_SITE_ADDR',type:'esriFieldTypeString'}]};
+const miamiMeta={...arcMeta,extent:{spatialReference:{wkid:102658,latestWkid:2236}},supportsDatumTransformation:true,fields:[{name:'FOLIO',type:'esriFieldTypeString',length:13},{name:'TRUE_SITE_ADDR',type:'esriFieldTypeString'}]};
 const miamiShape=[[-80.3,25.7],[-80.299,25.7],[-80.299,25.701],[-80.3,25.7]];
 const fixtureRaw={id:miami.id,recs:Array.from({length:10},(_,i)=>({
  i:'m'+i,p:'00-1000-123-'+String(i+1).padStart(4,'0'),a:'100 Main Street'
@@ -286,6 +286,35 @@ test('county pilot endpoint is owner-only and denies dispatch before activation'
  const status=await (await get()).json();
  assert.equal(status.eligible,10);
  assert.equal(status.active,false);
+ assert.equal(status.runAllowed,false);assert.equal(status.pilotRemaining,null);
+ assert.equal(status.schemaAt,null);assert.equal(status.wgs84ValidatedAt,null);
  assert.equal((await get('POST')).status,409);
  assert.equal(writes,0);
+});
+
+
+test('Miami-Dade requires explicit CRS and validates actual longitude/latitude',async()=>{
+ let response;
+ let metadata=miamiMeta;
+ const c=createCountyConnector(miami,{reserve:async()=>{},fetcher:async url=>
+  Response.json(url.pathname.endsWith('/query')?response:metadata)});
+ const discovery=await c.discover();
+ assert.equal(discovery.capabilities.nativeWkid,2236);
+ assert.equal(discovery.capabilities.datumTransformation,true);
+ const record=miamiRows[0],id=record.p.replaceAll('-','');
+ response={features:[]};
+ await assert.rejects(c.verify(record,discovery),{code:'missing',scope:'parcel'});
+ response=miamiResult(id);
+ assert.equal((await c.verify(record,discovery)).outputWkid,4326);
+ delete response.spatialReference;
+ await assert.rejects(c.verify(record,discovery),{code:'unsupported_crs'});
+ response=miamiResult(id);
+ response.features[0].geometry.spatialReference={wkid:2236};
+ await assert.rejects(c.verify(record,discovery),{code:'unsupported_crs'});
+ response={...miamiResult(id),spatialReference:{wkid:2236,latestWkid:4326}};
+ await assert.rejects(c.verify(record,discovery),{code:'unsupported_crs'});
+ response=miamiResult(id,miamiShape.map(([x,y])=>[x*10000,y*10000]));
+ await assert.rejects(c.verify(record,discovery),{code:'invalid_polygon'});
+ metadata={...miamiMeta,extent:{spatialReference:{wkid:3857}}};
+ await assert.rejects(c.discover(),{code:'native_crs_mismatch'});
 });

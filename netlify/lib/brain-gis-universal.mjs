@@ -113,8 +113,8 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   config.bounds[0]<config.bounds[2]&&config.bounds[1]<config.bounds[3];
  if(!bounded)throw Error('A reviewed county bounding box is required');
 
- async function request(url,parse){
-  await reserve(config.id);
+ async function request(url,parse,stage){
+  await reserve(config.id,stage);
   try{
    const res=await fetcher(url,{redirect:'error',signal:AbortSignal.timeout(8000)});
    if(!res.ok)throw connectorError('http_'+res.status,'Official source HTTP '+res.status,'source');
@@ -137,18 +137,26 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   return snapshot;
  }
  async function discover(){
-  const data=isArc?await request(new URL('?f=json',source),json):await download();
+  const data=isArc?await request(new URL('?f=json',source),json,'schema'):await download();
   if(isArc&&(data.error||!Array.isArray(data.fields)||data.geometryType!=='esriGeometryPolygon'||
     (data.capabilities&&!data.capabilities.split(',').some(value=>value.trim().toLowerCase()==='query'))))
    throw connectorError('unsupported_schema','Official layer does not expose queryable parcels','source');
+  const native=data?.extent?.spatialReference??data?.spatialReference;
+  const reported=[native?.wkid,native?.latestWkid].filter(value=>value!=null);
+  const expected=config.nativeWkid===2236?[2236,102658]:[config.nativeWkid];
+  if(config.nativeWkid&&(!reported.length||reported.some(value=>!expected.includes(value))))
+   throw connectorError('native_crs_mismatch','Layer did not declare its reviewed native spatial reference','source');
   const names=isArc?data.fields.map(field=>field.name).filter(name=>typeof name==='string'):
    [...new Set(data.flatMap(row=>Object.keys(row.attributes||{})))];
   const schema=inspectFields(names,config.fields);
-  if(isArc&&!data.fields.some(field=>field.name===schema.fields.parcel&&field.type==='esriFieldTypeString'))
+  if(isArc&&(!data.fields.some(field=>field.name===schema.fields.parcel&&field.type==='esriFieldTypeString'&&
+    (!config.identifierFormat||field.length===13))||
+    (config.identifierFormat&&!data.fields.some(field=>field.name===schema.fields.address&&field.type==='esriFieldTypeString'))))
    schema.compatible=false;
   return {dataset:config.id,source:source.href,authority:official.href,observedAt:now().toISOString(),
    reliability:schema.compatible?'reachable_candidate':'owner_review',schema,
-   capabilities:{geometry:isArc?'esriGeometryPolygon':config.format==='geojson'?'GeoJSON Polygon':schema.fields.geometry||null,
+   capabilities:{nativeWkid:reported.includes(2236)?2236:reported[0]??null,datumTransformation:data?.supportsDatumTransformation===true,
+    geometry:isArc?'esriGeometryPolygon':config.format==='geojson'?'GeoJSON Polygon':schema.fields.geometry||null,
     pagination:isArc&&data.advancedQueryCapabilities?.supportsPagination===true,
     maxRecordCount:isArc&&Number.isSafeInteger(data.maxRecordCount)?data.maxRecordCount:null,
     configuredRequestLimit:config.requestLimit??null}};
@@ -165,11 +173,18 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
     throw connectorError('unsupported_fields','Source field names need review','source');
    const query=new URLSearchParams({f:'json',where:fields.parcel+" = '"+canonical(record.p)+"'",outFields:Object.values(fields).join(','),
     returnGeometry:'true',outSR:'4326',resultRecordCount:'2'});
-   const data=await request(new URL(source.href+'/query?'+query),json);
+   const data=await request(new URL(source.href+'/query?'+query),json,'parcel_verification');
    if(data.error||data.exceededTransferLimit||!Array.isArray(data.features))
     throw connectorError('incomplete_results','GIS results incomplete or unavailable','source');
-   if((data.spatialReference?.latestWkid??data.spatialReference?.wkid)!==4326)
-    throw connectorError('unsupported_crs','Provider did not return WGS84 geometry','source');
+   const isWgs84=ref=>{
+    const reported=[ref?.wkid,ref?.latestWkid].filter(value=>value!=null);
+    return reported.length>0&&reported.every(value=>value===4326);
+   };
+   // Empty results can legitimately omit geometry metadata. Any returned
+   // geometry must explicitly declare WGS84 with no contradictory feature CRS.
+   if(data.features.length&&(!isWgs84(data.spatialReference)||
+      data.features.some(feature=>feature?.geometry?.spatialReference&&!isWgs84(feature.geometry.spatialReference))))
+    throw connectorError('unsupported_crs','Provider did not return consistent WGS84 geometry','source');
    matches=data.features;
   }else matches=(await download()).filter(row=>row.attributes?.[fields.parcel]===record.p);
   if(matches.length!==1)
@@ -191,7 +206,7 @@ export function createCountyConnector(config,{reserve,fetcher=fetch,now=()=>new 
   let evidence;
   try{evidence=polygonEvidence(rings,config.bounds);}catch(error){throw connectorError('invalid_polygon',error.message);}
   return {type:'county_research_evidence',dataset:config.id,recordId:record.i,parcelId:record.p,
-   source:source.href,checkedAt:now().toISOString(),geometry:evidence,publicationAllowed:false};
+   source:source.href,checkedAt:now().toISOString(),outputWkid:4326,geometry:evidence,publicationAllowed:false};
  }
  return {discover,match,verify};
 }

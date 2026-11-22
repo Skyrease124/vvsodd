@@ -65,9 +65,12 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
   version=await storage.write(key,data,version);
   if(!version)throw connectorError('lease_conflict','County worker checkpoint changed','control');
  }
- const connector=createCountyConnector(config,{fetcher,now:()=>new Date(now()),reserve:async()=>{
+ const connector=createCountyConnector(config,{fetcher,now:()=>new Date(now()),reserve:async(_county,stage)=>{
   await save(); // Verify ownership before every request.
   data.budget=await reserveCountyRequest(storage,config.id,{shared:SHARED_COUNTY_DAILY_LIMIT,county:config.requestLimit,permit},now);
+  recordEvent({status:'request_reserved',stage:stage||'download',sharedUsed:data.budget.total,
+   pilotUsed:permit?data.budget.pilots?.[config.id+':'+permit.id]:null});
+  await save();
  }});
  data.lockedUntil=iso(now()+75000);
  version=await storage.write(key,data,snapshot?.etag??null);
@@ -77,8 +80,10 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
   data.events=[...data.events,{...event,id:data.eventSequence,at:iso(now())}].slice(-100);
  }
  try{
-  if(!data.discovery||held){
+  if(!data.discovery||held||permit&&data.discoveryPermit!==permit.id){
    data.discovery=await connector.discover();
+   if(permit)data.discoveryPermit=permit.id;
+   recordEvent({status:'schema_checked',reason:data.discovery.reliability.replaceAll('_',' ')});
    await save();
   }
   const counts=new Map(), ids=new Map();
@@ -96,7 +101,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
      throw connectorError('dataset_ambiguity','Missing or duplicate identifier in county dataset');
     if(!data.evidence[index])data.evidence[index]=await connector.verify(record,data.discovery);
     if(retry)data.review[index]={...data.review[index],resolvedAt:iso(now())};
-    recordEvent({status:'evidence_saved',parcelId:record.p});
+    recordEvent({status:retry?'retry_verified':'evidence_saved',parcelId:record.p});
    }catch(error){
     if(error.scope!=='parcel')throw error;
     const prior=data.review[index];
@@ -117,7 +122,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
    data.sourceHealth={status:'quota_wait',reason:error.message};
   }else{
    const attempt=held?(snapshot.data.sourceHealth.attempt||0)+1:1;
-   data.sourceHealth={status:'source_paused',attempt,nextAt:iso(now()+[60000,180000,900000][Math.min(attempt,3)-1]),
+   data.sourceHealth={status:'source_paused',code:error.code||null,attempt,nextAt:iso(now()+[60000,180000,900000][Math.min(attempt,3)-1]),
     reason:error.scope==='source'?error.message:'County research temporarily unavailable'};
    data.retryHistory=[...data.retryHistory,{cursor:data.cursor,at:iso(now()),...data.sourceHealth}].slice(-50);
   }
