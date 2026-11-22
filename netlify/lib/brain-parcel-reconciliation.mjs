@@ -11,7 +11,7 @@ const needed=Object.freeze([
   'Independent confirmation of which recorded legal lot the current parcel represents'
 ]);
 export function reconciliationCase({dataset,recordId,original,candidate,sources=[],checkedAt,documents=[]}={}){
-  if(!id(dataset)||!id(recordId)||!id(original?.parcelId)||!id(candidate?.parcelId)||
+  if(!id(dataset)||typeof recordId!=='string'||recordId.length>120||!recordId.startsWith(dataset.replace('-', '|')+'|')||!id(original?.parcelId)||!id(candidate?.parcelId)||
      original.parcelId===candidate.parcelId) return null;
   if(!Array.isArray(sources)||!Array.isArray(documents))return null;
   const originalPair={parcelId:original.parcelId,schedule:id(original.schedule)||null};
