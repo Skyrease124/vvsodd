@@ -46,3 +46,13 @@ test('competing callers can reserve the final slot only once', async () => {
   assert.equal(await h.reserve(), 1);
   assert.equal(h.values.get('brain-wayne-gis-quota-v1-2026-11-23').data.count, 30);
 });
+
+
+test('preview and production use the same persistent Wayne quota namespace', async () => {
+ const fs = await import('node:fs');
+ const source=fs.readFileSync('netlify/lib/brain-auth.mjs','utf8');
+ assert.match(source,/sharedBudgetKey\(k\)/);
+ assert.match(source,/k==='brain-wayne-gis-quota-activation-v1'/);
+ assert.match(source,/k\.startsWith\('brain-wayne-gis-quota-v1-'\)/);
+ assert.match(source,/!sharedBudgetKey\(k\)/);
+});
