@@ -1,3 +1,4 @@
+import { reconciliationCase, reconciliationQueue } from '../../netlify/lib/brain-parcel-reconciliation.mjs';
 import { canDiagnoseLarimer, lookupLarimerAddress, larimerReconciliation } from '../../netlify/lib/brain-larimer-address-diagnostic.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -121,6 +122,7 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
   'node:crypto':synthetic({createHash}),
   '../lib/brain-auth.mjs':synthetic({...storage,withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,
    kvGet:async key=>{assert.equal(key,'brain-map-county-v1-CO-larimer');return null;}}),
+  '../lib/brain-parcel-reconciliation.mjs':synthetic({reconciliationCase,reconciliationQueue}),
   '../lib/brain-larimer-address-diagnostic.mjs':synthetic({canDiagnoseLarimer,larimerReconciliation,lookupLarimerAddress:async()=>{
    diagnoses++;return {kind:'address_research_only',status:'research_lead'};
   }}),
@@ -315,4 +317,39 @@ test('subdivision evidence and a saved address match leave the parcel identifier
  assert.equal(larimerReconciliation({...diagnostic,transferLimit:true}),null);
  assert.equal(larimerReconciliation({...diagnostic,rows:[{...diagnostic.rows[0],parcelId:'9701400014'}]}),null);
  assert.equal(larimerReconciliation(null),null);
+});
+
+test('generic parcel reconciliation queue retains unresolved cross-county identity and blocks publication',()=>{
+ const lead={
+  dataset:'CO-larimer',recordId:'CO|Larimer|9701400014|',
+  original:{parcelId:'9701400014',schedule:'0155675'},
+  candidate:{parcelId:'9701484001',schedule:'1688587',objectId:5665923},
+  checkedAt:'2026-11-22T02:05:34.546Z',
+  sources:[{authority:'Larimer GIS',url:connectorFor(dataset).source,findinG:'Address-only research lead'}]
+ };
+ const item=reconciliationCase(lead);
+ assert.equal(item.status,'unresolved_owner_review');
+ assert.equal(item.publicationAllowed,false);
+ assert.equal(item.identifierChangeAllowed,false);
+ assert.equal(item.automationEnabled,false);
+ assert.equal(item.candidate.objectId,5665923);
+ assert.equal(item.missingEvidence.length,3);
+ assert.deepEqual(reconciliationQueue([item,item]),[item]);
+ assert.equal(reconciliationCase({...lead,recordId:'FL|Wrong|9701400014|'}),null);
+ assert.equal(reconciliationCase({...lead,candidate:{parcelId:'9701400014'}}),null);
+});
+
+test('even an explicit official identifier cross reference requires separate owner legal review',()=>{
+ const lead={dataset:'CO-larimer',recordId:'CO|Larimer|9701400014|',
+  original:{parcelId:'9701400014',schedule:'0155675'},
+  candidate:{parcelId:'9701484001',schedule:'1688587'},
+  documents:[{type:'official_parcel_cross_reference',url:'https://larimer.gov/record/1',
+    receptionNumber:'123',originalParcel:'9701400014',currentParcel:'9701484001',
+    originalSchedule:'0155675',currentSchedule:'1688587'}]};
+ const item=reconciliationCase(lead);
+ assert.equal(item.status,'documented_link_pending_owner_review');
+ assert.equal(item.publicationAllowed,false);
+ assert.equal(item.identifierChangeAllowed,false);
+ const wrong=reconciliationCase({...lead,documents:[{...lead.documents[0],currentSchedule:'wrong'}]});
+ assert.equal(wrong.status,'unresolved_owner_review');
 });
