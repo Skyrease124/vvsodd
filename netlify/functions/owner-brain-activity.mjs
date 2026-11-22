@@ -111,7 +111,9 @@ async function handler(req){
   }
   const unique=[...new Map(events.map(event=>[event.id,event])).values()]
    .sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id));
+  // Only bounded receipts are loaded above; never present this as the all-time event count.
   const newest=unique.slice(0,90);
+  const eventWindow={availableCount:unique.length,returnedCount:newest.length,truncated:unique.length>newest.length,completeHistory:false};
   const now=Date.now(), retry=worker?.retry||null;
   const running=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
   const cooling=!!retry?.nextAt&&Date.parse(retry.nextAt)>now&&!retry.exhausted;
@@ -144,7 +146,7 @@ async function handler(req){
     lastSuccessfulBatch:date(worker?.lastSuccessfulBatch),lastCompleted:date(worker?.lastCompleted)},
    agents:{'Official GIS':automatic?.state||worker?.state||'not_started',Photon:photon?.state||'not_started',Geoapify:geo?.state||'not_started',
     Mapping:publication?.state||'not_started',Gemini:'no_recorded_activity',OpenAI:'no_recorded_activity',Groq:'no_recorded_activity',NVIDIA:'orchestration_display'},
-   eventCount:newest.length,events:newest});
+   eventCount:newest.length,eventWindow,events:newest});
  }catch(e){return respond(503,{ok:false,error:'Agent activity temporarily unavailable'});}
 }
 export default auth.withBrainStore(handler);
