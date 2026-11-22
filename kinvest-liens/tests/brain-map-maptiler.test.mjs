@@ -83,3 +83,13 @@ test('parcel selection is above the interactive map and hidden until parcels loa
  assert.match(html,/\$\('parcelControls'\)\.hidden=true/);
  assert.equal((html.match(/id="parcelFocus"/g)||[]).length,1);
 });
+
+
+test('parcel inspector identifies original versus Brain-corrected geometry for cross-map review',()=>{
+ const page=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
+ assert.match(page,/id="parcelEvidence"/);
+ assert.match(page,/function selectedParcelEvidence\(\)/);
+ assert.match(page,/record\.__brainMap\?'Verified Brain correction':'Original mapped county dataset'/);
+ assert.match(page,/Public and Workshop maps use the same county dataset and correction feed/);
+ assert.match(page,/selectedParcelEvidence\(\);/);
+});
