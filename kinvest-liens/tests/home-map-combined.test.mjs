@@ -52,3 +52,17 @@ test('hazard alerts live above homepage maps and use existing hazard endpoint',(
  assert.match(ticker,/\.netlify\/functions\/hazards\?major=1/);
  assert.match(css,/\.app-home-hazard:empty\{display:none\}/);
 });
+
+test('Radar categories render state-level markers on existing satellite map with 3D tilt',()=>{
+ const radar=fs.readFileSync('kinvest-liens/radar.js','utf8');
+ const app=fs.readFileSync('kinvest-liens/app-ui.js','utf8');
+ const map=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
+ assert.match(radar,/ppa:radar-category/);
+ assert.match(app,/type:'ppa:radar-overlay'/);
+ assert.match(map,/type!=='ppa:radar-overlay'/);
+ assert.match(map,/drawRadarPins\(\)/);
+ assert.match(map,/new maplibregl\.Marker/);
+ assert.match(map,/map\.easeTo\(\{pitch:REDUCED\?0:38/);
+ assert.match(map,/state-level aggregate, not parcel coordinates/);
+ assert.match(map,/ppa:radar-overlay-select/);
+});
