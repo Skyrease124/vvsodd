@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import * as auth from '../lib/brain-auth.mjs';
-import { runConnectorTrial } from '../lib/brain-gis-trial-checkpoint.mjs';
+import { runConnectorTrial, rearmConnectorTrial } from '../lib/brain-gis-trial-checkpoint.mjs';
 
 const hostname='deploy-preview-454--pricepocketasset.netlify.app';
 const dataset='CO-larimer';
@@ -38,7 +38,7 @@ async function handler(req,context) {
     const raw=await req.text();
     let body;
     try{if(raw.length>128)throw Error();body=JSON.parse(raw);}catch{return reply(400,{error:'Invalid trial request'});}
-    if(body?.action!=='verify-next-larimer'||body.confirmed!==true)return reply(400,{error:'Explicit trial confirmation required'});
+    if(!['verify-next-larimer','rearm-larimer-review'].includes(body?.action)||body.confirmed!==true)return reply(400,{error:'Explicit trial confirmation required'});
     if(count(await auth.kvGetVersioned(budgetKey))>=limit)return reply(429,{error:'Larimer trial budget is exhausted'});
     const root=process.env.LAMBDA_TASK_ROOT||process.cwd();
     const data=JSON.parse(await readFile(join(root,'kinvest-liens/map/data/CO-larimer.json'),'utf8'));
@@ -52,6 +52,20 @@ async function handler(req,context) {
     const overlay=await auth.kvGet('brain-map-county-v1-'+dataset);
     if(records.some(record=>overlay?.records?.[record.i]))return reply(409,{error:'A trial parcel already has a map correction'});
     const revision=createHash('sha256').update(JSON.stringify(records)).digest('hex');
+    if(body.action==='rearm-larimer-review'){
+      // Owner approves releasing only the current held parcel; no request is sent yet.
+      const snapshot=await auth.kvGetVersioned(trialKey);
+      const cursor=snapshot?.data?.cursor;
+      if(!Number.isSafeInteger(cursor)||!records[cursor]||
+         body.recordId!==records[cursor].i||
+         snapshot?.data?.retry?.recordId!==body.recordId||
+         snapshot?.data?.retry?.exhausted!==true)return reply(409,{error:'Exact held parcel review required'});
+      try{
+        const released=await rearmConnectorTrial({environment:context.deploy.context,dataset,revision,
+          recordId:body.recordId,storage:{read:auth.kvGetVersioned,write:auth.kvPutVersioned}});
+        return reply(200,released);
+      }catch{return reply(409,{error:'Review checkpoint changed or unavailable. Refresh status.'});}
+    }
     const result=await runConnectorTrial({environment:context.deploy.context,dataset,revision,records,reserve,
       storage:{read:auth.kvGetVersioned,write:auth.kvPutVersioned}});
     return reply(200,result);
