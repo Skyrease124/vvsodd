@@ -14,7 +14,10 @@ const SEEDED=new Set(['brain-source-events-v1','owner-brain-approvals-v1',
  'brain-map-county-v1-MI-wayne','brain-map-history-v1','brain-map-publication-status-v1']);
 export const isBrainPreview=()=>scope.getStore()?.preview===true;
 // API budgets and provider controls remain shared; a preview must not reset them.
-const isolated=k=>isBrainPreview()&&!k.includes('usage')&&k!=='owner-ai-research-api-controls';
+// GIS quota activation and daily reservations must be shared across preview and
+// production: separate preview budgets could exceed the upstream daily cap.
+const sharedBudgetKey=k=>k==='brain-wayne-gis-quota-activation-v1'||k.startsWith('brain-wayne-gis-quota-v1-');
+const isolated=k=>isBrainPreview()&&!k.includes('usage')&&!sharedBudgetKey(k)&&k!=='owner-ai-research-api-controls';
 export function withBrainStore(handler){
  return (req,context)=>scope.run(context?.deploy?
   {preview:context.deploy.context==='deploy-preview',environment:context.deploy.context}:
