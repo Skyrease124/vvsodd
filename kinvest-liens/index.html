@@ -51,7 +51,9 @@
     <div class="app-map-views" role="group" aria-label="Map view">
       <button type="button" data-home-map-view="parcels" aria-controls="home-parcels" aria-pressed="true">Parcel Map</button>
       <button type="button" data-home-map-view="radar" aria-controls="home-radar" aria-pressed="false">Tax Sale Radar</button>
+      <button type="button" data-home-map-view="both" aria-controls="home-parcels home-radar" aria-pressed="false">Both</button>
     </div>
+    <p class="app-map-combined-note" id="home-combined-note" hidden>Explore verified parcel locations and tax-sale opportunities together. Radar records are not automatically parcel-verified; confirm sale details with the county.</p>
     <div id="home-parcels">
     <script src="/app-location.js"></script>
     <iframe src="/map/?embed=1&home=1" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
