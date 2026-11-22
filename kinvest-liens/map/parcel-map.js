@@ -40,18 +40,24 @@
 
   // Keep all visible map instances current without restarting MapLibre or redeploying.
   // The Workshop map uses this same script; saved corrections refresh every 2 minutes.
-  let overlayRefreshRunning=false;
+  let overlayRefreshRunning=false,overlayRefreshCursor=0;
   async function refreshVerifiedOverlays(){
     if(document.hidden||overlayRefreshRunning||!window.PPABrainMap)return;
     overlayRefreshRunning=true;let changed=false;
     try{
-      for(const ds of Object.values(loaded).slice(0,8)){
-        const result=await window.PPABrainMap.apply(ds);
-        if(result.changed)changed=true;
+      const counties=Object.values(loaded);
+      // Rotate bounded batches so the ninth and later loaded counties are never starved.
+      // Each failed county is isolated; the other maps still receive their updates.
+      for(let i=0;i<Math.min(8,counties.length);i++){
+        const ds=counties[(overlayRefreshCursor+i)%counties.length];
+        try{
+          const result=await window.PPABrainMap.apply(ds);
+          if(result.changed)changed=true;
+        }catch(_){/* Keep existing polygons until the source recovers. */}
       }
+      if(counties.length)overlayRefreshCursor=(overlayRefreshCursor+8)%counties.length;
       if(changed){refresh();if(sel&&loaded[sel._d])popup(sel);}
-    }catch(_){/* Previous verified polygons remain visible when provider is offline. */}
-    finally{overlayRefreshRunning=false;}
+    }finally{overlayRefreshRunning=false;}
   }
   // ---------- data ----------
   function expand(ds) { const D = ds.dict; ds.recs.forEach(r => { for (const k in D) if (r[k] != null) r[k] = D[k][r[k]]; r._d = ds.id; r._n = ((r.a || '') + ' ' + (r.o || '') + ' ' + r.p).toLowerCase(); }); return ds; }
