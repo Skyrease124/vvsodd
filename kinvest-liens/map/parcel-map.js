@@ -392,9 +392,23 @@
         if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
         if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
         if(n.land)parts.push(n.land.toLocaleString()+' land records');
-        option.textContent=s.n+(parts.length?' · '+parts.join(' · '):' · no tracked Radar inventory');
+        option.textContent=s.n+(have[s.a]?' · '+have[s.a]+' mapped counties':'')+(parts.length?' · '+parts.join(' · '):'');
       }
     };
+    // Same official Radar dataset for homepage, full AI map, and Workshop.
+    // Fetch directly so labels work even when the homepage's Radar panel is not mounted.
+    api('/liens/states/radar.json').then(data=>{
+      const counts={};
+      for(const row of data.counties||[]){
+        if(!/^[A-Z]{2}$/.test(row.state||''))continue;
+        const n=counts[row.state]||(counts[row.state]={liens:0,deeds:0,land:0});
+        const amount=Math.max(0,Number(row.open)||0);
+        if(row.group==='county-held'||row.group==='lien-sale')n.liens+=amount;
+        else if(row.group==='deed')n.deeds+=amount;
+        else if(row.group==='state-held')n.land+=amount;
+      }
+      applyStateInventory(counts);
+    }).catch(()=>{/* Keep mapped county labels if Radar is unavailable. */});
     if(homeMap)window.addEventListener('message',event=>{
       if(event.origin!==location.origin||event.source!==window.parent)return;
       if(event.data?.type==='ppa:radar-state-inventory')applyStateInventory(event.data.counts);
