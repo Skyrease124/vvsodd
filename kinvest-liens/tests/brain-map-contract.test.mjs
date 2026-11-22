@@ -128,3 +128,11 @@ test('public correction feed hides pending publications and malformed geometry w
  assert.equal(mutation.status,405);
  assert.equal(reads,1);
 });
+
+
+test('offscreen county updates do not redraw mobile map or rebuild results',()=>{
+ const source=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
+ assert.match(source,/if\(result\.changed&&\(!active\.size\|\|active\.has\(ds\.id\)\)\)visibleChanged=true/);
+ assert.match(source,/if\(visibleChanged\)\{refresh\(\);/);
+ assert.match(source,/if\(sel&&loaded\[sel\._d\]&&\(!active\.size\|\|active\.has\(sel\._d\)\)\)popup\(sel\)/);
+});
