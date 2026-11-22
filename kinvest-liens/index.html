@@ -18,6 +18,14 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="radar.css">
 <link rel="stylesheet" href="/app-shell.css">
+<style>
+/* Unified view: one geographic canvas; Radar data and controls remain available. */
+.app-map.app-map-unified #home-radar .dmap.rmap{display:none!important}
+.app-map.app-map-unified #home-radar .rhead{display:none}
+.app-map.app-map-unified #home-radar .dhero{padding-top:0}
+.app-map.app-map-unified #home-radar .rfind{margin-top:12px}
+.app-map.app-map-unified #home-radar .rpanel{max-width:100%;overflow-wrap:anywhere}
+</style>
 </head>
 <body class="ppa-home">
 <header class="dnav">
