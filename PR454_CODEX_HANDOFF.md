@@ -267,3 +267,14 @@ The current dataset has 1,729 unmapped rows, and all 1,729 have Unknown situs. O
 Validated all 67 names and independent Census/FDOR identifiers against the Census and Florida source snapshots. Corrected all 67 county FIPS and Full_FIPS values, added explicit GEOID, and preserved the uploaded file and per-field audit. Two read-only service schemas were verified and recorded. County-level parcel validation remains unverified. County Operations exposes the directory, evidence and blockers to owners. Existing FloridaGIO pilot definitions now take their common source and county discriminator from the audited registry. No runner, public map feed, authorization or scheduler was activated.
 
 Current offline screening found one county with eligible candidates (Miami-Dade's ten-row cohort), 52 blocked by missing dataset or zero candidates, and 14 existing datasets still unverified. Santa Rosa remains blocked. Its official ParcelsOpenData layer is a possible supplemental source, but the publisher has not established whether its address fields are situs addresses or cleared the intended reuse. The 1,729 unmapped rows retain Unknown situs and the mineral-rights records remain separate. See tools/florida-gis/README.md for provenance and regeneration.
+
+## Unified Florida Land Discovery
+
+The owner preview includes a county-specific offline import and review section. Source schema and matching
+reuse the Florida registry, the existing pilot identifier formats, and the shared polygon validator.
+Import and review use a separate `brain-florida-land-v1-<GEOID>` checkpoint with compare-and-swap writes.
+The route can store private evidence and approve its exact revision for review. It has no provider,
+scheduler, budget mutation, or publication path. Existing map and research-release endpoints are unchanged.
+
+See [the offline operator guide](tools/florida-land/README.md) for source documentation, commands, review
+criteria, and supported formats.

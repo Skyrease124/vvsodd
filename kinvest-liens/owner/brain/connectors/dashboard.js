@@ -125,6 +125,8 @@ async function showCounty(){
     const {county,coverage,operation}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
     render(county,coverage,operation);
+    if(county.florida&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')
+      void showFloridaLand(county.florida,request);
     if(operation?.mode==='pilot-prepared'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showCountyPilot(county.id,request);
     if(county.id==='CO-larimer'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showTrial(request);
     if(request===selection)statusLine.textContent='';
@@ -566,4 +568,129 @@ async function showCountyPilot(id,selectionAtLoad){
  }
  if(list.childElementCount)panel.append(disclose('Skipped parcels awaiting review',list));
  details.append(grouped('County pilot controls',panel));
+}
+
+async function showFloridaLand(florida,request){
+ const line=text=>{
+  const node=document.createElement('p');
+  node.textContent=text;
+  return node;
+ };
+ const endpoint='/.netlify/functions/owner-brain-florida-land?'+new URLSearchParams({geoid:florida.county.geoid});
+ const panel=grouped('Unified Land Discovery');
+ const status=line('Loading saved county evidence…');
+ status.setAttribute('role','status');
+ panel.append(status);
+ details.append(panel);
+ const send=body=>read(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({...body,confirmed:true})});
+ try{
+  const data=await read(endpoint);
+  if(request!==selection)return;
+  const pending=data.records.filter(row=>!row.approved).length;
+  status.textContent='Preview only · '+(florida.eligible==null?'Parcel eligibility unverified':
+   florida.eligible+' eligible parcel candidates')+' · Offline imports use zero GIS requests';
+  const counts=document.createElement('div');
+  counts.className='metrics';
+  for(const [label,value] of [['Opportunities',data.records.length],['Matched with verified polygon',data.matched],
+   ['Unmatched',data.unmatched],['Pending review',pending],['Approved for review',data.approved],
+   ['Expired or canceled',data.expiredOrCanceled],['Imported rows',data.ingested],['Published',data.published]]){
+   const card=document.createElement('div'),number=document.createElement('strong'),caption=document.createElement('span');
+   card.className='metric';number.textContent=value;caption.textContent=label;
+   card.append(number,caption);counts.append(card);
+  }
+  panel.append(counts,line('Last completed import: '+(data.lastIngestion||'None saved')));
+  const sources=document.createElement('ul');
+  for(const source of data.sources){
+   const entry=document.createElement('li'),link=document.createElement('a');
+   link.href=source.url;link.textContent=source.agency;
+   entry.append(link,document.createTextNode(' · '+source.restrictions));sources.append(entry);
+  }
+  for(const receipt of data.receipts.slice(0,20)){
+   const entry=document.createElement('li');
+   entry.textContent=receipt.sourceId+' · '+receipt.retrievedAt+' · '+receipt.cursor+'/'+receipt.total+
+    ' rows inspected · '+receipt.skipped+' rejected · '+receipt.requests+' requests';
+   sources.append(entry);
+  }
+  panel.append(disclose('Official sources and import receipts',sources));
+  if(data.skipped.length){
+   const list=document.createElement('ul');
+   for(const entry of data.skipped.slice(-20).reverse()){
+    const row=document.createElement('li');
+    row.textContent=(entry.parcelId||'Row '+(entry.row+1))+' · '+entry.reason.replaceAll('_',' ')+' · '+entry.at;
+    list.append(row);
+   }
+   panel.append(disclose('Recent rejected records',list));
+  }
+  const listings=document.createElement('div');
+  const kind=document.createElement('select');
+  kind.setAttribute('aria-label','Filter government opportunities');
+  kind.add(new Option('All government opportunities',''));
+  kind.add(new Option('Tax Deed Auctions','tax-deed'));
+  kind.add(new Option('Surplus Land','surplus'));
+  kind.add(new Option('Public Land Sales','government-owned-offering'));
+  const pages=line('');
+  const more=document.createElement('button');
+  more.type='button';more.textContent='Show more listings';
+  let visible=20;
+  function renderListings(){
+   listings.replaceChildren();
+   const filtered=data.records.filter(row=>!kind.value||kind.value===row.item.type);
+   more.hidden=visible>=filtered.length;
+   pages.textContent=filtered.length?Math.min(visible,filtered.length)+' of '+filtered.length+' listings':'No saved listings in this view.';
+   for(const row of filtered.slice(0,visible)){
+    const item=row.item;
+    const evidence=document.createElement('div'),link=document.createElement('a');
+    link.href=item.evidence.url;link.textContent='Open official listing evidence';
+    evidence.append(line(item.evidence.agency+' · '+item.evidence.retrievedAt+' · '+row.versions+' saved revision(s)'),
+     line(item.auctionAt?'Auction: '+item.auctionAt:'Auction date unavailable'),
+     line('Price or bid: '+(item.askingPrice??item.openingBid??item.minimumBid??'Unavailable')+
+      ' · Acres: '+(row.acreage??'Unavailable')),link);
+    if(row.parcelEvidence){
+     const parcelLink=document.createElement('a');
+     parcelLink.href=row.parcelEvidence.url;parcelLink.textContent='Open official parcel source';
+     evidence.append(line([row.parcelEvidence.agency,row.parcelEvidence.crs,row.parcelEvidence.situs||
+      row.parcelEvidence.legalReference,row.parcelEvidence.retrievedAt].filter(Boolean).join(' · ')),parcelLink);
+    }
+    if(item.deadline)evidence.append(line('Deadline: '+item.deadline));
+    if(row.reason)evidence.append(line(row.reason.replaceAll('_',' ')));
+    const approve=document.createElement('button');
+    approve.type='button';approve.textContent=row.approved?'Review approved':'Approve for review';
+    approve.disabled=row.approved||!row.eligible;
+    approve.onclick=async()=>{
+     if(!confirm('Approve this exact listing and evidence revision for owner review?'))return;
+     approve.disabled=true;
+     try{await send({action:'approve',id:row.id,revision:row.revision,reviewToken:row.reviewToken});await showCounty();}
+     catch(error){status.textContent=error.message;approve.disabled=false;}
+    };
+    evidence.append(approve);
+    listings.append(disclose(item.parcelId+' · '+item.status+(item.evidence.fixture?' · Fixture':''),evidence));
+   }
+  }
+  kind.onchange=()=>{visible=20;renderListings();};
+  more.onclick=()=>{visible+=20;renderListings();};
+  renderListings();
+  panel.append(kind,pages,listings,more);
+  const file=document.createElement('input');
+  file.type='file';file.accept='.json,application/json';file.id='land-discovery-batch';
+  const label=document.createElement('label');
+  label.htmlFor=file.id;label.textContent='Approved local evidence batch';
+  const upload=document.createElement('button');
+  upload.type='button';upload.textContent='Import offline evidence';upload.disabled=true;
+  file.onchange=()=>{upload.disabled=!file.files.length;};
+  upload.onclick=async()=>{
+   const selected=file.files[0];
+   if(!selected||!confirm('Import this approved local evidence file into the preview review queue?'))return;
+   upload.disabled=true;
+   try{
+    if(selected.size>480*1024)throw Error('Select a prepared file under 480 KB.');
+    await send({action:'import',batch:JSON.parse(await selected.text())});
+    await showCounty();
+   }catch(error){status.textContent=error.message;upload.disabled=false;}
+  };
+  const intake=document.createElement('div');
+  intake.className='land-intake';
+  intake.append(label,file,upload);
+  panel.append(disclose('Import approved offline evidence',intake));
+ }catch(error){if(request===selection)status.textContent=error.message;}
 }

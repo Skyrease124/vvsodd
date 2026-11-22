@@ -69,6 +69,11 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base)return route.fulfill({contentType:'text/html',body:await fs.readFile(root+'index.html','utf8')});
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
+    if(path===api+'owner-brain-florida-land')return route.fulfill({json:{
+     records:[{item:{parcelId:'001',status:'scheduled',type:'tax-deed',evidence:{url:'https://gov.example/notice',agency:'Fixture',retrievedAt:at,fixture:true}},
+      eligible:false,verifiedPolygon:false,versions:1,reason:'missing_verified_polygon'}],
+     matched:0,unmatched:1,approved:0,expiredOrCanceled:0,ingested:1,published:0,sources:[],receipts:[],skipped:[]}
+    });
     if(path===api+'owner-brain-connectors'){
      if(!url.search)return route.fulfill({json:{counties:[county,wayne,miami,broward,palm,santa,directoryCounty]}});
      const selected=url.searchParams.get('dataset')==='MI-wayne'?wayne:url.searchParams.get('dataset')==='FL-miami-dade'?miami:url.searchParams.get('dataset')==='FL-broward'?broward:url.searchParams.get('dataset')==='FL-palm-beach'?palm:url.searchParams.get('dataset')==='FL-santa-rosa'?santa:url.searchParams.get('dataset')==='FL-calhoun'?directoryCounty:county;
@@ -122,6 +127,14 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
    assert.equal(await page.getByRole('button',{name:'Run Live Palm Beach Pilot'}).isDisabled(),true);
    await page.getByRole('button',{name:'Check Readiness'}).click();
    await page.getByText(/Native EPSG:6439/).waitFor();
+   assert.deepEqual(posts,[]);
+   await page.locator('#county').selectOption('FL-calhoun');
+   await page.getByRole('heading',{name:'Unified Land Discovery'}).waitFor();
+   await page.getByText('001 · scheduled · Fixture').click();
+   assert.equal(await page.getByRole('button',{name:'Approve for review'}).isDisabled(),true);
+   await page.getByText('Import approved offline evidence',{exact:true}).click();
+   assert.equal(await page.getByRole('button',{name:'Import offline evidence'}).isDisabled(),true);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth));
    assert.deepEqual(posts,[]);
    await page.locator('#county').selectOption('FL-broward');
    await page.getByText('No approved county parcel dataset is loaded',{exact:true}).waitFor();

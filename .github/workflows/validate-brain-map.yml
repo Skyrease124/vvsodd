@@ -16,6 +16,9 @@ on:
       - 'netlify/lib/brain-gis-*.mjs'
       - 'netlify/lib/data/florida-gis-registry.json'
       - 'tools/florida-gis/**'
+      - 'tools/florida-land/**'
+      - 'netlify/lib/brain-florida-land.mjs'
+      - 'kinvest-liens/owner/brain/connectors/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
       - 'netlify/lib/brain-county-sequence.mjs'
@@ -43,6 +46,9 @@ on:
       - 'netlify/lib/brain-gis-*.mjs'
       - 'netlify/lib/data/florida-gis-registry.json'
       - 'tools/florida-gis/**'
+      - 'tools/florida-land/**'
+      - 'netlify/lib/brain-florida-land.mjs'
+      - 'kinvest-liens/owner/brain/connectors/**'
       - 'netlify/lib/brain-reconciliation-*.mjs'
       - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
       - 'netlify/lib/brain-official-verification.mjs'
@@ -87,3 +93,5 @@ jobs:
       - run: python3 tools/florida-gis/build.py --check
       - run: python3 tools/florida-gis/test_build.py
       - run: node kinvest-liens/tests/brain-map-florida-registry.test.mjs
+      - run: node kinvest-liens/tests/brain-map-florida-land.test.mjs
+      - run: python3 tools/florida-land/test_prepare.py
