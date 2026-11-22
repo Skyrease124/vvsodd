@@ -128,3 +128,34 @@ test('owner re-arms exact exhausted parcel without moving cursor or resetting qu
  assert.equal(saved.lastOwnerRecovery.exhaustedAttempts,3);
  assert.equal((await h.invoke(body)).status,409);
 });
+
+
+test('scheduler mutation rejects guests, previews, cross-site and unconfirmed requests',async()=>{
+ const source=fs.readFileSync('netlify/functions/owner-brain-scheduler-control.mjs','utf8');
+ const store=new Map();
+ let owner=true,writes=0;
+ const auth={
+  userFromCookie:async()=>owner?{owner:true}:null,
+  kvGet:async key=>store.get(key)||null,
+  kvPut:async(key,value)=>{writes++;store.set(key,value);},
+  isBrainPreview:()=>false,
+  withBrainStore:handler=>handler
+ };
+ const code=source.replace(/^import .*;$/gm,'').replace(/export default auth\.withBrainStore\(handler\);?/,'');
+ const handler=vm.runInNewContext(code+';handler',{auth,Response,Request,URL,Date});
+ const url='https://pricepocketasset.com/.netlify/functions/owner-brain-scheduler-control';
+ const call=(body,headers={},context='production')=>handler(new Request(url,{method:'POST',headers:{origin:'https://pricepocketasset.com',...headers},body:JSON.stringify(body)}),{deploy:{context,published:true}});
+ const enable={action:'enable',confirmed:true,scope:'wayne-verified-gis-only'};
+ owner=false;
+ assert.equal((await call(enable)).status,401);
+ owner=true;
+ assert.equal((await call(enable,{},'deploy-preview')).status,403);
+ assert.equal((await call(enable,{'sec-fetch-site':'cross-site'})).status,403);
+ assert.equal((await call(enable,{origin:'https://attacker.example'})).status,403);
+ assert.equal((await call({...enable,confirmed:false})).status,400);
+ assert.equal((await call({...enable,scope:'other'})).status,400);
+ assert.equal(writes,0);
+ assert.equal((await call(enable,{'sec-fetch-site':'same-origin'})).status,200);
+ assert.equal(writes,1);
+ assert.equal(store.get('owner-brain-wayne-scheduler-control-v1').enabled,true);
+});
