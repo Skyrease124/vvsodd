@@ -10,7 +10,7 @@ const trim=(s,n=160)=>String(s??'').slice(0,n);
 const cityBounds=(lat,lon)=>Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=42.2&&lat<=42.5&&lon>=-83.4&&lon<=-82.8;
 const rad=x=>x*Math.PI/180;
 function meters(a,b){const dLat=rad(a.lat-b.lat),dLon=rad(a.lon-b.lon),lat1=rad(a.lat),lat2=rad(b.lat);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
-async function getJson(url,max=6000000){const r=await fetch(url,{signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error('HTTP '+r.status);const raw=await r.text();if(Buffer.byteLength(raw)>max)throw Error('Response too large');const data=JSON.parse(raw);if(data.error)throw Error(trim(data.error.message,80));return data;}
+async function getJson(url,max=6000000){const r=await (url.startsWith(LAYER+'/query?')?auth.fetchWayneGis:fetch)(url,{signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error('HTTP '+r.status);const raw=await r.text();if(Buffer.byteLength(raw)>max)throw Error('Response too large');const data=JSON.parse(raw);if(data.error)throw Error(trim(data.error.message,80));return data;}
 function officialStreet(s){
  const match=/^\s*(\d{1,6})\s+([A-Za-z][A-Za-z0-9 .'-]{2,70})/i.exec(s||'');
  if(!match)return null;

@@ -17,7 +17,7 @@ async function handler(req,context){
   if(body.action==='prepare'){
    // Indexed official GIS lookup, followed by exact tax parcel identity check.
    const url=GIS+'/query?'+new URLSearchParams({f:'json',where:'object_id=279374',outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326'});
-   const response=await fetch(url,{signal:AbortSignal.timeout(9000)});
+   const response=await auth.fetchWayneGis(url,{signal:AbortSignal.timeout(9000)});
    if(!response.ok)throw Error('Official GIS unavailable');
    const data=await response.json(),f=data.features?.[0];
    if(data.error||data.features?.length!==1||String(f?.attributes?.parcel_number).replace(/\.$/,'')!=='01002263')throw Error('Official parcel identity changed');
@@ -46,6 +46,6 @@ async function handler(req,context){
    return json(200,{ok:true,message:'Preview correction reversed. Open maps refresh within two minutes.'});
   }
   return json(400,{ok:false,error:'Unknown action'});
- }catch(e){return json(502,{ok:false,error:String(e.message).slice(0,180)});}
+ }catch(e){if(e.code==='QUOTA')return json(429,{ok:false,error:e.message});return json(502,{ok:false,error:String(e.message).slice(0,180)});}
 }
 export default auth.withBrainStore(handler);

@@ -9,16 +9,17 @@ async function handler(req,context){
  const preview=auth.isBrainPreview();
  const configuredState=await auth.kvGet('owner-brain-wayne-scheduler-control-v1');
  const configured=configuredState?.enabled===true&&configuredState?.approvedForProduction===true;
- const [worker,control,audit,overlay]=await Promise.all([
+ const [worker,control,audit,overlay,quota]=await Promise.all([
   auth.kvGet('owner-brain-wayne-worker-v1'),
   auth.kvGet('owner-brain-scanner-v1'),
   auth.kvGet('owner-brain-wayne-schedule-audit-v1'),
-  auth.kvGet('brain-map-county-v1-MI-wayne')
+  auth.kvGet('brain-map-county-v1-MI-wayne'),
+  auth.readWayneGisQuota()
  ]);
  const verifiedOverlayCount=Object.values(overlay?.records||{}).filter(r=>r?.verifiedGeometry===true&&r?.i&&Array.isArray(r.g)&&r.g.length).length;
  const steps=[
   {key:'preview_validation',name:'Preview GIS and publisher verified',ready:!!worker?.published&&!!worker?.cursor},
-  {key:'safety',name:'30-request daily cap and owner pause',ready:true},
+  {key:'safety',name:'30-request daily cap and owner pause',ready:quota.active},
   {key:'schedule',name:'Production scheduled runner enabled',ready:!preview&&configured},
   {key:'county_scope',name:'County connectors beyond Detroit',ready:false},
   {key:'preview_scheduler',name:'Unattended processing on Deploy Preview',ready:false}
@@ -29,7 +30,7 @@ async function handler(req,context){
   worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),verifiedOverlayCount,publicationCountMeaning:'worker total excludes earlier pilot and other confirmed overlay entries',state:String(worker?.state||'not_started'),
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
    retryParcel:worker?.retry?.parcelId||null,retryAttempt:Number(worker?.retry?.attempts||0),retryLastError:worker?.retry?.lastError||null,
-   lastCompleted:worker?.lastCompleted||null,dailyUsed:Number(worker?.dailyUsed||0),dailyLimit:30},
+   lastCompleted:worker?.lastCompleted||null,dailyUsed:quota.active?quota.count:Number(worker?.dailyUsed||0),quotaActive:quota.active,dailyLimit:30},
   lastScheduledRun:audit?.last||null,scheduledRuns:Number(audit?.runs||0),
   nextCountyAutomatic:false,allCountiesConfigured:false,checks:steps,
   waynePilotReady:steps.filter(x=>['preview_validation','safety'].includes(x.key)).every(x=>x.ready),

@@ -15,8 +15,8 @@ const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const today=()=>new Date().toISOString().slice(0,10);
 const valid=r=>r?.i&&/^[0-9]{8}\.?$/.test(String(r.p||''))&&!r.g&&!r.cx&&
   /^\s*\d{1,6}\s+[A-Za-z0-9][^,]{2,75},?\s+Detroit\b/i.test(String(r.a||''));
-async function get(url,max=12000000,timeout=8500){
- const res=await fetch(url,{signal:AbortSignal.timeout(timeout)});
+async function get(url,max=12000000,timeout=8500,redirect='follow'){
+ const res=await fetch(url,{signal:AbortSignal.timeout(timeout),redirect});
  if(!res.ok)throw Error('Source HTTP '+res.status);
  const raw=await res.text();
  if(Buffer.byteLength(raw)>max)throw Error('Source too large');
@@ -40,7 +40,8 @@ async function handler(req,context){
  }
  if(req.method==='GET'&&!scheduled){
   const s=state(await auth.kvGet(STORE));
-  return response(200,{ok:true,previewOnly:true,...s,lockedUntil:s.lockedUntil||null,maxAttempts:MAX_ATTEMPTS,dailyLimit:MAX_PER_DAY});
+  const quota=await auth.readWayneGisQuota();
+  return response(200,{ok:true,previewOnly:true,...s,dailyUsed:quota.active?quota.count:s.dailyUsed,quotaActive:quota.active,lockedUntil:s.lockedUntil||null,maxAttempts:MAX_ATTEMPTS,dailyLimit:MAX_PER_DAY});
  }
  if(!scheduled&&req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
  if(!scheduled){
@@ -53,6 +54,8 @@ async function handler(req,context){
  let s=state(snapshot?.data);
  if(s.lockedUntil&&Date.parse(s.lockedUntil)>Date.now())return response(409,{ok:false,error:'Another batch run is in progress'});
  if(s.day!==today())s={...s,day:today(),dailyUsed:0};
+ const quota=await auth.readWayneGisQuota();
+ if(quota.active)s.dailyUsed=quota.count;
  if(s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
  // Do not consume quota or advance the cursor while a failed parcel is cooling down.
  if(s.retry?.exhausted)return response(409,{ok:false,error:'GIS retry limit reached; owner review required',retry:s.retry,cursor:s.cursor});
@@ -92,11 +95,11 @@ async function handler(req,context){
   async function officialGet(url,recordIndex,timeout=6500,stage='direct_polygon'){
    if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA',stage});
    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED',stage});
-   s.dailyUsed++;
    await saveProgress({...s,cursor:recordIndex});
+   s.dailyUsed=await auth.reserveWayneGisRequest();
    const started=Date.now();
    try{
-    const data=await get(url,1000000,timeout);
+    const data=await get(url,1000000,timeout,'error');
     trace.push({stage,status:'ok',durationMs:Date.now()-started,at:new Date().toISOString()});
     return data;
    }catch(e){
@@ -195,8 +198,8 @@ async function handler(req,context){
    await publish(req,{...context,waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
     if(s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
     if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
-    s.dailyUsed++;
     await saveProgress({...s,cursor:i});
+    s.dailyUsed=await auth.reserveWayneGisRequest();
    }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const success=published.records?.[r.i]?.verifiedGeometry===true;

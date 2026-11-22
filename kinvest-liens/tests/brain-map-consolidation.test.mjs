@@ -168,10 +168,10 @@ test('publisher cannot be invoked directly and counts each official GIS lookup a
  const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
  assert.match(publisher,/waynePublisherInternal!==true/);
  assert.match(publisher,/typeof context\.chargeWayneGisRequest!=='function'/);
- assert.match(publisher,/await context\.chargeWayneGisRequest\(\);\s*result=await json\(url,1000000\)/);
+ assert.match(publisher,/await context\.chargeWayneGisRequest\(\);\s*result=await json\(url,1000000,'error'\)/);
  assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
  assert.match(worker,/if\(s\.dailyUsed>=MAX_PER_DAY\)throw Object\.assign\(Error\('Daily GIS request limit reached'\)/);
- assert.match(worker,/s\.dailyUsed\+\+;\s*await saveProgress\(\{\.\.\.s,cursor:i\}\)/);
+ assert.match(worker,/await saveProgress\(\{\.\.\.s,cursor:i\}\);\s*s\.dailyUsed=await auth\.reserveWayneGisRequest\(\)/);
 });
 
 test('concurrent re-arm requests cannot both write the same worker snapshot',async()=>{

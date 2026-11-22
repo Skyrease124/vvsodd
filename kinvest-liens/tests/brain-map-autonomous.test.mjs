@@ -22,7 +22,7 @@ test('scheduled agent discovers a missing parcel and fills an attributed verific
  const context=vm.createContext({URLSearchParams,AbortSignal,Buffer,console,fetch:async url=>{
   urls.push(String(url));return {ok:true,text:async()=>JSON.stringify(String(url).includes('/map/data/')?{recs:[record]}:{features:[fixture.feature]})};
  }});
- const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore'],function(){this.setExport('kvGet',async k=>structuredClone(saved.get(k)));this.setExport('kvPut',async(k,v)=>saved.set(k,structuredClone(v)));this.setExport('withBrainStore',h=>h);},{context});
+ const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore','fetchWayneGis'],function(){this.setExport('fetchWayneGis',context.fetch);this.setExport('kvGet',async k=>structuredClone(saved.get(k)));this.setExport('kvPut',async(k,v)=>saved.set(k,structuredClone(v)));this.setExport('withBrainStore',h=>h);},{context});
  const c=new vm.SyntheticModule(['default'],function(){this.setExport('default',crypto);},{context});
  const verify=new vm.SyntheticModule(['verifyOfficial'],function(){this.setExport('verifyOfficial',verifyOfficial);},{context});
  const worker=new vm.SourceTextModule(fs.readFileSync('netlify/functions/owner-brain-auto.mjs','utf8'),{context});

@@ -26,7 +26,7 @@ const handler=async req=>{
  const qs=new URLSearchParams({f:'json',where:"parcel_number = '"+id+"'",outFields:'parcel_number,address,zip_code,total_acreage,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
  let result;
  try{
-  const res=await fetch(LAYER+'/query?'+qs,{signal:AbortSignal.timeout(13000)});
+  const res=await auth.fetchWayneGis(LAYER+'/query?'+qs,{signal:AbortSignal.timeout(13000)});
   if(!res.ok)throw Error('HTTP '+res.status);
   const payload=await res.json();if(payload.error)throw Error(small(payload.error.message,100));
   const features=Array.isArray(payload.features)?payload.features:[];
@@ -41,7 +41,7 @@ const handler=async req=>{
   }else{
    result={status:matches.length>1?'ambiguous':'no_exact_match',verified:false,parcelId:id,sourceUrl:LAYER,note:'City of Detroit parcel layer returned no unique exact parcel number match; no location inferred.',foundAt:new Date().toISOString()};
   }
- }catch(e){return out(502,{error:'Detroit assessor GIS lookup failed: '+small(e.message,110)})}
+ }catch(e){if(e.code==='QUOTA')return out(429,{ok:false,error:e.message});return out(502,{error:'Detroit assessor GIS lookup failed: '+small(e.message,110)})}
  const latest=await auth.kvGet(STORE);
  if(!latest?.queue||latest.status==='paused')return out(409,{error:'Queue changed; candidate not saved'});
  const target=latest.queue.find(x=>x.dataset===b.dataset&&x.recordId===b.recordId);

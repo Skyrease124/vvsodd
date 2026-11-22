@@ -1,6 +1,7 @@
 // Share account authentication, but keep Brain state isolated on Deploy Previews.
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { getDeployStore, getStore } from '@netlify/blobs';
+import { readWayneQuota, reserveWayneRequest } from './brain-wayne-gis-quota.mjs';
 import * as auth from './auth.mjs';
 export * from './auth.mjs';
 const scope=new AsyncLocalStorage();
@@ -16,7 +17,7 @@ export const isBrainPreview=()=>scope.getStore()?.preview===true;
 const isolated=k=>isBrainPreview()&&!k.includes('usage')&&k!=='owner-ai-research-api-controls';
 export function withBrainStore(handler){
  return (req,context)=>scope.run(context?.deploy?
-  {preview:context.deploy.context==='deploy-preview'}:
+  {preview:context.deploy.context==='deploy-preview',environment:context.deploy.context}:
   (scope.getStore()||{preview:false}),()=>handler(req,context));
 }
 export async function kvGet(k){
@@ -46,4 +47,27 @@ export async function kvPutVersioned(key, value, etag) {
   if (!result.modified) return null;
   if (!result.etag) throw new Error('Missing write version');
   return result.etag;
+}
+
+function requireWayneQuotaContext() {
+  if (!['production', 'deploy-preview'].includes(scope.getStore()?.environment)) {
+    throw Object.assign(Error('GIS quota unavailable in this deploy context'), { code: 'QUOTA' });
+  }
+}
+export function readWayneGisQuota() {
+  requireWayneQuotaContext();
+  return readWayneQuota({ read: kvGetVersioned });
+}
+export async function reserveWayneGisRequest() {
+  requireWayneQuotaContext();
+  try {
+    return await reserveWayneRequest({ read: kvGetVersioned, write: kvPutVersioned });
+  } catch (error) {
+    if (error.code === 'QUOTA') throw error;
+    throw Object.assign(Error('GIS budget temporarily unavailable', { cause: error }), { code: 'QUOTA' });
+  }
+}
+export async function fetchWayneGis(url, options) {
+  await reserveWayneGisRequest();
+  return fetch(url, { ...options, redirect: 'error' });
 }

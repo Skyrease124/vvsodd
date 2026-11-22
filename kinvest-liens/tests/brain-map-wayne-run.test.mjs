@@ -13,7 +13,7 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
  const rows=[{i:'r1',p:'01002754',a:'100 Test St, Detroit MI'},{i:'r2',p:'01002830',a:'102 Test St, Detroit MI'},
  {i:'r3',p:'01003357',a:'104 Test St, Detroit MI'},{i:'r4',p:'01004444',a:'106 Test St, Detroit MI'}];
- let calls=0,publications=0;
+ let calls=0,publications=0,reserved=dailyUsed;
  const context=vm.createContext({Response,Request,URL,URLSearchParams,AbortSignal,Buffer,Date,console,crypto:undefined,
  fetch:async u=>{
   const url=new URL(u);if(url.hostname==='pricepocketasset.com')return Response.json({recs:rows});
@@ -23,7 +23,7 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
   const id=(url.searchParams.get('where')||'01002754').match(/010[0-9]{5}/)?.[0]||'01002754';
   return Response.json({features:[{attributes:{parcel_number:id+'.',address:'100 TEST ST',object_id:100},geometry:{rings:[[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]]]}}]});
  }});
- const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore','isBrainPreview'],function(){
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','readWayneGisQuota','reserveWayneGisRequest','withBrainStore','isBrainPreview'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
   this.setExport('kvGet',async k=>structuredClone(store.get(k)));
   this.setExport('kvPut',async(k,v)=>store.set(k,structuredClone(v)));
@@ -36,6 +36,11 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
    versions.set(key,next);
    store.set(key,structuredClone(value));
    return next;
+  });
+  this.setExport('readWayneGisQuota',async()=>({active:true,count:reserved}));
+  this.setExport('reserveWayneGisRequest',async()=>{
+   if(reserved>=30)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
+   return ++reserved;
   });
   this.setExport('withBrainStore',fn=>fn);
   this.setExport('isBrainPreview',()=>preview);

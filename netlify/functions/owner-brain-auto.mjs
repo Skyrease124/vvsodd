@@ -9,7 +9,7 @@ const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const tidy=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 const limit=(s,n=160)=>String(s??'').slice(0,n);
 const fetchJson=async (url,timeout=7000)=>{
- const r=await fetch(url,{signal:AbortSignal.timeout(timeout)});if(!r.ok)throw Error('Source HTTP '+r.status);
+ const r=await (url.startsWith(LAYER+'/query?')?auth.fetchWayneGis:fetch)(url,{signal:AbortSignal.timeout(timeout)});if(!r.ok)throw Error('Source HTTP '+r.status);
  const raw=await r.text();if(Buffer.byteLength(raw,'utf8')>10_000_000)throw Error('Dataset too large');
  const data=JSON.parse(raw);if(data.error)throw Error(limit(data.error.message,90));return data;
 };
@@ -91,7 +91,7 @@ async function handler(){
          log.entries=[...log.entries,entry].slice(-250);await auth.kvPut('owner-brain-approvals-v1',log);
          slot.verification=entry;slot.review={decision:entry.decision,reviewedAt:stamp,caseKey};
         }
-       }catch(e){slot.verification={status:'needs_review',checkedAt:new Date().toISOString(),notes:limit(e.message,180),evidenceUrl:LAYER};}
+       }catch(e){if(e.code==='QUOTA')throw e;slot.verification={status:'needs_review',checkedAt:new Date().toISOString(),notes:limit(e.message,180),evidenceUrl:LAYER};}
       }
       if(target.detroitAddress)slot.detroitAddress=target.detroitAddress;
       check.updatedAt=latest.updatedAt;

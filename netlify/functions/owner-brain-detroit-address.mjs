@@ -37,10 +37,10 @@ const handler=async req=>{
  const params=new URLSearchParams({f:'json',where:sql,outFields:'parcel_number,address,zip_code,object_id',returnGeometry:'false',resultRecordCount:'12'});
  let payload;
  try{
-  const response=await fetch(LAYER+'/query?'+params,{signal:AbortSignal.timeout(13000)});
+  const response=await auth.fetchWayneGis(LAYER+'/query?'+params,{signal:AbortSignal.timeout(13000)});
   if(!response.ok)throw Error('GIS HTTP '+response.status);
   payload=await response.json();if(payload.error)throw Error(short(payload.error.message,100));
- }catch(e){return j(502,{error:'Detroit street-address GIS query failed: '+short(e.message,100)})}
+ }catch(e){if(e.code==='QUOTA')return j(429,{ok:false,error:e.message});return j(502,{error:'Detroit street-address GIS query failed: '+short(e.message,100)})}
  const prefix=number+' '+street;
  const candidates=(payload.features||[]).map(f=>f.attributes||{}).filter(a=>{const aClean=clean(a.address);return aClean===prefix||aClean.startsWith(prefix+' ');}).slice(0,8).map(a=>({parcelId:short(a.parcel_number,60),address:short(a.address,160),zipCode:short(a.zip_code,15)}));
  const result={status:candidates.length?'address_candidates_unverified':'no_address_match',sourceAddress:address,streetSearched:prefix,candidates,sourceUrl:LAYER,checkedAt:new Date().toISOString(),note:candidates.length?'Address candidates only. Parcel number differences must be independently resolved; this is NOT an approved map location.':'No address candidates in this query. No coordinates inferred.',verified:false,approvable:false};

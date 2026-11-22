@@ -6,8 +6,8 @@ const APPROVALS='owner-brain-approvals-v1',STATUS='brain-map-publication-status-
 const ROOT='https://pricepocketasset.com';
 const GIS='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-async function json(url,limit=9000000){
- const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
+async function json(url,limit=9000000,redirect='follow'){
+ const r=await fetch(url,{signal:AbortSignal.timeout(9000),redirect});
  if(!r.ok)throw Error('HTTP '+r.status);
  const body=await r.text();if(Buffer.byteLength(body)>limit)throw Error('Response too large');
  const data=JSON.parse(body);if(data.error)throw Error(data.error.message||'Provider error');
@@ -75,7 +75,7 @@ async function handler(req,context){
    try{
     // Charge before dispatch, including failed GIS requests. The worker owns the shared daily cap.
     await context.chargeWayneGisRequest();
-    result=await json(url,1000000);
+    result=await json(url,1000000,'error');
    }catch(e){status.lastError=String(e.message).slice(0,120);break;}
    // A pause can happen while awaiting the remote provider. Nothing may
    // publish after the pause, even if the GIS request succeeds.
