@@ -184,3 +184,14 @@ test('replay and simulation retain periodic owner authorization checks',()=>{
  assert.match(page,/Owner session expired\. Sign in again/);
  assert.match(page,/if\(mode\(\)==='live'\)render\(d\)/);
 });
+
+
+test('API labels the displayed receipts as a bounded window, not complete historical count',async()=>{
+ const run=await create(true);
+ const response=await (await run(new Request('https://preview.test/activity'))).json();
+ assert.equal(response.eventWindow.completeHistory,false);
+ assert.equal(response.eventWindow.returnedCount,response.events.length);
+ assert.ok(response.eventWindow.availableCount>=response.eventWindow.returnedCount);
+ assert.equal(response.eventWindow.truncated,false);
+ assert.equal(response.eventCount,response.eventWindow.returnedCount);
+});
