@@ -81,9 +81,9 @@
     if(!mapWorkspace.classList.contains('app-map-unified')||!latestRadarCategory)return;
     const data=latestRadarCategory;
     const counties=(Array.isArray(data.counties)?data.counties:[]).map(c=>({
-      state:c.state,county:c.county,open:c.open,sale:{kind:c.sale?.kind,date:c.sale?.date}
+      state:c.state,county:c.county,open:c.open,group:c.group,history:!!c.history,sale:{kind:c.sale?.kind,date:c.sale?.date}
     }));
-    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:data.tab,counties},location.origin);
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:data.tab,month:data.month,counties},location.origin);
   }
   radarFrame.addEventListener('load',sendRadarOverlay);
   window.addEventListener('message',event=>{
@@ -113,7 +113,7 @@
   window.addEventListener('ppa:radar-category',event=>{
     const tab=event.detail?.tab;
     if(!['opp','cal','hist'].includes(tab))return;
-    latestRadarCategory={tab,counties:event.detail.counties};
+    latestRadarCategory={tab,month:event.detail.month,counties:event.detail.counties};
     renderRadarSummary();
     sendRadarOverlay();
   });
