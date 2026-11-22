@@ -27,3 +27,9 @@ test('preview UI explains publication scope and shows per-parcel results',()=>{
  assert.match(ui,/This cannot change production/);
  assert.match(ui,/row\.published/);
 });
+
+
+test('manual parcel publisher blocks cross-site browser requests before staging',()=>{
+ assert.match(code,/req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
+ assert.match(code,/return json\(403,\{ok:false,error:'Cross-site request denied'\}\)/);
+});
