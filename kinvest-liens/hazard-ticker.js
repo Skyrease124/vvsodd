@@ -4,7 +4,8 @@
   'use strict';
   var query = new URLSearchParams(location.search);
   if (window.parent !== window && query.get('embed') === '1' && query.get('home') === '1') return;
-  var host = document.getElementById('pmRH') ? { el: document.getElementById('pmRH'), cls: ' hz-sheet' } : (document.querySelector('.dwrap .rhead') ? { el: document.querySelector('.dwrap .rhead'), cls: ' hz-home', before: true } : null);
+  var homepage = document.getElementById('home-hazard-alerts');
+  var host = homepage ? { el: homepage, cls: ' hz-home-banner', inside: true } : (document.getElementById('pmRH') ? { el: document.getElementById('pmRH'), cls: ' hz-sheet' } : (document.querySelector('.dwrap .rhead') ? { el: document.querySelector('.dwrap .rhead'), cls: ' hz-home', before: true } : null));
   if (!host) return;
   var ICON = { wildfires: '🔥', floods: '🌊', severeStorms: '🌀', volcanoes: '🌋', landslides: '⛰️' };
   var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -13,7 +14,8 @@
     var list = d.major.slice(); for (var i = list.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = list[i]; list[i] = list[j]; list[j] = t; }
     var box = document.createElement('div'); box.className = 'hztick' + host.cls; box.setAttribute('role', 'note'); box.setAttribute('aria-label', 'Recent natural hazard reports');
     var ic = document.createElement('span'), tx = document.createElement('span'); ic.className = 'hz-ic'; tx.className = 'hz-tx'; box.appendChild(ic); box.appendChild(tx);
-    host.el.parentNode.insertBefore(box, host.before ? host.el : host.el.nextSibling);
+    if (host.inside) host.el.appendChild(box);
+    else host.el.parentNode.insertBefore(box, host.before ? host.el : host.el.nextSibling);
     var n = 0;
     function line(e) {
       var when = ''; try { when = new Date(e.date).toLocaleDateString([], { month: 'short', day: 'numeric' }); } catch (x) {}
