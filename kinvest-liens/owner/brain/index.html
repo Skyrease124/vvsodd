@@ -29,6 +29,8 @@
  <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
  <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
  </div>
+ <button id="wayneQuotaActivate" type="button" style="border-radius:9px;padding:11px 14px;background:#315574;border:1px solid #9ec9ed;color:white;font-weight:700">Activate Shared GIS Budget (Preview)</button>
+ <p id="wayneQuotaActivationResult" role="status" class="small"></p>
  <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Live Wayne Pilot</button>
  <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
  <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
@@ -293,6 +295,20 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    await loadAutonomy();
   }catch(e){summary.textContent='GIS retry review error: '+e.message;}
   finally{btn.disabled=false;}
+ };
+ document.getElementById('wayneQuotaActivate').onclick=async()=>{
+  const btn=document.getElementById('wayneQuotaActivate'),out=document.getElementById('wayneQuotaActivationResult');
+  if(!confirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 30-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
+  btn.disabled=true;out.textContent='Activating budget marker…';
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-quota-activate',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'activate-wayne-gis-quota',confirmed:true,scope:'wayne-preview-pilot'})
+   });
+   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Activation unavailable');
+   out.textContent=d.active?'GIS budget active. No requests dispatched.':('Budget marker saved. No GIS requests dispatched. Available after '+(d.resumeAt||'the next UTC day')+'.');
+   await loadAutonomy();
+  }catch(e){out.textContent='Activation: '+e.message;}finally{btn.disabled=false;}
  };
  document.getElementById('wayneTestBatch').onclick=async()=>{
   const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
