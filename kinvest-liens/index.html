@@ -26,7 +26,9 @@
 .app-map.app-map-unified #home-radar .rfind{margin-top:12px}
 .app-map.app-map-unified #home-radar .rpanel{max-width:100%;overflow-wrap:anywhere}
 /* Radar categories have their own row, never overlay the iframe's Tools control. */
-#home-radar-map-controls[hidden]{display:none!important}
+#home-radar-map-controls[hidden],#home-radar-map-summary[hidden]{display:none!important}
+#home-radar-map-summary{margin:0 12px 10px;padding:9px 12px;border:1px solid rgba(126,218,200,.25);border-radius:10px;background:#0b2832;color:#c5e3dc;font:500 12px/1.45 system-ui,sans-serif}
+#home-radar-map-summary strong{color:#7ff0c2}
 #home-radar-map-controls{position:static;width:100%;padding:10px 12px;box-sizing:border-box;background:#0a2331}
 #home-radar-map-controls .rtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:0;background:transparent;border:0;box-shadow:none}
 #home-radar-map-controls .rtabs button{min-width:0;min-height:46px;padding:8px 5px;border:1px solid rgba(126,218,200,.5);border-radius:12px;background:#10343d;color:#d6eee9;font:700 clamp(10px,2.7vw,14px)/1.2 system-ui,sans-serif;white-space:normal;overflow-wrap:normal;cursor:pointer}
@@ -74,7 +76,7 @@
     <div id="home-parcels">
     <script src="/app-location.js"></script>
     <iframe src="/map/?embed=1&home=1" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
-    <div id="home-radar-map-controls" aria-label="Tax Sale Radar map controls" hidden></div>
+    <div id="home-radar-map-controls" aria-label="Tax Sale Radar map controls" hidden></div><div id="home-radar-map-summary" role="status" aria-live="polite" hidden></div>
     <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span><a data-open-map href="/map/">Open full map →</a></div>
     </div>
 <div class="app-radar" id="home-radar" hidden>
