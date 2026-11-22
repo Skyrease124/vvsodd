@@ -77,6 +77,19 @@
   const radarSummary=document.getElementById('home-radar-map-summary');
   let latestRadarCategory=null;
   const radarFrame=document.querySelector('#home-parcels iframe');
+  function sendStateInventory(){
+    if(!latestRadarCategory)return;
+    const counts={};
+    for(const c of latestRadarCategory.counties||[]){
+      if(!/^[A-Z]{2}$/.test(c.state||''))continue;
+      const n=counts[c.state]||(counts[c.state]={liens:0,deeds:0,land:0});
+      const amount=Math.max(0,Number(c.open)||0);
+      if(c.group==='county-held'||c.group==='lien-sale')n.liens+=amount;
+      else if(c.group==='deed')n.deeds+=amount;
+      else if(c.group==='state-held')n.land+=amount;
+    }
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-state-inventory',counts},location.origin);
+  }
   function sendRadarOverlay(){
     if(!mapWorkspace.classList.contains('app-map-unified')||!latestRadarCategory)return;
     const data=latestRadarCategory;
@@ -85,7 +98,7 @@
     }));
     radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:data.tab,month:data.month,counties},location.origin);
   }
-  radarFrame.addEventListener('load',sendRadarOverlay);
+  radarFrame.addEventListener('load',()=>{sendRadarOverlay();sendStateInventory();});
   window.addEventListener('message',event=>{
     if(event.origin!==location.origin||event.source!==radarFrame.contentWindow)return;
     if(event.data?.type!=='ppa:radar-overlay-select'||!/^[A-Z]{2}$/.test(event.data.state||''))return;
@@ -116,6 +129,7 @@
     latestRadarCategory={tab,month:event.detail.month,counties:event.detail.counties};
     renderRadarSummary();
     sendRadarOverlay();
+    sendStateInventory();
   });
   function dockRadarTabs(enabled){
     if(enabled){
