@@ -14,3 +14,15 @@ test('homepage preserves parcel and radar surfaces and adds a combined view',()=
  assert.match(script,/home-radar'\)\.hidden = !\(both \|\| view === 'radar'\)/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
+
+
+test('Radar official changes hand off state only, without inventing parcel markers',()=>{
+ const radar=fs.readFileSync('kinvest-liens/radar.js','utf8');
+ const app=fs.readFileSync('kinvest-liens/app-ui.js','utf8');
+ assert.match(radar,/Explore state on Parcel Map/);
+ assert.match(radar,/ppa:radar-map-state/);
+ assert.match(app,/window\.addEventListener\('ppa:radar-map-state'/);
+ assert.match(app,/showMapView\('both'\)/);
+ assert.match(app,/select\.dispatchEvent\(new Event\('change'/);
+ assert.doesNotMatch(radar,/ppa:radar-map-parcel/);
+});
