@@ -98,10 +98,9 @@ test('shared public and Workshop maps rotate all loaded counties and isolate fee
 
 
 test('public correction feed hides pending publications and malformed geometry without GIS calls',async()=>{
- const context=vm.createContext({Response,Request,URL,console,Number,Object,Array,Math});
  let reads=0;
- const auth=new vm.SyntheticModule(['kvGet','withBrainStore'],function(){
-  this.setExport('kvGet',async()=>{reads++;return {version:12,records:{
+ const auth={
+  kvGet:async()=>{reads++;return {version:12,records:{
    pending:{i:'pending',p:'01002754',verifiedGeometry:true,publicationPending:true,
     evidenceUrl:'https://example.gov',g:[[[-83.1,42.3],[-83.099,42.3],[-83.1,42.301],[-83.1,42.3]]],
     bb:[-83.1,42.3,-83.099,42.301],cx:[-83.0995,42.3005]},
@@ -110,13 +109,12 @@ test('public correction feed hides pending publications and malformed geometry w
    good:{i:'good',p:'01003357',verifiedGeometry:true,evidenceUrl:'https://example.gov',
     g:[[[-83.1,42.3],[-83.099,42.3],[-83.1,42.301],[-83.1,42.3]]],
     bb:[-83.1,42.3,-83.099,42.301],cx:[-83.0995,42.3005]}
-  }}});
-  this.setExport('withBrainStore',handler=>handler);
- },{context});
- const module=new vm.SourceTextModule(fn,{context});
- await module.link(()=>auth);
- await module.evaluate();
- const handler=module.namespace.default;
+  }}},
+  withBrainStore:handler=>handler
+ };
+ // Evaluate the real endpoint handler without experimental vm.Module flags.
+ const executable=fn.replace(/^import .*;$/gm,'').replace(/export default auth\.withBrainStore\(handler\);?/,'');
+ const handler=vm.runInNewContext(executable+';handler',{Response,Request,URL,auth,Number,Object,Array,Math});
  const response=await handler(new Request('https://preview.test/.netlify/functions/brain-map-county?dataset=MI-wayne'));
  assert.equal(response.status,200);
  const data=await response.json();
