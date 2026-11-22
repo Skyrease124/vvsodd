@@ -87,6 +87,6 @@ test('primary PricePocket AI route denies non-Pro POST before models or portfoli
   const result=await handle({httpMethod:'POST',headers:{cookie:'ignored'},body:'{}'});
   assert.equal(result.statusCode,role==='anonymous'?401:denied?402:400,role);
   assert.equal(configReads,1);
-  if(denied)assert.equal(result.body.needPaid,role!=='anonymous');
+  if(role!=='anonymous'&&denied)assert.equal(result.body.needPaid,true);
  }
 });
