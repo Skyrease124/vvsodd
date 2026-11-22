@@ -10,7 +10,7 @@ async function handler(req){
  const saved=await auth.kvGet('brain-map-county-v1-'+dataset)||{version:0,records:{}};
  const records={};
  for(const [id,r] of Object.entries(saved.records||{}).slice(0,1500)){
-  if(!r||r.verifiedGeometry!==true||id!==r.i||typeof r.p!=='string'||!r.evidenceUrl?.startsWith('https://'))continue;
+  if(!r||r.verifiedGeometry!==true||r.publicationPending===true||id!==r.i||typeof r.p!=='string'||!r.evidenceUrl?.startsWith('https://'))continue;
   if(!Array.isArray(r.g)||r.g.length!==1||!Array.isArray(r.g[0])||r.g[0].length<4||r.g[0].length>6000)continue;
   if(!Array.isArray(r.bb)||r.bb.length!==4||!r.bb.every(Number.isFinite)||!valid(r.cx))continue;
   const ring=r.g[0];if(!ring.every(valid))continue;
