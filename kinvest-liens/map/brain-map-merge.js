@@ -27,7 +27,10 @@ async function apply(ds){
  if(!body.ok||body.dataset!==ds.id||typeof body.version!=='number')throw Error('Invalid correction feed');
  let state=memory.get(ds);
  if(!state){state={version:-1,baseline:new Map(ds.recs.filter(r=>!r.g&&!r.cx).map(r=>[r.i,{g:r.g??null,cx:r.cx??null,bb:r.bb??null,why:r.why??null}]))};memory.set(ds,state);}
- if(state.version===body.version)return {changed:false,count:0,version:body.version};
+ // Publication recovery can clear a pending marker without bumping the polygon version.
+ // Always reconcile the visible feed, even when its map version is unchanged.
+ // This also handles revoked corrections and identity repairs safely.
+
  let count=0;
  for(const r of ds.recs){
   const base=state.baseline.get(r.i);
