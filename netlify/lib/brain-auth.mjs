@@ -64,7 +64,7 @@ export async function reserveWayneGisRequest() {
     return await reserveWayneRequest({ read: kvGetVersioned, write: kvPutVersioned });
   } catch (error) {
     if (error.code === 'QUOTA') throw error;
-    throw Object.assign(Error('GIS budget temporarily unavailable', { cause: error }), { code: 'QUOTA' });
+    throw Object.assign(Error('GIS budget temporarily unavailable', { cause: error }), { code: 'QUOTA', quotaState: 'quota_unavailable' });
   }
 }
 export async function fetchWayneGis(url, options) {

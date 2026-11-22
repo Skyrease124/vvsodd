@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false}={}){
  const store=new Map();
  const versions=new Map();
  if(pending)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{i:'r1',verifiedGeometry:true,verifiedAt:'2026-11-22T00:00:00Z',publicationPending:true}}});
@@ -38,8 +38,9 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
    store.set(key,structuredClone(value));
    return next;
   });
-  this.setExport('readWayneGisQuota',async()=>({active:true,count:reserved}));
+  this.setExport('readWayneGisQuota',async()=>({active:!cutover,count:reserved}));
   this.setExport('reserveWayneGisRequest',async()=>{
+   if(cutover)throw Object.assign(Error('Cutover'),{code:'QUOTA',quotaState:'quota_cutover'});
    if(reserved>=30)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
    return ++reserved;
   });
@@ -212,4 +213,16 @@ test('worker recovers saved publication at full quota without dispatch or cursor
  assert.equal(h.reads(),0);
  assert.equal(h.publications(),0);
  assert.equal((await h.invoke()).status,429);
+});
+
+test('cutover reports historical usage separately without counting a parcel attempt',async()=>{
+ const h=await setup({dailyUsed:18,cutover:true,cursor:1});
+ const data=await (await h.invoke()).json();
+ assert.equal(data.state,'quota_cutover');
+ assert.equal(data.dailyUsed,null);
+ assert.equal(data.legacyDailyUsed,18);
+ assert.equal(data.attempted,0);
+ assert.equal(data.cursor,1);
+ assert.equal(h.reads(),0);
+ assert.equal(h.publications(),0);
 });

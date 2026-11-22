@@ -11,7 +11,10 @@ export async function readWayneQuota(storage, now = new Date()) {
   const activation = await storage.read(activationKey);
   const active = /^\d{4}-\d{2}-\d{2}$/.test(activation?.data?.day) && activation.data.day < day;
   const saved = active ? await storage.read(dayKey(day)) : null;
-  return { active, count: saved?.data?.count ?? 0 };
+  const start=active||!activation?.data?.day?null:new Date(activation.data.day+'T00:00:00Z');
+  if(start&&Number.isFinite(start.getTime()))start.setUTCDate(start.getUTCDate()+1);
+  return { active, count: saved?.data?.count ?? 0,
+    resumeAt:start&&Number.isFinite(start.getTime())?start.toISOString():null };
 }
 
 export async function reserveWayneRequest(storage, now = () => new Date()) {
@@ -25,7 +28,7 @@ export async function reserveWayneRequest(storage, now = () => new Date()) {
   // rather than allowing a fresh budget on top of uncounted dispatches.
   const activationDay = activation?.data?.day;
   if (typeof activationDay !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(activationDay) || activationDay >= day) {
-    throw Object.assign(Error('Shared GIS quota opens after the cutover UTC day'), { code: 'QUOTA' });
+    throw Object.assign(Error('Shared GIS quota opens after the cutover UTC day'), { code: 'QUOTA', quotaState: 'quota_cutover' });
   }
 
   const key = dayKey(day);
@@ -38,10 +41,10 @@ export async function reserveWayneRequest(storage, now = () => new Date()) {
     }
     if (await storage.write(key, { count: count + 1 }, current ? current.etag : null)) {
       if (utcDay(now()) !== day) {
-        throw Object.assign(Error('UTC day changed before GIS dispatch'), { code: 'QUOTA' });
+        throw Object.assign(Error('UTC day changed before GIS dispatch'), { code: 'QUOTA', quotaState: 'quota_unavailable' });
       }
       return count + 1;
     }
   }
-  throw Object.assign(Error('GIS budget busy; try again later'), { code: 'QUOTA' });
+  throw Object.assign(Error('GIS budget busy; try again later'), { code: 'QUOTA', quotaState: 'quota_unavailable' });
 }

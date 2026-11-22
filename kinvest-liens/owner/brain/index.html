@@ -163,14 +163,15 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
    const testButton=document.getElementById('wayneTestBatch');
    testButton.hidden=!d.preview;
-   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(d.worker.retryExhausted||d.worker.dailyUsed>=d.worker.dailyLimit));
-   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':d.worker.retryExhausted?'Review exhausted retry first':d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
+   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(d.worker.retryExhausted||(d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit)||Date.parse(d.worker.quotaResumeAt)>Date.now()));
+   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':d.worker.retryExhausted?'Review exhausted retry first':Date.parse(d.worker.quotaResumeAt)>Date.now()?'Shared GIS budget is waiting for UTC rollover':d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
    checks.textContent='Wayne cursor '+d.worker.cursor+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
     (d.worker.publicationPending?' · Saved publication needs recovery':'')+
-    (d.worker.quotaActive===false?' · Shared GIS budget starts after the first request’s UTC day':'')+
+    (d.worker.quotaActive===false?(d.worker.quotaResumeAt?' · Shared GIS budget opens '+new Date(d.worker.quotaResumeAt).toISOString().replace('T',' ').slice(0,16)+' UTC':' · First batch request initializes the shared GIS budget. It opens the following UTC day.'):'')+
+    (d.worker.quotaActive?' · Shared GIS requests '+d.worker.dailyUsed+'/'+d.worker.dailyLimit:'')+
     ' · Other counties blocked until verified GIS connectors are configured';
    return true;
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;return false;}
@@ -204,7 +205,9 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    if(!r.ok||!d.ok)throw Error(d.error||'Test batch unavailable');
    out.textContent='Batch '+(d.state||'completed').replaceAll('_',' ')+' · Cursor '+(d.cursor??'?')+
     ' · Attempted '+(d.attempted??0)+' · Verified '+(d.verified??0)+
-    ' · Published '+(d.published??0)+' · GIS requests '+(d.dailyUsed??'?')+'/'+(d.dailyLimit??30)+
+    ' · Published '+(d.published??0)+
+    (d.quotaActive===false?' · Shared GIS budget inactive'+(d.legacyDailyUsed==null?'':' · Historical worker counter '+d.legacyDailyUsed):
+     ' · GIS requests '+(d.dailyUsed??'?')+'/'+(d.dailyLimit??30))+
     (d.retry?.nextAt?' · Next retry '+new Date(d.retry.nextAt).toLocaleTimeString():'')+
     (d.rows?.[0]?.reason?' · '+d.rows[0].reason:'');
   }catch(e){out.textContent='Test batch failed: '+e.message;}
