@@ -1,7 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {approveLandReview,filterLandReview,importLandBatch,landSummary,LAND_SOURCES} from '../../netlify/lib/brain-florida-land.mjs';
-import {createHandler} from '../../netlify/functions/owner-brain-florida-land.mjs';
+import {readFile} from 'node:fs/promises';
+import vm from 'node:vm';
+import * as land from '../../netlify/lib/brain-florida-land.mjs';
+
+async function loadRoute(){
+ const context=vm.createContext({URL,Response,Buffer});
+ const createModule=exports=>new vm.SyntheticModule(Object.keys(exports),function(){
+  for(const [name,value] of Object.entries(exports))this.setExport(name,value);
+ },{context});
+ const dependency=createModule(land),auth=createModule({withBrainStore:handler=>handler});
+ const file=new URL('../../netlify/functions/owner-brain-florida-land.mjs',import.meta.url);
+ const endpoint=new vm.SourceTextModule(await readFile(file,'utf8'),{context});
+ await endpoint.link(path=>path.endsWith('/brain-auth.mjs')?auth:dependency);
+ await endpoint.evaluate();
+ return endpoint.namespace.createHandler;
+}
 
 const now=Date.parse('2026-11-22T12:00:00Z');
 const date='2026-11-21T12:00:00Z';
@@ -102,6 +117,7 @@ test('interrupted receipts resume idempotently and counties cannot reuse another
 });
 
 test('owner route checks preview, role, origin and CAS without provider or publication calls',async()=>{
+ const createHandler=await loadRoute();
  const url='https://deploy-preview-454--pricepocketasset.netlify.app/.netlify/functions/owner-brain-florida-land?geoid=12086';
  const context={deploy:{context:'deploy-preview'}};
  let user=null, stored=null;

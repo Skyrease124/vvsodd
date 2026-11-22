@@ -93,5 +93,5 @@ jobs:
       - run: python3 tools/florida-gis/build.py --check
       - run: python3 tools/florida-gis/test_build.py
       - run: node kinvest-liens/tests/brain-map-florida-registry.test.mjs
-      - run: node kinvest-liens/tests/brain-map-florida-land.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-florida-land.test.mjs
       - run: python3 tools/florida-land/test_prepare.py
