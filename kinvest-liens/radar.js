@@ -71,7 +71,16 @@ window.TaxRadarOn = true;
     const meta = mk('p', 'small rmeta', 'Detected ' + fmtDate(c.detectedAt) + (c.publishedAt ? ' · published ' + fmtDate(c.publishedAt) : '') + ' · '); const a = mk('a', '', 'Source: ' + (c.source.name || 'official record')); a.href = c.source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; meta.appendChild(a); li.appendChild(meta);
     const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
     const l1 = mk('a', 'btn small ghost', 'See affected listings'); l1.href = c.link + '#' + encodeURIComponent(c.county);
-    act.append(b1, l1); const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
+    act.append(b1, l1);
+    // Same-origin homepage handoff: state-level only. Never infer parcel geometry
+    // from a county sale record without an exact verified dataset match.
+    if (document.getElementById('home-parcels') && /^[A-Z]{2}$/.test(c.state || '')) {
+      const mapBtn = mk('button', 'btn small ghost', 'Explore state on Parcel Map');
+      mapBtn.type = 'button';
+      mapBtn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('ppa:radar-map-state', {detail:{state:c.state}})));
+      act.appendChild(mapBtn);
+    }
+    const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
     li.appendChild(act); return li;
   }
 
