@@ -274,16 +274,23 @@ for(const id of ['eventCounty','eventAgent','eventParcel'])$(id).addEventListene
  renderEvents();
 });
 async function refresh(){
- if(document.hidden||refresh.busy||mode()!=='live')return;refresh.busy=true;
+ // Revalidate owner access in replay and simulation too. The cached event view
+ // must not outlive an expired owner session.
+ if(document.hidden||refresh.busy)return;refresh.busy=true;
  try{
   const r=await fetch('/.netlify/functions/owner-brain-activity',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(12000)});
   if(r.status===401||r.status===403){
+   pauseReplay();clearTimeout(signalTimer);signalTimer=null;
+   $('network').classList.remove('pulse-verify','pulse-publish','pulse-error');
    document.body.classList.remove('authorized');$('gate').hidden=false;active=false;
+   text($('gate'),'Owner session expired. Sign in again to view recorded activity.');
    recorded=[];replay=[];replayShown=[];signalQueue=[];seenEvents.clear();lastEventPayload=null;
    $('activity').replaceChildren();$('ticker').replaceChildren();
   }
   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Owner activity unavailable');
   if(mode()==='live')render(d);
+  // A successful auth recheck in other modes must not restart replay,
+  // overwrite its event snapshot or present a simulation as live activity.
  }catch(e){if(!active)text($('gate'),'Activity access unavailable: '+e.message);else text($('stamp'),'Update failed · '+e.message);}
  finally{refresh.busy=false;}
 }
