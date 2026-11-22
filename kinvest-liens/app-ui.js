@@ -74,6 +74,32 @@
   // No instructional banners: the three categories select the Radar dataset below.
   const radarStatus = document.getElementById('home-radar-match-status');
   if(radarStatus){radarStatus.hidden=true;radarStatus.textContent='';}
+  const radarSummary=document.getElementById('home-radar-map-summary');
+  let latestRadarCategory=null;
+  function renderRadarSummary(){
+    if(!radarSummary)return;
+    const enabled=mapWorkspace.classList.contains('app-map-unified');
+    if(!enabled||!latestRadarCategory){radarSummary.hidden=true;return;}
+    const {tab,counties}=latestRadarCategory;
+    const records=Array.isArray(counties)?counties:[];
+    const relevant=tab==='opp'
+      ?records.filter(c=>Number(c.open)>0)
+      :tab==='cal'
+        ?records.filter(c=>c.sale?.kind==='scheduled'||c.sale?.kind==='tentative')
+        :records.filter(c=>c.sale?.kind==='past'||c.sale?.kind==='completed');
+    const title=tab==='opp'?'Open opportunities':tab==='cal'?'Scheduled or tentative sales':'Past or completed sales';
+    radarSummary.hidden=false;
+    radarSummary.textContent='';
+    const label=document.createElement('strong');
+    label.textContent=title+': ';
+    radarSummary.append(label,document.createTextNode(relevant.length.toLocaleString()+' county records in Radar. Browse the matching details below; parcel pins remain independently GIS-verified.'));
+  }
+  window.addEventListener('ppa:radar-category',event=>{
+    const tab=event.detail?.tab;
+    if(!['opp','cal','hist'].includes(tab))return;
+    latestRadarCategory={tab,counties:event.detail.counties};
+    renderRadarSummary();
+  });
   function dockRadarTabs(enabled){
     if(enabled){
       if(radarTabs.parentNode!==radarDock)radarDock.appendChild(radarTabs);
@@ -99,6 +125,7 @@
     // but use the verified Parcel Map as the single geographic canvas.
     mapWorkspace.classList.toggle('app-map-unified', both);
     dockRadarTabs(both);
+    renderRadarSummary();
   }
   for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
   showMapView('both');
