@@ -105,7 +105,7 @@
     const frame=document.querySelector('#home-parcels iframe');
     const requestId=++radarParcelRequest;
     const status=document.getElementById('home-radar-match-status');
-    if(status)status.textContent='Checking exact parcel ID against verified GIS boundaries…';
+    if(status){status.hidden=false;status.textContent='Checking exact parcel ID against verified GIS boundaries…';}
     const send=()=>frame.contentWindow?.postMessage({type:'ppa:radar-parcel',state,county,parcel,requestId},location.origin);
     if(frame.contentDocument?.readyState==='complete')send();
     else frame.addEventListener('load',send,{once:true});
