@@ -81,6 +81,16 @@ export function validatePutnam(data){
  return {...checked,status:'verified',geometry:feature.geometry};
 }
 
+const appraiserReview={
+ revision:'2026-11-22-public-access',
+ checkedOn:'2026-11-22',
+ status:'unavailable',
+ source:'https://apps.putnam-fl.com/pa/property/',
+ rollSource:'https://apps.putnam-fl.com/bocc/countyopendatapublic/main.php',
+ reason:'The property search timed out and the official 2026 assessment roll download returned HTTP 503.',
+ missing:'Exact appraiser record, complete legal description, land use, improvement indicators, assessment acreage and ownership.'
+};
+
 export async function putnamStatus(storage,now=Date.now,{includeGeometry=false}={}){
  const checkpoint=(await storage.read(key))?.data;
  let remaining=null,parcelQuotaAvailable=false;
@@ -95,7 +105,7 @@ export async function putnamStatus(storage,now=Date.now,{includeGeometry=false}=
  const interrupted=checkpoint?.status==='in_progress'&&now()-Date.parse(checkpoint.startedAt)>60000;
  const status=interrupted?'needs_review':retryable?(remaining>0&&parcelQuotaAvailable?'ready':'quota_unavailable'):checkpoint.status;
  return {...PUTNAM,remaining,limit:SHARED_COUNTY_DAILY_LIMIT,status,canRun:status==='ready',
-  checkedAt:checkpoint?.checkedAt??null,result:result?{...result,geometry:includeGeometry&&result.status==='verified'?result.geometry:undefined}:null,
+  checkedAt:checkpoint?.checkedAt??null,appraiserReview,result:result?{...result,geometry:includeGeometry&&result.status==='verified'?result.geometry:undefined}:null,
   reason:interrupted?'Interrupted before a receipt was saved. Checkpoint retained for owner review.':
    status==='quota_unavailable'?remaining===null?'Shared quota could not be read.':
     !parcelQuotaAvailable?'Putnam has used its request allowance today.':'The shared daily GIS quota is exhausted.':result?.reason??null};

@@ -337,3 +337,13 @@ rejection before reservation can be retried when quota becomes available. No quo
 is applied to an uncertain or dispatched request. A verified geometry is available from
 the same owner-only endpoint with `?geometry=1` for isolated integration work. Public map feeds,
 release rules, and existing county checkpoints have no write path from this action.
+
+### Putnam independent Property Appraiser review attempt
+
+On November 22, 2026, the official public property search timed out and the certified
+2026 assessment roll download returned HTTP 503. The Appraiser review panel documents
+both routes and the missing exact-parcel evidence. The Clerk certification provides
+Block F, Lot 24. The owner dashboard screenshot shows the saved GIS description only
+reaches the subdivision and plat reference, so the independent review remains pending.
+This access finding is separate from the original GIS receipt. No external GIS request,
+quota reservation, or private checkpoint write was needed.

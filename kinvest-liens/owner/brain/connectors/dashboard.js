@@ -737,7 +737,18 @@ async function showPutnamVerification(panel,line,request){
   if(state.result?.geometryValid)content.append(line('Boundary checked in '+state.result.crs+
    ' · Polygon-derived acres: '+state.result.polygonAcres.toFixed(4)+' · GIS source acres: '+
    (state.result.sourceAcres??'Unavailable')+' · Clerk-reported acres: '+state.clerkAcres));
-  if(state.result?.legalDescription)content.append(line(state.result.legalDescription));
+  if(state.result?.legalDescription)content.append(line('GIS legal description: '+state.result.legalDescription));
+  if(state.appraiserReview){
+   const review=state.appraiserReview;
+   const appraiser=document.createElement('a');
+   appraiser.href=review.source;appraiser.textContent='Putnam Property Appraiser search';
+   const roll=document.createElement('a');
+   roll.href=review.rollSource;roll.textContent='Certified assessment roll downloads';
+   content.append(disclose('Independent Property Appraiser review',
+    grouped('Appraiser record unavailable',line('Checked '+review.checkedOn),line(review.reason),
+     line('Clerk legal description: Oak Hills Estates, plat book 4, page 45, Block F, Lot 24.'),
+     line('Outstanding evidence: '+review.missing),appraiser,line(''),roll)));
+  }
   const button=document.createElement('button');
   button.type='button';button.textContent='Verify Putnam Parcel';button.disabled=!state.canRun;
   button.onclick=async()=>{

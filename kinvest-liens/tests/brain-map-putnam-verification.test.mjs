@@ -129,3 +129,11 @@ test('owner route rejects anonymous, member, cross-origin and unconfirmed reques
  assert.equal((await (await send(confirmation)).json()).status,'no_exact_match');
  assert.equal(calls,1);
 });
+
+test('appraiser access evidence appears without writing GIS checkpoints or budget',async()=>{
+ const store=memory();
+ const status=await putnam.putnamStatus(store,now);
+ assert.equal(status.appraiserReview.status,'unavailable');
+ assert.equal(status.appraiserReview.checkedOn,'2026-11-22');
+ assert.equal(store.data.size,0);
+});
