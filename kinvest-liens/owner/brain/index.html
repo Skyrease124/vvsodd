@@ -5,6 +5,11 @@
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
  <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
  <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <p id="wayneQueueProgress" aria-live="polite"></p>
+ <details id="wayneReviewQueue">
+  <summary>Skipped parcels needing review</summary>
+  <ul id="wayneReviewEntries" style="overflow-wrap:anywhere"></ul>
+ </details>
  <div id="wayneRetryAlert" hidden style="padding:11px;margin:12px 0;border-radius:10px;border:1px solid #af9070;background:#3d302e">
  <strong>Wayne County GIS retry needs review</strong>
  <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
@@ -161,10 +166,52 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     ' · Re-arming keeps the cursor and daily limit unchanged.':'';
    document.getElementById('wayneRetryRearm').dataset.parcel=d.worker.retryParcel||'';
    document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
+   const progress=d.worker.progress;
+   const sourceCooling=Date.parse(d.worker.sourcePause?.nextAt)>Date.now();
+   document.getElementById('wayneQueueProgress').textContent=(progress?
+    'Detroit GIS queue · Total '+progress.total+' · Verified '+progress.verified+' · Skipped '+progress.skipped+
+    ' · Failed after retries '+progress.failed+' · Pending '+progress.pending+
+    (progress.legacyProcessed?' · Earlier outcomes unavailable '+progress.legacyProcessed:'')+
+    ' · Processing complete '+progress.processingPercent+'% · Verified coverage '+progress.verifiedPercent+'%':
+    'Detroit GIS queue totals will appear after the next bounded batch.')+
+    (sourceCooling?' · Source paused until '+new Date(d.worker.sourcePause.nextAt).toLocaleString()+' · '+d.worker.sourcePause.reason:'');
+   const entries=document.getElementById('wayneReviewEntries');
+   entries.replaceChildren();
+   for(const entry of d.worker.reviewQueue||[]){
+    const row=document.createElement('li');
+    row.textContent=entry.parcelId+' · Skipped · Needs Review · '+entry.reason+' ';
+    if(d.preview){
+     const retry=document.createElement('button');
+     retry.type='button';
+     retry.textContent='Retry parcel';
+     retry.disabled=sourceCooling||d.worker.paused||Date.parse(d.worker.quotaResumeAt)>Date.now()||
+      (d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit);
+     retry.onclick=async()=>{
+      if(!confirm('Run one bounded official GIS retry for '+entry.parcelId+' in preview? Verified results may be published to the preview map.'))return;
+      retry.disabled=true;
+      try{
+       const res=await fetch('/.netlify/functions/owner-brain-wayne-run',{method:'POST',credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'retry-skipped-parcel',confirmed:true,
+         index:entry.index,parcelId:entry.parcelId,checkedAt:entry.checkedAt})});
+       const result=await res.json();
+       if(!res.ok||!result.ok)throw Error(result.error||'Retry failed');
+       await loadAutonomy();
+       summary.textContent='Parcel '+entry.parcelId+' · '+(result.rows?.[0]?.status||result.state);
+      }catch(error){summary.textContent=error.message;retry.disabled=false;}
+     };
+     row.append(retry);
+    }
+    entries.append(row);
+   }
+   if(!entries.childElementCount){
+    const row=document.createElement('li');
+    row.textContent='No saved skip entries.';
+    entries.append(row);
+   }
    const testButton=document.getElementById('wayneTestBatch');
    testButton.hidden=!d.preview;
-   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(d.worker.retryExhausted||(d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit)||Date.parse(d.worker.quotaResumeAt)>Date.now()));
-   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':d.worker.retryExhausted?'Review exhausted retry first':Date.parse(d.worker.quotaResumeAt)>Date.now()?'Shared GIS budget is waiting for UTC rollover':d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
+   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(sourceCooling||(d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit)||Date.parse(d.worker.quotaResumeAt)>Date.now()));
+   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':sourceCooling?'Official GIS source is cooling down':Date.parse(d.worker.quotaResumeAt)>Date.now()?'Shared GIS budget is waiting for UTC rollover':d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);

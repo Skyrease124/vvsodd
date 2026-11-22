@@ -50,7 +50,7 @@ async function handler(req){
     message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+
       (stage?' · stage '+stage:'')+(r.reason?' · '+clean(r.reason):''),
     parcelId:clean(r.parcelId),county:'MI-wayne',trace,failedStage:stage,
-    status:r.status==='published'?'success':r.status==='needs_review'?'warning':r.status==='retry_later'?'error':'info'});
+    status:r.status==='published'?'success':['needs_review','skipped'].includes(r.status)?'warning':r.status==='retry_later'?'error':'info'});
   }
   const sources=[['Photon',photon],['Geoapify',geo],['GIS Agent',automatic],['Publisher',publication]];
   for(const [name,s] of sources){
@@ -63,11 +63,12 @@ async function handler(req){
   const running=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
   const cooling=!!retry?.nextAt&&Date.parse(retry.nextAt)>now&&!retry.exhausted;
   const state=control?.status==='paused'?'paused':
-   running?'processing':cooling||worker?.state==='retry_wait'?'retrying':
+   running?'processing':Date.parse(worker?.sourcePause?.nextAt)>now?'source_paused':cooling||worker?.state==='retry_wait'?'retrying':
    retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?'attention':
    worker?.state==='source_scanned'?'complete':'idle';
   const health={state,detail:state==='paused'?'County automation paused':
     state==='processing'?'Official GIS batch running':
+    state==='source_paused'?'Official GIS source paused until '+worker.sourcePause.nextAt:
     state==='retrying'?'Waiting to retry parcel '+clean(retry?.parcelId):
     state==='attention'?clean(retry?.lastError||worker?.lastError||'Worker needs review'):
     state==='complete'?'Available source records scanned':'Waiting for next batch',

@@ -55,7 +55,7 @@ test('auto-run does not silently shut off after temporary network failures',()=>
  assert.match(frontend,/const terminal=\[401,403,404,409,429\]\.includes\(e\.status\)/);
  assert.match(frontend,/if\(!terminal\)/);
  assert.match(frontend,/scheduleAuto\(Number\.isFinite\(next\)/);
- assert.match(frontend,/data\.state==='retry_wait'/);
+ assert.match(frontend,/\['retry_wait','source_paused'\]\.includes\(data\.state\)/);
  assert.match(frontend,/autoCooldownUntil-Date\.now\(\)\+1000/);
  assert.match(frontend,/Next Auto Run:/);
  assert.match(frontend,/const timingDisplay=setInterval\(refreshAutoTiming,1000\)/);

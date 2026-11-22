@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false,missingFirst=false,polygon404=false,rejectPublication=false}={}){
  const store=new Map();
  const versions=new Map();
  if(pending)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{i:'r1',verifiedGeometry:true,verifiedAt:'2026-11-22T00:00:00Z',publicationPending:true}}});
@@ -20,7 +20,11 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
   const url=new URL(u);if(url.hostname==='pricepocketasset.com')return Response.json({recs:rows});
   calls++;if(failedGIS)throw Error('Simulated provider outage');
   if(timeoutFirst&&calls===1)throw Object.assign(Error('The operation was aborted due to timeout'),{name:'TimeoutError'});
-  if(url.searchParams.get('returnIdsOnly')==='true')return Response.json({objectIds:[100]});
+  if(url.searchParams.get('returnIdsOnly')==='true'){
+   if(missingFirst&&url.searchParams.get('where')?.includes('01002754'))return Response.json({objectIds:[]});
+   return Response.json({objectIds:[100]});
+  }
+  if(polygon404&&calls<=6)return new Response(null,{status:404});
   const id=(url.searchParams.get('where')||'01002754').match(/010[0-9]{5}/)?.[0]||'01002754';
   return Response.json({features:[{attributes:{parcel_number:id+'.',address:'100 TEST ST',object_id:100},geometry:{rings:[[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]]]}}]});
  }});
@@ -50,7 +54,7 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  const verify=new vm.SyntheticModule(['verifyOfficial','DETROIT_GIS'],function(){
   this.setExport('DETROIT_GIS','https://services2.arcgis.com/example/FeatureServer/0');
   this.setExport('verifyOfficial',(r,features)=>{
-   if(!features.length||r.p!=='01002754')throw Error('No exact verified feature');
+   if(!features.length||r.p!==(missingFirst||polygon404?'01002830':'01002754'))throw Error('No exact verified feature');
    return {officialObjectId:100,evidenceUrl:'https://services2.arcgis.com/example',notes:'Verified',checks:[],
     cx:[-83.0995,42.3005]};
   });
@@ -69,6 +73,10 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
     }
     calls++;
    }
+   if(rejectPublication&&context.wayneCurrentRecord==='r1'){
+    context.wayneRecordRejected('r1','Independent GIS lookup did not confirm exact identity');
+    return;
+   }
    publications++;
    const approvals=store.get('owner-brain-approvals-v1')?.entries||[];
    const map=store.get('brain-map-county-v1-MI-wayne')||{records:{}};
@@ -83,8 +91,8 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  await module.link(s=>s.includes('brain-auth')?auth:s.includes('brain-official')?verify:s.includes('publish-auto')?publisher:cryptoModule);
  await module.evaluate();
  const url='https://preview.test/.netlify/functions/owner-brain-wayne-run';
- const invoke=(method='POST',origin='https://preview.test',deploy='deploy-preview')=>
-  module.namespace.default(new Request(url,{method,headers:{origin},...(method==='POST'?{body:JSON.stringify({action:'run-wayne-batch',confirmed:true})}:{})}),{deploy:{context:deploy}});
+ const invoke=(method='POST',origin='https://preview.test',deploy='deploy-preview',body={action:'run-wayne-batch',confirmed:true})=>
+  module.namespace.default(new Request(url,{method,headers:{origin},...(method==='POST'?{body:JSON.stringify(body)}:{})}),{deploy:{context:deploy}});
  return {store,invoke,reads:()=>calls,publications:()=>publications};
 }
 test('preview-only owner and same-origin guards run before GIS queries',async()=>{
@@ -146,7 +154,7 @@ test('transient GIS outage schedules backoff without skipping or publishing',asy
  assert.equal(held.cursor,0);assert.equal(h.reads(),1);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,1);
 });
-test('backoff retries three times with quota accounting and then stops for review',async()=>{
+test('source outage backs off and pauses without skipping or draining the quota',async()=>{
  const h=await setup({failedGIS:true});
  await h.invoke();
  for(let attempt=2;attempt<=3;attempt++){
@@ -154,14 +162,14 @@ test('backoff retries three times with quota accounting and then stops for revie
   saved.retry.nextAt=new Date(Date.now()-1000).toISOString();
   h.store.set('owner-brain-wayne-worker-v1',saved);
   const data=await (await h.invoke()).json();
-  assert.equal(data.retry.attempts,attempt);
+  assert.equal(data.retry.attempts,attempt===3?0:attempt);
   assert.equal(data.cursor,0);
  }
  const terminal=h.store.get('owner-brain-wayne-worker-v1');
- assert.equal(terminal.retry.exhausted,true);
+ assert.equal(terminal.retry.exhausted,false);
  assert.equal(terminal.dailyUsed,3);
- assert.equal(terminal.state,'provider_error');
- assert.equal((await h.invoke()).status,409);
+ assert.equal(terminal.state,'source_paused');
+ assert.equal((await (await h.invoke()).json()).state,'source_paused');
  assert.equal(h.reads(),3);assert.equal(h.publications(),0);
 });
 test('owner UI explicitly exposes next bounded preview run',()=>{
@@ -224,5 +232,74 @@ test('cutover reports historical usage separately without counting a parcel atte
  assert.equal(data.attempted,0);
  assert.equal(data.cursor,1);
  assert.equal(h.reads(),0);
+ assert.equal(h.publications(),0);
+});
+
+
+test('a parcel missing from GIS is saved for review and the next parcel publishes in the same batch',async()=>{
+ const h=await setup({missingFirst:true});
+ const result=await (await h.invoke()).json();
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(result.cursor,3);
+ assert.equal(saved.reviewQueue[0].parcelId,'01002754');
+ assert.equal(saved.reviewQueue[0].reason,'Parcel missing from official GIS');
+ assert.equal(saved.reviewQueue[0].status,'skipped');
+ assert.equal(h.store.get('brain-map-county-v1-MI-wayne').records.r2.verifiedGeometry,true);
+ assert.deepEqual(result.progress,{total:4,verified:1,skipped:2,failed:0,legacyProcessed:0,pending:1,processingPercent:75,verifiedPercent:25});
+});
+
+test('an exhausted parcel-specific error advances the cursor and remains reviewable',async()=>{
+ const h=await setup({polygon404:true});
+ const key='owner-brain-wayne-worker-v1';
+ for(let attempt=1;attempt<3;attempt++){
+  assert.equal((await (await h.invoke()).json()).state,'retry_wait');
+  const saved=h.store.get(key);
+  saved.retry.nextAt=new Date(Date.now()-1000).toISOString();
+  h.store.set(key,saved);
+ }
+ const result=await (await h.invoke()).json();
+ assert.equal(result.cursor,3);
+ assert.equal(result.progress.failed,1);
+ assert.equal(result.published,1);
+ assert.equal(h.store.get(key).reviewQueue[0].failed,true);
+});
+
+test('owner retry is bound to the saved entry and never rewinds the main cursor',async()=>{
+ const h=await setup({missingFirst:true});
+ await h.invoke();
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ const entry=saved.reviewQueue[0];
+ const request={action:'retry-skipped-parcel',confirmed:true,index:0,parcelId:entry.parcelId,checkedAt:entry.checkedAt};
+ assert.equal((await h.invoke('POST',undefined,undefined,{...request,checkedAt:'stale'})).status,409);
+ const prior=h.reads();
+ const result=await (await h.invoke('POST',undefined,undefined,request)).json();
+ assert.equal(result.cursor,3);
+ assert.equal(result.attempted,1);
+ assert.equal(h.reads(),prior+1);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0].previousEvidence.length,1);
+});
+
+
+test('independent publication rejection creates a skip instead of a stuck publication checkpoint',async()=>{
+ const h=await setup({rejectPublication:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.cursor,3);
+ const held=h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0];
+ assert.equal(held.failedStage,'independent_publication_check');
+ assert.equal(held.status,'skipped');
+ assert.equal(h.publications(),0);
+});
+
+
+test('an owner-approved skipped parcel cannot dispatch after the shared quota closes',async()=>{
+ const h=await setup({dailyUsed:29,missingFirst:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.dailyUsed,30);
+ const entry=h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0];
+ const before=h.reads();
+ const retry=await h.invoke('POST',undefined,undefined,{action:'retry-skipped-parcel',
+  confirmed:true,index:0,parcelId:entry.parcelId,checkedAt:entry.checkedAt});
+ assert.equal(retry.status,429);
+ assert.equal(h.reads(),before);
  assert.equal(h.publications(),0);
 });

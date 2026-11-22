@@ -171,7 +171,7 @@ test('publisher cannot be invoked directly and counts each official GIS lookup a
  assert.match(publisher,/await context\.chargeWayneGisRequest\(\);\s*result=await json\(url,1000000,'error'\)/);
  assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
  assert.match(worker,/if\(quota\.active&&s\.dailyUsed>=MAX_PER_DAY\)throw Object\.assign\(Error\('Daily GIS request limit reached'\)/);
- assert.match(worker,/await saveProgress\(\{\.\.\.s,cursor:i\}\);\s*s\.dailyUsed=await auth\.reserveWayneGisRequest\(\)/);
+ assert.match(worker,/await saveProgress\(\{\.\.\.s,cursor:review\?s\.cursor:i\}\);\s*s\.dailyUsed=await auth\.reserveWayneGisRequest\(\)/);
 });
 
 test('concurrent re-arm requests cannot both write the same worker snapshot',async()=>{

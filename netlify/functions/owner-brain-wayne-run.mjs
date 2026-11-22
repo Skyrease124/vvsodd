@@ -9,9 +9,9 @@ const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
 const STORE='owner-brain-wayne-worker-v1', OVERLAY='brain-map-county-v1-MI-wayne';
 const CONTROL='owner-brain-scanner-v1', APPROVALS='owner-brain-approvals-v1';
 const MAX_ATTEMPTS=3, MAX_PER_DAY=30, LEASE_MS=90000;
-const RETRY_DELAYS_MS=[60000,180000]; // one minute, then three; stop after three provider attempts
+const RETRY_DELAYS_MS=[60000,180000];
+const SOURCE_COOLDOWN_MS=15*60000;
 const response=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
-const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 const today=()=>new Date().toISOString().slice(0,10);
 const valid=r=>r?.i&&/^[0-9]{8}\.?$/.test(String(r.p||''))&&!r.g&&!r.cx&&
   /^\s*\d{1,6}\s+[A-Za-z0-9][^,]{2,75},?\s+Detroit\b/i.test(String(r.a||''));
@@ -29,6 +29,7 @@ function state(value){
  {cursor:0,day:today(),dailyUsed:0,runs:0,verified:0,published:0,needsReview:0,failures:0,recent:[]};
 }
 async function handler(req,context){
+ let reviewRequest=null;
  const scheduled=context?.internalScheduled===true;
  if(scheduled){
   if(context?.deploy?.context!=='production')return response(404,{ok:false,error:'Scheduled execution requires published production deployment'});
@@ -45,8 +46,14 @@ async function handler(req,context){
  }
  if(!scheduled&&req.headers.get('origin')!==new URL(req.url).origin)return response(403,{ok:false,error:'Invalid origin'});
  if(!scheduled){
-  let body;try{const raw=await req.text();if(raw.length>250)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
-  if(body?.action!=='run-wayne-batch'||body.confirmed!==true)return response(400,{ok:false,error:'Explicit confirmation required'});
+  let body;try{const raw=await req.text();if(raw.length>500)throw Error();body=JSON.parse(raw);}catch{return response(400,{ok:false,error:'Invalid request'});}
+  if(body?.confirmed!==true||!['run-wayne-batch','retry-skipped-parcel'].includes(body.action))
+   return response(400,{ok:false,error:'Explicit confirmation required'});
+  if(body.action==='retry-skipped-parcel'){
+   if(!Number.isSafeInteger(body.index)||body.index<0||typeof body.parcelId!=='string'||typeof body.checkedAt!=='string')
+    return response(400,{ok:false,error:'Select an exact saved review entry'});
+   reviewRequest=body;
+  }
  }
  const control=await auth.kvGet(CONTROL);
  if(control?.status==='paused')return response(409,{ok:false,error:'Automation paused'});
@@ -59,13 +66,14 @@ async function handler(req,context){
  const existingOverlay=await auth.kvGet(OVERLAY)||{records:{}};
  const recoveryPending=Object.values(existingOverlay.records||{}).some(record=>record?.publicationPending===true);
  if(!recoveryPending&&quota.active&&s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
- // Do not consume quota or advance the cursor while a failed parcel is cooling down.
- if(!recoveryPending&&s.retry?.exhausted)return response(409,{ok:false,error:'GIS retry limit reached; owner review required',retry:s.retry,cursor:s.cursor});
- if(!recoveryPending&&s.retry?.nextAt&&Date.parse(s.retry.nextAt)>Date.now())return response(200,{
-  ok:true,previewOnly:!scheduled,state:'retry_wait',cursor:s.cursor,
+ const review=reviewRequest&&s.reviewQueue?.[reviewRequest.index];
+ if(reviewRequest&&(!review||review.resolvedAt||review.parcelId!==reviewRequest.parcelId||review.checkedAt!==reviewRequest.checkedAt))
+  return response(409,{ok:false,error:'Review entry changed; refresh before retrying'});
+ const nextAt=s.sourcePause?.nextAt||(!review&&s.retry?.nextAt);
+ if(!recoveryPending&&Date.parse(nextAt)>Date.now())return response(200,{
+  ok:true,previewOnly:!scheduled,state:s.sourcePause?'source_paused':'retry_wait',cursor:s.cursor,
   attempted:0,verified:0,published:0,needsReview:0,failures:0,
-  dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,retry:s.retry,rows:[],
-  message:'GIS retry scheduled; no provider request or map write occurred'
+  dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,retry:s.retry,sourcePause:s.sourcePause,rows:[]
  });
  const token=crypto.randomUUID();
  s={...s,token,lockedUntil:new Date(Date.now()+LEASE_MS).toISOString(),lastStarted:new Date().toISOString(),state:'running'};
@@ -98,10 +106,38 @@ async function handler(req,context){
    return decoded;
   });
   const overlay=await auth.kvGet(OVERLAY)||{records:{}};
-  let i=Math.min(s.cursor,rows.length);
+  let i=review?reviewRequest.index:Math.min(s.cursor,rows.length);
+  const activeRetry=()=>review?s.reviewRetry:s.retry;
+  function setRetry(retry){
+   if(review)s.reviewRetry=retry;
+   else s.retry=retry;
+  }
+  s.reviewQueue={...s.reviewQueue};
+  if(review&&overlay.records?.[review.recordId]?.verifiedGeometry===true)
+   return response(409,{ok:false,error:'Parcel already has saved verified geometry'});
+  if(review&&(!valid(rows[i])||rows[i].i!==review.recordId||String(rows[i].p).replace(/\.$/,'')!==review.parcelId))
+   return response(409,{ok:false,error:'Dataset row changed; review the parcel before retrying'});
+  async function checkpoint(){
+   if(!review)s.cursor=i;
+   await saveProgress(s);
+  }
+  async function skip(r,id,reason,stage,trace,failed=false){
+   const entry={recordId:r.i,parcelId:id,status:'skipped',checkedAt:new Date().toISOString(),
+    reason,failedStage:stage,gisTrace:trace,failed};
+   const prior=s.reviewQueue[i]||review;
+   if(prior)entry.previousEvidence=[...(prior.previousEvidence||[]),
+    {checkedAt:prior.checkedAt,reason:prior.reason,failedStage:prior.failedStage,gisTrace:prior.gisTrace}];
+   s.reviewQueue[i]=entry;
+   result.rows.push(entry);
+   result.needsReview++;
+   setRetry(null);
+   i++;
+   await checkpoint();
+  }
+
   // Netlify scheduled invocations have a shorter 30-second limit.
   // Keep their batch to one parcel, using exactly the same verification path.
-  const maxThisRun=scheduled?1:MAX_ATTEMPTS;
+  const maxThisRun=scheduled||review?1:MAX_ATTEMPTS;
   // Charge every actual GIS HTTP request, including fallback, to the daily cap.
   // Diagnostics record the stage, duration and outcome, never request URLs or private keys.
   // A request is counted before dispatch; its outcome is preserved with the batch.
@@ -109,7 +145,7 @@ async function handler(req,context){
   async function officialGet(url,recordIndex,timeout=6500,stage='direct_polygon'){
    if(quota.active&&s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA',stage});
    if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED',stage});
-   await saveProgress({...s,cursor:recordIndex});
+   await saveProgress({...s,cursor:review?s.cursor:recordIndex});
    s.dailyUsed=await auth.reserveWayneGisRequest();
    const started=Date.now();
    try{
@@ -131,21 +167,31 @@ async function handler(req,context){
    const bare=parcelId.replace(/\.$/,'');
    const ids=await officialGet(queryUrl({where:"parcel_number IN ('"+bare+"','"+bare+".')",returnIdsOnly:'true',returnGeometry:'false'}),recordIndex,5500,'object_id_resolution');
    const objectIds=ids.objectIds;
-   if(!Array.isArray(objectIds)||objectIds.length!==1||!Number.isSafeInteger(objectIds[0])||objectIds[0]<=0)
-    throw Object.assign(Error('Official object ID missing or ambiguous'),{code:'AMBIGUOUS'});
+   if(ids.exceededTransferLimit||!Array.isArray(objectIds))throw Error('Official GIS identifier response malformed');
+   if(objectIds.length!==1||!Number.isSafeInteger(objectIds[0])||objectIds[0]<=0)
+    throw Object.assign(Error(objectIds.length===0?'Parcel missing from official GIS':'Official object ID invalid or ambiguous'),{code:'AMBIGUOUS'});
    const official=await officialGet(queryUrl({objectIds:String(objectIds[0]),returnGeometry:'true',outSR:'4326',resultRecordCount:'2'}),recordIndex,6500,'indexed_polygon');
-   if(!Array.isArray(official.features)||official.features.length!==1||
+   if(official.exceededTransferLimit||!Array.isArray(official.features))throw Error('Official GIS geometry response malformed');
+   if(official.features.length!==1||
       official.features[0]?.attributes?.object_id!==objectIds[0])
     throw Object.assign(Error('Official object ID lookup mismatch'),{code:'AMBIGUOUS'});
    return official;
   }
-  while(i<rows.length&&result.attempted<maxThisRun&&(!quota.active||s.dailyUsed<MAX_PER_DAY)){
+  while(i<rows.length&&result.attempted<maxThisRun&&(!quota.active||s.dailyUsed<MAX_PER_DAY)&&(!review||i===reviewRequest.index)){
    const controlNow=await auth.kvGet(CONTROL);
    if(controlNow?.status==='paused'){s.state='paused';break;}
    const r=rows[i];
-   if(!valid(r)||overlay.records?.[r?.i]){i++;continue;}
+   if(!valid(r)||overlay.records?.[r?.i]||(!review&&s.reviewQueue[i]?.recordId===r.i)){i++;continue;}
    const id=String(r.p).replace(/\.$/,'');
-   if(s.retry&&(s.retry.parcelId!==id||s.retry.cursor!==i))s.retry=null;
+   if(activeRetry()&&(activeRetry().parcelId!==id||activeRetry().cursor!==i))setRetry(null);
+   if(activeRetry()?.exhausted){
+    if(activeRetry().parcelSpecific===true){
+     await skip(r,id,activeRetry().lastError,activeRetry().failedStage,activeRetry().gisTrace||[],true);
+     continue;
+    }
+    setRetry(null); // Legacy provider hold gets a bounded source probe.
+   }
+   if(Date.parse(activeRetry()?.nextAt)>Date.now()){s.state='retry_wait';break;}
    // Count one parcel attempt; GIS request usage is counted separately.
    result.attempted++;
    trace=[];
@@ -157,6 +203,7 @@ async function handler(req,context){
      // Resolve the indexed official object ID first, avoiding a heavy polygon scan.
      official=await lookupWithObjectId(id,i);
     }catch(primary){
+     if(/HTTP (401|403|402|429|5\d\d)\b/.test(String(primary.message)))throw primary;
      if(primary.code==='PAUSED'||primary.code==='QUOTA'||primary.code==='AMBIGUOUS')throw primary;
      // Fall back only for transient provider failures, never ambiguous identity.
      if(primary.name!=='TimeoutError'&&primary.name!=='AbortError'&&
@@ -164,6 +211,7 @@ async function handler(req,context){
       throw primary;
      method='direct';
      official=await officialGet(url,i,6500,'direct_polygon');
+     if(official.exceededTransferLimit||!Array.isArray(official.features))throw Error('Official GIS geometry response malformed');
     }
    }catch(e){
     if(e.code==='PAUSED'){s.state='paused';break;}
@@ -173,28 +221,39 @@ async function handler(req,context){
      break;
     }
     if(e.code==='AMBIGUOUS'){
-     result.needsReview++;i++;
-     result.rows.push({parcelId:id,status:'needs_review',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110),stage:e.stage||'object_id_validation',gisTrace:trace.slice()});
-     s.retry=null;
+     s.sourcePause=null;
+     await skip(r,id,String(e.message).slice(0,110),e.stage||'object_id_validation',trace.slice());
      continue;
     }
     result.failures++;
-    const attempts=(s.retry?.parcelId===id?s.retry.attempts:0)+1;
-    const exhausted=attempts>=3;
-    const nextAt=exhausted?null:new Date(Date.now()+RETRY_DELAYS_MS[attempts-1]).toISOString();
-    s.retry={parcelId:id,cursor:i,attempts,maxAttempts:3,nextAt,exhausted,lastError:String(e.message).slice(0,110),failedStage:e.stage||'unknown',gisTrace:trace.slice()};
-    s.state=exhausted?'provider_error':'retry_wait';
-    result.rows.push({parcelId:id,status:'retry_later',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110),retryAttempt:attempts,nextRetryAt:nextAt,failedStage:e.stage||'unknown',gisTrace:trace.slice()});
+    const attempts=(activeRetry()?.attempts||0)+1;
+    // A successful ID query plus an indexed polygon HTTP 404 is evidence
+    // about this parcel. Timeouts, access errors and 5xx can affect the source.
+    const parcelSpecific=e.stage==='indexed_polygon'&&/HTTP 404\b/.test(String(e.message));
+    const reason=String(e.message).slice(0,110);
+    if(parcelSpecific&&attempts>=MAX_ATTEMPTS){
+     s.sourcePause=null;
+     await skip(r,id,reason,e.stage,trace.slice(),true);
+     continue;
+    }
+    const sourcePause=!parcelSpecific&&(attempts>=MAX_ATTEMPTS||/HTTP (401|402|403|429|5\d\d)\b/.test(reason));
+    const nextAt=new Date(Date.now()+(sourcePause?SOURCE_COOLDOWN_MS:RETRY_DELAYS_MS[attempts-1])).toISOString();
+    s.sourcePause=sourcePause?{nextAt,reason}:null;
+    setRetry({parcelId:id,cursor:i,attempts:sourcePause?0:attempts,maxAttempts:MAX_ATTEMPTS,
+     nextAt,exhausted:false,lastError:reason,failedStage:e.stage||'unknown',gisTrace:trace.slice(),parcelSpecific});
+    s.state=sourcePause?'source_paused':'retry_wait';
+    result.rows.push({parcelId:id,status:'retry_later',checkedAt:new Date().toISOString(),reason,
+     retryAttempt:attempts,nextRetryAt:nextAt,failedStage:e.stage||'unknown',gisTrace:trace.slice()});
+    await checkpoint();
     break;
    }
-   // A successful provider response clears transient retry state even if parcel identity needs review.
-   s.retry=null;
+   s.sourcePause=null;
+   setRetry(null);
    try{
     verified=verifyOfficial(r,official.features);
     if(!Number.isSafeInteger(verified.officialObjectId)||verified.officialObjectId<=0)throw Error('Official object ID unavailable');
    }catch(e){
-    result.needsReview++;i++;
-    result.rows.push({parcelId:id,status:'needs_review',checkedAt:new Date().toISOString(),reason:String(e.message).slice(0,110),failedStage:'parcel_verification',gisTrace:trace.slice()});
+    await skip(r,id,String(e.message).slice(0,110),'parcel_verification',trace.slice());
     continue;
    }
    result.verified++;
@@ -208,26 +267,63 @@ async function handler(req,context){
    const beforeWrite=await auth.kvGet(CONTROL);
    if(beforeWrite?.status==='paused'){s.state='paused';break;}
    const approvals=await auth.kvGet(APPROVALS)||{entries:[]};
-   if(!approvals.entries.some(x=>x.caseKey===caseKey)){
-    await auth.kvPut(APPROVALS,{...approvals,entries:[...approvals.entries,item].slice(-250)});
+   const priorApproval=approvals.entries.find(x=>x.caseKey===caseKey);
+   if(!priorApproval||(review&&priorApproval.reviewedBy==='preview-wayne-batch-validator')){
+    await auth.kvPut(APPROVALS,{...approvals,entries:[...approvals.entries.filter(x=>x!==priorApproval),item].slice(-250)});
    }
    // Existing guarded publisher independently checks the official polygon and
    // the shared pause switch; the saved overlay is authoritative for success.
-   await publish(req,{...context,waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
+   let publicationRejection,publicationUnavailable=false;
+   const wayneHeldRecords=new Set(Object.values(s.reviewQueue).filter(entry=>!entry.resolvedAt&&entry.recordId!==r.i).map(entry=>entry.recordId));
+   await publish(req,{...context,wayneCurrentRecord:r.i,wayneHeldRecords,
+    waynePublicationUnavailable:()=>{publicationUnavailable=true;},
+    wayneRecordRejected:(recordId,reason)=>{if(recordId===r.i)publicationRejection=reason;},
+    waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
     if(quota.active&&s.dailyUsed>=MAX_PER_DAY)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
     if((await auth.kvGet(CONTROL))?.status==='paused')throw Object.assign(Error('Automation paused'),{code:'PAUSED'});
-    await saveProgress({...s,cursor:i});
+    await saveProgress({...s,cursor:review?s.cursor:i});
     s.dailyUsed=await auth.reserveWayneGisRequest();
    }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
    const saved=published.records?.[r.i];
    const success=saved?.verifiedGeometry===true&&!saved.publicationPending;
+   if(!success&&publicationRejection&&!saved?.publicationPending){
+    await skip(r,id,publicationRejection,'independent_publication_check',trace.slice());
+    continue;
+   }
    result.rows.push({parcelId:id,status:success?'published':'publish_pending',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice()});
-   if(success)result.published++;
-   else {s.state='publish_pending';break;}
+   if(success){
+    result.published++;
+    if(review)s.reviewQueue[i]={...review,resolvedAt:now};
+   }
+   else {
+    s.state='publish_pending';
+    if(publicationUnavailable&&!saved?.publicationPending){
+     s.sourcePause={nextAt:new Date(Date.now()+SOURCE_COOLDOWN_MS).toISOString(),reason:'Independent GIS publication check unavailable'};
+     s.state='source_paused';
+    }
+    break;
+   }
    i++;
+   await checkpoint();
   }
-  s.cursor=i;
+  if(!review)s.cursor=i;
+  const records=(await auth.kvGet(OVERLAY))?.records||{};
+  let total=0,verifiedCount=0,skipped=0,failed=0,legacyProcessed=0;
+  rows.forEach((record,index)=>{
+   if(!valid(record))return;
+   total++;
+   if(records[record.i]?.verifiedGeometry===true&&!records[record.i].publicationPending)verifiedCount++;
+   else if(s.reviewQueue[index]?.recordId===record.i){
+    skipped++;
+    if(s.reviewQueue[index].failed)failed++;
+   }else if(index<s.cursor)legacyProcessed++;
+  });
+  const percent=count=>total?Math.round(10000*count/total)/100:0;
+  s.progress={total,verified:verifiedCount,skipped,failed,legacyProcessed,
+   pending:total-verifiedCount-skipped-legacyProcessed,
+   processingPercent:percent(verifiedCount+skipped+legacyProcessed),verifiedPercent:percent(verifiedCount)};
+
   s.runs=(s.runs||0)+1;
   for(const k of ['verified','published','needsReview','failures'])s[k]=(s[k]||0)+result[k];
   s.lastBatch=result;
@@ -235,10 +331,10 @@ async function handler(req,context){
   // The prior implementation restamped historic results with lastCompleted.
   const oldRecent=(s.recent||[]).filter(x=>x.checkedAt);
   s.recent=[...result.rows,...oldRecent].slice(0,40);
-  if(s.state==='running')s.state=i>=rows.length?'source_scanned':'idle';
+  if(s.state==='running')s.state=s.cursor>=rows.length?'source_scanned':'idle';
   s.lastCompleted=new Date().toISOString();
   return response(200,{ok:true,previewOnly:true,cursor:s.cursor,sourceRecords:rows.length,
-   dailyUsed:quota.active?s.dailyUsed:null,legacyDailyUsed:quota.active?undefined:s.dailyUsed,quotaActive:quota.active,dailyLimit:MAX_PER_DAY,state:s.state,retry:s.retry||null,...result,
+   dailyUsed:quota.active?s.dailyUsed:null,legacyDailyUsed:quota.active?undefined:s.dailyUsed,quotaActive:quota.active,dailyLimit:MAX_PER_DAY,state:s.state,retry:activeRetry()||null,sourcePause:s.sourcePause,progress:s.progress,...result,
    message:scheduled?'Scheduled bounded official GIS batch; no paid AI calls':'Owner-triggered preview batch; no paid AI calls or production writes'});
  }catch(e){
   s.state='error';s.lastError=String(e.message||e).slice(0,130);

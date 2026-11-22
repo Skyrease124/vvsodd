@@ -116,10 +116,10 @@
    const data=await response.json();
    if(!response.ok||!data.ok)throw Object.assign(Error(data.error||'Batch not completed'),{status:response.status,data});
    // Both controls share one operation and must respect persisted cooldowns.
-   if(data.state==='retry_wait'){
-    const until=Date.parse(data.retry?.nextAt||'');
+   if(['retry_wait','source_paused'].includes(data.state)){
+    const until=Date.parse(data.sourcePause?.nextAt||data.retry?.nextAt||'');
     autoCooldownUntil=Number.isFinite(until)?until:Date.now()+60000;
-    forceResult.textContent='GIS retry waiting · Cursor '+data.cursor+' · Next attempt '+new Date(autoCooldownUntil).toLocaleTimeString();
+    forceResult.textContent=(data.state==='source_paused'?'GIS source paused':'GIS retry waiting')+' · Cursor '+data.cursor+' · Next attempt '+new Date(autoCooldownUntil).toLocaleTimeString();
     scheduleAuto(Math.max(1000,autoCooldownUntil-Date.now()+1000));
    }else{
     forceResult.textContent=(manual?'Force':'Auto')+' · Processed '+data.attempted+' · Published '+data.published+' · Review '+data.needsReview+' · Cursor '+data.cursor;

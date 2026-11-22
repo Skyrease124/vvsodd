@@ -99,24 +99,29 @@ async function handler(req,context){
   const source=new Map((county.recs||[]).map(r=>[r.i,r]));
   const key=OVERLAY;
   const saved=await auth.kvGet(key)||{version:0,records:{}};
-  for(const a of approved.filter(a=>!saved.records[a.recordId]).slice(0,5)){
+  const heldRecords=context.wayneHeldRecords;
+  const eligible=approved.filter(a=>!saved.records[a.recordId]&&!heldRecords?.has(a.recordId));
+  const current=eligible.find(a=>a.recordId===context.wayneCurrentRecord);
+  const candidates=current?[current,...eligible.filter(a=>a!==current)]:eligible;
+  for(const a of candidates.slice(0,5)){
+   const reject=reason=>{skipped++;context.wayneRecordRejected?.(a.recordId,reason);};
    if(saved.records[a.recordId])continue;
    const lat=a.proposedPosition?.lat,lon=a.proposedPosition?.lon;
-   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<42.2||lat>42.5||lon< -83.4||lon> -82.8){skipped++;continue;}
+   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<42.2||lat>42.5||lon< -83.4||lon> -82.8){reject('Position outside publisher bounds');continue;}
    const original=source.get(a.recordId);
-   if(!original||original.g||original.cx||norm(original.p)!==norm(a.parcelId)){skipped++;continue;}
-   if(!a.evidenceUrl||!/^https:\/\/(?:services2\.arcgis\.com|detroitmi\.gov|data\.detroitmi\.gov)\//i.test(a.evidenceUrl)){skipped++;continue;}
-   if(a.independentlyChecked!==true){skipped++;continue;}
+   if(!original||original.g||original.cx||norm(original.p)!==norm(a.parcelId)){reject('Original dataset identity changed or already mapped');continue;}
+   if(!a.evidenceUrl||!/^https:\/\/(?:services2\.arcgis\.com|detroitmi\.gov|data\.detroitmi\.gov)\//i.test(a.evidenceUrl)){reject('Unapproved GIS evidence source');continue;}
+   if(a.independentlyChecked!==true){reject('Independent verification is missing');continue;}
    // Detroit GIS uses a trailing period on some tax parcel IDs. Accept only
    // the exact identifier or that known variant; never use a prefix match.
    const parcel=String(a.parcelId);
-   if(!/^[0-9]{8}\.?$/.test(parcel)){skipped++;continue;}
+   if(!/^[0-9]{8}\.?$/.test(parcel)){reject('Publisher parcel number is invalid');continue;}
    const bare=parcel.replace(/\.$/,'');
    // Prefer the indexed object ID already established by the independent
    // verifier. Old owner-reviewed approvals still use the bounded legacy query.
    const objectId=a.officialObjectId;
    const indexed=Number.isSafeInteger(objectId)&&objectId>0;
-   if(objectId!=null&&!indexed){skipped++;continue;}
+   if(objectId!=null&&!indexed){reject('Publisher object ID is invalid');continue;}
    const clause=indexed?'object_id='+objectId:"parcel_number IN ('"+bare+"','"+bare+".')";
    const params={f:'json',where:clause,outFields:'parcel_number,address,object_id',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'};
    if(!indexed){
@@ -129,17 +134,22 @@ async function handler(req,context){
     // Charge before dispatch, including failed GIS requests. The worker owns the shared daily cap.
     await context.chargeWayneGisRequest();
     result=await json(url,1000000,'error');
-   }catch(e){status.lastError=String(e.message).slice(0,120);break;}
+   }catch(e){
+    status.lastError=String(e.message).slice(0,120);
+    if(!['QUOTA','PAUSED'].includes(e.code))context.waynePublicationUnavailable?.();
+    break;
+   }
    // A pause can happen while awaiting the remote provider. Nothing may
    // publish after the pause, even if the GIS request succeeds.
    const latestControl=await auth.kvGet('owner-brain-scanner-v1');
    if(latestControl?.status==='paused'){status.state='paused';break;}
-   const fs=result.features||[];
-   if(fs.length!==1||norm(fs[0].attributes?.parcel_number)!==norm(a.parcelId)||indexed&&fs[0].attributes?.object_id!==objectId){skipped++;continue;}
+   if(!Array.isArray(result.features)||result.exceededTransferLimit){status.lastError='Incomplete GIS publication response';context.waynePublicationUnavailable?.();break;}
+   const fs=result.features;
+   if(fs.length!==1||norm(fs[0].attributes?.parcel_number)!==norm(a.parcelId)||indexed&&fs[0].attributes?.object_id!==objectId){reject('Independent GIS lookup did not confirm exact identity');continue;}
    const poly=officialPolygon(fs[0].geometry?.rings);
-   if(!poly){skipped++;continue;}
+   if(!poly){reject('Independent GIS lookup did not return a valid polygon');continue;}
    // Owner's previously reviewed GIS position must be close to the freshly retrieved official polygon.
-   if(Math.abs(a.proposedPosition.lat-poly.cx[1])>0.002||Math.abs(a.proposedPosition.lon-poly.cx[0])>0.002){skipped++;continue;}
+   if(Math.abs(a.proposedPosition.lat-poly.cx[1])>0.002||Math.abs(a.proposedPosition.lon-poly.cx[0])>0.002){reject('Independent GIS polygon conflicts with verified position');continue;}
    const stamp=new Date().toISOString();
    const record={i:a.recordId,p:String(a.parcelId),...poly,verifiedGeometry:true,verifiedAt:stamp,evidenceUrl:GIS,caseKey:a.caseKey};
    const preWriteControl=await auth.kvGet(QUEUE);

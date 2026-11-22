@@ -64,7 +64,7 @@ test('reactor uses distinct event pulses and never replays historical events at 
 });
 test('worker timestamps individual GIS outcomes instead of inventing exact event time',()=>{
  const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
- assert.match(worker,/status:'needs_review',checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(worker,/status:'skipped',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:'retry_later',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:success\?'published':'publish_pending',lookupMethod:method,checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(source,/const at=date\(r\.checkedAt\)/);
