@@ -195,3 +195,11 @@ test('API labels the displayed receipts as a bounded window, not complete histor
  assert.equal(response.eventWindow.truncated,false);
  assert.equal(response.eventCount,response.eventWindow.returnedCount);
 });
+
+
+test('Activity UI explicitly labels historical replay as a recent-event window',()=>{
+ assert.match(page,/id="eventWindow"/);
+ assert.match(page,/Historical archive not yet verified/);
+ assert.match(page,/windowInfo\.truncated/);
+ assert.match(page,/Owner authorization required to inspect recorded events/);
+});
