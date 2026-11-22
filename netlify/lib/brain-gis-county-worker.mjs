@@ -74,6 +74,7 @@ export async function runCountyResearch({config,rows,revision,storage,authorizat
   await save();
  }});
  data.lockedUntil=iso(now()+75000);
+ if(retry||data.cursor<rows.length)recordEvent({status:'worker_started'});
  version=await storage.write(key,data,snapshot?.etag??null);
  if(!version)throw connectorError('lease_conflict','County worker checkpoint changed','control');
  function recordEvent(event){

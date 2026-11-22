@@ -156,3 +156,28 @@ export async function verifyPutnamOnce(storage,{fetcher=fetch,now=Date.now}={}){
  if(!await storage.write(key,saved,etag))throw Error('Verification receipt could not be saved');
  return putnamStatus(storage,now);
 }
+
+// Read-only projection. The historical receipt has no exact dispatch or reservation timestamp.
+export async function putnamActivity(read){
+ const audit=appraiserReview.status==='unavailable'?[{
+  id:'putnam-appraiser-'+appraiserReview.revision,at:appraiserReview.checkedOn,timePrecision:'day',
+  county:dataset,parcelId,agent:'Parcel research',from:'Putnam Property Appraiser',to:'Owner review',
+  type:'source_access_failed',status:'error',source:appraiserReview.source,receiptId:appraiserReview.revision,
+  quotaImpact:null,message:appraiserReview.reason
+ }]:[];
+ const receipt=await read(key);
+ const result=receipt?.result;
+ const at=receipt?.checkedAt;
+ if(receipt?.requestId!==requestId||!result||!Number.isFinite(Date.parse(at)))return audit;
+ const base={at:new Date(at).toISOString(),agent:'Official GIS',from:'FloridaGIO',to:'NVIDIA',county:dataset,
+  parcelId,source:source.url,receiptId:requestId};
+ const event={...base,id:'putnam-'+requestId+'-result',type:'verification_result',
+  quotaImpact:receipt.quotaReceipt?.reserved===1?1:null,
+  status:result.status==='verified'?'success':result.status==='source_unavailable'?'error':'warning',
+  message:'Putnam GIS receipt · '+result.status.replaceAll('_',' ')+(receipt.httpStatus?' · HTTP '+receipt.httpStatus:'')+
+   (result.reason?' · '+result.reason:'')};
+ if(result.geometryValid===true&&result.crs==='EPSG:4326'&&Number.isFinite(result.polygonAcres))
+  return [...audit,event,{...base,id:'putnam-'+requestId+'-geometry',type:'geometry_validated',status:'success',quotaImpact:null,
+   message:'Exact parcel · EPSG:4326 polygon validated · '+result.polygonAcres.toFixed(4)+' calculated acres'}];
+ return [...audit,event];
+}

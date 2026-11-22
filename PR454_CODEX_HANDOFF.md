@@ -347,3 +347,15 @@ Block F, Lot 24. The owner dashboard screenshot shows the saved GIS description 
 reaches the subdivision and plat reference, so the independent review remains pending.
 This access finding is separate from the original GIS receipt. No external GIS request,
 quota reservation, or private checkpoint write was needed.
+
+### Activity Log and NVIDIA Reactor integration
+
+The existing owner-only activity endpoint now projects Putnam's saved result and geometry
+checks, the dated Appraiser outage audit, county worker starts and reservations, and private
+owner decisions alongside the existing worker, source, and publication history. Missing
+dispatch or authorization timestamps are not reconstructed. The Appraiser audit has day
+precision. Live refresh is bounded to the existing 20-second foreground cadence.
+
+Historical Replay and Simulation use local data only. The log filters by county, agent and
+parcel. All 256 SVG fibers remain, with attached paths and collision bounds during dragging.
+No public feed, quota, or Putnam review checkpoint is written by activity viewing.

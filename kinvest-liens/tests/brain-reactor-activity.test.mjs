@@ -2,14 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {PUTNAM,putnamActivity} from '../../netlify/lib/brain-gis-putnam.mjs';
 const source=fs.readFileSync('netlify/functions/owner-brain-activity.mjs','utf8');
 const page=fs.readFileSync('kinvest-liens/owner/brain/activity/index.html','utf8');
 const brain=fs.readFileSync('kinvest-liens/owner/brain/index.html','utf8');
-async function create(owner,research=null,quota={active:true,count:21},county=null){
+async function create(owner,research=null,quota={active:true,count:21},county=null,putnamReceipt=null){
  const store=new Map([
   ['owner-brain-wayne-worker-v1',{cursor:7,runs:2,verified:5,published:5,needsReview:0,failures:0,dailyUsed:5,state:'idle',lastCompleted:'2026-11-21T20:00:00.000Z',recent:[{parcelId:'01002754',status:'published'}]}],
   ['brain-map-history-v1',{entries:[{dataset:'MI-wayne',parcelId:'01002754',action:'published',source:'official GIS',at:'2026-11-21T20:00:00.000Z'}]}],
  ]);
+ if(putnamReceipt)store.set('brain-gis-putnam-verification-v1-'+PUTNAM.requestId,putnamReceipt);
  if(research)store.set('brain-reconciliation-research-v1-CO-larimer',research);
  if(county)store.set('brain-gis-operations-v1-FL-miami-dade',county);
  const context=vm.createContext({Response,console,Date});
@@ -26,7 +28,10 @@ async function create(owner,research=null,quota={active:true,count:21},county=nu
   this.setExport('operationCountyIds',()=>['CO-larimer','FL-miami-dade']);
   this.setExport('countyCheckpointKey',id=>'brain-gis-operations-v1-'+id);
  },{context});
- await mod.link(specifier=>specifier.includes('brain-auth')?auth:operations);await mod.evaluate();
+ const putnam=new vm.SyntheticModule(['putnamActivity'],function(){
+  this.setExport('putnamActivity',putnamActivity);
+ },{context});
+ await mod.link(specifier=>specifier.includes('brain-auth')?auth:specifier.includes('brain-gis-putnam')?putnam:operations);await mod.evaluate();
  return mod.namespace.default;
 }
 test('owner alone reads actual saved worker and publication events',async()=>{
@@ -35,7 +40,7 @@ test('owner alone reads actual saved worker and publication events',async()=>{
  assert.equal(res.status,200);assert.equal(d.summary.cursor,7);
  assert.equal(d.health.dailyUsed,21);assert.equal(d.health.remaining,9);assert.equal(d.summary.processed,null);
  assert.equal(d.events.filter(e=>e.type==='published').length,1);
- assert.equal(d.events[0].parcelId,'01002754');
+ assert.equal(d.events.find(e=>e.type==='published').parcelId,'01002754');
  assert.equal(d.agents.Gemini,'no_recorded_activity');
 });
 test('unauthorized user cannot inspect activity',async()=>{
@@ -149,4 +154,24 @@ test('Miami-Dade Reactor events distinguish saved request reservations from veri
  assert.ok(events.some(event=>event.message.includes('1/3 pilot requests reserved')));
  assert.ok(events.some(event=>event.message.includes('Invalid polygon')));
  assert.ok(events.every(event=>event.type==='county_research'));
+});
+
+test('finished Putnam receipt uses only recorded time and charges quota once in the feed',async()=>{
+ const receipt={requestId:PUTNAM.requestId,checkedAt:'2026-11-22T18:23:49.242Z',httpStatus:200,
+  quotaReceipt:{reserved:1},result:{status:'needs_review',geometryValid:true,crs:'EPSG:4326',
+   polygonAcres:0.1149,reason:'Missing independent land-use evidence'}};
+ const run=await create(true,null,undefined,null,receipt);
+ const request=new Request('https://preview.test/.netlify/functions/owner-brain-activity');
+ const first=await (await run(request)).json(),second=await (await run(request)).json();
+ const recorded=first.events.filter(event=>event.county==='FL-putnam');
+ const audit=recorded.find(event=>event.timePrecision==='day');
+ assert.equal(audit.at,'2026-11-22');
+ assert.match(audit.message,/HTTP 503/);
+ const events=recorded.filter(event=>event.receiptId===receipt.requestId);
+ assert.equal(events.length,2);
+ assert.deepEqual(events,second.events.filter(event=>event.receiptId===receipt.requestId));
+ assert.ok(events.every(event=>event.at===receipt.checkedAt&&event.receiptId===receipt.requestId));
+ assert.equal(events.filter(event=>event.quotaImpact===1).length,1);
+ assert.ok(events.some(event=>event.type==='geometry_validated'));
+ assert.ok(events.some(event=>event.status==='warning'));
 });
