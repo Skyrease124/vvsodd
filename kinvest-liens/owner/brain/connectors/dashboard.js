@@ -124,6 +124,27 @@ async function showTrial(request){
       ' · '+diagnostic.checkedAt+(candidates?' · '+candidates:'');
     evidence.append(row);
   }
+  if(result.reconciliation){
+    const item=result.reconciliation;
+    const row=document.createElement('li');
+    const title=document.createElement('strong');
+    title.textContent='Treasurer-to-Assessor reconciliation: '+item.status+' · Owner review';
+    const summary=document.createElement('p');
+    summary.textContent=item.original.parcelId+' / '+item.original.schedule+' → '+item.candidate.parcelId+
+      ' / '+item.candidate.schedule+' (address lead). '+item.explanation;
+    const sources=document.createElement('ul');
+    for(const entry of item.sources){
+      const citation=document.createElement('li'),link=document.createElement('a');
+      link.href=entry.url;
+      link.textContent=entry.authority;
+      citation.append(link,document.createTextNode(' · '+entry.date+' · '+entry.finding));
+      sources.append(citation);
+    }
+    const next=document.createElement('p');
+    next.textContent=item.nextEvidence;
+    row.append(title,summary,sources,next);
+    evidence.append(row);
+  }
   if(result.canRunAddressDiagnostic){
     const diagnostic=document.createElement('button');
     diagnostic.textContent='Run final address diagnostic';

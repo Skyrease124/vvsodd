@@ -1,4 +1,4 @@
-import { canDiagnoseLarimer, lookupLarimerAddress } from '../../netlify/lib/brain-larimer-address-diagnostic.mjs';
+import { canDiagnoseLarimer, lookupLarimerAddress, larimerReconciliation } from '../../netlify/lib/brain-larimer-address-diagnostic.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -121,7 +121,7 @@ test('Larimer trial gates owner, origin and deployment and caps preview reservat
   'node:crypto':synthetic({createHash}),
   '../lib/brain-auth.mjs':synthetic({...storage,withBrainStore:h=>h,isBrainPreview:()=>true,userFromCookie:async()=>user,
    kvGet:async key=>{assert.equal(key,'brain-map-county-v1-CO-larimer');return null;}}),
-  '../lib/brain-larimer-address-diagnostic.mjs':synthetic({canDiagnoseLarimer,lookupLarimerAddress:async()=>{
+  '../lib/brain-larimer-address-diagnostic.mjs':synthetic({canDiagnoseLarimer,larimerReconciliation,lookupLarimerAddress:async()=>{
    diagnoses++;return {kind:'address_research_only',status:'research_lead'};
   }}),
   '../lib/brain-gis-trial-checkpoint.mjs':synthetic({rearmConnectorTrial:async()=>{throw Error('Unexpected review action');},runConnectorTrial:async params=>{
@@ -291,4 +291,23 @@ test('address diagnostic sends a fixed two-row attributes-only query and records
   assert.equal(check.status,status);
   assert.equal(check.kind,'address_research_only');
  }
+});
+
+
+test('subdivision evidence and a saved address match leave the parcel identifiers unresolved',()=>{
+ const diagnostic={kind:'address_research_only',recordId:record.i,status:'research_lead',resultCount:1,
+  transferLimit:false,source:connectorFor(dataset).source,checkedAt:'2026-11-22T02:00:00Z',
+  rows:[{parcelId:'9701484001',schedule:'1688587',objectId:5665923,address:'741 LINDENMEIER RD',city:'FORT COLLINS'}]};
+ const before=structuredClone(diagnostic);
+ const result=larimerReconciliation(diagnostic);
+ assert.equal(result.status,'unresolved');
+ assert.deepEqual(result.original,{parcelId:'9701400014',schedule:'0155675'});
+ assert.deepEqual(result.candidate,{parcelId:'9701484001',schedule:'1688587',objectId:5665923});
+ assert.equal(result.sources.at(-1).date,diagnostic.checkedAt);
+ assert.match(result.sources[1].finding,/BDR240012/);
+ assert.deepEqual(diagnostic,before);
+ assert.equal(larimerReconciliation({...diagnostic,status:'ambiguous'}),null);
+ assert.equal(larimerReconciliation({...diagnostic,transferLimit:true}),null);
+ assert.equal(larimerReconciliation({...diagnostic,rows:[{...diagnostic.rows[0],parcelId:'9701400014'}]}),null);
+ assert.equal(larimerReconciliation(null),null);
 });

@@ -49,3 +49,38 @@ export async function lookupLarimerAddress({fetcher=fetch,now=()=>new Date()}={}
     return finish();
   }catch{return finish();}
 }
+
+// Source-controlled research notes plus the timestamp from the saved preview
+// response. This read-only projection cannot promote a parcel or edit its ID.
+const reconciliationSources=Object.freeze([
+  Object.freeze({
+    authority:'Larimer County Treasurer', date:'2026-11-11',
+    url:'https://www.larimer.gov/treasurer/thirdparty/liens/sale',
+    finding:'The saved sale import lists parcel 9701400014 and schedule 0155675 for 741 Lindenmeier Rd.'
+  }),
+  Object.freeze({
+    authority:'City of Fort Collins Planning', date:'2024-11-13', reviewedAt:'2026-11-22T02:09:07Z',
+    url:'https://accela-aca.fcgov.com/CitizenAccess/Cap/CapDetail.aspx?Module=Planning&TabName=Planning&agencyCode=FTCOLLINS&capID1=24CAP&capID2=00000&capID3=00142',
+    finding:'Glover Estate review BDR240012 approved a minor subdivision with plat at this address and identifies parcel 9701400014. The public project summary does not identify the new parcel or schedule number.'
+  })
+]);
+
+export function larimerReconciliation(diagnostic) {
+  const row=diagnostic?.rows?.[0];
+  if(diagnostic?.kind!=='address_research_only'||diagnostic.recordId!==larimerDiagnosticRecord||
+     diagnostic.status!=='research_lead'||diagnostic.resultCount!==1||diagnostic.rows?.length!==1||
+     diagnostic.source!==source||diagnostic.transferLimit!==false||
+     row?.parcelId!=='9701484001'||row.schedule!=='1688587'||row.objectId!==5665923||
+     row.address!==address||row.city!==city||!Number.isFinite(Date.parse(diagnostic.checkedAt)))return null;
+  return {
+    status:'unresolved',
+    original:{parcelId:'9701400014',schedule:'0155675'},
+    candidate:{parcelId:row.parcelId,schedule:row.schedule,objectId:row.objectId},
+    explanation:'The city approved a minor subdivision for the original parcel. The current GIS address match is consistent with that history, but a recorded plat or Assessor parcel-history cross-reference has not linked both identifier pairs.',
+    sources:[...reconciliationSources,{
+      authority:'Larimer County Tax Parcels GIS', date:diagnostic.checkedAt, url:source,
+      finding:'The stored address query returned parcel 9701484001, schedule 1688587, and object 5665923 at the same situs address.'
+    }],
+    nextEvidence:'Obtain the recorded Glover Estate plat and the Assessor parcel split or renumbering history linking both parcel and schedule pairs. Keep on owner review until confirmed.'
+  };
+}
