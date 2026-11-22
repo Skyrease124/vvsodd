@@ -80,7 +80,16 @@ window.TaxRadarOn = true;
       mapBtn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('ppa:radar-map-state', {detail:{state:c.state}})));
       act.appendChild(mapBtn);
     }
-    const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
+    const it = c.items[0];
+    if (it && it.parcel && c.official === true && c.type !== 'missing' && c.type !== 'canceled' && document.getElementById('home-parcels')) {
+      const matchBtn=mk('button','btn small ghost','Locate verified parcel');
+      matchBtn.type='button';
+      matchBtn.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('ppa:radar-map-parcel',{detail:{
+        state:c.state,county:c.county,parcel:String(it.parcel)
+      }})));
+      act.appendChild(matchBtn);
+    }
+    if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
     li.appendChild(act); return li;
   }
 
