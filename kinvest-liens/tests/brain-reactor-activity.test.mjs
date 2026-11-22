@@ -221,3 +221,10 @@ test('inactive shared quota is identified without falsely reporting available re
  assert.equal(d.health.quotaResumeAt,'2026-11-23T00:00:00.000Z');
  assert.match(d.health.detail,/cutover.*resumes/);
 });
+
+
+test('mobile activity cards constrain long GIS receipts and transfer width',()=>{
+ assert.match(page,/\.logbody small\{display:block;max-width:100%;overflow-wrap:anywhere/);
+ assert.match(page,/\.transfer\{flex:0 0 min\(78vw,290px\)/);
+ assert.match(page,/\.log-entry\{display:grid;grid-template-columns:8px minmax\(0,1fr\)/);
+});
