@@ -59,3 +59,14 @@ test('private map inspects parcel boundaries even when MapTiler style returns HT
  assert.match(page,/MapTiler key not configured\. Boundary-only inspection remains available/);
  assert.match(page,/overlay\(\)/);
 });
+
+
+test('boundary-only map provides parcel-specific camera and does not jump on refresh',()=>{
+ const page=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
+ assert.match(page,/id="parcelFocus"/);
+ assert.match(page,/id="focusParcel"/);
+ assert.match(page,/function focusSelectedParcel\(features\)/);
+ assert.match(page,/map\.fitBounds\(bounds,\{padding:55,maxZoom:19,duration:0\}\)/);
+ assert.match(page,/if\(focusedDataset!==currentData\)/);
+ assert.match(page,/\$\('focusParcel'\)\.onclick=/);
+});
