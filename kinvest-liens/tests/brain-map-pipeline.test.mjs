@@ -154,3 +154,47 @@ test('recovery repairs any interrupted publication metadata write without GIS or
   assert.equal(h.calls.length,calls);
  }
 });
+
+
+test('captured Wayne 01002263 fixture stays identical across all three map consumers and rolls back without GIS',async()=>{
+ const fixture=JSON.parse(fs.readFileSync('kinvest-liens/tests/fixtures/detroit-01002263.json','utf8'));
+ const expectedRing=fixture.feature.geometry.rings[0];
+ const review={...approval(),officialObjectId:fixture.feature.attributes.object_id,
+  proposedPosition:{lat:42.37441065,lon:-83.073996}};
+ const h=await harness({review,features:[fixture.feature]});
+ await h.publish();
+ const countyKey='brain-map-county-v1-MI-wayne';
+ const correction=h.store.get(countyKey).records['test-record'];
+ assert.equal(correction.p,'01002263');
+ assert.deepEqual(correction.g,[expectedRing]);
+ const gisCalls=h.calls.filter(u=>u.hostname==='services2.arcgis.com').length;
+ const scripts=fs.readFileSync('kinvest-liens/map/brain-map-merge.js','utf8');
+ const instances=Array.from({length:3},()=>({id:'MI-wayne',recs:[{i:'test-record',p:'01002263',why:'missing'}]}));
+ const adapters=instances.map(ds=>{
+  const scope={window:{},URL,URLSearchParams,
+   fetch:()=>h.feed(new Request('https://preview.test/.netlify/functions/brain-map-county?dataset=MI-wayne'))};
+  vm.runInNewContext(scripts,scope);
+  return {ds,apply:()=>scope.window.PPABrainMap.apply(ds)};
+ });
+ for(const instance of adapters){
+  assert.equal((await instance.apply()).changed,true);
+  assert.deepEqual(instance.ds.recs[0].g,[expectedRing]);
+  assert.equal(instance.ds.recs[0].__brainMap,true);
+  assert.equal((await instance.apply()).changed,false);
+ }
+ assert.deepEqual(adapters.map(x=>x.ds.recs[0].g),[[expectedRing],[expectedRing],[expectedRing]]);
+ // Publication becomes incomplete but retains the same underlying version:
+ // the shared read-only feed hides it, and all three map consumers roll back.
+ h.store.get(countyKey).records['test-record'].publicationPending=true;
+ for(const instance of adapters){
+  assert.equal((await instance.apply()).changed,true);
+  assert.equal(instance.ds.recs[0].g,null);
+  assert.equal(instance.ds.recs[0].__brainMap,undefined);
+ }
+ delete h.store.get(countyKey).records['test-record'].publicationPending;
+ for(const instance of adapters){
+  assert.equal((await instance.apply()).changed,true);
+  assert.deepEqual(instance.ds.recs[0].g,[expectedRing]);
+ }
+ assert.equal(h.calls.filter(u=>u.hostname==='services2.arcgis.com').length,gisCalls);
+});
