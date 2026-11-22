@@ -295,6 +295,7 @@ window.TaxRadarOn = true;
     const bar = document.querySelector('.monbar'), cap = document.querySelector('.moncap'); if (bar) bar.hidden = t !== 'cal'; if (cap) cap.hidden = t !== 'cal';
     if (t !== 'cal' && S.month >= 0) { const all = bar && bar.querySelector('button'); all && all.click(); }
     renderFilters(); renderMap(); updatePanel();
+    window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:t,counties:S.data?.counties||[]}}));
   }
 
   function start() {
