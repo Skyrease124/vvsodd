@@ -131,12 +131,12 @@ async function handler(req){
     state==='source_paused'?'Official GIS source paused until '+worker.sourcePause.nextAt:
     state==='retrying'?'Waiting to retry parcel '+clean(retry?.parcelId):
     state==='attention'?clean(retry?.lastError||worker?.lastError||'Worker needs review'):
-    state==='quota_wait'?'Waiting for shared GIS budget':
+    state==='quota_wait'?(quota.resumeAt?'Shared GIS budget cutover · resumes '+quota.resumeAt:!quota.active?'Shared GIS budget not activated · no requests permitted':'Daily shared GIS budget exhausted'):
     state==='complete'?'Available source records scanned':'Waiting for next batch',
     retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
     retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
     failedStage:clean(retry?.failedStage||''),lastGisTrace:(retry?.gisTrace||[]).slice(0,5),
-    lastCompleted:date(worker?.lastCompleted),dailyUsed,remaining,dailyLimit:30};
+    lastCompleted:date(worker?.lastCompleted),dailyUsed,remaining,dailyLimit:30,quotaActive:quota.active===true,quotaResumeAt:date(quota.resumeAt)};
   return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',health,
    capturedAt:new Date().toISOString(),county:'Wayne, Michigan',
    summary:{verifiedPolygons,processed:progress?progress.total-progress.pending:null,skipped:progress?.skipped??null,pendingReview,
