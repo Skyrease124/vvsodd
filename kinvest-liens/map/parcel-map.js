@@ -1194,6 +1194,7 @@
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
     gj.features.forEach(f => { const a = f.properties.a, s = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a] || {}; f.properties.sys = s.sys || 'Sources differ'; f.properties.n = s.n || a; f.properties.has = have[a] ? 1 : 0; f.properties.col = COL[s.sys] || '#94a3b8'; });
     map.addSource('states', { type: 'geojson', data: gj });
+    if(homeMap)drawRadarPins();
     const before = 'p-fill';
     map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], homeMap ? 0.20 : 0.62, homeMap ? 0.10 : 0.42], 6.5, homeMap ? 0.07 : 0.4, 8.5, 0] } }, before);
     map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, layout: { visibility: 'none' }, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
@@ -1233,6 +1234,53 @@
     showTab('list', open);
   }
 
+  // Unified Radar overlays: state-level official county aggregates, not parcel pins.
+  // The source provides state/county identifiers but not verified auction coordinates.
+  let radarOverlay={tab:'opp',month:'',counties:[]},radarPins=[];
+  const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
+    t==='cal'?(c.sale?.kind==='scheduled'||c.sale?.kind==='tentative'):
+    (c.sale?.kind==='past'||c.sale?.kind==='completed');
+  function clearRadarPins(){radarPins.forEach(p=>p.remove());radarPins=[];}
+  function drawRadarPins(){
+    if(!homeMap||!mapReady||!map.getSource('states'))return;
+    clearRadarPins();
+    const src=map.getSource('states')._data;
+    if(!src?.features)return;
+    const grouped=new Map();
+    for(const c of radarOverlay.counties){
+      if(!/^[A-Z]{2}$/.test(c.state||'')||!radarKind(c,radarOverlay.tab))continue;
+      if(radarOverlay.tab==='cal'&&radarOverlay.month&&
+        !String(c.sale?.date||'').startsWith(radarOverlay.month))continue;
+      const arr=grouped.get(c.state)||[];arr.push(c);grouped.set(c.state,arr);
+    }
+    const colors={opp:'#3be6a2',cal:'#f6ba49',hist:'#b49aff'};
+    for(const feature of src.features){
+      const state=feature.properties?.a,rows=grouped.get(state);
+      if(!rows?.length)continue;
+      const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
+      const el=mk('button','ppa-radar-pin',String(rows.length));
+      el.type='button';el.style.cssText='width:34px;height:34px;border-radius:50%;border:2px solid white;background:'+colors[radarOverlay.tab]+';color:#10222d;font:800 13px system-ui;box-shadow:0 5px 18px #0009;cursor:pointer;transform:translateZ(0);transition:transform .25s';
+      el.title=rows.length+' county records in '+state+' ('+radarOverlay.tab+'); state-level aggregate, not parcel coordinates';
+      el.setAttribute('aria-label',el.title);
+      el.addEventListener('click',()=>{
+        focusState(state,{remember:false,panel:false});
+        window.parent.postMessage({type:'ppa:radar-overlay-select',state,tab:radarOverlay.tab},location.origin);
+      });
+      radarPins.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([(bb[0]+bb[2])/2,(bb[1]+bb[3])/2]).addTo(map));
+    }
+  }
+  if(homeMap)window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-overlay'||!['opp','cal','hist'].includes(d.tab)||!Array.isArray(d.counties)||d.counties.length>3000)return;
+    radarOverlay={tab:d.tab,month:typeof d.month==='string'&&/^\\d{4}-\\d{2}$/.test(d.month)?d.month:'',
+      counties:d.counties.filter(c=>c&&typeof c.state==='string'&&typeof c.county==='string').map(c=>({
+        state:c.state,county:c.county,open:Number(c.open)||0,
+        sale:{kind:String(c.sale?.kind||''),date:String(c.sale?.date||'')}
+      }))};
+    drawRadarPins();
+    if(mapReady)map.easeTo({pitch:REDUCED?0:38,duration:REDUCED?0:650});
+  });
   // Verified Radar parcel handoff. Exact state + county + parcel ID must match
   // an existing map dataset and a record with an official GIS geometry.
   if (homeMap) window.addEventListener('message', async event => {
