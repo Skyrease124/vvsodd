@@ -11,8 +11,12 @@ const approval=()=>({decision:'approved_for_staging',dataset:'MI-wayne',state:'M
  recordId:'test-record',parcelId:'01002263',independentlyChecked:true,
  evidenceUrl:GIS,caseKey:'test-review',proposedPosition:{lat:42.3005,lon:-83.0995}});
 const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.301],[-83.1,42.3]];
-async function harness({review=approval(),features,record,offline=false,pauseDuringGIS=false}={}){
+async function harness({review=approval(),features,record,offline=false,pauseDuringGIS=false,failWrite}={}){
  const store=new Map([['owner-brain-approvals-v1',{entries:[review]}]]);
+ store.set('owner-brain-scanner-v1',{status:'running',queue:[{dataset:'MI-wayne',recordId:'test-record',
+  review:{caseKey:'test-review',decision:'approved_for_staging'}}]});
+ const etags=new Map();
+ let failed=false;
  const county={id:'MI-wayne',recs:[record||{i:'test-record',p:'01002263',why:'missing'}]};
  const calls=[];
  const context=vm.createContext({URL,URLSearchParams,Response,AbortSignal,Buffer,console,
@@ -27,9 +31,17 @@ async function harness({review=approval(),features,record,offline=false,pauseDur
    if(pauseDuringGIS)store.set('owner-brain-scanner-v1',{status:'paused',queue:[]});
    return Response.json({features:features??[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring]}}]});
   }});
- const auth=new vm.SyntheticModule(['kvGet','kvPut','withBrainStore'],function(){
+ const auth=new vm.SyntheticModule(['kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore'],function(){
   this.setExport('withBrainStore',handler=>handler);this.setExport('kvGet',async key=>structuredClone(store.get(key)));
   this.setExport('kvPut',async(key,value)=>store.set(key,structuredClone(value)));
+  this.setExport('kvGetVersioned',async key=>store.has(key)?{data:structuredClone(store.get(key)),etag:etags.get(key)||'0'}:null);
+  this.setExport('kvPutVersioned',async(key,value,etag)=>{
+   const current=store.has(key)?etags.get(key)||'0':null;
+   if(current!==etag)return null;
+   if(!failed&&key===failWrite){failed=true;throw Error('Simulated interrupted write');}
+   const next=String(Number(current)+1);
+   etags.set(key,next);store.set(key,structuredClone(value));return next;
+  });
  },{context});
  async function module(path){
   const m=new vm.SourceTextModule(fs.readFileSync(path,'utf8'),{context});
@@ -39,9 +51,9 @@ async function harness({review=approval(),features,record,offline=false,pauseDur
  const publish=await module('netlify/functions/brain-map-publish-auto.mjs');
  const feed=await module('netlify/functions/brain-map-county.mjs');
  // The publisher is now internal-only; tests must use the same guarded context as the Wayne worker.
- const guardedPublish=()=>publish(new Request('https://preview.test/.netlify/functions/brain-map-publish-auto'),{
-  waynePublisherInternal:true,
-  chargeWayneGisRequest:async()=>{const used=store.get('test-gis-usage')||0;if(used>=30)throw Error('Daily GIS request limit reached');store.set('test-gis-usage',used+1);}
+ const guardedPublish=(recovery=false)=>publish(new Request('https://preview.test/.netlify/functions/brain-map-publish-auto'),{
+  waynePublisherInternal:true,wayneRecoveryOnly:recovery,
+  chargeWayneGisRequest:async()=>{assert.equal(recovery,false);const used=store.get('test-gis-usage')||0;if(used>=30)throw Error('Daily GIS request limit reached');store.set('test-gis-usage',used+1);}
  });
  return {store,county,publish:guardedPublish,feed,calls};
 }
@@ -114,4 +126,25 @@ test('invalid staged official object ID never reaches GIS or publication',async(
  await h.publish();
  assert.equal(h.store.has(KEY),false);
  assert.equal(h.calls.filter(u=>u.hostname==='services2.arcgis.com').length,0);
+});
+
+test('recovery repairs any interrupted publication metadata write without GIS or duplicate history', async () => {
+ for (const key of ['brain-map-history-v1','owner-brain-approvals-v1','owner-brain-scanner-v1']) {
+  const h=await harness({failWrite:key});
+  await h.publish();
+  const first=h.store.get(KEY);
+  assert.equal(first.records['test-record'].publicationPending,true);
+  assert.equal(h.store.get('brain-map-publication-status-v1').state,'error');
+  const calls=h.calls.length;
+  await Promise.all([h.publish(true),h.publish(true)]);
+  await h.publish(true);
+  const saved=h.store.get(KEY);
+  assert.equal(saved.version,first.version);
+  assert.deepEqual(saved.records['test-record'].g,first.records['test-record'].g);
+  assert.equal(saved.records['test-record'].publicationPending,undefined);
+  assert.equal(h.store.get('brain-map-history-v1').entries.length,1);
+  assert.equal(h.store.get('owner-brain-approvals-v1').entries[0].publishStatus,'published');
+  assert.equal(h.store.get('owner-brain-scanner-v1').queue[0].review.publishStatus,'published');
+  assert.equal(h.calls.length,calls);
+ }
 });

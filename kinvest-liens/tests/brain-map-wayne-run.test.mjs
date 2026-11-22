@@ -5,9 +5,10 @@ import vm from 'node:vm';
 const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
 
-async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false}={}){
+async function setup({paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false}={}){
  const store=new Map();
  const versions=new Map();
+ if(pending)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{i:'r1',verifiedGeometry:true,verifiedAt:'2026-11-22T00:00:00Z',publicationPending:true}}});
  if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
  if(cursor||dailyUsed)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
  if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
@@ -55,6 +56,11 @@ async function setup({paused=false,failedGIS=false,owner=true,preview=true,exist
  },{context});
  const publisher=new vm.SyntheticModule(['default'],function(){
   this.setExport('default',async(_req,context)=>{
+   if(context.wayneRecoveryOnly){
+    const row=store.get('brain-map-county-v1-MI-wayne').records.r1;
+    delete row.publicationPending;
+    return;
+   }
    if(chargePublisher){
     try{await context.chargeWayneGisRequest();}catch(error){
      if(error.code==='QUOTA')return;
@@ -190,6 +196,20 @@ test('publisher cannot dispatch after verification spends the final quota slot',
  assert.equal(result.cursor,0);
  assert.equal(result.state,'publish_pending');
  assert.equal(h.reads(),2);
+ assert.equal(h.publications(),0);
+ assert.equal((await h.invoke()).status,429);
+});
+
+test('worker recovers saved publication at full quota without dispatch or cursor progress',async()=>{
+ const h=await setup({dailyUsed:30,pending:true,chargePublisher:true});
+ const response=await h.invoke();
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.recovered,1);
+ assert.equal(data.attempted,0);
+ assert.equal(data.cursor,0);
+ assert.equal(data.dailyUsed,30);
+ assert.equal(h.reads(),0);
  assert.equal(h.publications(),0);
  assert.equal((await h.invoke()).status,429);
 });

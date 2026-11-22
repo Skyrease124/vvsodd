@@ -23,11 +23,12 @@ async function setup({owner=true,preview=true}={}){
   const id=(where.match(/0100[0-9]{4}/)||[])[0];
   return Response.json({features:[{attributes:{parcel_number:id+'.',address:id==='01002263'?'90 CHANDLER':'94 CHANDLER',object_id:279374},geometry:{rings:[ring]}}]});
  }});
- const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore','isBrainPreview'],function(){
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','withBrainStore','isBrainPreview','fetchWayneGis'],function(){
   this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
   this.setExport('kvGet',async k=>structuredClone(saved.get(k)));
   this.setExport('kvPut',async()=>{writes++;});
   this.setExport('withBrainStore',h=>h);
+  this.setExport('fetchWayneGis',context.fetch);
   this.setExport('isBrainPreview',()=>preview);
  },{context});
  const verification=new vm.SyntheticModule(['verifyOfficial','DETROIT_GIS'],function(){

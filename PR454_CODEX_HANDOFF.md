@@ -67,3 +67,11 @@ The integration branch now reserves an atomic ticket before dispatch from the Wa
 Older paths did not persist a complete daily total. To avoid opening a fresh allowance on top of uncounted activity, the first eligible GIS request in each environment records the cutover UTC date and does not dispatch. The budget opens on the following UTC day. The ledger uses the existing Brain namespace selection and does not migrate records between environments. Retire old preview builds from use during validation, since their code cannot participate in the new ledger. Legacy production schedules must stay outside overlapping deploys when this is eventually released.
 
 Local validation passed 92 tests across 18 workflow files, including the final-slot race, UTC rollover, legacy state preservation and existing publisher quota regression. No live GIS request or batch was made. Publication replay and owner-authenticated preview validation remain separate release gates.
+
+## Publication recovery follow-up
+
+New Wayne publications atomically save a verified polygon with an unfinished-metadata marker. A later worker invocation completes history, approval, and queue updates from that saved record without fetching the source or charging GIS quota. Conditional writes preserve intervening changes, and history deduplicates on dataset, record, review case, and original publication timestamp. Recovery clears the marker only after those writes succeed and leaves the source cursor unchanged. The owner test control allows this recovery even when the daily GIS budget is full. Previously published polygons without a marker are left as they are.
+
+A second quota pass routed the older three-parcel preview test and publishing preparation through the shared counter. The internal publisher still requires its existing guarded caller.
+
+Offline tests force interruptions at history, approval, and queue writes and replay recovery concurrently. The polygon version and geometry stay fixed, one history entry remains, and GIS dispatch does not repeat. Another test exercises worker recovery with a full budget. No production release or live batch was initiated.

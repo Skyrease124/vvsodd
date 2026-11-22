@@ -56,10 +56,12 @@ async function handler(req,context){
  if(s.day!==today())s={...s,day:today(),dailyUsed:0};
  const quota=await auth.readWayneGisQuota();
  if(quota.active)s.dailyUsed=quota.count;
- if(s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
+ const existingOverlay=await auth.kvGet(OVERLAY)||{records:{}};
+ const recoveryPending=Object.values(existingOverlay.records||{}).some(record=>record?.publicationPending===true);
+ if(!recoveryPending&&s.dailyUsed>=MAX_PER_DAY)return response(429,{ok:false,error:'Official GIS daily cap reached'});
  // Do not consume quota or advance the cursor while a failed parcel is cooling down.
- if(s.retry?.exhausted)return response(409,{ok:false,error:'GIS retry limit reached; owner review required',retry:s.retry,cursor:s.cursor});
- if(s.retry?.nextAt&&Date.parse(s.retry.nextAt)>Date.now())return response(200,{
+ if(!recoveryPending&&s.retry?.exhausted)return response(409,{ok:false,error:'GIS retry limit reached; owner review required',retry:s.retry,cursor:s.cursor});
+ if(!recoveryPending&&s.retry?.nextAt&&Date.parse(s.retry.nextAt)>Date.now())return response(200,{
   ok:true,previewOnly:!scheduled,state:'retry_wait',cursor:s.cursor,
   attempted:0,verified:0,published:0,needsReview:0,failures:0,
   dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,retry:s.retry,rows:[],
@@ -76,6 +78,18 @@ async function handler(req,context){
  }
  const result={attempted:0,verified:0,published:0,needsReview:0,failures:0,rows:[]};
  try{
+  if(recoveryPending){
+   await publish(req,{...context,waynePublisherInternal:true,wayneRecoveryOnly:true,
+    chargeWayneGisRequest:async()=>{throw Error('Recovery cannot dispatch GIS');}});
+   const records=(await auth.kvGet(OVERLAY))?.records||{};
+   const recovered=Object.values(existingOverlay.records||{}).filter(record=>record?.publicationPending
+    &&records[record.i]?.verifiedAt===record.verifiedAt&&!records[record.i]?.publicationPending);
+   s.state=Object.values(records).some(record=>record?.publicationPending)?'publish_pending':'idle';
+   s.lastCompleted=new Date().toISOString();
+   return response(200,{ok:true,state:s.state,cursor:s.cursor,attempted:0,verified:0,
+    published:0,recovered:recovered.length,dailyUsed:s.dailyUsed,dailyLimit:MAX_PER_DAY,retry:s.retry||null,rows:[],
+    message:'Recovered '+recovered.length+' saved publication records without another GIS lookup'});
+  }
   const ds=await get(DATA);
   const rows=(ds.recs||[]).map(r=>{
    const decoded={...r};
@@ -202,7 +216,8 @@ async function handler(req,context){
     s.dailyUsed=await auth.reserveWayneGisRequest();
    }});
    const published=await auth.kvGet(OVERLAY)||{records:{}};
-   const success=published.records?.[r.i]?.verifiedGeometry===true;
+   const saved=published.records?.[r.i];
+   const success=saved?.verifiedGeometry===true&&!saved.publicationPending;
    result.rows.push({parcelId:id,status:success?'published':'publish_pending',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice()});
    if(success)result.published++;
    else {s.state='publish_pending';break;}

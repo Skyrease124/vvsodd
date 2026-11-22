@@ -28,6 +28,7 @@ async function handler(req,context){
   unattendedProductionEnabled:!preview&&configured,scheduledFrequencyMinutes:30,
   previewRequiresOpenDashboard:true,websiteControlledSchedule:true,
   worker:{cursor:Number(worker?.cursor||0),published:Number(worker?.published||0),verifiedOverlayCount,publicationCountMeaning:'worker total excludes earlier pilot and other confirmed overlay entries',state:String(worker?.state||'not_started'),
+   publicationPending:Object.values(overlay?.records||{}).some(r=>r?.publicationPending===true),
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
    retryParcel:worker?.retry?.parcelId||null,retryAttempt:Number(worker?.retry?.attempts||0),retryLastError:worker?.retry?.lastError||null,
    lastCompleted:worker?.lastCompleted||null,dailyUsed:quota.active?quota.count:Number(worker?.dailyUsed||0),quotaActive:quota.active,dailyLimit:30},

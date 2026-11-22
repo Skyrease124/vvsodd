@@ -5,7 +5,7 @@ import {verifyOfficial,DETROIT_GIS} from '../lib/brain-official-verification.mjs
 const BASE='https://pricepocketasset.com/map/data/MI-wayne.json';
 const json=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow'}});
 async function read(url,max=12000000){
- const response=await fetch(url,{signal:AbortSignal.timeout(7500)});
+ const response=await (url.startsWith(DETROIT_GIS+'/query?')?auth.fetchWayneGis:fetch)(url,{signal:AbortSignal.timeout(7500)});
  if(!response.ok)throw Error('Source HTTP '+response.status);
  const body=await response.text();
  if(Buffer.byteLength(body)>max)throw Error('Source exceeded safe size');
@@ -46,6 +46,7 @@ async function handler(req,context){
     results.push({recordId:record.i,parcelId:record.p,address:record.a,status:'verified',
      officialObjectId:verified.officialObjectId,checks:verified.checks});
    }catch(e){
+    if(e.code==='QUOTA')throw e;
     results.push({recordId:record.i,parcelId:record.p,address:record.a,status:'needs_review',
      reason:String(e.message||e).slice(0,120)});
    }
@@ -54,6 +55,6 @@ async function handler(req,context){
    attempted:results.length,verified:results.filter(x=>x.status==='verified').length,
    needsReview:results.filter(x=>x.status==='needs_review').length,results,
    message:results.length?'Live official GIS batch checked. No preview or production data was modified.':'No eligible unmapped Detroit-address parcels found in source dataset.'});
- }catch(e){return json(502,{ok:false,error:String(e.message||e).slice(0,120)});}
+ }catch(e){return json(e.code==='QUOTA'?429:502,{ok:false,error:String(e.message||e).slice(0,120)});}
 }
 export default auth.withBrainStore(handler);

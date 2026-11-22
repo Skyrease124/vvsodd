@@ -162,12 +162,13 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
    const testButton=document.getElementById('wayneTestBatch');
    testButton.hidden=!d.preview;
-   testButton.disabled=d.worker.paused||d.worker.retryExhausted||d.worker.dailyUsed>=d.worker.dailyLimit;
-   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.retryExhausted?'Review exhausted retry first':d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
+   testButton.disabled=d.worker.paused||(!d.worker.publicationPending&&(d.worker.retryExhausted||d.worker.dailyUsed>=d.worker.dailyLimit));
+   testButton.title=d.worker.paused?'Resume preview automation before running':d.worker.publicationPending?'Finish saved publication metadata without a GIS request':d.worker.retryExhausted?'Review exhausted retry first':d.worker.dailyUsed>=d.worker.dailyLimit?'Daily official GIS request limit reached':'Run up to 3 official GIS parcel attempts in the isolated preview';
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
    checks.textContent='Wayne cursor '+d.worker.cursor+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
+    (d.worker.publicationPending?' · Saved publication needs recovery':'')+
     (d.worker.quotaActive===false?' · Shared GIS budget starts after the first request’s UTC day':'')+
     ' · Other counties blocked until verified GIS connectors are configured';
   }catch(e){summary.textContent='Readiness check unavailable: '+e.message;}

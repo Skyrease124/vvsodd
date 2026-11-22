@@ -10,7 +10,7 @@ const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
 const KEY='brain-map-county-v1-MI-wayne',APPROVALS='owner-brain-approvals-v1';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 async function read(url,limit=12000000){
- const response=await fetch(url,{signal:AbortSignal.timeout(8500)});
+ const response=await (url.startsWith(DETROIT_GIS+'/query?')?auth.fetchWayneGis:fetch)(url,{signal:AbortSignal.timeout(8500)});
  if(!response.ok)throw Error('Source HTTP '+response.status);
  const raw=await response.text();
  if(Buffer.byteLength(raw)>limit)throw Error('Source too large');
@@ -70,6 +70,6 @@ async function handler(req,context){
   return json(200,{ok:true,previewOnly:true,requested:3,published:count,results,
    publicationStatus:await auth.kvGet('brain-map-publication-status-v1'),
    message:count===3?'All three official polygons published to the isolated preview feed.':'One or more parcels not published; inspect publisher status. No production writes.'});
- }catch(e){return json(502,{ok:false,error:String(e.message||e).slice(0,160)});}
+ }catch(e){return json(e.code==='QUOTA'?429:502,{ok:false,error:String(e.message||e).slice(0,160)});}
 }
 export default auth.withBrainStore(handler);

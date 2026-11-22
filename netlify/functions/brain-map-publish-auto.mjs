@@ -3,6 +3,50 @@
 // Writes only the dynamic map overlay store, not static parcel data / tax sale status.
 import * as auth from '../lib/brain-auth.mjs';
 const APPROVALS='owner-brain-approvals-v1',STATUS='brain-map-publication-status-v1';
+const OVERLAY='brain-map-county-v1-MI-wayne';
+const HISTORY='brain-map-history-v1', QUEUE='owner-brain-scanner-v1';
+
+// Start from the deploy seed if the persistent preview has no value yet.
+async function update(key, mutate){
+ for(let attempt=0;attempt<8;attempt++){
+  const snapshot=await auth.kvGetVersioned(key);
+  const current=snapshot?snapshot.data:await auth.kvGet(key);
+  const next=mutate(current);
+  if(next===undefined)return false;
+  if(await auth.kvPutVersioned(key,next,snapshot?snapshot.etag:null))return true;
+ }
+ throw Error('Publication storage busy: '+key);
+}
+async function reconcile(record){
+ const at=record.verifiedAt;
+ await update(HISTORY,current=>{
+  const entries=current?.entries||[];
+  if(entries.some(x=>x.action==='published'&&x.dataset==='MI-wayne'&&x.recordId===record.i&&x.reviewCase===record.caseKey&&x.at===at))return;
+  const event={dataset:'MI-wayne',recordId:record.i,parcelId:record.p,action:'published',source:'official Detroit current parcel GIS',reviewCase:record.caseKey,at};
+  return {...current,entries:[event,...entries].slice(0,300)};
+ });
+ await update(APPROVALS,current=>{
+  const entries=current?.entries||[];
+  const match=x=>x.caseKey===record.caseKey&&x.dataset==='MI-wayne'&&x.recordId===record.i&&x.decision==='approved_for_staging';
+  if(!entries.some(x=>match(x)&&(x.publishStatus!=='published'||x.publishedAt!==at)))return;
+  return {...current,entries:entries.map(x=>match(x)?{...x,publishStatus:'published',publishedAt:at}:x)};
+ });
+ await update(QUEUE,current=>{
+  const match=x=>x.dataset==='MI-wayne'&&x.recordId===record.i&&x.review?.decision==='approved_for_staging'&&
+   (!x.review.caseKey||x.review.caseKey===record.caseKey);
+  if(!current?.queue?.some(x=>match(x)&&x.review.publishStatus!=='published'))return;
+  return {...current,queue:current.queue.map(x=>match(x)?{...x,review:{...x.review,publishStatus:'published'}}:x)};
+ });
+ // The polygon and its pending marker were committed together. Clear the
+ // marker only after every secondary write has completed.
+ await update(OVERLAY,current=>{
+  const saved=current?.records?.[record.i];
+  if(!saved?.publicationPending||saved.caseKey!==record.caseKey||saved.verifiedAt!==at)return;
+  const {publicationPending,...completed}=saved;
+  return {...current,records:{...current.records,[record.i]:completed}};
+ });
+}
+
 const ROOT='https://pricepocketasset.com';
 const GIS='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const norm=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -32,6 +76,15 @@ async function handler(req,context){
  // Only the guarded Wayne worker may invoke publication. Public function requests cannot publish.
  if(context?.waynePublisherInternal!==true||typeof context.chargeWayneGisRequest!=='function')
   return new Response(JSON.stringify({ok:false,error:'Publisher is internal to guarded Wayne worker'}),{status:403,headers:{'Content-Type':'application/json'}});
+ if(context.wayneRecoveryOnly){
+  if((await auth.kvGet(QUEUE))?.status==='paused')return;
+  const overlay=await auth.kvGet(OVERLAY);
+  for(const record of Object.values(overlay?.records||{}).filter(r=>r?.publicationPending===true).slice(0,5)){
+   if((await auth.kvGet(QUEUE))?.status==='paused')return;
+   await reconcile(record);
+  }
+  return;
+ }
  const last=await auth.kvGet(STATUS)||{runs:0,published:0,skipped:0};
  const status={...last,runs:(last.runs||0)+1,lastStarted:new Date().toISOString(),state:'running',lastError:null};
  await auth.kvPut(STATUS,status);
@@ -44,7 +97,7 @@ async function handler(req,context){
   if(!approved.length){status.state='waiting_for_approved_polygons';return;}
   const county=await json(ROOT+'/map/data/MI-wayne.json',12000000);
   const source=new Map((county.recs||[]).map(r=>[r.i,r]));
-  const key='brain-map-county-v1-MI-wayne';
+  const key=OVERLAY;
   const saved=await auth.kvGet(key)||{version:0,records:{}};
   for(const a of approved.filter(a=>!saved.records[a.recordId]).slice(0,5)){
    if(saved.records[a.recordId])continue;
@@ -89,22 +142,17 @@ async function handler(req,context){
    if(Math.abs(a.proposedPosition.lat-poly.cx[1])>0.002||Math.abs(a.proposedPosition.lon-poly.cx[0])>0.002){skipped++;continue;}
    const stamp=new Date().toISOString();
    const record={i:a.recordId,p:String(a.parcelId),...poly,verifiedGeometry:true,verifiedAt:stamp,evidenceUrl:GIS,caseKey:a.caseKey};
-   // Reload before write to avoid overwriting other functions' published records.
-   const preWriteControl=await auth.kvGet('owner-brain-scanner-v1');
+   const preWriteControl=await auth.kvGet(QUEUE);
    if(preWriteControl?.status==='paused'){status.state='paused';break;}
-   const current=await auth.kvGet(key)||{version:0,records:{}};
-   if(current.records[a.recordId])continue;
-   const updated={...current,version:(current.version||0)+1,updatedAt:stamp,records:{...current.records,[a.recordId]:record}};
-   await auth.kvPut(key,updated);
-   const history=await auth.kvGet('brain-map-history-v1')||{entries:[]};
-   history.entries=[{dataset:'MI-wayne',recordId:a.recordId,parcelId:a.parcelId,action:'published',source:'official Detroit current parcel GIS',reviewCase:a.caseKey,at:stamp},...(history.entries||[])].slice(0,300);
-   await auth.kvPut('brain-map-history-v1',history);
-   const decisions=await auth.kvGet(APPROVALS);
-   const decision=decisions?.entries?.find(e=>e.caseKey===a.caseKey);
-   if(decision){decision.publishStatus='published';decision.publishedAt=stamp;await auth.kvPut(APPROVALS,decisions);}
-   const queue=await auth.kvGet('owner-brain-scanner-v1');
-   const item=queue?.queue?.find(r=>r.dataset==='MI-wayne'&&r.recordId===a.recordId);
-   if(item?.review){item.review.publishStatus='published';await auth.kvPut('owner-brain-scanner-v1',queue);}
+   const added=await update(key,value=>{
+    const current=value||{version:0,records:{}};
+    if(current.records[a.recordId])return;
+    return {...current,version:(current.version||0)+1,updatedAt:stamp,records:{
+     ...current.records,[a.recordId]:{...record,publicationPending:true}
+    }};
+   });
+   if(!added)continue;
+   await reconcile(record);
    passed++;
   }
   status.published=(status.published||0)+passed;
