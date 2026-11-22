@@ -69,7 +69,7 @@ window.TaxRadarOn = true;
     if (c.type === 'result' && c.prices) li.appendChild(mk('p', 'small', 'Actual sale prices from ' + money(c.prices.min) + ' to ' + money(c.prices.max) + ' (first ' + c.items.length + ' shown by price order on the county page).'));
     if (c.type === 'missing') li.appendChild(mk('p', 'small', 'Not called sold, redeemed or withdrawn: that needs an official record.'));
     const meta = mk('p', 'small rmeta', 'Detected ' + fmtDate(c.detectedAt) + (c.publishedAt ? ' · published ' + fmtDate(c.publishedAt) : '') + ' · '); const a = mk('a', '', 'Source: ' + (c.source.name || 'official record')); a.href = c.source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; meta.appendChild(a); li.appendChild(meta);
-    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
+    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); if (!document.querySelector('.app-map-unified')) document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
     const l1 = mk('a', 'btn small ghost', 'See affected listings'); l1.href = c.link + '#' + encodeURIComponent(c.county);
     act.append(b1, l1);
     // Same-origin homepage handoff: state-level only. Never infer parcel geometry
@@ -210,6 +210,9 @@ window.TaxRadarOn = true;
   // ---- bottom panel for a state
   function openState(a, focusChange, onlyChanges) {
     S.sel = a; persist(); M.select(a); if (M.paths[a]) M.paths[a].classList.add('sel'); renderPanel(a, focusChange, onlyChanges);
+    // Keep the visible Parcel Map in sync when the home workspace is unified.
+    if (document.querySelector('.app-map-unified') && /^[A-Z]{2}$/.test(a))
+      window.dispatchEvent(new CustomEvent('ppa:radar-map-state', {detail:{state:a}}));
   }
   let panelState = null;
   function updatePanel() { if (panelState && !$('rpanel').hidden) renderPanel(panelState); }
