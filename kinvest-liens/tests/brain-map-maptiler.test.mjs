@@ -47,3 +47,15 @@ test('MapTiler includes verified corrections beyond the static drawing cap',()=>
  assert.equal(visibleParcels([...baseline,correction])[0],correction);
  assert.equal(visibleParcels([...baseline,...more]).length,251);
 });
+
+
+test('private map inspects parcel boundaries even when MapTiler style returns HTTP 403',()=>{
+ const page=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
+ assert.match(page,/boundaryOnly=true/);
+ assert.match(page,/error\.status!==401&&error\.status!==403&&error\.status!==429/);
+ assert.match(page,/version:8,sources:\{\},layers:\[/);
+ assert.match(page,/Boundary-only map loaded/);
+ assert.match(page,/if\(boundaryOnly\|\|!map\|\|!map\.isStyleLoaded\(\)\)return/);
+ assert.match(page,/MapTiler key not configured\. Boundary-only inspection remains available/);
+ assert.match(page,/overlay\(\)/);
+});
