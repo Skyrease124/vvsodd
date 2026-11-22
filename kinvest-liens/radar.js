@@ -295,7 +295,7 @@ window.TaxRadarOn = true;
     const bar = document.querySelector('.monbar'), cap = document.querySelector('.moncap'); if (bar) bar.hidden = t !== 'cal'; if (cap) cap.hidden = t !== 'cal';
     if (t !== 'cal' && S.month >= 0) { const all = bar && bar.querySelector('button'); all && all.click(); }
     renderFilters(); renderMap(); updatePanel();
-    window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:t,counties:S.data?.counties||[]}}));
+    window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:t,counties:S.data?.counties||[],month:S.month}}));
   }
 
   function start() {
@@ -307,7 +307,7 @@ window.TaxRadarOn = true;
       const redraw = () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); };
       if (window.ResizeObserver) new ResizeObserver(redraw).observe(M.svg);
       else window.addEventListener('resize', redraw);
-      window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); } });
+      window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:S.tab,counties:S.data?.counties||[],month:S.month}})); } });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rpanel').hidden) closePanel(); });
       setTab(S.tab); if (S.sel && M.by[S.sel]) { M.select(S.sel); }
       // remember this visit for next time (the comparison above already used the previous value)
