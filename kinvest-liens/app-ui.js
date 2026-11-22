@@ -97,6 +97,25 @@
     mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
     mapViews[0].focus({preventScroll:true});
   });
+  window.addEventListener('ppa:radar-map-state', event => {
+    const stateCode = event.detail?.state;
+    if (typeof stateCode !== 'string' || !/^[A-Z]{2}$/.test(stateCode)) return;
+    // Preserve Radar below the map while exploring the state. This does not
+    // claim that any sale record has been matched to a verified parcel.
+    showMapView('both');
+    const frame = document.querySelector('#home-parcels iframe');
+    const selectState = () => {
+      try {
+        const select = frame.contentDocument?.querySelector('select[aria-label="State"]');
+        if (!select || ![...select.options].some(o => o.value === stateCode)) return false;
+        select.value = stateCode;
+        select.dispatchEvent(new Event('change', {bubbles:true}));
+        return true;
+      } catch (_) { return false; }
+    };
+    if (!selectState()) frame.addEventListener('load', selectState, {once:true});
+    mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  });
   if (location.hash === '#map') showMapView('radar');
   window.addEventListener('hashchange', () => { if (location.hash === '#map') showMapView('radar'); });
   const header = document.querySelector('.dnav');
