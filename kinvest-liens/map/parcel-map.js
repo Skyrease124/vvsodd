@@ -1531,7 +1531,8 @@
   function drawRadarPins(){
     if(!homeMap||!mapReady||!map.getSource('states'))return;
     clearRadarPins();
-    if(homeMap&&!!curState)return;
+    // Land Only shows the land-for-sale totals (green state badges), not Radar record counts.
+    if(landOnly||(homeMap&&!!curState))return;
     const radarMode=homeMode();
     const src=map.getSource('states')._data;if(!src?.features)return;
     const zoom=map.getZoom(),countyView=zoom>=6.6;
