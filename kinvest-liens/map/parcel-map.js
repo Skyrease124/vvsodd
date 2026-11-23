@@ -521,8 +521,9 @@
         if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
         pageN=40;
         refresh();
+        syncStateBadges();
         drawRadarPins();
-        if(curState && !curCounty)stateCard(curState,!homeMap);
+        if(curState && !curCounty && !homeMap)stateCard(curState,true);
         // Leave the Tools panel open so the user can switch modes again immediately.
       });
       const landDock=mk('div','pm-land-dock');landDock.style.cssText='display:grid;gap:3px;margin-top:8px;width:100%;position:relative';
@@ -1341,7 +1342,7 @@
   let radarOverlay={tab:'opp',month:-1,counties:[]},radarPins=[],radarCounties=null,radarGeometryLoading=false;
   const parcelStateBadges=[];
   let radarOverlayEnabled=false;
-  function syncStateBadges(){parcelStateBadges.forEach(m=>{m.getElement().style.display=(radarOverlayEnabled||homeMap&&!!curState)?'none':'';});}
+  function syncStateBadges(){parcelStateBadges.forEach(m=>{m.getElement().style.display=((radarOverlayEnabled&&!landOnly)||(homeMap&&!!curState))?'none':'';});}
   const radarNorm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of)\\b/g,'').replace(/[^a-z0-9]/g,'');
   const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
     t==='cal'?(c.group!=='county-held'&&c.group!=='state-held'&&
