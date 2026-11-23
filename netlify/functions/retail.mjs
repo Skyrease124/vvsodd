@@ -43,7 +43,7 @@ export default async function handler(req, context) {
   if (!owner) return json(403, { ok: false, error: 'Owner only.' });
   if (a === 'create') return done(await R.createProduct(me.uid, b));
   if (a === 'update') return done(await R.updateProduct(b.id, b));
-  if (a === 'refreshImage') return done(await R.refreshImage(b.id));
+  if (a === 'refreshImage') return done(await R.refreshImageNow(b.id, { origin: new URL(req.url).origin }));
   if (a === 'checkNow') return done(await R.checkNow(b.id, { origin: new URL(req.url).origin }));
   if (a === 'broadcast') return done(await R.broadcast(b));
   if (a === 'decide') return done(await R.decide(me.uid, b.id, b));

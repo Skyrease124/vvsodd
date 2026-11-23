@@ -155,7 +155,12 @@
       const acts = mk('div', 'acts'), sel = select([['', 'Set status…']].concat(STOCK_OPTS, [['disabled', 'Disabled']]));
       sel.onchange = async () => { if (!sel.value) return; if ((sel.value === 'in_stock' || sel.value === 'low_stock') && !(await confirmSheet('Mark as ' + STATUS[sel.value].toLowerCase() + '?', 'If it was not in stock before, matching members get a push now. Only do this after you checked the store page.', 'Confirm'))) { sel.value = ''; return; } const r = await post({ action: 'update', id: p.id, status: sel.value }); const s = (r.j.sent || [])[0]; toast(r.s === 200 ? (s ? (s.skipped ? 'Saved. Alert held back (cooldown).' : 'Saved. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : 'Saved.') : (r.j.error || 'Error')); setTimeout(() => location.reload(), 900); };
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
-      const ri = mk('button', '', 'Refresh image'); ri.type = 'button'; ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id }); ri.textContent = r.s === 200 ? (r.j.found ? 'Image saved' : 'Image not found') : 'Could not read'; setTimeout(() => location.reload(), 900); };
+      const ri = mk('button', '', 'Refresh image'); ri.type = 'button';
+      ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id });
+        if (r.s !== 200) { ri.disabled = false; ri.textContent = 'Refresh image'; toast(r.j.error || 'Could not read the page.'); return; }
+        const msg = await waitCheck(r.j.jobId);
+        try { sessionStorage.setItem('rt-flash', msg); } catch (e) { /* private mode: the card still shows the result */ }
+        location.reload(); };
       const ck = mk('button', '', 'Check now'); ck.type = 'button';
       ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id });
         if (r.s !== 200) { ck.disabled = false; ck.textContent = 'Check now'; toast(r.j.error || 'Could not check.'); return; }

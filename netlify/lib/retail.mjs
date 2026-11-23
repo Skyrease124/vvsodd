@@ -368,14 +368,6 @@ export async function decide(owner, id, b) {
   return { ok: true, request: q };
 }
 
-// Re-reads only the product image. Stock status, watchers and alerts are not touched.
-export async function refreshImage(id) {
-  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
-  const r = await lookup(p.url); const img = r.ok && r.info && r.info.image;
-  if (img) { p.image = img; p.imageSource = 'page'; p.imageNote = ''; } else { p.imageNote = 'Image not found'; }
-  p.imageCheckedAt = now(); p.updated = now(); await auth.kvPut(KP(p.id), p);
-  return { ok: true, found: !!img, product: await getProduct(id) };
-}
 
 // ---- monitor: one check per product, faster near release, slower when a source keeps failing ----
 export function dueIn(p) {
@@ -428,24 +420,46 @@ function tokenOk(expected, given) {
 async function clearJob(productId, jobId) {
   const q = await getProduct(productId); if (q && q.checkJob === jobId) { q.checkJob = ''; await auth.kvPut(KP(q.id), q); }
 }
-// The owner asks for one product to be checked now. A short guard stops double taps; one job per product at a time.
-export async function checkNow(id, { origin = '' } = {}) {
-  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
-  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
+// Shared by Check now and Refresh image: a short double-tap guard, and one job per product at a time.
+function tapGuard(p) {
   const wait = Math.ceil(((p.manualCheckAt ? Date.parse(p.manualCheckAt) : 0) + MANUAL_GUARD_MS - Date.now()) / 1000);
-  if (wait > 0) return err(429, 'Checked a moment ago. Try again in ' + wait + ' seconds.');
+  return wait > 0 ? err(429, 'Checked a moment ago. Try again in ' + wait + ' seconds.') : null;
+}
+async function queueJob(p, kind, origin) {
   const busy = p.checkJob ? await auth.kvGet(JK(p.checkJob)) : null;
   if (busy && (busy.status === 'queued' || busy.status === 'running') && Date.now() - Date.parse(busy.createdAt) < JOB_STALE_MS) return err(409, 'This product is already being checked. Wait for the result.', { jobId: busy.id });
-  const job = { id: crypto.randomBytes(12).toString('hex'), product: p.id, token: crypto.randomBytes(24).toString('hex'), status: 'queued', createdAt: now() };
+  const job = { id: crypto.randomBytes(12).toString('hex'), product: p.id, kind, token: crypto.randomBytes(24).toString('hex'), status: 'queued', createdAt: now() };
   p.manualCheckAt = now(); p.checkJob = job.id;
   await auth.kvPut(JK(job.id), job); await auth.kvPut(KP(p.id), p);
   try { await dispatchCheck({ origin, jobId: job.id, token: job.token }); }
   catch (e) {
-    job.status = 'done'; job.finishedAt = now(); job.result = { readable: false, message: 'Could not start the check. Stock unchanged. Try again in a moment.' };
+    job.status = 'done'; job.finishedAt = now(); job.result = { readable: false, found: false, message: 'Could not start the check. Stock unchanged. Try again in a moment.' };
     await auth.kvPut(JK(job.id), job); await clearJob(p.id, job.id);
     return err(502, job.result.message);
   }
   return { ok: true, queued: true, jobId: job.id };
+}
+// The owner's "Check now": same rules as an automatic check.
+export async function checkNow(id, { origin = '' } = {}) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
+  const g = tapGuard(p); if (g) return g;
+  return queueJob(p, 'stock', origin);
+}
+// The owner's "Refresh image": reads the store page for a picture only. Stock status is never touched.
+export async function refreshImageNow(id, { origin = '' } = {}) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' images are not read automatically. Paste an image link in Edit.');
+  const g = tapGuard(p); if (g) return g;
+  return queueJob(p, 'image', origin);
+}
+async function runImageJob(p) {
+  const r = await lookup(p.url, { timeoutMs: CHECK_TIMEOUT_MS });
+  const img = r.ok && r.info && r.info.image;
+  const fresh = await getProduct(p.id);
+  if (img) { fresh.image = img; fresh.imageSource = 'page'; fresh.imageNote = ''; } else { fresh.imageNote = 'Image not found'; }
+  fresh.imageCheckedAt = now(); fresh.updated = now(); await auth.kvPut(KP(fresh.id), fresh);
+  return { readable: true, found: !!img, message: img ? 'Image saved from the store page.' : 'No image found on the store page. Paste an image link in Edit.' };
 }
 // Runs one queued job. Called by the background function with the job's token. Returns false for a wrong token or unknown job.
 export async function runCheckJob(jobId, token) {
@@ -457,6 +471,7 @@ export async function runCheckJob(jobId, token) {
   try {
     const p = await getProduct(job.product);
     if (!p) result = { readable: false, message: 'The product was removed. Nothing was checked.' };
+    else if (job.kind === 'image') result = await runImageJob(p);
     else {
       const c = await checkOne(p, { timeoutMs: CHECK_TIMEOUT_MS });
       const after = await getProduct(p.id), held = (c.sent || []).some(x => x.skipped);
