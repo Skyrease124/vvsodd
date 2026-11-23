@@ -106,13 +106,15 @@ const NS='http://www.w3.org/2000/svg';
 const svg=(name,attrs={},parent)=>{const el=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);if(parent)parent.append(el);return el};
 const positions=[{x:120,y:120,name:'Gemini',role:'DOCUMENTS',color:'#72b9ff'},{x:580,y:120,name:'OpenAI',role:'VALIDATION',color:'#52ebba'},{x:120,y:610,name:'Groq',role:'PARCEL DATA',color:'#ffb477'},{x:580,y:610,name:'Mapping',role:'GIS LAYERS',color:'#bd9dff'}];
 const reactorFibers=[],fibersByNode=[];
+const CORE={x:350,y:365,r:84},RIM={rx:88,ry:57};
 for(const [group,n] of positions.entries()){
  const list=[];fibersByNode.push(list);
- const startX=n.x<350?n.x+35:n.x-35,startY=n.y<365?n.y+40:n.y-40;
- const endX=n.x<350?285:415,endY=n.y<365?306:424;
+ // Each stream leaves the core as a fan and meets the node's inner rim, so it reads as a ribbon of threads.
+ const rimBase=Math.atan2((CORE.y-n.y)/RIM.ry,(CORE.x-n.x)/RIM.rx);
+ const coreBase=Math.atan2(n.y-CORE.y,n.x-CORE.x);
  for(let i=0;i<64;i++){
-  const t=i/63;
-  const f={color:n.color,side:n.x<350?-1:1,up:n.y<365?-1:1,dense:i%6===0,particle:i%2===0,phase:(i*0.31)%7,speed:0.05+(i%11)*0.006,bend:Math.sin(t*2*Math.PI)*55,sx:startX+(n.x<350?-t*23:t*23),sy:startY+(n.y<365?t*29:-t*29),ex:endX+(n.x<350?t*40:-t*40),ey:endY,dx:0,dy:0};
+  const spread=(i+0.5)/64-0.5,scatter=((i*0.618034)%1)-0.5;
+  const f={node:n,color:n.color,dense:i%6===0,particle:i%2===0,phase:(i*0.31)%7,speed:0.05+(i%11)*0.006,spread,scatter,rimBase,coreBase};
   list.push(f);reactorFibers.push(f);
  }
  const g=svg('g',{'class':'node'+(n.name==='Mapping'?' event-mapnode':''),style:'--c:'+n.color+';animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));
@@ -125,8 +127,6 @@ for(const [group,n] of positions.entries()){
 const reactorCanvas=document.getElementById('reactorCanvas'),rctx=reactorCanvas.getContext('2d'),stage=reactorCanvas.parentElement;
 const lowEnd=(navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||8)<=4;
 const particles=reactorFibers.filter(f=>f.particle);
-const STRAND_OFFSETS=[[0,0,0,0],[2.5,-1.5,9,-5],[-2.5,1.5,-9,5]];
-const ACTIVE_STRANDS=lowEnd?STRAND_OFFSETS.slice(0,1):STRAND_OFFSETS;
 const sparkles=Array.from({length:70},(_,i)=>({x:(i*97)%700,y:(i*131)%730,r:.6+(i%3)*.4,s:.2+(i%7)*.05,p:i*.7}));
 let dpr=1,scaleX=1,scaleY=1,running=false,rafId=0,lastRender=0,canvasVisible=true;
 const sprites={};
@@ -152,9 +152,19 @@ const whiteSprite=spriteFor('#ffffff');
 const beamGradient=null;
 function updateFibers(time){
  for(const f of reactorFibers){
-  f.px=f.sx+f.dx;f.py=f.sy+f.dy;
-  f.qx=350+f.side*170+f.bend+f.dx*.5+Math.sin(time*.8+f.phase)*26;
-  f.qy=365+f.up*175+f.dy*.5+Math.cos(time*.6+f.phase)*16;
+  const n=f.node;
+  const a0=f.coreBase+f.spread*0.9+f.scatter*0.12;
+  const a3=f.rimBase+f.spread*1.1+f.scatter*0.1;
+  const p0x=CORE.x+Math.cos(a0)*CORE.r,p0y=CORE.y+Math.sin(a0)*CORE.r;
+  const p3x=n.x+Math.cos(a3)*RIM.rx*0.98,p3y=n.y+Math.sin(a3)*RIM.ry*0.98;
+  const dx=p3x-p0x,dy=p3y-p0y,len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len,ny=dx/len;                       // unit normal across the stream
+  const bow=f.spread*90+f.scatter*18;               // fibres fan across the stream's width
+  const w1=bow*0.8+Math.sin(time*0.9+f.phase)*20;
+  const w2=-bow*0.45+Math.sin(time*0.9+f.phase+1.9)*20; // opposite bend gives an S-curve
+  f.p0x=p0x;f.p0y=p0y;f.p3x=p3x;f.p3y=p3y;
+  f.c1x=p0x+dx*0.33+nx*w1;f.c1y=p0y+dy*0.33+ny*w1;
+  f.c2x=p0x+dx*0.68+nx*w2;f.c2y=p0y+dy*0.68+ny*w2;
  }
 }
 function drawFrame(time){
@@ -190,17 +200,22 @@ function drawFrame(time){
  // Fibers, batched per node.
  for(const list of fibersByNode){
   rctx.strokeStyle=list[0].color;
-  rctx.globalAlpha=.34;rctx.lineWidth=.8;rctx.beginPath();
-  for(const f of list){for(const o of ACTIVE_STRANDS){rctx.moveTo(f.px+o[0],f.py+o[1]);rctx.quadraticCurveTo(f.qx+o[2],f.qy+o[3],f.ex+o[0]*.5,f.ey);}}
+  // Soft neon glow under the threads, then the threads themselves.
+  if(!lowEnd){rctx.globalAlpha=.07;rctx.lineWidth=5;rctx.beginPath();
+  for(const f of list){rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
+  rctx.stroke();}
+  rctx.globalAlpha=.3;rctx.lineWidth=.8;rctx.beginPath();
+  for(const f of list){if(lowEnd&&!f.particle)continue;rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
   rctx.stroke();
-  rctx.globalAlpha=.9;rctx.lineWidth=1.8;rctx.beginPath();
-  for(const f of list){if(!f.dense)continue;rctx.moveTo(f.px,f.py);rctx.quadraticCurveTo(f.qx,f.qy,f.ex,f.ey);}
+  rctx.globalAlpha=.9;rctx.lineWidth=1.6;rctx.beginPath();
+  for(const f of list){if(!f.dense)continue;rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
   rctx.stroke();
  }
  // Travelling light.
  for(const f of particles){
   const p=(time*(.2+f.speed)+f.phase/7)%1,q=1-p;
-  const x=q*q*f.px+2*q*p*f.qx+p*p*f.ex,y=q*q*f.py+2*q*p*f.qy+p*p*f.ey;
+  const k0=q*q*q,k1=3*q*q*p,k2=3*q*p*p,k3=p*p*p;
+  const x=k0*f.p0x+k1*f.c1x+k2*f.c2x+k3*f.p3x,y=k0*f.p0y+k1*f.c1y+k2*f.c2y+k3*f.p3y;
   rctx.globalAlpha=.35+.65*Math.sin(Math.PI*p);
   rctx.drawImage(p>.82?whiteSprite:f.sprite,x-6,y-6,12,12);
  }
@@ -261,7 +276,6 @@ function bindNode(node,position,paths){
   if(signalNode===position)beamFrom(position);
   const dx=position.x-origin.x,dy=position.y-origin.y;
   node.setAttribute('transform','translate('+dx+' '+dy+')');
-  for(const f of paths){f.dx=dx;f.dy=dy;}
   refresh();
  });
  node.addEventListener('lostpointercapture',()=>{pointer=null;});
