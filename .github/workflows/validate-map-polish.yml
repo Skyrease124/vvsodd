@@ -4,11 +4,16 @@ on:
     branches:
       - feature/map-polish-toolbar-gis
       - claude/engineering-workspace
+      - integration/brain-map-452-453-preserve
     paths:
       - kinvest-liens/map/parcel-map.js
       - kinvest-liens/map/parcel-map.css
       - tests/map_polish.test.mjs
       - tests/map_polish.browser.cjs
+      - tests/map_behavior.browser.cjs
+      - tests/map_polish.static-server.cjs
+      - kinvest-liens/map/index.html
+      - kinvest-liens/tests/home-map-combined.test.mjs
       - .github/workflows/validate-map-polish.yml
   workflow_dispatch:
 permissions:
@@ -41,3 +46,4 @@ jobs:
         run: |
           node tests/map_polish.static-server.cjs >/tmp/ppa-serve.log 2>&1 &
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_polish.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_behavior.browser.cjs

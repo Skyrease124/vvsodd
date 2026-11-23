@@ -33,7 +33,7 @@
   const acres = r => r.ac != null ? (r.ac >= 0.1 ? r.ac.toFixed(2) : r.ac.toFixed(3)) + ' acres' : null;
   const sqft = r => r.sf ? r.sf.toLocaleString('en-US') + ' sq ft' : (r.ac != null ? Math.round(r.ac * 43560).toLocaleString('en-US') + ' sq ft' : null);
   const slugState = a => a;
-  let IDX = null, map = null, mapReady = false, loaded = {}, sel = null, near = null, paid = false, signedIn = false, acctDone = false, base = 'hybrid', sort = params.get('sort') === 'low' ? 'low' : 'sale', pageN = 40, curState = '', curCounty = '';
+  let IDX = null, map = null, mapReady = false, loaded = {}, sel = null, near = null, paid = false, signedIn = false, acctDone = false, base = 'satellite', sort = params.get('sort') === 'low' ? 'low' : 'sale', pageN = 40, curState = '', curCounty = '';
   // Homepage Tools: Land Only, Tax Liens and Deeds are one choice at a time (none selected shows everything).
   const HOME_CAT = { lien: 'tax_lien', deed: 'tax_deed', land: 'land_bank' };
   const HOME_RADAR = { lien: ['lien-sale', 'county-held'], deed: ['deed'], land: ['state-held'] };
@@ -187,7 +187,8 @@
     sources: { osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' },
       sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' },
       ref: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 } },
-    layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' }, paint: { 'raster-saturation': -0.35, 'raster-brightness-max': 0.9, 'raster-fade-duration': 250 } }, { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-brightness-max': 0.86, 'raster-saturation': -0.08, 'raster-fade-duration': 250 } }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'visible' } }] });
+    // 'ref' (white boundaries and place labels) is opt-in via Layers > Hybrid only; the default is satellite with black state borders.
+    layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' }, paint: { 'raster-saturation': -0.35, 'raster-brightness-max': 0.9, 'raster-fade-duration': 250 } }, { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-brightness-max': 0.86, 'raster-saturation': -0.08, 'raster-fade-duration': 250 } }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'none' } }] });
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
   // Current homepage Tools mode: 'all', 'lien', 'deed' or 'land'.

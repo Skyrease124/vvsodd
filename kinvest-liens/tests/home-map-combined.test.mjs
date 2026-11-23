@@ -5,13 +5,18 @@ test('homepage preserves parcel and radar surfaces and adds a combined view',()=
  const html=fs.readFileSync('kinvest-liens/index.html','utf8');
  const script=fs.readFileSync('kinvest-liens/app-ui.js','utf8');
  const css=fs.readFileSync('kinvest-liens/styles.css','utf8');
- for(const view of ['parcels','radar','both'])assert.match(html,new RegExp('data-home-map-view="'+view+'"'));
+ // Design: one combined "Price Pocket Maps" view. The separate Parcel Map and Tax Sale Radar
+ // buttons stay in the markup but are hidden; both map surfaces always show together.
+ assert.match(html,/<button[^>]*data-home-map-view="both"[^>]*aria-pressed="true"[^>]*>Price Pocket Maps<\/button>/);
+ assert.match(html,/<button[^>]*data-home-map-view="parcels"[^>]*hidden style="display:none!important"/);
+ assert.match(html,/<button[^>]*data-home-map-view="radar"[^>]*hidden style="display:none!important"/);
  assert.match(html,/id="home-parcels"/);
  assert.match(html,/id="home-radar"/);
- assert.match(html,/id="home-combined-note"/);
- assert.match(script,/const both = view === 'both'/);
- assert.match(script,/home-parcels'\)\.hidden = !\(both \|\| view === 'parcels'\)/);
- assert.match(script,/home-radar'\)\.hidden = !\(both \|\| view === 'radar'\)/);
+ assert.match(html,/id="home-combined-note"[^>]*hidden/);
+ assert.match(script,/document\.getElementById\('home-parcels'\)\.hidden=false;/);
+ assert.match(script,/document\.getElementById\('home-radar'\)\.hidden=false;/);
+ assert.match(script,/document\.getElementById\('home-combined-note'\)\.hidden=true;/);
+ assert.match(script,/mapWorkspace\.classList\.toggle\('app-map-unified',view==='both'\)/);
  assert.match(css,/grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
 });
 
@@ -24,7 +29,9 @@ test('Radar official changes hand off state only, without inventing parcel marke
  assert.match(app,/window\.addEventListener\('ppa:radar-map-state'/);
  assert.match(app,/showMapView\('both'\)/);
  assert.match(app,/select\.dispatchEvent\(new Event\('change'/);
- assert.doesNotMatch(radar,/ppa:radar-map-parcel/);
+ // The parcel handoff exists only for an official change with a parcel reference (gated below).
+ assert.match(radar,/c\.official === true && c\.type !== 'missing' && c\.type !== 'canceled'/);
+ assert.match(radar,/Explore state on Parcel Map/);
 });
 
 test('exact Radar parcel handoff requires official change and verified GIS polygon',()=>{
@@ -62,12 +69,13 @@ test('Radar categories render verified county-area markers with fallback and 3D 
  assert.match(map,/type!=='ppa:radar-overlay'/);
  assert.match(map,/drawRadarPins\(\)/);
  assert.match(map,/new maplibregl\.Marker/);
- assert.match(map,/map\.easeTo\(\{pitch:REDUCED\?0:38/);
+ assert.match(map,/map\.easeTo\(\{pitch:REDUCED\?0:22/);
  assert.match(map,/county location/);
  assert.match(map,/state aggregate/);
  assert.match(map,/radarCounties/);
  assert.match(map,/radarOverlay.month/);
  assert.match(map,/!!c.history/);
- assert.match(app,/month:data.month/);
+ // The homepage map is opportunity-only: calendar and history stay in Explore, so month is fixed to -1.
+ assert.match(app,/tab:'opp',month:-1,counties/);
  assert.match(map,/ppa:radar-overlay-select/);
 });
