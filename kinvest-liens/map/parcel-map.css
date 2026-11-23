@@ -578,3 +578,10 @@ body.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"s
 .pm-ml .pm-sw,.pm-ml .pm-sw input{width:44px!important;height:27px!important;flex-basis:44px!important}
 .pm-ml .pm-sw i::after{width:23px;height:23px}
 .pm-ml .pm-sw input:checked+i::after{transform:translateX(17px)}
+
+/* Search and state/county pickers float on top of the map */
+.ppa-map-home .pm-top{grid-area:canvas;align-self:start;position:relative;z-index:70;padding:8px;background:none;pointer-events:none}
+.ppa-map-home .pm-top :is(form,.pm-home-search,.pm-home-scope,.pm-pill,.pm-area,input,select,button){pointer-events:auto}
+.ppa-map-home .pm-top .pm-home-search,.ppa-map-home .pm-top .pm-pill{box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.ppa-map-home .pm-center{height:clamp(340px,88vw,500px)}
+@media(min-width:900px){.ppa-map-home .pm-center{height:clamp(375px,38vw,495px)}}
