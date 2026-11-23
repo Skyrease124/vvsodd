@@ -387,6 +387,7 @@
     const rs = shown().filter(passes); const polys = rs.filter(r => r.g), pts = rs.filter(r => !r.g && r.cx);
     if (mapReady) { map.getSource('parcels').setData({ type: 'FeatureCollection', features: polys.map(feature) }); map.getSource('dots').setData({ type: 'FeatureCollection', features: polys.filter(r => r.cx).map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); map.getSource('pts').setData({ type: 'FeatureCollection', features: pts.map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); }
     renderResults(rs); renderCounts(); paintResearch();
+    if (homeMap) scheduleStrip();
   }
   // Padding keeps the records clear of the search pill, the round buttons and the phone's bottom sheet, so a county lands centered in what you can actually see.
   const fitPad = () => homeMap ? {top:18,bottom:28,left:14,right:14} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
@@ -659,6 +660,7 @@
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
+      stripEl=mk('section','pm-strip');stripEl.id='pmStrip';stripEl.hidden=true;stripEl.setAttribute('aria-label','Parcels in this state');layout.append(stripEl);
       const resizeFrame = () => {
         const height = Math.ceil(layout.getBoundingClientRect().height);
         if (height > 0 && window.frameElement) window.frameElement.style.height = height + 'px';
@@ -858,6 +860,54 @@
     path.setAttribute('fill', cat.c + '40'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '3'); path.setAttribute('vector-effect', 'non-scaling-stroke'); path.setAttribute('stroke-linejoin', 'round'); svg.appendChild(path);
     const tag = mk('span', 'ptag', cat.n); tag.style.background = cat.c; w.append(img, svg, tag); if (r.va) { const v = mk('span', 'ptag v', 'Vacant land'); w.appendChild(v); } return w;
   }
+  // ---------- Homepage parcel strip: swipeable satellite thumbnails of the selected state's parcels (Florida first) ----------
+  const STRIP_STATES = new Set(['FL']);
+  let stripEl = null, stripTimer = 0, stripSig = '', stripList = [], stripShown = 0, stripScroller = null;
+  function stripThumb(r) {
+    const W = 300, H = 188, w = mk('span', 'pm-sc-img');
+    let x0 = MERC.X(r.bb[0]), x1 = MERC.X(r.bb[2]), y0 = MERC.Y(r.bb[1]), y1 = MERC.Y(r.bb[3]); const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    let pw = Math.max((x1 - x0) * 1.7, 170), ph = Math.max((y1 - y0) * 1.7, 95); if (pw / ph > W / H) ph = pw * H / W; else pw = ph * W / H; x0 = cx - pw / 2; x1 = cx + pw / 2; y0 = cy - ph / 2; y1 = cy + ph / 2;
+    const img = mk('img'); img.alt = ''; img.width = W; img.height = H; img.loading = 'lazy'; img.decoding = 'async';
+    img.src = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=' + [x0, y0, x1, y1].map(v => v.toFixed(1)).join(',') + '&bboxSR=3857&imageSR=3857&size=' + W + ',' + H + '&format=jpg&f=image';
+    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('d', r.g.map(ring => 'M' + ring.map(p => ((MERC.X(p[0]) - x0) / pw * W).toFixed(1) + ',' + ((y1 - MERC.Y(p[1])) / ph * H).toFixed(1)).join('L') + 'Z').join(' '));
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '2'); path.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(path);
+    w.append(img, svg); return w;
+  }
+  function markStripSel() { if (!stripScroller) return; stripScroller.querySelectorAll('.pm-sc').forEach(b => b.setAttribute('aria-current', String(!!sel && String(sel.i) === b.dataset.i))); }
+  function stripMore() {
+    if (!stripScroller) return;
+    for (const r of stripList.slice(stripShown, stripShown + 30)) {
+      const ds = IDX.datasets.find(x => x.id === r._d), cat = CATS[r.c];
+      const b = mk('button', 'pm-sc'); b.type = 'button'; b.dataset.i = String(r.i);
+      const acres = r.ac != null ? (r.ac >= 10 ? Math.round(r.ac) : r.ac.toFixed(r.ac >= 1 ? 1 : 2)) + ' ac' : '';
+      const meta = [r.amt != null ? '$' + Math.round(r.amt).toLocaleString('en-US') : '', r.sd && /^\d{4}-\d{2}-\d{2}/.test(r.sd) ? r.sd.slice(5, 10).replace('-', '/') : ''].filter(Boolean).join(' · ');
+      b.setAttribute('aria-label', (ds ? ds.county + ' County' : 'Parcel') + (acres ? ', ' + acres : '') + (meta ? ', ' + meta : '') + '. Show on map');
+      const tag = mk('i', 'pm-sc-dot'); if (cat) tag.style.background = cat.c;
+      const t = mk('span', 'pm-sc-t'); t.append(tag, mk('b', '', (ds ? ds.county.replace(/ County$/, '') : 'Parcel') + (acres ? ' · ' + acres : '')));
+      b.append(stripThumb(r), t, mk('small', '', meta || (cat ? cat.n : '')));
+      b.addEventListener('click', () => { select(r, { fly: true }); markStripSel(); });
+      stripScroller.appendChild(b);
+    }
+    stripShown = Math.min(stripList.length, stripShown + 30); markStripSel();
+  }
+  function renderStrip() {
+    if (!stripEl) return;
+    const on = homeMap && STRIP_STATES.has(curState);
+    const list = on ? shown().filter(passes).filter(r => r.bb && r.g) : [];
+    if (!list.length) { stripEl.hidden = true; stripSig = ''; return; }
+    const key = r => (isUpcoming(r) ? '0' + r.sd.slice(0, 10) : '1' + String(r.amt == null ? 9e9 : r.amt).padStart(12, '0'));
+    list.sort((a, b) => key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0);
+    const sig = curState + '|' + curCounty + '|' + list.length + '|' + list[0].i;
+    stripEl.hidden = false;
+    if (sig === stripSig) { markStripSel(); return; }
+    stripSig = sig; stripList = list; stripShown = 0; stripEl.textContent = '';
+    const head = mk('div', 'pm-strip-h'); head.append(mk('b', '', (IDX.states[curState]?.n || curState) + ' parcels'), mk('span', '', list.length.toLocaleString('en-US') + ' with a drawn boundary · swipe'));
+    stripScroller = mk('div', 'pm-strip-sc'); stripScroller.setAttribute('role', 'list');
+    stripScroller.addEventListener('scroll', () => { if (stripShown < stripList.length && stripScroller.scrollLeft + stripScroller.clientWidth > stripScroller.scrollWidth - 300) stripMore(); }, { passive: true });
+    stripEl.append(head, stripScroller); stripMore();
+  }
+  function scheduleStrip() { if (stripEl) { clearTimeout(stripTimer); stripTimer = setTimeout(renderStrip, 250); } }
   const hoaText = v => !v ? 'Not on file' : v === 'unknown' ? 'Not confirmed' : v;
   const tile = (k, v, s) => { const t = mk('div', 't'); t.append(mk('span', 'k', k), mk('b', '', v == null || v === '' ? '—' : String(v))); if (s) t.appendChild(mk('span', 's', s)); return t; };
   // Turf is strictly opt-in browser-side property research; no county records are rewritten.

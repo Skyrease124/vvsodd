@@ -585,3 +585,22 @@ body.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"s
 .ppa-map-home .pm-top .pm-home-search,.ppa-map-home .pm-top .pm-pill{box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .ppa-map-home .pm-center{height:clamp(340px,88vw,500px)}
 @media(min-width:900px){.ppa-map-home .pm-center{height:clamp(375px,38vw,495px)}}
+
+/* Parcel strip: swipeable thumbnails under the map (Florida first) */
+body.ppa-map-home .pm{grid-template-areas:"search" "canvas" "strip" "rail" "extra"}
+@media(min-width:900px){body.ppa-map-home .pm:has(.pm-right:not([inert]),.pm-left.open,.pm-pop:not([hidden]),.pm-cam:not([hidden])){grid-template-areas:"search search" "canvas extra" "strip extra" "rail extra"}}
+.ppa-map-home .pm-strip{grid-area:strip;min-width:0;padding:8px 0 10px;background:#0d2230;border-top:1px solid #355467}
+.ppa-map-home .pm-strip[hidden]{display:none}
+.ppa-map-home .pm-strip-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:0 12px 6px;color:#e8f4f1;font:600 13px/1.2 system-ui,-apple-system,sans-serif}
+.ppa-map-home .pm-strip-h span{color:#9fb3c2;font-weight:500;font-size:11px}
+.ppa-map-home .pm-strip-sc{display:flex;gap:9px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:0 12px 2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ppa-map-home .pm-strip-sc::-webkit-scrollbar{display:none}
+.ppa-map-home .pm-sc{flex:0 0 152px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:5px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.06);color:#f2f7f9;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,background .2s}
+.ppa-map-home .pm-sc:active{transform:scale(.97)}
+.ppa-map-home .pm-sc[aria-current=true]{border-color:#7ff0c2;background:rgba(127,240,194,.14)}
+.ppa-map-home .pm-sc-img{position:relative;display:block;width:100%;aspect-ratio:300/188;border-radius:10px;overflow:hidden;background:#17303d}
+.ppa-map-home .pm-sc-img img,.ppa-map-home .pm-sc-img svg{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.ppa-map-home .pm-sc-t{display:flex;align-items:center;gap:5px;min-width:0}
+.ppa-map-home .pm-sc-t b{font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ppa-map-home .pm-sc-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%}
+.ppa-map-home .pm-sc small{color:#9fb3c2;font-size:11px;padding-left:1px}
