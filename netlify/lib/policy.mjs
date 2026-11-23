@@ -11,5 +11,5 @@ export function subscriptionCheckoutText(site) {
   return 'You are subscribing to PricePocketPro: $5.50 USD per week, charged now and then automatically every week until you cancel. Cancel any time in Account > Manage subscription; you keep access until the end of the week you have paid for. Use only a card or payment method you own or have permission to use. See the [Billing, subscription and refund policy](' + site + '/legal/billing/) and [Terms](' + site + '/legal/terms/).';
 }
 export function donationCheckoutText(site) {
-  return 'This is an optional one-time donation to PricePocketAsset. It does not unlock any features, and it is not tax-deductible. Use only a card or payment method you own or have permission to use. See the [Donation terms](' + site + '/legal/donations/).';
+  return 'This is an optional, one-time contribution to support PricePocketAsset. It does not provide products, services, memberships or special benefits. PricePocketAsset is a for-profit project, and this contribution is not tax-deductible. Use only a card or payment method you own or have permission to use. See the [Support Terms](' + site + '/legal/donations/).';
 }
