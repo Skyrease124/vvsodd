@@ -367,6 +367,7 @@
 // "Add to Home Screen" help at the bottom of every page: steps for iPhone, Android and desktop. Hidden once the site is already installed.
 (function () {
   function add() {
+    if (location.pathname !== '/' && location.pathname !== '/index.html') return;
     if (document.body.classList.contains('ppa-home') && document.getElementById('install')) return;
     if (document.querySelector('.a2hs')) return;
     const standalone = !!(navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches)); if (standalone) return;
