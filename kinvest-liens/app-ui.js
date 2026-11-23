@@ -147,23 +147,7 @@
     const tab=document.getElementById('tab-'+link.dataset.exploreRadar);
     if(tab)tab.click();
   }));
-  for (const control of mapViews) {
-      const selected = control.dataset.homeMapView === view;
-      control.setAttribute('aria-pressed', String(selected));
-
-    }
-    const both = view === 'both';
-    document.getElementById('home-parcels').hidden = !(both || view === 'parcels');
-    document.getElementById('home-radar').hidden = !(both || view === 'radar');
-    document.getElementById('home-combined-note').hidden = !both;
-    // In combined mode keep Radar's records, tabs, state search and panels,
-    // but use the verified Parcel Map as the single geographic canvas.
-    mapWorkspace.classList.toggle('app-map-unified', both);
-    dockRadarTabs(both);
-    renderRadarSummary();
-    sendRadarOverlay();
-  }
-  for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
+  for(const control of mapViews)control.addEventListener('click',()=>showMapView(control.dataset.homeMapView));
   showMapView('both');
   const openRadarLink = event => {
     event.preventDefault();
