@@ -138,6 +138,7 @@
     #explore-radar .rtabs button{flex:1}
     #explore-radar #rpanel[hidden]{display:none}
   </style>
+<div id="explore-sale-list" aria-live="polite"></div>
 <div class="app-radar" id="home-radar">
 <section class="dhero radar-on">
   <div class="dwrap">
@@ -190,6 +191,43 @@
 <script src="liens/states/lien-summary.js"></script>
 <script src="map.js"></script>
 <script src="radar.js"></script>
+<script>
+(function(){
+  const host=document.getElementById('explore-sale-list');
+  let records=[];
+  function draw(kind){
+    host.replaceChildren();
+    const matches=records.filter(r=>kind==='cal'
+      ?['scheduled','tentative'].includes(r.sale?.kind)
+      :['past','completed'].includes(r.sale?.kind));
+    const title=document.createElement('h3');
+    title.textContent=kind==='cal'?'Auction Calendar':'Sale History';
+    const count=document.createElement('p');
+    count.textContent=matches.length.toLocaleString()+' county sale records · Verify dates and status with the official source';
+    host.append(title,count);
+    if(!matches.length){const empty=document.createElement('p');empty.textContent='No matching sales in the current imported records.';host.append(empty);return;}
+    const list=document.createElement('div');
+    list.style.cssText='display:grid;gap:10px;margin:14px 0 24px';
+    for(const r of matches.slice(0,100)){
+      const row=document.createElement('a');
+      row.href=(typeof r.link==='string'&&r.link.startsWith('/'))?r.link:'/liens/states/state/?s='+encodeURIComponent(r.state||'');
+      row.style.cssText='display:block;padding:13px 15px;border:1px solid #385d69;border-radius:12px;color:inherit;text-decoration:none;background:#10283a';
+      const name=document.createElement('strong');
+      name.textContent=(r.county||'County')+', '+(r.state||'');
+      const detail=document.createElement('div');
+      detail.style.cssText='margin-top:4px;opacity:.8;font-size:13px';
+      detail.textContent=(r.sale?.date||'Date not confirmed')+' · '+(r.sale?.kind||'Sale')+' · Open county details';
+      row.append(name,detail);list.append(row);
+    }
+    host.append(list);
+  }
+  fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error('Unavailable');return r.json();}).then(d=>{
+    records=Array.isArray(d.counties)?d.counties:[];
+    draw(['cal','hist'].includes(window.TaxRadar?._state?.tab)?window.TaxRadar._state.tab:'cal');
+  }).catch(()=>{host.textContent='Sale records could not be loaded. Please try again later.';});
+  document.querySelectorAll('#explore-radar .rtabs [data-tab]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.tab==='cal'||b.dataset.tab==='hist')draw(b.dataset.tab);}));
+})();
+</script>
 <script src="home-state.js"></script>
 <script src="/app-ui.js" defer></script>
 <script src="/auth-nav.js" defer></script>
