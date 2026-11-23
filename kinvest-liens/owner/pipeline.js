@@ -28,11 +28,12 @@
  const autoButton=document.createElement('button');autoButton.type='button';
  autoButton.style.cssText='background:#17334a;color:#d9f6eb;border:1px solid #5a988a;border-radius:10px;padding:10px 14px';
  autoButton.hidden=true;
- let autoEnabled=true,autoAllowed=false,runInProgress=false,autoStopped=false;
+ // Auto Run is OFF by default: each automatic batch can use up to nine shared official GIS requests. Press Force Auto Run, or turn Auto Run on, to allow batches.
+ let autoEnabled=false,autoAllowed=false,runInProgress=false,autoStopped=false;
  let nextAutoAt=Date.now()+300000,autoCooldownUntil=0,autoTimer=null;
  const setAutoLabel=()=>{autoButton.textContent=autoEnabled&&!autoStopped?'Auto Run: ON':'Auto Run: OFF';};
  setAutoLabel();
- autoButton.onclick=()=>{autoEnabled=!(autoEnabled&&!autoStopped);autoStopped=false;setAutoLabel();if(autoEnabled)scheduleAuto(1000);else if(autoTimer!==null){clearTimeout(autoTimer);autoTimer=null;}
+ autoButton.onclick=()=>{autoEnabled=!(autoEnabled&&!autoStopped);autoStopped=false;setAutoLabel();if(autoEnabled)scheduleAuto(300000);else if(autoTimer!==null){clearTimeout(autoTimer);autoTimer=null;}
   forceResult.textContent=autoEnabled?'Automatic preview batches enabled while this dashboard is open.':'Automatic preview batches paused on this device.';};
  const autoTiming=document.createElement('span');autoTiming.style.cssText='color:#9ac7bd;font-size:13px';
  const updateInfo=document.createElement('span');updateInfo.style.cssText='color:#b4d1d6;font-size:13px';
@@ -149,7 +150,7 @@
   }finally{runInProgress=false;autoButton.disabled=false;force.disabled=false;refreshAutoTiming();await load();}
  }
  force.onclick=()=>runBatch(true);
- scheduleAuto(300000);
+ if(autoEnabled)scheduleAuto(300000);
  const timingDisplay=setInterval(refreshAutoTiming,1000);
  const onFocus=()=>{if(!document.hidden){void load();if(autoEnabled&&!autoStopped&&Date.now()>=nextAutoAt)scheduleAuto(1000);}};
  document.addEventListener('visibilitychange',onFocus);
