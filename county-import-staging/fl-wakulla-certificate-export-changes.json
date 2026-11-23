@@ -1,0 +1,16 @@
+{
+  "mode": "comparison",
+  "source": "https://wakullatax.com/s/WakullaCountyCertificates-h4x5.xlsx",
+  "checkedAt": "2026-11-23T22:05:49.675851+00:00",
+  "previousCheckedAt": "2026-11-20T20:06:26.597803+00:00",
+  "summary": {
+    "baselineRecords": 224,
+    "currentRecords": 224,
+    "added": 0,
+    "missingFromLatest": 0,
+    "statusChanged": 0,
+    "amountChanged": 0
+  },
+  "changes": [],
+  "note": "A certificate missing from the new file is NOT proof of redemption."
+}
