@@ -512,12 +512,12 @@
       const landInput=mk('input');landInput.type='checkbox';landInput.id='pmLandOnly';landInput.setAttribute('aria-label','Land Only map filter');
       landInput.style.cssText='width:22px;height:22px;accent-color:#22c55e;flex-shrink:0';
       landRow.append(landText,landInput);
-      const note=mk('p','pm-land-note','Availability is not confirmed. These are government land inventory records, not verified active sale offers.');
+      const note=mk('p','pm-land-note','Government land inventory may accept offers or applications; confirm each parcel’s current status with the agency.');
       note.style.cssText='font-size:11px;line-height:1.45;margin:5px 4px 10px;opacity:.85';
       note.hidden=true;
       landInput.addEventListener('change',()=>{
         landOnly=landInput.checked;
-        note.hidden=!landOnly;
+        note.hidden=true;
         if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
         pageN=40;
         refresh();
@@ -525,12 +525,14 @@
         if(curState && !curCounty)stateCard(curState,!homeMap);
         // Leave the Tools panel open so the user can switch modes again immediately.
       });
-      const landDock=mk('div','pm-land-dock');landDock.style.cssText='display:grid;gap:3px;margin-top:8px;width:100%';
+      const landDock=mk('div','pm-land-dock');landDock.style.cssText='display:grid;gap:3px;margin-top:8px;width:100%;position:relative';
       landRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:5px;padding:7px 5px;border:1px solid #45cba8;border-radius:12px;background:#103b3b;color:white;cursor:pointer;font-size:11px';
       landText.querySelector('small').hidden=true;
       landInput.style.cssText='width:19px;height:19px;accent-color:#22c55e;flex-shrink:0';
-      note.style.cssText='font-size:10px;line-height:1.3;max-width:120px;margin:2px;color:#d2efe5';
+      note.style.cssText='font-size:11px;line-height:1.35;position:absolute;right:100%;top:0;width:min(240px,65vw);padding:10px;background:#103b3b;color:#d2efe5;border:1px solid #45cba8;border-radius:10px;box-shadow:0 6px 24px #0007;z-index:10';
       landDock.append(landRow,note);dock.append(landDock);
+      landDock.addEventListener('mouseleave',()=>{if(landOnly)note.hidden=true;});
+      landRow.addEventListener('click',()=>{if(landOnly)note.hidden=true;});
     }
     for(const [button,label] of [[lay,'Layers'],[fb,'Filters'],[camb,'Cameras'],[hzb,'Hazards']]){
       button.appendChild(mk('span','pm-control-label',label));
