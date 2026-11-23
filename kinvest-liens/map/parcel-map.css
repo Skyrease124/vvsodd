@@ -543,3 +543,10 @@ body.ppa-map-home .pm{
 .ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls{order:31;display:flex!important;justify-content:flex-start;gap:8px;grid-column:auto;padding:6px 16px 14px;margin:0}
 .ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls .maplibregl-ctrl-group button+button{border-top:0!important;border-left:1px solid #456875!important}
 
+/* Quick links under the Tools button */
+.ppa-map-home .pm-rail-link{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100%;min-height:44px;margin-top:8px;padding:6px 2px;border:1px solid rgba(126,218,200,.5);border-radius:14px;background:#10343d;color:#d6eee9;font:700 11px/1.2 system-ui,sans-serif;text-align:center;text-decoration:none}
+.ppa-map-home .pm-rail-link:focus-visible{outline:3px solid #ffe17b;outline-offset:2px}
+
+.ppa-map-home .pm-rail-link{flex-direction:column;gap:2px;min-height:52px}
+.ppa-map-home .pm-rail-link b{font-size:11px;line-height:1.15}
+.ppa-map-home .pm-rail-link small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:9px;font-weight:500;opacity:.8}
