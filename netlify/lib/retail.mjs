@@ -383,17 +383,37 @@ export function dueIn(p) {
   if (p.status === 'upcoming' && p.releaseDate) { const ms = Date.parse(p.releaseDate) - Date.now(); if (ms > 7 * 864e5) return 12 * 3600e3; if (ms > 2 * 864e5) return 3 * 3600e3; if (ms > -864e5) return 10 * 60e3; }
   return AVAILABLE.has(p.status) ? 20 * 60e3 : 30 * 60e3;
 }
+// One automatic check of one product. The monitor and the owner's "Check now" both use it, so the rules are the same.
+export async function checkOne(p) {
+  const r = await lookup(p.url);
+  if (!r.ok || !r.readable) {
+    p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable';
+    if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; }
+    await auth.kvPut(KP(p.id), p);
+    return { readable: false, failedNow: p.fails === 3, note: p.lastError, changed: false, alerts: 0, sent: [] };
+  }
+  p.fails = 0; p.lastError = '';
+  if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
+  const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
+  return { readable: true, failedNow: false, note: r.note, changed: p.status !== before, alerts: sent.filter(x => !x.skipped).length, sent };
+}
 export async function monitor({ limit = 25 } = {}) {
   const ps = (await listProducts()).filter(p => p.auto && !RETAILERS[p.retailer].noFetch && (!p.checkedAt || Date.now() - Date.parse(p.checkedAt) >= dueIn(p)));
   const res = { checked: 0, changed: 0, alerts: 0, failed: [] };
   for (const p of ps.slice(0, limit)) {
-    const r = await lookup(p.url); res.checked++;
-    if (!r.ok || !r.readable) { p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable'; if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; } await auth.kvPut(KP(p.id), p); if (p.fails === 3) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError }); continue; }
-    p.fails = 0; p.lastError = ''; if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
-    const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
-    if (p.status !== before) res.changed++; res.alerts += sent.filter(x => !x.skipped).length;
+    const c = await checkOne(p); res.checked++;
+    if (c.failedNow) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError });
+    if (c.changed) res.changed++; res.alerts += c.alerts;
   }
   return res;
+}
+// The owner asks for one product to be checked now. Same rules as an automatic check; at most once a minute per product.
+export async function checkNow(id) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
+  if (p.checkedAt && Date.now() - Date.parse(p.checkedAt) < 60e3) return err(429, 'Checked a moment ago. Wait a minute and try again.');
+  const c = await checkOne(p);
+  return { ok: true, readable: c.readable, note: c.note, changed: c.changed, alerts: c.alerts, sent: c.sent, product: await getProduct(id) };
 }
 
 // ---- private pushes to the owner only ----

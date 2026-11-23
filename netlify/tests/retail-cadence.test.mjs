@@ -37,4 +37,24 @@ const owner = await monitorFn.default(new Request('http://x/.netlify/functions/r
 const body = await owner.json();
 ok(owner.status === 200 && body.ok === true, 'the owner can run the product check by hand');
 ok(monitorFn.config === undefined, 'no schedule is set on the product check');
+// 4. Check now: the owner can check one product; members cannot; the same rules apply
+const api = (await import('../functions/retail.mjs')).default;
+const postApi = (c, b) => api(new Request('http://x/.netlify/functions/retail', { method: 'POST', headers: { cookie: c, 'Content-Type': 'application/json' }, body: JSON.stringify(b) }));
+const IN_STOCK_PAGE = '<html><script type="application/ld+json">{"@type":"Product","name":"Check now test","offers":{"@type":"Offer","price":"44.00","availability":"https://schema.org/InStock"}}</script><button>Add to Cart</button></html>';
+const ct = (await R.createProduct('founder', { url: 'https://www.target.com/p/check-now-test', name: 'Check now test (TEST FIXTURE)', category: 'pokemon', status: 'sold_out', auto: true })).product;
+R._setFetch(async () => new Response(IN_STOCK_PAGE, { status: 200 }));
+let res = await postApi(M, { action: 'checkNow', id: ct.id });
+ok(res.status === 403, 'members cannot run Check now');
+res = await postApi(F, { action: 'checkNow', id: ct.id }); let j = await res.json();
+ok(res.status === 200 && j.readable === true && j.product.status === 'in_stock', 'Check now reads the page and applies the result');
+ok(j.sent.some(x => x.kind === 'restock'), 'Check now sends the same restock alert an automatic check would');
+res = await postApi(F, { action: 'checkNow', id: ct.id });
+ok(res.status === 429, 'a second Check now within a minute is refused');
+const amz = (await R.createProduct('founder', { url: 'https://www.amazon.com/dp/B0CHECKNOW', name: 'Check now Amazon (TEST FIXTURE)', category: 'electronics' })).product;
+res = await postApi(F, { action: 'checkNow', id: amz.id }); j = await res.json();
+ok(res.status === 400 && /never checked automatically/.test(j.error), 'Amazon cannot be checked by the store reader');
+const stale = await R.getProduct(ct.id); stale.checkedAt = ago(5); await auth.kvPut('rp_' + ct.id, stale);
+R._setFetch(async () => new Response('<html>nothing here</html>', { status: 200 }));
+res = await postApi(F, { action: 'checkNow', id: ct.id }); j = await res.json();
+ok(res.status === 200 && j.readable === false && j.product.fails === 1 && j.product.status === 'in_stock', 'an unreadable page is reported and counted; the stock status is not changed by one failure');
 console.log('# pass ' + pass);

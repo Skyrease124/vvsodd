@@ -154,9 +154,15 @@
       sel.onchange = async () => { if (!sel.value) return; if ((sel.value === 'in_stock' || sel.value === 'low_stock') && !(await confirmSheet('Mark as ' + STATUS[sel.value].toLowerCase() + '?', 'If it was not in stock before, matching members get a push now. Only do this after you checked the store page.', 'Confirm'))) { sel.value = ''; return; } const r = await post({ action: 'update', id: p.id, status: sel.value }); const s = (r.j.sent || [])[0]; toast(r.s === 200 ? (s ? (s.skipped ? 'Saved. Alert held back (cooldown).' : 'Saved. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : 'Saved.') : (r.j.error || 'Error')); setTimeout(() => location.reload(), 900); };
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
       const ri = mk('button', '', 'Refresh image'); ri.type = 'button'; ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id }); ri.textContent = r.s === 200 ? (r.j.found ? 'Image saved' : 'Image not found') : 'Could not read'; setTimeout(() => location.reload(), 900); };
+      const ck = mk('button', '', 'Check now'); ck.type = 'button';
+      ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id }); ck.disabled = false; ck.textContent = 'Check now';
+        if (r.s !== 200) { toast(r.j.error || 'Could not check.'); return; }
+        if (!r.j.readable) { toast('Could not read the page. ' + (r.j.note || 'Try again later.')); }
+        else { const s = (r.j.sent || [])[0]; toast('Now: ' + (STATUS[r.j.product.status] || r.j.product.status) + (s ? (s.skipped ? '. Alert held back (cooldown).' : '. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : '.')); }
+        setTimeout(() => location.reload(), 1600); };
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };
       const op = mk('a', '', 'Open'); op.href = p.url; op.target = '_blank'; op.rel = 'noopener noreferrer'; op.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:.85rem;color:inherit;text-decoration:none';
-      acts.append(sel, ed, ri, on, op); g.append(acts); d.append(th, g); list.append(d); });
+      acts.append(sel, ed, ri); if (p.auto) acts.append(ck); acts.append(on, op); g.append(acts); d.append(th, g); list.append(d); });
     // requests
     const rq = mk('div'); rq.id = 'requests'; rq.append(mk('h2', '', 'Product requests (' + x.j.requests.length + ')')); root.append(rq);
     if (!x.j.requests.length) rq.append(mk('div', 'rt-empty', 'No requests waiting.'));
