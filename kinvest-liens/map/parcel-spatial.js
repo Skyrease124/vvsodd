@@ -22,8 +22,11 @@
       return {status:'measured',acres:squareMeters/SQ_M_PER_ACRE,squareFeet:squareMeters*10.7639104167};
     }catch{return {status:'unavailable',reason:'Parcel geometry could not be measured'};}
   }
+  const isLee=d=>!!d&&d.state==='FL'&&/^Lee(?: County)?$/i.test(d.county||'');
+  // Lee County has an official building layer; every other county uses nationwide OpenStreetMap footprints.
+  function buildingSource(d){return isLee(d)?'lee-buildings':'osm-buildings';}
   function buildingQueryBBox(r,d){
-    if(!d||d.state!=='FL'||!/^Lee(?: County)?$/i.test(d.county||''))return null;
+    if(!d)return null;
     const bb=r?.bb;
     if(!Array.isArray(bb)||bb.length!==4||bb.some(n=>!Number.isFinite(Number(n))))return null;
     const [west,south,east,north]=bb.map(Number);
@@ -31,14 +34,15 @@
     // A small cushion includes footprints whose boundary touches the parcel edge.
     const pad=0.00003;
     const box=[west-pad,south-pad,east+pad,north+pad];
-    if(box[2]-box[0]>0.018||box[3]-box[1]>0.018||box[0]<LEE_BOUNDS[0]||box[1]<LEE_BOUNDS[1]||box[2]>LEE_BOUNDS[2]||box[3]>LEE_BOUNDS[3])return null;
+    if(box[2]-box[0]>0.018||box[3]-box[1]>0.018)return null;
+    if(isLee(d)&&(box[0]<LEE_BOUNDS[0]||box[1]<LEE_BOUNDS[1]||box[2]>LEE_BOUNDS[2]||box[3]>LEE_BOUNDS[3]))return null;
     return box.map(n=>n.toFixed(6)).join(',');
   }
   function buildingOverlap(r,data,turf){
     const parcel=parcelFeature(r);
     if(!parcel||!turf||typeof turf.intersect!=='function'||typeof turf.area!=='function'||typeof turf.featureCollection!=='function')
       return {status:'unavailable',reason:'Parcel geometry or Turf.js unavailable'};
-    if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||!data.metadata||data.metadata.county!=='Lee')
+    if(!data||data.type!=='FeatureCollection'||!Array.isArray(data.features)||!data.metadata||(data.metadata.county!=='Lee'&&data.metadata.source!=='osm'))
       return {status:'unavailable',reason:'Official building data unavailable'};
     let count=0,invalid=0;
     for(const candidate of data.features){
@@ -53,5 +57,5 @@
     if(partial)return {status:'incomplete',count:0,reason:'Building result incomplete; no vacancy conclusion'};
     return {status:'no-overlap',count:0,partial:false};
   }
-  root.PPAParcelSpatial={calculateAcreage,buildingQueryBBox,buildingOverlap};
+  root.PPAParcelSpatial={calculateAcreage,buildingQueryBBox,buildingSource,buildingOverlap};
 })(typeof window!=='undefined'?window:globalThis);

@@ -874,9 +874,7 @@
     const buildings=mk('p','pm-spatial-result');
     const box=lib?.buildingQueryBBox(r,d);
     if(!box){
-      buildings.textContent=d?.state==='FL'&&/^Lee(?: County)?$/i.test(d?.county||'')
-        ?'Building overlap: unavailable for this parcel boundary or query area.'
-        :'Building overlap: not available for this county (Lee County coverage only).';
+      buildings.textContent='Building overlap: unavailable for this parcel boundary or query area.';
       panel.appendChild(buildings);
       return panel;
     }
@@ -885,9 +883,10 @@
     check.type='button';
     check.addEventListener('click',async()=>{
       if(!panel.isConnected)return;
-      check.disabled=true;buildings.textContent='Checking Lee County mapped building footprints…';
+      const lee=lib.buildingSource(d)==='lee-buildings';
+      check.disabled=true;buildings.textContent=lee?'Checking Lee County mapped building footprints…':'Checking mapped building footprints…';
       try{
-        const url='/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source:'lee-buildings',bbox:box});
+        const url=lee?'/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source:'lee-buildings',bbox:box}):'/.netlify/functions/building-footprints?'+new URLSearchParams({bbox:box});
         const response=await fetch(url,{credentials:'same-origin'});
         if(!response.ok)throw Error('County GIS service unavailable');
         const data=await response.json();
@@ -895,11 +894,11 @@
         const result=lib.buildingOverlap(r,data,turfLib);
         if(result.status==='overlap')buildings.textContent='Mapped building overlap detected ('+result.count+' footprint'+(result.count===1?'':'s')+').'+
           (result.partial?' Results may be incomplete.':'');
-        else if(result.status==='no-overlap')buildings.textContent='No overlap in the returned building footprints. Not confirmation of vacant land.';
+        else if(result.status==='no-overlap')buildings.textContent='No overlap in the returned building footprints.'+(lee?'':' OpenStreetMap coverage can be incomplete.')+' Not confirmation of vacant land.';
         else if(result.status==='incomplete')buildings.textContent='Building overlap inconclusive: returned data incomplete.';
         else buildings.textContent='Building overlap unavailable: '+result.reason+'.';
       }catch{
-        if(panel.isConnected)buildings.textContent='Building overlap unavailable: county GIS could not be checked.';
+        if(panel.isConnected)buildings.textContent='Building overlap unavailable: building data could not be checked.';
       }finally{if(panel.isConnected){check.disabled=false;check.textContent='Check again';}}
     });
     panel.append(check,buildings,mk('p','pm-spatial-note','Footprints are a map-data research signal, not proof of current building condition or vacancy.'));
