@@ -1368,21 +1368,27 @@
   const parcelStateBadges=[];
   let radarOverlayEnabled=false;
   function syncStateBadges(){
+    // Only customize state markers while Land Only is active.
     const landCounts={};
-    if(IDX?.datasets)for(const d of IDX.datasets)if(d.cats?.land_bank)landCounts[d.state]=(landCounts[d.state]||0)+Number(d.cats.land_bank||0);
+    if(homeMap&&landOnly&&IDX?.datasets)for(const d of IDX.datasets){
+      const n=Number(d.cats?.land_bank||0);
+      if(n>0)landCounts[d.state]=(landCounts[d.state]||0)+n;
+    }
     parcelStateBadges.forEach(m=>{
-      const el=m.getElement(),a=el.dataset.state,landCount=landCounts[a]||0;
-      el.style.display=((radarOverlayEnabled&&!landOnly)||(homeMap&&!!curState)||(homeMap&&landOnly&&!landCount))?'none':'';
+      const el=m.getElement(),a=el.dataset.state;
       if(homeMap&&landOnly){
-        el.textContent=landCount.toLocaleString('en-US');
-        el.title=landCount.toLocaleString('en-US')+' indexed land-bank/state-held parcel records in '+(IDX.states[a]?.n||a)+'; purchase eligibility unconfirmed';
+        const n=landCounts[a]||0;
+        if(!n||curState){el.style.display='none';return;}
+        el.textContent=n.toLocaleString('en-US');
+        el.title=n.toLocaleString('en-US')+' indexed government land parcels in '+(IDX.states[a]?.n||a)+'; sale status not confirmed';
         el.setAttribute('aria-label',el.title);
-        el.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:36px;max-width:72px;height:27px;padding:0 6px;border-radius:7px;border:1px solid #baf9df;background:#12b981;color:#062e23;font:700 11px/1 system-ui,-apple-system,sans-serif;letter-spacing:-.2px;white-space:nowrap;box-shadow:0 2px 6px #0006;cursor:pointer;transform:none;';
+        el.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:34px;max-width:70px;height:26px;padding:0 5px;border-radius:6px;border:1px solid #baf9df;background:#12b981;color:#062e23;font:700 11px/1 system-ui,-apple-system,sans-serif;white-space:nowrap;box-shadow:0 2px 5px #0005;cursor:pointer;';
       }else{
         el.textContent=el.dataset.count;
         el.title=el.dataset.title;
         el.setAttribute('aria-label',el.title);
         el.style.cssText='';
+        el.style.display=(radarOverlayEnabled||(homeMap&&!!curState))?'none':'';
       }
     });
   }
