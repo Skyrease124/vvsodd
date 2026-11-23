@@ -561,3 +561,20 @@ body.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"s
 .ppa-map-home .maplibregl-ctrl-attrib,.ppa-map-home .maplibregl-ctrl-scale{display:none!important}
 .ppa-map-home .pm-home-rail{flex-wrap:wrap}
 .ppa-map-home .pm-attrib{flex:1 0 100%;margin:6px 2px 0;font:500 10px/1.3 system-ui,sans-serif;color:#9fb3c2;opacity:.75}
+
+/* Tools is a small pill on the map (bottom-left); the imagery credit sits bottom-right */
+.ppa-map-home .pm-home-rail{grid-area:canvas!important;align-self:end;justify-self:stretch;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:flex-end;justify-content:space-between;gap:8px;padding:0 8px 8px;margin:0;border:0;background:none;pointer-events:none;z-index:80}
+.ppa-map-home .pm-home-rail .pm-stack{width:auto;pointer-events:auto}
+.ppa-map-home .pm-home-rail .pm-tool-trigger{width:auto!important;height:34px!important;min-height:34px!important;padding:0 13px!important;gap:6px!important;border-radius:999px!important;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.ppa-map-home .pm-home-rail .pm-tool-trigger svg{width:16px;height:16px}
+.ppa-map-home .pm-home-rail .pm-tool-trigger .pm-tool-trigger-label{font-size:12px!important;font-weight:650}
+.ppa-map-home .pm-attrib{flex:0 1 auto;margin:0 0 2px;text-align:right;font:500 9px/1.25 system-ui,sans-serif;color:rgba(255,255,255,.78);opacity:1;text-shadow:0 1px 3px rgba(0,0,0,.9);pointer-events:none}
+/* Panel at a moderate size */
+.ppa-map-home .pm-tool-menu.pm-ml{width:248px;max-height:min(270px,62dvh);border-radius:16px;pointer-events:auto}
+.ppa-map-home .pm-tool-dock:not(.open) .pm-tool-menu.pm-ml{pointer-events:none}
+.pm-ml-head{padding:12px 14px 8px;font-size:15px}
+.pm-ml .pm-ml-row{min-height:46px!important;padding:5px 14px!important;gap:10px!important;font-size:14px!important}
+.pm-ml .pm-ml-ic{flex-basis:30px!important;width:30px!important;height:30px!important}
+.pm-ml .pm-sw,.pm-ml .pm-sw input{width:44px!important;height:27px!important;flex-basis:44px!important}
+.pm-ml .pm-sw i::after{width:23px;height:23px}
+.pm-ml .pm-sw input:checked+i::after{transform:translateX(17px)}
