@@ -104,6 +104,8 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
      active:false,sharedRemaining:28,countyRemaining:1,pilotLimit:3,
      blockers:['Owner approval for a live pilot is pending'],review:{0:{parcelId:'0007',reason:'No official match',checkedAt:at}}}});
     if(path===api+'owner-brain-larimer-trial'&&request.method()==='GET')return route.fulfill({json:trial});
+    // Source discovery is preview-only and has its own check; answer it as unavailable so its panel stays hidden.
+    if(path===api+'owner-brain-discovery')return route.fulfill({status:404,json:{ok:false,error:'Deploy preview only'}});
     if(path===api+'owner-brain-reconciliation-research'){
      if(request.method()==='POST'){
       const body=request.postDataJSON();posts.push(body);

@@ -273,6 +273,20 @@ test('when the top candidate does not match, the next candidate is checked and c
  assert.equal(second.sample.outcome, 'matched');
 });
 
+test('a time limit ends the pass cleanly, keeps the requests already made, and says so', async () => {
+ let clock = NOW.getTime();
+ const { fetcher } = transport(govRoutes(), { query: matchingQuery });
+ const slow = async (url, options) => { clock += 5000; return fetcher(url, options); };
+ const result = await discoverCounty({
+  countyId: COUNTY, budget: budgetFor(memoryStorage()), fetcher: slow, now: () => new Date(clock),
+  seeds: SEEDS, dataset: DATASET, records: [RECORD], deadline: NOW.getTime() + 12000,
+ });
+ assert.notEqual(result.status, 'Verified');
+ assert.match(result.stopped, /Time limit reached/);
+ assert.equal(result.requests.used, 3, 'list, layers, schema; the verification request was never sent');
+ assert.match(result.candidates[0].reasons.at(-1), /Time limit reached/);
+});
+
 test('approval is a record change: it needs a verified, current, authoritative candidate and makes no request', async () => {
  const { fetcher, calls } = transport(govRoutes(), { query: matchingQuery });
  const result = await discoverCounty({ countyId: COUNTY, budget: budgetFor(memoryStorage()), fetcher, now: () => NOW, seeds: SEEDS, dataset: DATASET, records: [RECORD] });

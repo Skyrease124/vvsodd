@@ -49,3 +49,12 @@ section>details>ul,section>details>ol{margin-block:.45rem}
 .land-intake{display:grid;gap:.65rem;min-width:0}
 .land-intake input{width:100%;min-width:0;max-width:100%;font:inherit}
 .land-intake button{justify-self:start}
+
+.discovery{margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--line)}
+.discovery[hidden]{display:none}
+.discovery h3{margin:0 0 .35rem}
+.discovery-card{border:1px solid var(--line);border-radius:.8rem;padding:.7rem .85rem;margin-block:.65rem;background:#0f202b;min-width:0}
+.discovery-card h4{margin:.1rem 0 .4rem;overflow-wrap:anywhere}
+.discovery-card ul{margin:.3rem 0}
+.discovery-note{margin:.4rem 0;font-size:.92rem;color:var(--muted)}
+.discovery-status{font-weight:700;color:var(--accent);margin:.5rem 0 .2rem}

@@ -34,6 +34,13 @@
   <label for="county">County dataset</label>
   <select id="county"></select>
   <div id="details"></div>
+  <div id="discovery" class="discovery" role="region" aria-labelledby="discovery-title" hidden>
+   <h3 id="discovery-title">Source discovery</h3>
+   <p class="muted">Preview only. Discovery reads public ArcGIS metadata and checks one sample parcel per candidate. It never changes the map.</p>
+   <p id="discovery-budget" class="muted"></p>
+   <p id="discovery-message" role="status" class="muted"></p>
+   <div id="discovery-details" aria-live="polite"></div>
+  </div>
  </section>
 </main>
 </body>

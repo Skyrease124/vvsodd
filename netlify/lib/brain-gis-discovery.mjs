@@ -12,6 +12,8 @@ export const MAX_SERVICE_PROBES = 6;
 export const MAX_LAYER_DETAILS = 3;
 export const MAX_SAMPLES = 3;
 export const MAX_CANDIDATE_CHECKS = 2;
+// Keeps an owner-triggered pass inside a synchronous function's time limit. A cut-off run would spend budget and lose its result.
+export const DISCOVERY_TIME_LIMIT_MS = 8000;
 export const BUDGET_KEY_PREFIX = 'brain-gis-discovery-budget-v1-';
 const CACHE_MS = 24 * 60 * 60 * 1000;
 const STALE_MS = 3 * 365.25 * 24 * 60 * 60 * 1000;
@@ -147,11 +149,12 @@ export function createDiscoveryBudget({ storage, now = () => new Date(), dailyLi
  };
 }
 
-export function createGisClient({ countyId, budget, fetcher = fetch, now = () => new Date(), timeoutMs = 8000, cache = new Map() }) {
+export function createGisClient({ countyId, budget, fetcher = fetch, now = () => new Date(), timeoutMs = 8000, cache = new Map(), deadline = Infinity }) {
  const ledger = [];
  let cacheHits = 0;
  const locate = url => { const u = new URL(url); return { host: u.host, path: u.pathname }; };
  async function reserve(stage, url) {
+  if (now().getTime() >= deadline) throw connectorError('discovery_deadline', 'Time limit reached. Run again to continue.', 'discovery');
   await budget.reserve(countyId, stage);
   ledger.push({ stage, ...locate(url) });
  }
@@ -185,18 +188,22 @@ export function createGisClient({ countyId, budget, fetcher = fetch, now = () =>
 }
 
 // Runs one bounded discovery pass for a county. Budget exhaustion ends the pass and is reported, never thrown.
-export async function discoverCounty({ countyId, dataset = null, records = [], budget, fetcher = fetch, now = () => new Date(), seeds = DISCOVERY_SEEDS, maxServiceProbes = MAX_SERVICE_PROBES, cache = new Map() }) {
+export async function discoverCounty({ countyId, dataset = null, records = [], budget, fetcher = fetch, now = () => new Date(), seeds = DISCOVERY_SEEDS, maxServiceProbes = MAX_SERVICE_PROBES, cache = new Map(), deadline = Infinity }) {
  const seed = seeds[countyId];
  if (!seed) throw connectorError('no_seed', 'No reviewed discovery seed for this county', 'discovery');
- const client = createGisClient({ countyId, budget, fetcher, now, cache });
+ // Every request, including the connector's own, is capped to the time left in this pass.
+ const timeLeft = () => deadline - now().getTime();
+ const boundedFetch = (url, options) => fetcher(url, { ...options,
+  signal: AbortSignal.any([options.signal, AbortSignal.timeout(Math.max(1, Math.min(8000, timeLeft())))]) });
+ const client = createGisClient({ countyId, budget, fetcher: boundedFetch, now, cache, deadline });
  const observedAt = now().toISOString();
  const notes = [], rejected = [];
- const state = { limited: false };
+ const state = { limited: false, stopReason: null };
  const probe = async (url, stage) => {
-  if (state.limited) return { error: connectorError('discovery_skipped', 'Skipped after the request limit', 'discovery') };
+  if (state.limited) return { error: connectorError('discovery_skipped', 'Skipped after a discovery limit was reached', 'discovery') };
   try { return { data: await client.get(url, stage) }; }
   catch (error) {
-   if (error.scope === 'discovery') state.limited = true;
+   if (error.scope === 'discovery') { state.limited = true; state.stopReason = error.message; }
    return { error };
   }
  };
@@ -298,7 +305,7 @@ export async function discoverCounty({ countyId, dataset = null, records = [], b
   }
  } else {
   for (const candidate of checkable) {
-   if (state.limited) { candidate.reasons.push('Sample check not run: request limit reached'); continue; }
+   if (state.limited) { candidate.reasons.push('Sample check not run: a discovery limit was reached'); continue; }
    await sampleCheck(candidate);
    if (candidate.status === 'Verified') break;
   }
@@ -325,8 +332,9 @@ export async function discoverCounty({ countyId, dataset = null, records = [], b
   const stop = (error, attempts) => {
    if (error.scope === 'discovery') {
     state.limited = true;
+    state.stopReason = error.message;
     candidate.status = 'Source Found';
-    candidate.reasons.push('Sample check stopped: discovery request limit reached');
+    candidate.reasons.push('Sample check stopped: ' + error.message);
     candidate.sample = attempts.length ? { outcome: 'not-matched', attempts, checkedAt: now().toISOString() } : null;
     return;
    }
@@ -336,7 +344,7 @@ export async function discoverCounty({ countyId, dataset = null, records = [], b
   };
   let connector, discovery;
   try {
-   connector = createCountyConnector(config, { reserve: (id, stage) => client.reserve(stage, config.source), fetcher, now });
+   connector = createCountyConnector(config, { reserve: (id, stage) => client.reserve(stage, config.source), fetcher: boundedFetch, now });
    discovery = await connector.discover();
   } catch (error) { return stop(error, []); }
 
@@ -387,7 +395,7 @@ export async function discoverCounty({ countyId, dataset = null, records = [], b
   : best.reasons[0] ?? status;
  return {
   countyId, county: seed.county, state: seed.state, observedAt,
-  status, reason, best: best?.id ?? null, candidates, rejected, notes,
+  status, reason, best: best?.id ?? null, candidates, rejected, notes, stopped: state.stopReason,
   requests: client.summary(),
   daily: await budget.usage(),
   map: { status: 'not-connected', reason: 'Discovery does not change the map. Overlays stay unchanged until an owner approves a verified source and a reviewed overlay correction exists.' },

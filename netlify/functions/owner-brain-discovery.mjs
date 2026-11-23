@@ -6,7 +6,8 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import * as auth from '../lib/brain-auth.mjs';
 import {
- approveCandidate, createDiscoveryBudget, discoverCounty, DISCOVERY_DAILY_LIMIT, DISCOVERY_RUN_LIMIT, DISCOVERY_SEEDS
+ approveCandidate, createDiscoveryBudget, discoverCounty, DISCOVERY_DAILY_LIMIT, DISCOVERY_RUN_LIMIT, DISCOVERY_SEEDS,
+ DISCOVERY_TIME_LIMIT_MS
 } from '../lib/brain-gis-discovery.mjs';
 
 const RECORDS = 'brain-gis-discovery-v1';
@@ -58,6 +59,7 @@ async function handler(req, context) {
   const budget = createDiscoveryBudget({ storage });
   const result = await discoverCounty({
    countyId: body.countyId, dataset: { bb: dataset?.bb ?? null }, records: county.recs ?? [], budget, fetcher: fetch,
+   deadline: Date.now() + DISCOVERY_TIME_LIMIT_MS,
   });
   const records = (await auth.kvGet(RECORDS)) ?? {};
   records[body.countyId] = { ...result, savedAt: new Date().toISOString() };

@@ -3,6 +3,12 @@ const api = '/.netlify/functions/owner-brain-connectors';
 const picker = document.getElementById('county');
 const statusLine = document.getElementById('status');
 const details = document.getElementById('details');
+const discovery = document.getElementById('discovery');
+const discoveryBudget = document.getElementById('discovery-budget');
+const discoveryMessage = document.getElementById('discovery-message');
+const discoveryDetails = document.getElementById('discovery-details');
+const discoveryApi = '/.netlify/functions/owner-brain-discovery';
+let discoveryState = null; // last saved discovery status; null when the preview-only API is unavailable
 let selection = 0;
 let lastCounty = ''; // remembered so that clearing a filter returns to the county the owner had open
 function disclose(label,content){
@@ -127,6 +133,7 @@ async function showCounty(){
     const {county,coverage,operation}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
     render(county,coverage,operation);
+    renderDiscovery(picker.value);
     if(county.florida&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')
       void showFloridaLand(county.florida,request);
     if(operation?.mode==='pilot-prepared'&&location.hostname==='deploy-preview-454--pricepocketasset.netlify.app')await showCountyPilot(county.id,request);
@@ -175,6 +182,134 @@ picker.addEventListener('change',showCounty);
     await updatePicker('CO-larimer');
   }catch(error){statusLine.textContent=error.message;}
 })();
+
+// Source discovery: owner-only, preview-only. Discovery runs only when the owner presses its button,
+// never on page load, and approval records a decision without touching the map.
+const discoveryLabels = {'Source Found':'Source found','Testing':'Testing','Verified':'Verified','Blocked':'Blocked','Needs Review':'Needs review'};
+const discoveryPost = body => read(discoveryApi,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(20000)});
+function element(tag,text,className){
+  const node=document.createElement(tag);
+  if(text!==undefined)node.textContent=text;
+  if(className)node.className=className;
+  return node;
+}
+function sampleSummary(sample){
+  if(!sample)return 'Not sample-checked';
+  if(sample.outcome==='matched')return 'Sample parcel matched the official layer and its address'+
+    (sample.identifierForm==='dashes-removed'?' (identifier compared without dashes)':'');
+  if(sample.outcome==='not-matched')return 'No sample parcel matched · '+sample.attempts.length+' tried';
+  return 'Check error: '+(sample.message||sample.code);
+}
+function approvable(candidate){
+  return candidate.status==='Verified'&&candidate.authority?.status==='verified'&&
+    candidate.sample?.outcome==='matched'&&candidate.currentness!=='stale';
+}
+function candidateCard(countyId,candidate,approved){
+  const card=element('article',undefined,'discovery-card');
+  card.append(element('h4',candidate.layer.name||'Layer '+candidate.layer.id));
+  const list=element('dl');
+  const add=(term,value)=>{
+    const dd=element('dd');
+    if(value instanceof Node)dd.append(value);else dd.textContent=value;
+    list.append(element('dt',term),dd);
+  };
+  add('Status',discoveryLabels[candidate.status]||candidate.status);
+  add('Service',candidate.service.name+' · '+candidate.service.type);
+  add('Authority',candidate.authority.status==='verified'
+    ?'Verified by '+candidate.authority.basis.replaceAll('-',' ')+' · '+candidate.authority.host
+    :'Not established · '+candidate.authority.host);
+  add('Freshness',candidate.currentness==='stale'?'Last edited '+candidate.lastEditDate.slice(0,10)+' · stale'
+    :candidate.currentness==='current'?'Edited within three years':'No edit date published');
+  add('Sample check',sampleSummary(candidate.sample));
+  const link=element('a','Official layer');
+  link.href=candidate.layer.url;
+  add('Source',link);
+  const notes=element('ul');
+  for(const reason of candidate.reasons)notes.append(element('li',reason));
+  add('Notes',notes);
+  if(approved)add('Owner decision','Approved for the owner record · the map is not connected');
+  card.append(list);
+  if(approvable(candidate)&&!approved){
+    const approve=element('button','Approve source for owner record');
+    approve.type='button';
+    approve.addEventListener('click',()=>approveSource(countyId,candidate.id,approve));
+    card.append(approve);
+  }
+  return card;
+}
+function renderDiscovery(countyId){
+  discoveryDetails.replaceChildren();
+  if(!discoveryState||!countyId)return;
+  const entry=discoveryState.counties.find(item=>item.id===countyId);
+  if(!entry){
+    discoveryDetails.append(element('p','No reviewed discovery seed exists for this county yet.','discovery-note'));
+    return;
+  }
+  const run=element('button','Run bounded discovery · up to '+discoveryState.budget.runLimit+' requests');
+  run.type='button';
+  run.addEventListener('click',()=>runDiscovery(countyId,run));
+  discoveryDetails.append(run);
+  const result=entry.result;
+  if(!result){
+    discoveryDetails.append(element('p','Discovery has not run for this county.','discovery-note'));
+  }else{
+    discoveryDetails.append(element('p',(discoveryLabels[result.status]||result.status)+' · '+result.reason,'discovery-status'));
+    discoveryDetails.append(element('p','Last run '+new Date(result.savedAt||result.observedAt).toLocaleString()+
+      ' · '+result.requests.used+' requests','discovery-note'));
+    if(result.stopped)discoveryDetails.append(element('p','Stopped early: '+result.stopped+' Run again to continue.','discovery-note'));
+    if(result.owner){
+      const approved=result.candidates.find(candidate=>candidate.id===result.owner.candidateId);
+      discoveryDetails.append(element('p','Owner approved · '+(approved?.layer.name||'source')+' · the map is not connected','discovery-note'));
+    }
+    for(const candidate of result.candidates)
+      discoveryDetails.append(candidateCard(countyId,candidate,result.owner?.candidateId===candidate.id));
+  }
+  discoveryDetails.append(element('p','Map: not connected. Discovery does not change the map. Overlays stay as they are until an approved source and a reviewed overlay correction exist.','discovery-note'));
+  const events=(discoveryState.log||[]).filter(event=>event.countyId===countyId).slice(0,5);
+  if(events.length){
+    const log=element('ul');
+    for(const event of events){
+      const item=event.type==='gis-source-approved'?'Owner approved a source':'Discovery '+(discoveryLabels[event.status]||event.status)+' · '+event.requests+' requests';
+      log.append(element('li',new Date(event.at).toLocaleString()+' · '+item));
+    }
+    discoveryDetails.append(disclose('Recent discovery activity',log));
+  }
+}
+async function loadDiscovery(){
+  try{discoveryState=await read(discoveryApi);}
+  catch{discoveryState=null;discovery.hidden=true;return;}
+  discovery.hidden=false;
+  const budget=discoveryState.budget;
+  discoveryBudget.textContent='Discovery requests today: '+budget.used.toLocaleString('en-US')+' of '+budget.dailyLimit+
+    ' · up to '+budget.runLimit+' per run · separate from the county and Wayne GIS budgets';
+  renderDiscovery(picker.value);
+}
+async function runDiscovery(countyId,trigger){
+  trigger.disabled=true;
+  trigger.textContent='Discovering…';
+  discoveryMessage.textContent='Checking official sources. This takes up to about ten seconds.';
+  try{
+    const {result}=await discoveryPost({confirmed:true,action:'discover',countyId});
+    discoveryMessage.textContent=result.stopped?'Stopped at the time limit. Saved results are shown; run again to continue.':
+      'Discovery finished · '+result.requests.used+' requests used.';
+  }catch(error){
+    discoveryMessage.textContent=(error.message||'The run did not return')+'. Saved status is shown below; check it before running again.';
+  }
+  await loadDiscovery();
+}
+async function approveSource(countyId,candidateId,trigger){
+  if(!window.confirm('Approve this source for the owner record? The map will not change.'))return;
+  trigger.disabled=true;
+  try{
+    await discoveryPost({confirmed:true,action:'approve-source',countyId,candidateId});
+    discoveryMessage.textContent='Source approved for the owner record. The map was not changed.';
+  }catch(error){
+    discoveryMessage.textContent=error.message;
+    trigger.disabled=false;
+  }
+  await loadDiscovery();
+}
+loadDiscovery();
 
 async function showTrial(request){
   const url='/.netlify/functions/owner-brain-larimer-trial';

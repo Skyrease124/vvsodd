@@ -34,6 +34,8 @@ const detail = county => ({county, coverage:{available:0,mapped:0,verified:0,rem
     }
     // Larimer's preview-only trial panel is not part of this check; answer it as unavailable.
     if (url.pathname === '/.netlify/functions/owner-brain-larimer-trial') return route.fulfill({ status: 404, json: { error: 'not part of this check' } });
+    // Source discovery is preview-only and is covered by county-discovery-panel.cjs; answer it as unavailable so its panel stays hidden.
+    if (url.pathname === '/.netlify/functions/owner-brain-discovery') return route.fulfill({ status: 404, json: { error: 'not part of this check' } });
     if (url.pathname !== '/favicon.ico') unexpected.push(url.pathname);
     return route.fulfill({ status: 404 });
   });
