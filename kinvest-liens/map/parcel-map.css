@@ -227,6 +227,9 @@ body.ppa-map-home .pm{display:block;position:absolute;overflow:hidden}
 .ppa-map-home .pm-center{height:100%}
 .ppa-map-home .pm-top{inset:7px 8px auto}
 .ppa-map-home .pm-home-search{display:flex;gap:4px;align-items:stretch;margin-bottom:4px;border:1px solid #547369;border-radius:999px;padding:2px;background:#081b27ec;backdrop-filter:blur(12px)}
+.ppa-map-home .pm-home-search.pm-ai-active{border-color:#f4cd65;box-shadow:0 0 0 1px #f4cd65a6,0 0 13px #f4ce6680,0 0 27px #f4ce663d;transition:border-color .2s ease,box-shadow .2s ease}
+.ppa-map-home .pm-home-search.pm-ai-active:focus-within{box-shadow:0 0 0 1px #f4cd65,0 0 18px #f4ce66a6,0 0 32px #f4ce6650}
+@media(prefers-reduced-motion:reduce){.ppa-map-home .pm-home-search.pm-ai-active{transition:none}}
 .ppa-map-home .pm-search{flex:1;min-width:0;width:auto;max-width:none;align-items:center;gap:0;margin:0;padding:0;border:0;background:none;backdrop-filter:none}
 .ppa-map-home .pm-search input{padding:3px 1px;min-height:32px}
 .ppa-map-home .pm-search:not(:focus-within) input{text-overflow:ellipsis}
