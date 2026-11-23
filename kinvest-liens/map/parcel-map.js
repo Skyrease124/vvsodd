@@ -34,7 +34,10 @@
   const sqft = r => r.sf ? r.sf.toLocaleString('en-US') + ' sq ft' : (r.ac != null ? Math.round(r.ac * 43560).toLocaleString('en-US') + ' sq ft' : null);
   const slugState = a => a;
   let IDX = null, map = null, mapReady = false, loaded = {}, sel = null, near = null, paid = false, signedIn = false, acctDone = false, base = 'hybrid', sort = params.get('sort') === 'low' ? 'low' : 'sale', pageN = 40, curState = '', curCounty = '';
-  let parcelsOn = true; // homepage Tools panel: Parcels switch
+  // Homepage Tools: Land Only, Tax Liens and Deeds are one choice at a time (none selected shows everything).
+  const HOME_CAT = { lien: 'tax_lien', deed: 'tax_deed', land: 'land_bank' };
+  const HOME_RADAR = { lien: ['lien-sale', 'county-held'], deed: ['deed'], land: ['state-held'] };
+  const HOME_RESEARCH = { lien: 'lien', land: 'land' };
   let landOnly = false; // Homepage Tools mode; existing land-bank datasets are research inventory, not confirmed offers.
   const F = { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: params.get('vacant') === '1', small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false };
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
@@ -129,7 +132,7 @@
     const relevant = [...byCounty.values()].filter(d =>
       (!active.size || active.has(d.meta.id)) && (!curState || d.meta.state === curState));
     researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
-    const features = researchOn ? researchPins.filter(item => !homeMap || !landOnly || item.release.type === 'land').map(item => ({
+    const features = researchOn ? researchPins.filter(item => !homeMap || researchInMode(item)).map(item => ({
       type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
       properties: {id:item.release.id, type:item.release.type}
     })) : [];
@@ -187,7 +190,15 @@
     layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' }, paint: { 'raster-saturation': -0.35, 'raster-brightness-max': 0.9, 'raster-fade-duration': 250 } }, { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-brightness-max': 0.86, 'raster-saturation': -0.08, 'raster-fade-duration': 250 } }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'visible' } }] });
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
-  function setParcelsVisible(on) { if (!mapReady) return; ['p-fill', 'p-line', 'pts', 'p-dots'].forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'); }); }
+  // Current homepage Tools mode: 'all', 'lien', 'deed' or 'land'.
+  function homeMode() {
+    if (landOnly) return 'land';
+    const on = Object.keys(F.cats).filter(k => F.cats[k]);
+    const only = on.length === 1 && Object.keys(HOME_CAT).find(m => HOME_CAT[m] === on[0]);
+    return only || 'all';
+  }
+  function homeModeAllows(d) { const m = homeMode(); return m === 'all' || !!(d.cats && d.cats[HOME_CAT[m]]); }
+  function researchInMode(item) { const m = homeMode(); return m === 'all' || HOME_RESEARCH[m] === item.release.type; }
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
   function moveNativeMapControls(){
     const menu=window.__pmDock?.menu;
@@ -358,7 +369,6 @@
     return { type: 'Feature', properties: { i: r.i, c: r.c, v: r.v ? 1 : 0, va: r.va ? 1 : 0, ac: r.ac == null ? null : r.ac, lbl, no: r.o ? 0 : 1 }, geometry: { type: 'Polygon', coordinates: r.g } };
   }
   function refresh() {
-    if (mapReady) setParcelsVisible(parcelsOn);
     const rs = shown().filter(passes); const polys = rs.filter(r => r.g), pts = rs.filter(r => !r.g && r.cx);
     if (mapReady) { map.getSource('parcels').setData({ type: 'FeatureCollection', features: polys.map(feature) }); map.getSource('dots').setData({ type: 'FeatureCollection', features: polys.filter(r => r.cx).map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); map.getSource('pts').setData({ type: 'FeatureCollection', features: pts.map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); }
     renderResults(rs); renderCounts(); paintResearch();
@@ -385,18 +395,18 @@
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
     IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
-    // In homepage Land Only mode, the state picker follows the same indexed
-    // land-bank inventory as the green map badges. Do not alter other modes.
-    const syncLandStateOptions=()=>{
+    // In a homepage Tools mode (Land Only, Tax Liens or Deeds), the state picker lists only states with that category in the index.
+    const syncModeStates=()=>{
       if(!homeMap)return;
-      const eligible=new Set(IDX.datasets.filter(d=>Number(d.cats?.land_bank||0)>0).map(d=>d.state));
+      const limited=homeMode()!=='all';
+      const eligible=new Set(IDX.datasets.filter(d=>homeModeAllows(d)).map(d=>d.state));
       for(const option of stSel.options){
         if(!option.value)continue;
-        option.hidden=landOnly&&!eligible.has(option.value);
-        option.disabled=landOnly&&!eligible.has(option.value);
+        option.hidden=limited&&!eligible.has(option.value);
+        option.disabled=limited&&!eligible.has(option.value);
       }
-      if(landOnly&&stSel.value&&!eligible.has(stSel.value)){
-        stSel.value='';curState='';curCounty='';
+      if(limited&&stSel.value&&!eligible.has(stSel.value)){
+        stSel.value='';curState='';curCounty='';active=new Set(['__none__']);
         if(window.__pm)fillCounties(window.__pm.coSel);
       }
     };
@@ -525,7 +535,7 @@
     }
     const tools=mk('div','pm-tools');tools.append(camb,hzb);
     if(homeMap){
-      // Homepage Tools panel (reference design): Map Layers with Land Only, Parcels, Tax Liens, Deeds, Map Style, Boundary and More Layers.
+      // Homepage Tools panel (reference design): Map Layers with Land Only, Tax Liens, Deeds, Map Style, Boundary and More Layers.
       // It reuses the existing controls and handlers; the map itself is unchanged.
       menu.classList.add('pm-ml');
       const ic=svg=>{const x=mk('span','pm-ml-ic');x.innerHTML=svg;return x;};
@@ -537,30 +547,34 @@
       landRow.append(ic(ICON.pin),mk('span','pm-ml-t','Land Only'),sw(landInput));
       const note=mk('p','pm-land-note','Government land inventory may accept offers or applications; confirm each parcel’s current status with the agency.');
       note.hidden=true;
-      landInput.addEventListener('change',()=>{
-        landOnly=landInput.checked;
-        syncLandStateOptions();
+      // Land Only, Tax Liens and Deeds: one choice at a time. Turning one on turns the others off; turning it off shows everything.
+      const setHomeMode=m=>{
+        F.cats.tax_lien=m==='all'||m==='lien';
+        F.cats.tax_deed=m==='all'||m==='deed';
+        F.cats.land_bank=m==='all'||m==='land';
+        landOnly=m==='land';
         note.hidden=true;
-        if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
+        syncModeStates();
+        if(sel&&(!F.cats[sel.c]||(landOnly&&sel.c!=='land_bank'))){sel=null;closePop();}
         pageN=40;
-        if(homeMap&&curState){fillCounties(window.__pm.coSel);}
+        document.querySelectorAll('#pmFbox input[data-cat-key]').forEach(cb=>{cb.checked=!!F.cats[cb.dataset.catKey];});
+        // Keep the county the user picked when the new view still has records for it; otherwise show the state.
+        const keepCounty=!!curCounty&&IDX.datasets.some(d=>d.id===curCounty&&homeModeAllows(d));
+        if(homeMap&&curState)fillCounties(window.__pm.coSel);
+        if(keepCounty)window.__pm.coSel.value=curCounty;
         refresh();
         syncStateBadges();
         drawRadarPins();
-        if(curState && !curCounty && !homeMap)stateCard(curState,true);
-        if(homeMap&&curState)void focusState(curState,{remember:false,panel:false,zoom:false});
-        // Leave the Tools panel open so the user can switch modes again immediately.
-      });
-      // Parcels: shows or hides the parcel outlines and dots (the data is unchanged)
-      const parcelsIn=mk('input');parcelsIn.type='checkbox';parcelsIn.checked=parcelsOn;parcelsIn.setAttribute('aria-label','Parcels');
-      parcelsIn.addEventListener('change',()=>{parcelsOn=parcelsIn.checked;setParcelsVisible(parcelsOn);syncMore();});
-      const parcelsRow=mk('label','pm-ml-row');parcelsRow.append(ic(ICON.layers),mk('span','pm-ml-t','Parcels'),sw(parcelsIn));
+        if(homeMap&&curState&&!keepCounty)void focusState(curState,{remember:false,panel:false,zoom:false});
+        syncMore();
+      };
+      landInput.addEventListener('change',()=>setHomeMode(landInput.checked?'land':'all'));
       // Tax Liens and Deeds: the same category filters as the Filters panel
-      const lienIn=mk('input');lienIn.type='checkbox';lienIn.checked=!!F.cats.tax_lien;lienIn.setAttribute('aria-label','Tax liens');
-      lienIn.addEventListener('change',()=>{F.cats.tax_lien=lienIn.checked;refresh();syncMore();});
+      const lienIn=mk('input');lienIn.type='checkbox';lienIn.setAttribute('aria-label','Tax liens');
+      lienIn.addEventListener('change',()=>setHomeMode(lienIn.checked?'lien':'all'));
       const lienRow=mk('label','pm-ml-row');lienRow.append(ic(ICON.filter),mk('span','pm-ml-t','Tax Liens'),sw(lienIn));
-      const deedIn=mk('input');deedIn.type='checkbox';deedIn.checked=!!F.cats.tax_deed;deedIn.setAttribute('aria-label','Deeds');
-      deedIn.addEventListener('change',()=>{F.cats.tax_deed=deedIn.checked;refresh();syncMore();});
+      const deedIn=mk('input');deedIn.type='checkbox';deedIn.setAttribute('aria-label','Deeds');
+      deedIn.addEventListener('change',()=>setHomeMode(deedIn.checked?'deed':'all'));
       const deedRow=mk('label','pm-ml-row');deedRow.append(ic(ICON.filter),mk('span','pm-ml-t','Deeds'),sw(deedIn));
       // Map Style: opens the existing Map / Satellite / Hybrid buttons
       const baseName={map:'Map',satellite:'Satellite',hybrid:'Hybrid'};
@@ -577,9 +591,9 @@
       const moreBtn=mk('button','pm-ml-row pm-ml-link');moreBtn.type='button';
       moreBtn.append(ic(ICON.layers),mk('span','pm-ml-t','More Layers'),moreVal,mk('span','pm-ml-chev','›'));
       moreBtn.addEventListener('click',()=>{more.hidden=!more.hidden;});
-      syncMore=function(){const n=[camb,hzb].filter(b=>b.classList.contains('on')).length+(floridaBtn.getAttribute('aria-pressed')==='true'?1:0);moreVal.textContent=n+' active';};
+      syncMore=function(){const n=[camb,hzb].filter(b=>b.classList.contains('on')).length+(floridaBtn.getAttribute('aria-pressed')==='true'?1:0);moreVal.textContent=n+' active';const m=homeMode();landInput.checked=m==='land';lienIn.checked=m==='lien';deedIn.checked=m==='deed';};
       syncMore();
-      menu.append(head,landRow,note,parcelsRow,lienRow,deedRow,styleBtn,seg,boundRow,moreBtn,more);
+      menu.append(head,landRow,note,lienRow,deedRow,styleBtn,seg,boundRow,moreBtn,more);
     }
     for(const [button,label] of [[lay,'Layers'],[fb,'Filters'],[camb,'Cameras'],[hzb,'Hazards']]){
       button.appendChild(mk('span','pm-control-label',label));
@@ -678,7 +692,7 @@
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
-    const list = IDX.datasets.filter(d => d.state === curState && (!homeMap || !landOnly || d.cats?.land_bank)); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
+    const list = IDX.datasets.filter(d => d.state === curState && (!homeMap || homeModeAllows(d))); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
   }
   function stateNote() {
     const R = $('pmResults'); if (!curState) return; const has = IDX.datasets.some(d => d.state === curState), s = IDX.allStates.find(x => x.a === curState);
@@ -713,7 +727,7 @@
   function buildFilters() {
     const f = $('pmFilters'); f.textContent = ''; const box = mk('div', 'pm-f'); f.appendChild(box); box.id = 'pmFbox';
     box.appendChild(mk('h3', '', 'Property type'));
-    Object.entries(CATS).forEach(([k, v]) => { const l = mk('label'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = F.cats[k]; cb.addEventListener('change', () => { F.cats[k] = cb.checked; refresh(); }); const sw = mk('span', 'sw'); sw.style.background = v.c; const n = mk('span', 'n'); n.dataset.cat = k; l.append(cb, sw, document.createTextNode(v.n), n); box.appendChild(l); });
+    Object.entries(CATS).forEach(([k, v]) => { const l = mk('label'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = F.cats[k]; cb.dataset.catKey = k; cb.addEventListener('change', () => { F.cats[k] = cb.checked; refresh(); }); const sw = mk('span', 'sw'); sw.style.background = v.c; const n = mk('span', 'n'); n.dataset.cat = k; l.append(cb, sw, document.createTextNode(v.n), n); box.appendChild(l); });
     const lv = mk('label'), cv = mk('input'); cv.type = 'checkbox'; cv.addEventListener('change', () => { F.vacantOnly = cv.checked; refresh(); }); const sv = mk('span', 'sw'); sv.style.background = 'transparent'; sv.style.border = '2px solid ' + VAC; const nv = mk('span', 'n'); nv.dataset.cat = 'vac'; lv.append(cv, sv, document.createTextNode('Vacant land only'), nv); box.appendChild(lv);
     box.appendChild(mk('h3', '', 'Research updates'));
     const researchLabel = mk('label');
@@ -1344,7 +1358,7 @@
   let stateParcelLoadToken=0;
   async function showStateParcels(a) {
     const token=++stateParcelLoadToken;
-    const datasets=IDX.datasets.filter(d=>d.state===a&&(!landOnly||d.cats?.land_bank)).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
+    const datasets=IDX.datasets.filter(d=>d.state===a&&(!homeMap||homeModeAllows(d))).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
     say('Loading parcels across '+datasets.length+' mapped counties…',true);
@@ -1517,12 +1531,14 @@
   function drawRadarPins(){
     if(!homeMap||!mapReady||!map.getSource('states'))return;
     clearRadarPins();
-    if(landOnly||(homeMap&&!!curState))return;
+    if(homeMap&&!!curState)return;
+    const radarMode=homeMode();
     const src=map.getSource('states')._data;if(!src?.features)return;
     const zoom=map.getZoom(),countyView=zoom>=6.6;
     const grouped=new Map(),countyGroups=new Map();
     for(const c of radarOverlay.counties){
       if(!STATE_FIPS[c.state]||!radarKind(c,radarOverlay.tab))continue;
+      if(radarMode!=='all'&&!(HOME_RADAR[radarMode]||[]).includes(c.group))continue;
       if(radarOverlay.tab==='cal'&&radarOverlay.month>=0&&
         (!c.sale?.date||Number(c.sale.date.slice(5,7))-1!==radarOverlay.month))continue;
       const list=grouped.get(c.state)||[];list.push(c);grouped.set(c.state,list);
