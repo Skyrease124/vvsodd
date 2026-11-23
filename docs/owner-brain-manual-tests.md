@@ -31,7 +31,7 @@ These checks need a signed-in owner account on the **preview** site. They were n
 2. Expected: "Rejected. Nothing was published." The case cannot be approved afterwards.
 
 ## Test 5: withdraw a public correction
-1. Reject a case that is already public.
+1. In the queue, find a case marked **already public** and press **Withdraw from public map**. Confirm.
 2. Expected: "Rejected. The correction was removed from the public map." The parcel disappears from the signed-out and the owner views of the feed.
 
 Research releases (lien, land, tax deed and property updates) can be withdrawn through the research-updates API by a signed-in owner. There is no dashboard button for this yet. The withdrawal removes the item for every viewer.
