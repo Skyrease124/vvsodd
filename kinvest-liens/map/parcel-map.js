@@ -382,6 +382,21 @@
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
     IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
+    // In homepage Land Only mode, the state picker follows the same indexed
+    // land-bank inventory as the green map badges. Do not alter other modes.
+    const syncLandStateOptions=()=>{
+      if(!homeMap)return;
+      const eligible=new Set(IDX.datasets.filter(d=>Number(d.cats?.land_bank||0)>0).map(d=>d.state));
+      for(const option of stSel.options){
+        if(!option.value)continue;
+        option.hidden=landOnly&&!eligible.has(option.value);
+        option.disabled=landOnly&&!eligible.has(option.value);
+      }
+      if(landOnly&&stSel.value&&!eligible.has(stSel.value)){
+        stSel.value='';curState='';curCounty='';
+        if(window.__pm)fillCounties(window.__pm.coSel);
+      }
+    };
     // Native iOS state picker shows a concise, source-labelled Radar inventory summary.
     // Counts describe tracked records, not a guarantee that a listing remains purchasable.
     const applyStateInventory=counts=>{
@@ -517,6 +532,7 @@
       note.hidden=true;
       landInput.addEventListener('change',()=>{
         landOnly=landInput.checked;
+        syncLandStateOptions();
         note.hidden=true;
         if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
         pageN=40;
