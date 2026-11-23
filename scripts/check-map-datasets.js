@@ -16,7 +16,8 @@ function checkMapDataset(data, filename) {
       if (seen.has(rec.i)) errors.push('Duplicate record ID at ' + i);
       seen.add(rec.i);
     }
-    if (rec.amt != null && (!Number.isFinite(rec.amt) || rec.amt < 0)) errors.push('Invalid amount at ' + i);
+    // Negative amounts are real county-list values (credits or overpayments), so only non-numeric amounts are rejected.
+    if (rec.amt != null && !Number.isFinite(rec.amt)) errors.push('Invalid amount at ' + i);
     if (rec.lat != null && (!Number.isFinite(rec.lat) || rec.lat < -90 || rec.lat > 90)) errors.push('Invalid latitude at ' + i);
     if (rec.lng != null && (!Number.isFinite(rec.lng) || rec.lng < -180 || rec.lng > 180)) errors.push('Invalid longitude at ' + i);
   });
