@@ -535,6 +535,10 @@ body.ppa-map-home .pm{
 .ppa-map-home .pm-tool-dock.open{z-index:60}
 .ppa-map-home .pm-tool-menu.pm-ml{z-index:60}
 .ppa-map-home .pm-home-rail{position:relative;z-index:80}
-/* Not part of the reference Map Layers panel: hidden inside the panel only (the controls still exist in the page) */
-.pm-ml .pm-home-results,.pm-ml .pm-native-map-controls{display:none!important}
-.ppa-map-home .pm-tool-menu.pm-ml .pm-home-results,.ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls{display:none!important}
+/* Properties and the zoom / locate controls stay in the panel as before (same buttons, same handlers), as a footer under the rows */
+.ppa-map-home .pm-tool-menu.pm-ml{display:flex;flex-direction:column}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-home-results{order:30;display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;width:100%!important;min-height:56px!important;height:auto!important;margin:0!important;padding:8px 16px!important;border:0!important;border-top:1px solid rgba(255,255,255,.08)!important;border-radius:0!important;background:none!important;box-shadow:none!important;color:#f5f5f7!important;font:600 15px/1.2 -apple-system,system-ui,sans-serif!important}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-home-results svg{flex:0 0 34px;width:34px;height:34px;padding:8px;box-sizing:border-box;border-radius:10px;background:rgba(255,255,255,.08);color:#c9d6df}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-home-results .pm-control-label{display:inline!important;font-size:15px!important;color:#f5f5f7!important}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls{order:31;display:flex!important;justify-content:flex-start;gap:8px;grid-column:auto;padding:6px 16px 14px;margin:0}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls .maplibregl-ctrl-group button+button{border-top:0!important;border-left:1px solid #456875!important}

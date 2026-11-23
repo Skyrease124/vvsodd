@@ -590,7 +590,7 @@
     menu.addEventListener('click',e=>{
       const button=e.target.closest('button');
       if(!button)return;
-      if(button===lay||homeMap){return;} // Keep menu open while user chooses basemap or switches homepage layers.
+      if(button===lay||button.classList.contains('pm-ml-link')){return;} // Keep menu open for the Map Style and More Layers rows; every other button closes it, as before.
       if(button.closest('.pm-seg'))return;
       setDock(false);
     });
