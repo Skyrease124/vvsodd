@@ -72,8 +72,9 @@ test('reactor uses distinct event pulses and never replays historical events at 
  assert.match(page,/prefers-reduced-motion:reduce/);
  assert.match(page,/aria-live="polite"/);
  assert.match(page,/event-reactor/);
- assert.match(page,/'class':'packet'/);
- assert.match(page,/id="packets"/);
+ assert.match(page,/id="reactorCanvas"/);
+ assert.match(page,/getContext\('2d'\)/);
+ assert.match(page,/requestAnimationFrame/);
  assert.match(page,/event-beam/);
  assert.match(page,/event-wave/);
 });
@@ -208,7 +209,8 @@ test('Activity UI explicitly labels historical replay as a recent-event window',
 
 
 test('all 256 thin Reactor fibers animate with original drag and reduced motion support',()=>{
- assert.match(page,/\x27class\x27:\x27fiber moving\x27\+/);
+ assert.match(page,/const reactorFibers=\[\],fibersByNode=\[\]/);
+ assert.match(page,/function drawFrame\(time\)/);
  assert.match(page,/for\(let i=0;i<64;i\+\+\)/);
  assert.doesNotMatch(page,/\.fiber\.moving\.dense\{animation:none/);
  assert.match(page,/prefers-reduced-motion:reduce/);
