@@ -642,6 +642,10 @@
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
       rail.append(stack);
+      // Quick links under Tools: the saved-properties page and the full parcel map.
+      for(const [href,label] of [['/account/watchlist/','Watchlist'],['/map/','Parcel search']]){
+        const a=mk('a','pm-rail-link',label);a.href=href;a.target='_top';rail.append(a);
+      }
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
