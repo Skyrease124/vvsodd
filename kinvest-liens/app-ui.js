@@ -154,7 +154,7 @@
     document.getElementById('explore-radar').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
     document.getElementById('tab-cal')?.focus({preventScroll:true});
   };
-  document.querySelector('[data-open-radar]').addEventListener('click', openRadarLink);
+  document.querySelector('[data-open-radar]')?.addEventListener('click', openRadarLink);
   document.getElementById('home-radar').addEventListener('click', event => {
     const link = event.target.closest('[data-radar-parcel-state]');
     const state = link && mapWorkspace.querySelector('iframe').contentDocument?.querySelector('select[aria-label="State"]');
