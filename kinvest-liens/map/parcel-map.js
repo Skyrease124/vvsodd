@@ -34,6 +34,7 @@
   const sqft = r => r.sf ? r.sf.toLocaleString('en-US') + ' sq ft' : (r.ac != null ? Math.round(r.ac * 43560).toLocaleString('en-US') + ' sq ft' : null);
   const slugState = a => a;
   let IDX = null, map = null, mapReady = false, loaded = {}, sel = null, near = null, paid = false, signedIn = false, acctDone = false, base = 'hybrid', sort = params.get('sort') === 'low' ? 'low' : 'sale', pageN = 40, curState = '', curCounty = '';
+  let landOnly = false; // Homepage Tools mode; existing land-bank datasets are research inventory, not confirmed offers.
   const F = { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: params.get('vacant') === '1', small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false };
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
   const say = (t, keep) => { const m = $('pmMsg'); m.textContent = ''; if (t) { m.appendChild(mk('span', 'm', t)); if (!keep) setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 6500); } };
@@ -78,6 +79,7 @@
   const isOtc = r => r.k === 'otc' || /over[- ]the[- ]counter|surplus|\botc\b/i.test((r.t || '') + ' ' + (r.st || ''));
   const sfha = r => r.fz && r.fz.sfha != null ? r.fz.sfha > 0 : null;
   function passes(r) {
+    if (homeMap && landOnly && r.c !== 'land_bank') return false;
     if (F.query && !F.query.every(term => r._n.includes(term))) return false;
     if (F.vacantOnly && !r.va) return false; if (!F.cats[r.c] && !(F.vacantOnly && r.va)) return false;
     if (F.small && !(r.ac != null && r.ac <= 1)) return false;
@@ -126,7 +128,7 @@
     const relevant = [...byCounty.values()].filter(d =>
       (!active.size || active.has(d.meta.id)) && (!curState || d.meta.state === curState));
     researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
-    const features = researchOn ? researchPins.map(item => ({
+    const features = researchOn ? researchPins.filter(item => !homeMap || !landOnly || item.release.type === 'land').map(item => ({
       type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
       properties: {id:item.release.id, type:item.release.type}
     })) : [];
@@ -502,6 +504,28 @@
       if(!open)seg.hidden=true;
     }
     const tools=mk('div','pm-tools');tools.append(camb,hzb);
+    if(homeMap){
+      const landRow=mk('label','pm-land-only-toggle');
+      landRow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 10px;border-radius:12px;background:rgba(34,197,94,.09);cursor:pointer;min-height:48px';
+      const landText=mk('span');landText.append(mk('strong','', 'Land Only'),mk('small','','Land-bank and state-held parcel records'));
+      landText.style.cssText='display:grid;gap:3px;font-size:12px;line-height:1.3';
+      const landInput=mk('input');landInput.type='checkbox';landInput.id='pmLandOnly';landInput.setAttribute('aria-label','Land Only map filter');
+      landInput.style.cssText='width:22px;height:22px;accent-color:#22c55e;flex-shrink:0';
+      landRow.append(landText,landInput);
+      const note=mk('p','pm-land-note','Availability is not confirmed. These are government land inventory records, not verified active sale offers.');
+      note.style.cssText='font-size:11px;line-height:1.45;margin:5px 4px 10px;opacity:.85';
+      note.hidden=true;
+      landInput.addEventListener('change',()=>{
+        landOnly=landInput.checked;
+        note.hidden=!landOnly;
+        if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
+        pageN=40;
+        refresh();
+        if(curState && !curCounty)stateCard(curState,!homeMap);
+        // Leave the Tools panel open so the user can switch modes again immediately.
+      });
+      menu.prepend(landRow,note);
+    }
     for(const [button,label] of [[lay,'Layers'],[fb,'Filters'],[camb,'Cameras'],[hzb,'Hazards']]){
       button.appendChild(mk('span','pm-control-label',label));
     }
@@ -655,7 +679,7 @@
     const nt = mk('p', 'pm-empty'); nt.style.fontSize = '.8rem'; nt.textContent = 'Solid outline: on the official list we checked. Dashed outline: historical or not confirmed. Yellow edge: vacant land. Colors show the kind of record, not that a property is available.'; box.appendChild(nt);
   }
   function renderCounts() {
-    const rs = shown(); const c = { tax_deed: 0, tax_lien: 0, land_bank: 0, vac: 0 }; rs.forEach(r => { c[r.c]++; if (r.va) c.vac++; });
+    const rs = shown().filter(passes); const c = { tax_deed: 0, tax_lien: 0, land_bank: 0, vac: 0 }; rs.forEach(r => { c[r.c]++; if (r.va) c.vac++; });
     document.querySelectorAll('#pmFbox [data-cat]').forEach(n => { n.textContent = rs.length ? c[n.dataset.cat].toLocaleString('en-US') : ''; });
     const lg = $('pmLegend'); lg.textContent = ''; Object.entries(CATS).forEach(([k, v]) => { const s = mk('span'); const i = mk('i'); i.style.background = v.c; s.append(i, document.createTextNode(v.n)); lg.appendChild(s); }); Object.entries(COL).forEach(([k, c]) => { const s = mk('span', 'lg-st'); const i = mk('i'); i.style.background = c; s.append(i, document.createTextNode(k)); lg.appendChild(s); }); lg.querySelectorAll(':scope > span:not(.lg-st)').forEach(x => x.classList.add('lg-pc')); const sv = mk('span', 'lg-pc'); const iv = mk('i'); iv.style.border = '2px solid ' + VAC; iv.style.background = 'transparent'; sv.append(iv, document.createTextNode('Vacant land')); lg.appendChild(sv);
   }
@@ -692,14 +716,14 @@
     R.textContent = '';
     $('tabList').textContent = rs.length ? 'Properties · ' + rs.length.toLocaleString('en-US') : 'Properties';
     updateHomeDrawer(loadedAny ? rs.length.toLocaleString('en-US') + (rs.length === 1 ? ' property' : ' properties') : 'Properties', loadedAny && rs.length > 0);
-    if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
+    if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', landOnly && homeMap ? 'Land inventory' : 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
     if (!homeMap) {
       R.append(mk('h3', '', 'Properties'), mk('p', 'cnt', rs.length.toLocaleString('en-US') + ' match your filters' + (F.inView ? ' in this view' : '') + '. Showing ' + Math.min(rs.length, pageN) + '.'));
       const control = makeSort(); control.style.cssText = 'width:100%;margin-bottom:6px'; R.append(control);
     }
     [...rs].sort(sortFns[sort]).slice(0, pageN).forEach(r => R.appendChild(card(r)));
     if (rs.length > pageN) { const m = mk('button', 'pm-btn', 'Show more'); m.type = 'button'; m.style.width = '100%'; m.addEventListener('click', () => { pageN += 40; refresh(); }); R.appendChild(m); }
-    if (!rs.length) R.appendChild(mk('p', 'pm-empty', 'Nothing matches these filters. Try resetting them.'));
+    if (!rs.length) R.appendChild(mk('p', 'pm-empty', landOnly && homeMap ? 'No matching land-bank parcel records loaded. Choose a county with land inventory; sale availability must be verified with the source.' : 'Nothing matches these filters. Try resetting them.'));
     if (homeMap) R.scrollTop = scroll;
   }
   const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => homeMap || window.innerWidth < 980;
