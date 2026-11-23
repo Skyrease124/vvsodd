@@ -79,42 +79,7 @@
     <div id="home-radar-map-controls" aria-label="Tax Sale Radar map controls" hidden></div><div id="home-radar-map-summary" role="status" aria-live="polite" hidden></div>
     <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span><a data-open-map href="/map/">Open full map →</a></div>
     </div>
-<div class="app-radar" id="home-radar" hidden>
-<section class="dhero radar-on">
-  <div class="dwrap">
-    <div class="rhead">
-      <p id="hgreet" class="hgreet" aria-hidden="true"></p>
-      <h2>Tax Sale <span class="gold">Radar</span></h2>
-      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records.</p>
-    </div>
-    <div id="radar" class="radar">
-      <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
-      <div class="rtabs" role="tablist" aria-label="Map views">
-        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="true">Opportunities</button>
-        <button type="button" role="tab" id="tab-cal" data-tab="cal" aria-selected="false">Auction Calendar</button>
-        <button type="button" role="tab" id="tab-hist" data-tab="hist" aria-selected="false">Sale History</button>
-      </div>
-      <div id="rfilters" class="rfilters" aria-label="Find my deal"></div>
-      <div class="rfind"><label for="rfindin" class="sr-only">Find a state</label><div class="rcombo"><input id="rfindin" type="text" role="combobox" aria-expanded="false" aria-controls="rfindlist" aria-autocomplete="list" autocomplete="off" placeholder="Search a state"><ul id="rfindlist" role="listbox" hidden></ul></div></div>
-      <div class="dmap rmap">
-        <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
-      </div>
-      <div id="mapstats" class="mapstats" aria-label="Site numbers"></div>
-      <details id="rlegend" class="rlegend"><summary>Legend: what the colors and markers mean</summary><div id="rlegendbody"></div></details>
-      <aside id="rpanel" class="rpanel" role="dialog" aria-modal="false" aria-labelledby="rpanelh" hidden></aside>
-    </div>
-    <div class="flpanel" hidden>
-      <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
-      <div class="flintro"><h2>Florida</h2><p>Florida sells tax lien certificates (green). Select a county to open its tax collector page.</p></div>
-      <div class="flcounties"><h3>Available Counties (Example)</h3><div id="flchips" class="flchips"></div>
-        <a class="dghost" href="liens/states/state/?s=FL">View All Florida Counties &rarr;</a></div>
-      <div class="flwhy"><h3>Good to know</h3>
-        <ul><li>Rates and rules differ by state and county</li><li>Redemption periods can tie up money for years</li><li>Always verify with the county before you bid</li></ul>
-        <a class="dbtn" href="liens/">Learn More &rarr;</a></div>
-    </div>
-  </div>
-</section>
-</div>
+
   </section>
   <aside class="flyover-teaser" aria-label="Upcoming Parcel Flyover feature"><span class="flyover-teaser-icon" aria-hidden="true">✈</span><div class="flyover-teaser-copy"><div class="flyover-teaser-heading"><strong>Parcel Flyover</strong><span class="flyover-teaser-badge">COMING SOON</span></div><p>Explore properties from above with immersive 3D flyovers.</p></div><span class="flyover-teaser-pro">Planned Pro feature</span></aside>
   <style>
@@ -158,7 +123,57 @@
     <a class="app-card" href="/liens/states/"><span data-icon="layers"></span><b>County Data</b><small>Official records and sources</small></a>
     <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Classes</b><small>Lessons and practice drills</small></a>
     <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Workspace for research, lists and analysis</small></a>
+    <a class="app-card" href="#explore-radar" data-explore-radar="cal"><span data-icon="calendar"></span><b>Auction Calendar</b><small>Upcoming and tentative sales</small></a>
+    <a class="app-card" href="#explore-radar" data-explore-radar="hist"><span data-icon="file"></span><b>Sale History</b><small>Past and completed sales</small></a>
   </nav>
+</section>
+<section id="explore-radar" class="app-section" aria-label="Auction calendar and sale history">
+  <style>
+    #explore-radar .rmap, #explore-radar #mapstats, #explore-radar #rlegend, #explore-radar #rwhat {display:none!important}
+    #explore-radar .dhero{padding:0;background:transparent}
+    #explore-radar .dwrap{max-width:100%;padding:0}
+    #explore-radar .rhead{display:none}
+    #explore-radar .rtabs [data-tab="opp"]{display:none!important}
+    #explore-radar .rtabs{display:flex}
+    #explore-radar .rtabs button{flex:1}
+    #explore-radar #rpanel[hidden]{display:none}
+  </style>
+<div class="app-radar" id="home-radar">
+<section class="dhero radar-on">
+  <div class="dwrap">
+    <div class="rhead">
+      <p id="hgreet" class="hgreet" aria-hidden="true"></p>
+      <h2>Tax Sale <span class="gold">Radar</span></h2>
+      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records.</p>
+    </div>
+    <div id="radar" class="radar">
+      <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
+      <div class="rtabs" role="tablist" aria-label="Map views">
+        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="false" hidden>Opportunities</button>
+        <button type="button" role="tab" id="tab-cal" data-tab="cal" aria-selected="false">Auction Calendar</button>
+        <button type="button" role="tab" id="tab-hist" data-tab="hist" aria-selected="false">Sale History</button>
+      </div>
+      <div id="rfilters" class="rfilters" aria-label="Find my deal"></div>
+      <div class="rfind"><label for="rfindin" class="sr-only">Find a state</label><div class="rcombo"><input id="rfindin" type="text" role="combobox" aria-expanded="false" aria-controls="rfindlist" aria-autocomplete="list" autocomplete="off" placeholder="Search a state"><ul id="rfindlist" role="listbox" hidden></ul></div></div>
+      <div class="dmap rmap">
+        <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
+      </div>
+      <div id="mapstats" class="mapstats" aria-label="Site numbers"></div>
+      <details id="rlegend" class="rlegend"><summary>Legend: what the colors and markers mean</summary><div id="rlegendbody"></div></details>
+      <aside id="rpanel" class="rpanel" role="dialog" aria-modal="false" aria-labelledby="rpanelh" hidden></aside>
+    </div>
+    <div class="flpanel" hidden>
+      <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
+      <div class="flintro"><h2>Florida</h2><p>Florida sells tax lien certificates (green). Select a county to open its tax collector page.</p></div>
+      <div class="flcounties"><h3>Available Counties (Example)</h3><div id="flchips" class="flchips"></div>
+        <a class="dghost" href="liens/states/state/?s=FL">View All Florida Counties &rarr;</a></div>
+      <div class="flwhy"><h3>Good to know</h3>
+        <ul><li>Rates and rules differ by state and county</li><li>Redemption periods can tie up money for years</li><li>Always verify with the county before you bid</li></ul>
+        <a class="dbtn" href="liens/">Learn More &rarr;</a></div>
+    </div>
+  </div>
+</section>
+</div>
 </section>
 <aside class="app-upgrade" data-upgrade><div><b>Upgrade to Pro</b><p>Unlock PricePocket AI, Map Assistant, live cameras and bulk downloads.</p></div><a class="app-button" href="/plans/">Compare Plans →</a></aside>
 </div>
