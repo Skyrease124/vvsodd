@@ -556,3 +556,8 @@ body.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"s
     grid-template-areas:"search search" "canvas extra" "rail extra";
   }
 }
+
+/* No scale bar or info button on the homepage map; the imagery credit sits under the Tools bar */
+.ppa-map-home .maplibregl-ctrl-attrib,.ppa-map-home .maplibregl-ctrl-scale{display:none!important}
+.ppa-map-home .pm-home-rail{flex-wrap:wrap}
+.ppa-map-home .pm-attrib{flex:1 0 100%;margin:6px 2px 0;font:500 10px/1.3 system-ui,sans-serif;color:#9fb3c2;opacity:.75}

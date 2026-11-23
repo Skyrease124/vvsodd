@@ -220,7 +220,6 @@
     if (homeMap) {
       map.addControl(navigationControl, controlSide);
       map.addControl(locationControl, controlSide);
-      map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
       // Keep MapLibre's original button handlers but place their controls inside the dock.
       moveNativeMapControls();
       const repaint = () => {
@@ -642,6 +641,7 @@
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
       rail.append(stack);
+      rail.append(mk('p','pm-attrib','Imagery © Esri, Maxar, Earthstar Geographics'));
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
