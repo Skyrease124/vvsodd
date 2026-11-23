@@ -60,7 +60,8 @@ await call(P, { action: 'watch', id: wid, inStock: true, maxPrice: '400' }); sen
 sent.length = 0; r = await call(F, { action: 'update', id: jid, status: 'in_stock' }); ok(r.j.sent[0].kind === 'release' && /Release Live/.test(sent[0].headings.en) && sent[0].url.startsWith('https://www.nike.com/'), 'UPCOMING -> IN STOCK sends the release alert to the Nike page');
 // feed freshness
 let fd = (await call(A, { feed: 1 })).j; ok(fd.inStock.some(p => p.id === pid), 'in stock product shows in In Stock Now');
-const st = await R.getProduct(wid); st.confirmedAt = '2020-01-01T00:00:00Z'; await auth.kvPut('rp_' + wid, st); fd = (await call(A, { feed: 1 })).j; ok(!fd.inStock.some(p => p.id === wid), 'stale "in stock" never shown as in stock');
+const st = await R.getProduct(wid); st.confirmedAt = '2020-01-01T00:00:00Z'; st.confirmedBy = 'auto'; await auth.kvPut('rp_' + wid, st); fd = (await call(A, { feed: 1 })).j; ok(!fd.inStock.some(p => p.id === wid), 'stale automatic "in stock" never shown as in stock');
+st.confirmedBy = 'owner'; await auth.kvPut('rp_' + wid, st); fd = (await call(A, { feed: 1 })).j; ok(fd.inStock.some(p => p.id === wid), 'owner-confirmed in stock stays in stock beyond 3 hours');
 // inbox
 let ib = (await call(P, { inbox: 1 })).j; ok(ib.items.length >= 3 && ib.unread >= 3 && ib.items[0].retailer, 'alerts center lists alerts with unread status');
 await call(P, { action: 'read', ids: 'all' }); ok((await call(P, { inbox: 1 })).j.unread === 0, 'mark all read');

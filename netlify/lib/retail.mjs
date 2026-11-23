@@ -34,8 +34,9 @@ export const STATUSES = ['upcoming', 'monitoring', 'in_stock', 'low_stock', 'sol
 // Stock states shown to people. Price alone never means in_stock. 'sold_out' is kept for older records (same as out_of_stock).
 export const STOCK_LABEL = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', out_of_stock: 'OUT OF STOCK', sold_out: 'OUT OF STOCK', invite_only: 'Invite Only', preorder: 'Preorder', coming_soon: 'Coming Soon', waitlist: 'Waitlist', limited_access: 'Limited Access', unknown: 'Unknown', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
 const AVAILABLE = new Set(['in_stock', 'low_stock']);
-const COOLDOWN_MS = () => +(process.env.RETAIL_COOLDOWN_MIN || 360) * 60e3;   // same alert type, same product: at most every 6 hours
-const FRESH_MS = 3 * 3600e3;   // "In Stock Now" only shows results confirmed in the last 3 hours
+const COOLDOWN_MS = () => +(process.env.RETAIL_COOLDOWN_MIN || 360) * 60e3;   // automatic changes: same alert type, same product, at most every 6 hours
+const OWNER_COOLDOWN_MS = () => +(process.env.RETAIL_OWNER_COOLDOWN_MIN || 30) * 60e3;   // owner-confirmed changes: a short guard against double taps
+const FRESH_MS = 3 * 3600e3;   // automatic checks: "In Stock Now" only shows a result confirmed in the last 3 hours. Owner-confirmed stock stays until the owner changes it.
 
 // ---- URL safety: https, a known store, no credentials, tracking parameters removed ----
 export function checkUrl(raw) {
@@ -199,7 +200,7 @@ export async function createProduct(owner, b) {
   if (!p.name) return err(400, 'Add a product name.'); if (!p.category) return err(400, 'Pick a category.');
   if (STATUSES.includes(b.status)) p.status = b.status;
   if (p.priceManual != null) p.price = p.priceManual;
-  if (AVAILABLE.has(p.status)) p.confirmedAt = p.checkedAt = now();
+  if (AVAILABLE.has(p.status)) { p.confirmedAt = p.checkedAt = now(); p.confirmedBy = 'owner'; }
   await auth.kvPut(KP(p.id), p); await auth.kvPut(KU(c.url), { id: p.id }); return { ok: true, product: p };
 }
 export async function updateProduct(id, b) {
@@ -217,7 +218,7 @@ export async function listProducts({ all } = {}) {
 }
 // Public card: verified facts only. "In stock" shows only while the last confirmation is fresh.
 export function card(p) {
-  const fresh = p.confirmedAt && Date.now() - Date.parse(p.confirmedAt) < FRESH_MS;
+  const fresh = p.confirmedAt && (p.confirmedBy === 'owner' || Date.now() - Date.parse(p.confirmedAt) < FRESH_MS);
   const status = AVAILABLE.has(p.status) && !fresh ? 'monitoring' : p.status;
   return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, buyUrl: p.affiliateUrl || p.url, asin: p.asin || '', image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', imageNote: p.image ? '' : (p.imageNote || 'Image not found'), imageSource: p.imageSource || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
 }
@@ -226,7 +227,7 @@ export function card(p) {
 export async function applyResult(p, r, source) {
   const t = now(), prevStatus = p.status, prevPrice = p.price;
   const nextStatus = STATUSES.includes(r.status) ? r.status : prevStatus, nextPrice = r.price != null ? num(r.price) : prevPrice;
-  p.checkedAt = t; if (AVAILABLE.has(nextStatus)) p.confirmedAt = t;
+  p.checkedAt = t; if (AVAILABLE.has(nextStatus)) { p.confirmedAt = t; p.confirmedBy = source; }
   if (r.reason) p.statusReason = clean(r.reason, 240);
   const events = [];
   if (nextStatus !== prevStatus) {
@@ -238,7 +239,7 @@ export async function applyResult(p, r, source) {
   if (nextPrice != null && nextPrice !== prevPrice) { p.prevPrice = prevPrice; p.price = nextPrice; if (prevPrice != null && nextPrice < prevPrice && AVAILABLE.has(p.status)) events.push('price'); }
   p.updated = t; const sent = [];
   for (const kind of events) {
-    const last = (p.lastAlert || {})[kind]; if (last && Date.now() - Date.parse(last) < COOLDOWN_MS()) { sent.push({ kind, skipped: 'cooldown' }); continue; }
+    const last = (p.lastAlert || {})[kind]; if (last && Date.now() - Date.parse(last) < (source === 'owner' ? OWNER_COOLDOWN_MS() : COOLDOWN_MS())) { sent.push({ kind, skipped: 'cooldown' }); continue; }
     p.lastAlert = Object.assign({}, p.lastAlert, { [kind]: t }); sent.push(Object.assign({ kind }, await notifyProduct(p, kind)));
   }
   await auth.kvPut(KP(p.id), p); return sent;
