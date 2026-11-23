@@ -446,6 +446,7 @@
       else mapDraft = input.value;
       asking = on;
       aib.setAttribute('aria-checked', String(on));
+      aib.closest('.pm-home-search')?.classList.toggle('pm-ai-active',on);
       input.value = on ? aiDraft : mapDraft;
       input.placeholder = on ? 'Ask about this map area…' : 'Search state, county, parcel, owner…';
       input.enterKeyHint = on ? 'send' : 'search';
@@ -1666,8 +1667,8 @@
     buildAi();
     const ask = $('pmAsk');
     if (ask) {
-      ask.replaceChildren(mk('span', '', paid ? 'Map Assistant' : '🔒 Map Assistant'), mk('b', '', 'Pro'));
-      ask.setAttribute('aria-label', paid ? 'Map Assistant' : 'Map Assistant, Pro feature');
+      ask.replaceChildren(mk('span', '', paid ? 'AI' : '🔒 AI'), mk('b', '', 'Pro'));
+      ask.setAttribute('aria-label', paid ? 'AI' : 'AI, Pro feature');
       ask.title = 'Ask questions about the current county, parcel or map area.';
       if (homeMap && paid) {
         ask.setAttribute('role', 'switch');
