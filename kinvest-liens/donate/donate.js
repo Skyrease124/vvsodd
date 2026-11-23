@@ -12,7 +12,7 @@
   other.addEventListener('input', () => { custom = other.value.trim() !== ''; msg.hidden = true; paint(); });
   go.addEventListener('click', async () => {
     const v = val(); if (!valid(v) || !$('dnOk').checked) return; go.disabled = true; go.textContent = 'Opening Stripe…'; msg.hidden = true;
-    try { const r = await fetch('/.netlify/functions/donate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: v, ack: { optional: true, version: '2026-11-18' } }) }); const d = await r.json().catch(() => ({})); if (r.ok && d.url && /^https:\/\/checkout\.stripe\.com\//.test(d.url)) { location.href = d.url; return; } msg.textContent = d.error || 'Something went wrong. Please try again.'; }
+    try { const r = await fetch('/.netlify/functions/donate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: v, ack: { optional: true, version: '2026-11-23' } }) }); const d = await r.json().catch(() => ({})); if (r.ok && d.url && /^https:\/\/checkout\.stripe\.com\//.test(d.url)) { location.href = d.url; return; } msg.textContent = d.error || 'Something went wrong. Please try again.'; }
     catch (e) { msg.textContent = 'Could not reach the server. Check your connection and try again.'; }
     msg.hidden = false; paint();
   });

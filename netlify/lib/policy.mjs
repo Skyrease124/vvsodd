@@ -1,6 +1,10 @@
 // One place for the policy version and the consent records. Bump POLICY_VERSION whenever the Terms, Billing policy or Donation terms change in a way people should re-accept.
 // The text people see before paying lives on the pages themselves (account page, /donate/, /legal/billing/, /legal/donations/); tests keep the numbers in step with the Stripe price.
 export const POLICY_VERSION = '2026-11-18';
+// Support Terms (voluntary contributions only). Revised 2026-11-23. Contributions made before that date were made under
+// SUPPORT_TERMS_PREVIOUS_VERSION and keep that version on their payment record. Subscriptions still use POLICY_VERSION.
+export const SUPPORT_TERMS_VERSION = '2026-11-23';
+export const SUPPORT_TERMS_PREVIOUS_VERSION = '2026-11-18';
 export const PLAN = { name: 'PricePocketPro', cents: 550, interval: 'week' };
 // Records that a member accepted the terms and authorized recurring billing before being sent to Stripe Checkout. Kept on the member record (no card data, no IP address).
 export function consentRecord(kind, extra) { return Object.assign({ kind, version: POLICY_VERSION, at: new Date().toISOString() }, extra || {}); }
