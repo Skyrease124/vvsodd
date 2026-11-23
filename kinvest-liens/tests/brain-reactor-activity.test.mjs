@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
 import {PUTNAM,putnamActivity} from '../../netlify/lib/brain-gis-putnam.mjs';
 const source=fs.readFileSync('netlify/functions/owner-brain-activity.mjs','utf8');
 const page=fs.readFileSync('kinvest-liens/owner/brain/activity/index.html','utf8');
@@ -31,7 +32,7 @@ async function create(owner,research=null,quota={active:true,count:21},county=nu
  const putnam=new vm.SyntheticModule(['putnamActivity'],function(){
   this.setExport('putnamActivity',putnamActivity);
  },{context});
- await mod.link(specifier=>specifier.includes('brain-auth')?auth:specifier.includes('brain-gis-putnam')?putnam:operations);await mod.evaluate();
+ await mod.link(async specifier=>specifier.includes('brain-auth')?auth:specifier.includes('brain-gis-putnam')?putnam:specifier.includes('brain-gis-universal')||specifier.includes('brain-gis-county')?operations:(await pureModule(specifier,context))||operations);await mod.evaluate();
  return mod.namespace.default;
 }
 test('owner alone reads actual saved worker and publication events',async()=>{
@@ -41,7 +42,8 @@ test('owner alone reads actual saved worker and publication events',async()=>{
  assert.equal(d.health.dailyUsed,21);assert.equal(d.health.remaining,9);assert.equal(d.summary.processed,null);
  assert.equal(d.events.filter(e=>e.type==='published').length,1);
  assert.equal(d.events.find(e=>e.type==='published').parcelId,'01002754');
- assert.equal(d.agents.Gemini,'no_recorded_activity');
+ assert.equal(d.agents.Gemini.state,'not_connected');
+ assert.equal(d.agents.NVIDIA.state,'idle');
 });
 test('unauthorized user cannot inspect activity',async()=>{
  const run=await create(false);
@@ -82,7 +84,7 @@ test('worker timestamps individual GIS outcomes instead of inventing exact event
  const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
  assert.match(worker,/status:'skipped',checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(worker,/status:'retry_later',checkedAt:new Date\(\)\.toISOString\(\)/);
- assert.match(worker,/status:success\?'published':'publish_pending',lookupMethod:method,checkedAt:new Date\(\)\.toISOString\(\)/);
+ assert.match(worker,/status:'pending_owner_review',lookupMethod:method,checkedAt:new Date\(\)\.toISOString\(\)/);
  assert.match(source,/const at=date\(r\.checkedAt\)/);
  assert.match(source,/if\(!at\)continue/);
  assert.match(source,/approximateTime:false/);

@@ -3,7 +3,7 @@
 // No paid AI. Writes only to isolated preview Brain store.
 import * as auth from '../lib/brain-auth.mjs';
 import {verifyOfficial,DETROIT_GIS} from '../lib/brain-official-verification.mjs';
-import publish from './brain-map-publish-auto.mjs';
+import {updateJson,addPendingIfAbsent} from '../lib/brain-approvals.mjs';
 import crypto from 'node:crypto';
 const IDS=['01002754','01002830','01003357'];
 const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
@@ -47,7 +47,7 @@ async function handler(req,context){
    const stamp=new Date().toISOString();
    const caseKey=crypto.createHash('sha256').update('MI-wayne\n'+r.i).digest('hex').slice(0,28);
    staged.push({caseKey,dataset:'MI-wayne',recordId:r.i,parcelId:r.p,state:'MI',county:'Wayne',
-     decision:'approved_for_staging',reviewedAt:stamp,reviewedBy:'preview-owner-confirmed-official-validator',
+     decision:'pending_owner_review',reviewedAt:stamp,reviewedBy:'preview-owner-confirmed-official-validator',
      reviewMethod:'exact_identity_address_polygon',independentlyChecked:true,officialObjectId:verified.officialObjectId,
      evidenceUrl:verified.evidenceUrl,notes:verified.notes,checks:verified.checks,
      proposedPosition:{lat:verified.cx[1],lon:verified.cx[0]},publishStatus:'not_published'});
@@ -56,21 +56,21 @@ async function handler(req,context){
   if(staged.length){
    const currentControl=await auth.kvGet('owner-brain-scanner-v1');
    if(currentControl?.status==='paused')return json(409,{ok:false,error:'Automation paused during verification'});
-   const approvals=await auth.kvGet(APPROVALS)||{entries:[]};
-   const merged=[...(approvals.entries||[])];
-   for(const item of staged)if(!merged.some(x=>x.caseKey===item.caseKey))merged.push(item);
-   await auth.kvPut(APPROVALS,{...approvals,entries:merged.slice(-250)});
-   await publish(req,context);
+   // Validator output waits in the owner approval queue. Publication happens only after owner approval.
+   for(const item of staged)await updateJson(auth,APPROVALS,ledger=>{
+    const next=addPendingIfAbsent(ledger?.entries||[],item);
+    return next?{...ledger,entries:next}:undefined;
+   });
   }
   const after=await auth.kvGet(KEY)||{records:{}};
   const results=IDS.map(id=>{
    const record=byId.get(id);
-   return {parcelId:id,recordId:record?.i||null,published:!!record?.i&&after.records?.[record.i]?.verifiedGeometry===true};
+   return {parcelId:id,recordId:record?.i||null,published:!!record?.i&&after.records?.[record.i]?.verifiedGeometry===true,pendingOwnerReview:!!record?.i&&!after.records?.[record.i]?.verifiedGeometry};
   });
   const count=results.filter(r=>r.published).length;
   return json(200,{ok:true,previewOnly:true,requested:3,published:count,results,
    publicationStatus:await auth.kvGet('brain-map-publication-status-v1'),
-   message:count===3?'All three official polygons published to the isolated preview feed.':'One or more parcels not published; inspect publisher status. No production writes.'});
+   message:count===3?'All three official polygons are published to the isolated preview feed.':'Verified corrections are waiting for owner approval in the Owner Dashboard queue. No public publication happened in this step.'});
  }catch(e){return json(e.code==='QUOTA'?429:502,{ok:false,error:String(e.message||e).slice(0,160)});}
 }
 export default auth.withBrainStore(handler);

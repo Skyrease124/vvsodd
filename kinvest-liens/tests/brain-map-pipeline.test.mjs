@@ -4,10 +4,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
 
 const GIS='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const KEY='brain-map-county-v1-MI-wayne';
-const approval=()=>({decision:'approved_for_staging',dataset:'MI-wayne',state:'MI',county:'Wayne',
+// An owner decision: the only kind of approval the publisher will publish.
+const approval=()=>({decision:'approved_for_staging',reviewedBy:'owner',reviewedAt:'2026-11-20T12:00:00.000Z',releaseMode:'pro_first_48h',dataset:'MI-wayne',state:'MI',county:'Wayne',
  recordId:'test-record',parcelId:'01002263',independentlyChecked:true,
  evidenceUrl:GIS,caseKey:'test-review',proposedPosition:{lat:42.3005,lon:-83.0995}});
 const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.301],[-83.1,42.3]];
@@ -31,7 +33,9 @@ async function harness({review=approval(),features,record,offline=false,pauseDur
    if(pauseDuringGIS)store.set('owner-brain-scanner-v1',{status:'paused',queue:[]});
    return Response.json({features:features??[{attributes:{parcel_number:'01002263'},geometry:{rings:[ring]}}]});
   }});
- const auth=new vm.SyntheticModule(['kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore'],function(){
+ const auth=new vm.SyntheticModule(['kvGet','kvPut','kvGetVersioned','kvPutVersioned','withBrainStore','userFromCookie'],function(){
+  // Anonymous viewer: the public feed decides visibility from the session, and this fixture has none.
+  this.setExport('userFromCookie',async()=>null);
   this.setExport('withBrainStore',handler=>handler);this.setExport('kvGet',async key=>structuredClone(store.get(key)));
   this.setExport('kvPut',async(key,value)=>store.set(key,structuredClone(value)));
   this.setExport('kvGetVersioned',async key=>store.has(key)?{data:structuredClone(store.get(key)),etag:etags.get(key)||'0'}:null);
@@ -45,7 +49,7 @@ async function harness({review=approval(),features,record,offline=false,pauseDur
  },{context});
  async function module(path){
   const m=new vm.SourceTextModule(fs.readFileSync(path,'utf8'),{context});
-  await m.link(specifier=>{assert.equal(specifier,'../lib/brain-auth.mjs');return auth;});
+  await m.link(async specifier=>{if(specifier==='../lib/brain-auth.mjs')return auth;const pure=await pureModule(specifier,context);assert.ok(pure,'unexpected import '+specifier);return pure;});
   await m.evaluate();return m.namespace.default;
  }
  const publish=await module('netlify/functions/brain-map-publish-auto.mjs');

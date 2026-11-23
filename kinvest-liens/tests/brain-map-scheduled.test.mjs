@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
 const schedule=fs.readFileSync('netlify/functions/brain-wayne-scheduled.mjs','utf8');
 const worker=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
 test('published scheduled runner defaults off and requires explicit Netlify env opt in',()=>{
@@ -16,7 +17,7 @@ test('scheduled runner invokes same guarded worker as owner-triggered force butt
  assert.match(schedule,/import \{runScheduledWayne\} from '\.\/owner-brain-wayne-run\.mjs'/);
  assert.match(schedule,/await runScheduledWayne\(synthetic,context\)/);
  assert.match(worker,/export const runScheduledWayne=auth\.withBrainStore/);
- assert.match(worker,/waynePublisherInternal:true,chargeWayneGisRequest:async/);
+ assert.match(worker,/waynePublisherInternal:true,wayneRecoveryOnly:true/);
  assert.match(worker,/MAX_ATTEMPTS=3, MAX_PER_DAY=30/);
  assert.match(worker,/controlNow\?\.status==='paused'/);
  assert.match(worker,/auth\.kvGet\(OVERLAY\)/);
@@ -95,7 +96,7 @@ async function retryHarness({owner=true,paused=false,exhausted=true}={}){
   this.setExport('withBrainStore',fn=>fn);
  },{context:ctx});
  const source=fs.readFileSync('netlify/functions/owner-brain-wayne-retry-review.mjs','utf8');
- const mod=new vm.SourceTextModule(source,{context:ctx});await mod.link(()=>auth);await mod.evaluate();
+ const mod=new vm.SourceTextModule(source,{context:ctx});await mod.link(async s=>(await pureModule(s,ctx))||auth);await mod.evaluate();
  const invoke=(body,{origin='https://preview.test',deploy='deploy-preview',method='POST'}={})=>
   mod.namespace.default(new Request('https://preview.test/.netlify/functions/owner-brain-wayne-retry-review',{
    method,headers:{origin},...(method==='POST'?{body:JSON.stringify(body)}:{})

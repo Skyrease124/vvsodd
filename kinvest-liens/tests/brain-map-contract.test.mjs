@@ -4,6 +4,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {visibleTo} from '../../netlify/lib/update-release.mjs';
+import {isProAccount} from '../../netlify/lib/research-releases.mjs';
 const map=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
 const html=fs.readFileSync('kinvest-liens/map/index.html','utf8');
 const tiler=fs.readFileSync('kinvest-liens/owner/maptiler/index.html','utf8');
@@ -114,7 +116,7 @@ test('public correction feed hides pending publications and malformed geometry w
  };
  // Evaluate the real endpoint handler without experimental vm.Module flags.
  const executable=fn.replace(/^import .*;$/gm,'').replace(/export default auth\.withBrainStore\(handler\);?/,'');
- const handler=vm.runInNewContext(executable+';handler',{Response,Request,URL,auth,Number,Object,Array,Math});
+ const handler=vm.runInNewContext(executable+';handler',{Response,Request,URL,auth:{...auth,userFromCookie:async()=>null},visibleTo,isProAccount,Number,Object,Array,Math});
  const response=await handler(new Request('https://preview.test/.netlify/functions/brain-map-county?dataset=MI-wayne'));
  assert.equal(response.status,200);
  const data=await response.json();

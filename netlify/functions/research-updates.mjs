@@ -9,7 +9,7 @@ const INDEX='approved-research-releases-v1';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{
   'Content-Type':'application/json; charset=utf-8','Cache-Control':'private, no-store',
   'X-Content-Type-Options':'nosniff'}});
-const permitted = new Set(['lien','land']);
+const permitted = new Set(['lien','land','tax_deed','property']);
 function cleanIndex(value) {
   if (!value || !Array.isArray(value.list)) return [];
   return value.list.filter(item=>item && typeof item === 'object').slice(0,2000);

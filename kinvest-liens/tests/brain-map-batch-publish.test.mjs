@@ -16,7 +16,10 @@ test('only three fixed parcel IDs, bounded GIS, verified identity and guarded pu
  for(const id of ['01002754','01002830','01003357'])assert.match(code,new RegExp(id));
  assert.match(code,/verifyOfficial\(r,feature\.features\)/);
  assert.match(code,/Number\.isSafeInteger\(verified\.officialObjectId\)/);
- assert.match(code,/await publish\(req,context\)/);
+ // Staged decisions wait for owner approval. This route never publishes directly.
+ assert.match(code,/decision:'pending_owner_review'/);
+ assert.doesNotMatch(code,/await publish\(/);
+ assert.match(code,/addPendingIfAbsent/);
  assert.match(code,/if\(staged\.length\)/);
  assert.match(code,/currentControl\?\.status==='paused'/);
  assert.doesNotMatch(code,/api\.geoapify\.com|api\.tavily\.com|auth\.kvDel/);

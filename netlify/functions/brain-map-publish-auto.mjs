@@ -2,6 +2,8 @@
 // Uses official current GIS polygon (not geocoded positions) and explicit staging review.
 // Writes only the dynamic map overlay store, not static parcel data / tax sale status.
 import * as auth from '../lib/brain-auth.mjs';
+import {publishable} from '../lib/brain-approvals.mjs';
+import {releaseTimes} from '../lib/update-release.mjs';
 const APPROVALS='owner-brain-approvals-v1',STATUS='brain-map-publication-status-v1';
 const OVERLAY='brain-map-county-v1-MI-wayne';
 const HISTORY='brain-map-history-v1', QUEUE='owner-brain-scanner-v1';
@@ -93,7 +95,8 @@ async function handler(req,context){
   const control=await auth.kvGet('owner-brain-scanner-v1');
   if(control?.status==='paused'){status.state='paused';return;}
   const log=await auth.kvGet(APPROVALS)||{entries:[]};
-  const approved=(log.entries||[]).filter(x=>x.decision==='approved_for_staging'&&x.dataset==='MI-wayne'&&x.state==='MI'&&x.county&&x.recordId&&x.parcelId);
+  // Only a decision a human owner made can publish. Validator decisions stay pending.
+  const approved=(log.entries||[]).filter(x=>publishable(x)&&x.dataset==='MI-wayne'&&x.state==='MI'&&x.county&&x.recordId&&x.parcelId);
   if(!approved.length){status.state='waiting_for_approved_polygons';return;}
   const county=await json(ROOT+'/map/data/MI-wayne.json',12000000);
   const source=new Map((county.recs||[]).map(r=>[r.i,r]));
@@ -151,7 +154,9 @@ async function handler(req,context){
    // Owner's previously reviewed GIS position must be close to the freshly retrieved official polygon.
    if(Math.abs(a.proposedPosition.lat-poly.cx[1])>0.002||Math.abs(a.proposedPosition.lon-poly.cx[0])>0.002){reject('Independent GIS polygon conflicts with verified position');continue;}
    const stamp=new Date().toISOString();
-   const record={i:a.recordId,p:String(a.parcelId),...poly,verifiedGeometry:true,verifiedAt:stamp,evidenceUrl:GIS,caseKey:a.caseKey};
+   // The release clock starts at owner approval, not at publication.
+   const release=releaseTimes({approvedAt:a.reviewedAt,releaseMode:a.releaseMode||'pro_first_48h'});
+   const record={i:a.recordId,p:String(a.parcelId),...poly,verifiedGeometry:true,verifiedAt:stamp,evidenceUrl:GIS,caseKey:a.caseKey,approvedBy:'owner',...release};
    const preWriteControl=await auth.kvGet(QUEUE);
    if(preWriteControl?.status==='paused'){status.state='paused';break;}
    const added=await update(key,value=>{

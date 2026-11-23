@@ -32,6 +32,17 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 .health{max-width:760px;margin:13px auto;padding:14px 16px;border-radius:16px;border:1px solid #476a73;background:#0b1f2bdd}
 .health-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .health-title{font-weight:750;letter-spacing:.2px}
+.agentStrip{max-width:760px;margin:0 auto 13px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.agentChip{border:1px solid #476a73;border-radius:12px;padding:9px 11px;background:#0b1f2bdd;font-size:12px;color:#c9e7ea;min-width:0}
+.agentChip b{display:block;font-size:12px;letter-spacing:.3px}
+.agentChip span{display:block;font-size:11px;letter-spacing:.8px;font-weight:750;margin-top:3px}
+.agentChip small{display:block;color:#93a4b8;font-size:11px;margin-top:3px;letter-spacing:0;overflow-wrap:anywhere}
+.agentChip[data-state="active"] span{color:#a0f4ce}
+.agentChip[data-state="completed"] span{color:#8fd9ff}
+.agentChip[data-state="idle"] span{color:#c4c7d4}
+.agentChip[data-state="failed"] span{color:#ff9a92}
+.agentChip[data-state="quota_limited"] span{color:#ffd59c}
+.agentChip[data-state="not_connected"] span{color:#7d879c}
 .health-pill{font-size:11px;font-weight:750;letter-spacing:.8px;padding:6px 11px;border-radius:100px;border:1px solid #4e9b83;background:#183e35;color:#a0f4ce}
 .health[data-state="retrying"] .health-pill{color:#ffd59c;background:#443120;border-color:#bb854d}
 .health[data-state="attention"] .health-pill{color:#ff9a92;background:#46292c;border-color:#ad5e62}
@@ -70,7 +81,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 </style></head>
 <body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
 <div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
-<h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · genuine agent activity</div>
+<h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · recorded agent activity</div>
 <div id="gate" role="status">Verifying owner access and loading recorded agent activity…</div>
 <div class="only-authorized">
 <div class="stage"><canvas id="reactorCanvas" class="reactor-canvas" aria-hidden="true"></canvas><svg class="network" id="network" viewBox="0 0 700 730" role="img" aria-label="Decorative animated information paths connecting Gemini, OpenAI, Groq and Mapping to NVIDIA">
@@ -87,6 +98,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 <g id="eventLayer" aria-hidden="true"><path class="event-beam" id="reactorBeam" d="M580 610 Q510 485 414 405" fill="none" stroke="var(--signal)" stroke-width="5"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="3" fill="none"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="2" fill="none" style="animation-delay:.2s"/></g><g id="nodes"></g><text x="350" y="708" fill="#9eeedb" text-anchor="middle" font-size="10" letter-spacing="2">REACTOR VISUALIZATION</text>
 </svg></div>
 <section id="health" class="health" data-state="idle" aria-label="Official GIS agent health"><div class="health-head"><span class="health-title">Official GIS Agent Health</span><span id="healthState" class="health-pill">CHECKING</span></div><p id="healthDetail" class="health-detail" role="status">Reading worker status…</p><div id="healthMeta" class="health-meta">No live health report yet</div></section>
+<section id="agentStrip" class="agentStrip" aria-label="Agent states from stored records"></section>
 <div class="overview"><div class="metric"><b id="verified">—</b><span>VERIFIED MAP POLYGONS</span></div><div class="metric"><b id="published">—</b><span>WORKER PUBLICATIONS</span></div><div class="metric"><b id="cursor">—</b><span>WAYNE CURSOR</span></div><div class="metric"><b id="processed">—</b><span>PROCESSED</span></div><div class="metric"><b id="skipped">—</b><span>SKIPPED</span></div><div class="metric"><b id="pendingReview">—</b><span>PENDING REVIEW</span></div></div>
 <div class="update"><div id="signalLabel" role="status" aria-live="polite">Waiting for new recorded activity</div><strong id="county">Wayne County</strong><span> · </span><span id="workerState">Loading</span><span> · </span><span id="stamp">Not yet updated</span><div class="controls" style="margin-top:10px"><button id="refresh" type="button">Refresh activity</button><button id="motion" type="button" aria-pressed="false">Pause visual motion</button></div></div>
 <section class="sect"><div class="sectHead"><h2>Verified Transfers</h2><span class="status">RECORDED EVENTS</span></div><div class="ticker"><div id="ticker" class="tickerTrack"><span class="empty">Loading verified transfers…</span></div></div></section>
@@ -294,6 +306,7 @@ let seenEvents=new Set(),signalQueue=[],signalTimer=null;
 function classifyEvent(ev){
  if(ev.status==='error'||ev.status==='warning')return 'pulse-error';
  if(ev.type==='published')return 'pulse-publish';
+ if(ev.type==='nvidia_transfer'||ev.type==='nvidia_result')return 'pulse-verify';
  if(ev.type==='geometry_validated'||ev.eventType==='request_reserved')return 'pulse-verify';
  if(ev.type==='verification_result'&&ev.status==='success')return 'pulse-verify';
  return null;
@@ -321,11 +334,27 @@ function playSignal(){
  beamFrom(signalNode);
  text($('signalLabel'),(mode()==='live'?'':mode()==='replay'?'REPLAY · ':'SIMULATION · ')+(kind==='pulse-publish'?'MAP PUBLICATION · '+ev.parcelId:
   kind==='pulse-error'?'AGENT WARNING · '+(ev.parcelId||ev.agent):
+  ev.type==='nvidia_transfer'?'HELPER → NVIDIA · '+(ev.count||0)+' ITEMS':
+  ev.type==='nvidia_result'?'NVIDIA CONSOLIDATION · OWNER REVIEW':
   (ev.eventType==='request_reserved'?'GIS REQUEST RESERVED · ':'GEOMETRY CHECK · ')+(ev.parcelId||ev.agent)));
  signalTimer=setTimeout(()=>{
   network.classList.remove(kind);signalTimer=null;signalNode=null;
   playSignal();
  },kind==='pulse-publish'?2200:1700);
+}
+// Explicit, text-labelled agent states. Colour supports the label; it never replaces it.
+const AGENT_LABEL={active:'ACTIVE',idle:'IDLE',completed:'COMPLETED',failed:'FAILED',quota_limited:'QUOTA LIMITED',not_connected:'NOT CONNECTED'};
+function renderAgents(agents){
+ const strip=$('agentStrip');if(!strip)return;
+ strip.replaceChildren();
+ for(const [name,info] of Object.entries(agents)){
+  const state=AGENT_LABEL[info?.state]?info.state:'idle';
+  const chip=document.createElement('div');chip.className='agentChip';chip.dataset.state=state;
+  const title=document.createElement('b');title.textContent=name;
+  const label=document.createElement('span');label.textContent=AGENT_LABEL[state];
+  const detail=document.createElement('small');detail.textContent=String(info?.detail||'');
+  chip.append(title,label,detail);strip.appendChild(chip);
+ }
 }
 function render(d){
  recorded=[...new Map((d.events||[]).map(e=>[e.id,e])).values()].sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id));
@@ -346,7 +375,7 @@ function render(d){
  text($('connection'),d.summary.paused?'PAUSED':'CONNECTED');
  text($('verified'),String(d.summary.verifiedPolygons??'—'));text($('published'),String(d.summary.published));text($('cursor'),String(d.summary.cursor));
  for(const field of ['processed','skipped','pendingReview'])text($(field),String(d.summary[field]??'—'));
- text($('workerState'),health.state.replaceAll('_',' '));text($('stamp'),'Checked '+time(d.capturedAt));
+ text($('workerState'),health.state.replaceAll('_',' '));text($('stamp'),'Checked '+time(d.capturedAt));renderAgents(d.agents||{});
  for(const [id,field] of [['eventCounty','county'],['eventAgent','agent']]){
   const select=$(id),values=new Set([...select.options].map(option=>option.value));
   for(const entry of recorded)if(entry[field]&&!values.has(entry[field])){

@@ -3,6 +3,7 @@
 import * as auth from '../lib/brain-auth.mjs';
 import {verifyOfficial,DETROIT_GIS} from '../lib/brain-official-verification.mjs';
 import publish from './brain-map-publish-auto.mjs';
+import {updateJson,addPendingIfAbsent} from '../lib/brain-approvals.mjs';
 import crypto from 'node:crypto';
 
 const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
@@ -288,69 +289,44 @@ async function handler(req,context){
    const now=new Date().toISOString();
    const caseKey=crypto.createHash('sha256').update('MI-wayne\n'+r.i).digest('hex').slice(0,28);
    const item={caseKey,dataset:'MI-wayne',recordId:r.i,parcelId:r.p,state:'MI',county:'Wayne',
-    decision:'approved_for_staging',reviewedAt:now,reviewedBy:'preview-wayne-batch-validator',
+    decision:'pending_owner_review',reviewedAt:now,reviewedBy:'preview-wayne-batch-validator',
     reviewMethod:'exact_identity_address_polygon',independentlyChecked:true,officialObjectId:verified.officialObjectId,
     evidenceUrl:verified.evidenceUrl,notes:verified.notes,checks:verified.checks,
     proposedPosition:{lat:verified.cx[1],lon:verified.cx[0]},publishStatus:'not_published'};
    const beforeWrite=await auth.kvGet(CONTROL);
    if(beforeWrite?.status==='paused'){s.state='paused';break;}
-   const approvals=await auth.kvGet(APPROVALS)||{entries:[]};
-   const priorApproval=approvals.entries.find(x=>x.caseKey===caseKey);
-   if(!priorApproval||(review&&priorApproval.reviewedBy==='preview-wayne-batch-validator')){
-    await auth.kvPut(APPROVALS,{...approvals,entries:[...approvals.entries.filter(x=>x!==priorApproval),item].slice(-250)});
-   }
-   // Existing guarded publisher independently checks the official polygon and
-   // the shared pause switch; the saved overlay is authoritative for success.
-   let publicationRejection,publicationUnavailable=false,publicationHold;
-   const wayneHeldRecords=new Set(Object.values(s.reviewQueue).filter(entry=>!entry.resolvedAt&&entry.recordId!==r.i).map(entry=>entry.recordId));
-   await publish(req,{...context,wayneCurrentRecord:r.i,wayneHeldRecords,
-    waynePublicationUnavailable:()=>{publicationUnavailable=true;},
-    wayneRecordRejected:(recordId,reason)=>{if(recordId===r.i)publicationRejection=reason;},
-    wayneCurrentOnly:!!pilot,
-    waynePublisherInternal:true,chargeWayneGisRequest:async()=>{
-     try{await charge(i,'independent_publication_check');}
-     catch(error){publicationHold=error;throw error;}
-   }});
-   const published=await auth.kvGet(OVERLAY)||{records:{}};
-   const saved=published.records?.[r.i];
-   const success=saved?.verifiedGeometry===true&&!saved.publicationPending;
-   if(!success&&publicationRejection&&!saved?.publicationPending){
-    await skip(r,id,publicationRejection,'independent_publication_check',trace.slice());
-    continue;
-   }
-   result.rows.push({parcelId:id,status:success?'published':'publish_pending',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice()});
-   if(success){
-    result.published++;
-    if(review)s.reviewQueue[i]={...review,resolvedAt:now};
-   }
-   else {
-    s.state=pilot&&publicationHold?(publicationHold.quotaState||(publicationHold.code==='PAUSED'?'paused':'quota_reached')):'publish_pending';
-    if(publicationUnavailable&&!saved?.publicationPending){
-     s.sourcePause={nextAt:new Date(Date.now()+SOURCE_COOLDOWN_MS).toISOString(),reason:'Independent GIS publication check unavailable'};
-     s.state='source_paused';
-    }
-    break;
-   }
+   // Validator output is never publication. It becomes a pending owner decision, and only an
+   // owner approval (owner-brain-review) can release the correction to the public map.
+   const queued=await updateJson(auth,APPROVALS,ledger=>{
+    const next=addPendingIfAbsent(ledger?.entries||[],item);
+    return next?{...ledger,entries:next}:undefined;
+   });
+   if(review)s.reviewQueue[i]={...review,resolvedAt:now};
+   result.rows.push({parcelId:id,status:'pending_owner_review',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice(),queued:queued.changed});
+   result.pendingOwnerReview=(result.pendingOwnerReview||0)+1;
    i++;
    await checkpoint();
   }
   if(!review)s.cursor=i;
   const finalOverlay=await auth.kvGet(OVERLAY);
   const records=finalOverlay?.records||{};
-  let total=0,verifiedCount=0,skipped=0,failed=0,legacyProcessed=0;
+  // Verified means published after owner approval. Verified-but-unreviewed parcels are counted separately.
+  const awaiting=new Set(((await auth.kvGet(APPROVALS))?.entries||[]).filter(e=>e.dataset==='MI-wayne'&&e.decision==='pending_owner_review').map(e=>e.recordId));
+  let total=0,verifiedCount=0,skipped=0,failed=0,legacyProcessed=0,pendingOwnerReview=0;
   rows.forEach((record,index)=>{
    if(!valid(record))return;
    total++;
    if(records[record.i]?.verifiedGeometry===true&&!records[record.i].publicationPending)verifiedCount++;
+   else if(awaiting.has(record.i))pendingOwnerReview++;
    else if(s.reviewQueue[index]?.recordId===record.i){
     skipped++;
     if(s.reviewQueue[index].failed)failed++;
    }else if(index<s.cursor)legacyProcessed++;
   });
   const percent=count=>total?Math.round(10000*count/total)/100:0;
-  s.progress={total,verified:verifiedCount,skipped,failed,legacyProcessed,
-   pending:total-verifiedCount-skipped-legacyProcessed,
-   processingPercent:percent(verifiedCount+skipped+legacyProcessed),verifiedPercent:percent(verifiedCount)};
+  s.progress={total,verified:verifiedCount,pendingOwnerReview,skipped,failed,legacyProcessed,
+   pending:total-verifiedCount-pendingOwnerReview-skipped-legacyProcessed,
+   processingPercent:percent(verifiedCount+pendingOwnerReview+skipped+legacyProcessed),verifiedPercent:percent(verifiedCount)};
 
   s.runs=(s.runs||0)+1;
   for(const k of ['verified','published','needsReview','failures'])s[k]=(s[k]||0)+result[k];
@@ -361,9 +337,9 @@ async function handler(req,context){
   if(s.state==='running')s.state=s.cursor>=rows.length?'source_scanned':pilot&&pilotRequests===PILOT_REQUEST_LIMIT?'pilot_limit':'idle';
   s.lastCompleted=new Date().toISOString();
   if(result.published+result.needsReview>0)s.lastSuccessfulBatch=s.lastCompleted;
-  if(pilot)s.lastPilot={at:s.lastCompleted,state:s.state,cursor:s.cursor,requests:pilotRequests,requestLimit:PILOT_REQUEST_LIMIT,
+  if(pilot)s.lastPilot={at:s.lastCompleted,state:s.state,cursor:s.cursor,requests:pilotRequests,requestLimit:PILOT_REQUEST_LIMIT,pendingOwnerReview:result.pendingOwnerReview||0,
    remaining:Math.max(0,MAX_PER_DAY-s.dailyUsed),source:DETROIT_GIS,mapVersion:finalOverlay?.version??0,
-   attempted:result.attempted,processed:result.published+result.needsReview,verified:result.verified,
+   attempted:result.attempted,processed:result.published+result.needsReview+(result.pendingOwnerReview||0),verified:result.verified,pendingOwnerReview:result.pendingOwnerReview||0,
    skipped:result.needsReview,published:result.published,rows:result.rows};
   return response(200,{ok:true,previewOnly:true,cursor:s.cursor,sourceRecords:rows.length,
    ...(pilot?{pilot:s.lastPilot}:{}),

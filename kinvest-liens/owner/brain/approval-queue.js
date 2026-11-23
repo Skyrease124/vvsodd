@@ -1,0 +1,140 @@
+// Owner approval queue for validator-verified Wayne corrections, and the NVIDIA consolidation panel.
+// Every write is an explicit owner action. Nothing here publishes a correction by itself.
+(function () {
+ 'use strict';
+ const $ = id => document.getElementById(id);
+ const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = String(text); return n; };
+ const fmt = iso => (iso ? new Date(iso).toLocaleString() : '—');
+ const REVIEW = '/.netlify/functions/owner-brain-review';
+ const NVIDIA = '/.netlify/functions/owner-brain-nvidia';
+ const REASON = 'The request did not finish. Refresh the queue before trying again.';
+
+ async function call(url, method, body) {
+  const options = {method, credentials: 'same-origin', cache: 'no-store'};
+  if (body) { options.headers = {'Content-Type': 'application/json'}; options.body = JSON.stringify(body); }
+  const response = await window.PPABrainRequest(url, options);
+  const data = await response.json();
+  if (!response.ok) throw Error(data.error || REASON);
+  return data;
+ }
+
+ async function loadQueue() {
+  const status = $('approvalStatus');
+  try {
+   const data = await call(REVIEW, 'GET');
+   const entries = data.entries || [];
+   // Open validator decisions: pending, plus older validator approvals that were never published.
+   const open = e => e.decision === 'pending_owner_review' || (e.decision === 'approved_for_staging' && e.reviewedBy !== 'owner' && e.publishStatus !== 'published');
+   const pending = entries.filter(e => e.dataset === 'MI-wayne' && open(e));
+   const waiting = entries.filter(e => e.dataset === 'MI-wayne' && e.decision === 'approved_for_staging' && e.reviewedBy === 'owner' && e.publishStatus !== 'published');
+   status.textContent = pending.length + ' waiting for your decision · ' + waiting.length + ' approved and waiting to publish';
+   renderQueue(pending);
+  } catch (error) {
+   status.textContent = 'Queue unavailable: ' + error.message;
+  }
+ }
+
+ function renderQueue(items) {
+  const box = $('approvalItems');
+  box.replaceChildren();
+  if (!items.length) { box.append(el('p', 'small', 'No validator-verified corrections are waiting for review.')); return; }
+  for (const entry of items.slice(0, 25)) {
+   const card = el('article', 'approval-card');
+   card.append(el('h3', '', 'Parcel ' + entry.parcelId + ' · record ' + entry.recordId));
+   card.append(el('p', 'small', 'Validator checked ' + fmt(entry.reviewedAt) + ': official identity, address and polygon matched.'));
+   const link = el('a', '', 'Open the official evidence');
+   link.href = entry.evidenceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
+   card.append(link);
+   const lat = Number(entry.proposedPosition?.lat), lon = Number(entry.proposedPosition?.lon);
+   card.append(el('p', 'small', 'Proposed centre: ' + (Number.isFinite(lat) ? lat.toFixed(5) : '—') + ', ' + (Number.isFinite(lon) ? lon.toFixed(5) : '—')));
+
+   const notes = el('textarea'); notes.rows = 3; notes.maxLength = 1000; notes.placeholder = 'Your review note (at least 15 characters)'; notes.setAttribute('aria-label', 'Review note');
+   const confirmLabel = el('label', 'small'); const confirm = el('input'); confirm.type = 'checkbox';
+   confirmLabel.append(confirm, document.createTextNode(' I personally checked the official county record.'));
+   const mode = el('select'); mode.setAttribute('aria-label', 'Release timing');
+   mode.append(new Option('Pro first, Free after 48 hours', 'pro_first_48h'), new Option('Critical: release to everyone now', 'immediate_critical'));
+   const criticalBox = el('div', 'approval-critical'); criticalBox.hidden = true;
+   const criticalConfirm = el('input'); criticalConfirm.type = 'checkbox';
+   const criticalLabel = el('label', 'small'); criticalLabel.append(criticalConfirm, document.createTextNode(' I confirm this corrects inaccurate or misleading information.'));
+   const reason = el('textarea'); reason.rows = 2; reason.maxLength = 500; reason.placeholder = 'Why this is critical (at least 40 characters)'; reason.setAttribute('aria-label', 'Critical reason');
+   criticalBox.append(criticalLabel, reason);
+   mode.addEventListener('change', () => { criticalBox.hidden = mode.value !== 'immediate_critical'; });
+
+   const approve = el('button', '', 'Approve'); approve.type = 'button';
+   const reject = el('button', 'danger', 'Reject'); reject.type = 'button';
+   const result = el('p', 'small'); result.setAttribute('role', 'status');
+   const actions = el('div', 'controls'); actions.append(approve, reject);
+   card.append(notes, confirmLabel, mode, criticalBox, actions, result);
+   box.append(card);
+
+   const send = async (action) => {
+    if (!confirm.checked && action === 'approve') { result.textContent = 'Confirm that you personally checked the official record.'; return; }
+    const verb = action === 'approve' ? (mode.value === 'immediate_critical' ? 'Approve and release to everyone now' : 'Approve; Pro first, Free after 48 hours') : 'Reject';
+    if (!window.confirm(verb + ' this correction for parcel ' + entry.parcelId + '?')) return;
+    approve.disabled = reject.disabled = true;
+    try {
+     const data = await call(REVIEW, 'POST', {action, dataset: 'MI-wayne', recordId: entry.recordId, confirmed: true,
+      notes: notes.value, officialSourceConfirmed: confirm.checked, evidenceUrl: entry.evidenceUrl,
+      releaseMode: action === 'approve' ? mode.value : undefined,
+      criticalConfirmed: criticalConfirm.checked, criticalReason: reason.value});
+     result.textContent = data.notice || 'Saved.';
+     await loadQueue();
+    } catch (error) {
+     result.textContent = error.message;
+     approve.disabled = reject.disabled = false;
+    }
+   };
+   approve.addEventListener('click', () => send('approve'));
+   reject.addEventListener('click', () => send('reject'));
+  }
+ }
+
+ async function publishApproved() {
+  const result = $('approvalStatus');
+  if (!window.confirm('Publish every approved correction that is waiting? Each publication uses the shared official GIS budget.')) return;
+  try {
+   const data = await call(REVIEW, 'POST', {action: 'publish-approved', confirmed: true});
+   result.textContent = data.notice || 'Publication attempted.';
+   await loadQueue();
+  } catch (error) { result.textContent = error.message; }
+ }
+
+ const STATE_TEXT = {completed: 'Completed', failed: 'Failed', quota_limited: 'Daily limit reached', idle: 'Idle', not_configured: 'Not configured'};
+ async function loadNvidia() {
+  const status = $('nvidiaStatus');
+  try {
+   const data = await call(NVIDIA, 'GET');
+   const key = data.configured ? 'Key configured (' + (data.keySource === 'env' ? 'environment' : 'saved in admin setup') + '). The key is never shown.' : 'No key configured. Nothing will be sent.';
+   status.textContent = (STATE_TEXT[data.state] || data.state) + ' · ' + key + ' · Used today ' + data.usedToday + ' of ' + data.dailyLimit;
+   $('nvidiaRun').disabled = !data.configured || data.remainingToday <= 0;
+   const box = $('nvidiaReceipts'); box.replaceChildren();
+   for (const r of (data.receipts || []).slice(0, 5)) {
+    const card = el('article', 'approval-card');
+    card.append(el('h3', '', fmt(r.at) + ' · ' + (STATE_TEXT[r.outcome] || r.outcome)));
+    const sources = Object.entries(r.inputs?.sources || {}).map(([k, v]) => k + ' ' + v).join(', ') || 'none';
+    card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '')));
+    if (r.outcome === 'completed') card.append(el('p', 'small', (r.conflicts || []).length + ' conflict(s) flagged · ' + (r.proposals || []).length + ' proposal(s) await your approval · ' + (r.rejected || []).length + ' citation(s) rejected'));
+    for (const p of (r.proposals || []).slice(0, 5)) card.append(el('p', 'small', 'Parcel ' + p.parcelId + ': ' + p.summary));
+    for (const c of (r.conflicts || []).slice(0, 5)) card.append(el('p', 'small', 'Conflict on parcel ' + c.parcelId + ': ' + c.detail));
+    if (r.error) card.append(el('p', 'small', 'Error: ' + r.error));
+    box.append(card);
+   }
+  } catch (error) { status.textContent = 'NVIDIA status unavailable: ' + error.message; }
+ }
+
+ async function runNvidia() {
+  if (!window.confirm('Send the current stored helper results to NVIDIA? This uses one of today\'s allowed runs. Nothing is published.')) return;
+  const result = $('nvidiaStatus');
+  $('nvidiaRun').disabled = true;
+  try {
+   const data = await call(NVIDIA, 'POST', {action: 'consolidate', confirmed: true});
+   result.textContent = data.notice || 'Consolidation finished.';
+  } catch (error) { result.textContent = error.message; }
+  await loadNvidia();
+ }
+
+ const approvalButton = $('publishApprovedBtn'); if (approvalButton) approvalButton.addEventListener('click', publishApproved);
+ const runButton = $('nvidiaRun'); if (runButton) runButton.addEventListener('click', runNvidia);
+ if ($('approvalItems')) loadQueue();
+ if ($('nvidiaReceipts')) loadNvidia();
+})();

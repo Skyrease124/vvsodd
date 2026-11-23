@@ -38,6 +38,7 @@
   const HOME_CAT = { lien: 'tax_lien', deed: 'tax_deed', land: 'land_bank' };
   const HOME_RADAR = { lien: ['lien-sale', 'county-held'], deed: ['deed'], land: ['state-held'] };
   const HOME_RESEARCH = { lien: 'lien', land: 'land' };
+  const RESEARCH_LABEL = { lien: 'lien', land: 'land', tax_deed: 'tax deed', property: 'property' };
   let landOnly = false; // Homepage Tools mode; existing land-bank datasets are research inventory, not confirmed offers.
   const F = { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: params.get('vacant') === '1', small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false };
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
@@ -150,7 +151,7 @@
       if (!data.ok || !Array.isArray(data.records)) throw Error('Invalid research response');
       researchAccess = data.access === 'pro' ? 'pro' : 'free';
       researchUpdates = data.records.filter(r => r &&
-        (r.type === 'lien' || r.type === 'land') && r.researchOnly === true &&
+        RESEARCH_LABEL[r.type] && r.researchOnly === true &&
         r.availableForPurchase === false && typeof r.id === 'string');
     } catch (error) { researchUpdates = []; researchAccess = 'free'; }
     paintResearch();
@@ -163,7 +164,7 @@
     if (!item) return;
     const r = item.release, pane = mk('div');
     pane.style.cssText = 'color:#13263b;font:14px/1.5 system-ui;max-width:270px';
-    pane.appendChild(mk('b', '', 'New approved ' + (r.type === 'lien' ? 'lien' : 'land') + ' research'));
+    pane.appendChild(mk('b', '', 'New approved ' + (RESEARCH_LABEL[r.type] || 'land') + ' research'));
     pane.appendChild(mk('div', '', r.title || 'Research update'));
     pane.appendChild(mk('div', '', (r.county || '') + ', ' + (r.state || '') + ' · Parcel ' + r.parcelId));
     if (r.description) pane.appendChild(mk('p', '', r.description));

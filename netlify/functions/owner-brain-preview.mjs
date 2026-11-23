@@ -25,7 +25,7 @@ async function handler(req){
  const log=(await auth.kvGet(LEDGER))||{entries:[]};
  const entry=(log.entries||[]).find(x=>x.caseKey===b.caseKey);
  if(!entry)return result(404,{ok:false,error:'Review decision not found'});
- if(entry.decision!=='approved_for_staging'||entry.publishStatus!=='not_published'||!entry.independentlyChecked||!entry.evidenceUrl?.startsWith('https://'))return result(409,{ok:false,error:'Only owner-approved, unpublished corrections with official evidence can be previewed'});
+ if(entry.decision!=='approved_for_staging'||entry.reviewedBy!=='owner'||entry.publishStatus!=='not_published'||!entry.independentlyChecked||!entry.evidenceUrl?.startsWith('https://'))return result(409,{ok:false,error:'Only owner-approved, unpublished corrections with official evidence can be previewed'});
  if(!entry.proposedPosition||!Number.isFinite(entry.proposedPosition.lat)||!Number.isFinite(entry.proposedPosition.lon))return result(409,{ok:false,error:'Approved record lacks a numeric proposed coordinate'});
  try{
    const idx=await jsonFile('/map/index.json',8_000_000);

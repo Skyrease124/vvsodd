@@ -5,6 +5,38 @@ import {putnamActivity} from '../lib/brain-gis-putnam.mjs';
 import {countyCheckpointKey} from '../lib/brain-gis-county-worker.mjs';
 const respond=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const clean=s=>String(s??'').slice(0,160);
+// Explicit states: active, idle, completed, failed, quota_limited, not_connected. Derived from stored state only.
+function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}){
+ const st=(state,detail,lastAt=null)=>({state,detail,lastAt:date(lastAt)});
+ const workerRunning=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
+ const gisCount=quota?.active?Number(quota.count)||0:0;
+ const gis=workerRunning?st('active','Official GIS batch running',worker?.lastStarted):
+  gisCount>=30?st('quota_limited','Shared official GIS budget used for today',worker?.lastCompleted):
+  worker?.retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?st('failed',clean(worker?.lastError||worker?.state),worker?.lastCompleted):
+  worker?.lastCompleted?st('completed','Last Wayne batch finished',worker.lastCompleted):st('idle','No Wayne batch recorded',null);
+ const pState=(s,limited)=>s?.state==='running'?st('active','Address lookup running',s.lastStarted):
+  limited?st('quota_limited',clean(limited),s?.lastCompleted):
+  s?.lastError?st('failed',clean(s.lastError),s?.lastCompleted):
+  s?.lastCompleted?st('completed','Last lookup batch finished',s.lastCompleted):st('idle','No lookup recorded',null);
+ const photonLimited=photon?.lastWarning&&/denied|rate|limit/i.test(photon.lastWarning)?photon.lastWarning:null;
+ const geoLimited=(Number(geo?.dailyUsage)||0)>=(Number(geo?.dailyLimit)||300)?'Geoapify daily allowance used':null;
+ const latest=nvidiaReceipts[0];
+ const nvidia=!latest?st('idle','No NVIDIA consolidation run yet',null):
+  latest.outcome==='completed'?st('completed',(latest.proposals||[]).length+' proposal(s) awaiting owner approval',latest.at):
+  latest.outcome==='failed'?st('failed',clean(latest.error,120),latest.at):
+  latest.outcome==='quota_limited'?st('quota_limited','NVIDIA rate or quota limit reached',latest.at):
+  st('idle',clean(latest.outcome).replaceAll('_',' '),latest.at);
+ return {
+  'Official GIS':gis,
+  Photon:pState(photon,photonLimited),
+  Geoapify:pState(geo,geoLimited),
+  Mapping:pState(publication,null),
+  NVIDIA:nvidia,
+  Gemini:st('not_connected','Not part of the helper pipeline',null),
+  OpenAI:st('not_connected','Not part of the helper pipeline',null),
+  Groq:st('not_connected','Not part of the helper pipeline',null),
+ };
+}
 const date=s=>{const t=Date.parse(s||'');return Number.isFinite(t)?new Date(t).toISOString():null};
 async function handler(req){
  if(req.method!=='GET')return respond(405,{ok:false,error:'GET only'});
@@ -15,6 +47,7 @@ async function handler(req){
    'owner-brain-wayne-worker-v1','brain-map-history-v1','brain-map-publication-status-v1',
    'owner-brain-scanner-v1','owner-brain-photon-status-v1','owner-brain-geoapify-status-v1',
    'owner-brain-automatic-status-v1','brain-map-county-v1-MI-wayne','owner-brain-approvals-v1'].map(k=>auth.kvGet(k))),auth.readWayneGisQuota()]);
+  const nvidiaReceipts=(await auth.kvGet('brain-nvidia-consolidation-v1'))?.receipts||[];
   const events=auth.isBrainPreview()?await putnamActivity(auth.kvGet):[];
   const research=auth.isBrainPreview()?await auth.kvGet('brain-reconciliation-research-v1-CO-larimer'):null;
   const researchIds=new Set();
@@ -109,6 +142,23 @@ async function handler(req){
    events.push({id:'agent-'+name+'-'+at,at,agent:name,from:name,to:'NVIDIA',type:'run_complete',
     message:name+' · '+clean(s.state||'completed')+' · '+Number(s.checked||s.published||0)+' checked/published total',status:s.state==='error'?'error':'info'});
   }
+  // NVIDIA events exist only for requests that were actually sent (stored receipts).
+  for(const r of nvidiaReceipts.slice(0,10)){
+   const at=date(r.at);if(!at)continue;
+   const count=Number.isInteger(r.inputs?.count)?r.inputs.count:0;
+   const sources=Object.entries(r.inputs?.sources||{}).map(([k,v])=>clean(k)+' '+Number(v)).join(', ');
+   if(['completed','failed','quota_limited'].includes(r.outcome))
+    events.push({id:'nvidia-in-'+clean(r.id),at,agent:'Helper agents',from:'Helper agents',to:'NVIDIA',type:'nvidia_transfer',
+     county:'MI-wayne',count,status:r.outcome==='completed'?'info':'error',
+     message:'Helper results sent to NVIDIA · '+count+' items'+(sources?' ('+sources+')':'')+(r.outcome==='completed'?'':' · '+clean(r.outcome).replaceAll('_',' '))});
+   if(r.outcome==='completed')
+    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:'MI-wayne',
+     status:(r.conflicts||[]).length?'warning':'info',
+     message:'NVIDIA consolidation · '+(r.proposals||[]).length+' proposal(s) await owner approval · '+(r.conflicts||[]).length+' conflict(s) flagged · '+(r.rejected||[]).length+' rejected'});
+   if(r.outcome==='failed')
+    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:'MI-wayne',status:'error',
+     message:'NVIDIA consolidation failed · '+clean(r.error,120)});
+  }
   const unique=[...new Map(events.map(event=>[event.id,event])).values()]
    .sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id));
   // Only bounded receipts are loaded above; never present this as the all-time event count.
@@ -144,8 +194,7 @@ async function handler(req){
     needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed,remaining,dailyLimit:30,
     state:clean(worker?.state||'not_started'),paused:control?.status==='paused',
     lastSuccessfulBatch:date(worker?.lastSuccessfulBatch),lastCompleted:date(worker?.lastCompleted)},
-   agents:{'Official GIS':automatic?.state||worker?.state||'not_started',Photon:photon?.state||'not_started',Geoapify:geo?.state||'not_started',
-    Mapping:publication?.state||'not_started',Gemini:'no_recorded_activity',OpenAI:'no_recorded_activity',Groq:'no_recorded_activity',NVIDIA:'orchestration_display'},
+   agents:agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}),
    eventCount:newest.length,eventWindow,events:newest});
  }catch(e){return respond(503,{ok:false,error:'Agent activity temporarily unavailable'});}
 }

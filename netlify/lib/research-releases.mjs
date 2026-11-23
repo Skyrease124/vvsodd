@@ -1,6 +1,7 @@
 // Approved lien and parcel-land research release policy. Private server-side data only.
 export const PRO_EARLY_ACCESS_MS = 48 * 60 * 60 * 1000;
-export const RELEASE_TYPES = new Set(['lien', 'land']);
+export const RELEASE_TYPES = new Set(['lien', 'land', 'tax_deed', 'property']);
+export const RELEASE_MODES = new Set(['pro_first_48h', 'immediate_critical']);
 
 export function isProAccount(user, now = new Date()) {
   if (!user) return false;
@@ -16,6 +17,7 @@ export function releaseAtDate(item) {
   if (!item || !RELEASE_TYPES.has(item.type) || item.researchOnly !== true
       || item.availableForPurchase !== false || item.reviewApproved !== true
       || item.publicationApproved !== true) return null;
+  if (item.releaseMode !== undefined && !RELEASE_MODES.has(item.releaseMode)) return null;
   const ms = Date.parse(item.proReleaseAt);
   if (!Number.isFinite(ms) || typeof item.proReleaseAt !== 'string'
       || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(item.proReleaseAt)) return null;
@@ -28,7 +30,9 @@ export function audienceFor(item, user, now = Date.now()) {
   const point = now instanceof Date ? now.getTime() : now;
   if (!Number.isFinite(point) || point < start) return 'none';
   if (isProAccount(user, new Date(point))) return 'pro';
-  return point >= start + PRO_EARLY_ACCESS_MS ? 'free' : 'none';
+  // A critical release is visible to everyone at approval; otherwise Free waits 48 hours.
+  const freeAt = item.releaseMode === 'immediate_critical' ? start : start + PRO_EARLY_ACCESS_MS;
+  return point >= freeAt ? 'free' : 'none';
 }
 
 export function safeResearchRecord(item) {
@@ -54,6 +58,11 @@ export function makeRelease(data, time, reviewer) {
   if (u.protocol !== 'https:' || u.username || u.password || u.port) throw Error('Only HTTPS evidence URLs are allowed.');
   if (data.type === 'lien' && (!data.certificateNumber || String(data.certificateNumber).length > 80)) throw Error('Certificate number required.');
   if (!data.approvedForResearch) throw Error('Owner must explicitly approve publication of researched data.');
+  const releaseMode = data.releaseMode || 'pro_first_48h';
+  if (!RELEASE_MODES.has(releaseMode)) throw Error('Unknown release mode.');
+  const criticalReason = typeof data.criticalReason === 'string' ? data.criticalReason.trim() : '';
+  if (releaseMode === 'immediate_critical' && (data.criticalConfirmed !== true || criticalReason.length < 40))
+    throw Error('An immediate critical release needs confirmation and a reason of at least 40 characters.');
   if (!reviewer) throw Error('Owner identity required.');
   const date = time instanceof Date ? time : new Date(time);
   if (!Number.isFinite(date.getTime())) throw Error('Invalid release date.');
@@ -66,6 +75,7 @@ export function makeRelease(data, time, reviewer) {
     sourceCheckedAt:date.toISOString(),
     proReleaseAt:date.toISOString(),
     researchOnly:true,reviewApproved:true,publicationApproved:true,availableForPurchase:false,
+    releaseMode,...(releaseMode === 'immediate_critical' ? {criticalReason} : {}),
     reviewerAudit:reviewer,
     publishedToPublicMaps:false
   };

@@ -87,7 +87,7 @@ async function handler(){
         const stamp=new Date().toISOString(),caseKey=crypto.createHash('sha256').update(target.dataset+'\n'+target.recordId).digest('hex').slice(0,28);
         const log=await auth.kvGet('owner-brain-approvals-v1')||{entries:[]};
         if(!log.entries.some(e=>e.caseKey===caseKey)){
-         const entry={caseKey,dataset:target.dataset,recordId:target.recordId,parcelId:target.parcelId,state:'MI',county:'Wayne',decision:'approved_for_staging',reviewedAt:stamp,reviewedBy:'automated-official-source-validator',reviewMethod:'exact_identity_address_polygon',evidenceUrl:verified.evidenceUrl,notes:verified.notes,checks:verified.checks,independentlyChecked:true,officialObjectId:verified.officialObjectId,proposedPosition:{lat:verified.cx[1],lon:verified.cx[0]},publishStatus:'not_published'};
+         const entry={caseKey,dataset:target.dataset,recordId:target.recordId,parcelId:target.parcelId,state:'MI',county:'Wayne',decision:'pending_owner_review',reviewedAt:stamp,reviewedBy:'automated-official-source-validator',reviewMethod:'exact_identity_address_polygon',evidenceUrl:verified.evidenceUrl,notes:verified.notes,checks:verified.checks,independentlyChecked:true,officialObjectId:verified.officialObjectId,proposedPosition:{lat:verified.cx[1],lon:verified.cx[0]},publishStatus:'not_published'};
          log.entries=[...log.entries,entry].slice(-250);await auth.kvPut('owner-brain-approvals-v1',log);
          slot.verification=entry;slot.review={decision:entry.decision,reviewedAt:stamp,caseKey};
         }

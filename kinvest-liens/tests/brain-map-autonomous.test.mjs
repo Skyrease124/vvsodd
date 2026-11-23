@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
 import crypto from 'node:crypto';
 import {verifyOfficial} from '../../netlify/lib/brain-official-verification.mjs';
+import {publishable} from '../../netlify/lib/brain-approvals.mjs';
 const fixture=JSON.parse(fs.readFileSync('kinvest-liens/tests/fixtures/detroit-01002263.json','utf8'));
 const record={i:'MI|Wayne|01002263|',p:'01002263',a:'90 Chandler, Detroit MI 48202'};
 test('official evidence fills notes and geometry only after exact ID, street and polygon checks',()=>{
@@ -26,11 +28,12 @@ test('scheduled agent discovers a missing parcel and fills an attributed verific
  const c=new vm.SyntheticModule(['default'],function(){this.setExport('default',crypto);},{context});
  const verify=new vm.SyntheticModule(['verifyOfficial'],function(){this.setExport('verifyOfficial',verifyOfficial);},{context});
  const worker=new vm.SourceTextModule(fs.readFileSync('netlify/functions/owner-brain-auto.mjs','utf8'),{context});
- await worker.link(s=>s==='node:crypto'?c:s.includes('verification')?verify:auth);await worker.evaluate();
+ await worker.link(async s=>s==='node:crypto'?c:s.includes('verification')?verify:(await pureModule(s,context))||auth);await worker.evaluate();
  await worker.namespace.default();
  const entry=saved.get('owner-brain-approvals-v1').entries[0];
  assert.equal(entry.reviewedBy,'automated-official-source-validator');
- assert.equal(entry.decision,'approved_for_staging');assert.match(entry.notes,/90 CHANDLER/);
+ assert.equal(entry.decision,'pending_owner_review');assert.match(entry.notes,/90 CHANDLER/);
+ assert.equal(publishable(entry),false,'a validator decision must never be publishable');
  assert.equal(saved.get('owner-brain-scanner-v1').queue[0].verification.caseKey,entry.caseKey);
  assert.ok(urls.some(u=>new URL(u).searchParams.get('where')==='object_id=279374'));
 });

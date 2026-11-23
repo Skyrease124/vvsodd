@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
 
 const users=[
  {label:'anonymous',value:null,expected:401},
@@ -27,7 +28,8 @@ async function reviewEndpoint(user){
   this.setExport('default',{createHash:()=>({update:()=>({digest:()=> 'test-hash'})})});
  },{context:ctx});
  const module=new vm.SourceTextModule(fs.readFileSync('netlify/functions/owner-brain-review.mjs','utf8'),{context:ctx});
- await module.link(s=>s==='node:crypto'?cryptoModule:auth);
+ const publisherStub=new vm.SyntheticModule(['default'],function(){this.setExport('default',async()=>{throw Error('publisher must not run in this access test');});},{context:ctx});
+ await module.link(async s=>{if(s==='node:crypto')return cryptoModule;if(s.includes('brain-map-publish-auto'))return publisherStub;return (await pureModule(s,ctx))||auth;});
  await module.evaluate();
  return {handler:module.namespace.default,reads:()=>reads,writes:()=>writes};
 }
@@ -59,7 +61,8 @@ test('owner can read the private approval ledger, but cross-origin writes are re
   body:JSON.stringify({action:'approve',confirmed:true})});
  const blocked=await app.handler(forged);
  assert.equal(blocked.status,403);
- assert.equal(app.reads(),2);
+ // A cross-origin request is refused before the approval ledger is read.
+ assert.equal(app.reads(),1);
  assert.equal(app.writes(),0);
 });
 test('owner-only activity endpoint rejects non-owner roles before reading internal state',()=>{

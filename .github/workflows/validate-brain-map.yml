@@ -8,6 +8,16 @@ on:
       - 'kinvest-liens/owner/maptiler/**'
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
       - 'kinvest-liens/tests/brain-reactor-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-approval-gate.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-consolidation.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-release-policy.test.mjs'
+      - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
+      - 'kinvest-liens/tests/support/**'
+      - 'netlify/lib/update-release.mjs'
+      - 'netlify/lib/research-releases.mjs'
+      - 'netlify/functions/research-updates.mjs'
+      - 'netlify/functions/owner-brain-nvidia.mjs'
       - 'kinvest-liens/tests/brain-owner-free-access.test.mjs'
       - 'kinvest-liens/tests/brain-pro-ai-access.test.mjs'
       - 'kinvest-liens/tests/home-map-combined.test.mjs'
@@ -50,6 +60,16 @@ on:
       - 'kinvest-liens/owner/maptiler/**'
       - 'kinvest-liens/tests/brain-map-*.test.mjs'
       - 'kinvest-liens/tests/brain-reactor-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-approval-gate.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-consolidation.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-release-policy.test.mjs'
+      - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
+      - 'kinvest-liens/tests/support/**'
+      - 'netlify/lib/update-release.mjs'
+      - 'netlify/lib/research-releases.mjs'
+      - 'netlify/functions/research-updates.mjs'
+      - 'netlify/functions/owner-brain-nvidia.mjs'
       - 'kinvest-liens/tests/brain-owner-free-access.test.mjs'
       - 'kinvest-liens/tests/brain-pro-ai-access.test.mjs'
       - 'kinvest-liens/tests/home-map-combined.test.mjs'
@@ -119,6 +139,10 @@ jobs:
       - run: python3 tools/florida-land/test_prepare.py
       - run: node tests/test_pro_first_research.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-putnam-verification.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-approval-gate.test.mjs
+      - run: node kinvest-liens/tests/brain-nvidia-consolidation.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-nvidia-activity.test.mjs
+      - run: node kinvest-liens/tests/brain-release-policy.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-owner-free-access.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-pro-ai-access.test.mjs
       - run: node kinvest-liens/tests/home-map-combined.test.mjs
