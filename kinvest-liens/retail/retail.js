@@ -130,7 +130,7 @@
     root.textContent = ''; root.append(mk('h1', '', 'Retail Alerts'), mk('p', 'rt-muted', 'Owner tools. Members never see this page.'));
     // add product
     const add = mk('div', 'rt-box'); add.append(mk('h3', '', 'Add a product'));
-    const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn', 'Read page'); look.type = 'button';
+    const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn rt-read', 'Read page'); look.type = 'button';
     const name = input('', 'Product name'), img = input('', 'https://… image link (optional)', 'url'), price = input('', 'e.g. 54.99'); price.inputMode = 'decimal';
     const cat = select(cats), st = select(STOCK_OPTS, 'monitoring'), rel = input('', '', 'datetime-local'), vr = input('', 'Size / color (optional)');
     const [autoRow, auto] = toggle('Automatic stock checks', 'Only for pages where stock status could be read.', false); auto.disabled = true;

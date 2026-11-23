@@ -39,7 +39,10 @@
 .rt-sw input:checked+i{background:#34c759}.rt-sw input:checked+i::after{transform:translateX(20px)}
 .rt-form{display:grid;gap:12px}.rt-form label{display:grid;gap:6px;font-weight:600;font-size:.9rem}
 .rt-form input,.rt-form select,.rt-form textarea{width:100%;min-height:46px;border:0;border-radius:14px;background:var(--fill);padding:10px 14px;font:inherit;font-size:1rem;color:var(--ink)}
-.rt-form textarea{min-height:90px}.rt-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rt-form textarea{min-height:90px}.rt-two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+/* Fields may shrink below their native width, so a date picker cannot push the card past the screen. */
+.rt-two>label,.rt-form label{min-width:0}.rt-form input,.rt-form select,.rt-form textarea{min-width:0}
+.rt-btn.rt-read{flex:0 0 auto;white-space:nowrap;padding:0 18px}
 .rt-msg{min-height:1.2em;font-size:.9rem}.rt-msg.ok{color:var(--green)}.rt-msg.bad{color:var(--red)}
 .rt-al{display:flex;gap:12px;padding:14px 16px;background:var(--card);border-radius:18px;box-shadow:0 0 0 .5px var(--line);margin-bottom:8px;text-decoration:none;color:inherit}
 .rt-al.unread{box-shadow:0 0 0 1.5px var(--g2)}.rt-al .dot{width:9px;height:9px;border-radius:50%;background:var(--blue);margin-top:7px;flex:none}.rt-al:not(.unread) .dot{visibility:hidden}
