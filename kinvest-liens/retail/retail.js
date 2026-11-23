@@ -128,6 +128,8 @@
     const root = $('root'); const x = await get({ admin: 1 }); if (x.s !== 200) { root.textContent = ''; root.append(mk('div', 'rt-empty', x.s === 401 ? 'Sign in as the owner.' : 'Owner only.')); return; }
     const meta = (await get({ feed: 1 })).j, cats = Object.entries(meta.categories), stores = Object.entries(meta.retailers);
     root.textContent = ''; root.append(mk('h1', '', 'Retail Alerts'), mk('p', 'rt-muted', 'Owner tools. Members never see this page.'));
+    let flash = ''; try { flash = sessionStorage.getItem('rt-flash') || ''; sessionStorage.removeItem('rt-flash'); } catch (e) { /* ignore */ }
+    if (flash) root.append(mk('div', 'rt-box rt-flash', flash));
     // add product
     const add = mk('div', 'rt-box'); add.append(mk('h3', '', 'Add a product'));
     const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn rt-read', 'Read page'); look.type = 'button';
@@ -155,11 +157,10 @@
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
       const ri = mk('button', '', 'Refresh image'); ri.type = 'button'; ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id }); ri.textContent = r.s === 200 ? (r.j.found ? 'Image saved' : 'Image not found') : 'Could not read'; setTimeout(() => location.reload(), 900); };
       const ck = mk('button', '', 'Check now'); ck.type = 'button';
-      ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id }); ck.disabled = false; ck.textContent = 'Check now';
-        if (r.s !== 200) { toast(r.j.error || 'Could not check.'); return; }
-        if (!r.j.readable) { toast('Could not read the page. ' + (r.j.note || 'Try again later.')); }
-        else { const s = (r.j.sent || [])[0]; toast('Now: ' + (STATUS[r.j.product.status] || r.j.product.status) + (s ? (s.skipped ? '. Alert held back (cooldown).' : '. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : '.')); }
-        setTimeout(() => location.reload(), 1600); };
+      ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id });
+        if (r.s !== 200) { ck.disabled = false; ck.textContent = 'Check now'; toast(r.j.error || 'Could not check.'); return; }
+        try { sessionStorage.setItem('rt-flash', r.j.message || 'Checked.'); } catch (e) { /* private mode: the card still shows the result */ }
+        location.reload(); };
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };
       const op = mk('a', '', 'Open'); op.href = p.url; op.target = '_blank'; op.rel = 'noopener noreferrer'; op.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:.85rem;color:inherit;text-decoration:none';
       acts.append(sel, ed, ri); if (p.auto) acts.append(ck); acts.append(on, op); g.append(acts); d.append(th, g); list.append(d); });

@@ -407,15 +407,21 @@ export async function monitor({ limit = 25 } = {}) {
   }
   return res;
 }
-// The owner asks for one product to be checked now. Same rules as an automatic check; at most once a minute per product.
+// The owner's "Check now": same rules as an automatic check. A short guard stops double taps; it does not block a retry after a failure.
+const MANUAL_GUARD_MS = 15e3;
 export async function checkNow(id) {
   const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
   if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
-  if (p.checkedAt && Date.now() - Date.parse(p.checkedAt) < 60e3) return err(429, 'Checked a moment ago. Wait a minute and try again.');
+  const wait = Math.ceil(((p.manualCheckAt ? Date.parse(p.manualCheckAt) : 0) + MANUAL_GUARD_MS - Date.now()) / 1000);
+  if (wait > 0) return err(429, 'Checked a moment ago. Try again in ' + wait + ' seconds.');
+  p.manualCheckAt = now(); await auth.kvPut(KP(p.id), p);
   const c = await checkOne(p);
-  return { ok: true, readable: c.readable, note: c.note, changed: c.changed, alerts: c.alerts, sent: c.sent, product: await getProduct(id) };
+  const held = (c.sent || []).some(x => x.skipped);
+  const message = !c.readable
+    ? 'Could not read the page. Stock unchanged. You can check again in 15 seconds.'
+    : 'Checked: ' + (STOCK_LABEL[p.status] || p.status) + (c.changed ? ' (changed)' : ' (no change)') + (c.alerts ? '. Alert sent.' : held ? '. Alert held back (cooldown).' : '.');
+  return { ok: true, readable: c.readable, note: c.note, message, changed: c.changed, alerts: c.alerts, sent: c.sent, product: await getProduct(id) };
 }
-
 // ---- private pushes to the owner only ----
 export async function notifyOwner(title, body, path = '/owner/retail/', key) {
   const email = FOUNDER_EMAIL(); const u = await auth.getUser(email); if (!u || !u.owner) return { ok: false, error: 'owner account not found' };
