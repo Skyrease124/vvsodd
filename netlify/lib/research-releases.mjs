@@ -25,6 +25,7 @@ export function releaseAtDate(item) {
 }
 
 export function audienceFor(item, user, now = Date.now()) {
+  if (item && item.withdrawn === true) return 'none'; // owner withdrew it: visible to no one
   const start = releaseAtDate(item);
   if (start === null) return 'none';
   const point = now instanceof Date ? now.getTime() : now;

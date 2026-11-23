@@ -23,12 +23,15 @@
   try {
    const data = await call(REVIEW, 'GET');
    const entries = data.entries || [];
-   // Open validator decisions: pending, plus older validator approvals that were never published.
+   // Open validator decisions (pending, or approved but never published), and corrections already public
+   // from older validator approvals. Owners can approve or withdraw the latter from here.
    const open = e => e.decision === 'pending_owner_review' || (e.decision === 'approved_for_staging' && e.reviewedBy !== 'owner' && e.publishStatus !== 'published');
+   const publicLegacy = e => e.decision === 'approved_for_staging' && e.reviewedBy !== 'owner' && e.publishStatus === 'published';
    const pending = entries.filter(e => e.dataset === 'MI-wayne' && open(e));
+   const legacy = entries.filter(e => e.dataset === 'MI-wayne' && publicLegacy(e));
    const waiting = entries.filter(e => e.dataset === 'MI-wayne' && e.decision === 'approved_for_staging' && e.reviewedBy === 'owner' && e.publishStatus !== 'published');
-   status.textContent = pending.length + ' waiting for your decision · ' + waiting.length + ' approved and waiting to publish';
-   renderQueue(pending);
+   status.textContent = pending.length + ' waiting for your decision · ' + legacy.length + ' already public from older validator approvals · ' + waiting.length + ' approved and waiting to publish';
+   renderQueue(pending.concat(legacy));
   } catch (error) {
    status.textContent = 'Queue unavailable: ' + error.message;
   }
@@ -40,8 +43,9 @@
   if (!items.length) { box.append(el('p', 'small', 'No validator-verified corrections are waiting for review.')); return; }
   for (const entry of items.slice(0, 25)) {
    const card = el('article', 'approval-card');
-   card.append(el('h3', '', 'Parcel ' + entry.parcelId + ' · record ' + entry.recordId));
-   card.append(el('p', 'small', 'Validator checked ' + fmt(entry.reviewedAt) + ': official identity, address and polygon matched.'));
+   const isPublic = entry.publishStatus === 'published';
+   card.append(el('h3', '', 'Parcel ' + entry.parcelId + ' · record ' + entry.recordId + (isPublic ? ' · already public' : '')));
+   card.append(el('p', 'small', (isPublic ? 'Published from a validator approval ' : 'Validator checked ') + fmt(entry.reviewedAt) + ': official identity, address and polygon matched.'));
    const link = el('a', '', 'Open the official evidence');
    link.href = entry.evidenceUrl; link.target = '_blank'; link.rel = 'noopener noreferrer';
    card.append(link);
@@ -61,7 +65,7 @@
    mode.addEventListener('change', () => { criticalBox.hidden = mode.value !== 'immediate_critical'; });
 
    const approve = el('button', '', 'Approve'); approve.type = 'button';
-   const reject = el('button', 'danger', 'Reject'); reject.type = 'button';
+   const reject = el('button', 'danger', isPublic ? 'Withdraw from public map' : 'Reject'); reject.type = 'button';
    const result = el('p', 'small'); result.setAttribute('role', 'status');
    const actions = el('div', 'controls'); actions.append(approve, reject);
    card.append(notes, confirmLabel, mode, criticalBox, actions, result);
@@ -69,7 +73,7 @@
 
    const send = async (action) => {
     if (!confirm.checked && action === 'approve') { result.textContent = 'Confirm that you personally checked the official record.'; return; }
-    const verb = action === 'approve' ? (mode.value === 'immediate_critical' ? 'Approve and release to everyone now' : 'Approve; Pro first, Free after 48 hours') : 'Reject';
+    const verb = action === 'approve' ? (mode.value === 'immediate_critical' ? 'Approve and release to everyone now' : 'Approve; Pro first, Free after 48 hours') : (isPublic ? 'Withdraw this public correction from every viewer' : 'Reject');
     if (!window.confirm(verb + ' this correction for parcel ' + entry.parcelId + '?')) return;
     approve.disabled = reject.disabled = true;
     try {

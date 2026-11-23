@@ -34,6 +34,8 @@ These checks need a signed-in owner account on the **preview** site. They were n
 1. Reject a case that is already public.
 2. Expected: "Rejected. The correction was removed from the public map." The parcel disappears from the signed-out and the owner views of the feed.
 
+Research releases (lien, land, tax deed and property updates) can be withdrawn through the research-updates API by a signed-in owner. There is no dashboard button for this yet. The withdrawal removes the item for every viewer.
+
 ## Test 6: shared GIS budget
 1. Approve a case when the shared official GIS budget is used up.
 2. Expected: "Approved. Publication waits for the shared official GIS budget." The correction stays out of the public feed.

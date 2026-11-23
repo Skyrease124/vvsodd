@@ -40,6 +40,18 @@ export default async function handler(req) {
   if(req.headers.get('origin')!==u.origin)return json(403,{ok:false,error:'Invalid request origin.'});
   if(Number(req.headers.get('content-length')||0)>10000)return json(413,{ok:false,error:'Request too large.'});
   let b;try{b=await req.json();}catch{return json(400,{ok:false,error:'Invalid JSON.'});}
+  if(b?.action==='withdraw'){
+    // Owner withdraws a released research item. It disappears for every viewer, Pro included.
+    if(typeof b.id!=='string'||!/^[A-Za-z0-9-]{8,80}$/.test(b.id))return json(400,{ok:false,error:'Invalid update id.'});
+    const list=cleanIndex(await auth.kvGet(INDEX));
+    const target=list.find(item=>item.id===b.id);
+    if(!target)return json(404,{ok:false,error:'Update not found.'});
+    const at=new Date().toISOString();
+    const next={schemaVersion:1,list:list.map(item=>item.id===b.id?{...item,withdrawn:true,withdrawnAt:at}:item)};
+    await auth.kvPut('research-release-audit-withdraw-'+b.id+'-'+at.replace(/[^0-9]/g,''),{id:b.id,action:'withdrawn',at,by:me.email});
+    await auth.kvPut(INDEX,next);
+    return json(200,{ok:true,id:b.id,message:'Withdrawn. The update no longer appears for any viewer.'});
+  }
   if(b?.action!=='release')return json(400,{ok:false,error:'Unknown action.'});
   try {
     const id=crypto.randomUUID();

@@ -54,9 +54,12 @@ second.set('brain-map-history-v1', {entries: [{dataset: 'MI-wayne', recordId: 'T
 second.set('brain-nvidia-consolidation-v1', {receipts: [receipt('n2', 'completed', {inputs: {count: 6, sources: {validator: 2, 'official-gis-worker': 3, photon: 1}, refs: []}, conflicts: [{parcelId: '99000010', refs: ['H1'], kind: 'status_disagreement', detail: 'x'}]}), ...first.get('brain-nvidia-consolidation-v1').receipts]});
 const refreshJson = JSON.stringify(await activity(second, {active: true, count: 12}));
 const emptyJson = JSON.stringify(await activity(new Map(), {active: false, count: 0}));
-const reviewJson = JSON.stringify({ok: true, entries: [{caseKey: 'k1', dataset: 'MI-wayne', recordId: 'TEST-P', parcelId: '99000020', decision: 'pending_owner_review',
-  reviewedBy: 'preview-wayne-batch-validator', reviewedAt: ago(15), evidenceUrl: 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0',
-  proposedPosition: {lat: 42.3, lon: -83.1}}]});
+const GIS = 'https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
+const reviewJson = JSON.stringify({ok: true, entries: [
+  {caseKey: 'k1', dataset: 'MI-wayne', recordId: 'TEST-P', parcelId: '99000020', decision: 'pending_owner_review',
+    reviewedBy: 'preview-wayne-batch-validator', reviewedAt: ago(15), evidenceUrl: GIS, proposedPosition: {lat: 42.3, lon: -83.1}},
+  {caseKey: 'k2', dataset: 'MI-wayne', recordId: 'TEST-Q', parcelId: '99000021', decision: 'approved_for_staging',
+    reviewedBy: 'preview-wayne-batch-validator', reviewedAt: ago(900), publishStatus: 'published', evidenceUrl: GIS, proposedPosition: {lat: 42.31, lon: -83.11}}]});
 const nvidiaJson = JSON.stringify({ok: true, configured: true, keySource: 'env', state: 'idle', dailyLimit: 3, usedToday: 1, remainingToday: 2, receipts: []});
 
 const pulses = page => page.evaluate(() => [...document.getElementById('network').classList].filter(c => c.startsWith('pulse-')));
@@ -114,10 +117,13 @@ try {
     await page.route('**/.netlify/functions/owner-brain-nvidia', r => r.fulfill({status: 200, contentType: 'application/json', body: nvidiaJson}));
     await page.goto('http://127.0.0.1:8765/owner/brain/', {waitUntil: 'domcontentloaded'});
     await page.waitForFunction(() => !document.getElementById('approvalStatus').textContent.startsWith('Loading'), null, {timeout: 20000});
-    assert.match(await page.locator('#approvalStatus').textContent(), /1 waiting for your decision/);
-    assert.equal(await page.locator('#approvalItems .approval-card').count(), 1);
-    assert.equal(await page.locator('#approvalItems button', {hasText: 'Approve'}).count(), 1);
-    assert.equal(await page.locator('#approvalItems select option').count(), 2, 'Pro-first and critical options');
+    assert.match(await page.locator('#approvalStatus').textContent(), /1 waiting for your decision · 1 already public/);
+    assert.equal(await page.locator('#approvalItems .approval-card').count(), 2, 'pending and already-public corrections');
+    assert.match(await page.locator('#approvalItems .approval-card').nth(1).locator('h3').textContent(), /already public/);
+    assert.equal(await page.locator('#approvalItems button', {hasText: 'Approve'}).count(), 2);
+    assert.equal(await page.locator('#approvalItems button', {hasText: 'Reject'}).count(), 1, 'pending cases get Reject');
+    assert.equal(await page.locator('#approvalItems button', {hasText: 'Withdraw from public map'}).count(), 1, 'public cases say Withdraw');
+    assert.equal(await page.locator('#approvalItems .approval-card').first().locator('select option').count(), 2, 'Pro-first and critical options');
     await page.waitForFunction(() => document.getElementById('nvidiaStatus').textContent.includes('Key configured'), null, {timeout: 20000});
     assert.equal(await page.locator('#nvidiaRun').isDisabled(), false);
     const html = await page.content();

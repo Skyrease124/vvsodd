@@ -71,6 +71,13 @@ test('research releases use the same window and support a critical release', () 
  assert.equal(isProAccount({owner: true}), true);
 });
 
+test('a withdrawn research release is invisible to every viewer', () => {
+ const item = {type: 'land', researchOnly: true, availableForPurchase: false, reviewApproved: true, publicationApproved: true,
+  proReleaseAt: T0, withdrawn: true};
+ assert.equal(audienceFor(item, {owner: true}, t0 + 999 * H), 'none');
+ assert.equal(audienceFor(item, null, t0 + 999 * H), 'none');
+});
+
 test('creating a critical research release needs confirmation and a real reason', () => {
  const base = {id: 'rel-x', type: 'land', state: 'FL', county: 'Palm Beach', parcelId: 'PB-1', title: 'Palm Beach land parcel update',
   description: 'Official county land record reviewed against the source.', evidenceUrl: 'https://www.pbcgov.org/records', approvedForResearch: true};
