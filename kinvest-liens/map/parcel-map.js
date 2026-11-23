@@ -1275,10 +1275,10 @@
   let stateParcelLoadToken=0;
   async function showStateParcels(a) {
     const token=++stateParcelLoadToken;
-    const datasets=IDX.datasets.filter(d=>d.state===a);
+    const datasets=IDX.datasets.filter(d=>d.state===a).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
-    say('Loading mapped parcels from '+datasets.length+' counties…',true);
+    say('Loading parcels across '+datasets.length+' mapped counties…',true);
     let cursor=0,done=0,failed=0;
     const worker=async()=>{
       while(cursor<datasets.length&&token===stateParcelLoadToken){
@@ -1294,7 +1294,10 @@
         done++;
         if(token!==stateParcelLoadToken)return;
         refresh();
-        if(done===datasets.length)say('Showing mapped parcels from '+(done-failed)+' counties'+(failed?' · '+failed+' unavailable':'')+'.');
+        if(done===datasets.length){
+          const records=shown().filter(passes),mapped=records.filter(p=>p.g||p.cx).length;
+          say(mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded counties'+(failed?' · '+failed+' unavailable':'')+'.');
+        }
       }
     };
     await Promise.all(Array.from({length:Math.min(4,datasets.length)},()=>worker()));
@@ -1304,7 +1307,7 @@
     ++stateParcelLoadToken; active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
     const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
     if (panel) { stateCard(a, !homeMap); if (homeMap) openRight(false); }
-    if(homeMap)showStateParcels(a);
+    if(homeMap)void showStateParcels(a);
     aiRefresh();
     if (remember && locationContext) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
     const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
