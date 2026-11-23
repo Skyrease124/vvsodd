@@ -13,7 +13,7 @@ window.TaxRadarOn = true;
   const SS = (() => { try { return window.sessionStorage; } catch (e) { return null; } })();
   const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
   const saved = (() => { try { return JSON.parse((SS && SS.getItem('ppa_radar')) || '{}'); } catch (e) { return {}; } })();
-  const S = {tab: saved.tab || 'opp', vac: !!saved.vac, types: new Set((saved.types || ['county-held', 'lien-sale', 'deed']).concat(saved.types && saved.types.includes('state-held') === false && saved.typesV2 ? [] : ['state-held'])), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
+  const S = {tab: ['cal','hist'].includes(saved.tab) ? saved.tab : 'cal', vac: !!saved.vac, types: new Set((saved.types || ['county-held', 'lien-sale', 'deed']).concat(saved.types && saved.types.includes('state-held') === false && saved.typesV2 ? [] : ['state-held'])), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
   const persist = () => { try { SS && SS.setItem('ppa_radar', JSON.stringify({tab: S.tab, vac: S.vac, types: [...S.types], budget: S.budget, sel: S.sel, fOpen: typeof fOpen === 'undefined' ? false : fOpen})); } catch (e) {} };
   const TYPES = [['state-held', 'State-Held Land'], ['county-held', 'County-Held Liens'], ['lien-sale', 'Advertised Lien Sales'], ['deed', 'Tax Deed Auctions']];
   const GROUP_LABEL = {'state-held': 'State-held land', 'county-held': 'County-held', 'lien-sale': 'Advertised sale', 'deed': 'Tax deed'};
