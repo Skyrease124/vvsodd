@@ -1382,12 +1382,18 @@
         el.textContent=n.toLocaleString('en-US');
         el.title=n.toLocaleString('en-US')+' indexed government land parcels in '+(IDX.states[a]?.n||a)+'; sale status not confirmed';
         el.setAttribute('aria-label',el.title);
+        // Preserve MapLibre's inline transform: replacing cssText detaches the marker
+        // from its geographic position until the next camera movement.
+        const markerTransform=el.style.transform;
         el.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:34px;max-width:70px;height:26px;padding:0 5px;border-radius:6px;border:1px solid #baf9df;background:#12b981;color:#062e23;font:700 11px/1 system-ui,-apple-system,sans-serif;white-space:nowrap;box-shadow:0 2px 5px #0005;cursor:pointer;';
+        if(markerTransform)el.style.transform=markerTransform;
       }else{
         el.textContent=el.dataset.count;
         el.title=el.dataset.title;
         el.setAttribute('aria-label',el.title);
+        const markerTransform=el.style.transform;
         el.style.cssText='';
+        if(markerTransform)el.style.transform=markerTransform;
         el.style.display=(radarOverlayEnabled||(homeMap&&!!curState))?'none':'';
       }
     });
@@ -1591,6 +1597,17 @@
     if (pointed) map.easeTo({center:[area.lng,area.lat], zoom:9.5, duration:REDUCED ? 0 : 240});
   }
   async function start2() {
+    // Homepage map always opens in national Choose a state mode.
+    // Explicit selections during this visit still work normally.
+    if(homeMap){
+      curState='';curCounty='';sel=null;active=new Set(['__none__']);
+      if(window.__pm){window.__pm.stSel.value='';fillCounties(window.__pm.coSel);}
+      const clean=new URL(location.href);
+      ['s','c','p'].forEach(key=>clean.searchParams.delete(key));
+      if(clean.href!==location.href)history.replaceState(null,'',clean);
+      syncStateBadges();
+      return;
+    }
     const q = new URLSearchParams(location.search), county = q.get('c'), parcel = q.get('p'), state = q.get('s');
     const point = new URLSearchParams(location.hash.slice(1));
     const lat = Number(point.get('lat')), lng = Number(point.get('lng'));
