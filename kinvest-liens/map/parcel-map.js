@@ -1284,7 +1284,8 @@
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
     say('Loading parcels across '+datasets.length+' mapped counties…',true);
-    let cursor=0,done=0,failed=0;
+    let cursor=0,done=0,failed=0,paintTimer=0;
+    const schedulePaint=()=>{if(paintTimer)return;paintTimer=setTimeout(()=>{paintTimer=0;if(token===stateParcelLoadToken)refresh();},120);};
     const worker=async()=>{
       while(cursor<datasets.length&&token===stateParcelLoadToken){
         const d=datasets[cursor++];
@@ -1293,19 +1294,21 @@
             const data=expand(await api('/map/data/'+d.file));
             if(token!==stateParcelLoadToken)return;
             data.meta=d;loaded[d.id]=data;
-            if(window.PPABrainMap)await window.PPABrainMap.apply(data).catch(()=>{});
+            // Avoid blocking the main map on optional GIS enrichment for every county.
+            if(window.PPABrainMap)setTimeout(()=>{if(token===stateParcelLoadToken)void window.PPABrainMap.apply(data).catch(()=>{});},0);
           }
         }catch(_){failed++;}
         done++;
         if(token!==stateParcelLoadToken)return;
-        refresh();
+        schedulePaint();
         if(done===datasets.length){
           const records=shown().filter(passes),mapped=records.filter(p=>p.g||p.cx).length;
+          if(paintTimer){clearTimeout(paintTimer);paintTimer=0;}refresh();
           say(mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded counties'+(failed?' · '+failed+' unavailable':'')+'.');
         }
       }
     };
-    await Promise.all(Array.from({length:Math.min(4,datasets.length)},()=>worker()));
+    await Promise.all(Array.from({length:Math.min(3,datasets.length)},()=>worker()));
   }
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
     if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
@@ -1346,13 +1349,13 @@
   let radarOverlayEnabled=false;
   function syncStateBadges(){
     const landCounts={};
-    if(IDX?.datasets)for(const d of IDX.datasets)if(d.cats?.land_bank)landCounts[d.state]=(landCounts[d.state]||0)+1;
+    if(IDX?.datasets)for(const d of IDX.datasets)if(d.cats?.land_bank)landCounts[d.state]=(landCounts[d.state]||0)+Number(d.cats.land_bank||0);
     parcelStateBadges.forEach(m=>{
       const el=m.getElement(),a=el.dataset.state,landCount=landCounts[a]||0;
       el.style.display=((radarOverlayEnabled&&!landOnly)||(homeMap&&!!curState)||(homeMap&&landOnly&&!landCount))?'none':'';
       if(homeMap&&landOnly){
-        el.textContent=String(landCount);
-        el.title=landCount+' counties with mapped government land records in '+(IDX.states[a]?.n||a)+'; purchase eligibility unconfirmed';
+        el.textContent=landCount.toLocaleString('en-US');
+        el.title=landCount.toLocaleString('en-US')+' indexed land-bank/state-held parcel records in '+(IDX.states[a]?.n||a)+'; purchase eligibility unconfirmed';
         el.setAttribute('aria-label',el.title);
         el.style.background='#22c55e';el.style.color='#09251e';
       }else{
