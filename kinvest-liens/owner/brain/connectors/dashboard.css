@@ -41,6 +41,10 @@ section>details>ul,section>details>ol{margin-block:.45rem}
 .county-filters label{min-width:0}
 .county-filters input,.county-filters select{box-sizing:border-box;width:100%;max-width:100%;min-height:44px}
 .county-filters input{background:#10242f;color:inherit;border:1px solid #527278;border-radius:8px;padding:9px}
+#county-reset{align-self:start;background:transparent;color:var(--accent);border:1px solid #527278;margin:.2rem 0 0;height:auto;min-height:44px}
+#county-reset[hidden]{display:none}
+#county-summary{margin:0 0 .5rem;font-size:.92rem}
+#county-summary:empty{display:none}
 
 .land-intake{display:grid;gap:.65rem;min-width:0}
 .land-intake input{width:100%;min-width:0;max-width:100%;font:inherit}

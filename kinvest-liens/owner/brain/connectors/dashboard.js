@@ -4,6 +4,7 @@ const picker = document.getElementById('county');
 const statusLine = document.getElementById('status');
 const details = document.getElementById('details');
 let selection = 0;
+let lastCounty = ''; // remembered so that clearing a filter returns to the county the owner had open
 function disclose(label,content){
   const panel=document.createElement('details'),summary=document.createElement('summary');
   summary.textContent=label;
@@ -122,6 +123,7 @@ async function showCounty(){
   details.replaceChildren();
   try{
     if(!picker.value){statusLine.textContent='No counties match these filters.';return;}
+    lastCounty=picker.value;
     const {county,coverage,operation}=await read(api+'?'+new URLSearchParams({dataset:picker.value}));
     if(request!==selection)return;
     render(county,coverage,operation);
@@ -139,22 +141,36 @@ picker.addEventListener('change',showCounty);
     counties.sort((a,b)=>(a.state+a.county).localeCompare(b.state+b.county));
     const state=document.getElementById('county-state'),name=document.getElementById('county-name'),mode=document.getElementById('county-mode');
     for(const code of [...new Set(counties.map(county=>county.state))].sort())state.add(new Option(code,code));
-    function updatePicker(preferred=picker.value){
+    const summary=document.getElementById('county-summary'),reset=document.getElementById('county-reset');
+    function updatePicker(preferred=picker.value||lastCounty){
+      const previous=picker.value;
       const query=name.value.trim().toLowerCase();
       picker.replaceChildren();
+      const tally=new Map();
+      let shown=0;
       for(const county of counties){
         if(state.value&&state.value!==county.state||
            query&&!county.county.toLowerCase().includes(query)||
            mode.value&&mode.value!==(county.operation?.mode||'unconfigured'))continue;
+        shown++;
+        tally.set(county.status,(tally.get(county.status)||0)+1);
         picker.add(new Option(county.state+' · '+county.county+' · '+county.status,county.id));
       }
       if([...picker.options].some(option=>option.value===preferred))picker.value=preferred;
       picker.disabled=!picker.options.length;
+      reset.hidden=!(state.value||query||mode.value);
+      summary.textContent=shown
+        ?'Showing '+shown.toLocaleString('en-US')+' of '+counties.length.toLocaleString('en-US')+' counties · '+
+          [...tally].sort((a,b)=>b[1]-a[1]).map(([status,n])=>n.toLocaleString('en-US')+' '+String(status||'unknown').toLowerCase()).join(' · ')
+        :'0 of '+counties.length.toLocaleString('en-US')+' counties shown · Choose “Show all counties” to see the full list.';
+      // Filters change the list only; reload the county details when the selected county actually changes.
+      if(picker.value&&picker.value===previous)return;
       return showCounty();
     }
     state.addEventListener('change',()=>updatePicker());
-    name.addEventListener('change',()=>updatePicker());
+    name.addEventListener('input',()=>updatePicker());
     mode.addEventListener('change',()=>updatePicker());
+    reset.addEventListener('click',()=>{state.value='';name.value='';mode.value='';updatePicker();});
     document.getElementById('dashboard').hidden=false;
     await updatePicker('CO-larimer');
   }catch(error){statusLine.textContent=error.message;}
