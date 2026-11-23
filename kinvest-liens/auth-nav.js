@@ -4,6 +4,7 @@
   const API = '/.netlify/functions/account';
   const isEmbeddedMap = new URLSearchParams(location.search).get('embed') === '1' && window.top !== window;
   if (isEmbeddedMap) return;
+  if (!window.__ppxSwitch) { const sw = document.createElement('script'); sw.src = '/experience-switch.js'; sw.defer = true; document.head.appendChild(sw); }
   if (!document.querySelector('link[href="/app-shell.css"]')) {
     const appCss = document.createElement('link'); appCss.rel = 'stylesheet'; appCss.href = '/app-shell.css'; document.head.appendChild(appCss);
   }

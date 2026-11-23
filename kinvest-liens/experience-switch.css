@@ -1,0 +1,22 @@
+/* Experience switch: Price Pocket Assets | Price Pocket Retail. Compact, animated, keyboard friendly. */
+.ppx-switch{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;align-items:center;flex:none;box-sizing:border-box;height:30px;min-width:124px;margin:0 4px;padding:3px;border-radius:999px;background:color-mix(in srgb,currentColor 10%,transparent);isolation:isolate;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif}
+.ppx-switch::before{content:"";position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:color-mix(in srgb,currentColor 22%,transparent);box-shadow:0 1px 2px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.08);transition:transform .34s cubic-bezier(.32,.72,0,1);z-index:-1}
+.ppx-switch--retail::before{transform:translateX(100%)}
+.ppx-switch a{display:flex;align-items:center;justify-content:center;height:24px;min-width:56px;padding:0 10px;border-radius:999px;color:inherit;font-size:12.5px;font-weight:650;letter-spacing:-.01em;line-height:1;text-decoration:none;white-space:nowrap;opacity:.6;transition:opacity .25s ease}
+.ppx-switch a[aria-current="page"]{opacity:1}
+.ppx-switch a:hover{opacity:.9}
+.ppx-switch a:focus-visible{outline:2px solid #5b8cff;outline-offset:1px}
+@media (max-width:440px){.ppx-switch{min-width:112px;height:28px;margin:0 2px}.ppx-switch a{min-width:50px;padding:0 8px;font-size:12px}}
+/* Full-page transition: the page fades and slides out, then the next page fades in. */
+html.ppx-leaving body{opacity:0;transform:translateX(-12px);transition:opacity .26s ease,transform .32s cubic-bezier(.32,.72,0,1)}
+html.ppx-entering body{animation:ppxSwitchIn .38s cubic-bezier(.22,.61,.36,1) both}
+@keyframes ppxSwitchIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){html.ppx-leaving body,html.ppx-entering body{transition:none!important;animation:none!important;transform:none!important}}
+/* A bar that cannot fit the switch beside its brand and account controls is marked .ppx-own-line by experience-switch.js:
+   the switch then takes its own line under the brand, and every existing control keeps its place. */
+header.ppx-own-line .nav-in,header.ppx-own-line .dnav-in,header.ppx-own-line.app-bar{flex-wrap:wrap;row-gap:6px}
+header.ppx-own-line .ppx-switch{order:2;flex-basis:100%;max-width:max-content}
+/* Light Assets header: dark green text so both labels read clearly. */
+header.nav .ppx-switch{color:#0b4a34}
+header.nav .ppx-switch a{color:#0b4a34;opacity:.74}
+header.nav .ppx-switch a[aria-current="page"]{opacity:1}
