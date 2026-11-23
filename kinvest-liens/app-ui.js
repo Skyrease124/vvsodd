@@ -45,7 +45,7 @@
   const areaLink = document.querySelector('[data-open-map]');
   const recentLink = document.querySelector('[data-recent-link]');
   const showArea = area => {
-    areaLink.href = loc.mapPath(area);
+    if (areaLink) areaLink.href = loc.mapPath(area);
     if (!area) return;
     document.querySelector('[data-recent-label]').textContent = area.parcel ? 'Recent parcel' : 'Map area';
     document.querySelector('[data-recent]').textContent = area.label || 'Current map area';

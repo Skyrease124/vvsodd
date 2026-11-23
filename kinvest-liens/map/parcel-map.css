@@ -489,3 +489,52 @@ body.ppa-map-home .pm{
   body:not(.ppa-map-home) .pm-tool-trigger-label{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){.pm-tool-menu{transition:none}}
+
+/* Homepage Tools panel (Map Layers): dark card, icon rows, green switches. Only used when the homepage map builds it. */
+.ppa-map-home .pm-tool-menu.pm-ml{display:block;right:calc(100% + 10px);top:0;width:276px;max-height:min(72dvh,540px);overflow:auto;padding:0;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:rgba(12,24,34,.96);box-shadow:0 18px 50px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.pm-ml-head{display:flex;justify-content:space-between;align-items:center;padding:16px 16px 10px;color:#f5f5f7;font-size:17px}
+.pm-ml-head b{font-weight:700}
+.pm-ml-chev{font-size:24px;line-height:1;color:#c9d6df;opacity:.6}
+.pm-ml-row{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin:0;padding:8px 16px;border:0;border-top:1px solid rgba(255,255,255,.08);background:none;color:#f5f5f7;font:600 15px/1.2 -apple-system,system-ui,sans-serif;text-align:left;cursor:pointer;box-sizing:border-box}
+.pm-ml-head+.pm-ml-row{border-top:1px solid rgba(255,255,255,.08)}
+.pm-ml-ic{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.08);display:grid;place-items:center;color:#c9d6df}
+.pm-ml-ic svg{width:18px;height:18px}
+.pm-ml-t{flex:1;min-width:0;white-space:nowrap}
+.pm-ml-val{color:#9fb3c2;font-weight:500;font-size:14px;white-space:nowrap}
+.pm-ml-link .pm-ml-chev{margin-left:2px}
+.pm-ml-static{cursor:default}
+.pm-ml-more{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px 12px 12px;border-top:1px solid rgba(255,255,255,.08)}
+.pm-ml-more[hidden]{display:none}
+.pm-ml-more .pm-ib,.pm-ml-more .pm-gis-toggle{width:100%!important;min-height:44px!important;height:auto!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center}
+.pm-ml .pm-sw{position:relative;flex:0 0 51px;width:51px;height:31px;display:inline-block}
+.pm-ml .pm-sw input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer;z-index:1}
+.pm-ml .pm-sw i{position:absolute;inset:0;border-radius:31px;background:#39393d;transition:background .2s}
+.pm-ml .pm-sw i::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .2s}
+.pm-ml .pm-sw input:checked+i{background:#34c759}
+.pm-ml .pm-sw input:checked+i::after{transform:translateX(20px)}
+.pm-ml .pm-land-note{font-size:12px;line-height:1.4;margin:0;padding:0 16px 10px;color:#c9d6df}
+.pm-ml .pm-land-note[hidden]{display:none}
+.pm-ml .pm-seg{position:static!important;display:flex;gap:6px;padding:0 16px 12px;background:none;border:0;box-shadow:none}
+.pm-ml .pm-seg[hidden]{display:none!important}
+.pm-ml .pm-seg button{flex:1;min-height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#f5f5f7;font:600 13px system-ui,sans-serif}
+.pm-ml .pm-seg button[aria-pressed=true]{background:#0b6e4f;border-color:#34c759}
+/* The site-wide label and button styles are column-based; the Map Layers rows need rows. */
+.pm-ml .pm-ml-row{flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:12px!important;min-height:56px!important;padding:8px 16px!important;margin:0!important;font-size:15px!important;font-weight:600!important;line-height:1.2!important;color:#f5f5f7!important;background:none!important;box-shadow:none!important;border-radius:0!important;width:100%!important}
+.pm-ml .pm-ml-row+.pm-ml-row{border-top:1px solid rgba(255,255,255,.08)!important}
+.pm-ml .pm-ml-ic{flex:0 0 34px!important;width:34px!important;height:34px!important;margin:0!important;padding:0!important}
+.pm-ml .pm-ml-t{flex:1 1 auto!important;min-width:0!important;margin:0!important;white-space:nowrap}
+.pm-ml .pm-ml-val{margin:0!important;white-space:nowrap;font-size:14px!important;font-weight:500!important;color:#9fb3c2!important}
+.pm-ml .pm-ml-chev{margin:0!important;font-size:22px!important}
+.pm-ml .pm-sw{position:relative!important;display:inline-block!important;flex:0 0 51px!important;width:51px!important;height:31px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important}
+.pm-ml .pm-sw input{position:absolute!important;inset:0!important;width:51px!important;height:31px!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;cursor:pointer!important;z-index:1!important}
+.pm-ml .pm-sw i{position:absolute!important;inset:0!important;display:block!important;border-radius:31px!important;background:#39393d!important;transition:background .2s!important}
+.pm-ml .pm-sw input:checked+i{background:#34c759!important}
+.pm-ml .pm-head{display:flex!important}
+.pm-ml-more .pm-ib,.pm-ml-more .pm-gis-toggle{flex-direction:column!important}
+/* Keep the open Map Layers panel above the map's own controls */
+.ppa-map-home .pm-tool-dock.open{z-index:60}
+.ppa-map-home .pm-tool-menu.pm-ml{z-index:60}
+.ppa-map-home .pm-home-rail{position:relative;z-index:80}
+/* Not part of the reference Map Layers panel: hidden inside the panel only (the controls still exist in the page) */
+.pm-ml .pm-home-results,.pm-ml .pm-native-map-controls{display:none!important}
+.ppa-map-home .pm-tool-menu.pm-ml .pm-home-results,.ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls{display:none!important}
