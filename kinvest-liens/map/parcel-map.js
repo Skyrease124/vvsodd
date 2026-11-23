@@ -1667,8 +1667,8 @@
     buildAi();
     const ask = $('pmAsk');
     if (ask) {
-      ask.replaceChildren(mk('span', '', paid ? 'AI' : '🔒 AI'), mk('b', '', 'Pro'));
-      ask.setAttribute('aria-label', paid ? 'AI' : 'AI, Pro feature');
+      ask.replaceChildren(mk('span', '', paid ? 'AI' : '🔒 AI'));
+      ask.setAttribute('aria-label', paid ? 'AI' : 'AI, members only');
       ask.title = 'Ask questions about the current county, parcel or map area.';
       if (homeMap && paid) {
         ask.setAttribute('role', 'switch');
