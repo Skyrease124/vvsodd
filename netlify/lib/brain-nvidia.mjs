@@ -5,7 +5,6 @@
 // exist in the input and every proposal must be backed by an official or validator item.
 // Nothing is published here. Every proposal waits for owner approval.
 import {complete} from './llm.mjs';
-import * as keystore from './keystore.mjs';
 import {updateJson, LEDGER, DECISION} from './brain-approvals.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
@@ -133,11 +132,13 @@ export async function usageToday(auth, now = Date.now()) {
 }
 
 // Runs one owner-triggered consolidation. Returns the receipt that was stored.
-export async function runConsolidation({auth, now = Date.now(), config} = {}) {
+// config comes from the endpoint (keystore.getConfig()). This library never loads the key store itself,
+// so it stays a pure module that runs without installed packages.
+export async function runConsolidation({auth, now = Date.now(), config = null} = {}) {
   const started = Date.now();
   const id = 'nv-' + new Date(now).toISOString().replace(/[-:.TZ]/g, '').slice(0, 14) + '-' + Math.random().toString(36).slice(2, 8);
   const items = await collectItems(auth);
-  const cfg = config === undefined ? await keystore.getConfig() : config;
+  const cfg = config;
   const base = {id, at: new Date(now).toISOString(), inputs: {count: items.length, sources: {}, refs: items.map(i => ({ref: i.ref, source: i.source, parcelId: i.parcelId || null, checkedAt: i.checkedAt}))}};
   for (const i of items) base.inputs.sources[i.source] = (base.inputs.sources[i.source] || 0) + 1;
   const deterministic = deterministicConflicts(items);
