@@ -1272,9 +1272,29 @@
     map.addLayer({ id: 'st-sel', type: 'line', source: 'states', layout: { visibility: 'none' }, filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
     map.on('mouseenter', 'st-fill', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'st-fill', () => { map.getCanvas().style.cursor = ''; });
     map.on('click', 'st-fill', e => { if (map.getZoom() > 7.5 || map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) return; const f = e.features && e.features[0]; if (f) focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); });
+    // Position each badge at a point within its actual state polygon, not at a bounding-box midpoint.
+    const insideRing=(p,ring)=>{let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const a=ring[i],b=ring[j];if(((a[1]>p[1])!==(b[1]>p[1]))&&(p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]))inside=!inside;
+    }return inside;};
+    const insidePoly=(p,poly)=>insideRing(p,poly[0])&&!poly.slice(1).some(hole=>insideRing(p,hole));
+    const insideState=(p,geom)=>(geom.type==='Polygon'?[geom.coordinates]:geom.coordinates).some(poly=>insidePoly(p,poly));
+    const badgePoint=(geom)=>{
+      const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.coordinates;
+      const outer=polygons.map(poly=>poly[0]).sort((a,b)=>b.length-a.length)[0];
+      const xs=outer.map(p=>p[0]),ys=outer.map(p=>p[1]);
+      const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+      const mid=[(minX+maxX)/2,(minY+maxY)/2];
+      if(insideState(mid,geom))return mid;
+      // Scan inward from the center to avoid labels floating over neighboring states or water.
+      for(let step=1;step<=8;step++)for(let dx=-step;dx<=step;dx++)for(let dy=-step;dy<=step;dy++){
+        const p=[mid[0]+dx*(maxX-minX)/20,mid[1]+dy*(maxY-minY)/20];
+        if(insideState(p,geom))return p;
+      }
+      return outer[0];
+    };
     // small labels with how many counties have data
-    const pts = { type: 'FeatureCollection', features: gj.features.filter(f => f.properties.has).map(f => { const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { xs.push(c[0]); ys.push(c[1]); })); return { type: 'Feature', properties: { a: f.properties.a, n: have[f.properties.a] }, geometry: { type: 'Point', coordinates: [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2] } }; }) };
-    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title);el.dataset.state=f.properties.a;el.dataset.count=String(f.properties.n);el.dataset.title=el.title; el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); }); parcelStateBadges.push(new maplibregl.Marker({ element: el }).setLngLat(f.geometry.coordinates).addTo(map)); }); syncStateBadges();
+    const pts = { type: 'FeatureCollection', features: gj.features.filter(f => f.properties.has).map(f => { const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { xs.push(c[0]); ys.push(c[1]); })); return { type: 'Feature', properties: { a: f.properties.a, n: have[f.properties.a] }, geometry: { type: 'Point', coordinates: badgePoint(f.geometry) } }; }) };
+    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title);el.dataset.state=f.properties.a;el.dataset.count=String(f.properties.n);el.dataset.title=el.title; el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); }); parcelStateBadges.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(f.geometry.coordinates).addTo(map)); }); syncStateBadges();
   }
   function stateBB(a) { if (!mapReady || !map.getSource('states')) return null; const src = map.getSource('states')._data; const f = src && src.features.find(x => x.properties.a === a); if (!f) return null; const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { if (c[0] > -170) { xs.push(c[0]); ys.push(c[1]); } })); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
   let stateParcelLoadToken=0;
@@ -1357,12 +1377,12 @@
         el.textContent=landCount.toLocaleString('en-US');
         el.title=landCount.toLocaleString('en-US')+' indexed land-bank/state-held parcel records in '+(IDX.states[a]?.n||a)+'; purchase eligibility unconfirmed';
         el.setAttribute('aria-label',el.title);
-        el.style.background='#22c55e';el.style.color='#09251e';
+        el.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:36px;max-width:72px;height:27px;padding:0 6px;border-radius:7px;border:1px solid #baf9df;background:#12b981;color:#062e23;font:700 11px/1 system-ui,-apple-system,sans-serif;letter-spacing:-.2px;white-space:nowrap;box-shadow:0 2px 6px #0006;cursor:pointer;transform:none;';
       }else{
         el.textContent=el.dataset.count;
         el.title=el.dataset.title;
         el.setAttribute('aria-label',el.title);
-        el.style.removeProperty('background');el.style.removeProperty('color');
+        el.style.cssText='';
       }
     });
   }
