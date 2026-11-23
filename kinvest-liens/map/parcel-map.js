@@ -269,8 +269,22 @@
       map.on('mouseenter','research-pin',()=>{map.getCanvas().style.cursor='pointer';});
       map.on('mouseleave','research-pin',()=>{map.getCanvas().style.cursor='';});
       paintResearch();
-      ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); map.on('click', l, e => { const f = e.features && e.features[0]; if (f) { const r = byId(f.properties.i); if (r) select(r, { fly: false }); } }); });
-      map.on('click', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts', 'p-dots'] }).length) closePop(); });
+      ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); });
+      // Tapping a parcel: exact hit first, then the nearest dot within a finger-sized area, then the parcel shape. A miss closes the card.
+      map.on('click', e => {
+        const other = ['research-pin', 'hz-c'].filter(id => map.getLayer(id));
+        if (other.length && map.queryRenderedFeatures(e.point, { layers: other }).length) return;
+        let hit = map.queryRenderedFeatures(e.point, { layers: ['pts', 'p-dots'] });
+        if (!hit.length) {
+          const pad = 24, box = [[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]];
+          const near = map.queryRenderedFeatures(box, { layers: ['pts', 'p-dots'] }).filter(f => f.geometry && f.geometry.type === 'Point');
+          const dist = f => { const q = map.project(f.geometry.coordinates); return Math.hypot(q.x - e.point.x, q.y - e.point.y); };
+          near.sort((a, b) => dist(a) - dist(b)); if (near.length) hit = [near[0]];
+        }
+        if (!hit.length) hit = map.queryRenderedFeatures(e.point, { layers: ['p-fill'] });
+        const f = hit[0], r = f && byId(f.properties.i);
+        if (r) select(r, { fly: false }); else closePop();
+      });
       setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
     });
   }
