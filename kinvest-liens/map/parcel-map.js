@@ -416,7 +416,7 @@
       if(event.data?.type==='ppa:radar-state-inventory')applyStateInventory(event.data.counts);
     });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
-    stSel.addEventListener('change', () => { if (!stSel.value) { ++stateParcelLoadToken;curState = ''; curCounty = '';active=new Set(['__none__']);fillCounties(coSel);syncGISButton();refresh();if(mapReady)map.fitBounds([[-126,23.5],[-65.5,50.5]],{padding:fitPad(),duration:500});aiRefresh();return; } focusState(stSel.value,{remember:!homeMap,panel:!homeMap}); });
+    stSel.addEventListener('change', () => { if (!stSel.value) { ++stateParcelLoadToken;curState = ''; curCounty = '';active=new Set(['__none__']);fillCounties(coSel);syncGISButton();refresh();syncStateBadges();drawRadarPins();if(mapReady)map.fitBounds([[-126,23.5],[-65.5,50.5]],{padding:fitPad(),duration:500});aiRefresh();return; } focusState(stSel.value,{remember:!homeMap,panel:!homeMap}); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); else if(curState) focusState(curState,{remember:false,panel:false,zoom:true}); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
@@ -1305,6 +1305,7 @@
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
     if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
     ++stateParcelLoadToken; active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
+    if(homeMap){syncStateBadges();drawRadarPins();}
     const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
     if (panel && !homeMap) stateCard(a,true);
     if(homeMap){openRight(false);if(isMobile())setSnap('peek');}
@@ -1338,7 +1339,7 @@
   let radarOverlay={tab:'opp',month:-1,counties:[]},radarPins=[],radarCounties=null,radarGeometryLoading=false;
   const parcelStateBadges=[];
   let radarOverlayEnabled=false;
-  function syncStateBadges(){parcelStateBadges.forEach(m=>{m.getElement().style.display=radarOverlayEnabled?'none':'';});}
+  function syncStateBadges(){parcelStateBadges.forEach(m=>{m.getElement().style.display=(radarOverlayEnabled||homeMap&&!!curState)?'none':'';});}
   const radarNorm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of)\\b/g,'').replace(/[^a-z0-9]/g,'');
   const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
     t==='cal'?(c.group!=='county-held'&&c.group!=='state-held'&&
@@ -1414,7 +1415,7 @@
   function drawRadarPins(){
     if(!homeMap||!mapReady||!map.getSource('states'))return;
     clearRadarPins();
-    if(landOnly)return;
+    if(landOnly||(homeMap&&!!curState))return;
     const src=map.getSource('states')._data;if(!src?.features)return;
     const zoom=map.getZoom(),countyView=zoom>=6.6;
     const grouped=new Map(),countyGroups=new Map();
