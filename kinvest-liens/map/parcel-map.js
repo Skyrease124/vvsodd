@@ -642,19 +642,6 @@
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
       rail.append(stack);
-      // Quick links under Tools: the same two cards that were under For You (saved properties, recent parcel or map area).
-      const railLink=(href,label,sub)=>{const a=mk('a','pm-rail-link');a.href=href;a.target='_top';a.append(mk('b','',label),mk('small','',sub));rail.append(a);return a;};
-      const watchA=railLink('/account/watchlist/','Watchlist','Saved');
-      const recentA=railLink('/map/','Parcel search','Explore');
-      fetch('/.netlify/functions/watch?action=watching',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(d=>{
-        if(!Array.isArray(d?.keys))return;const n=d.keys.length;
-        watchA.querySelector('small').textContent=n+' saved';watchA.title=n===1?'1 saved property':n.toLocaleString('en-US')+' saved properties';
-      }).catch(()=>{});
-      try{
-        const loc=window.parent.ppaLocation;
-        const showRecent=area=>{if(!area)return;recentA.querySelector('b').textContent=area.parcel?'Recent parcel':'Map area';recentA.querySelector('small').textContent=area.label||'Current area';recentA.title=(area.parcel?'Recent parcel: ':'Map area: ')+(area.label||'');recentA.href=loc.mapPath(area);};
-        if(loc){loc.subscribe(showRecent);loc.ready().then(showRecent);}
-      }catch(e){}
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
