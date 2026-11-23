@@ -91,12 +91,13 @@
     radarFrame.contentWindow?.postMessage({type:'ppa:radar-state-inventory',counts},location.origin);
   }
   function sendRadarOverlay(){
-    if(!mapWorkspace.classList.contains('app-map-unified')||!latestRadarCategory)return;
+    if(!latestRadarCategory)return;
     const data=latestRadarCategory;
     const counties=(Array.isArray(data.counties)?data.counties:[]).map(c=>({
       state:c.state,county:c.county,open:c.open,group:c.group,history:!!c.history,sale:{kind:c.sale?.kind,date:c.sale?.date}
     }));
-    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:data.tab,month:data.month,counties},location.origin);
+    // The map remains opportunity-focused; calendar/history live only in Explore.
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:'opp',month:-1,counties},location.origin);
   }
   radarFrame.addEventListener('load',()=>{sendRadarOverlay();sendStateInventory();});
   window.addEventListener('message',event=>{
@@ -107,7 +108,7 @@
   });
   function renderRadarSummary(){
     if(!radarSummary)return;
-    const enabled=mapWorkspace.classList.contains('app-map-unified');
+    const enabled=false; // No calendar, history or opportunity summary beneath the map.
     if(!enabled||!latestRadarCategory){radarSummary.hidden=true;return;}
     const {tab,counties}=latestRadarCategory;
     const records=Array.isArray(counties)?counties:[];
@@ -131,19 +132,22 @@
     sendRadarOverlay();
     sendStateInventory();
   });
-  function dockRadarTabs(enabled){
-    if(enabled){
-      if(radarTabs.parentNode!==radarDock)radarDock.appendChild(radarTabs);
-      radarDock.hidden=false;
-
-    }else{
-      radarDock.hidden=true;
-      if(radarTabs.parentNode!==radarTabHome)radarTabHome.insertBefore(radarTabs,radarTabNext);
-
-    }
-  }
   function showMapView(view) {
-    for (const control of mapViews) {
+    for(const control of mapViews)control.setAttribute('aria-pressed',String(control.dataset.homeMapView===view));
+    // Keep the same parcel map for all modes; Explore owns the calendar/history UI.
+    document.getElementById('home-parcels').hidden=false;
+    document.getElementById('home-radar').hidden=false;
+    document.getElementById('home-combined-note').hidden=true;
+    radarDock.hidden=true;
+    mapWorkspace.classList.toggle('app-map-unified',view==='both');
+    renderRadarSummary();
+    sendRadarOverlay();
+  }
+  document.querySelectorAll('[data-explore-radar]').forEach(link=>link.addEventListener('click',()=>{
+    const tab=document.getElementById('tab-'+link.dataset.exploreRadar);
+    if(tab)tab.click();
+  }));
+  for (const control of mapViews) {
       const selected = control.dataset.homeMapView === view;
       control.setAttribute('aria-pressed', String(selected));
 
