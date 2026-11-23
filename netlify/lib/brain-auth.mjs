@@ -16,7 +16,7 @@ export const isBrainPreview=()=>scope.getStore()?.preview===true;
 // API budgets and provider controls remain shared; a preview must not reset them.
 // GIS quota activation and daily reservations must be shared across preview and
 // production: separate preview budgets could exceed the upstream daily cap.
-const sharedBudgetKey=k=>k==='brain-wayne-gis-quota-activation-v1'||k.startsWith('brain-wayne-gis-quota-v1-');
+const sharedBudgetKey=k=>k==='brain-wayne-gis-quota-activation-v1'||k.startsWith('brain-wayne-gis-quota-v1-')||k.startsWith('brain-gis-discovery-budget-v1-');
 const isolated=k=>isBrainPreview()&&!k.includes('usage')&&!sharedBudgetKey(k)&&k!=='owner-ai-research-api-controls';
 export function withBrainStore(handler){
  return (req,context)=>scope.run(context?.deploy?

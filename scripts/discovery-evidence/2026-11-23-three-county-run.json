@@ -1,0 +1,607 @@
+{
+  "generatedAt": "2026-11-23T07:29:22.437Z",
+  "counties": [
+    {
+      "countyId": "FL-miami-dade",
+      "county": "Miami-Dade",
+      "state": "FL",
+      "observedAt": "2026-11-23T07:29:11.212Z",
+      "status": "Verified",
+      "reason": "Sample parcel matched the official layer and its situs address",
+      "best": "FL-miami-dade|MD_PA_PropertySearch|6",
+      "candidates": [
+        {
+          "id": "FL-miami-dade|MD_PA_PropertySearch|6",
+          "status": "Verified",
+          "reasons": [
+            "Sample parcel matched the official layer and its situs address"
+          ],
+          "score": 3,
+          "service": {
+            "name": "MD_PA_PropertySearch",
+            "type": "MapServer",
+            "url": "https://gisfs.miamidade.gov/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer"
+          },
+          "layer": {
+            "id": 6,
+            "name": "MDC.PaParcel",
+            "url": "https://gisfs.miamidade.gov/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/6"
+          },
+          "fields": {
+            "parcel": "FOLIO",
+            "address": "TRUE_SITE_ADDR"
+          },
+          "nativeWkid": 2236,
+          "nativeAliases": [
+            102658
+          ],
+          "authority": {
+            "status": "verified",
+            "basis": "government-domain",
+            "host": "gisfs.miamidade.gov"
+          },
+          "authorityUrl": "https://www.miamidadepa.gov/pa/real-estate/property-search.page",
+          "lastEditDate": null,
+          "currentness": "unknown",
+          "sample": {
+            "outcome": "matched",
+            "recordId": "FL|Miami-Dade|30-3951-015-0010|20559",
+            "identifierForm": "dashes-removed",
+            "attempts": 1,
+            "checkedAt": "2026-11-23T07:29:11.629Z",
+            "polygon": {
+              "acres": 0.7385,
+              "bounds": [
+                -80.394307396961,
+                25.78236077503009,
+                -80.39274142538325,
+                25.78253618825768
+              ]
+            }
+          },
+          "observedAt": "2026-11-23T07:29:11.212Z"
+        },
+        {
+          "id": "FL-miami-dade|MD_PA_PropertySearch|8",
+          "status": "Source Found",
+          "reasons": [
+            "Not sample-checked: a higher-ranked candidate verified first"
+          ],
+          "score": 3,
+          "service": {
+            "name": "MD_PA_PropertySearch",
+            "type": "MapServer",
+            "url": "https://gisfs.miamidade.gov/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer"
+          },
+          "layer": {
+            "id": 8,
+            "name": "MDC.GeoProp",
+            "url": "https://gisfs.miamidade.gov/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/8"
+          },
+          "fields": {
+            "parcel": "FOLIO",
+            "address": "address"
+          },
+          "nativeWkid": 2236,
+          "nativeAliases": [
+            102658
+          ],
+          "authority": {
+            "status": "verified",
+            "basis": "government-domain",
+            "host": "gisfs.miamidade.gov"
+          },
+          "authorityUrl": "https://www.miamidadepa.gov/pa/real-estate/property-search.page",
+          "lastEditDate": null,
+          "currentness": "unknown",
+          "sample": null,
+          "observedAt": "2026-11-23T07:29:11.212Z"
+        }
+      ],
+      "rejected": [
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 1,
+          "reason": "Polygon layer lacks a situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 2,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 3,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 4,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 5,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 7,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 9,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 10,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 11,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 12,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 13,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 14,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 15,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 16,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 17,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MD_PA_PropertySearch",
+          "layer": 18,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        }
+      ],
+      "notes": [],
+      "requests": {
+        "used": 4,
+        "cacheHits": 0,
+        "byStage": {
+          "list-services": 1,
+          "probe-layers": 1,
+          "schema": 1,
+          "parcel_verification": 1
+        },
+        "requests": [
+          {
+            "stage": "list-services",
+            "host": "gisfs.miamidade.gov",
+            "path": "/mdarcgis/rest/services"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "gisfs.miamidade.gov",
+            "path": "/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/layers"
+          },
+          {
+            "stage": "schema",
+            "host": "gisfs.miamidade.gov",
+            "path": "/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/6"
+          },
+          {
+            "stage": "parcel_verification",
+            "host": "gisfs.miamidade.gov",
+            "path": "/mdarcgis/rest/services/MD_PA_PropertySearch/MapServer/6"
+          }
+        ]
+      },
+      "daily": {
+        "day": "2026-11-23",
+        "used": 4,
+        "dailyLimit": 60,
+        "runLimit": 16,
+        "runUsed": 4
+      },
+      "map": {
+        "status": "not-connected",
+        "reason": "Discovery does not change the map. Overlays stay unchanged until an owner approves a verified source and a reviewed overlay correction exists."
+      },
+      "elapsedMs": 419,
+      "datasetRecords": 248
+    },
+    {
+      "countyId": "CO-larimer",
+      "county": "Larimer",
+      "state": "CO",
+      "observedAt": "2026-11-23T07:29:11.646Z",
+      "status": "Verified",
+      "reason": "Sample parcel matched the official layer and its situs address",
+      "best": "CO-larimer|MapServices/Parcels|3",
+      "candidates": [
+        {
+          "id": "CO-larimer|MapServices/Parcels|3",
+          "status": "Verified",
+          "reasons": [
+            "Sample parcel matched the official layer and its situs address"
+          ],
+          "score": 5,
+          "service": {
+            "name": "MapServices/Parcels",
+            "type": "MapServer",
+            "url": "https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer"
+          },
+          "layer": {
+            "id": 3,
+            "name": "Tax Parcels",
+            "url": "https://maps1.larimer.org/arcgis/rest/services/MapServices/Parcels/MapServer/3"
+          },
+          "fields": {
+            "parcel": "PARCELNUM",
+            "address": "LOCADDRESS"
+          },
+          "nativeWkid": 2876,
+          "nativeAliases": [],
+          "authority": {
+            "status": "verified",
+            "basis": "seed-declared-domain",
+            "host": "maps1.larimer.org"
+          },
+          "authorityUrl": "https://www.larimer.gov/assessor",
+          "lastEditDate": null,
+          "currentness": "unknown",
+          "sample": {
+            "outcome": "matched",
+            "recordId": "CO|Larimer|9524325120|",
+            "identifierForm": "as-recorded",
+            "attempts": 1,
+            "checkedAt": "2026-11-23T07:29:12.218Z",
+            "polygon": {
+              "acres": 0.047,
+              "bounds": [
+                -105.07277094603802,
+                40.3805824937239,
+                -105.07247813897143,
+                40.3806582164324
+              ]
+            }
+          },
+          "observedAt": "2026-11-23T07:29:11.646Z"
+        }
+      ],
+      "rejected": [
+        {
+          "service": "MapServices/Parcels",
+          "layer": 1,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MapServices/Parcels",
+          "layer": 2,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MapServices/Parcels",
+          "layer": 4,
+          "reason": "Polygon layer lacks a parcel identifier and situs address field"
+        },
+        {
+          "service": "MapServices/Parcels",
+          "layer": 5,
+          "reason": "Polygon layer lacks a situs address field"
+        }
+      ],
+      "notes": [],
+      "requests": {
+        "used": 4,
+        "cacheHits": 0,
+        "byStage": {
+          "list-services": 1,
+          "probe-layers": 1,
+          "schema": 1,
+          "parcel_verification": 1
+        },
+        "requests": [
+          {
+            "stage": "list-services",
+            "host": "maps1.larimer.org",
+            "path": "/arcgis/rest/services/MapServices"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "maps1.larimer.org",
+            "path": "/arcgis/rest/services/MapServices/Parcels/MapServer/layers"
+          },
+          {
+            "stage": "schema",
+            "host": "maps1.larimer.org",
+            "path": "/arcgis/rest/services/MapServices/Parcels/MapServer/3"
+          },
+          {
+            "stage": "parcel_verification",
+            "host": "maps1.larimer.org",
+            "path": "/arcgis/rest/services/MapServices/Parcels/MapServer/3"
+          }
+        ]
+      },
+      "daily": {
+        "day": "2026-11-23",
+        "used": 8,
+        "dailyLimit": 60,
+        "runLimit": 16,
+        "runUsed": 4
+      },
+      "map": {
+        "status": "not-connected",
+        "reason": "Discovery does not change the map. Overlays stay unchanged until an owner approves a verified source and a reviewed overlay correction exists."
+      },
+      "elapsedMs": 573,
+      "datasetRecords": 1831
+    },
+    {
+      "countyId": "FL-palm-beach",
+      "county": "Palm Beach",
+      "state": "FL",
+      "observedAt": "2026-11-23T07:29:12.227Z",
+      "status": "Verified",
+      "reason": "Sample parcel matched the official layer and its situs address",
+      "best": "FL-palm-beach|Parcels_and_Property_Details_Local_Projection|0",
+      "candidates": [
+        {
+          "id": "FL-palm-beach|PARCEL_DETAILS|14",
+          "status": "Blocked",
+          "reasons": [
+            "Source unavailable or response unreadable"
+          ],
+          "score": 7,
+          "service": {
+            "name": "PARCEL_DETAILS",
+            "type": "FeatureServer",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/PARCEL_DETAILS/FeatureServer"
+          },
+          "layer": {
+            "id": 14,
+            "name": "PAO.PARCEL_DETAILS",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/PARCEL_DETAILS/FeatureServer/14"
+          },
+          "fields": {
+            "parcel": "PARCEL_NUMBER",
+            "address": "SITE_ADDR_STR"
+          },
+          "nativeWkid": 2881,
+          "nativeAliases": [],
+          "authority": {
+            "status": "verified",
+            "basis": "arcgis-organization-name",
+            "host": "services1.arcgis.com",
+            "portalName": "Palm Beach County GIS"
+          },
+          "authorityUrl": "https://www.arcgis.com/sharing/rest/portals/ZWOoUZbtaYePLlPw",
+          "lastEditDate": "2024-09-17T17:08:33.420Z",
+          "currentness": "current",
+          "sample": {
+            "outcome": "error",
+            "code": "transport_or_payload",
+            "message": "Source unavailable or response unreadable",
+            "attempts": [
+              {
+                "recordId": "FL|Palm Beach|74-43-43-22-41-000-2200|22999",
+                "code": "transport_or_payload"
+              }
+            ],
+            "checkedAt": "2026-11-23T07:29:21.712Z"
+          },
+          "observedAt": "2026-11-23T07:29:12.227Z"
+        },
+        {
+          "id": "FL-palm-beach|Parcels_and_Property_Details_Local_Projection|0",
+          "status": "Verified",
+          "reasons": [
+            "Sample parcel matched the official layer and its situs address"
+          ],
+          "score": 7,
+          "service": {
+            "name": "Parcels_and_Property_Details_Local_Projection",
+            "type": "FeatureServer",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_Local_Projection/FeatureServer"
+          },
+          "layer": {
+            "id": 0,
+            "name": "Parcels_and_Property_Details_Local_Projection",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_Local_Projection/FeatureServer/0"
+          },
+          "fields": {
+            "parcel": "PARCEL_NUMBER",
+            "address": "SITE_ADDR_STR"
+          },
+          "nativeWkid": 2881,
+          "nativeAliases": [],
+          "authority": {
+            "status": "verified",
+            "basis": "arcgis-organization-name",
+            "host": "services1.arcgis.com",
+            "portalName": "Palm Beach County GIS"
+          },
+          "authorityUrl": "https://www.arcgis.com/sharing/rest/portals/ZWOoUZbtaYePLlPw",
+          "lastEditDate": "2026-11-20T18:25:05.036Z",
+          "currentness": "current",
+          "sample": {
+            "outcome": "matched",
+            "recordId": "FL|Palm Beach|74-43-43-22-41-000-2200|22999",
+            "identifierForm": "dashes-removed",
+            "attempts": 1,
+            "checkedAt": "2026-11-23T07:29:22.436Z",
+            "polygon": {
+              "acres": 1.7427,
+              "bounds": [
+                -80.0532865366696,
+                26.7063061125858,
+                -80.0521378801629,
+                26.7069893149035
+              ]
+            }
+          },
+          "observedAt": "2026-11-23T07:29:12.227Z"
+        },
+        {
+          "id": "FL-palm-beach|Parcels_and_Property_Details_WebMercator|0",
+          "status": "Source Found",
+          "reasons": [
+            "Not sample-checked: a higher-ranked candidate verified first"
+          ],
+          "score": 7,
+          "service": {
+            "name": "Parcels_and_Property_Details_WebMercator",
+            "type": "FeatureServer",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_WebMercator/FeatureServer"
+          },
+          "layer": {
+            "id": 0,
+            "name": "Parcels_and_Property_Details_WebMercator",
+            "url": "https://services1.arcgis.com/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_WebMercator/FeatureServer/0"
+          },
+          "fields": {
+            "parcel": "PARCEL_NUMBER",
+            "address": "SITE_ADDR_STR"
+          },
+          "nativeWkid": 2881,
+          "nativeAliases": [],
+          "authority": {
+            "status": "verified",
+            "basis": "arcgis-organization-name",
+            "host": "services1.arcgis.com",
+            "portalName": "Palm Beach County GIS"
+          },
+          "authorityUrl": "https://www.arcgis.com/sharing/rest/portals/ZWOoUZbtaYePLlPw",
+          "lastEditDate": "2026-11-16T13:58:33.563Z",
+          "currentness": "current",
+          "sample": null,
+          "observedAt": "2026-11-23T07:29:12.227Z"
+        }
+      ],
+      "rejected": [
+        {
+          "service": "PAO_PARCELS",
+          "layer": 0,
+          "reason": "Polygon layer lacks a situs address field"
+        },
+        {
+          "service": "Parcels",
+          "layer": 0,
+          "reason": "Polygon layer lacks a situs address field"
+        },
+        {
+          "service": "PBC_Parcels",
+          "layer": 0,
+          "reason": "Polygon layer lacks a situs address field"
+        }
+      ],
+      "notes": [
+        "3 lower-ranked services not probed"
+      ],
+      "requests": {
+        "used": 12,
+        "cacheHits": 0,
+        "byStage": {
+          "list-services": 1,
+          "probe-layers": 6,
+          "portal-owner": 1,
+          "schema": 2,
+          "parcel_verification": 2
+        },
+        "requests": [
+          {
+            "stage": "list-services",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/PAO_PARCELS/FeatureServer/layers"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/PARCEL_DETAILS/FeatureServer/layers"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels/FeatureServer/layers"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_Local_Projection/FeatureServer/layers"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_WebMercator/FeatureServer/layers"
+          },
+          {
+            "stage": "probe-layers",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/PBC_Parcels/FeatureServer/layers"
+          },
+          {
+            "stage": "portal-owner",
+            "host": "www.arcgis.com",
+            "path": "/sharing/rest/portals/ZWOoUZbtaYePLlPw"
+          },
+          {
+            "stage": "schema",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/PARCEL_DETAILS/FeatureServer/14"
+          },
+          {
+            "stage": "parcel_verification",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/PARCEL_DETAILS/FeatureServer/14"
+          },
+          {
+            "stage": "schema",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_Local_Projection/FeatureServer/0"
+          },
+          {
+            "stage": "parcel_verification",
+            "host": "services1.arcgis.com",
+            "path": "/ZWOoUZbtaYePLlPw/arcgis/rest/services/Parcels_and_Property_Details_Local_Projection/FeatureServer/0"
+          }
+        ]
+      },
+      "daily": {
+        "day": "2026-11-23",
+        "used": 20,
+        "dailyLimit": 60,
+        "runLimit": 16,
+        "runUsed": 12
+      },
+      "map": {
+        "status": "not-connected",
+        "reason": "Discovery does not change the map. Overlays stay unchanged until an owner approves a verified source and a reviewed overlay correction exists."
+      },
+      "elapsedMs": 10210,
+      "datasetRecords": 840
+    }
+  ]
+}
