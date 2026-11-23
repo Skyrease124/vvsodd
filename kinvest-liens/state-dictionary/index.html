@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>State Parcel Dictionary | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<meta name="description" content="Look up any state: how its tax liens, deeds and land sales work, the next verified sale, and a link to its parcel map.">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/radar.css">
+<link rel="stylesheet" href="/app-shell.css">
+<style>
+#state-dictionary .rmap,#state-dictionary #mapstats,#state-dictionary #rlegend,#state-dictionary #rwhat,#state-dictionary .rhead,#state-dictionary .rtabs,#state-dictionary #rfilters{display:none!important}
+#state-dictionary .dhero{padding:0;background:transparent}
+#state-dictionary .dwrap{max-width:100%;padding:0}
+#state-dictionary #rpanel[hidden]{display:none}
+#state-dictionary .rpanel{max-width:100%;overflow-wrap:anywhere}
+#state-dictionary .sd-lead{color:#c5e3dc;margin:0 0 14px;line-height:1.5}
+</style>
+</head>
+<body class="ppa-home">
+<header class="dnav">
+  <div class="dwrap dnav-in">
+    <a class="dlogo" href="./" aria-label="PricePocketAsset home">
+      <img src="/img/logo-mark.png" alt="" width="86" height="40" class="dmark">
+      <span><b>PricePocket<em>Asset</em></b><small>Invest &middot; Grow &middot; Build Wealth</small></span>
+    </a>
+    <nav class="dlinks" aria-label="Main">
+      <a class="on" href="./">Home</a>
+      <a href="#products">Explore</a>
+      <a href="liens/#calculator">Tools</a>
+      <a href="learn/">Master Class</a>
+      <a href="about/">About</a>
+      <a href="account/">Account</a>
+      <a href="portfolio/">Portfolio</a>
+      <a href="land/">Land for Sale</a>
+      <a href="donate/">Support</a>
+    </nav>
+    <a class="dbtn" href="/account/?mode=up">Sign Up</a>
+  </div>
+</header>
+
+<main id="top">
+<div class="app-home">
+<section id="state-dictionary" class="app-section" aria-labelledby="sd-title">
+  <div class="app-section-title"><h1 id="sd-title">State Parcel Dictionary</h1><a href="/">← Home</a></div>
+  <p class="sd-lead">Search a state to see how its tax lien, deed and land sales work, who the local officials are, the next verified sale, and a link to its parcel map.</p>
+<div class="app-radar" id="home-radar">
+<section class="dhero radar-on">
+  <div class="dwrap">
+    <div class="rhead">
+      <p id="hgreet" class="hgreet" aria-hidden="true"></p>
+      <h2>Tax Sale <span class="gold">Radar</span></h2>
+      <p class="dlead">See what changed on official county lists, find sales and county-held liens, and open the real records.</p>
+    </div>
+    <div id="radar" class="radar">
+      <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
+      <div class="rtabs" role="tablist" aria-label="Map views">
+        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="false" hidden>Opportunities</button>
+        <button type="button" role="tab" id="tab-cal" data-tab="cal" aria-selected="false">Auction Calendar</button>
+        <button type="button" role="tab" id="tab-hist" data-tab="hist" aria-selected="false">Sale History</button>
+      </div>
+      <div id="rfilters" class="rfilters" aria-label="Find my deal"></div>
+      <div class="rfind"><label for="rfindin" class="sr-only">Find a state</label><div class="rcombo"><input id="rfindin" type="text" role="combobox" aria-expanded="false" aria-controls="rfindlist" aria-autocomplete="list" autocomplete="off" placeholder="Search a state"><ul id="rfindlist" role="listbox" hidden></ul></div></div>
+      <div class="dmap rmap">
+        <div id="usmap" class="usmap" data-base="liens/states/state/"></div>
+      </div>
+      <div id="mapstats" class="mapstats" aria-label="Site numbers"></div>
+      <details id="rlegend" class="rlegend"><summary>Legend: what the colors and markers mean</summary><div id="rlegendbody"></div></details>
+      <aside id="rpanel" class="rpanel" role="dialog" aria-modal="false" aria-labelledby="rpanelh" hidden></aside>
+    </div>
+    <div class="flpanel" hidden>
+      <div class="flshape"><svg id="flsvg" viewBox="0 0 975 610" aria-hidden="true"></svg></div>
+      <div class="flintro"><h2>Florida</h2><p>Florida sells tax lien certificates (green). Select a county to open its tax collector page.</p></div>
+      <div class="flcounties"><h3>Available Counties (Example)</h3><div id="flchips" class="flchips"></div>
+        <a class="dghost" href="liens/states/state/?s=FL">View All Florida Counties &rarr;</a></div>
+      <div class="flwhy"><h3>Good to know</h3>
+        <ul><li>Rates and rules differ by state and county</li><li>Redemption periods can tie up money for years</li><li>Always verify with the county before you bid</li></ul>
+        <a class="dbtn" href="liens/">Learn More &rarr;</a></div>
+    </div>
+  </div>
+</section>
+</div>
+</section>
+</div>
+</main>
+
+<footer class="app-footer">
+  <p>Education and research tools only. Not legal, tax, or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</p>
+  <nav aria-label="Site information"><a href="/plans/">Free vs Pro</a><a href="/about/">About</a><a href="/support/billing/">Billing support</a><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a></nav>
+</footer>
+<script src="/script.js"></script>
+<script src="/liens/states/states.js"></script>
+<script src="/officials.js"></script>
+<script src="/map-data.js"></script>
+<script src="/liens/states/lien-summary.js"></script>
+<script src="/map.js"></script>
+<script src="/radar.js"></script>
+<script src="/home-state.js"></script>
+<script src="/auth-nav.js" defer></script>
+</body>
+</html>
