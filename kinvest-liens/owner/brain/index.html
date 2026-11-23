@@ -168,7 +168,45 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
 </script><script src="preview-test.js" defer></script><script src="/owner/pipeline.js" defer></script><script>
 (async()=>{
  const summary=document.getElementById('unattendedSummary'),checks=document.getElementById('unattendedChecks');
- let pilotRunning=false;
+ let pilotRunning=false, shownPilotAt=null;
+ const pilotSleep=ms=>new Promise(done=>setTimeout(done,ms));
+ // A pilot can finish on the server while the browser loses its reply. The saved record is then the
+ // truth: show it, or say plainly that nothing finished. This only reads status; it never starts a run.
+ async function reconcilePilot(startedBefore,reason){
+  const out=document.getElementById('wayneBatchResult');
+  out.hidden=false;
+  out.textContent='The reply to the pilot was lost ('+reason+'). Checking the saved result on the server…';
+  const deadline=Date.now()+90000;
+  while(Date.now()<deadline){
+   try{
+    const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+    const d=await res.json();
+    if(res.ok&&d.ok){
+     const w=d.worker,newRun=!!w.lastStarted&&w.lastStarted!==startedBefore;
+     if(newRun&&w.lastPilot&&Date.parse(w.lastPilot.at)>=Date.parse(w.lastStarted)){
+      shownPilotAt=w.lastPilot.at;
+      showPilot(w.lastPilot);
+      const note=document.createElement('span');
+      note.style.display='block';note.style.color='#9fe8c8';
+      note.textContent='Saved result. The server finished this pilot; only the browser reply was lost.';
+      out.prepend(note);
+      return true;
+     }
+     if(Date.parse(w.lockedUntil)>Date.now()){
+      out.textContent='The pilot is still running on the server. Checking again…';
+     }else{
+      out.textContent=newRun
+       ?'The pilot stopped on the server'+(w.lastError?': '+w.lastError:'.')+' Check the status above before running again.'
+       :'The pilot did not start on the server, so no GIS request was made. You can run it again.';
+      return false;
+     }
+    }
+   }catch(e){/* status unreachable for a moment; keep checking until the deadline */}
+   await pilotSleep(3000);
+  }
+  out.textContent='Still unknown after 90 seconds. The server may still be finishing the pilot. Reload this page and check the saved result before running again.';
+  return false;
+ }
  function showPilot(p){
   const out=document.getElementById('wayneBatchResult');
   out.hidden=false;
@@ -268,7 +306,12 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
    testButton.title=hold||'Run one preview pilot using at most three official GIS requests, including publication';
    testButton.dataset.cursor=String(d.worker.cursor);
    testButton.dataset.lastStarted=d.worker.lastStarted||'';
-   if(d.worker.lastPilot&&document.getElementById('wayneBatchResult').hidden)showPilot(d.worker.lastPilot);
+   if(d.worker.lastPilot&&!pilotRunning&&d.worker.lastPilot.at!==shownPilotAt){shownPilotAt=d.worker.lastPilot.at;showPilot(d.worker.lastPilot);}
+   document.getElementById('wayneQuotaActivationResult').textContent=d.worker.quotaActive
+    ?'Shared GIS budget active: '+Math.max(0,d.worker.dailyLimit-(d.worker.dailyUsed||0))+' of '+d.worker.dailyLimit+' requests left today. Activation itself sends no requests.'
+    :(d.worker.quotaResumeAt
+      ?'Budget marker saved. No GIS requests dispatched. Available after '+new Date(d.worker.quotaResumeAt).toISOString().replace('T',' ').slice(0,16)+' UTC.'
+      :'Shared GIS budget is not active. Activating it sends no GIS requests.');
    const toggle=document.getElementById('unattendedToggle');
    toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
    toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
@@ -306,26 +349,39 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
     body:JSON.stringify({action:'activate-wayne-gis-quota',confirmed:true,scope:'wayne-preview-pilot'})
    });
    const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Activation unavailable');
-   out.textContent=d.active?'GIS budget active. No requests dispatched.':('Budget marker saved. No GIS requests dispatched. Available after '+(d.resumeAt||'the next UTC day')+'.');
-   await loadAutonomy();
+   out.textContent=d.active?'Budget activation saved. No GIS requests were sent.':'Budget marker saved. No GIS requests were sent.';
+   await loadAutonomy(); // replaces this message with the live budget count
   }catch(e){out.textContent='Activation: '+e.message;}finally{btn.disabled=false;}
  };
  document.getElementById('wayneTestBatch').onclick=async()=>{
   const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
   if(!confirm('Run one live Detroit GIS pilot in this preview? Up to three official GIS requests, including the independent publisher, count against the shared daily quota. Verified polygons may publish to the preview maps.'))return;
   pilotRunning=true;
+  const startedBefore=btn.dataset.lastStarted||null;
   btn.disabled=true;out.hidden=false;out.textContent='Running the live Wayne pilot…';
+  let reply=null,lost=null;
   try{
    const r=await fetch('/.netlify/functions/owner-brain-wayne-run',{
     method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({action:'run-live-wayne-pilot',confirmed:true,cursor:Number(btn.dataset.cursor),
-     lastStarted:btn.dataset.lastStarted||null}),
+     lastStarted:startedBefore}),
     signal:AbortSignal.timeout(60000)
    });
-   const d=await r.json();
-   if(!r.ok||!d.pilot)throw Error(d.error||'Pilot did not start');
-   showPilot(d.pilot);
-  }catch(e){out.textContent='Pilot: '+e.message;}
+   try{reply={status:r.status,body:await r.json()};}
+   catch{lost='HTTP '+r.status+' with no readable reply';}
+  }catch(e){lost=e.message||'connection closed';}
+  try{
+   if(lost||reply.status>=500){
+    // The server may have finished: the browser lost the reply, or the server failed partway. Read the saved state.
+    await reconcilePilot(startedBefore,lost||reply.body?.error||'HTTP '+reply.status);
+   }else if(reply.status>=400||!reply.body?.pilot){
+    // Explicit refusals (checkpoint changed, budget, hold) come before any GIS request.
+    out.textContent='Pilot: '+(reply.body?.error||'the server did not run a pilot (state '+(reply.body?.state||'unknown')+')')+'. Nothing ran from this request.';
+   }else{
+    shownPilotAt=reply.body.pilot.at;
+    showPilot(reply.body.pilot);
+   }
+  }catch(e){out.textContent='Pilot display error: '+e.message;}
   finally{pilotRunning=false;await loadAutonomy();}
  };
  const readinessButton=document.getElementById('unattendedRefresh');
