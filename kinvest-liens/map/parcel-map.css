@@ -604,3 +604,6 @@ body.ppa-map-home .pm{grid-template-areas:"search" "canvas" "strip" "rail" "extr
 .ppa-map-home .pm-sc-t b{font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ppa-map-home .pm-sc-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%}
 .ppa-map-home .pm-sc small{color:#9fb3c2;font-size:11px;padding-left:1px}
+
+/* Parcel Measurements card (acreage and building overlap) is hidden until further notice. Delete this rule to show it again. */
+.pm-spatial{display:none!important}
