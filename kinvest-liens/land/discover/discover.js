@@ -45,7 +45,7 @@ function refreshMississippiParcels(){
 function render(){const visible=records.filter(c=>(!state.value||c.state===state.value)&&(!county.value||c.county===county.value)).sort((a,b)=>(Number(b.open)||0)-(Number(a.open)||0));results.replaceChildren();refreshMississippiParcels();const maxPrice=Number(document.getElementById('maxprice').value),minAcres=Number(document.getElementById('minacres').value);if(maxPrice||minAcres){status.textContent='Price and acreage filters require verified parcel-level records; no qualifying individual parcel data is available in this source index.';results.append(text('p','Individual parcels with verified price and acreage have not been imported. Clear those filters to browse county inventory sources.','empty'));return;}status.textContent=visible.length+' government land inventory sources found'+(state.value?' for '+state.options[state.selectedIndex].text:'')+'. Availability not confirmed.';if(!visible.length){results.append(text('p','No state-held land records are currently tracked for this selection. This does not mean no land is for sale.','empty'));return;}for(const c of visible.slice(0,100)){const card=text('article','', 'landcard');card.append(text('h2',label(c)),text('p',format(c.open)+' records on the last indexed government list'),text('p','Source checked: '+(c.checked||'date unavailable'),'muted'));if(c.priceLabel)card.append(text('p',c.priceLabel,'muted'));if(/^https:\/\//.test(c.source||'')){const a=text('a','Open official government source');a.href=c.source;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}results.append(card);}if(visible.length>100)results.append(text('p','Showing first 100 sources. Select a state or county to narrow the list.','muted'));}const stateFips={AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
 const normalize=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of|division)\\b/g,'').replace(/\\([^)]*\\)/g,'').replace(/[^a-z0-9]/g,'');
 let map=null,geometry=null,markers=[],recordPins=new Map(),stateBorders=null;
-let landParcelLayer=null,landParcelRequest=0,parcelIndex=null,parcelCache=new Map();
+let landParcelLayer=null,landParcelRequest=0,parcelIndex=null,parcelCache=new Map(),parcelCanvas=null;
 async function renderLandParcels(){
  const token=++landParcelRequest;
  if(landParcelLayer){landParcelLayer.remove();landParcelLayer=null;}
@@ -73,7 +73,7 @@ async function renderLandParcels(){
     popup.append(title,detail,link);
     // Draw the real boundary at every supported zoom; add a compact marker when
     // the real polygon is too small to recognize on screen. Never inflate geometry.
-    const polygon=L.polygon(rings,{color:'#a4ffe1',weight:map.getZoom()<9?2.5:2,fillColor:'#12b981',fillOpacity:0.46,renderer:L.canvas()});
+    const polygon=L.polygon(rings,{color:'#a4ffe1',weight:map.getZoom()<9?2.5:2,fillColor:'#12b981',fillOpacity:0.46,renderer:parcelCanvas||(parcelCanvas=L.canvas({padding:0.25}))});
     polygon.bindPopup(popup).addTo(layer);
     const nw=map.latLngToContainerPoint(bounds.getNorthWest()),se=map.latLngToContainerPoint(bounds.getSouthEast());
     if(Math.max(Math.abs(nw.x-se.x),Math.abs(nw.y-se.y))<9&&center){
