@@ -30,7 +30,7 @@ async function showMississippiParcels(){
    card.append(text('p','Tax-forfeited / state-held · Purchase status unconfirmed','muted'));
    const source=(data.sources||[])[0];
    if(/^https:\/\//.test(source||'')){const a=text('a','Check official Mississippi land source');a.href=source;a.target='_blank';a.rel='noopener noreferrer';card.append(a);}
-   const link=text('a','View on Parcel Map');link.href='/map/?state=MS&county='+encodeURIComponent(d.county)+'&parcel='+encodeURIComponent(parcel);link.style.marginLeft='12px';card.append(link);
+   const link=text('a','View on Parcel Map');link.href='/map/?'+new URLSearchParams({c:d.id,p:parcel});link.style.marginLeft='12px';card.append(link);
    target.append(card);
   }
   if(total>found.length)target.append(text('p','Showing the first '+found.length+' of '+format(total)+' parcels. Select a county to narrow the list.','muted'));
@@ -81,7 +81,7 @@ async function renderLandParcels(){
     const bounds=L.latLngBounds(rings.flat());if(!view.intersects(bounds))continue;
     const popup=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('p'),link=document.createElement('a');
     title.textContent='Parcel '+(parcel.p||'unknown');detail.textContent=dataset.county+(parcel.ac!=null?' · '+parcel.ac+' acres':'')+' · Sale status unconfirmed';
-    link.textContent='View parcel';link.href='/map/?state='+stateCode+'&county='+encodeURIComponent(dataset.county)+'&parcel='+encodeURIComponent(parcel.p||'');
+    link.textContent='View parcel';link.href='/map/?'+new URLSearchParams({c:dataset.id,p:String(parcel.p||'')});
     popup.append(title,detail,link);
     L.polygon(rings,{color:'#a4ffe1',weight:zoom<9?2.5:2,fillColor:'#12b981',fillOpacity:0.46,renderer:parcelCanvas||(parcelCanvas=L.canvas({padding:0.25}))}).bindPopup(popup).addTo(layer);
     const nw=map.latLngToContainerPoint(bounds.getNorthWest()),se=map.latLngToContainerPoint(bounds.getSouthEast());
