@@ -128,12 +128,12 @@ async function bestBuy(url) {
   const d = await r.json(); return { name: clean(d.name, 160), image: d.image, price: +d.salePrice || undefined, releaseDate: d.releaseDate || undefined };
 }
 // {ok, info:{name,image,price,status,reason,releaseDate}, readable, note}. readable = a real state was found (not UNKNOWN), so automatic checks can run.
-export async function lookup(url) {
+export async function lookup(url, { timeoutMs = 9000 } = {}) {
   const c = checkUrl(url); if (!c) return err(400, 'Paste a https link from a supported store.');
   const store = RETAILERS[c.retailer].name;
   if (RETAILERS[c.retailer].noFetch) return { ok: true, info: { status: 'unknown', reason: store + ' does not allow automatic checks. You confirm stock yourself.' }, readable: false, note: store + ' does not allow automatic checks. You confirm stock yourself.' };
   try {
-    const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(9000) });
+    const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) });
     if (!r.ok) return { ok: true, info: { status: 'unknown', reason: store + ' answered ' + r.status }, readable: false, note: store + ' answered ' + r.status + '. Fill in the details yourself; stock is owner-confirmed.' };
     const html = (await r.text()).slice(0, 3e6); const info = parseHtml(html);
     if (c.retailer === 'bestbuy') { try { const a = await bestBuy(c.url); if (a) { info.name = a.name || info.name; if (a.price) info.price = a.price; if (a.releaseDate) info.releaseDate = a.releaseDate; } } catch (e) { /* the page still decides stock */ } }
@@ -384,8 +384,8 @@ export function dueIn(p) {
   return AVAILABLE.has(p.status) ? 20 * 60e3 : 30 * 60e3;
 }
 // One automatic check of one product. The monitor and the owner's "Check now" both use it, so the rules are the same.
-export async function checkOne(p) {
-  const r = await lookup(p.url);
+export async function checkOne(p, opts = {}) {
+  const r = await lookup(p.url, opts);
   if (!r.ok || !r.readable) {
     p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable';
     if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; }
@@ -407,21 +407,77 @@ export async function monitor({ limit = 25 } = {}) {
   }
   return res;
 }
-// The owner's "Check now": same rules as an automatic check. A short guard stops double taps; it does not block a retry after a failure.
-const MANUAL_GUARD_MS = 15e3;
-export async function checkNow(id) {
+// ---- Owner "Check now" as a background job. The request queues a job and returns at once; a background function
+// runs it with a longer time limit; the owner page polls the job. Each job has a secret token that only the queued
+// request knows, so nothing else can start a job.
+const MANUAL_GUARD_MS = 15e3;   // owner double-tap guard, measured from the last tap
+const CHECK_TIMEOUT_MS = 25000;
+const JOB_STALE_MS = 10 * 60e3;
+const JK = id => 'rcheck_' + String(id || '').replace(/[^a-f0-9]/g, '');
+let dispatchImpl = null;
+export const _setDispatch = f => { dispatchImpl = f; };
+async function dispatchCheck({ origin, jobId, token }) {
+  if (dispatchImpl) return dispatchImpl({ origin, jobId, token });
+  const r = await fetch(origin + '/.netlify/functions/retail-check-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId, token }), signal: AbortSignal.timeout(8000) });
+  if (r.status !== 202 && !r.ok) throw Error('background check answered ' + r.status);
+}
+function tokenOk(expected, given) {
+  const a = Buffer.from(String(expected || '')), b = Buffer.from(String(given || ''));
+  return a.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+async function clearJob(productId, jobId) {
+  const q = await getProduct(productId); if (q && q.checkJob === jobId) { q.checkJob = ''; await auth.kvPut(KP(q.id), q); }
+}
+// The owner asks for one product to be checked now. A short guard stops double taps; one job per product at a time.
+export async function checkNow(id, { origin = '' } = {}) {
   const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
   if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
   const wait = Math.ceil(((p.manualCheckAt ? Date.parse(p.manualCheckAt) : 0) + MANUAL_GUARD_MS - Date.now()) / 1000);
   if (wait > 0) return err(429, 'Checked a moment ago. Try again in ' + wait + ' seconds.');
-  p.manualCheckAt = now(); await auth.kvPut(KP(p.id), p);
-  const c = await checkOne(p);
-  const held = (c.sent || []).some(x => x.skipped);
-  const message = !c.readable
-    ? 'Could not read the page. Stock unchanged. You can check again in 15 seconds.'
-    : 'Checked: ' + (STOCK_LABEL[p.status] || p.status) + (c.changed ? ' (changed)' : ' (no change)') + (c.alerts ? '. Alert sent.' : held ? '. Alert held back (cooldown).' : '.');
-  return { ok: true, readable: c.readable, note: c.note, message, changed: c.changed, alerts: c.alerts, sent: c.sent, product: await getProduct(id) };
+  const busy = p.checkJob ? await auth.kvGet(JK(p.checkJob)) : null;
+  if (busy && (busy.status === 'queued' || busy.status === 'running') && Date.now() - Date.parse(busy.createdAt) < JOB_STALE_MS) return err(409, 'This product is already being checked. Wait for the result.', { jobId: busy.id });
+  const job = { id: crypto.randomBytes(12).toString('hex'), product: p.id, token: crypto.randomBytes(24).toString('hex'), status: 'queued', createdAt: now() };
+  p.manualCheckAt = now(); p.checkJob = job.id;
+  await auth.kvPut(JK(job.id), job); await auth.kvPut(KP(p.id), p);
+  try { await dispatchCheck({ origin, jobId: job.id, token: job.token }); }
+  catch (e) {
+    job.status = 'done'; job.finishedAt = now(); job.result = { readable: false, message: 'Could not start the check. Stock unchanged. Try again in a moment.' };
+    await auth.kvPut(JK(job.id), job); await clearJob(p.id, job.id);
+    return err(502, job.result.message);
+  }
+  return { ok: true, queued: true, jobId: job.id };
 }
+// Runs one queued job. Called by the background function with the job's token. Returns false for a wrong token or unknown job.
+export async function runCheckJob(jobId, token) {
+  const job = await auth.kvGet(JK(jobId));
+  if (!job || !tokenOk(job.token, token)) return false;
+  if (job.status !== 'queued') return true;   // already ran (or running): never run twice
+  job.status = 'running'; job.startedAt = now(); await auth.kvPut(JK(job.id), job);
+  let result;
+  try {
+    const p = await getProduct(job.product);
+    if (!p) result = { readable: false, message: 'The product was removed. Nothing was checked.' };
+    else {
+      const c = await checkOne(p, { timeoutMs: CHECK_TIMEOUT_MS });
+      const after = await getProduct(p.id), held = (c.sent || []).some(x => x.skipped);
+      result = { readable: c.readable, changed: c.changed, alerts: c.alerts,
+        message: !c.readable ? 'Could not read the page. Stock unchanged. You can check again in 15 seconds.'
+          : 'Checked: ' + (STOCK_LABEL[after.status] || after.status) + (c.changed ? ' (changed)' : ' (no change)') + (c.alerts ? '. Alert sent.' : held ? '. Alert held back (cooldown).' : '.') };
+    }
+  } catch (e) {
+    result = { readable: false, message: 'The check stopped unexpectedly. Stock unchanged. Try again in a moment.' };
+  }
+  await clearJob(job.product, job.id).catch(() => {});
+  job.status = 'done'; job.finishedAt = now(); job.result = result; await auth.kvPut(JK(job.id), job);
+  return true;
+}
+// What the owner page reads. The token is never returned.
+export async function checkStatus(jobId) {
+  const job = await auth.kvGet(JK(jobId));
+  if (!job) return err(404, 'Check not found.');
+  return { ok: true, status: job.status, result: job.status === 'done' ? job.result : null };
+}
+
 // ---- private pushes to the owner only ----
 export async function notifyOwner(title, body, path = '/owner/retail/', key) {
   const email = FOUNDER_EMAIL(); const u = await auth.getUser(email); if (!u || !u.owner) return { ok: false, error: 'owner account not found' };

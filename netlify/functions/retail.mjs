@@ -24,6 +24,7 @@ export default async function handler(req, context) {
     if (!owner) return json(403, { ok: false, error: 'Owner only.' });
     if (q.get('admin')) return json(200, { ok: true, products: (await R.listProducts({ all: true })).map(p => Object.assign(R.card(p), { rawStatus: p.status, active: p.active, lastError: p.lastError || '', fails: p.fails || 0, priceManual: p.priceManual })), requests: await R.listRequests(), history: await R.history(30) });
     if (q.get('lookup')) return done(await R.lookup(q.get('lookup')));
+    if (q.get('checkJob')) return done(await R.checkStatus(q.get('checkJob')));
     return json(400, { ok: false, error: 'Nothing asked.' });
   }
   if (req.method !== 'POST') return json(405, { ok: false });
@@ -43,7 +44,7 @@ export default async function handler(req, context) {
   if (a === 'create') return done(await R.createProduct(me.uid, b));
   if (a === 'update') return done(await R.updateProduct(b.id, b));
   if (a === 'refreshImage') return done(await R.refreshImage(b.id));
-  if (a === 'checkNow') return done(await R.checkNow(b.id));
+  if (a === 'checkNow') return done(await R.checkNow(b.id, { origin: new URL(req.url).origin }));
   if (a === 'broadcast') return done(await R.broadcast(b));
   if (a === 'decide') return done(await R.decide(me.uid, b.id, b));
   if (a === 'test') return done(await R.notifyOwner('Test owner alert', 'Owner notifications are working.', '/owner/retail/'));

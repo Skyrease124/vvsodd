@@ -159,7 +159,8 @@
       const ck = mk('button', '', 'Check now'); ck.type = 'button';
       ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id });
         if (r.s !== 200) { ck.disabled = false; ck.textContent = 'Check now'; toast(r.j.error || 'Could not check.'); return; }
-        try { sessionStorage.setItem('rt-flash', r.j.message || 'Checked.'); } catch (e) { /* private mode: the card still shows the result */ }
+        const msg = await waitCheck(r.j.jobId);
+        try { sessionStorage.setItem('rt-flash', msg); } catch (e) { /* private mode: the card still shows the result */ }
         location.reload(); };
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };
       const op = mk('a', '', 'Open'); op.href = p.url; op.target = '_blank'; op.rel = 'noopener noreferrer'; op.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:.85rem;color:inherit;text-decoration:none';
@@ -194,6 +195,17 @@
       const [ar, au] = toggle('Automatic stock checks', '', p.auto); const f = mk('div', 'rt-form'); f.append(field('Name', n), field('Image', im), field('Price', pr), field('Category', c), field('Release date', rd), field('Variant', v), ar); const msg = mk('p', 'rt-msg');
       const go = mk('button', 'rt-btn gold', 'Save'); go.type = 'button'; go.onclick = async () => { const r = await post({ action: 'update', id: p.id, name: n.value, image: im.value, price: pr.value, category: c.value, releaseDate: rd.value, variant: v.value, auto: au.checked }); if (r.s === 200) { close(); location.reload(); } else { msg.className = 'rt-msg bad'; msg.textContent = r.j.error || 'Could not save.'; } };
       sh.append(mk('h3', '', 'Edit product'), f, msg, go, mk('p', 'rt-muted rt-small', 'Changing the price to a lower one while in stock sends a price-drop alert.')); });
+  }
+  // Polls a queued check until it finishes, or about 100 seconds pass.
+  async function waitCheck(jobId) {
+    const until = Date.now() + 100e3;
+    while (Date.now() < until) {
+      await new Promise(res => setTimeout(res, 2000));
+      const s = await get({ checkJob: jobId });
+      if (s.s !== 200) return s.j.error || 'Could not read the check result.';
+      if (s.j.status === 'done') return (s.j.result && s.j.result.message) || 'Checked.';
+    }
+    return 'Still checking in the background. Reload in a minute to see the result.';
   }
   function toast(t) { const d = mk('div', 'rt-ov on'); d.style.alignItems = 'center'; const s = mk('div', 'rt-sheet', t); s.style.cssText = 'width:auto;border-radius:18px;padding:14px 20px;transform:none'; d.append(s); document.body.append(d); setTimeout(() => d.remove(), 1400); }
 

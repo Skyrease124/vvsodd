@@ -37,7 +37,8 @@ const owner = await monitorFn.default(new Request('http://x/.netlify/functions/r
 const body = await owner.json();
 ok(owner.status === 200 && body.ok === true, 'the owner can run the product check by hand');
 ok(monitorFn.config === undefined, 'no schedule is set on the product check');
-// 4. Check now: the owner can check one product; members cannot; the same rules apply
+// 4. Check now runs as a background job: queued at once, then the result is read from the job
+R._setDispatch(async ({ jobId, token }) => { await R.runCheckJob(jobId, token); });   // stand-in for the background function, run inline
 const api = (await import('../functions/retail.mjs')).default;
 const postApi = (c, b) => api(new Request('http://x/.netlify/functions/retail', { method: 'POST', headers: { cookie: c, 'Content-Type': 'application/json' }, body: JSON.stringify(b) }));
 const IN_STOCK_PAGE = '<html><script type="application/ld+json">{"@type":"Product","name":"Check now test","offers":{"@type":"Offer","price":"44.00","availability":"https://schema.org/InStock"}}</script><button>Add to Cart</button></html>';
@@ -46,9 +47,10 @@ R._setFetch(async () => new Response(IN_STOCK_PAGE, { status: 200 }));
 let res = await postApi(M, { action: 'checkNow', id: ct.id });
 ok(res.status === 403, 'members cannot run Check now');
 res = await postApi(F, { action: 'checkNow', id: ct.id }); let j = await res.json();
-ok(res.status === 200 && j.readable === true && j.product.status === 'in_stock', 'Check now reads the page and applies the result');
-ok(j.sent.some(x => x.kind === 'restock'), 'Check now sends the same restock alert an automatic check would');
-ok(/^Checked: IN STOCK \(changed\)\. Alert sent\./.test(j.message), 'Check now says what it found in plain words');
+ok(res.status === 200 && j.queued === true && typeof j.jobId === 'string', 'Check now queues a background job straight away');
+let st = await R.checkStatus(j.jobId);
+ok(st.status === 'done' && st.result.readable === true && (await R.getProduct(ct.id)).status === 'in_stock', 'the job reads the page and applies the result');
+ok(/^Checked: IN STOCK \(changed\)\. Alert sent\./.test(st.result.message), 'the result says what was found, in plain words');
 res = await postApi(F, { action: 'checkNow', id: ct.id });
 ok(res.status === 429 && /Try again in \d+ seconds/.test((await res.json()).error), 'a second Check now right after is refused with a countdown');
 const amz = (await R.createProduct('founder', { url: 'https://www.amazon.com/dp/B0CHECKNOW', name: 'Check now Amazon (TEST FIXTURE)', category: 'electronics' })).product;
@@ -57,7 +59,10 @@ ok(res.status === 400 && /never checked automatically/.test(j.error), 'Amazon ca
 const stale = await R.getProduct(ct.id); stale.manualCheckAt = ago(1); await auth.kvPut('rp_' + ct.id, stale);
 R._setFetch(async () => new Response('<html>nothing here</html>', { status: 200 }));
 res = await postApi(F, { action: 'checkNow', id: ct.id }); j = await res.json();
-ok(res.status === 200 && j.readable === false && j.product.fails === 1 && j.product.status === 'in_stock', 'an unreadable page is reported and counted; the stock status is not changed by one failure');
-ok(/Stock unchanged/.test(j.message), 'an unreadable page says the stock is unchanged');
-res = await postApi(F, { action: 'checkNow', id: ct.id }); ok(res.status === 429, 'after a failed check, the owner is told to wait 15 seconds (no silent retry)');
+st = await R.checkStatus(j.jobId);
+ok(res.status === 200 && st.result.readable === false && (await R.getProduct(ct.id)).fails === 1 && (await R.getProduct(ct.id)).status === 'in_stock', 'an unreadable page is reported and counted; one failure does not change the stock status');
+ok(/Stock unchanged/.test(st.result.message), 'an unreadable page says the stock is unchanged');
+res = await postApi(F, { action: 'checkNow', id: ct.id });
+ok(res.status === 429, 'after a failed check, the owner is told to wait 15 seconds (no silent retry)');
+
 console.log('# pass ' + pass);
