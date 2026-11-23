@@ -191,14 +191,16 @@
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
   // Current homepage Tools mode: 'all', 'lien', 'deed' or 'land'.
+  // Returns 'all', 'land', 'lien', 'deed' or 'lien+deed' (Tax Liens and Deeds can both be on).
   function homeMode() {
     if (landOnly) return 'land';
-    const on = Object.keys(F.cats).filter(k => F.cats[k]);
-    const only = on.length === 1 && Object.keys(HOME_CAT).find(m => HOME_CAT[m] === on[0]);
-    return only || 'all';
+    const names = Object.keys(HOME_CAT).filter(m => F.cats[HOME_CAT[m]]);
+    if (!names.length || names.length === 3 || (names.includes('land') && names.length > 1)) return 'all';
+    return names.join('+');
   }
-  function homeModeAllows(d) { const m = homeMode(); return m === 'all' || !!(d.cats && d.cats[HOME_CAT[m]]); }
-  function researchInMode(item) { const m = homeMode(); return m === 'all' || HOME_RESEARCH[m] === item.release.type; }
+  const modeParts = m => m === 'all' ? [] : m.split('+');
+  function homeModeAllows(d) { const p = modeParts(homeMode()); return !p.length || p.some(x => !!(d.cats && d.cats[HOME_CAT[x]])); }
+  function researchInMode(item) { const p = modeParts(homeMode()); return !p.length || p.some(x => HOME_RESEARCH[x] === item.release.type); }
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
   function moveNativeMapControls(){
     const menu=window.__pmDock?.menu;
@@ -549,9 +551,10 @@
       note.hidden=true;
       // Land Only, Tax Liens and Deeds: one choice at a time. Turning one on turns the others off; turning it off shows everything.
       const setHomeMode=m=>{
-        F.cats.tax_lien=m==='all'||m==='lien';
-        F.cats.tax_deed=m==='all'||m==='deed';
-        F.cats.land_bank=m==='all'||m==='land';
+        const p=m==='all'?['lien','deed','land']:m.split('+');
+        F.cats.tax_lien=p.includes('lien');
+        F.cats.tax_deed=p.includes('deed');
+        F.cats.land_bank=p.includes('land');
         landOnly=m==='land';
         note.hidden=true;
         syncModeStates();
@@ -571,10 +574,11 @@
       landInput.addEventListener('change',()=>setHomeMode(landInput.checked?'land':'all'));
       // Tax Liens and Deeds: the same category filters as the Filters panel
       const lienIn=mk('input');lienIn.type='checkbox';lienIn.setAttribute('aria-label','Tax liens');
-      lienIn.addEventListener('change',()=>setHomeMode(lienIn.checked?'lien':'all'));
+      const lienDeed=()=>setHomeMode([lienIn.checked&&'lien',deedIn.checked&&'deed'].filter(Boolean).join('+')||'all');
+      lienIn.addEventListener('change',lienDeed);
       const lienRow=mk('label','pm-ml-row');lienRow.append(ic(ICON.filter),mk('span','pm-ml-t','Tax Liens'),sw(lienIn));
       const deedIn=mk('input');deedIn.type='checkbox';deedIn.setAttribute('aria-label','Deeds');
-      deedIn.addEventListener('change',()=>setHomeMode(deedIn.checked?'deed':'all'));
+      deedIn.addEventListener('change',lienDeed);
       const deedRow=mk('label','pm-ml-row');deedRow.append(ic(ICON.filter),mk('span','pm-ml-t','Deeds'),sw(deedIn));
       // Map Style: opens the existing Map / Satellite / Hybrid buttons
       const baseName={map:'Map',satellite:'Satellite',hybrid:'Hybrid'};
@@ -591,7 +595,7 @@
       const moreBtn=mk('button','pm-ml-row pm-ml-link');moreBtn.type='button';
       moreBtn.append(ic(ICON.layers),mk('span','pm-ml-t','More Layers'),moreVal,mk('span','pm-ml-chev','›'));
       moreBtn.addEventListener('click',()=>{more.hidden=!more.hidden;});
-      syncMore=function(){const n=[camb,hzb].filter(b=>b.classList.contains('on')).length+(floridaBtn.getAttribute('aria-pressed')==='true'?1:0);moreVal.textContent=n+' active';const m=homeMode();landInput.checked=m==='land';lienIn.checked=m==='lien';deedIn.checked=m==='deed';};
+      syncMore=function(){const n=[camb,hzb].filter(b=>b.classList.contains('on')).length+(floridaBtn.getAttribute('aria-pressed')==='true'?1:0);moreVal.textContent=n+' active';const m=homeMode();landInput.checked=m==='land';lienIn.checked=m==='lien'||m==='lien+deed';deedIn.checked=m==='deed'||m==='lien+deed';};
       syncMore();
       menu.append(head,landRow,note,lienRow,deedRow,styleBtn,seg,boundRow,moreBtn,more);
     }
@@ -1539,7 +1543,7 @@
     const grouped=new Map(),countyGroups=new Map();
     for(const c of radarOverlay.counties){
       if(!STATE_FIPS[c.state]||!radarKind(c,radarOverlay.tab))continue;
-      if(radarMode!=='all'&&!(HOME_RADAR[radarMode]||[]).includes(c.group))continue;
+      if(radarMode!=='all'&&!modeParts(radarMode).some(x=>(HOME_RADAR[x]||[]).includes(c.group)))continue;
       if(radarOverlay.tab==='cal'&&radarOverlay.month>=0&&
         (!c.sale?.date||Number(c.sale.date.slice(5,7))-1!==radarOverlay.month))continue;
       const list=grouped.get(c.state)||[];list.push(c);grouped.set(c.state,list);
