@@ -607,19 +607,3 @@ body.ppa-map-home .pm{grid-template-areas:"search" "canvas" "strip" "rail" "extr
 
 /* Parcel Measurements card (acreage and building overlap) is hidden until further notice. Delete this rule to show it again. */
 .pm-spatial{display:none!important}
-
-/* Parcel popup (double-tap a parcel): a sheet over the homepage showing the parcel's full detail */
-.pm-sheet{position:fixed;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;background:rgba(4,10,18,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:pmSheetFade .22s ease-out}
-.pm-sheet[hidden]{display:none}
-.pm-sheet-panel{position:relative;display:flex;flex-direction:column;width:100%;max-width:620px;height:calc(100% - max(env(safe-area-inset-top),14px) - 10px);border-radius:24px 24px 0 0;background:linear-gradient(180deg,#10243a,#0b1624 38%);border:1px solid rgba(255,255,255,.14);border-bottom:0;box-shadow:0 -18px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12);overflow:hidden;animation:pmSheetUp .3s cubic-bezier(.2,.8,.2,1)}
-.pm-sheet-grab{flex:none;display:block;width:42px;height:5px;margin:8px auto 2px;border-radius:99px;background:rgba(255,255,255,.28)}
-.pm-sheet-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 8px 10px 18px;border-bottom:1px solid rgba(255,255,255,.1)}
-.pm-sheet-t{min-width:0}
-.pm-sheet-t b{display:block;font:700 17px/1.25 -apple-system,system-ui,sans-serif;color:#f5f8fa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pm-sheet-t span{display:block;font:500 12px/1.3 system-ui,sans-serif;color:#9fb3c2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pm-sheet-x{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:26px;line-height:1;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.pm-sheet-x:active{transform:scale(.92)}
-.pm-sheet-frame{flex:1;width:100%;border:0;background:#0b1624}
-@keyframes pmSheetUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
-@keyframes pmSheetFade{from{opacity:0}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.pm-sheet,.pm-sheet-panel{animation:none}}
