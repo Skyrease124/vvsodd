@@ -214,6 +214,7 @@
   function initMap() {
     map = window.__ppaMap = new maplibregl.Map({ container: 'pmMap', style: STYLE(), bounds: [[-126, 23.5], [-65.5, 50.5]], fitBoundsOptions: { padding: homeMap ? {top:16,bottom:22,left:12,right:12} : pickerMap ? {top:8,bottom:8,left:10,right:10} : embedded ? {top:90,bottom:46,left:10,right:10} : {top:150,bottom:150,left:12,right:12} }, maxZoom: 21, attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false, cooperativeGestures: false });
     if (embedded) map.scrollZoom.disable();
+    if (homeMap) map.doubleClickZoom.disable();
     const controlSide = homeMap ? 'top-right' : 'bottom-right';
     const locationControl = new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: false }, trackUserLocation: false });
     const navigationControl = new maplibregl.NavigationControl({ showCompass: false });
@@ -282,8 +283,14 @@
           near.sort((a, b) => dist(a) - dist(b)); if (near.length) hit = [near[0]];
         }
         if (!hit.length) hit = map.queryRenderedFeatures(e.point, { layers: ['p-fill'] });
-        const f = hit[0], r = f && byId(f.properties.i);
-        if (r) select(r, { fly: false }); else closePop();
+        const f = hit[0]; let r = f && byId(f.properties.i);
+        if (!r && sel && sel.g && inRings(e.lngLat.lng, e.lngLat.lat, sel.g)) r = sel; // a tap inside the highlighted parcel counts as that parcel
+        if (!r) { closePop(); return; }
+        // Double-tap (or double-click) a parcel: open its full detail in a popup on this page.
+        const now = Date.now();
+        if (homeMap && lastTap.i === r.i && now - lastTap.t < 420) { lastTap = { t: 0, i: null }; openSheet(r); return; }
+        lastTap = { t: now, i: r.i };
+        select(r, { fly: false });
       });
       setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
     });
@@ -662,6 +669,7 @@
       layout.append(rail,content);
       stripEl=mk('section','pm-strip');stripEl.id='pmStrip';stripEl.hidden=true;stripEl.setAttribute('aria-label','Parcels in this state');layout.append(stripEl);
       const resizeFrame = () => {
+        if (window.__ppaSheetOpen) return;
         const height = Math.ceil(layout.getBoundingClientRect().height);
         if (height > 0 && window.frameElement) window.frameElement.style.height = height + 'px';
       };
@@ -860,6 +868,74 @@
     path.setAttribute('fill', cat.c + '40'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '3'); path.setAttribute('vector-effect', 'non-scaling-stroke'); path.setAttribute('stroke-linejoin', 'round'); svg.appendChild(path);
     const tag = mk('span', 'ptag', cat.n); tag.style.background = cat.c; w.append(img, svg, tag); if (r.va) { const v = mk('span', 'ptag v', 'Vacant land'); w.appendChild(v); } return w;
   }
+  function inRings(x, y, rings) { let c = false; for (const ring of rings) for (let i = 0, k = ring.length - 1; i < ring.length; k = i++) { const [xi, yi] = ring[i], [xk, yk] = ring[k]; if ((yi > y) !== (yk > y) && x < (xk - xi) * (y - yi) / (yk - yi) + xi) c = !c; } return c; }
+  // ---------- Parcel popup: double-tap a parcel (or press View property) to see its full detail without leaving the homepage ----------
+  // The popup shows the parcel's own detail page (photo, Street View, weather, flood, owner records and the rest) in a sheet over the page.
+  let sheetHidden = [], sheetRaised = [], sheetEl = null, sheetFrame = null, sheetTitle = null, sheetSub = null, sheetSaved = null, sheetOverflow = '', lastTap = { t: 0, i: null };
+  function parcelSheetUrl(r, d) { return d.detail ? '/liens/parcel/?' + new URLSearchParams({ k: r.i, embed: '1' }) : '/map/?' + new URLSearchParams({ c: d.id, p: r.p }); }
+  function buildSheet() {
+    sheetEl = mk('div', 'pm-sheet'); sheetEl.hidden = true;
+    const panel = mk('div', 'pm-sheet-panel'); panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-modal', 'true'); panel.setAttribute('aria-label', 'Parcel details');
+    const grab = mk('span', 'pm-sheet-grab'); grab.setAttribute('aria-hidden', 'true');
+    const head = mk('div', 'pm-sheet-head'), t = mk('div', 'pm-sheet-t'); sheetTitle = mk('b'); sheetSub = mk('span'); t.append(sheetTitle, sheetSub);
+    const x = mk('button', 'pm-sheet-x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close parcel details'); x.addEventListener('click', closeSheet);
+    head.append(t, x);
+    sheetFrame = mk('iframe', 'pm-sheet-frame'); sheetFrame.title = 'Parcel details';
+    sheetFrame.addEventListener('load', () => {
+      try {
+        const doc = sheetFrame.contentDocument; if (!doc || !doc.head || doc.location.href === 'about:blank') return;
+        const st = doc.createElement('style'); st.textContent = 'header.nav,.dnav,.app-footer,footer,.ppx-bottom,.ppx-bar,#ppx-bottom,nav[aria-label="Primary"],[data-upgrade],p:has(>#back),#back{display:none!important}body{padding-top:0!important;padding-bottom:12px!important}';
+        doc.head.appendChild(st);
+      } catch (e) {}
+    });
+    panel.append(grab, head, sheetFrame); sheetEl.appendChild(panel);
+    sheetEl.addEventListener('click', e => { if (e.target === sheetEl) closeSheet(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheetEl && !sheetEl.hidden) closeSheet(); });
+    document.body.appendChild(sheetEl);
+  }
+  // The homepage header and bottom bar are sticky and would sit on top of the popup, so hide them while it is open.
+  function hideParentChrome() {
+    sheetHidden = []; sheetRaised = [];
+    try {
+      const pw = window.parent, fe = window.frameElement;
+      // Raise the frame's own containers so homepage content further down the page cannot paint over the popup.
+      for (let el = fe && fe.parentElement; el && el !== pw.document.body && el !== pw.document.documentElement; el = el.parentElement) {
+        sheetRaised.push([el, el.style.zIndex, el.style.position]);
+        if (pw.getComputedStyle(el).position === 'static') el.style.position = 'relative';
+        el.style.zIndex = '2147483000';
+      }
+      pw.document.querySelectorAll('body *').forEach(el => {
+        if (el === fe || el.contains(fe)) return;
+        const cs = pw.getComputedStyle(el);
+        if ((cs.position === 'fixed' || cs.position === 'sticky') && cs.visibility !== 'hidden') { sheetHidden.push([el, el.style.visibility]); el.style.visibility = 'hidden'; }
+      });
+    } catch (e) {}
+  }
+  function openSheet(r) {
+    const d = IDX.datasets.find(x => x.id === r._d); if (!d) return;
+    if (!sheetEl) buildSheet();
+    sheetTitle.textContent = r.a || ('Parcel ' + r.p);
+    sheetSub.textContent = d.county + ', ' + d.state + (r.a ? ' · ' + r.p : '');
+    sheetFrame.src = parcelSheetUrl(r, d);
+    // The map lives in a small frame on the homepage; widen that frame to the whole screen while the popup is open.
+    const fe = window.frameElement;
+    if (fe && sheetSaved == null) {
+      sheetSaved = fe.style.cssText; window.__ppaSheetOpen = true; hideParentChrome();
+      fe.style.cssText = sheetSaved + ';position:fixed;top:0;left:0;width:100vw;height:100dvh;max-width:none;margin:0;border:0;border-radius:0;z-index:2147483000';
+      try { sheetOverflow = window.parent.document.documentElement.style.overflow; window.parent.document.documentElement.style.overflow = 'hidden'; } catch (e) {}
+    }
+    sheetEl.hidden = false; sheetEl.querySelector('.pm-sheet-x').focus({ preventScroll: true });
+  }
+  function closeSheet() {
+    if (!sheetEl || sheetEl.hidden) return;
+    sheetEl.hidden = true; sheetFrame.src = 'about:blank';
+    const fe = window.frameElement;
+    if (fe && sheetSaved != null) { fe.style.cssText = sheetSaved; }
+    sheetSaved = null; window.__ppaSheetOpen = false;
+    sheetHidden.forEach(([el, v]) => { el.style.visibility = v; }); sheetHidden = [];
+    sheetRaised.forEach(([el, z, pos]) => { el.style.zIndex = z; el.style.position = pos; }); sheetRaised = [];
+    try { window.parent.document.documentElement.style.overflow = sheetOverflow; } catch (e) {}
+  }
   // ---------- Homepage parcel strip: swipeable satellite thumbnails of the selected state's parcels (Florida first) ----------
   const STRIP_STATES = new Set(['FL']);
   let stripEl = null, stripTimer = 0, stripSig = '', stripList = [], stripShown = 0, stripScroller = null;
@@ -974,8 +1050,9 @@
       setTimeout(() => { const old = wrap.querySelector('.cambar .tool[aria-label^="Nearby Cameras"]'); if (old) { const nb = old.cloneNode(true); old.replaceWith(nb); nb.addEventListener('click', () => { openCams({ lat: r.cx[1], lng: r.cx[0] }, 10, true); }); } }, 400);
     }).catch(() => { const n = wrap.querySelector('.note'); if (n) n.textContent = 'Tools could not load. Check your connection and try again.'; });
   }
+  const SHOW_ELEVATION=false; // Elevation line is hidden until further notice.
   function addSavedElevation(host,r,d){
-    if(!r?.i||!d?.id||!r.cx)return;
+    if(!SHOW_ELEVATION||!r?.i||!d?.id||!r.cx)return;
     const note=mk('p','note','Elevation: checking saved terrain data…');
     host.appendChild(note);
     const key=r.i;
@@ -1001,6 +1078,7 @@
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
     details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
+    details.addEventListener('click', e => { e.preventDefault(); openSheet(r); });
     card.append(info, close, details);
     if (r.g && r.bb) {
       const thumbnail = hero(r, d);
