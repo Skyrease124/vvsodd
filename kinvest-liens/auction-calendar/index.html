@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Auction Calendar | PricePocketAsset</title>
+<meta name="theme-color" content="#0b6e4f">
+<meta name="description" content="Upcoming and tentative county tax sales from the official lists we track.">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/app-shell.css">
+</head>
+<body class="ppa-home">
+<header class="dnav">
+  <div class="dwrap dnav-in">
+    <a class="dlogo" href="./" aria-label="PricePocketAsset home">
+      <img src="/img/logo-mark.png" alt="" width="86" height="40" class="dmark">
+      <span><b>PricePocket<em>Asset</em></b><small>Invest &middot; Grow &middot; Build Wealth</small></span>
+    </a>
+    <nav class="dlinks" aria-label="Main">
+      <a class="on" href="./">Home</a>
+      <a href="#products">Explore</a>
+      <a href="liens/#calculator">Tools</a>
+      <a href="learn/">Master Class</a>
+      <a href="about/">About</a>
+      <a href="account/">Account</a>
+      <a href="portfolio/">Portfolio</a>
+      <a href="land/">Land for Sale</a>
+      <a href="donate/">Support</a>
+    </nav>
+    <a class="dbtn" href="/account/?mode=up">Sign Up</a>
+  </div>
+</header>
+
+<main id="top">
+<div class="app-home">
+<section class="app-section" aria-labelledby="pg-title">
+  <div class="app-section-title"><h1 id="pg-title">Auction Calendar</h1><a href="/">← Home</a></div>
+  <p style="color:#c5e3dc;margin:0 0 14px;line-height:1.5">Upcoming and tentative county tax sales from the official lists we track.</p>
+  <div id="sale-list" aria-live="polite">Loading…</div>
+</section>
+</div>
+</main>
+
+<footer class="app-footer">
+  <p>Education and research tools only. Not legal, tax, or investment advice. Tax lien investing involves risk, including loss of principal. Verify everything with the county before you bid.</p>
+  <nav aria-label="Site information"><a href="/plans/">Free vs Pro</a><a href="/about/">About</a><a href="/support/billing/">Billing support</a><a href="/legal/privacy/">Privacy</a><a href="/legal/terms/">Terms</a><a href="/legal/billing/">Billing &amp; refunds</a><a href="/legal/disclaimer/">Disclaimer</a></nav>
+</footer>
+<script>
+(function(){
+  const host=document.getElementById('sale-list'),kind='cal';
+  fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error('Unavailable');return r.json();}).then(d=>{
+    const records=Array.isArray(d.counties)?d.counties:[];
+    const matches=records.filter(r=>kind==='cal'?['scheduled','tentative'].includes(r.sale?.kind):['past','completed'].includes(r.sale?.kind));
+    host.replaceChildren();
+    const count=document.createElement('p');
+    count.textContent=matches.length.toLocaleString()+' county sale records · Verify dates and status with the official source';
+    host.append(count);
+    if(!matches.length){const e=document.createElement('p');e.textContent='No matching sales in the current imported records.';host.append(e);return;}
+    const list=document.createElement('div');list.style.cssText='display:grid;gap:10px;margin:14px 0 24px';
+    for(const r of matches.slice(0,100)){
+      const row=document.createElement('a');
+      row.href=(typeof r.link==='string'&&r.link.startsWith('/'))?r.link:'/liens/states/state/?s='+encodeURIComponent(r.state||'');
+      row.style.cssText='display:block;padding:13px 15px;border:1px solid #385d69;border-radius:12px;color:inherit;text-decoration:none;background:#10283a';
+      const name=document.createElement('strong');name.textContent=(r.county||'County')+', '+(r.state||'');
+      const detail=document.createElement('div');detail.style.cssText='margin-top:4px;opacity:.8;font-size:13px';
+      detail.textContent=(r.sale?.date||'Date not confirmed')+' · '+(r.sale?.kind||'Sale')+' · Open county details';
+      row.append(name,detail);list.append(row);
+    }
+    host.append(list);
+  }).catch(()=>{host.textContent='Sale records could not be loaded. Please try again later.';});
+})();
+</script>
+<script src="/auth-nav.js" defer></script>
+</body>
+</html>
