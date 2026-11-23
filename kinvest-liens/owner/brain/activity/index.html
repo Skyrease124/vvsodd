@@ -162,7 +162,7 @@ function updateFibers(time){
   const bow=f.spread*90+f.scatter*18;               // fibres fan across the stream's width
   const w1=bow*0.8+Math.sin(time*0.9+f.phase)*20;
   const w2=-bow*0.45+Math.sin(time*0.9+f.phase+1.9)*20; // opposite bend gives an S-curve
-  f.p0x=p0x;f.p0y=p0y;f.p3x=p3x;f.p3y=p3y;
+  f.p0x=p0x;f.p0y=p0y;f.p3x=p3x;f.p3y=p3y;f.nx=nx;f.ny=ny;
   f.c1x=p0x+dx*0.33+nx*w1;f.c1y=p0y+dy*0.33+ny*w1;
   f.c2x=p0x+dx*0.68+nx*w2;f.c2y=p0y+dy*0.68+ny*w2;
  }
@@ -197,18 +197,20 @@ function drawFrame(time){
  rctx.save();rctx.translate(350,365);rctx.rotate(-time*2*Math.PI/19);rctx.beginPath();rctx.arc(0,0,105,0,Math.PI*2);rctx.stroke();rctx.restore();
  rctx.setLineDash([]);
  rctx.save();rctx.translate(350,365);rctx.rotate(time*2*Math.PI/9);rctx.strokeStyle='rgba(215,255,244,.85)';rctx.lineWidth=6;rctx.beginPath();rctx.arc(0,0,82,0,69/82);rctx.stroke();rctx.restore();
- // Fibers, batched per node.
+ // Fibers, batched per node. Each fibre is a ribbon of three close threads (one on low-end devices).
+ const ribbon=lowEnd?[0]:[-3.5,0,3.5];
+ const thread=(f,o)=>{const ox=f.nx*o,oy=f.ny*o;rctx.moveTo(f.p0x+ox,f.p0y+oy);rctx.bezierCurveTo(f.c1x+ox,f.c1y+oy,f.c2x+ox,f.c2y+oy,f.p3x+ox,f.p3y+oy);};
  for(const list of fibersByNode){
   rctx.strokeStyle=list[0].color;
-  // Soft neon glow under the threads, then the threads themselves.
-  if(!lowEnd){rctx.globalAlpha=.07;rctx.lineWidth=5;rctx.beginPath();
-  for(const f of list){rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
-  rctx.stroke();}
-  rctx.globalAlpha=.3;rctx.lineWidth=.8;rctx.beginPath();
-  for(const f of list){if(lowEnd&&!f.particle)continue;rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
+  // Soft neon glow under the ribbons, then the threads and the brighter fibres.
+  if(!lowEnd){rctx.globalAlpha=.08;rctx.lineWidth=6;rctx.beginPath();
+   for(const f of list)thread(f,0);
+   rctx.stroke();}
+  rctx.globalAlpha=.36;rctx.lineWidth=.8;rctx.beginPath();
+  for(const f of list){if(lowEnd&&!f.particle)continue;for(const o of ribbon)thread(f,o);}
   rctx.stroke();
   rctx.globalAlpha=.9;rctx.lineWidth=1.6;rctx.beginPath();
-  for(const f of list){if(!f.dense)continue;rctx.moveTo(f.p0x,f.p0y);rctx.bezierCurveTo(f.c1x,f.c1y,f.c2x,f.c2y,f.p3x,f.p3y);}
+  for(const f of list){if(f.dense)thread(f,0);}
   rctx.stroke();
  }
  // Travelling light.
