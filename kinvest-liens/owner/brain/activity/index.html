@@ -112,7 +112,7 @@ for(const [group,n] of positions.entries()){
  const endX=n.x<350?285:415,endY=n.y<365?306:424;
  for(let i=0;i<64;i++){
   const t=i/63;
-  const f={color:n.color,side:n.x<350?-1:1,up:n.y<365?-1:1,dense:i%6===0,particle:i%4===0,phase:(i*0.31)%7,speed:0.05+(i%11)*0.006,bend:Math.sin(t*2*Math.PI)*55,sx:startX+(n.x<350?-t*23:t*23),sy:startY+(n.y<365?t*29:-t*29),ex:endX+(n.x<350?t*40:-t*40),ey:endY,dx:0,dy:0};
+  const f={color:n.color,side:n.x<350?-1:1,up:n.y<365?-1:1,dense:i%6===0,particle:i%2===0,phase:(i*0.31)%7,speed:0.05+(i%11)*0.006,bend:Math.sin(t*2*Math.PI)*55,sx:startX+(n.x<350?-t*23:t*23),sy:startY+(n.y<365?t*29:-t*29),ex:endX+(n.x<350?t*40:-t*40),ey:endY,dx:0,dy:0};
   list.push(f);reactorFibers.push(f);
  }
  const g=svg('g',{'class':'node'+(n.name==='Mapping'?' event-mapnode':''),style:'--c:'+n.color+';animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));
@@ -125,6 +125,8 @@ for(const [group,n] of positions.entries()){
 const reactorCanvas=document.getElementById('reactorCanvas'),rctx=reactorCanvas.getContext('2d'),stage=reactorCanvas.parentElement;
 const lowEnd=(navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||8)<=4;
 const particles=reactorFibers.filter(f=>f.particle);
+const STRAND_OFFSETS=[[0,0,0,0],[2.5,-1.5,9,-5],[-2.5,1.5,-9,5]];
+const ACTIVE_STRANDS=lowEnd?STRAND_OFFSETS.slice(0,1):STRAND_OFFSETS;
 const sparkles=Array.from({length:70},(_,i)=>({x:(i*97)%700,y:(i*131)%730,r:.6+(i%3)*.4,s:.2+(i%7)*.05,p:i*.7}));
 let dpr=1,scaleX=1,scaleY=1,running=false,rafId=0,lastRender=0,canvasVisible=true;
 const sprites={};
@@ -161,16 +163,16 @@ function drawFrame(time){
  rctx.clearRect(0,0,700,730);
  rctx.globalCompositeOperation='lighter';
  // Node pulse behind each node.
- positions.forEach((n,k)=>{const pulse=.5+.5*Math.sin(time*1.6+k*1.3);rctx.globalAlpha=.1+.12*pulse;rctx.drawImage(haloFor(n.color),n.x-100,n.y-100,200,200);});
+ positions.forEach((n,k)=>{const pulse=.5+.5*Math.sin(time*1.6+k*1.3);rctx.globalAlpha=.18+.16*pulse;rctx.drawImage(haloFor(n.color),n.x-100,n.y-100,200,200);});
  // Base beam and ripples.
  const beam=rctx.createLinearGradient(0,455,0,650);
- beam.addColorStop(0,'rgba(120,255,225,.55)');beam.addColorStop(1,'rgba(120,255,225,0)');
- rctx.globalAlpha=1;rctx.fillStyle=beam;rctx.fillRect(346,455,8,195);
+ beam.addColorStop(0,'rgba(120,255,225,.85)');beam.addColorStop(1,'rgba(120,255,225,0)');
+ rctx.globalAlpha=1;rctx.fillStyle=beam;rctx.fillRect(343,455,14,195);
  rctx.lineWidth=1.2;
- for(let k=0;k<4;k++){const s=(time*.22+k/4)%1,rx=60+230*s;rctx.strokeStyle='rgba(110,235,255,'+(0.5*(1-s)).toFixed(3)+')';rctx.beginPath();rctx.ellipse(350,650,rx,rx*.16,0,0,Math.PI*2);rctx.stroke();}
+ for(let k=0;k<4;k++){const s=(time*.22+k/4)%1,rx=60+230*s;rctx.strokeStyle='rgba(110,235,255,'+(0.75*(1-s)).toFixed(3)+')';rctx.beginPath();rctx.ellipse(350,650,rx,rx*.16,0,0,Math.PI*2);rctx.stroke();}
  // Bright band around the core (replaces the blurred halo removed from SVG).
  const band=rctx.createRadialGradient(350,365,84,350,365,132);
- band.addColorStop(0,'rgba(63,245,184,0)');band.addColorStop(.45,'rgba(63,245,184,.6)');band.addColorStop(.75,'rgba(63,245,184,.38)');band.addColorStop(1,'rgba(63,245,184,0)');
+ band.addColorStop(0,'rgba(63,245,184,0)');band.addColorStop(.45,'rgba(63,245,184,.85)');band.addColorStop(.75,'rgba(63,245,184,.38)');band.addColorStop(1,'rgba(63,245,184,0)');
  rctx.globalAlpha=1;rctx.fillStyle=band;rctx.beginPath();rctx.arc(350,365,132,0,Math.PI*2);rctx.fill();
  // Core waves and rotating rings (these were SVG elements before).
  for(let k=0;k<2;k++){
@@ -188,10 +190,10 @@ function drawFrame(time){
  // Fibers, batched per node.
  for(const list of fibersByNode){
   rctx.strokeStyle=list[0].color;
-  rctx.globalAlpha=.42;rctx.lineWidth=.9;rctx.beginPath();
-  for(const f of list){if(f.dense)continue;rctx.moveTo(f.px,f.py);rctx.quadraticCurveTo(f.qx,f.qy,f.ex,f.ey);}
+  rctx.globalAlpha=.34;rctx.lineWidth=.8;rctx.beginPath();
+  for(const f of list){for(const o of ACTIVE_STRANDS){rctx.moveTo(f.px+o[0],f.py+o[1]);rctx.quadraticCurveTo(f.qx+o[2],f.qy+o[3],f.ex+o[0]*.5,f.ey);}}
   rctx.stroke();
-  rctx.globalAlpha=.85;rctx.lineWidth=2.1;rctx.beginPath();
+  rctx.globalAlpha=.9;rctx.lineWidth=1.8;rctx.beginPath();
   for(const f of list){if(!f.dense)continue;rctx.moveTo(f.px,f.py);rctx.quadraticCurveTo(f.qx,f.qy,f.ex,f.ey);}
   rctx.stroke();
  }
@@ -200,7 +202,7 @@ function drawFrame(time){
   const p=(time*(.2+f.speed)+f.phase/7)%1,q=1-p;
   const x=q*q*f.px+2*q*p*f.qx+p*p*f.ex,y=q*q*f.py+2*q*p*f.qy+p*p*f.ey;
   rctx.globalAlpha=.35+.65*Math.sin(Math.PI*p);
-  rctx.drawImage(p>.82?whiteSprite:f.sprite,x-5,y-5,10,10);
+  rctx.drawImage(p>.82?whiteSprite:f.sprite,x-6,y-6,12,12);
  }
  rctx.globalAlpha=.6;rctx.fillStyle='#bff7ff';
  for(const s of sparkles){rctx.fillRect((s.x+Math.sin(time*s.s+s.p)*18+700)%700,(s.y+Math.cos(time*s.s*.7+s.p)*14+730)%730,s.r,s.r);}
