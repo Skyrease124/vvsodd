@@ -520,10 +520,12 @@
         note.hidden=true;
         if(sel && landOnly && sel.c!=='land_bank'){sel=null;closePop();}
         pageN=40;
+        if(homeMap&&curState){fillCounties(window.__pm.coSel);}
         refresh();
         syncStateBadges();
         drawRadarPins();
         if(curState && !curCounty && !homeMap)stateCard(curState,true);
+        if(homeMap&&curState)void focusState(curState,{remember:false,panel:false,zoom:false});
         // Leave the Tools panel open so the user can switch modes again immediately.
       });
       const landDock=mk('div','pm-land-dock');landDock.style.cssText='display:grid;gap:3px;margin-top:8px;width:100%;position:relative';
@@ -632,7 +634,7 @@
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
-    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
+    const list = IDX.datasets.filter(d => d.state === curState && (!homeMap || !landOnly || d.cats?.land_bank)); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
   }
   function stateNote() {
     const R = $('pmResults'); if (!curState) return; const has = IDX.datasets.some(d => d.state === curState), s = IDX.allStates.find(x => x.a === curState);
@@ -1272,13 +1274,13 @@
     map.on('click', 'st-fill', e => { if (map.getZoom() > 7.5 || map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) return; const f = e.features && e.features[0]; if (f) focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); });
     // small labels with how many counties have data
     const pts = { type: 'FeatureCollection', features: gj.features.filter(f => f.properties.has).map(f => { const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { xs.push(c[0]); ys.push(c[1]); })); return { type: 'Feature', properties: { a: f.properties.a, n: have[f.properties.a] }, geometry: { type: 'Point', coordinates: [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2] } }; }) };
-    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title); el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); }); parcelStateBadges.push(new maplibregl.Marker({ element: el }).setLngLat(f.geometry.coordinates).addTo(map)); }); syncStateBadges();
+    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title);el.dataset.state=f.properties.a;el.dataset.count=String(f.properties.n);el.dataset.title=el.title; el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); }); parcelStateBadges.push(new maplibregl.Marker({ element: el }).setLngLat(f.geometry.coordinates).addTo(map)); }); syncStateBadges();
   }
   function stateBB(a) { if (!mapReady || !map.getSource('states')) return null; const src = map.getSource('states')._data; const f = src && src.features.find(x => x.properties.a === a); if (!f) return null; const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { if (c[0] > -170) { xs.push(c[0]); ys.push(c[1]); } })); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
   let stateParcelLoadToken=0;
   async function showStateParcels(a) {
     const token=++stateParcelLoadToken;
-    const datasets=IDX.datasets.filter(d=>d.state===a).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
+    const datasets=IDX.datasets.filter(d=>d.state===a&&(!landOnly||d.cats?.land_bank)).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
     say('Loading parcels across '+datasets.length+' mapped counties…',true);
@@ -1342,7 +1344,25 @@
   let radarOverlay={tab:'opp',month:-1,counties:[]},radarPins=[],radarCounties=null,radarGeometryLoading=false;
   const parcelStateBadges=[];
   let radarOverlayEnabled=false;
-  function syncStateBadges(){parcelStateBadges.forEach(m=>{m.getElement().style.display=((radarOverlayEnabled&&!landOnly)||(homeMap&&!!curState))?'none':'';});}
+  function syncStateBadges(){
+    const landCounts={};
+    if(IDX?.datasets)for(const d of IDX.datasets)if(d.cats?.land_bank)landCounts[d.state]=(landCounts[d.state]||0)+1;
+    parcelStateBadges.forEach(m=>{
+      const el=m.getElement(),a=el.dataset.state,landCount=landCounts[a]||0;
+      el.style.display=((radarOverlayEnabled&&!landOnly)||(homeMap&&!!curState)||(homeMap&&landOnly&&!landCount))?'none':'';
+      if(homeMap&&landOnly){
+        el.textContent=String(landCount);
+        el.title=landCount+' counties with mapped government land records in '+(IDX.states[a]?.n||a)+'; purchase eligibility unconfirmed';
+        el.setAttribute('aria-label',el.title);
+        el.style.background='#22c55e';el.style.color='#09251e';
+      }else{
+        el.textContent=el.dataset.count;
+        el.title=el.dataset.title;
+        el.setAttribute('aria-label',el.title);
+        el.style.removeProperty('background');el.style.removeProperty('color');
+      }
+    });
+  }
   const radarNorm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of)\\b/g,'').replace(/[^a-z0-9]/g,'');
   const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
     t==='cal'?(c.group!=='county-held'&&c.group!=='state-held'&&
