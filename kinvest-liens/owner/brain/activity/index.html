@@ -64,6 +64,12 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 }
 .node ellipse{filter:drop-shadow(0 0 7px var(--c,#7bd3ff)) drop-shadow(0 0 1px var(--c,#7bd3ff))}
 .node .node-title{fill:#f4fbff;text-shadow:0 0 8px var(--c,#7bd3ff)}
+/* Light packets travel from each node toward the core. Still mode and reduced motion stop them via the existing rules. */
+#packets{pointer-events:none}
+.packet{fill:none;stroke-linecap:round;stroke-dasharray:18 238;animation:packet var(--dur,3s) linear var(--delay,0s) infinite;opacity:.95}
+@keyframes packet{from{stroke-dashoffset:256}to{stroke-dashoffset:0}}
+.node ellipse{animation:nodeGlow 3.4s ease-in-out infinite}
+@keyframes nodeGlow{0%,100%{stroke-width:1.8}50%{stroke-width:2.8}}
 </style></head>
 <body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
 <div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
@@ -72,7 +78,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 <div class="only-authorized">
 <svg class="network" id="network" viewBox="0 0 700 730" role="img" aria-label="Decorative animated information paths connecting Gemini, OpenAI, Groq and Mapping to NVIDIA">
 <defs><filter id="fiberGlow" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="coreBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="10"/></filter><radialGradient id="nodeGlass" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#2d4d6e"/><stop offset="1" stop-color="#08111f"/></radialGradient><radialGradient id="core"><stop stop-color="#2a9476"/><stop offset=".62" stop-color="#143c3a"/><stop offset="1" stop-color="#071923"/></radialGradient><linearGradient id="sweep"><stop stop-color="#63f5ca" stop-opacity="0"/><stop offset=".5" stop-color="#d7fff4" stop-opacity=".95"/><stop offset="1" stop-color="#4e95fa" stop-opacity="0"/></linearGradient></defs>
-<g id="fibers" filter="url(#fiberGlow)"></g>
+<g id="fibers" filter="url(#fiberGlow)"></g><g id="packets"></g>
 <g opacity=".6"><circle class="core-wave" cx="350" cy="365" r="113" stroke="#73ffcd" stroke-width="2" fill="none"/><circle class="core-wave" cx="350" cy="365" r="113" stroke="#4ddfff" stroke-width="1.3" fill="none" style="animation-delay:-1s"/></g>
 <circle cx="350" cy="365" r="108" fill="#3ff5b8" opacity=".6" filter="url(#coreBlur)"/><circle class="hub" cx="350" cy="365" r="119" fill="#27ce9f" opacity=".08"/>
 <circle class="ring" cx="350" cy="365" r="116" fill="none" stroke="#7bfbc1" stroke-width="1.3" stroke-dasharray="4 17" opacity=".6"/>
@@ -111,6 +117,7 @@ for(const [group,n] of positions.entries()){
   const sx=startX+(n.x<350?-t*23:t*23),sy=startY+(n.y<365?t*29:-t*29),ex=endX+(n.x<350?t*18:-t*18),ey=endY;
   const d='M '+sx.toFixed(2)+' '+sy.toFixed(2)+' Q '+(350+(n.x<350?-170:170)+dx).toFixed(2)+' '+(365+(n.y<365?-175:175)).toFixed(2)+' '+ex.toFixed(2)+' '+ey.toFixed(2);
   const path=svg('path',{d,fill:'none',stroke:n.color,'stroke-width':i%6===0?'2.3':'1.15','class':'fiber moving'+(i%6===0?' dense':''),style:'--dur:'+(2.8+(i%11)*.18)+'s;--delay:-'+((i*0.31)%7).toFixed(2)+'s'},document.getElementById('fibers'));
+  if(i%4===0)svg('path',{d,fill:'none',stroke:n.color,'stroke-width':'2.6','class':'packet',style:'--dur:'+(2.4+(i%5)*.22)+'s;--delay:-'+((i*0.37)%3).toFixed(2)+'s'},document.getElementById('packets'));
   paths.push({path,sx,sy,ex,ey,cx:350+(n.x<350?-170:170)+dx,cy:365+(n.y<365?-175:175)});
  }
  const g=svg('g',{'class':'node'+(n.name==='Mapping'?' event-mapnode':''),style:'--c:'+n.color+';animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));

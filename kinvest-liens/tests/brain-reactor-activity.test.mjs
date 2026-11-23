@@ -72,6 +72,8 @@ test('reactor uses distinct event pulses and never replays historical events at 
  assert.match(page,/prefers-reduced-motion:reduce/);
  assert.match(page,/aria-live="polite"/);
  assert.match(page,/event-reactor/);
+ assert.match(page,/'class':'packet'/);
+ assert.match(page,/id="packets"/);
  assert.match(page,/event-beam/);
  assert.match(page,/event-wave/);
 });
