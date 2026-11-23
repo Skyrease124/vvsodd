@@ -4,10 +4,10 @@ import * as S from '../lib/stripe.mjs';
 
 const reply=(status,obj)=>new Response(JSON.stringify(obj),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Content-Type-Options':'nosniff'}});
 const idOf=v=>typeof v==='string'?v:(v&&v.id)||null;
-const kindOf=charge=>{
+export const kindOf=charge=>{
   const pi=typeof charge.payment_intent==='object'?charge.payment_intent:null;
   const meta=pi?.metadata||charge.metadata||{};
-  if(meta.kind==='donation'||/PricePocketAsset donation/i.test(pi?.description||charge.description||''))return 'donations';
+  if(meta.kind==='donation'||/PricePocketAsset (donation|voluntary support)/i.test(pi?.description||charge.description||''))return 'donations';
   if(charge.invoice || meta.kind==='subscription' || meta.subscription_id || /subscription|membership/i.test(pi?.description||charge.description||''))return 'pro';
   return 'other';
 };
