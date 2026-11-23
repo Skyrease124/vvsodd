@@ -46,47 +46,70 @@ function render(){const visible=records.filter(c=>(!state.value||c.state===state
 const normalize=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of|division)\\b/g,'').replace(/\\([^)]*\\)/g,'').replace(/[^a-z0-9]/g,'');
 let map=null,geometry=null,markers=[],recordPins=new Map(),stateBorders=null;
 let landParcelLayer=null,landParcelRequest=0,parcelIndex=null,parcelCache=new Map(),parcelCanvas=null;
+let parcelIndexPromise=null,parcelPending=new Map(),parcelRenderTimer=null;
+function getParcelIndex(){
+ if(parcelIndex)return Promise.resolve(parcelIndex);
+ if(!parcelIndexPromise)parcelIndexPromise=fetch('/map/index.json').then(r=>{if(!r.ok)throw Error('Parcel index unavailable');return r.json();}).then(j=>parcelIndex=j.datasets.filter(d=>['MS','AL','AR'].includes(d.state)&&d.cats?.land_bank)).catch(e=>{parcelIndexPromise=null;throw e;});
+ return parcelIndexPromise;
+}
+function getParcelData(file){
+ if(parcelCache.has(file))return Promise.resolve(parcelCache.get(file));
+ if(parcelPending.has(file))return parcelPending.get(file);
+ const task=fetch('/map/data/'+encodeURIComponent(file)).then(r=>{if(!r.ok)throw Error('Parcel data unavailable');return r.json();}).then(d=>{parcelCache.set(file,d);return d;}).finally(()=>parcelPending.delete(file));
+ parcelPending.set(file,task);return task;
+}
 async function renderLandParcels(){
  const token=++landParcelRequest;
- if(landParcelLayer){landParcelLayer.remove();landParcelLayer=null;}
- if(!map||!['MS','AL','AR'].includes(state.value)||map.getZoom()<6)return;
- const caption=document.getElementById('mapcaption');
+ if(!map||!['MS','AL','AR'].includes(state.value)||map.getZoom()<6){
+  if(landParcelLayer){landParcelLayer.remove();landParcelLayer=null;}return;
+ }
+ const caption=document.getElementById('mapcaption'),stateCode=state.value,view=map.getBounds(),zoom=map.getZoom();
+ caption.textContent='Loading mapped '+stateNames[stateCode]+' parcels…';
  try{
-  if(!parcelIndex){const response=await fetch('/map/index.json');if(!response.ok)throw Error('Parcel index unavailable');parcelIndex=(await response.json()).datasets.filter(d=>['MS','AL','AR'].includes(d.state)&&d.cats?.land_bank);}
-  const view=map.getBounds(),layer=L.featureGroup(),stateCode=state.value;
-  let count=0,centers=0,missing=0;
-  const datasets=parcelIndex.filter(d=>d.state===stateCode&&d.mapped&&d.bb&&(!county.value||normalize(d.county)===normalize(county.value))&&view.intersects(L.latLngBounds([d.bb[1],d.bb[0]],[d.bb[3],d.bb[2]])));
-  for(const dataset of datasets){
-   if(token!==landParcelRequest)return;
-   let data=parcelCache.get(dataset.file);
-   if(!data){const response=await fetch('/map/data/'+encodeURIComponent(dataset.file));if(!response.ok)continue;data=await response.json();parcelCache.set(dataset.file,data);}
+  const index=await getParcelIndex();if(token!==landParcelRequest)return;
+  const datasets=index.filter(d=>d.state===stateCode&&d.mapped&&d.bb&&(!county.value||normalize(d.county)===normalize(county.value))&&view.intersects(L.latLngBounds([d.bb[1],d.bb[0]],[d.bb[3],d.bb[2]])));
+  const layer=L.featureGroup(),oldLayer=landParcelLayer;
+  let count=0,centers=0,completed=0;
+  // Keep existing geometry visible while the next viewport loads.
+  const updateCaption=()=>{if(token===landParcelRequest)caption.textContent=count+' mapped state-held parcels in view'+(centers?' · '+centers+' tiny parcels highlighted':'')+(completed<datasets.length?' · loading '+completed+'/'+datasets.length+' counties…':' · availability unconfirmed');};
+  const drawDataset=(dataset,data)=>{
    for(const parcel of data.recs||[]){
-    if(token!==landParcelRequest)return;
     if(parcel.c!=='land_bank'||!Array.isArray(parcel.g)||!parcel.g.length)continue;
-    const rings=parcel.g.map(ring=>ring.map(point=>[point[1],point[0]]));
     const center=Array.isArray(parcel.cx)?[parcel.cx[1],parcel.cx[0]]:null;
     if(center&&!view.contains(center))continue;
+    const rings=parcel.g.map(ring=>ring.map(point=>[point[1],point[0]]));
     const bounds=L.latLngBounds(rings.flat());if(!view.intersects(bounds))continue;
     const popup=document.createElement('div'),title=document.createElement('strong'),detail=document.createElement('p'),link=document.createElement('a');
     title.textContent='Parcel '+(parcel.p||'unknown');detail.textContent=dataset.county+(parcel.ac!=null?' · '+parcel.ac+' acres':'')+' · Sale status unconfirmed';
     link.textContent='View parcel';link.href='/map/?state='+stateCode+'&county='+encodeURIComponent(dataset.county)+'&parcel='+encodeURIComponent(parcel.p||'');
     popup.append(title,detail,link);
-    // Draw the real boundary at every supported zoom; add a compact marker when
-    // the real polygon is too small to recognize on screen. Never inflate geometry.
-    const polygon=L.polygon(rings,{color:'#a4ffe1',weight:map.getZoom()<9?2.5:2,fillColor:'#12b981',fillOpacity:0.46,renderer:parcelCanvas||(parcelCanvas=L.canvas({padding:0.25}))});
-    polygon.bindPopup(popup).addTo(layer);
+    L.polygon(rings,{color:'#a4ffe1',weight:zoom<9?2.5:2,fillColor:'#12b981',fillOpacity:0.46,renderer:parcelCanvas||(parcelCanvas=L.canvas({padding:0.25}))}).bindPopup(popup).addTo(layer);
     const nw=map.latLngToContainerPoint(bounds.getNorthWest()),se=map.latLngToContainerPoint(bounds.getSouthEast());
     if(Math.max(Math.abs(nw.x-se.x),Math.abs(nw.y-se.y))<9&&center){
-     L.circleMarker(center,{radius:map.getZoom()<8?3.5:2.5,color:'#d9fff1',weight:1,fillColor:'#31e6b1',fillOpacity:0.9}).bindPopup(popup.cloneNode(true)).addTo(layer);centers++;
+     L.circleMarker(center,{radius:zoom<8?3.5:2.5,color:'#d9fff1',weight:1,fillColor:'#31e6b1',fillOpacity:0.9,renderer:parcelCanvas}).bindPopup(popup.cloneNode(true)).addTo(layer);centers++;
     }
     count++;
    }
-  }
+  };
+  // Cached counties paint immediately. Missing counties download concurrently
+  // with a bounded worker pool, rather than blocking the whole map serially.
+  const cached=datasets.filter(d=>parcelCache.has(d.file));
+  const missing=datasets.filter(d=>!parcelCache.has(d.file));
+  for(const d of cached){drawDataset(d,parcelCache.get(d.file));completed++;}
   if(token!==landParcelRequest)return;
-  landParcelLayer=layer.addTo(map);
-  const all=parcelIndex.filter(d=>d.state===stateCode&&d.cats?.land_bank);
-  const mapped=all.filter(d=>d.mapped).length;
-  caption.textContent=count+' mapped state-held parcel boundaries in view'+(centers?' · '+centers+' small parcels highlighted':'')+' · '+mapped+'/'+all.length+' county datasets mapped · availability unconfirmed';
+  landParcelLayer=layer.addTo(map);if(oldLayer)oldLayer.remove();updateCaption();
+  let next=0;
+  const worker=async()=>{
+   while(next<missing.length){
+    const dataset=missing[next++];
+    try{const data=await getParcelData(dataset.file);if(token!==landParcelRequest)return;drawDataset(dataset,data);}
+    catch(e){/* One unavailable county must not block the other counties. */}
+    if(token!==landParcelRequest)return;
+    completed++;updateCaption();
+   }
+  };
+  await Promise.all(Array.from({length:Math.min(5,missing.length)},()=>worker()));
+  if(token===landParcelRequest)updateCaption();
  }catch(error){if(token===landParcelRequest)caption.textContent='Parcel geometry unavailable · browse government sources below';}
 }
 function clearMarkers(){for(const m of markers)m.remove();markers=[];recordPins.clear();}
@@ -103,6 +126,6 @@ function initLandMap(){const caption=document.getElementById('mapcaption');if(ty
 const imagery=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Imagery © Esri',maxZoom:18}).addTo(map);
 imagery.on('tileload',()=>{loaded=true;fallback.hidden=true;});
 imagery.on('tileerror',()=>{if(++errors>=3&&!loaded){imagery.remove();const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(map);streets.on('tileload',()=>{loaded=true;fallback.hidden=true;caption.textContent='Street map fallback · county inventory locations, not parcels';});streets.on('tileerror',()=>{fallback.textContent='Map imagery unavailable in this browser. Browse government land sources below.';});}});
-setTimeout(()=>{if(!loaded)fallback.textContent='Map imagery is taking longer than expected. Browse government land sources below.';},8000);map.on('zoomend',()=>{drawLandMap();void renderLandParcels();});map.on('moveend',()=>{if(['MS','AL','AR'].includes(state.value)&&map.getZoom()>=6)void renderLandParcels();});map.whenReady(()=>{map.invalidateSize();drawLandMap();});fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json').then(r=>{if(!r.ok)throw Error('No county boundaries');return r.json();}).then(data=>{geometry=new Map();for(const feature of data.features||[]){const fips=String(feature.id||'').padStart(5,'0'),name=feature.properties?.NAME;if(name)geometry.set(fips.slice(0,2)+':'+normalize(name),feature);}drawLandMap(true);fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json').then(r=>r.json()).then(states=>{stateBorders=L.geoJSON(states,{style:{color:'#050505',weight:2.5,opacity:1,fillOpacity:0},interactive:false}).addTo(map);stateBorders.bringToFront();}).catch(()=>{caption.textContent='State border overlay unavailable · inventory markers remain available';});}).catch(()=>{caption.textContent='County location data unavailable · browse official land sources below';});}catch(e){document.getElementById('landmap-fallback').textContent='Map could not start. Browse government land sources below.';caption.textContent='Map unavailable · browse official land sources below';console.error('Land map initialization failed',e);}}
+setTimeout(()=>{if(!loaded)fallback.textContent='Map imagery is taking longer than expected. Browse government land sources below.';},8000);map.on('zoomend',()=>{drawLandMap();});map.on('moveend',()=>{if(parcelRenderTimer)clearTimeout(parcelRenderTimer);parcelRenderTimer=setTimeout(()=>{if(['MS','AL','AR'].includes(state.value)&&map.getZoom()>=6)void renderLandParcels();},90);});map.whenReady(()=>{map.invalidateSize();drawLandMap();});fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json').then(r=>{if(!r.ok)throw Error('No county boundaries');return r.json();}).then(data=>{geometry=new Map();for(const feature of data.features||[]){const fips=String(feature.id||'').padStart(5,'0'),name=feature.properties?.NAME;if(name)geometry.set(fips.slice(0,2)+':'+normalize(name),feature);}drawLandMap(true);fetch('https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json').then(r=>r.json()).then(states=>{stateBorders=L.geoJSON(states,{style:{color:'#050505',weight:2.5,opacity:1,fillOpacity:0},interactive:false}).addTo(map);stateBorders.bringToFront();}).catch(()=>{caption.textContent='State border overlay unavailable · inventory markers remain available';});}).catch(()=>{caption.textContent='County location data unavailable · browse official land sources below';});}catch(e){document.getElementById('landmap-fallback').textContent='Map could not start. Browse government land sources below.';caption.textContent='Map unavailable · browse official land sources below';console.error('Land map initialization failed',e);}}
 document.getElementById('maxprice').addEventListener('input',render);document.getElementById('minacres').addEventListener('input',render);
 state.addEventListener('change',()=>{fillCounties();render();drawLandMap(true);});county.addEventListener('change',()=>{render();drawLandMap(true);});fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error('Radar data unavailable');return r.json();}).then(data=>{records=(data.counties||[]).filter(c=>c.group==='state-held'&&c.source&&c.county&&c.state);const codes=[...new Set(records.map(c=>c.state))].sort();for(const code of codes)state.add(new Option(code,code));for(const option of state.options){if(option.value)option.textContent=({AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',FL:'Florida',GA:'Georgia',MS:'Mississippi',TN:'Tennessee',TX:'Texas',WV:'West Virginia'})[option.value]||option.value;}const initial=new URLSearchParams(location.search).get('state');if(codes.includes(initial))state.value=initial;fillCounties();render();initLandMap();}).catch(e=>{status.textContent='Land research data could not be loaded. Please try again later.';console.error(e);});})();
