@@ -642,20 +642,6 @@
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
       rail.append(stack);
-      // Quick links under Tools: the same two cards that were under For You (saved properties, recent parcel or map area).
-      const railIcons={watch:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg>',recent:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>'};
-      const railLink=(href,label,sub,icon)=>{const a=mk('a','pm-rail-link');a.href=href;a.target='_top';const i=mk('span','pm-rail-ic');i.innerHTML=railIcons[icon];a.append(i,mk('b','',label),mk('small','',sub));rail.append(a);return a;};
-      const watchA=railLink('/account/watchlist/','Watchlist','Saved','watch');
-      const recentA=railLink('/map/','Recent','Explore','recent');
-      fetch('/.netlify/functions/watch?action=watching',{credentials:'same-origin'}).then(r=>r.ok?r.json():null).then(d=>{
-        if(!Array.isArray(d?.keys))return;const n=d.keys.length;
-        watchA.querySelector('small').textContent=n+' saved';watchA.title=n===1?'1 saved property':n.toLocaleString('en-US')+' saved properties';
-      }).catch(()=>{});
-      try{
-        const loc=window.parent.ppaLocation;
-        const showRecent=area=>{if(!area)return;recentA.querySelector('b').textContent=area.parcel?'Parcel':'Area';recentA.querySelector('small').textContent=area.label||'Current area';recentA.title=(area.parcel?'Recent parcel: ':'Map area: ')+(area.label||'');recentA.href=loc.mapPath(area);};
-        if(loc){loc.subscribe(showRecent);loc.ready().then(showRecent);}
-      }catch(e){}
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);

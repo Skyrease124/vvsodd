@@ -543,22 +543,16 @@ body.ppa-map-home .pm{
 .ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls{order:31;display:flex!important;justify-content:flex-start;gap:8px;grid-column:auto;padding:6px 16px 14px;margin:0}
 .ppa-map-home .pm-tool-menu.pm-ml .pm-native-map-controls .maplibregl-ctrl-group button+button{border-top:0!important;border-left:1px solid #456875!important}
 
-/* Rail buttons (Tools, Watchlist, Recent): one matched set, frosted glass, soft press */
-.ppa-map-home .pm-home-rail .pm-tool-trigger,.ppa-map-home .pm-rail-link{
-  display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:3px;box-sizing:border-box;width:100%!important;height:60px!important;min-height:60px!important;margin:0!important;padding:6px 2px!important;
-  border:1px solid rgba(255,255,255,.16)!important;border-radius:16px!important;
-  background:linear-gradient(160deg,rgba(255,255,255,.14),rgba(255,255,255,.05))!important;
-  -webkit-backdrop-filter:blur(16px) saturate(1.4);backdrop-filter:blur(16px) saturate(1.4);
-  box-shadow:0 6px 18px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.22)!important;
-  color:#f2f7f9!important;text-decoration:none;font:600 10px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif!important;letter-spacing:.01em;
-  transition:transform .16s cubic-bezier(.2,.8,.2,1),background .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
-.ppa-map-home .pm-rail-link{margin-top:10px!important}
-.ppa-map-home .pm-home-rail .pm-tool-trigger:active,.ppa-map-home .pm-rail-link:active{transform:scale(.95);background:rgba(255,255,255,.2)!important}
-.ppa-map-home .pm-rail-link:focus-visible,.ppa-map-home .pm-home-rail .pm-tool-trigger:focus-visible{outline:2px solid #8ef1c6;outline-offset:2px}
-.ppa-map-home .pm-rail-ic{display:grid;place-items:center;width:22px;height:22px;color:#9be8cf}
-.ppa-map-home .pm-rail-ic svg{width:20px;height:20px}
-.ppa-map-home .pm-home-rail .pm-tool-trigger svg{width:20px;height:20px;color:#9be8cf}
-.ppa-map-home .pm-rail-link b{font-size:9.5px;font-weight:650;line-height:1.1;letter-spacing:-.01em;max-width:none;overflow:visible;white-space:nowrap}
-.ppa-map-home .pm-rail-link small{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8.5px;font-weight:500;opacity:.7}
-.ppa-map-home .pm-home-rail .pm-tool-trigger .pm-tool-trigger-label{font-size:10px;font-weight:650}
-@media(prefers-reduced-motion:reduce){.ppa-map-home .pm-rail-link,.ppa-map-home .pm-home-rail .pm-tool-trigger{transition:none}}
+
+/* Tools sits in a bar under the map, so the map uses the full width */
+body.ppa-map-home .pm{grid-template-columns:minmax(0,1fr);grid-template-areas:"search" "canvas" "rail" "extra"}
+.ppa-map-home .pm-home-rail{flex-direction:row;align-items:center;border-left:0;border-top:1px solid #355467;padding:8px 10px}
+.ppa-map-home .pm-home-rail .pm-stack{width:100%}
+.ppa-map-home .pm-home-rail .pm-tool-trigger{width:100%!important;height:44px!important;min-height:44px!important;flex-direction:row!important;gap:8px!important;padding:0 14px!important;border-radius:14px!important}
+.ppa-map-home .pm-tool-menu.pm-ml{right:auto;left:0;top:auto;bottom:calc(100% + 8px);transform-origin:bottom left;max-height:min(300px,60dvh)}
+@media(min-width:900px){
+  body.ppa-map-home .pm:has(.pm-right:not([inert]),.pm-left.open,.pm-pop:not([hidden]),.pm-cam:not([hidden])){
+    grid-template-columns:minmax(0,1fr) minmax(245px,31%);
+    grid-template-areas:"search search" "canvas extra" "rail extra";
+  }
+}
