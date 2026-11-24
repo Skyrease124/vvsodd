@@ -1433,7 +1433,7 @@
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
     say('Loading parcels across '+datasets.length+' counties with records…',true);
-    let cursor=0,done=0,failed=0,paintTimer=0;
+    let cursor=0,done=0,failed=0,paintTimer=0;const applies=[];
     const schedulePaint=()=>{if(paintTimer)return;paintTimer=setTimeout(()=>{paintTimer=0;if(token===stateParcelLoadToken)refresh();},120);};
     const worker=async()=>{
       while(cursor<datasets.length&&token===stateParcelLoadToken){
@@ -1444,7 +1444,7 @@
             if(token!==stateParcelLoadToken)return;
             data.meta=d;loaded[d.id]=data;
             // Avoid blocking the main map on optional GIS enrichment for every county.
-            if(window.PPABrainMap)setTimeout(()=>{if(token===stateParcelLoadToken)void window.PPABrainMap.apply(data).catch(()=>{});},0);
+            if(window.PPABrainMap)applies.push(new Promise(ok=>setTimeout(()=>{if(token===stateParcelLoadToken)window.PPABrainMap.apply(data).catch(()=>{}).then(ok,ok);else ok();},0)));
           }
         }catch(_){failed++;}
         done++;
@@ -1453,10 +1453,16 @@
         if(done===datasets.length){
           const records=shown().filter(passes),mapped=records.filter(p=>p.g||p.cx).length;
           if(paintTimer){clearTimeout(paintTimer);paintTimer=0;}refresh();
-          const listed=records.length;
+          const listed=records.length,verifying=!mapped&&!!listed;
           say(mapped||!listed
             ? mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded '+(done-failed===1?'county':'counties')+(failed?' · '+failed+' unavailable':'')+'.'
             : listed.toLocaleString('en-US')+' tax sale records are listed. Parcel outlines for this state are still being verified.');
+          // The approved outlines arrive after the lists load. If any turn up, the message says so instead of "still being verified".
+          if(verifying)Promise.all(applies).then(()=>{
+            if(token!==stateParcelLoadToken)return;
+            const now=shown().filter(passes).filter(p=>p.g||p.cx).length;
+            if(now){refresh();say(now.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded '+(done-failed===1?'county':'counties')+'.');}
+          });
         }
       }
     };

@@ -75,6 +75,28 @@ function approvedFeed(file,n){
     assert.equal(await f2.locator('#pmStrip .pm-sc').count(),2,'Iowa: one card per approved parcel');
     assert.match(await f2.locator('#pmStrip .pm-strip-h').textContent(),/Iowa parcels/);
     await c2.close();
-    console.log('PASS: parcel strip for New York (3 approved parcels, county list still works), Iowa none until approved then 2, Florida unchanged');
+    // 5. TAPPING the state on the map does the same as choosing it: no dropdown, no county, every approved parcel appears.
+    const c3=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
+    const p3=await c3.newPage();
+    await p3.route('**/.netlify/functions/account',r=>r.fulfill({status:200,contentType:'application/json',body:'{}'}));
+    await p3.route('**/server.arcgisonline.com/**',r=>r.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==','base64')}));
+    await p3.route('**/.netlify/functions/brain-map-records**',r=>{
+      const st=new URL(r.request().url()).searchParams.get('state');
+      r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(st==='NY'?approvedFeed('NY-city-of-rochester.json',3):{ok:true,records:[]})});
+    });
+    await p3.goto(BASE+'/',{waitUntil:'domcontentloaded'});
+    const el3=p3.locator('iframe[src*="/map/?embed=1&home=1"]');await el3.waitFor({timeout:20000});
+    const f3=await (await el3.elementHandle()).contentFrame();
+    await f3.waitForFunction(()=>window.__ppaMap&&window.__ppaMap.getLayer&&window.__ppaMap.getLayer('st-line'),null,{timeout:30000});
+    await p3.waitForTimeout(1500);
+    const at=await f3.evaluate(()=>{const m=window.__ppaMap,q=m.project([-75.5,42.9]),r=m.getContainer().getBoundingClientRect();return {x:q.x+r.x,y:q.y+r.y};});
+    const box=await el3.boundingBox();await p3.mouse.click(box.x+at.x,box.y+at.y);
+    await f3.locator('#pmStrip .pm-sc').first().waitFor({state:'visible',timeout:20000});
+    assert.equal(await f3.locator('#pmStrip .pm-sc').count(),3,'tapping New York shows every approved parcel');
+    assert.equal(await f3.evaluate(()=>window.__pm.stSel.value),'NY');
+    assert.equal(await f3.evaluate(()=>window.__pm.coSel.value),'','no county was chosen');
+    await f3.waitForFunction(()=>/3 mapped parcels across 1 loaded county/.test(document.getElementById('pmMsg').textContent),null,{timeout:20000});
+    await c3.close();
+    console.log('PASS: parcel strip for New York by tap and by choice (3 approved parcels, county list still works), Iowa none until approved then 2, Florida unchanged');
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
