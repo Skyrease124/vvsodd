@@ -98,3 +98,16 @@ test('endpoint source: owner only, same origin, confirmed, upload only, counted 
   assert.doesNotMatch(s, /fetch\(/, 'the endpoint itself fetches nothing: no link following');
   assert.doesNotMatch(s, /rec\.[a-z]*[Kk]ey|key\s*[:,]\s*key/, 'the key is not stored');
 });
+
+test('the reader page lists saved results with Verify and Reject, which only post an owner decision', () => {
+  const h = fs.readFileSync(new URL('../../kinvest-liens/owner/ocr/index.html', import.meta.url), 'utf8');
+  assert.match(h, /id="gemSaved"/); assert.match(h, /'Verify', 'verified'/); assert.match(h, /'Reject', 'rejected'/);
+  assert.match(h, /action: 'gemini-review', id: r\.id, decision/); assert.match(h, /gemini-resume/);
+  assert.match(h, /Nothing here is published/);
+});
+test('review changes only the decision on one stored result', () => {
+  const e = fs.readFileSync(new URL('../../netlify/functions/owner-brain-gemini.mjs', import.meta.url), 'utf8');
+  const block = e.slice(e.indexOf("body.action === 'gemini-review'"), e.indexOf("body.action !== 'gemini-extract'"));
+  assert.match(block, /\['verified', 'rejected'\]\.includes\(body\.decision\)/);
+  assert.doesNotMatch(block, /fetch\(|reserveGemini|extract\(/, 'a decision costs no request');
+});
