@@ -15,6 +15,7 @@ on:
       - kinvest-liens/map/index.html
       - kinvest-liens/owner/brain/**
       - kinvest-liens/tests/brain-activity-page.browser.mjs
+      - kinvest-liens/tests/brain-intake-page.browser.mjs
       - kinvest-liens/tests/home-map-combined.test.mjs
       - .github/workflows/validate-map-polish.yml
   workflow_dispatch:
@@ -50,3 +51,4 @@ jobs:
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_polish.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_behavior.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-activity-page.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-intake-page.browser.mjs

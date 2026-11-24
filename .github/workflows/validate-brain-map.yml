@@ -13,6 +13,17 @@ on:
       - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
       - 'kinvest-liens/tests/brain-release-policy.test.mjs'
       - 'kinvest-liens/tests/brain-research-release-feed.test.mjs'
+      - 'kinvest-liens/tests/property-intake-endpoint.test.mjs'
+      - 'kinvest-liens/tests/property-intake-library.test.mjs'
+      - 'kinvest-liens/tests/live-checks.test.mjs'
+      - 'kinvest-liens/tests/static-map-baseline.test.mjs'
+      - 'kinvest-liens/tests/brain-intake-page.browser.mjs'
+      - 'netlify/lib/property-intake.mjs'
+      - 'netlify/lib/live-checks.mjs'
+      - 'netlify/lib/data/static-map-baseline.json'
+      - 'netlify/functions/owner-property-intake.mjs'
+      - 'netlify/functions/owner-brain-live-checks.mjs'
+      - 'tools/map/**'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
       - 'netlify/lib/update-release.mjs'
@@ -66,6 +77,17 @@ on:
       - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
       - 'kinvest-liens/tests/brain-release-policy.test.mjs'
       - 'kinvest-liens/tests/brain-research-release-feed.test.mjs'
+      - 'kinvest-liens/tests/property-intake-endpoint.test.mjs'
+      - 'kinvest-liens/tests/property-intake-library.test.mjs'
+      - 'kinvest-liens/tests/live-checks.test.mjs'
+      - 'kinvest-liens/tests/static-map-baseline.test.mjs'
+      - 'kinvest-liens/tests/brain-intake-page.browser.mjs'
+      - 'netlify/lib/property-intake.mjs'
+      - 'netlify/lib/live-checks.mjs'
+      - 'netlify/lib/data/static-map-baseline.json'
+      - 'netlify/functions/owner-property-intake.mjs'
+      - 'netlify/functions/owner-brain-live-checks.mjs'
+      - 'tools/map/**'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
       - 'netlify/lib/update-release.mjs'
@@ -149,3 +171,7 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-owner-free-access.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-pro-ai-access.test.mjs
       - run: node kinvest-liens/tests/home-map-combined.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/property-intake-endpoint.test.mjs
+      - run: node kinvest-liens/tests/property-intake-library.test.mjs
+      - run: node kinvest-liens/tests/live-checks.test.mjs
+      - run: node kinvest-liens/tests/static-map-baseline.test.mjs

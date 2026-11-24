@@ -2,6 +2,7 @@
 export const PRO_EARLY_ACCESS_MS = 48 * 60 * 60 * 1000;
 export const RELEASE_TYPES = new Set(['lien', 'land', 'tax_deed', 'property']);
 export const RELEASE_MODES = new Set(['pro_first_48h', 'immediate_critical']);
+export const STATES = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WI WV WY'.split(' '));
 
 export function isProAccount(user, now = new Date()) {
   if (!user) return false;
@@ -49,7 +50,7 @@ export function safeResearchRecord(item) {
 
 export function makeRelease(data, time, reviewer) {
   if (!data || !RELEASE_TYPES.has(data.type)) throw Error('Unsupported update type.');
-  if (!new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WI WV WY'.split(' ')).has(data.state)) throw Error('Unsupported state.');
+  if (!STATES.has(data.state)) throw Error('Unsupported state.');
   if (!/^[a-zA-Z0-9._ -]{2,80}$/.test(String(data.county || ''))) throw Error('Invalid county.');
   if (!/^[a-zA-Z0-9._ -]{3,100}$/.test(String(data.parcelId || ''))) throw Error('Invalid parcel.');
   if (typeof data.title !== 'string' || data.title.trim().length < 6 || data.title.length > 140) throw Error('Title required.');
