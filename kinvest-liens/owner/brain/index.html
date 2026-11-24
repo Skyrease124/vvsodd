@@ -378,7 +378,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  };
  document.getElementById('wayneQuotaActivate').onclick=async()=>{
   const btn=document.getElementById('wayneQuotaActivate'),out=document.getElementById('wayneQuotaActivationResult');
-  if(!confirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 30-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
+  if(!confirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 300-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
   btn.disabled=true;out.textContent='Activating budget marker…';
   try{
    const r=await fetch('/.netlify/functions/owner-brain-wayne-quota-activate',{

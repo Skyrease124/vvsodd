@@ -9,7 +9,8 @@ import crypto from 'node:crypto';
 const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
 const STORE='owner-brain-wayne-worker-v1', OVERLAY='brain-map-county-v1-MI-wayne';
 const CONTROL='owner-brain-scanner-v1', APPROVALS='owner-brain-approvals-v1';
-const MAX_ATTEMPTS=3, MAX_PER_DAY=30, LEASE_MS=90000;
+const MAX_ATTEMPTS=3, MAX_PER_DAY=300, LEASE_MS=90000;
+const MANUAL_PER_RUN=MAX_ATTEMPTS, SCHEDULED_PER_RUN=2; // parcels per run; kept small so one run stays inside the function time limit
 const RETRY_DELAYS_MS=[60000,180000];
 const PILOT_REQUEST_LIMIT=3;
 const SOURCE_COOLDOWN_MS=15*60000;
@@ -161,7 +162,7 @@ async function handler(req,context){
 
   // Netlify scheduled invocations have a shorter 30-second limit.
   // Keep their batch to one parcel, using exactly the same verification path.
-  const maxThisRun=scheduled||review?1:MAX_ATTEMPTS;
+  const maxThisRun=review?1:scheduled?SCHEDULED_PER_RUN:MANUAL_PER_RUN;
   // Charge every actual GIS HTTP request, including fallback, to the daily cap.
   // Diagnostics record the stage, duration and outcome, never request URLs or private keys.
   // A request is counted before dispatch; its outcome is preserved with the batch.

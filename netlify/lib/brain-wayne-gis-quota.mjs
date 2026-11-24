@@ -1,6 +1,6 @@
 // One UTC budget for the Brain's official Wayne/Detroit GIS requests.
 // Ticket reservations are monotonic: do not refund after a timeout or interruption.
-export const WAYNE_DAILY_LIMIT = 30;
+export const WAYNE_DAILY_LIMIT = 300; // raised from 30 by the owner (Nov 24, 2026); Detroit GIS is a free public service
 
 const activationKey = 'brain-wayne-gis-quota-activation-v1';
 const dayKey = day => 'brain-wayne-gis-quota-v1-' + day;

@@ -72,7 +72,7 @@ async function setup({liveShapeFixture=false,snapshot=null,interruptAfterValid=f
   this.setExport('readWayneGisQuota',async()=>({active:!cutover,count:reserved}));
   this.setExport('reserveWayneGisRequest',async()=>{
    if(cutover)throw Object.assign(Error('Cutover'),{code:'QUOTA',quotaState:'quota_cutover'});
-   if(reserved>=30)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
+   if(reserved>=300)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
    return ++reserved;
   });
   this.setExport('withBrainStore',fn=>fn);
@@ -203,7 +203,7 @@ test('source outage backs off and pauses without skipping or draining the quota'
 test('owner UI explicitly exposes next bounded preview run',()=>{
  assert.match(ui,/Run next Wayne batch \(up to 3\)/);
  assert.match(ui,/owner-brain-wayne-run/);
- assert.match(code,/MAX_PER_DAY=30/);
+ assert.match(code,/MAX_PER_DAY=300/);
  assert.match(code,/controlNow\?\.status==='paused'/);
  assert.match(code,/waynePublisherInternal:true,wayneRecoveryOnly:true/);
 });
@@ -227,9 +227,9 @@ test('overlapping owner requests share one worker lease and charge one batch',as
  assert.equal(h.publications(),0);
 });
 test('verification that spends the final quota slot queues its correction and stops before another lookup',async()=>{
- const h=await setup({dailyUsed:28,chargePublisher:true});
+ const h=await setup({dailyUsed:298,chargePublisher:true});
  const result=await (await h.invoke()).json();
- assert.equal(result.dailyUsed,30);
+ assert.equal(result.dailyUsed,300);
  assert.equal(result.cursor,1);
  assert.equal(result.pendingOwnerReview,1);
  assert.equal(h.reads(),2);
@@ -238,14 +238,14 @@ test('verification that spends the final quota slot queues its correction and st
 });
 
 test('worker recovers saved publication at full quota without dispatch or cursor progress',async()=>{
- const h=await setup({dailyUsed:30,pending:true,chargePublisher:true});
+ const h=await setup({dailyUsed:300,pending:true,chargePublisher:true});
  const response=await h.invoke();
  assert.equal(response.status,200);
  const data=await response.json();
  assert.equal(data.recovered,1);
  assert.equal(data.attempted,0);
  assert.equal(data.cursor,0);
- assert.equal(data.dailyUsed,30);
+ assert.equal(data.dailyUsed,300);
  assert.equal(h.reads(),0);
  assert.equal(h.publications(),0);
  assert.equal((await h.invoke()).status,429);
@@ -320,9 +320,9 @@ test('worker never dispatches publication, so a publisher rejection cannot stran
 
 
 test('an owner-approved skipped parcel cannot dispatch after the shared quota closes',async()=>{
- const h=await setup({dailyUsed:29,missingFirst:true});
+ const h=await setup({dailyUsed:299,missingFirst:true});
  const result=await (await h.invoke()).json();
- assert.equal(result.dailyUsed,30);
+ assert.equal(result.dailyUsed,300);
  const entry=h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0];
  const before=h.reads();
  const retry=await h.invoke('POST',undefined,undefined,{action:'retry-skipped-parcel',
@@ -385,7 +385,7 @@ test('live pilot counts each official lookup once in its three-request ceiling; 
  assert.equal(pilot.pendingOwnerReview,1);
  assert.equal(pilot.cursor,4);
  assert.equal(pilot.mapVersion,0);
- assert.equal(pilot.remaining,27);
+ assert.equal(pilot.remaining,297);
  assert.deepEqual(h.upstreamIds,['01004444','01004444','01005555']);
  assert.equal((await runPilot(h,pilotRequest(3))).status,409);
  assert.equal(h.reads(),3);
@@ -405,7 +405,7 @@ test('pilot continues past skipped parcels and retains the cursor when the reque
 
 test('live pilot refuses cutover, low budget, recovery, pause, and stale or unconfirmed requests',async()=>{
  for(const [options,expected,body] of [
-  [{cutover:true},429], [{dailyUsed:28},429], [{pending:true},409], [{paused:true},409],
+  [{cutover:true},429], [{dailyUsed:298},429], [{pending:true},409], [{paused:true},409],
   [{},400,{...pilotRequest(),confirmed:false}], [{},409,pilotRequest(1)], [{owner:false},401]
  ]){
   const h=await setup(options);

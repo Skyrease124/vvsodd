@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readWayneQuota, reserveWayneRequest } from '../../netlify/lib/brain-wayne-gis-quota.mjs';
+import { readWayneQuota, reserveWayneRequest, WAYNE_DAILY_LIMIT } from '../../netlify/lib/brain-wayne-gis-quota.mjs';
 
 function setup() {
   const values = new Map();
@@ -37,14 +37,14 @@ test('competing callers can reserve the final slot only once', async () => {
   const h = setup();
   await assert.rejects(h.reserve(), { code: 'QUOTA' });
   h.on('2026-11-23T00:00:00Z');
-  for (let index = 1; index < 30; index++) assert.equal(await h.reserve(), index);
+  for (let index = 1; index < WAYNE_DAILY_LIMIT; index++) assert.equal(await h.reserve(), index);
   const results = await Promise.allSettled([h.reserve(), h.reserve(), h.reserve()]);
-  assert.deepEqual(results.filter(r => r.status === 'fulfilled').map(r => r.value), [30]);
+  assert.deepEqual(results.filter(r => r.status === 'fulfilled').map(r => r.value), [WAYNE_DAILY_LIMIT]);
   for (const result of results.filter(r => r.status === 'rejected')) assert.equal(result.reason.code, 'QUOTA');
-  assert.deepEqual(await h.read(), { active: true, count: 30, resumeAt:null });
+  assert.deepEqual(await h.read(), { active: true, count: WAYNE_DAILY_LIMIT, resumeAt:null });
   h.on('2026-11-24T00:00:00Z');
   assert.equal(await h.reserve(), 1);
-  assert.equal(h.values.get('brain-wayne-gis-quota-v1-2026-11-23').data.count, 30);
+  assert.equal(h.values.get('brain-wayne-gis-quota-v1-2026-11-23').data.count, WAYNE_DAILY_LIMIT);
 });
 
 
