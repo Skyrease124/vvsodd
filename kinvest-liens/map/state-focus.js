@@ -135,10 +135,15 @@
     const sw = Math.max(8, Math.round(W / 8)), sh = Math.max(8, Math.round(H / 8));
     if (small.width !== sw || small.height !== sh) { small.width = sw; small.height = sh; }
     smallc.imageSmoothingEnabled = true; smallc.drawImage(src, 0, 0, sw, sh);
+    // Zoomed in past the framed view (a parcel, a street): the shape fills the screen, so the surroundings blur fades out
+    // and the close-up stays sharp.
+    const zin = target.fz ? Math.max(0, Math.min(1, (map.getZoom() - target.fz - 1) / 1)) : 0, va = veilT * (1 - zin); lastVeil = va;
+    if (va > 0.003) {
     fxc.save(); fxc.beginPath(); fxc.rect(0, 0, W, H);
     target.veilRings.forEach(r => { const s2 = silhouette(r); s2.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }); fxc.closePath(); });
-    fxc.clip('evenodd'); fxc.globalAlpha = veilT; fxc.imageSmoothingEnabled = true; fxc.imageSmoothingQuality = 'high';
+    fxc.clip('evenodd'); fxc.globalAlpha = va; fxc.imageSmoothingEnabled = true; fxc.imageSmoothingQuality = 'high';
     fxc.drawImage(small, 0, 0, W, H); fxc.fillStyle = 'rgba(2,10,8,0.46)'; fxc.fillRect(0, 0, W, H); fxc.restore();
+    }
     // a thin emerald rim along the true border at the top of the raised shape (kept subtle so it never looks busy)
     if (rimOn) {
       fxc.save(); fxc.lineJoin = 'round'; fxc.lineCap = 'round';
@@ -152,7 +157,7 @@
   }
   // Drawn only inside the map's own render event (when its picture is still available); this just asks for another frame.
   const schedule = () => { if (map && target) map.triggerRepaint(); };
-  let rimOn = false, rimT = 0;
+  let rimOn = false, rimT = 0, lastVeil = 0;
   function fade(to, ms) {
     cancelAnimationFrame(veilAnim); const v0 = veilT, r0 = rimT, t0 = performance.now(); rimOn = true;
     const set = (v, r) => { veilT = v; rimT = r; if (to === 0 && v <= 0.003) rimOn = false; schedule(); };
@@ -206,7 +211,7 @@
   function lockCamera(mySeq) {
     settled(() => {
       if (mySeq !== seq || !target) return;
-      const f = frame(); let fired = false; const done = () => { if (fired || mySeq !== seq || !target) return; fired = true; try { map.setMaxBounds(paddedBounds(target.bb, f)); } catch (_) { /* ignore */ } };
+      const f = frame(); target.fz = f ? f.zoom : map.getZoom(); let fired = false; const done = () => { if (fired || mySeq !== seq || !target) return; fired = true; try { map.setMaxBounds(paddedBounds(target.bb, f)); } catch (_) { /* ignore */ } };
       try { map.easeTo(Object.assign({ pitch: PITCH, duration: dur(800), easing: ease }, f ? { center: f.center, zoom: f.zoom } : {})); } catch (_) { /* ignore */ }
       setTimeout(() => settled(done), 60);
     });
@@ -272,7 +277,7 @@
     if (map.getPitch() > 0.5) map.easeTo({ pitch: 0, duration: dur(700), easing: ease });
   }
 
-  window.PPAFocus = { active: false, pitch: () => (target ? PITCH : 0), apply };
+  window.PPAFocus = { active: false, pitch: () => (target ? PITCH : 0), apply, veil: () => lastVeil };
   window.addEventListener('ppa:map-focus', e => { try { apply(e.detail); } catch (_) { /* the map keeps working */ } });
   (function boot() {
     const t = setInterval(() => {

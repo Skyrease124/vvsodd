@@ -69,6 +69,11 @@ const COUNTIES = {type: 'FeatureCollection', features: [
     const sel = await f.evaluate(() => JSON.stringify(window.__ppaMap.getSource('ppa-focus')._data.features[0].geometry.coordinates[0][0]));
     assert.match(sel, /-90\.9|-90\.2|-93\.9|-93\.2/, label + ': the raised shape is that county\'s own outline');
 
+    // 3b. Zooming in to a parcel inside the selection: the blur fades out so the close-up is sharp.
+    await until(() => window.PPAFocus.veil() > 0.5, 'the surroundings are blurred at the framed view');
+    await f.evaluate(() => { const m = window.__ppaMap; m.jumpTo({zoom: m.getZoom() + 3}); });
+    await until(() => window.PPAFocus.veil() < 0.01, 'zoomed in to a parcel, nothing is blurred');
+
     // 4. Changing the state moves the effect to the new state.
     await pick('State', 'FL');
     await until(() => { const mb = window.__ppaMap.getMaxBounds(); const c = window.__ppaMap.getCenter(); return window.__ppaMap.getTerrain() && mb && mb.getWest() < -86 && mb.getEast() > -81 && mb.getSouth() < 26 && mb.getNorth() > 29 && c.lng > -88 && c.lng < -79.5 && c.lat > 24 && c.lat < 31.5; }, 'the effect moves to Florida');
