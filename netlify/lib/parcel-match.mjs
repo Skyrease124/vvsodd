@@ -23,6 +23,37 @@ export function normSbl(raw) {
   return section + '-' + parseInt(m[3], 10) + '-' + parseInt(m[4], 10) + sub;
 }
 
+// Identifier normalizers. Each source names one. ny-sbl is the default and reproduces the Rochester audit exactly.
+//   ny-sbl        section-block-lot numbers used in New York: "120.74-2-13" and "0120.74-02-013" are one parcel
+//   alphanumeric  letters and digits only, in upper case: "12-34/5a" and "12.34/5A" are one parcel
+//   exact         the text as written, with the ends trimmed (for layers whose identifiers are already canonical)
+export const NORMALIZERS = Object.freeze(['ny-sbl', 'alphanumeric', 'exact']);
+const toInt = v => (/^\d+$/.test(String(v ?? '').trim()) ? parseInt(String(v).trim(), 10) : null);
+const quote = v => "'" + String(v).replace(/'/g, "''") + "'";
+
+export function identifierKey(normalizer, raw) {
+  if (normalizer === 'alphanumeric') return String(raw ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '') || null;
+  if (normalizer === 'exact') return String(raw ?? '').trim() || null;
+  throw new Error('Unknown identifier normalizer: ' + normalizer);
+}
+
+// The key of a whole identifier, with no fallback to trailing text (used for the coverage counts).
+export function wholeKey(normalizer, raw) {
+  return (normalizer || 'ny-sbl') === 'ny-sbl' ? normSbl(raw) : identifierKey(normalizer, raw);
+}
+
+// The key used for matching. For ny-sbl a value with trailing text ("091.75-2-25./HOME") gives its leading SBL and a note.
+export function keyFor(normalizer, raw) {
+  const name = normalizer || 'ny-sbl';
+  if (name !== 'ny-sbl') return {key: identifierKey(name, raw), note: null};
+  const full = normSbl(raw);
+  if (full) return {key: full, note: null};
+  const lead = leadingSbl(raw);
+  const key = lead ? normSbl(lead) : null;
+  const note = key ? 'The parcel number "' + String(raw).trim() + '" has trailing text after the SBL ' + lead + '. Matching used the SBL and the verified address.' : null;
+  return {key, note};
+}
+
 export function canonicalStreet(text) {
   return String(text ?? '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ').split(/\s+/).filter(Boolean)
     .map(w => SUFFIX[w] || DIR[w] || w).join(' ');
@@ -193,21 +224,16 @@ function readFeature(src, feature, record) {
 // Resolves one record against an ordered list of sources (highest priority first).
 // src: {id, label, bbox, byParcel: Map(normSbl -> features[]), toAddress(attrs), official(attrs), evidence(parcel)}
 export function resolveRecord(record, sources) {
-  let key = normSbl(record.parcel), identifierNote = null;
-  if (!key) {
-    // Trailing text after a valid SBL is set aside; the address check below still has to pass.
-    const lead = leadingSbl(record.parcel);
-    key = lead ? normSbl(lead) : null;
-    if (key) identifierNote = 'The parcel number "' + String(record.parcel).trim() + '" has trailing text after the SBL ' + lead + '. Matching used the SBL and the verified address.';
-  }
-  const out = {parcel: record.parcel, sblKey: key, identifierNote, address: record.address || null, status: 'pending', reason: null,
+  // The audit fields use the first source's normalizer; each source then looks the identifier up with its own.
+  const first = keyFor(sources[0] && sources[0].normalize, record.parcel);
+  const out = {parcel: record.parcel, sblKey: first.key, identifierNote: first.note, address: record.address || null, status: 'pending', reason: null,
     source: null, point: null, boundary: null, bbox: null, official: null, evidenceUrl: null, crossChecks: []};
-  if (!key) return {...out, reason: 'sbl_unreadable'};
+  if (!first.key) return {...out, reason: (sources[0] && sources[0].normalize || 'ny-sbl') === 'ny-sbl' ? 'sbl_unreadable' : 'identifier_unreadable'};
   if (!record.address) return {...out, reason: 'address_missing'};
   let chosen = null, chosenIndex = -1;
   for (let i = 0; i < sources.length && !chosen; i++) {
     const src = sources[i];
-    const features = src.byParcel.get(key) || [];
+    const features = lookup(src, record.parcel);
     if (!features.length) continue;     // not in this source: try the next one
     const reads = features.map(f => readFeature(src, f, record));
     const good = reads.filter(r => r.ok);
@@ -223,7 +249,7 @@ export function resolveRecord(record, sources) {
   out.status = 'matched';
   out.reason = chosen.multiPart ? 'verified_point_only' : 'verified';
   out.point = chosen.point; out.boundary = chosen.boundary; out.bbox = chosen.bbox; out.official = chosen.official;
-  if (identifierNote && chosen.official && chosen.official.printKey === String(record.parcel).trim()) {
+  if (out.identifierNote && chosen.official && chosen.official.printKey === String(record.parcel).trim()) {
     out.identifierNote += ' The official layer uses the same identifier.';
   }
   out.evidenceUrl = chosen.evidenceUrl;
@@ -231,7 +257,7 @@ export function resolveRecord(record, sources) {
   // Other sources are checked against the chosen position; a disagreement beyond CONFLICT_METERS holds the record.
   for (let j = chosenIndex + 1; j < sources.length; j++) {
     const src = sources[j];
-    const features = src.byParcel.get(key) || [];
+    const features = lookup(src, record.parcel);
     if (!features.length) { out.crossChecks.push({source: src.id, outcome: 'not_found'}); continue; }
     const reads = features.map(f => readFeature(src, f, record)).filter(r => r.ok);
     if (!reads.length) { out.crossChecks.push({source: src.id, outcome: 'address_or_geometry_disagrees'}); continue; }
@@ -247,13 +273,50 @@ export function indexFeatures(src, features) {
   const byParcel = new Map();
   for (const f of features || []) {
     const raw = f.attributes && f.attributes[src.parcelField];
-    const lead = leadingSbl(raw);
-    const key = normSbl(raw) || (lead ? normSbl(lead) : null);
+    const key = keyFor(src.normalize, raw).key;
     if (!key) continue;
     if (!byParcel.has(key)) byParcel.set(key, []);
     byParcel.get(key).push(f);
   }
   return {...src, byParcel};
+}
+
+// The features of one source that a record's identifier reaches (empty if none, or if the identifier is unreadable).
+function lookup(src, raw) {
+  const key = keyFor(src.normalize, raw).key;
+  return key ? src.byParcel.get(key) || [] : [];
+}
+
+// Address fields of a layer, read from the attribute names its configuration declares (gis-sources.mjs). A field that is
+// not declared, or is empty, falls back to the SITEADDRESS text, read the same way as any street address.
+export function addressFromFields(f, a) {
+  const site = parseAddress(f.siteAddress ? (a[f.siteAddress] || '') : '');
+  const low = toInt(f.low ? a[f.low] : null) ?? site.low;
+  const high = toInt(f.high ? a[f.high] : null) ?? site.high ?? low;
+  const street = f.street && a[f.street] ? canonicalStreet(a[f.street]) : site.street;
+  const zip = f.zip && a[f.zip] ? String(a[f.zip]).trim().slice(0, 5) : site.zip;
+  return {low: low ?? null, high: high ?? null, street, zip};
+}
+
+export function officialFromFields(f, a) {
+  const value = name => (name && a[name] !== undefined && a[name] !== null && a[name] !== '' ? a[name] : null);
+  const acres = value(f.acres);
+  return {parcelId: value(f.parcelId), printKey: value(f.printKey), siteAddress: value(f.siteAddress), zip: value(f.zip),
+    acres: typeof acres === 'number' ? Math.round(acres * 1000) / 1000 : null};
+}
+
+// The matcher's source for one configuration in gis-sources.mjs. A configuration may supply its own toAddress, official
+// and evidence functions (as the Rochester sources do); otherwise the declared fields and the layer URL are used.
+export function sourceFromConfig(config) {
+  const name = config.normalize || 'ny-sbl';
+  if (!NORMALIZERS.includes(name)) throw new Error(config.id + ': unknown identifier normalizer "' + name + '"');
+  const f = config.fields || {};
+  return {
+    id: config.id, label: config.label, bbox: config.bbox, parcelField: config.parcelField, layerUrl: config.layerUrl, normalize: name,
+    toAddress: config.toAddress || (a => addressFromFields(f, a)),
+    official: config.official || (a => officialFromFields(f, a)),
+    evidence: config.evidence || (parcel => config.layerUrl + '/query?where=' + encodeURIComponent(config.parcelField + '=' + quote(parcel)) + '&outFields=*&f=html'),
+  };
 }
 
 // Matches a whole dataset. Returns the audit document: sources, counts and one entry per record.

@@ -1,14 +1,15 @@
 // Pure tests for the reusable parcel matcher (netlify/lib/parcel-match.mjs), the source configuration and the
 // import planner (netlify/lib/parcel-import.mjs). No network, no store: every official feature is a fixture.
-// Run from the repo root: node kinvest-liens/tests/parcel-match.test.mjs
+// Run from the repo root: node tests/parcel-match.test.mjs
+// Kept outside kinvest-liens: it checks official Rochester spellings that are restricted until the Pro window ends.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normSbl, canonicalStreet, parseAddress, addressMatch, closeRing, pointInRing, representativePoint, checkRing,
   resolveRecord, indexFeatures, matchDataset, leadingSbl, metersBetween,
-} from '../../netlify/lib/parcel-match.mjs';
-import {buildImportPlan} from '../../netlify/lib/parcel-import.mjs';
-import {SOURCES, sourcesFor, ADDRESS_ARTIFACT_FIXES} from '../../netlify/lib/gis-sources.mjs';
+} from '../netlify/lib/parcel-match.mjs';
+import {buildImportPlan} from '../netlify/lib/parcel-import.mjs';
+import {SOURCES, sourcesFor, ADDRESS_ARTIFACT_FIXES} from '../netlify/lib/gis-sources.mjs';
 
 const NOW = new Date('2026-11-24T12:00:00.000Z');
 const ROCHESTER_BOX = [-77.85, 43.0, -77.45, 43.3];

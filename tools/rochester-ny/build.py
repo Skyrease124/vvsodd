@@ -3,6 +3,8 @@
 Source: https://www.cityofrochester.gov/sites/default/files/2026-11/City%20of%20Roc%20Auction%20List%2011.16.26.pdf
 (the city's site refuses automated downloads, so the PDF was supplied by the site owner).  Run:  python3 tools/rochester-ny/build.py <list.pdf>
 Columns: SBL, address, zip, lot size, use, assessed value, estimated minimum bid, demolition flag. The build fails if any line that starts like a parcel is not read.
+The output file is the public list. Do not commit a rebuilt liens-rochester.js before the Pro early-access window for the address
+corrections has ended: the public map data is corrected only by tools/rochester-ny/apply-address-corrections.mjs.
 """
 import json, os, re, subprocess, sys
 
@@ -12,9 +14,20 @@ URL = 'https://www.cityofrochester.gov/sites/default/files/2026-11/City%20of%20R
 ROW = re.compile(r'^(\S+)\s+(.+?)\s+(\d{5})\s+(.+?)\s{2,}(.+?)\s+\$([\d,]+\.\d\d)\s+\$([\d,]+\.\d\d)\s*([A-Za-z]?)\s*$')
 
 
+# Whole-word abbreviations only. The earlier text replace(' Av', ' Ave') also matched the start of longer words, so "AVENUE"
+# was written "Aveenue", "AVERILL" "Aveerill" and "AVIS" "Aveis" (11 records; see tools/rochester-ny/address-corrections.json).
+ABBREVIATIONS = [(re.compile(r'\bAv\b'), 'Ave'), (re.compile(r'\bPk\b'), 'Park')]
+
+
+def expand(text):
+    for pattern, full in ABBREVIATIONS:
+        text = pattern.sub(full, text)
+    return text
+
+
 def addr(a, zipc):
     a = re.sub(r'^0+(?=\d)', '', a.strip()); a = re.sub(r'\b0+(\d)', r'\1', a)   # "0081-83 ABERDEEN ST" -> "81-83 Aberdeen St"
-    return '%s, Rochester NY %s' % (a.title().replace(' Av', ' Ave').replace(' Pk', ' Park'), zipc)
+    return '%s, Rochester NY %s' % (expand(a.title()), zipc)
 
 
 def acres(lot):

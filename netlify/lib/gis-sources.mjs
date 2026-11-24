@@ -21,6 +21,13 @@ export const ADDRESS_ARTIFACT_FIXES = Object.freeze({
   ]),
 });
 
+// To add a county, copy one entry and give the layer's own names:
+//   parcelField  the attribute that holds the parcel number, compared after "normalize":
+//                ny-sbl (New York section-block-lot), alphanumeric (letters and digits) or exact (as written)
+//   fields       the attribute names for siteAddress, low, high, street, zip, parcelId, printKey and acres
+//   bbox         the county's bounding box; a polygon outside it is a conflict, not a match
+//   covers       the state and county the layer serves (datasets are matched by these exact names)
+// Nothing is matched until an entry exists and tools/parcel-match/run.mjs is run for the dataset.
 export const SOURCES = Object.freeze({
   'city-of-rochester-tax-parcels': {
     id: 'city-of-rochester-tax-parcels',
@@ -33,6 +40,7 @@ export const SOURCES = Object.freeze({
     dataDate: '2025',
     itemModified: '2025-06-09',
     parcelField: 'PRINTKEY',
+    normalize: 'ny-sbl',
     bbox: [-77.85, 43.0, -77.45, 43.3],
     toAddress: a => {
       const site = parseAddress(a.SITEADDRESS || '');
@@ -63,6 +71,7 @@ export const SOURCES = Object.freeze({
     dataDate: 'layer last data edit 2025-12-03; item modified 2026-02-17',
     itemModified: '2026-02-17',
     parcelField: 'PRINTKEY',
+    normalize: 'ny-sbl',
     bbox: [-78.2, 42.8, -77.1, 43.5],
     toAddress: a => {
       const number = int(a.PARCELADDRESSNUMBER);

@@ -30,9 +30,16 @@ on:
       - 'kinvest-liens/tests/export-approved-records.test.mjs'
       - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
-      - 'kinvest-liens/tests/parcel-match.test.mjs'
+      - 'tests/parcel-match.test.mjs'
+      - 'tests/parcel-match-county.test.mjs'
       - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
-      - 'kinvest-liens/tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - 'tests/location-coverage.test.mjs'
+      - 'tools/rochester-ny/**'
+      - 'tools/coverage/**'
+      - 'docs/location-coverage.md'
+      - 'docs/location-coverage.csv'
       - 'netlify/lib/parcel-match.mjs'
       - 'netlify/lib/parcel-import.mjs'
       - 'netlify/lib/gis-sources.mjs'
@@ -112,9 +119,16 @@ on:
       - 'kinvest-liens/tests/export-approved-records.test.mjs'
       - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
-      - 'kinvest-liens/tests/parcel-match.test.mjs'
+      - 'tests/parcel-match.test.mjs'
+      - 'tests/parcel-match-county.test.mjs'
       - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
-      - 'kinvest-liens/tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - 'tests/location-coverage.test.mjs'
+      - 'tools/rochester-ny/**'
+      - 'tools/coverage/**'
+      - 'docs/location-coverage.md'
+      - 'docs/location-coverage.csv'
       - 'netlify/lib/parcel-match.mjs'
       - 'netlify/lib/parcel-import.mjs'
       - 'netlify/lib/gis-sources.mjs'
@@ -215,6 +229,10 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/export-approved-records.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-preview-isolation.test.mjs
       - run: node kinvest-liens/tests/nvidia-client-errors.test.mjs
-      - run: node kinvest-liens/tests/parcel-match.test.mjs
+      - run: node tests/parcel-match.test.mjs
       - run: node kinvest-liens/tests/rochester-matches-output.test.mjs
-      - run: node kinvest-liens/tests/rochester-map-merge.test.mjs
+      - run: node tests/rochester-map-merge.test.mjs
+      - run: node --test tests/parcel-match-county.test.mjs
+      - run: node tests/rochester-address-corrections.test.mjs
+      - run: python3 tools/rochester-ny/test_build.py
+      - run: node tests/location-coverage.test.mjs

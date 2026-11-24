@@ -24,8 +24,8 @@ const ITEMS = [
     releaseId: 'rel-33333333-3333-4333-8333-333333333333', approval: {releaseMode: 'pro_first_48h', at: NOW}},
   // Verified against the official layer and located: the only kind of record the batch bar can select.
   {...base, id: '44444444-4444-4444-8444-444444444444', title: 'Verified official position', status: 'awaiting_approval', origin: 'gis-import',
-    verification: {evidenceUrl: 'https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D%27106.22-4-23%27', notes: 'Matched on parcel number and address.', verifiedAt: NOW},
-    locationVerified: true, property: {category: 'tax_deed', address: '363 Avenue A, Rochester NY 14621', ownerName: null, amount: 1000, acreage: 0.1, hasCoordinates: true, hasBoundary: true}},
+    verification: {evidenceUrl: 'https://maps.example.invalid/parcels/query?where=PRINTKEY%3D%27TEST-0001%27', notes: 'Matched on parcel number and address.', verifiedAt: NOW},
+    locationVerified: true, property: {category: 'tax_deed', address: '1 Example Road, Testville NY 00000', ownerName: null, amount: 1000, acreage: 0.1, hasCoordinates: true, hasBoundary: true}},
 ];
 const MATCHES = {ok: true, dataset: 'NY-city-of-rochester', generatedAt: NOW, state: 'NY', county: 'City of Rochester',
   summary: {records: 3, matched: 2, matchedWithBoundary: 2, matchedPointOnly: 0, pending: 1, byReason: {verified: 2, sbl_not_found: 1}},

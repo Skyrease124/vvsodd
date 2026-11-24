@@ -399,9 +399,11 @@ test('approved positions reach the map Pro first and Free after 48 hours, with t
   for (let k = 0; k < ids.length; k += 50) assert.equal((await (await act({action: 'batch-approve', ids: ids.slice(k, k + 50)})).json()).approved, Math.min(50, ids.length - k));
   const pro = await mapRecords('pro', 'City of Rochester', 'NY');
   assert.equal(pro.records.length, 191);
-  const r = pro.records.find(x => x.p === '106.22-4-23');
+  // The first corrected parcel and its official spelling come from the corrections manifest, so no restricted text is written here.
+  const first = JSON.parse(fs.readFileSync(new URL('../../tools/rochester-ny/address-corrections.json', import.meta.url), 'utf8')).corrections[0];
+  const r = pro.records.find(x => x.p === first.parcel);
   assert.ok(r.cx && r.g && r.bb, 'a located record with a boundary');
-  assert.equal(r.a, '363 Avenue A, Rochester NY 14621', 'the official spelling replaces the list artifact');
+  assert.equal(r.a, first.corrected, 'the official spelling replaces the list artifact');
   assert.match(r.src, /City of Rochester Tax Parcels/);
   assert.match(r.src, /modified for use from its original source, which is the official website of the City of Rochester/);
   assert.equal((await mapRecords('free', 'City of Rochester', 'NY')).records.length, 0, 'Free waits');

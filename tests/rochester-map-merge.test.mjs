@@ -3,12 +3,13 @@
 // audit document with the same fields the server sends (netlify/lib/approved-records.mjs mapRecord), so the map side
 // is tested against real data. Checks: 191 records, no duplicates, positions only from official boundaries, the
 // official spelling of the corrected addresses, the required source wording on each record, and a full rollback.
-// Run from the repo root: node kinvest-liens/tests/rochester-map-merge.test.mjs
+// Run from the repo root: node tests/rochester-map-merge.test.mjs
+// This file is kept outside kinvest-liens: it checks official addresses that are restricted until the Pro window ends.
 import fs from 'node:fs';
 import vm from 'node:vm';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SOURCES} from '../../netlify/lib/gis-sources.mjs';
+import {SOURCES} from '../netlify/lib/gis-sources.mjs';
 
 const DATASET_FILE = 'kinvest-liens/map/data/NY-city-of-rochester.json';
 const MATCHES = JSON.parse(fs.readFileSync('netlify/lib/data/parcel-matches/NY-city-of-rochester.json', 'utf8'));
