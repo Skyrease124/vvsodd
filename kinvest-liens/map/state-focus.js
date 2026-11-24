@@ -185,7 +185,7 @@
   // The camera may roam the shape plus a margin, and always the framed view itself, so a long or narrow state is never cropped
   // by the lock. Staying within the shape itself is handled by easing the centre back (see onMoveEnd).
   function paddedBounds(bb) {
-    const px = (bb[2] - bb[0]) * 0.08, py = (bb[3] - bb[1]) * 0.08; let w = bb[0] - px, s = bb[1] - py, e = bb[2] + px, n = bb[3] + py;
+    const px = (bb[2] - bb[0]) * 0.6, py = (bb[3] - bb[1]) * 0.6; let w = bb[0] - px, s = bb[1] - py, e = bb[2] + px, n = bb[3] + py;
     try {
       // The framed view itself (as the map's own limit measures it, flat), so a long or narrow shape is never cropped.
       const c = map.getContainer(), z = map.getZoom(), ctr = map.getCenter(), lonSpan = c.clientWidth / (512 * Math.pow(2, z)) * 360, latSpan = c.clientHeight / (512 * Math.pow(2, z)) * 360 * Math.cos(ctr.lat * Math.PI / 180);
@@ -222,7 +222,8 @@
   }
   function onMoveEnd(e) {
     if (!target || !e || !e.originalEvent) return; // only after a person moved the map
-    const c = map.getCenter(), p = [c.lng, c.lat]; if (inside(p, target.outers)) return;
+    const c = map.getCenter(), p = [c.lng, c.lat], b = target.bb, mx = (b[2] - b[0]) * 0.3, my = (b[3] - b[1]) * 0.3;
+    if (inside(p, target.outers) || (p[0] > b[0] - mx && p[0] < b[2] + mx && p[1] > b[1] - my && p[1] < b[3] + my)) return; // some room to roam beyond the border
     const q = nearest(p, target.outers); if (q) map.easeTo({ center: q, duration: dur(450), easing: ease });
   }
 
@@ -255,6 +256,7 @@
     const state = detail && detail.state, countyName = detail && detail.county;
     if (target && target.key === state + '|' + (countyName || '') && state) { const same = ++seq; settled(() => { if (same === seq) lockCamera(same); }); return; } // the same selection again: only re-frame
     const my = ++seq; clearTimeout(lockTimer);
+    try { map.setMaxBounds(null); } catch (_) { /* release the old lock first so the map can travel to the new selection */ }
     if (!state) { clear(my); return; }
     const sf = stateFeature(state); if (!sf) { clear(my); return; }
     let geoms = [sf.geometry], list = null;
@@ -275,7 +277,7 @@
     try { map.setMaxBounds(null); } catch (_) { /* ignore */ }
     fade(0, 500);
     const done = () => { if (my !== seq) return; target = null; try { if (map.getSource('ppa-counties')) map.getSource('ppa-counties').setData({ type: 'FeatureCollection', features: [] }); } catch (_) { /* ignore */ } };
-    lift(0, 600, done);
+    lift(0, 600, done); setTimeout(done, 900); // done() also runs if the lift is interrupted
     if (map.getPitch() > 0.5) map.easeTo({ pitch: 0, duration: dur(700), easing: ease });
   }
 

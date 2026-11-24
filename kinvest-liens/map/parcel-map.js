@@ -732,10 +732,11 @@
     const ds = await load(id); if (!ds) return; curCounty = id; const d = ds.meta; if (window.__pm) { window.__pm.stSel.value = d.state; curState = d.state; fillCounties(window.__pm.coSel); window.__pm.coSel.value = id; }
     F.query = null; active = new Set([id]); F.inView = false; syncGISButton(); { const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); a.hidden = true; } }
     refresh(); closePop(); showTab('list', false); aiRefresh(); if (isMobile()) setSnap('peek'); // collapse the sheet so the county is in view; pull it up for the list
+    ppaFocus(d.state, d.county); // releases any earlier lock before the camera moves
     const correctedBounds=fitBB(ds),mappedCount=ds.recs.filter(r=>r.g||r.cx).length;
     if (correctedBounds) fitTo(correctedBounds); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
     if (announce && mappedCount && mappedCount < d.records) setTimeout(() => { if (curCounty === d.id) say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'); }, 1500); // only while that county is still the one on screen
-    setMapUrl(id); ppaFocus(d.state, d.county);
+    setMapUrl(id);
     if (remember && locationContext) rememberArea(locationContext.countyArea(d));
   }
   async function searchArea() {
@@ -1476,11 +1477,11 @@
     if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
     ++stateParcelLoadToken; active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
     if(homeMap){syncStateBadges();drawRadarPins();}
+    ppaFocus(a,''); // first, so the previous lock is released before the camera moves
     const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
     if (panel && !homeMap) stateCard(a,true);
     if(homeMap){openRight(false);if(isMobile())setSnap('peek');}
     if(homeMap)void showStateParcels(a);
-    ppaFocus(a,'');
     aiRefresh();
     if (remember && locationContext && !homeMap) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
     const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
