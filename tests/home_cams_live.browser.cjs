@@ -33,6 +33,11 @@ const cam = (id, live) => ({kind: 'camera', name: 'Cam ' + id, road: 'I-' + id, 
     const after = await page.locator('#hcams .hc-focus').first().getAttribute('aria-label');
     assert.notEqual(after, before, 'tapping another camera selects it (was ' + before + ', now ' + after + ')');
     await page.locator('#hcams .hc-dot').nth(names.length - 1).click(); await page.waitForTimeout(900);
+    // The camera in the middle pops out as you scroll: after moving to the last camera, the glow has moved off the first one.
+    const lastFocus = await page.locator('#hcams .hc-card.hc-focus').evaluate(c => [...c.parentNode.children].indexOf(c));
+    assert.equal(lastFocus, names.length - 1, 'the popped-out camera follows the scroll to the last one');
+    const scaleOfFocus = await page.locator('#hcams .hc-card.hc-focus').evaluate(c => getComputedStyle(c).transform);
+    assert.notEqual(scaleOfFocus, 'none', 'the popped-out camera is scaled up');
     assert.ok(await page.locator('#hcams .hc-dot.on').evaluate((d, n) => [...d.parentNode.children].indexOf(d) === n - 1, names.length), 'tapping the last dot moves to the last camera');
     assert.deepEqual(errors, [], 'no page errors');
     await page.screenshot({path: '/tmp/claude-0/-home-user-vvsodd/bf604de6-2661-56bf-bbdc-299b08c4a426/scratchpad/home-cams-' + visit + '.png', fullPage: false}).catch(() => {});

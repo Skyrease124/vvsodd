@@ -170,8 +170,7 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
 /* Live Cameras: layout from the reference (glowing centred hero, LIVE pills, full-width browse button) */
 .ppa-home .hcams{padding:16px 0 14px;overflow:visible;border:0;background:transparent}
 .ppa-home .hc-grid{align-items:center;gap:14px;padding:14px 16px 10px;margin:0 -16px;scroll-snap-type:x mandatory;scroll-padding:0 16px}
-.ppa-home .hc-card{flex:none;flex-basis:min(44%,190px);border-radius:18px;border:1px solid rgba(120,170,200,.35);background:#0d2133;transform:scale(.94);opacity:.8;transition:transform .35s ease,opacity .35s ease,box-shadow .35s ease}
-.ppa-home .hc-card.hc-hero{flex-basis:min(64%,300px);transform:scale(1);opacity:1;border-color:#5df1ae;box-shadow:0 0 0 1px rgba(93,241,174,.55),0 0 26px rgba(16,185,129,.5),0 14px 30px rgba(0,0,0,.35)}
+.ppa-home .hc-card{flex:none;flex-basis:min(58%,260px);border-radius:18px;border:1px solid rgba(120,170,200,.35);background:#0d2133;transform:scale(.9);opacity:.8;transform-origin:center;transition:transform .35s ease,opacity .35s ease,box-shadow .35s ease,border-color .35s ease}
 .ppa-home .hc-card img,.ppa-home .hc-media{aspect-ratio:16/10}
 .ppa-home .hc-cap{padding:8px 10px 10px}.ppa-home .hc-cap b{font-size:.84rem}.ppa-home .hc-cap span{font-size:.74rem}
 .ppa-home .hc-media{background:linear-gradient(160deg,#133a52,#0b1c2b)}
@@ -196,4 +195,5 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
 .ppa-home .hc-dot.on{width:22px;background:#5df1ae;box-shadow:0 0 8px rgba(93,241,174,.6)}
 /* The camera in the middle of the row is the one selected (glow only, so the row does not jump while it moves) */
 .ppa-home .hc-card.hc-focus{border-color:#5df1ae;box-shadow:0 0 0 1px rgba(93,241,174,.55),0 0 26px rgba(16,185,129,.5),0 14px 30px rgba(0,0,0,.35);opacity:1;transform:scale(1)}
+/* the camera in the middle pops out as you scroll; the size is a transform, so the row does not reflow */
 .ppa-home .hc-card:focus-visible{outline:2px solid #5df1ae;outline-offset:3px}
