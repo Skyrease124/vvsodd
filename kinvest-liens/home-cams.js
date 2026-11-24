@@ -13,7 +13,9 @@
   const grid = mk('div','hc-grid'), msg = mk('p','hc-msg'), options = mk('details','hc-options');
   options.append(mk('summary','','Browse other camera areas'));
   const chips = mk('div','hc-chips'); options.append(chips); host.append(grid,msg,options);
-  let controller, refresh, started = false, currentKey, stopVideo, hlsLibrary;
+  let controller, refresh, started = false, currentKey, stopVideos = [], hlsLibrary;
+  // Homepage: only live feeds are shown (no snapshot-only cameras), and each visit picks a different state from the list.
+  const liveOnly = true, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const plans = '/plans/?src=Live%20cameras';
   function watchVideo(camera, media, badge, signal) {
     const video = mk('video','hc-video');
@@ -72,7 +74,7 @@
     const key = [area?.lat,area?.lng,area?.label].join('|');
     if (key === currentKey) return;
     currentKey = key;
-    clearInterval(refresh); stopVideo?.(); stopVideo = null;
+    clearInterval(refresh); stopVideos.forEach(stop => stop?.()); stopVideos = [];
     controller?.abort();
     const job = new AbortController(); controller = job;
     grid.replaceChildren();
@@ -85,22 +87,23 @@
     allLink.href = path(lat,lng,radius);
     msg.textContent = 'Finding cameras near ' + name + '…';
     try {
-      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:4,preview:1,video:1}), {signal:job.signal});
+      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:liveOnly ? 8 : 4,preview:1,video:1}), {signal:job.signal});
       if (job.signal.aborted) return;
       if (r.status === 401 || r.status === 402) { locked(); return; }
       const d = await r.json();
       if (job.signal.aborted) return;
       if (!r.ok || !d.ok) throw new Error('unavailable');
-      const cams = d.cameras.filter(c => c.image || c.video || c.viewer);
-      const featured = matchMedia('(prefers-reduced-motion: reduce)').matches ? null : cams.find(c => c.video && c.image);
-      msg.textContent = cams.length ? 'Near ' + name + ' · Swipe for more' : 'No cameras found near ' + name + '.';
+      const cams = liveOnly ? d.cameras.filter(c => c.video && c.image).slice(0, 4) : d.cameras.filter(c => c.image || c.video || c.viewer);
+      const featured = reduced ? null : cams.find(c => c.video && c.image);
+      msg.textContent = cams.length ? 'Live near ' + name + ' · Swipe for more' : (liveOnly ? 'No live cameras found near ' : 'No cameras found near ') + name + '.';
       const update = cams.map(c => {
-        const card = c === featured ? mk('article','hc-card') : link('',path(c.lat,c.lng,15)); card.className = 'hc-card';
+        const structured = c === featured || liveOnly;
+        const card = structured ? mk('article','hc-card') : link('',path(c.lat,c.lng,15)); card.className = 'hc-card';
         if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
         const media = mk('div','hc-media');
         const fallback = mk('span','hc-viewer',c.kind === 'viewer' ? 'Open official camera ↗' : 'Open camera →');
         const cap = mk('div','hc-cap'); cap.append(mk('b','',c.name),mk('span','',c.road || c.operator));
-        if (c === featured) {
+        if (structured) {
           const details = link('',path(c.lat,c.lng,15)); details.className = 'hc-cap-link'; details.append(cap);
           card.append(media,details);
         } else card.append(media,cap);
@@ -114,7 +117,7 @@
         img.onerror = () => { media.classList.remove('has-snapshot'); badge.hidden = true; fallback.hidden = false; };
         img.onload = () => { media.classList.add('has-snapshot'); badge.hidden = false; fallback.hidden = true; };
         media.append(img,badge); set();
-        if (c === featured) stopVideo = watchVideo(c, media, badge, job.signal);
+        if (c === featured || (liveOnly && !reduced)) stopVideos.push(watchVideo(c, media, badge, job.signal));
         return set;
       }).filter(Boolean);
       if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
@@ -134,7 +137,7 @@
     const nearby = mk('button','hc-chip','Near current map'); nearby.type = 'button';
     nearby.addEventListener('click', async () => { options.open = false; load(await loc.ready()); });
     chips.prepend(nearby);
-    const [label,lat,lng] = losAngeles;
+    const [label,lat,lng] = liveOnly ? places[Math.floor(Math.random() * places.length)] : losAngeles;
     load({label,lat,lng});
   };
   const observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) { observer.disconnect(); go(); } }, {rootMargin:'220px'});
