@@ -67,5 +67,28 @@ const row = page => page.locator('.bn-row[aria-controls="nvidiaPanel"]');
   assert.equal(await page.locator('.bn-fold').first().evaluate(e => getComputedStyle(e).transitionDuration), '0s');
   await context.close();
 }
+// 5. Nothing is left loose far down the page: the progress panel, the monitor, and tools the page adds later all sit in rows.
+{
+  const {context, page} = await open();
+  assert.equal(await page.locator('.bn-row[href="#app"]').count(), 0, 'no row jumps to the whole locked section');
+  for (const name of ['County Agent Progress', 'Automatic Research Monitor']) {
+    const r = page.locator('.bn-row', {hasText: name}).first();
+    assert.ok((await r.getAttribute('aria-controls')) !== null, name + ' opens in place');
+  }
+  await page.evaluate(() => {
+    const app = document.getElementById('app');
+    const b = document.createElement('button'); b.textContent = 'Test Agent Run (no AI credits)'; app.append(b);
+    const sec = document.createElement('section'); sec.className = 'panel'; sec.innerHTML = '<h2>Automatic preview — 90 Chandler</h2><p>Retrieves the official record.</p>'; app.prepend(sec);
+    const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Automatic polygon verification currently supports Detroit. Agents compare the parcel.'; app.append(p);
+  });
+  await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => [...document.getElementById('app').children].filter(n => !/^(STYLE|SCRIPT|DIALOG)$/.test(n.tagName)).length), 0, 'nothing loose in the section');
+  const tools = page.locator('.bn-row', {hasText: 'Preview and test tools'});
+  assert.equal(await tools.count(), 1);
+  await tools.click(); await page.waitForTimeout(500);
+  assert.equal(await page.getByRole('button', {name: /Test Agent Run/}).isVisible(), true, 'the tool opens under its row');
+  assert.match(await page.locator('.bn-about').textContent(), /Automatic polygon verification currently supports Detroit/);
+  await context.close();
+}
 await browser.close();
 console.log('PASS: Control Center rows open panels in place, no scroll, several open, search, address link, reduced motion');

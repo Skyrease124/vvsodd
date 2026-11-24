@@ -78,3 +78,6 @@ html{scroll-behavior:smooth;scroll-padding-top:12px}
 #nvidiaPanel.nv-busy #nvidiaRun,.approval-card.nv-busy button{animation:nv-pulse 1.4s ease-in-out infinite}
 .approval-card.nv-busy{opacity:.92;transition:opacity .3s}
 @media(prefers-reduced-motion:reduce){.nv-new,.approval-card.nv-new>p,#nvidiaPanel.nv-busy #nvidiaStatus::after,#nvidiaPanel.nv-busy #nvidiaRun,.approval-card.nv-busy button{animation:none!important}}
+
+/* The locked section only holds dialogs and styles once its panels live in the rows. */
+#app.bn-shell:not([hidden]){display:contents}
