@@ -155,3 +155,16 @@ test('a check without a daily limit records its result in the live-check log and
   assert.ok(auth.store.has(LOG));
   assert.equal(auth.store.has(COUNTER), false, 'no counter is written when the check has no limit');
 });
+
+test('a display-only entry shows usage in the summary and can never be run', async () => {
+  const auth = memoryAuth();
+  const {spec, calls} = fakeCheck({displayOnly: true, usedToday: async () => 4, limit: 10});
+  const checks = {groq: spec};
+  const shown = (await summary({auth, checks, now: NOW})).items.find(i => i.name === 'groq');
+  assert.equal(shown.displayOnly, true);
+  assert.equal(shown.usedToday, 4); assert.equal(shown.limitPerDay, 10);
+  const out = await runLiveCheck({auth, name: 'groq', checks, now: NOW});
+  assert.equal(out.ok, false); assert.equal(out.status, 400);
+  assert.deepEqual(calls, {run: 0, reserve: 0}, 'nothing was reserved or sent');
+  assert.equal((await summary({auth, checks: {x: fakeCheck().spec}, now: NOW})).items[0].displayOnly, false);
+});

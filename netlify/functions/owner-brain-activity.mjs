@@ -20,11 +20,12 @@ function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,queue,n
   s?.lastCompleted?st('completed','Last lookup batch finished',s.lastCompleted):st('idle','No lookup recorded',null);
  const photonLimited=photon?.lastWarning&&/denied|rate|limit/i.test(photon.lastWarning)?photon.lastWarning:null;
  const geoLimited=(Number(geo?.dailyUsage)||0)>=(Number(geo?.dailyLimit)||300)?'Geoapify daily allowance used':null;
- // Groq triage is a real, owner-confirmed tool. Its stored, unverified results are counted here; NVIDIA does not read them.
+ // Groq triage is a real, owner-confirmed tool. Its stored, unverified results are counted here; NVIDIA reads them as context only.
  const triaged=(Array.isArray(queue)?queue:[]).filter(x=>x?.triage?.status==='complete'&&date(x.triage.createdAt));
  const lastTriage=triaged.map(x=>date(x.triage.createdAt)).sort().at(-1)||null;
- const groq=triaged.length?st('completed',triaged.length+' unverified triage result(s) stored. Standalone: not sent to NVIDIA',lastTriage):st('idle','Standalone triage tool. No result stored. Not sent to NVIDIA',null);
  const latest=nvidiaReceipts[0];
+ const groqRead=Number(latest?.inputs?.sources?.groq)||0;
+ const groq=triaged.length?st('completed',triaged.length+' unverified triage result(s) stored. '+(groqRead?'Last NVIDIA run read '+groqRead+' as context only':'Not yet read by NVIDIA'),lastTriage):st('idle','Triage tool. No result stored. NVIDIA reads results as context only',null);
  const nvidia=!latest?st('idle','No NVIDIA consolidation run yet',null):
   latest.outcome==='completed'?st('completed',(latest.proposals||[]).length+' proposal(s) awaiting owner approval',latest.at):
   latest.outcome==='failed'?st('failed',clean(latest.error,120),latest.at):

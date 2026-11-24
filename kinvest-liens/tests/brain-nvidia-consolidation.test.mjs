@@ -392,3 +392,51 @@ test('a run includes the new sources in the receipt, and the matched position ne
   for (const r of matched) assert.equal(body.includes(String(r.point[1])), false, 'no official matched latitude is in the request');
   assert.ok(receipt.inputs.datasets.includes('IA-scott') && receipt.inputs.datasets.includes('CO-larimer'));
 });
+
+// ---- Step 4: Groq triage as context only ----
+const triageQueue = () => ({'owner-brain-scanner-v1': {status: 'idle', queue: [
+  {dataset: 'IA-scott', recordId: 'q1', parcelId: 'C0050-21', triage: {status: 'complete', summary: 'Check the situs address on the county page; reference 99887.', checks: ['a'], priority: 'high', createdAt: ago(7)}},
+  {dataset: 'NY-city-of-rochester', recordId: 'q2', parcelId: '120.74-2-13', triage: {status: 'complete', summary: 'Possible duplicate.', createdAt: ago(9)}},
+  {dataset: 'IA-scott', recordId: 'q3', parcelId: 'C0050-22', triage: {status: 'pending'}},
+  {dataset: 'IA-scott', recordId: 'q4', parcelId: 'C0050-23'}]}});
+
+test('Groq triage is collected as an unverified, non-official item without its checklist', async () => {
+  const items = (await collectItems(fakeAuth(triageQueue()))).filter(i => i.source === 'groq');
+  assert.equal(items.length, 2, 'only completed triage is read');
+  assert.ok(items.every(i => i.unverified === true && i.official !== true && i.status === 'triaged_unverified' && i.dataset && i.parcelId));
+  assert.equal(JSON.stringify(items).includes('checks'), false, 'the checklist is not collected');
+  assert.equal(items.some(i => i.lat != null), false, 'no position');
+});
+
+test('Groq alone can never back a proposal, even with an official item about another parcel', () => {
+  const items = [
+    {ref: 'H1', source: 'groq', dataset: 'IA-scott', parcelId: 'C0050-21', status: 'triaged_unverified', reason: 'Check the situs address.', unverified: true},
+    {ref: 'H2', source: 'validator', dataset: 'IA-scott', parcelId: 'C0050-99', status: 'pending_owner_review'}];
+  const alone = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'C0050-21', refs: ['H1'], summary: 'Groq says it is fine.'}]}), items);
+  assert.equal(alone.proposals.length, 0);
+  assert.ok(alone.rejected.includes('proposal has no official or validator source'));
+  const wrong = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'C0050-21', refs: ['H1', 'H2'], summary: 'Mixed.'}]}), items);
+  assert.equal(wrong.proposals.length, 0, 'a different parcel cannot lend its official status');
+});
+
+test('Groq text is not a source of numbers, and the prompt says it is context only', () => {
+  const items = [
+    {ref: 'H1', source: 'groq', dataset: 'IA-scott', parcelId: 'C0050-21', status: 'triaged_unverified', reason: 'Reference 99887 on the county page.', unverified: true},
+    {ref: 'H2', source: 'validator', dataset: 'IA-scott', parcelId: 'C0050-21', status: 'pending_owner_review'}];
+  const out = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'C0050-21', refs: ['H1', 'H2'], summary: 'Official match; reference 99887.'}]}), items);
+  assert.equal(out.proposals.length, 0);
+  assert.ok(out.rejected.some(r => /do not contain/.test(r)));
+  assert.match(lib.buildPrompt(items).system, /Groq items are unverified AI triage notes: context only, never evidence/);
+  const ok = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'C0050-21', refs: ['H1', 'H2'], summary: 'Official match supports an update.'}]}), items);
+  assert.equal(ok.proposals.length, 1, 'with an official item for the same parcel the proposal stands');
+  assert.deepEqual(ok.proposals[0].sources.map(x => x.source), ['groq', 'validator'], 'Groq is listed as a source with its own label');
+});
+
+test('a run reads Groq triage as context and records it in the receipt', async () => {
+  mode = 'good';
+  const receipt = await runConsolidation({auth: fakeAuth({...seed(), ...triageQueue()}), now, config: cfg});
+  assert.equal(receipt.outcome, 'completed');
+  assert.equal(receipt.inputs.sources.groq, 2);
+  assert.match(sent.at(-1).body, /triaged_unverified/);
+  assert.equal(sent.at(-1).body.includes('"checks"'), false);
+});

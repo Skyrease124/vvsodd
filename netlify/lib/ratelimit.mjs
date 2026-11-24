@@ -18,6 +18,6 @@ export function hit(k, limit, windowMs) {
 }
 // Looks without counting.
 export function peek(k, limit, windowMs) {
-  return serial(async () => { const now = Date.now(), r = (await kvGet(key(k))) || { t: [] }; const t = (r.t || []).filter(x => now - x < windowMs); return t.length >= limit ? { ok: false, retryAfterSec: Math.max(1, Math.ceil((windowMs - (now - t[0])) / 1000)) } : { ok: true, retryAfterSec: 0 }; });
+  return serial(async () => { const now = Date.now(), r = (await kvGet(key(k))) || { t: [] }; const t = (r.t || []).filter(x => now - x < windowMs); return t.length >= limit ? { ok: false, used: t.length, retryAfterSec: Math.max(1, Math.ceil((windowMs - (now - t[0])) / 1000)) } : { ok: true, used: t.length, retryAfterSec: 0 }; });
 }
 export function clear(k) { return serial(async () => { await kvPut(key(k), { t: [] }); }); }

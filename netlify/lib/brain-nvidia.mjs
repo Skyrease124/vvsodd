@@ -13,7 +13,7 @@ import {MATCHES} from './parcel-matches-registry.mjs';
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
 export const DAILY_LIMIT = 3; // owner-triggered consolidations per UTC day, to stay inside free allowances
-const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, COORD_TOLERANCE = 0.002; // degrees, about 200 m
+const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
 const US_BOUNDS = {minLat: 18, maxLat: 72, minLon: -180, maxLon: -60};
@@ -91,6 +91,14 @@ export async function collectItems(auth, options = {}) {
     }
   matched.sort((a, b) => a.overlap - b.overlap || a.dataset.localeCompare(b.dataset) || a.parcelId.localeCompare(b.parcelId));
   raw.push(...matched.slice(0, MAX_PARCEL_MATCH).map(({overlap, ...item}) => item));
+  // Groq triage notes: stored, unverified AI summaries of queued parcels. Context only: they are never official,
+  // so they cannot back a proposal, and no position or checklist is sent.
+  const queue = (await auth.kvGet('owner-brain-scanner-v1'))?.queue;
+  const triaged = (Array.isArray(queue) ? queue : []).filter(x => x?.triage?.status === 'complete' && x.triage.createdAt && x.parcelId && x.dataset)
+    .sort((a, b) => String(b.triage.createdAt).localeCompare(String(a.triage.createdAt))).slice(0, MAX_GROQ);
+  for (const x of triaged)
+    raw.push({source: 'groq', dataset: clip(x.dataset, 60), parcelId: clip(x.parcelId, 20), recordId: clip(x.recordId, 40), status: 'triaged_unverified',
+      reason: clip(x.triage.summary, 160), checkedAt: x.triage.createdAt, unverified: true});
   raw.sort((a, b) => String(b.checkedAt).localeCompare(String(a.checkedAt)));
   return raw.slice(0, MAX_ITEMS).map((item, i) => ({ref: 'H' + (i + 1), ...item}));
 }
@@ -128,7 +136,7 @@ export function buildPrompt(items) {
   const system = [
     'You consolidate helper-agent results for a county tax-sale research team.',
     'Use ONLY the items provided. Each item has a ref (H1, H2, ...) and a dataset (one county). The same parcel number in two datasets is two different parcels. Do not invent parcel IDs, coordinates, owners, amounts, dates or sources.',
-    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position.',
+    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position. Groq items are unverified AI triage notes: context only, never evidence, and never a reason to propose an update.',
     'Return ONLY JSON: {"conflicts":[{"parcelId":"...","refs":["H1"],"detail":"short factual text"}],"proposals":[{"parcelId":"...","refs":["H1"],"summary":"short factual text"}]}.',
     'Propose an update only when a validator, official-gis-worker, county-worker official_evidence or parcel-match item supports it. Every proposal needs owner approval.',
   ].join(' ');
@@ -153,7 +161,8 @@ export function parseAnswer(text) {
 const numbersIn = text => String(text ?? '').match(/\d[\d.,-]{2,}\d|\d{3,}/g) || [];
 function unsupportedNumber(text, cited) {
   // Only what NVIDIA was shown counts: a parcel-match position was withheld from the prompt.
-  const shown = cited.map(i => (i.source === 'parcel-match' ? {...i, lat: null, lon: null} : i));
+  // Groq note text is never a source of numbers either.
+  const shown = cited.map(i => (i.source === 'parcel-match' ? {...i, lat: null, lon: null} : i.source === 'groq' ? {...i, reason: null} : i));
   const pool = JSON.stringify(shown).replace(/,/g, '');
   return numbersIn(text).find(n => !pool.includes(n.replace(/,/g, '')));
 }

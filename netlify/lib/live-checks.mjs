@@ -50,6 +50,7 @@ async function recordResult(auth, record) {
 export async function runLiveCheck({auth, name, checks, now = Date.now(), paused = false}) {
   const spec = Object.prototype.hasOwnProperty.call(checks, name) ? checks[name] : null;
   if (!spec) return {status: 404, ok: false, error: 'Unknown check'};
+  if (spec.displayOnly) return {status: 400, ok: false, error: 'This entry only shows usage. It cannot be run.'};
   if (paused) return {status: 409, ok: false, error: 'Agent automation is paused. Nothing was sent.'};
   const started = Date.now();
   const at = new Date(now).toISOString();
@@ -83,7 +84,7 @@ export async function summary({auth, checks, now = Date.now()}) {
     const spec = checks[name];
     const available = (await spec.available()) === true;
     items.push({
-      name, label: spec.label, cost: spec.cost, available,
+      name, label: spec.label, cost: spec.cost, available, displayOnly: spec.displayOnly === true,
       missing: available ? null : (spec.missing || null),
       limitPerDay: spec.limit ?? null,
       usedToday: spec.usedToday ? await spec.usedToday(now) : null,

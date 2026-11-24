@@ -4,6 +4,8 @@
 import * as auth from '../lib/brain-auth.mjs';
 import * as keystore from '../lib/keystore.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
+import * as RL from '../lib/ratelimit.mjs';
+import * as GL from '../lib/groq-limits.mjs';
 import {complete} from '../lib/llm.mjs';
 import {reserveRun, usageToday, DAILY_LIMIT} from '../lib/brain-nvidia.mjs';
 import {DETROIT_GIS} from '../lib/brain-official-verification.mjs';
@@ -58,6 +60,17 @@ function buildChecks(now) {
           return {outcome: 'failed', detail: 'Geoapify did not answer in time.'};
         }
       },
+    },
+    // Usage only: Groq requests are made by the connection test and by triage, never by this list.
+    groq: {
+      label: 'Groq connection test and triage',
+      cost: 'Shared allowance for the key test and parcel triage. This entry only shows usage.',
+      displayOnly: true,
+      limit: GL.groqCaps(null).daily,
+      missing: 'Groq key is not saved, or Groq is switched off. Nothing was sent.',
+      available: async () => { await KEYS.load(); return !!KEYS.keyOf('GROQ_API_KEY') && GL.groqCaps(await auth.kvGet('owner-ai-research-api-controls')).enabled; },
+      usedToday: async () => GL.groqUsedToday(RL, GL.groqCaps(await auth.kvGet('owner-ai-research-api-controls'))),
+      run: async () => ({outcome: 'failed', detail: 'This entry only shows usage.'}),
     },
     wayne_gis: {
       label: 'Wayne County GIS layer check',

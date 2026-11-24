@@ -90,14 +90,16 @@ test('Gemini and OpenAI report a key check only; Groq reports its standalone tri
   const idle = (await run(new Map())).body.agents;
   assert.equal(idle.Gemini.state, 'not_connected'); assert.match(idle.Gemini.detail, /Key check only/);
   assert.equal(idle.OpenAI.state, 'not_connected'); assert.match(idle.OpenAI.detail, /no results reach NVIDIA/);
-  assert.equal(idle.Groq.state, 'idle'); assert.match(idle.Groq.detail, /Not sent to NVIDIA/i);
+  assert.equal(idle.Groq.state, 'idle'); assert.match(idle.Groq.detail, /context only/i);
   const queue = [{triage: {status: 'complete', createdAt: ago(40)}}, {triage: {status: 'complete', createdAt: ago(10)}}, {triage: {status: 'pending'}}, {}];
   const done = (await run(new Map([['owner-brain-scanner-v1', {queue}]]))).body.agents;
   assert.equal(done.Groq.state, 'completed');
   assert.match(done.Groq.detail, /2 unverified triage result\(s\) stored/);
-  assert.match(done.Groq.detail, /not sent to NVIDIA/i);
+  assert.match(done.Groq.detail, /Not yet read by NVIDIA/);
   assert.equal(done.Groq.lastAt, ago(10));
   assert.equal(done.Gemini.state, 'not_connected', 'stored Groq results do not connect the other helpers');
+  const read = (await run(new Map([['owner-brain-scanner-v1', {queue}], ['brain-nvidia-consolidation-v1', {receipts: [receipt('a', 'completed', {inputs: {count: 4, sources: {validator: 2, groq: 2}, refs: []}})]}]]))).body.agents;
+  assert.match(read.Groq.detail, /Last NVIDIA run read 2 as context only/);
 });
 
 test('only a real NVIDIA request is shown as going to NVIDIA; other events say where the result was stored', async () => {

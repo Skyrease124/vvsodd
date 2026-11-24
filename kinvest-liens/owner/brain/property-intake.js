@@ -392,6 +392,7 @@
    card.appendChild(el('p', 'pi-meta', item.limitPerDay != null ? 'Used today: ' + (item.usedToday || 0) + ' of ' + item.limitPerDay : 'Shared budget, checked on each run'));
    if (item.last) card.appendChild(el('p', 'pi-meta', 'Last run ' + fmt(item.last.at) + ': ' + (OUTCOME_LABEL[item.last.outcome] || item.last.outcome) + '. ' + item.last.detail));
    const msg = el('p', 'pi-status');
+   if (item.displayOnly) { card.append(msg); list.appendChild(card); continue; }
    const btn = button('Run once…', 'pi-btn', () => runLive(item, btn, msg));
    btn.disabled = !item.available;
    card.append(btn, msg);

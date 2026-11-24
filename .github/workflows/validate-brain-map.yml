@@ -38,6 +38,10 @@ on:
       - 'tests/location-coverage.test.mjs'
       - 'tests/scott-county-match.test.mjs'
       - 'tests/release-window.test.mjs'
+      - 'tests/scott-crosscheck.test.mjs'
+      - 'tests/parcel-match-registry.test.mjs'
+      - 'kinvest-liens/tests/groq-limits.test.mjs'
+      - 'netlify/lib/groq-limits.mjs'
       - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
@@ -130,6 +134,10 @@ on:
       - 'tests/location-coverage.test.mjs'
       - 'tests/scott-county-match.test.mjs'
       - 'tests/release-window.test.mjs'
+      - 'tests/scott-crosscheck.test.mjs'
+      - 'tests/parcel-match-registry.test.mjs'
+      - 'kinvest-liens/tests/groq-limits.test.mjs'
+      - 'netlify/lib/groq-limits.mjs'
       - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
@@ -244,3 +252,6 @@ jobs:
       - run: node tests/location-coverage.test.mjs
       - run: node --test tests/scott-county-match.test.mjs
       - run: node --test tests/release-window.test.mjs
+      - run: node --test tests/scott-crosscheck.test.mjs
+      - run: node --test tests/parcel-match-registry.test.mjs
+      - run: node --test kinvest-liens/tests/groq-limits.test.mjs
