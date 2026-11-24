@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import {validateSubmission, validateBatch, findDuplicate, newItem, verifyItem, approveItem, rejectItem, httpsUrl, releaseIdFor, MAX_BATCH} from '../../netlify/lib/property-intake.mjs';
 
 const NOW = new Date('2026-11-24T09:00:00.000Z');
-const good = {kind: 'new_property', origin: 'owner-manual', state: 'fl', county: 'Palm Beach', parcelId: 'PB-100200',
+const good = {kind: 'new_property', category: 'land_bank', origin: 'owner-manual', state: 'fl', county: 'Palm Beach', parcelId: 'PB-100200',
   title: '  Parcel   record update  ', description: 'Official county record reviewed against the source.'};
 
 test('a valid item is normalised: state upper-cased, spaces collapsed and trimmed', () => {

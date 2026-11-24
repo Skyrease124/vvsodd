@@ -45,6 +45,11 @@
   try {
    const data = await call(INTAKE, 'GET');
    intakeItems = data.items || [];
+   const store = $('intakeStorage');
+   store.textContent = data.storage === 'preview-isolated'
+    ? 'Storage: isolated preview store. Approvals, withdrawals and test writes here never reach the production site.'
+    : 'Storage: PRODUCTION. Approvals here change the live site.';
+   store.className = 'pi-storage' + (data.storage === 'preview-isolated' ? '' : ' pi-bad');
    renderIntake();
    if (!intakeItems.length) say(status, 'Nothing is waiting for review.');
   } catch (error) { say(status, error.message, true); }
@@ -60,6 +65,14 @@
   card.appendChild(el('h3', '', item.title));
   card.appendChild(el('p', 'pi-desc', item.description));
   card.appendChild(el('p', 'pi-meta', 'Origin: ' + item.origin + ' · ' + (STATUS_LABEL[item.status] || item.status)));
+  if (item.property) {
+   const p = item.property;
+   card.appendChild(el('p', 'pi-meta', [p.category && 'Category: ' + p.category.replace('_', ' '), p.address, p.ownerName && 'Owner: ' + p.ownerName,
+    p.amount != null && 'Amount: ' + '$' + p.amount, p.acreage != null && p.acreage + ' acres'].filter(Boolean).join(' · ')));
+   card.appendChild(el('p', 'pi-meta', !p.hasCoordinates ? 'No coordinates: it will be listed as an unlocated property, without a map position.'
+    : item.locationVerified ? 'Location verified: it will appear on the map' + (p.hasBoundary ? ' with its boundary.' : ' as a marker.')
+    : 'Coordinates supplied but not verified: the map shows it only after the location check is ticked at verification.'));
+  }
   if (item.verification) card.appendChild(el('p', 'pi-meta', 'Verified ' + fmt(item.verification.verifiedAt) + ' · official source: ' + item.verification.evidenceUrl));
   if (item.approval && item.approval.releaseMode) card.appendChild(el('p', 'pi-meta', 'Release: ' + (item.approval.releaseMode === 'immediate_critical' ? 'critical, everyone now' : 'Pro first, Free after 48 hours') + ' · approved ' + fmt(item.approval.at)));
   const actions = el('div', 'pi-actions');
@@ -100,15 +113,17 @@
   const notes = area('What you checked and how the parcel matches (at least 15 characters)', 3);
   const official = check('I checked the official county record myself.');
   const identity = check('The parcel number and the address match the record.');
+  const location = check('The coordinates' + (item.property && item.property.hasBoundary ? ' and boundary' : '') + ' match the official county GIS.');
+  if (!item.property || !item.property.hasCoordinates) location.label.hidden = true;
   const msg = el('p', 'pi-status');
-  panel.append(field('Official source (https only)', url), field('Verification notes', notes), official.label, identity.label, msg);
+  panel.append(field('Official source (https only)', url), field('Verification notes', notes), official.label, identity.label, location.label, msg);
   panel.appendChild(button('Save verification', 'pi-btn', () => {
    const link = url.value.trim();
    if (!/^https:\/\//.test(link)) return say(msg, 'The official source must start with https://', true);
    if (notes.value.trim().length < 15) return say(msg, 'Write at least 15 characters of notes.', true);
    if (!official.box.checked || !identity.box.checked) return say(msg, 'Tick both checks first.', true);
    run(() => call(INTAKE, 'POST', {confirmed: true, action: 'verify', id: item.id, evidenceUrl: link, notes: notes.value.trim(),
-    checklist: {officialSource: official.box.checked, identityMatched: identity.box.checked}}), 'Verified. Next: approve it or reject it.', msg);
+    checklist: {officialSource: official.box.checked, identityMatched: identity.box.checked, locationVerified: location.box.checked}}), 'Verified. Next: approve it or reject it.', msg);
   }));
  }
  function approveForm(item, panel) {

@@ -14,10 +14,12 @@ const base = {kind: 'new_property', kindLabel: 'New property information', state
   origin: 'owner-manual', description: 'Official county record reviewed against the source.', audit: [{at: NOW, action: 'submitted', by: 'owner', note: ''}],
   createdAt: NOW, createdBy: 'owner', releaseId: null, approval: null, verification: null, sourceUrl: null, certificateNumber: null, taxYear: null};
 const ITEMS = [
-  {...base, id: '11111111-1111-4111-8111-111111111111', title: 'Parcel awaiting check', status: 'awaiting_verification'},
+  {...base, id: '11111111-1111-4111-8111-111111111111', title: 'Parcel awaiting check', status: 'awaiting_verification',
+    property: {category: 'land_bank', address: '1 Test Way', ownerName: null, amount: 1000, acreage: null, hasCoordinates: true, hasBoundary: false}, locationVerified: false},
   // Hostile text: must render as plain text, never as an element.
   {...base, id: '22222222-2222-4222-8222-222222222222', title: 'Verified <img src=x onerror="window.__xss=1">', status: 'awaiting_approval',
-    verification: {evidenceUrl: 'https://www.pbcgov.org/records/2', notes: 'Checked the record.', verifiedAt: NOW}},
+    verification: {evidenceUrl: 'https://www.pbcgov.org/records/2', notes: 'Checked the record.', verifiedAt: NOW},
+    property: {category: 'land_bank', address: '2 Test Way', ownerName: null, amount: null, acreage: null, hasCoordinates: false, hasBoundary: false}, locationVerified: false},
   {...base, id: '33333333-3333-4333-8333-333333333333', title: 'Released parcel', status: 'released',
     releaseId: 'rel-33333333-3333-4333-8333-333333333333', approval: {releaseMode: 'pro_first_48h', at: NOW}},
 ];
@@ -37,7 +39,7 @@ const LIVE = [
 ];
 
 // Installs the mocks and returns the list of writes the page sent.
-async function install(page, {liveHidden = false} = {}) {
+async function install(page, {liveHidden = false, storage = 'preview-isolated'} = {}) {
   const writes = [];
   const live = structuredClone(LIVE);
   await page.route('**/.netlify/functions/**', async route => {
@@ -46,7 +48,7 @@ async function install(page, {liveHidden = false} = {}) {
     const method = request.method();
     const json = (status, body) => route.fulfill({status, contentType: 'application/json', body: JSON.stringify(body), headers: {'Cache-Control': 'no-store'}});
     if (method === 'POST') writes.push({name, body: request.postDataJSON()});
-    if (name === 'owner-property-intake') return method === 'GET' ? json(200, {ok: true, items: ITEMS, count: ITEMS.length})
+    if (name === 'owner-property-intake') return method === 'GET' ? json(200, {ok: true, items: ITEMS, count: ITEMS.length, storage})
       : json(200, {ok: true, item: null, notice: 'Saved.', created: 0, duplicates: [], withdrawnAt: NOW});
     if (name === 'research-updates') return method === 'GET' ? json(200, {ok: true, releases: RELEASES}) : json(200, {ok: true, withdrawnAt: NOW});
     if (name === 'owner-brain-live-checks') {
@@ -85,6 +87,9 @@ try {
     const html = await page.content();
     assert.equal(html.includes(DUMMY_KEY) || /nvapi-/.test(html), false, 'no key-like value on the page');
     assert.equal(writes.length, 0, 'opening the page writes nothing');
+    assert.match(await page.locator('#intakeStorage').innerText(), /isolated preview store/, 'storage banner confirms isolation before any write');
+    assert.match(await page.locator('#intakeList article').nth(0).innerText(), /Coordinates supplied but not verified/);
+    assert.match(await page.locator('#intakeList article').nth(1).innerText(), /No coordinates: it will be listed as an unlocated property/);
     await context.close();
   }
 
@@ -107,12 +112,14 @@ try {
     assert.equal(writes.length, 0);
     await card.locator('.pi-form input[type=checkbox]').nth(0).check();
     await card.locator('.pi-form input[type=checkbox]').nth(1).check();
+    assert.equal(await card.locator('.pi-form input[type=checkbox]').nth(2).isVisible(), true, 'location check shown for an item with coordinates');
+    await card.locator('.pi-form input[type=checkbox]').nth(2).check();
     await card.getByRole('button', {name: 'Save verification'}).click();
     await page.waitForFunction(() => document.getElementById('intakeStatus').textContent.includes('Verified'));
     const sent = writes.find(w => w.body && w.body.action === 'verify');
     assert.ok(sent, 'verify was sent');
     assert.equal(sent.body.confirmed, true);
-    assert.deepEqual(sent.body.checklist, {officialSource: true, identityMatched: true});
+    assert.deepEqual(sent.body.checklist, {officialSource: true, identityMatched: true, locationVerified: true});
     assert.equal(sent.body.evidenceUrl, 'https://www.pbcgov.org/records/1');
     await context.close();
   }
@@ -221,9 +228,10 @@ try {
   {
     const context = await browser.newContext({viewport: {width: 1280, height: 900}});
     const page = await context.newPage();
-    await install(page, {liveHidden: true});
+    await install(page, {liveHidden: true, storage: 'production'});
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
     await page.waitForSelector('#intakeList article');
+    assert.match(await page.locator('#intakeStorage').innerText(), /PRODUCTION/, 'production is announced before any write');
     assert.equal(await page.locator('#liveChecksPanel').isVisible(), false, 'live checks stay hidden where they are not available');
     await context.close();
   }

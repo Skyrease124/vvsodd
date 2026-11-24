@@ -44,7 +44,8 @@ export function safeResearchRecord(item) {
     'sourceUrl','sourceCheckedAt','evidenceUrl','proReleaseAt','title','description','acreage'];
   const r = Object.fromEntries(keys.filter(k => item[k] !== null && item[k] !== undefined)
     .map(k => [k, item[k]]));
-  return {...r,researchOnly:true,availableForPurchase:false,
+  // mapRecord: the update is shown as a property record on the map, so the map does not add a research pin for it.
+  return {...r,researchOnly:true,availableForPurchase:false,mapRecord:!!item.property,
     disclaimer:'Research only; verify current county status and availability directly with the official source.'};
 }
 

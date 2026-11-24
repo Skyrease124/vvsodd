@@ -249,7 +249,9 @@ function start(){
  running=true;rafId=requestAnimationFrame(frame);
 }
 function stop(){running=false;if(rafId)cancelAnimationFrame(rafId);rafId=0;}
-function refresh(){if(!running)drawFrame(performance.now()/1000);}
+// Named apart from the activity refresh below: two top-level functions named refresh made drag and resize
+// call the network refresh, and left the canvas undrawn when motion is reduced.
+function redrawReactor(){if(!running)drawFrame(performance.now()/1000);}
 function resize(){
  dpr=Math.min(window.devicePixelRatio||1,lowEnd?1:2);
  const cssW=stage.clientWidth||700,cssH=cssW*730/700;
@@ -258,11 +260,11 @@ function resize(){
 }
 function initReactorCanvas(){
 resize();
-new ResizeObserver(()=>{resize();refresh();}).observe(stage);
+new ResizeObserver(()=>{resize();redrawReactor();}).observe(stage);
 new IntersectionObserver(([entry])=>{canvasVisible=entry.isIntersecting;if(canvasVisible)start();else stop();}).observe(reactorCanvas);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else start();});
 new MutationObserver(()=>{if(document.body.classList.contains('still'))stop();else start();}).observe(document.body,{attributes:true,attributeFilter:['class']});
-refresh();
+redrawReactor();
 start();
 }
 function bindNode(node,position,paths){
@@ -290,7 +292,7 @@ function bindNode(node,position,paths){
   if(signalNode===position)beamFrom(position);
   const dx=position.x-origin.x,dy=position.y-origin.y;
   node.setAttribute('transform','translate('+dx+' '+dy+')');
-  refresh();
+  redrawReactor();
  });
  node.addEventListener('lostpointercapture',()=>{pointer=null;});
 }

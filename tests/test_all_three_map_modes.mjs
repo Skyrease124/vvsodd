@@ -33,7 +33,7 @@ test('preloads only authorized research county data without polluting normal map
  assert.match(script,/const entries = \[\.\.\.choices\.values\(\)\]\.slice\(0, 12\)/);
  assert.match(script,/researchMapped\[d\.id\] = expanded/);
  assert.match(script,/const byCounty = new Map\(\[\.\.\.Object\.values\(researchMapped\), \.\.\.Object\.values\(loaded\)\]/);
- assert.match(script,/researchPins = window\.PPAResearchMap\.match\(researchUpdates, relevant\)/);
+ assert.match(script,/researchPins = window\.PPAResearchMap\.match\(researchUpdates\.filter\(u => !u\.mapRecord\), relevant\)/);
  assert.match(script,/await locateApprovedResearch\(\)/);
  assert.match(script,/if \(!raw \|\| !Array\.isArray\(raw\.recs\) \|\| !raw\.dict \|\| raw\.id !== d\.id\) return/);
  assert.match(script,/researchUpdates = data\.records\.filter/);

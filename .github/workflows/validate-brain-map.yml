@@ -24,6 +24,11 @@ on:
       - 'netlify/functions/owner-property-intake.mjs'
       - 'netlify/functions/owner-brain-live-checks.mjs'
       - 'tools/map/**'
+      - 'netlify/lib/approved-records.mjs'
+      - 'netlify/functions/export.mjs'
+      - 'kinvest-liens/tests/brain-map-records-merge.test.mjs'
+      - 'kinvest-liens/tests/export-approved-records.test.mjs'
+      - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
       - 'netlify/lib/update-release.mjs'
@@ -88,6 +93,11 @@ on:
       - 'netlify/functions/owner-property-intake.mjs'
       - 'netlify/functions/owner-brain-live-checks.mjs'
       - 'tools/map/**'
+      - 'netlify/lib/approved-records.mjs'
+      - 'netlify/functions/export.mjs'
+      - 'kinvest-liens/tests/brain-map-records-merge.test.mjs'
+      - 'kinvest-liens/tests/export-approved-records.test.mjs'
+      - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
       - 'netlify/lib/update-release.mjs'
@@ -175,3 +185,6 @@ jobs:
       - run: node kinvest-liens/tests/property-intake-library.test.mjs
       - run: node kinvest-liens/tests/live-checks.test.mjs
       - run: node kinvest-liens/tests/static-map-baseline.test.mjs
+      - run: node kinvest-liens/tests/brain-map-records-merge.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/export-approved-records.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-preview-isolation.test.mjs

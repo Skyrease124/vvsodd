@@ -99,7 +99,7 @@ export async function summary({auth, checks, now = Date.now()}) {
 export async function intakeRoundTrip({auth, now = Date.now()}) {
   const at = new Date(now);
   const actor = 'owner-live-check';
-  const v = validateSubmission({kind: 'new_property', origin: 'live-check', state: 'FL', county: 'Palm Beach', parcelId: 'LIVE-CHECK-0001',
+  const v = validateSubmission({kind: 'new_property', origin: 'live-check', state: 'FL', county: 'Palm Beach', parcelId: 'LIVE-CHECK-0001', category: 'land_bank',
     title: 'Live check round trip item', description: 'Owner live check: a test item saved in the preview store only, then withdrawn.'});
   if (!v.ok) return {outcome: 'failed', detail: 'The test item failed validation. Nothing was stored.'};
   let item = newItem(v.item, {now: at, actor});

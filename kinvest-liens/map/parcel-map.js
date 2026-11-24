@@ -132,7 +132,7 @@
     const byCounty = new Map([...Object.values(researchMapped), ...Object.values(loaded)].map(d => [d.meta.id, d]));
     const relevant = [...byCounty.values()].filter(d =>
       (!active.size || active.has(d.meta.id)) && (!curState || d.meta.state === curState));
-    researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
+    researchPins = window.PPAResearchMap.match(researchUpdates.filter(u => !u.mapRecord), relevant);
     const features = researchOn ? researchPins.filter(item => !homeMap || researchInMode(item)).map(item => ({
       type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
       properties: {id:item.release.id, type:item.release.type}

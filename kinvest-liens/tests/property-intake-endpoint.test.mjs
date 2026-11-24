@@ -24,8 +24,10 @@ const mk = src => new vm.SourceTextModule(src, {context});
 const syn = (names, fill) => new vm.SyntheticModule(names, function () { fill(this); }, {context});
 
 const sessions = {free: {paidThrough: null}, pro: {paidThrough: '2026-12-31'}, owner: {owner: true, email: 'owner@example.com'}};
-const authMock = syn(['userFromCookie', 'kvGet', 'kvPut', 'kvGetVersioned', 'kvPutVersioned', 'withBrainStore'], s => {
+let PREVIEW = true;
+const authMock = syn(['userFromCookie', 'kvGet', 'kvPut', 'kvGetVersioned', 'kvPutVersioned', 'withBrainStore', 'isBrainPreview'], s => {
   s.setExport('withBrainStore', h => h);
+  s.setExport('isBrainPreview', () => PREVIEW);
   s.setExport('userFromCookie', async c => { const k = (c || '').replace('sess=', ''); return sessions[k] ? {...sessions[k]} : null; });
   s.setExport('kvGet', async k => (store.has(k) ? structuredClone(store.get(k)) : null));
   s.setExport('kvPut', async (k, v) => put(k, v));
@@ -57,8 +59,11 @@ async function loadLib(file) {
 }
 const intakeMod = await loadLib(ROOT + 'netlify/functions/owner-property-intake.mjs');
 const feedMod = await loadLib(ROOT + 'netlify/functions/research-updates.mjs');
+const recordsMod = await loadLib(ROOT + 'netlify/functions/brain-map-records.mjs');
 await intakeMod.evaluate();
 await feedMod.evaluate();
+await recordsMod.evaluate();
+const mapRecords = async (who, county = 'Palm Beach') => { const r = await recordsMod.namespace.default(new Request(ORIGIN + '/.netlify/functions/brain-map-records?state=FL&county=' + encodeURIComponent(county), {headers: who ? {cookie: 'sess=' + who} : {}})); return {status: r.status, ...(await r.json())}; };
 const intake = intakeMod.namespace.default;
 const feed = feedMod.namespace.default;
 
@@ -71,7 +76,7 @@ const publicFeed = (who, type = '') => call(feed, 'GET', 'research-updates', {wh
 const listItems = async () => (await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner'})).json()).items;
 const releaseList = () => (store.get('approved-research-releases-v1') || {list: []}).list;
 
-const prop = (over = {}) => ({kind: 'new_property', origin: 'owner-manual', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200',
+const prop = (over = {}) => ({kind: 'new_property', category: 'land_bank', origin: 'owner-manual', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200',
   title: 'Palm Beach parcel record update', description: 'Official county record reviewed against the source.', ...over});
 const lien = (over = {}) => ({kind: 'tax_lien', origin: 'county-dataset', state: 'FL', county: 'Palm Beach', parcelId: 'PB-200300',
   certificateNumber: '2026-0042', title: 'Palm Beach tax lien update', description: 'Certificate listed on the county tax collector site.', ...over});
@@ -121,7 +126,7 @@ test('identical open items and identical released items are refused as duplicate
   fresh();
   const first = await (await act({action: 'submit', items: [prop()]})).json();
   assert.equal(first.created, 1);
-  const again = await (await act({action: 'submit', items: [prop(), prop({title: 'A different parcel title'})]})).json();
+  const again = await (await act({action: 'submit', items: [prop(), prop({parcelId: 'PB-100201', title: 'A different parcel title'})]})).json();
   assert.equal(again.created, 1);
   assert.equal(again.duplicates.length, 1);
   assert.equal((await listItems()).length, 2);
@@ -182,7 +187,7 @@ test('an approved item cannot be approved, rejected or withdrawn in the wrong st
   await act({action: 'approve', id, releaseMode: 'pro_first_48h'});
   assert.equal((await act({action: 'approve', id, releaseMode: 'pro_first_48h'})).status, 409, 'approved twice');
   assert.equal((await act({action: 'reject', id, notes: 'Changing my mind after release.'})).status, 409, 'reject after release');
-  const open = await submitOne(prop({title: 'Another parcel update title'}));
+  const open = await submitOne(prop({parcelId: 'PB-100299', title: 'Another parcel update title'}));
   assert.equal((await act({action: 'withdraw', id: open.id, reason: 'Never released, cannot withdraw.'})).status, 409, 'withdraw before release');
   assert.equal((await act({action: 'approve', id: open.id, releaseMode: 'pro_first_48h'})).status, 409, 'approve before verification');
 });
@@ -232,4 +237,101 @@ test('an approval retried after a partial write does not publish the same item t
   const retry = await act({action: 'approve', id, releaseMode: 'pro_first_48h'});
   assert.equal(retry.status, 200);
   assert.equal(releaseList().filter(r => r.id === 'rel-' + id).length, 1, 'exactly one release for the item');
+});
+
+test('the intake reports which store it writes to, so the owner can confirm isolation before any write', async () => {
+  fresh();
+  const get = async () => (await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner'})).json()).storage;
+  PREVIEW = true; assert.equal(await get(), 'preview-isolated');
+  PREVIEW = false; assert.equal(await get(), 'production');
+  PREVIEW = true;
+});
+
+test('an approved property becomes a map record for its county, Pro first and Free after 48 hours, never while pending', async () => {
+  fresh();
+  const sub = await submitOne(prop({address: '1 Ocean Ave', amount: 5000, longitude: -80.05, latitude: 26.71}));
+  assert.equal((await mapRecords('pro')).records.length, 0, 'nothing while awaiting verification');
+  await act(verify(sub.id, {checklist: {officialSource: true, identityMatched: true, locationVerified: true}}));
+  assert.equal((await mapRecords('pro')).records.length, 0, 'nothing while awaiting approval');
+  await act({action: 'approve', id: sub.id, releaseMode: 'pro_first_48h'});
+  const pro = await mapRecords('pro');
+  assert.equal(pro.records.length, 1);
+  const rec = pro.records[0];
+  assert.deepEqual({p: rec.p, c: rec.c, a: rec.a, amt: rec.amt, cx: rec.cx, why: rec.why}, {p: 'PB-100200', c: 'land_bank', a: '1 Ocean Ave', amt: 5000, cx: [-80.05, 26.71], why: null});
+  assert.equal((await mapRecords('free')).records.length, 0, 'Free waits');
+  assert.equal((await mapRecords(null)).records.length, 0, 'anonymous waits');
+  assert.equal((await mapRecords('pro', 'Broward')).records.length, 0, 'other counties are untouched');
+  NOW = T0 + 48 * H;
+  assert.equal((await mapRecords(null)).records.length, 1, 'anonymous sees it at 48 hours');
+  // The research feed flags it as a map record, so the map draws no second research pin for it.
+  assert.equal((await publicFeed(null)).records[0].mapRecord, true);
+});
+
+test('coordinates are published only when the location check was ticked; otherwise the property is listed as unlocated', async () => {
+  fresh();
+  const sub = await submitOne(prop({longitude: -80.05, latitude: 26.71, boundary: [[-80.06, 26.70], [-80.04, 26.70], [-80.04, 26.72], [-80.06, 26.72], [-80.06, 26.70]]}));
+  await act(verify(sub.id));
+  await act({action: 'approve', id: sub.id, releaseMode: 'immediate_critical', criticalConfirmed: true, criticalReason: 'Test of an unverified location being withheld from the map.'});
+  const rec = (await mapRecords(null)).records[0];
+  assert.equal(rec.cx, null, 'no position without the location check');
+  assert.equal(rec.g, null, 'no boundary without the location check');
+  assert.match(rec.why, /Location not verified/);
+});
+
+test('a verified boundary is published with its box; a boundary that does not contain the centre is dropped', async () => {
+  fresh();
+  const ring = [[-80.06, 26.70], [-80.04, 26.70], [-80.04, 26.72], [-80.06, 26.72], [-80.06, 26.70]];
+  const a = await submitOne(prop({longitude: -80.05, latitude: 26.71, boundary: ring}));
+  const b = await submitOne(prop({parcelId: 'PB-777', longitude: -81.5, latitude: 27.5, boundary: ring}));
+  for (const id of [a.id, b.id]) {
+    await act(verify(id, {checklist: {officialSource: true, identityMatched: true, locationVerified: true}}));
+    await act({action: 'approve', id, releaseMode: 'immediate_critical', criticalConfirmed: true, criticalReason: 'Test of boundary publication rules on the map.'});
+  }
+  const recs = (await mapRecords(null)).records;
+  const inside = recs.find(r => r.p === 'PB-100200'), outside = recs.find(r => r.p === 'PB-777');
+  assert.deepEqual(inside.bb, [-80.06, 26.7, -80.04, 26.72]);
+  assert.equal(inside.g.length, 1);
+  assert.equal(outside.g, null, 'inconsistent boundary is not drawn');
+  assert.deepEqual(outside.cx, [-81.5, 27.5], 'the verified point still stands');
+});
+
+test('a second approval for the same parcel is a correction of one record, and withdrawing it restores the earlier version', async () => {
+  fresh();
+  const first = await submitOne(prop({address: '1 Ocean Ave', amount: 5000}));
+  await act(verify(first.id));
+  await act({action: 'approve', id: first.id, releaseMode: 'immediate_critical', criticalConfirmed: true, criticalReason: 'First version of the record released for this test.'});
+  NOW = T0 + 3600e3;
+  const second = await submitOne(prop({title: 'Corrected amount for the parcel', amount: 4200}));
+  await act(verify(second.id));
+  await act({action: 'approve', id: second.id, releaseMode: 'immediate_critical', criticalConfirmed: true, criticalReason: 'The earlier amount was inaccurate and could mislead bidders.'});
+  let recs = (await mapRecords(null)).records;
+  assert.equal(recs.length, 1, 'one record per state, county and parcel');
+  assert.equal(recs[0].amt, 4200);
+  assert.equal((await act({action: 'withdraw', id: second.id, reason: 'Correction withdrawn: the earlier amount was right.'})).status, 200);
+  recs = (await mapRecords(null)).records;
+  assert.equal(recs.length, 1);
+  assert.equal(recs[0].amt, 5000, 'the earlier approved version is shown again');
+  await act({action: 'withdraw', id: first.id, reason: 'Whole record withdrawn by the owner for this test.'});
+  assert.equal((await mapRecords(null)).records.length, 0, 'gone for every viewer');
+  assert.equal((await mapRecords('pro')).records.length, 0);
+});
+
+test('one open item per parcel: a second submission for the same state, county and parcel waits', async () => {
+  fresh();
+  await submitOne(prop());
+  const again = await (await act({action: 'submit', items: [prop({title: 'Different wording, same parcel', county: 'palm beach'})]})).json();
+  assert.equal(again.created, 0);
+  assert.match(again.duplicates[0].why, /already has an item awaiting review/);
+});
+
+test('a new property needs a category and coordinates inside the United States', async () => {
+  fresh();
+  assert.equal((await act({action: 'submit', items: [prop({category: undefined})]})).status, 400);
+  assert.equal((await act({action: 'submit', items: [prop({longitude: 2.35, latitude: 48.85})]})).status, 400);
+  assert.equal((await act({action: 'submit', items: [prop({boundary: [[-80, 26], [-80.1, 26], [-80, 26.1]]})]})).status, 400);
+});
+
+test('the map records feed refuses malformed counties', async () => {
+  const r = await recordsMod.namespace.default(new Request(ORIGIN + '/.netlify/functions/brain-map-records?state=Florida&county=x'));
+  assert.equal(r.status, 400);
 });

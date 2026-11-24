@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import {makeRelease, STATES, audienceFor} from './research-releases.mjs';
 import {updateJson} from './brain-approvals.mjs';
 import {RELEASE_MODES} from './update-release.mjs';
+import {cleanPropertyFields, propertyBlock, recordKey} from './approved-records.mjs';
 
 export const INTAKE = 'property-intake-v1';
 export const RELEASE_INDEX = 'approved-research-releases-v1';
@@ -55,7 +56,9 @@ export function validateSubmission(raw) {
   if (raw.kind === 'tax_lien' && !certificateNumber) return {ok: false, error: 'A tax lien update needs its certificate number'};
   let sourceUrl = null;
   if (raw.sourceUrl) { sourceUrl = httpsUrl(raw.sourceUrl); if (!sourceUrl) return {ok: false, error: 'The source must be an HTTPS link'}; }
-  return {ok: true, item: {kind: raw.kind, origin: raw.origin, state, county, parcelId, title, description, certificateNumber, taxYear: clip(raw.taxYear, 8) || null, sourceUrl}};
+  const prop = cleanPropertyFields(raw, raw.kind);
+  if (prop.error) return {ok: false, error: prop.error};
+  return {ok: true, item: {kind: raw.kind, origin: raw.origin, state, county, parcelId, title, description, certificateNumber, taxYear: clip(raw.taxYear, 8) || null, sourceUrl, property: prop.fields}};
 }
 
 // A batch is accepted whole or not at all, so a partial import never reaches storage.
@@ -71,11 +74,14 @@ export function validateBatch(list) {
 const keyOf = o => [o.kind, o.state, o.county.toLowerCase(), o.parcelId.toUpperCase(), o.title.toLowerCase()].join('|');
 export const releaseIdFor = itemId => 'rel-' + itemId;
 
-// Duplicate protection: an identical open item, or an identical release that already exists, is refused.
+// Duplicate protection. One open item per state + county + parcel: a second submission for the same parcel
+// waits until the first is decided. An identical release that already exists is refused. A different update to
+// a released parcel is allowed: it is a correction of the same property record, not a new property.
 export function findDuplicate(items, releases, candidate) {
   const key = keyOf(candidate);
-  const open = items.find(x => OPEN.has(x.status) && keyOf(x) === key);
-  if (open) return {id: open.id, why: 'an identical item is already awaiting review'};
+  const parcel = recordKey(candidate.state, candidate.county, candidate.parcelId);
+  const open = items.find(x => OPEN.has(x.status) && recordKey(x.state, x.county, x.parcelId) === parcel);
+  if (open) return {id: open.id, why: 'this parcel already has an item awaiting review'};
   const released = releases.find(r => !r.withdrawn && keyOf({kind: kindOfRelease(r), state: r.state, county: r.county, parcelId: r.parcelId, title: r.title}) === key);
   if (released) return {id: released.id, why: 'an identical update is already released'};
   return null;
@@ -99,7 +105,7 @@ export function verifyItem(item, {evidenceUrl, notes, checklist, now, actor}) {
   if (text.length < 15) return {error: 400, message: 'Write at least 15 characters of verification notes'};
   const at = iso(now);
   return {item: {...item, status: STATUS.awaiting_approval,
-    verification: {evidenceUrl: url, notes: text, checklist: {officialSource: true, identityMatched: true}, verifiedAt: at, by: actor},
+    verification: {evidenceUrl: url, notes: text, checklist: {officialSource: true, identityMatched: true, locationVerified: checklist.locationVerified === true}, verifiedAt: at, by: actor},
     audit: [...item.audit, {at, action: 'verified', by: actor, note: text.slice(0, 200)}]}};
 }
 
@@ -120,6 +126,8 @@ export function approveItem(item, {releaseMode = 'pro_first_48h', criticalReason
       releaseMode, criticalConfirmed, criticalReason: reason || undefined,
     }, new Date(now), actor);
   } catch (error) { return {error: 400, message: String(error.message).slice(0, 160)}; }
+  // The property block turns the release into a map record; legacy research-only items have no property fields.
+  if (item.property) release.property = propertyBlock(item);
   return {release, item: {...item, status: STATUS.released, releaseId: release.id,
     approval: {decision: 'approved', at, releaseMode, criticalReason: releaseMode === 'immediate_critical' ? reason : null, by: actor},
     audit: [...item.audit, {at, action: 'approved', by: actor, note: releaseMode}]}};

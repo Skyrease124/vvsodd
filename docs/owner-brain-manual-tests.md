@@ -51,38 +51,51 @@ Research releases (lien, land, tax deed and property updates) can be withdrawn f
 3. After Test 1, a "HELPER → NVIDIA · N ITEMS" signal appears within about 20 seconds, or on **Refresh activity**. NVIDIA shows COMPLETED.
 4. Recorded events shown on first load do not replay as new animation. Only events that arrive after the page loaded animate.
 
-## Test 9: property intake (verify, approve, reject, critical)
-Every new property fact waits in **Property intake · owner approval** until you verify and approve it. Use only the synthetic test parcel below, never a production parcel.
-1. Paste this JSON into the intake box, tick "I understand these items stay private until they are verified and approved", and press **Save for verification**:
-   `[{"kind":"new_property","origin":"owner-manual","state":"FL","county":"Palm Beach","parcelId":"TEST-PB-0001","title":"Manual test item","description":"Owner manual test of the intake workflow. Not a real parcel."}]`
-   Expected: "Created 1". The item shows **Awaiting verification**. Signed out, `/.netlify/functions/research-updates` lists nothing for it.
-2. Press **Verify this item**. Enter an `http://` source first: expected "The official source must start with https://". Then enter an `https://` official link, notes of at least 15 characters, tick both checks, press **Save verification**. Expected: "Verified. Next: approve it or reject it."
-3. Press **Approve…**, keep "Pro first, Free after 48 hours", tick "I personally checked the official record", press **Approve and release**. Expected: "Released to Pro now. Free and anonymous viewers see it after 48 hours." Then check `/.netlify/functions/research-updates?type=property`: signed out, the item is absent; signed in as Pro, it is present with `"access":"pro"`; after 48 hours from the approval time, signed out, it is present.
-4. Reject path: submit a second synthetic item (change `TEST-PB-0001` to `TEST-PB-0002`), verify it, press **Approve…** then **Reject…**, write at least 15 characters, press **Reject: nothing is published**. Expected: "Rejected. Nothing was published." The rejected item has no approve button.
-5. Critical path (test item only): on a third synthetic item, choose "Critical: release to everyone now". The reason box and the critical confirmation appear. Write a reason under 40 characters: expected "A critical release needs the confirmation and a reason of at least 40 characters." With 40 or more characters and the confirmation ticked, press **Approve and release**. Expected: "Released to everyone now." Signed out, the item is present at once.
-6. Refused batches: paste a batch with one bad item (for example `"parcelId":"x"`). Expected: the whole batch is refused and no item appears.
+## Preview links (Deploy Preview of PR #454)
+- Owner dashboard: https://deploy-preview-454--pricepocketasset.netlify.app/owner/brain/
+- Sign in: https://deploy-preview-454--pricepocketasset.netlify.app/login/ (use your owner account; sign out later to test the Free view)
+- Map, Palm Beach test county: https://deploy-preview-454--pricepocketasset.netlify.app/map/?c=FL-palm-beach
+- Map feed for the test county (shows what the signed-in viewer receives): https://deploy-preview-454--pricepocketasset.netlify.app/.netlify/functions/brain-map-records?state=FL&county=Palm%20Beach
+- Key manager: https://deploy-preview-454--pricepocketasset.netlify.app/owner/keys/
 
-## Test 10: research withdrawal (dialog, reason, audit, every viewer)
-1. In **Research releases · withdraw**, find the item released in Test 9 step 3. Press **Withdraw from every viewer…**. A confirmation dialog opens with the item title.
-2. Press **Withdraw now** with an empty reason. Expected: "Write at least 15 characters explaining the withdrawal." Nothing is sent.
-3. Write a reason of at least 15 characters and press **Withdraw now**. Expected: the dialog closes, and the status reads "Withdrawn at <time>. It no longer appears for any viewer." The card now shows "Withdrawn <time> · reason: …" and its audit history lists a withdrawn entry.
-4. Check every viewer: `/.netlify/functions/research-updates?type=property` returns no item signed out, signed in as Free, signed in as Pro, or signed in as owner. On the preview map, reload the test parcel's view; if the item had appeared as a pin, it is gone.
-5. The withdraw button is no longer shown for that item. The intake card for the same item shows **Withdrawn**.
+## Before any write: confirm the preview store
+1. Open the owner dashboard and scroll to **Property intake · owner approval**.
+2. Under the paste box, the green line must read: "Storage: isolated preview store. Approvals, withdrawals and test writes here never reach the production site." If it reads "Storage: PRODUCTION", stop: you are not on the preview.
+3. Shared on purpose: the NVIDIA, Geoapify and Wayne GIS daily allowance counters (one allowance for the account), sign-in sessions, and Pro download history (the export allowance). Everything else these tests write stays in the preview store.
 
-## Test 11: live checks (preview only, one request each, you press each one)
-This panel appears only on the preview. Each run asks for confirmation and sends one request.
-1. Press **Refresh availability**. Expected: four cards: NVIDIA chat check, Geoapify geocode check, Wayne County GIS layer check, Intake round trip. Each says "Configured on the server. The value is never shown." or names what is missing. No key value appears anywhere on the page.
-2. **NVIDIA**: if "NVIDIA key is not configured", the button stays disabled and nothing is sent. Otherwise press **Run once…**. Expected: "OK: NVIDIA answered one request with an 8-token limit." Used today rises by one, and the NVIDIA panel's "Used today" count rises too (it shares the 3 daily runs).
-3. **Geoapify**: press **Run once…**. Expected: "OK: Geoapify answered with N result(s)." If the key is missing the button is disabled. If the result is `Failed: Geoapify returned HTTP 401 or 403`, check the key and its restrictions in the key manager (Test 12).
-4. **Wayne County GIS layer check**: press **Run once…**. Expected: "OK: Wayne County GIS answered layer metadata. No parcel was queried." If it says "Allowance used up", the shared Wayne GIS daily budget is spent; wait for the UTC day to reset.
-5. **Intake round trip**: press **Run once…**. Expected: "OK: Round trip: submitted, verified, approved Pro first, checked the Pro and Free timing, then withdrawn. Stored in the preview store only." A new item labelled `live-check` appears in the intake list as **Withdrawn**. Limit: three per day.
-6. Record each outcome word. Do not run a check more times than you need: each press uses real allowance.
+## Test 9: property intake becomes a real map record
+Use only the synthetic parcels below (TEST-PB-…), never a production parcel.
+1. In **Property intake · owner approval**, paste:
+   `[{"kind":"new_property","category":"land_bank","origin":"owner-manual","state":"FL","county":"Palm Beach","parcelId":"TEST-PB-0001","title":"Manual test item","description":"Owner manual test of the intake workflow. Not a real parcel.","address":"1 Test Way, West Palm Beach FL","amount":1000,"longitude":-80.0534,"latitude":26.7153},{"kind":"new_property","category":"land_bank","origin":"owner-manual","state":"FL","county":"Palm Beach","parcelId":"TEST-PB-0002","title":"Unlocated test item","description":"Owner manual test of an unlocated property. Not a real parcel.","address":"2 Test Way, West Palm Beach FL"}]`
+2. Tick "I understand these items stay private…" and press **Save for verification**. Expected: "Created 2". Both cards read **Awaiting verification**. The map feed link shows `"records":[]`.
+3. On TEST-PB-0001 press **Verify this item**. Enter `https://discover.pbcgov.org/` as the official source, notes of 15+ characters, tick the two checks **and** "The coordinates match the official county GIS", then press **Save verification**.
+4. On TEST-PB-0002 press **Verify this item**, do the same but leave the coordinates check unticked (it has no coordinates, so the box is hidden).
+5. On TEST-PB-0001 press **Approve…**, keep "Pro first, Free after 48 hours", tick "I personally checked…", press **Approve and release**. Expected: "Released to Pro now. Free and anonymous viewers see it after 48 hours."
+6. On TEST-PB-0002 press **Approve…**, choose "Critical: release to everyone now", write a 40+ character reason, tick both boxes, press **Approve and release**. Expected: "Released to everyone now."
+7. Signed in as owner, open the map link. Search for "Test Way". Expected: both parcels are listed in Palm Beach. TEST-PB-0001 has a marker at its point; TEST-PB-0002 opens with "Location not verified yet. Listed without a map position", and no marker.
+8. In a private window (signed out), open the map link. Expected: only TEST-PB-0002 (critical) is listed; TEST-PB-0001 appears 48 hours after step 5.
+9. Correction: paste `[{"kind":"new_property","category":"land_bank","origin":"owner-manual","state":"FL","county":"Palm Beach","parcelId":"TEST-PB-0001","title":"Corrected amount","description":"Correction of the amount on the manual test item.","amount":900}]`, verify it, and approve it as critical. Expected on the map: still one TEST-PB-0001, now with amount 900 (no second record).
+10. Reject path: paste a third item with `"parcelId":"TEST-PB-0003"`, verify it, press **Approve…** then **Reject…**, write 15+ characters, press **Reject: nothing is published**. Expected: "Rejected. Nothing was published." It never appears on the map.
+11. Pro download: signed in as owner on the map, open TEST-PB-0001, tick its select box, and use **Downloads** to preview the file. Expected: the row shows amount 900. (This uses the shared export history, not an allowance, for the owner.)
 
-## Test 12: key availability in the API Key Manager (names only)
-1. Open `/owner/keys/`. Each key shows "set" or "not set" and a short hint of its last characters.
-2. Check only the status of `GEOAPIFY_API_KEY` here. The NVIDIA key is checked in the **NVIDIA consolidation** panel on the dashboard ("Key configured (environment)" or "(saved in admin setup)"). The Wayne County GIS check needs no key. Do not edit, replace, copy, or record any value or hint.
-3. If a key is not set and you want that live check, add the key yourself in the key manager. Never paste it into chat, a note or a screenshot.
-4. Record only which names are set. Expected: the live checks in Test 11 match these statuses (a key that is set can still fail: that is a provider result, not a missing key).
+## Test 10: withdrawal (dialog, reason, audit, every viewer)
+1. In **Research releases · withdraw**, find "Corrected amount" (TEST-PB-0001). Press **Withdraw from every viewer…**.
+2. Press **Withdraw now** with no reason. Expected: "Write at least 15 characters explaining the withdrawal." Nothing is sent.
+3. Write 15+ characters and press **Withdraw now**. Expected: the dialog closes; "Withdrawn at <time>. It no longer appears for any viewer."; the card shows the reason and its audit history lists "withdrawn".
+4. Reload the map. Expected: TEST-PB-0001 shows the earlier amount 1000 again (the correction is withdrawn, the first approval stands).
+5. Withdraw "Manual test item" (the first TEST-PB-0001 approval) the same way. Reload the map: TEST-PB-0001 is gone for owner, Pro, Free and signed out. Its intake card reads **Withdrawn**.
+
+## Test 11: live checks (preview only; one request per press)
+1. In **Live checks · preview only** press **Refresh availability**. Four cards appear; each says "Configured on the server. The value is never shown." or names what is missing.
+2. **NVIDIA chat check** → **Run once…** → OK in the browser prompt. Expected: "OK: NVIDIA answered one request with an 8-token limit." (uses one of the 3 daily NVIDIA runs). If the key is missing the button is greyed out.
+3. **Geoapify geocode check** → **Run once…** → OK. Expected: "OK: Geoapify answered with N result(s)."
+4. **Wayne County GIS layer check** → **Run once…** → OK. Expected: "OK: Wayne County GIS answered layer metadata. No parcel was queried."
+5. **Intake round trip** → **Run once…** → OK. Expected: "OK: Round trip: submitted, verified, approved Pro first…, then withdrawn. Stored in the preview store only." A `live-check` item appears in the intake list as **Withdrawn**.
+
+## Test 12: key availability (names only)
+1. Open the key manager link. Check only whether `GEOAPIFY_API_KEY` is "set". Do not edit, copy or record any value or hint.
+2. The NVIDIA key status is in the dashboard's **NVIDIA consolidation** panel ("Key configured (environment)" or "(saved in admin setup)"). The Wayne GIS check needs no key.
+3. Record only the names that are set. Test 11 should match.
 
 ## Recording results
 For each test, write the date (UTC), the preview URL, the outcome in the words above, and whether it matched the expected result. Note any difference exactly. Do not include keys, tokens or session cookies.

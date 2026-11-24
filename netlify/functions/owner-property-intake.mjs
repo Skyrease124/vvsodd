@@ -20,6 +20,9 @@ const summarize = (item, releases) => ({
   sourceUrl: item.sourceUrl, status: describeStatus(item, releases), createdAt: item.createdAt, createdBy: item.createdBy,
   verification: item.verification ? {evidenceUrl: item.verification.evidenceUrl, notes: item.verification.notes, verifiedAt: item.verification.verifiedAt} : null,
   approval: item.approval || null, releaseId: item.releaseId, audit: (item.audit || []).slice(-20),
+  property: item.property ? {category: item.property.category, address: item.property.address, ownerName: item.property.ownerName,
+    amount: item.property.amount, acreage: item.property.acreage, hasCoordinates: !!item.property.candidatePoint, hasBoundary: !!item.property.candidateRing} : null,
+  locationVerified: item.verification?.checklist?.locationVerified === true,
 });
 
 async function handler(req) {
@@ -30,7 +33,8 @@ async function handler(req) {
     const intake = await readIntake(auth);
     const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
     const items = (intake.items || []).slice(-200).reverse().map(item => summarize(item, releases));
-    return json(200, {ok: true, items, count: (intake.items || []).length});
+    // storage tells the owner, before any write, whether this site writes to the isolated preview store.
+    return json(200, {ok: true, items, count: (intake.items || []).length, storage: auth.isBrainPreview() ? 'preview-isolated' : 'production'});
   }
   if (req.headers.get('origin') !== new URL(req.url).origin) return json(403, {ok: false, error: 'Invalid origin'});
   let b;
