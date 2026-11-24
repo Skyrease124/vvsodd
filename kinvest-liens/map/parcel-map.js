@@ -1137,8 +1137,9 @@
     el._anchor = anchor; el.hidden = false; placeCallout();
   }
   function select(r, o) {
-    sel = r; near = null; popup(r);
-    if (homeMap) showCallout(r, IDX.datasets.find(x => x.id === r._d));
+    sel = r; near = null;
+    if (homeMap) { const pop = $('pmPop'); if (pop) pop.hidden = true; showCallout(r, IDX.datasets.find(x => x.id === r._d)); } // homepage: only the small card on the map
+    else popup(r);
     const dataset = IDX.datasets.find(x => x.id === r._d);
     if (embedded&&pickerMap&&dataset){
       window.parent.dispatchEvent(new CustomEvent('ppa:workshop-parcel',{detail:{
