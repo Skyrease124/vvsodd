@@ -169,7 +169,7 @@ export async function putnamActivity(read){
  const result=receipt?.result;
  const at=receipt?.checkedAt;
  if(receipt?.requestId!==requestId||!result||!Number.isFinite(Date.parse(at)))return audit;
- const base={at:new Date(at).toISOString(),agent:'Official GIS',from:'FloridaGIO',to:'NVIDIA',county:dataset,
+ const base={at:new Date(at).toISOString(),agent:'Official GIS',from:'FloridaGIO',to:'Stored result',county:dataset,
   parcelId,source:source.url,receiptId:requestId};
  const event={...base,id:'putnam-'+requestId+'-result',type:'verification_result',
   quotaImpact:receipt.quotaReceipt?.reserved===1?1:null,

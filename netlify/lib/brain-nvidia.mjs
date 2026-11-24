@@ -11,11 +11,15 @@ export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
 export const DAILY_LIMIT = 3; // owner-triggered consolidations per UTC day, to stay inside free allowances
 const MAX_ITEMS = 30, COORD_TOLERANCE = 0.002; // degrees, about 200 m
-const MI_BOX = {minLat: 41.6, maxLat: 48.4, minLon: -90.5, maxLon: -82.1};
+// Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
+// named here. A dataset's own geography is enforced by the official-source checks, never by this module.
+const US_BOUNDS = {minLat: 18, maxLat: 72, minLon: -180, maxLon: -60};
+// The official GIS worker store is the Wayne County worker's. Its rows carry this dataset id.
+const WAYNE_WORKER_DATASET = 'MI-wayne';
 
 const clip = (v, n = 160) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
-const inBox = (lat, lon) => lat != null && lon != null && lat >= MI_BOX.minLat && lat <= MI_BOX.maxLat && lon >= MI_BOX.minLon && lon <= MI_BOX.maxLon;
+const inUs = (lat, lon) => lat != null && lon != null && lat >= US_BOUNDS.minLat && lat <= US_BOUNDS.maxLat && lon >= US_BOUNDS.minLon && lon <= US_BOUNDS.maxLon;
 const day = now => new Date(now).toISOString().slice(0, 10);
 // Removes the configured key and any key-shaped or bearer text before anything is stored or shown.
 const scrub = (text, secret) => {
@@ -33,10 +37,10 @@ export async function collectItems(auth) {
   const raw = [];
   for (const row of (Array.isArray(worker.recent) ? worker.recent : []).slice(0, 15)) {
     if (!row?.checkedAt) continue;
-    raw.push({source: 'official-gis-worker', parcelId: clip(row.parcelId, 20), status: clip(row.status, 60), reason: clip(row.reason), checkedAt: row.checkedAt});
+    raw.push({source: 'official-gis-worker', dataset: WAYNE_WORKER_DATASET, parcelId: clip(row.parcelId, 20), status: clip(row.status, 60), reason: clip(row.reason), checkedAt: row.checkedAt});
   }
-  for (const e of (ledger.entries || []).filter(x => x.dataset === 'MI-wayne' && [DECISION.pending, DECISION.approved].includes(x.decision)).slice(-15)) {
-    raw.push({source: 'validator', parcelId: clip(e.parcelId, 20), recordId: clip(e.recordId, 40), status: clip(e.decision, 60),
+  for (const e of (ledger.entries || []).filter(x => x.dataset && [DECISION.pending, DECISION.approved].includes(x.decision)).slice(-15)) {
+    raw.push({source: 'validator', dataset: clip(e.dataset, 60), parcelId: clip(e.parcelId, 20), recordId: clip(e.recordId, 40), status: clip(e.decision, 60),
       lat: num(e.proposedPosition?.lat), lon: num(e.proposedPosition?.lon), evidenceUrl: /^https:\/\//.test(e.evidenceUrl || '') ? clip(e.evidenceUrl, 300) : null,
       checkedAt: e.reviewedAt});
   }
@@ -45,7 +49,7 @@ export async function collectItems(auth) {
       if (!row?.checkedAt) continue;
       const c = Array.isArray(row.candidates) ? row.candidates[0] : null;
       const lat = num(c?.lat), lon = num(c?.lon);
-      raw.push({source, parcelId: clip(row.parcelId, 20), status: clip(row.status, 60), lat: inBox(lat, lon) ? lat : null, lon: inBox(lat, lon) ? lon : null,
+      raw.push({source, dataset: clip(row.dataset, 60) || null, parcelId: clip(row.parcelId, 20), status: clip(row.status, 60), lat: inUs(lat, lon) ? lat : null, lon: inUs(lat, lon) ? lon : null,
         checkedAt: row.checkedAt, unverified: true});
     }
   }
@@ -56,23 +60,26 @@ export async function collectItems(auth) {
 // Deterministic conflicts: same parcel, different status class or different location across helpers.
 export function deterministicConflicts(items) {
   const byParcel = new Map();
-  for (const item of items) if (item.parcelId) byParcel.set(item.parcelId, [...(byParcel.get(item.parcelId) || []), item]);
+  // A parcel number is only unique inside its dataset, so the key is the dataset and the number together.
+  const keyOf = item => (item.dataset || '') + '\n' + item.parcelId;
+  for (const item of items) if (item.parcelId) byParcel.set(keyOf(item), [...(byParcel.get(keyOf(item)) || []), item]);
   const out = [];
-  for (const [parcelId, group] of byParcel) {
+  for (const [key, group] of byParcel) {
     if (group.length < 2) continue;
+    const parcelId = group[0].parcelId, dataset = group[0].dataset || null;
     // Verified = validator or official worker reported an exact match (pending, approved or published).
     // Unverified = the worker could not confirm the parcel. One of each is a real disagreement.
     const official = group.filter(i => i.source === 'validator' || i.source === 'official-gis-worker');
     const classOf = i => (['pending_owner_review', 'approved_for_staging', 'published'].includes(i.status) ? 'verified' : 'unverified');
     const classes = new Set(official.map(classOf));
     if (classes.size > 1)
-      out.push({parcelId, refs: official.map(i => i.ref), kind: 'status_disagreement', origin: 'deterministic',
+      out.push({parcelId, dataset, refs: official.map(i => i.ref), kind: 'status_disagreement', origin: 'deterministic',
         detail: 'Official worker and validator disagree on whether this parcel was verified.'});
     const located = group.filter(i => i.lat != null && i.lon != null);
     for (let a = 0; a < located.length; a++) for (let b = a + 1; b < located.length; b++) {
       const dLat = Math.abs(located[a].lat - located[b].lat), dLon = Math.abs(located[a].lon - located[b].lon);
       if (dLat > COORD_TOLERANCE || dLon > COORD_TOLERANCE)
-        out.push({parcelId, refs: [located[a].ref, located[b].ref], kind: 'location_disagreement', origin: 'deterministic',
+        out.push({parcelId, dataset, refs: [located[a].ref, located[b].ref], kind: 'location_disagreement', origin: 'deterministic',
           detail: 'Stored coordinates for this parcel differ by more than about 200 m.'});
     }
   }
@@ -82,13 +89,13 @@ export function deterministicConflicts(items) {
 export function buildPrompt(items) {
   const system = [
     'You consolidate helper-agent results for a county tax-sale research team.',
-    'Use ONLY the items provided. Each item has a ref (H1, H2, ...). Do not invent parcel IDs, coordinates, owners, amounts, dates or sources.',
+    'Use ONLY the items provided. Each item has a ref (H1, H2, ...) and a dataset (one county). The same parcel number in two datasets is two different parcels. Do not invent parcel IDs, coordinates, owners, amounts, dates or sources.',
     'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries.',
     'Return ONLY JSON: {"conflicts":[{"parcelId":"...","refs":["H1"],"detail":"short factual text"}],"proposals":[{"parcelId":"...","refs":["H1"],"summary":"short factual text"}]}.',
     'Propose an update only when a validator or official-gis-worker item supports it. Every proposal needs owner approval.',
   ].join(' ');
-  const user = JSON.stringify(items.map(({ref, source, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified}) =>
-    ({ref, source, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified: !!unverified})));
+  const user = JSON.stringify(items.map(({ref, source, dataset, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified}) =>
+    ({ref, source, dataset, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified: !!unverified})));
   return {system, user};
 }
 
@@ -111,13 +118,13 @@ function unsupportedNumber(text, cited) {
   return numbersIn(text).find(n => !pool.includes(n.replace(/,/g, '')));
 }
 // Source references are built from the input items, never from the model.
-const sourcesOf = cited => cited.map(i => ({ref: i.ref, source: i.source, status: i.status || null, evidenceUrl: i.evidenceUrl || null,
+const sourcesOf = cited => cited.map(i => ({ref: i.ref, source: i.source, dataset: i.dataset || null, status: i.status || null, evidenceUrl: i.evidenceUrl || null,
   checkedAt: i.checkedAt || null, unverified: !!i.unverified}));
 // Facts only from official or validator items; geocoder candidates never supply a location.
-function factsOf(parcelId, cited) {
+function factsOf(parcelId, cited, dataset = null) {
   const official = cited.filter(i => i.source === 'validator' || i.source === 'official-gis-worker');
   const located = official.find(i => Number.isFinite(i.lat) && Number.isFinite(i.lon));
-  return {parcelId, statuses: [...new Set(official.map(i => i.status).filter(Boolean))],
+  return {parcelId, dataset, statuses: [...new Set(official.map(i => i.status).filter(Boolean))],
     location: located ? {lat: located.lat, lon: located.lon, ref: located.ref} : null,
     evidenceUrls: [...new Set(official.map(i => i.evidenceUrl).filter(Boolean))]};
 }
@@ -131,20 +138,21 @@ export function validateConsolidation(text, items) {
   const refsOk = refs => Array.isArray(refs) && refs.length > 0 && refs.length <= 6 && refs.every(r => byRef.has(r));
   const conflicts = [], proposals = [];
   for (const c of (Array.isArray(parsed?.conflicts) ? parsed.conflicts : []).slice(0, 20)) {
-    const parcels = refsOk(c?.refs) ? new Set(c.refs.map(r => byRef.get(r).parcelId)) : null;
-    if (!parcels || parcels.size !== 1 || !parcels.has(clip(c.parcelId, 20))) { rejected.push('conflict cited unknown refs or another parcel'); continue; }
+    // Every cited item must be the same parcel in the same dataset.
+    const parcels = refsOk(c?.refs) ? new Set(c.refs.map(r => (byRef.get(r).dataset || '') + '\n' + byRef.get(r).parcelId)) : null;
+    if (!parcels || parcels.size !== 1 || !c.refs.every(r => byRef.get(r).parcelId === clip(c.parcelId, 20))) { rejected.push('conflict cited unknown refs or another parcel'); continue; }
     const extra = unsupportedNumber(c.detail, c.refs.map(r => byRef.get(r)));
     if (extra) { rejected.push('conflict stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
-    conflicts.push({parcelId: clip(c.parcelId, 20), refs: c.refs, kind: 'model_flag', origin: 'nvidia', detail: clip(c.detail, 240), sources: sourcesOf(c.refs.map(r => byRef.get(r)))});
+    conflicts.push({parcelId: clip(c.parcelId, 20), dataset: byRef.get(c.refs[0]).dataset || null, refs: c.refs, kind: 'model_flag', origin: 'nvidia', detail: clip(c.detail, 240), sources: sourcesOf(c.refs.map(r => byRef.get(r)))});
   }
   for (const p of (Array.isArray(parsed?.proposals) ? parsed.proposals : []).slice(0, 20)) {
     const cited = refsOk(p?.refs) ? p.refs.map(r => byRef.get(r)) : null;
     if (!cited) { rejected.push('proposal cited unknown refs'); continue; }
-    if (!cited.every(i => i.parcelId === clip(p.parcelId, 20))) { rejected.push('proposal named a parcel its sources do not cover'); continue; }
+    if (!cited.every(i => i.parcelId === clip(p.parcelId, 20) && (i.dataset || '') === (cited[0].dataset || ''))) { rejected.push('proposal named a parcel its sources do not cover'); continue; }
     if (!cited.some(i => i.source === 'validator' || i.source === 'official-gis-worker')) { rejected.push('proposal has no official or validator source'); continue; }
     const extra = unsupportedNumber(p.summary, cited);
     if (extra) { rejected.push('proposal stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
-    proposals.push({parcelId: clip(p.parcelId, 20), refs: p.refs, summary: clip(p.summary, 300), facts: factsOf(clip(p.parcelId, 20), cited),
+    proposals.push({parcelId: clip(p.parcelId, 20), dataset: cited[0].dataset || null, refs: p.refs, summary: clip(p.summary, 300), facts: factsOf(clip(p.parcelId, 20), cited, cited[0].dataset || null),
       sources: sourcesOf(cited), requiresOwnerApproval: true});
   }
   return {conflicts, proposals, rejected};
@@ -173,7 +181,8 @@ export async function runConsolidation({auth, now = Date.now(), config = null} =
   const id = 'nv-' + new Date(now).toISOString().replace(/[-:.TZ]/g, '').slice(0, 14) + '-' + Math.random().toString(36).slice(2, 8);
   const items = await collectItems(auth);
   const cfg = config;
-  const base = {id, at: new Date(now).toISOString(), inputs: {count: items.length, sources: {}, refs: items.map(i => ({ref: i.ref, source: i.source, parcelId: i.parcelId || null, checkedAt: i.checkedAt}))}};
+  const base = {id, at: new Date(now).toISOString(), inputs: {count: items.length, sources: {}, datasets: [...new Set(items.map(i => i.dataset).filter(Boolean))].sort(),
+      refs: items.map(i => ({ref: i.ref, source: i.source, dataset: i.dataset || null, parcelId: i.parcelId || null, checkedAt: i.checkedAt}))}};
   for (const i of items) base.inputs.sources[i.source] = (base.inputs.sources[i.source] || 0) + 1;
   const deterministic = deterministicConflicts(items);
   let receipt;

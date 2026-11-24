@@ -76,13 +76,16 @@ const seed = () => ({
 });
 const cfg = {key: DUMMY_KEY, model: '', source: 'test'};
 
-test('collectItems reads only stored helper output, keeps sources, and drops geocoder points outside Michigan', async () => {
+test('collectItems reads only stored helper output, keeps sources, and drops geocoder points outside the United States', async () => {
   const items = await collectItems(fakeAuth(seed()));
   assert.ok(items.length >= 5);
   assert.deepEqual([...new Set(items.map(i => i.source))].sort(), ['geoapify', 'official-gis-worker', 'photon', 'validator']);
   assert.equal(items.every(i => /^H\d+$/.test(i.ref)), true);
   const photon = items.filter(i => i.source === 'photon');
-  assert.equal(photon.some(i => i.lat === 33.7), false, 'a candidate outside Michigan is not sent as a location');
+  const abroad = seed();
+  abroad['owner-brain-photon-status-v1'].recent[0].candidates = [{lat: 48.85, lon: 2.35}];
+  const outside = (await collectItems(fakeAuth(abroad))).filter(i => i.source === 'photon');
+  assert.equal(outside.every(i => i.lat === null && i.lon === null), true, 'a point outside the United States is not sent as a location');
   assert.equal(photon.find(i => i.lat === 42.3006)?.unverified, true, 'geocoder candidates are labelled unverified');
 });
 
@@ -246,3 +249,66 @@ test('receipts are bounded and carry source references, not raw provider text', 
 });
 
 test.after(() => server.close());
+
+// ---- Nationwide: no state or county is named by the consolidation ----
+const nationwide = () => ({
+  'owner-brain-wayne-worker-v1': {recent: []},
+  [LEDGER]: {entries: [
+    {dataset: 'IA-scott', recordId: 's1', parcelId: 'C0050-21', decision: 'pending_owner_review', reviewedAt: ago(10), proposedPosition: {lat: 41.5521, lon: -90.6012}, evidenceUrl: 'https://services.arcgis.com/x/FeatureServer/3'},
+    {dataset: 'NY-city-of-rochester', recordId: 'r1', parcelId: '120.74-2-13', decision: 'pending_owner_review', reviewedAt: ago(12), proposedPosition: {lat: 43.1566, lon: -77.6088}, evidenceUrl: 'https://maps.example.test/layer'},
+    {dataset: 'IA-scott', recordId: 's2', parcelId: 'C0050-22', decision: 'rejected', reviewedAt: ago(14)}]},
+  'owner-brain-photon-status-v1': {recent: [{dataset: 'IA-scott', parcelId: 'C0050-21', status: 'address_candidates_unverified', checkedAt: ago(8), candidates: [{lat: 41.5522, lon: -90.6011}]}]},
+  'owner-brain-geoapify-status-v1': {recent: [{dataset: 'NY-city-of-rochester', parcelId: '120.74-2-13', status: 'address_candidates_unverified', checkedAt: ago(9), candidates: [{lat: 43.1567, lon: -77.6087}]}]},
+});
+
+test('Scott and Rochester helper results are collected with their dataset and keep their positions', async () => {
+  const items = await collectItems(fakeAuth(nationwide()));
+  assert.deepEqual([...new Set(items.map(i => i.dataset))].sort(), ['IA-scott', 'NY-city-of-rochester']);
+  assert.equal(items.filter(i => i.source === 'validator').length, 2, 'validator entries of every dataset are read; rejected ones are not');
+  const scott = items.find(i => i.source === 'photon');
+  assert.equal(scott.lat, 41.5522, 'an Iowa candidate keeps its position');
+  assert.equal(items.find(i => i.source === 'geoapify').lat, 43.1567, 'a New York candidate keeps its position');
+});
+
+test('the same parcel number in two datasets is two parcels: no conflict between them', async () => {
+  const items = [
+    {ref: 'H1', source: 'validator', dataset: 'IA-scott', parcelId: '1001', status: 'pending_owner_review', lat: 41.5, lon: -90.6},
+    {ref: 'H2', source: 'official-gis-worker', dataset: 'MI-wayne', parcelId: '1001', status: 'needs_review', lat: 42.3, lon: -83.1}];
+  assert.deepEqual(deterministicConflicts(items), []);
+  const same = [{...items[0]}, {ref: 'H3', source: 'official-gis-worker', dataset: 'IA-scott', parcelId: '1001', status: 'needs_review'}];
+  const found = deterministicConflicts(same);
+  assert.equal(found.length, 1);
+  assert.equal(found[0].dataset, 'IA-scott', 'a real conflict names its dataset');
+});
+
+test('a model answer must cite one dataset: mixed datasets are rejected, and a proposal carries its dataset', () => {
+  const items = [
+    {ref: 'H1', source: 'validator', dataset: 'IA-scott', parcelId: '1001', status: 'pending_owner_review'},
+    {ref: 'H2', source: 'validator', dataset: 'NY-city-of-rochester', parcelId: '1001', status: 'pending_owner_review'}];
+  const mixed = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: '1001', refs: ['H1', 'H2'], summary: 'Both match.'}]}), items);
+  assert.equal(mixed.proposals.length, 0);
+  assert.ok(mixed.rejected.some(r => /another parcel|do not cover/.test(r)));
+  const one = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: '1001', refs: ['H1'], summary: 'Official polygon matches.'}]}), items);
+  assert.equal(one.proposals.length, 1);
+  assert.equal(one.proposals[0].dataset, 'IA-scott');
+  assert.equal(one.proposals[0].facts.dataset, 'IA-scott');
+  assert.equal(one.proposals[0].sources[0].dataset, 'IA-scott');
+});
+
+test('a run over Scott and Rochester results stores the datasets it covered in the receipt', async () => {
+  mode = 'good';
+  const auth = fakeAuth(nationwide());
+  const receipt = await runConsolidation({auth, now, config: cfg});
+  assert.equal(receipt.outcome, 'completed');
+  assert.deepEqual(receipt.inputs.datasets, ['IA-scott', 'NY-city-of-rochester']);
+  assert.ok(receipt.inputs.refs.every(r => r.dataset));
+  assert.ok(receipt.proposals.every(p => ['IA-scott', 'NY-city-of-rochester'].includes(p.dataset)));
+  assert.equal(sent.at(-1).body.includes('IA-scott'), true, 'the dataset is part of what NVIDIA is shown');
+});
+
+test('the consolidation names no state or county', async () => {
+  const fs = await import('node:fs');
+  const text = fs.readFileSync('netlify/lib/brain-nvidia.mjs', 'utf8');
+  assert.equal(/MI_BOX|Michigan|inBox/.test(text), false);
+  assert.equal((text.match(/MI-wayne/g) || []).length, 1, 'only the Wayne worker store names its own dataset');
+});

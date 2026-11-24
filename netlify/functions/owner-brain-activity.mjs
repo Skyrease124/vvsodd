@@ -6,7 +6,7 @@ import {countyCheckpointKey} from '../lib/brain-gis-county-worker.mjs';
 const respond=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const clean=s=>String(s??'').slice(0,160);
 // Explicit states: active, idle, completed, failed, quota_limited, not_connected. Derived from stored state only.
-function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}){
+function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,queue,now}){
  const st=(state,detail,lastAt=null)=>({state,detail,lastAt:date(lastAt)});
  const workerRunning=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
  const gisCount=quota?.active?Number(quota.count)||0:0;
@@ -20,6 +20,10 @@ function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}){
   s?.lastCompleted?st('completed','Last lookup batch finished',s.lastCompleted):st('idle','No lookup recorded',null);
  const photonLimited=photon?.lastWarning&&/denied|rate|limit/i.test(photon.lastWarning)?photon.lastWarning:null;
  const geoLimited=(Number(geo?.dailyUsage)||0)>=(Number(geo?.dailyLimit)||300)?'Geoapify daily allowance used':null;
+ // Groq triage is a real, owner-confirmed tool. Its stored, unverified results are counted here; NVIDIA does not read them.
+ const triaged=(Array.isArray(queue)?queue:[]).filter(x=>x?.triage?.status==='complete'&&date(x.triage.createdAt));
+ const lastTriage=triaged.map(x=>date(x.triage.createdAt)).sort().at(-1)||null;
+ const groq=triaged.length?st('completed',triaged.length+' unverified triage result(s) stored. Standalone: not sent to NVIDIA',lastTriage):st('idle','Standalone triage tool. No result stored. Not sent to NVIDIA',null);
  const latest=nvidiaReceipts[0];
  const nvidia=!latest?st('idle','No NVIDIA consolidation run yet',null):
   latest.outcome==='completed'?st('completed',(latest.proposals||[]).length+' proposal(s) awaiting owner approval',latest.at):
@@ -32,11 +36,14 @@ function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}){
   Geoapify:pState(geo,geoLimited),
   Mapping:pState(publication,null),
   NVIDIA:nvidia,
-  Gemini:st('not_connected','Not part of the helper pipeline',null),
-  OpenAI:st('not_connected','Not part of the helper pipeline',null),
-  Groq:st('not_connected','Not part of the helper pipeline',null),
+  // Gemini and OpenAI have a key check only: no helper job stores results and nothing is sent to NVIDIA.
+  Gemini:st('not_connected','Key check only. No helper job exists and no results reach NVIDIA',null),
+  OpenAI:st('not_connected','Key check only. No helper job exists and no results reach NVIDIA',null),
+  Groq:groq,
  };
 }
+// Receipts name the datasets they covered. Older receipts predate that field and were Wayne only by construction.
+const receiptCounty=r=>{const d=Array.isArray(r?.inputs?.datasets)?r.inputs.datasets:null;return d===null?'MI-wayne':d.length===1?d[0]:d.length?'Multiple counties':'No dataset'};
 const date=s=>{const t=Date.parse(s||'');return Number.isFinite(t)?new Date(t).toISOString():null};
 async function handler(req){
  if(req.method!=='GET')return respond(405,{ok:false,error:'GET only'});
@@ -55,7 +62,7 @@ async function handler(req){
    const at=date(entry?.at);
    if(!at||typeof entry.id!=='string'||!['document','missing','restricted','unavailable','metadata','started','paused','resumed','conflict'].includes(entry.outcome)||researchIds.has(entry.id))continue;
    researchIds.add(entry.id);
-   events.push({id:'research-'+clean(entry.id),at,agent:'Parcel research',from:'Official records',to:'NVIDIA',
+   events.push({id:'research-'+clean(entry.id),at,agent:'Parcel research',from:'Official records',to:'Stored research',
     type:'parcel_research',message:'Larimer research · '+clean(entry.sourceId)+' · '+entry.outcome+(Number.isInteger(entry.httpStatus)?' · HTTP '+entry.httpStatus:'')+
     (entry.outcome==='metadata'?' · Metadata saved · Owner review required':entry.outcome==='conflict'?' · Conflicting records · Owner review required':''),
     county:'CO-larimer',receiptId:clean(entry.id),source:clean(entry.sourceId),status:entry.outcome==='document'?'success':entry.outcome==='unavailable'?'error':'info'});
@@ -70,7 +77,7 @@ async function handler(req){
      const at=date(event.at);
      if(!at||!['worker_started','schema_checked','request_reserved','evidence_saved','retry_verified','skipped','source_paused','quota_wait','owner_paused','owner_resumed'].includes(event.status))continue;
      events.push({id:'county-operation-'+county+'-'+(event.id??[at,event.parcelId,event.status].join('-')),
-      at,agent:'County connectors',from:'Official source',to:'NVIDIA',type:'county_research',eventType:event.status,
+      at,agent:'County connectors',from:'Official source',to:'Stored evidence',type:'county_research',eventType:event.status,
       county,parcelId:clean(event.parcelId),source:countyOperation(county)?.source??null,
       quotaImpact:event.status==='request_reserved'?1:null,status:['worker_started','schema_checked','request_reserved','evidence_saved','owner_resumed','retry_verified'].includes(event.status)?'info':'warning',
       message:county+' · '+event.status.replaceAll('_',' ')+(event.parcelId?' · '+clean(event.parcelId):'')+
@@ -91,7 +98,7 @@ async function handler(req){
   for(const review of (approvals?.entries||[]).slice(-30)){
    const at=date(review.reviewedAt);
    if(!at||!review.caseKey||!['approved_for_staging','rejected'].includes(review.decision))continue;
-   events.push({id:'owner-review-'+clean(review.caseKey)+'-'+at,at,agent:'Owner review',from:'Owner review',to:'NVIDIA',
+   events.push({id:'owner-review-'+clean(review.caseKey)+'-'+at,at,agent:'Owner review',from:'Owner review',to:'Approval ledger',
     type:'owner_review',county:clean(review.dataset),parcelId:clean(review.parcelId),receiptId:clean(review.caseKey),
     status:review.decision==='rejected'?'warning':'info',source:clean(review.sourceProvider)||null,
     message:review.decision==='rejected'?'Rejected by owner':'Owner approved private staging'});
@@ -122,7 +129,7 @@ async function handler(req){
    if(recentIds.has(id))continue;
    recentIds.add(id);
    events.push({id,at,approximateTime:false,agent:'Official GIS',
-    from:'Official GIS',to:'NVIDIA',type:'verification_result',
+    from:'Official GIS',to:'Stored result',type:'verification_result',
     message:'Parcel '+clean(r.parcelId)+' · '+clean(r.status).replaceAll('_',' ')+
       (stage?' · stage '+stage:'')+(r.reason?' · '+clean(r.reason):''),
     parcelId:clean(r.parcelId),county:'MI-wayne',trace,failedStage:stage,
@@ -130,7 +137,7 @@ async function handler(req){
   }
   const pilot=worker?.lastPilot;
   const pilotAt=date(pilot?.at);
-  if(pilotAt)events.push({id:'wayne-pilot-'+pilotAt,at:pilotAt,agent:'Official GIS',from:'Official GIS',to:'NVIDIA',
+  if(pilotAt)events.push({id:'wayne-pilot-'+pilotAt,at:pilotAt,agent:'Official GIS',from:'Official GIS',to:'Stored result',
    type:'run_complete',county:'MI-wayne',status:pilot.state==='source_paused'||pilot.state==='retry_wait'?'warning':'info',
    message:'Live Wayne pilot · '+clean(pilot.state).replaceAll('_',' ')+' · Cursor '+pilot.cursor+
     ' · Attempted '+pilot.attempted+' · Processed '+pilot.processed+' · Verified '+pilot.verified+' · Skipped '+pilot.skipped+
@@ -139,7 +146,7 @@ async function handler(req){
   const sources=[['Photon',photon],['Geoapify',geo],['GIS Agent',automatic],['Publisher',publication]];
   for(const [name,s] of sources){
    const at=date(s?.lastCompleted);if(!at)continue;
-   events.push({id:'agent-'+name+'-'+at,at,agent:name,from:name,to:'NVIDIA',type:'run_complete',
+   events.push({id:'agent-'+name+'-'+at,at,agent:name,from:name,to:'Stored result',type:'run_complete',
     message:name+' · '+clean(s.state||'completed')+' · '+Number(s.checked||s.published||0)+' checked/published total',status:s.state==='error'?'error':'info'});
   }
   // NVIDIA events exist only for requests that were actually sent (stored receipts).
@@ -149,14 +156,14 @@ async function handler(req){
    const sources=Object.entries(r.inputs?.sources||{}).map(([k,v])=>clean(k)+' '+Number(v)).join(', ');
    if(['completed','failed','quota_limited'].includes(r.outcome))
     events.push({id:'nvidia-in-'+clean(r.id),at,agent:'Helper agents',from:'Helper agents',to:'NVIDIA',type:'nvidia_transfer',
-     county:'MI-wayne',count,status:r.outcome==='completed'?'info':'error',
+     county:receiptCounty(r),count,status:r.outcome==='completed'?'info':'error',
      message:'Helper results sent to NVIDIA · '+count+' items'+(sources?' ('+sources+')':'')+(r.outcome==='completed'?'':' · '+clean(r.outcome).replaceAll('_',' '))});
    if(r.outcome==='completed')
-    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:'MI-wayne',
+    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:receiptCounty(r),
      status:(r.conflicts||[]).length?'warning':'info',
      message:'NVIDIA consolidation · '+(r.proposals||[]).length+' proposal(s) await owner approval · '+(r.conflicts||[]).length+' conflict(s) flagged · '+(r.rejected||[]).length+' rejected'});
    if(r.outcome==='failed')
-    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:'MI-wayne',status:'error',
+    events.push({id:'nvidia-out-'+clean(r.id),at,agent:'NVIDIA',from:'NVIDIA',to:'Owner review',type:'nvidia_result',county:receiptCounty(r),status:'error',
      message:'NVIDIA consolidation failed · '+clean(r.error,120)});
   }
   const unique=[...new Map(events.map(event=>[event.id,event])).values()]
@@ -194,7 +201,7 @@ async function handler(req){
     needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed,remaining,dailyLimit:30,
     state:clean(worker?.state||'not_started'),paused:control?.status==='paused',
     lastSuccessfulBatch:date(worker?.lastSuccessfulBatch),lastCompleted:date(worker?.lastCompleted)},
-   agents:agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,now}),
+   agents:agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,queue:control?.queue,now}),
    eventCount:newest.length,eventWindow,events:newest});
  }catch(e){return respond(503,{ok:false,error:'Agent activity temporarily unavailable'});}
 }

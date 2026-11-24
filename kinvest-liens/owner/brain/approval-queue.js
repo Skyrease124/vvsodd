@@ -119,7 +119,7 @@
     card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '')));
     if (r.outcome === 'completed') card.append(el('p', 'small', (r.conflicts || []).length + ' conflict(s) flagged · ' + (r.proposals || []).length + ' proposal(s) await your approval · ' + (r.rejected || []).length + ' citation(s) rejected'));
     for (const p of (r.proposals || []).slice(0, 5)) {
-     card.append(el('p', 'small', 'Parcel ' + p.parcelId + ': ' + p.summary));
+     card.append(el('p', 'small', 'Parcel ' + p.parcelId + (p.dataset ? ' (' + p.dataset + ')' : '') + ': ' + p.summary));
      // Source references come from the helper results NVIDIA received, not from the model's text.
      const refs = (p.sources || []).map(x => x.ref + ' ' + x.source + (x.checkedAt ? ' (' + String(x.checkedAt).slice(0, 10) + ')' : '')).join('; ');
      if (refs) card.append(el('p', 'small', 'Sources: ' + refs));

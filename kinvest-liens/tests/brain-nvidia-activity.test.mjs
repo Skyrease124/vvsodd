@@ -85,3 +85,43 @@ test('an active Wayne batch is reported as active, and a finished one as complet
   const done = await run(new Map([['owner-brain-wayne-worker-v1', {state: 'idle', lastCompleted: ago(10), recent: []}]]));
   assert.equal(done.body.agents['Official GIS'].state, 'completed');
 });
+
+test('Gemini and OpenAI report a key check only; Groq reports its standalone triage honestly', async () => {
+  const idle = (await run(new Map())).body.agents;
+  assert.equal(idle.Gemini.state, 'not_connected'); assert.match(idle.Gemini.detail, /Key check only/);
+  assert.equal(idle.OpenAI.state, 'not_connected'); assert.match(idle.OpenAI.detail, /no results reach NVIDIA/);
+  assert.equal(idle.Groq.state, 'idle'); assert.match(idle.Groq.detail, /Not sent to NVIDIA/i);
+  const queue = [{triage: {status: 'complete', createdAt: ago(40)}}, {triage: {status: 'complete', createdAt: ago(10)}}, {triage: {status: 'pending'}}, {}];
+  const done = (await run(new Map([['owner-brain-scanner-v1', {queue}]]))).body.agents;
+  assert.equal(done.Groq.state, 'completed');
+  assert.match(done.Groq.detail, /2 unverified triage result\(s\) stored/);
+  assert.match(done.Groq.detail, /not sent to NVIDIA/i);
+  assert.equal(done.Groq.lastAt, ago(10));
+  assert.equal(done.Gemini.state, 'not_connected', 'stored Groq results do not connect the other helpers');
+});
+
+test('only a real NVIDIA request is shown as going to NVIDIA; other events say where the result was stored', async () => {
+  const store = new Map([
+    ['owner-brain-wayne-worker-v1', {recent: [{parcelId: '01002754', status: 'needs_review', checkedAt: ago(30)}], lastPilot: {at: ago(25), state: 'complete', cursor: 5}}],
+    ['owner-brain-photon-status-v1', {lastCompleted: ago(20), state: 'completed', checked: 5}],
+    ['owner-brain-geoapify-status-v1', {lastCompleted: ago(19), state: 'completed', checked: 4}],
+    ['owner-brain-approvals-v1', {entries: [{caseKey: 'k1', decision: 'approved_for_staging', reviewedAt: ago(15), dataset: 'IA-scott', parcelId: 'C0050-21'}]}],
+    ['brain-nvidia-consolidation-v1', {receipts: [receipt('a', 'completed')]}]]);
+  const {body} = await run(store);
+  const toNvidia = body.events.filter(e => e.to === 'NVIDIA');
+  assert.deepEqual([...new Set(toNvidia.map(e => e.type))], ['nvidia_transfer'], 'nothing but a sent request is labelled as going to NVIDIA');
+  for (const type of ['verification_result', 'run_complete', 'owner_review']) {
+    const e = body.events.find(x => x.type === type);
+    assert.ok(e, type + ' is still in the feed');
+    assert.notEqual(e.to, 'NVIDIA', type);
+  }
+  assert.equal(body.events.find(x => x.type === 'owner_review').to, 'Approval ledger');
+  assert.equal(body.events.find(x => x.type === 'verification_result').to, 'Stored result');
+});
+
+test('NVIDIA events name the datasets the receipt covered, not a fixed county', async () => {
+  const county = async inputs => (await run(new Map([['brain-nvidia-consolidation-v1', {receipts: [receipt('a', 'completed', {inputs: {count: 3, sources: {validator: 3}, refs: [], ...inputs}})]}]]))).body.events.find(e => e.type === 'nvidia_transfer').county;
+  assert.equal(await county({datasets: ['IA-scott']}), 'IA-scott');
+  assert.equal(await county({datasets: ['IA-scott', 'NY-city-of-rochester']}), 'Multiple counties');
+  assert.equal(await county({}), 'MI-wayne', 'receipts from before the datasets field were Wayne only');
+});
