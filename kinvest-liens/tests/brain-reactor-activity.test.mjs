@@ -43,7 +43,7 @@ test('owner alone reads actual saved worker and publication events',async()=>{
  assert.equal(d.health.dailyUsed,21);assert.equal(d.health.remaining,9);assert.equal(d.summary.processed,null);
  assert.equal(d.events.filter(e=>e.type==='published').length,1);
  assert.equal(d.events.find(e=>e.type==='published').parcelId,'01002754');
- assert.equal(d.agents.Gemini.state,'idle');assert.equal(d.agents.OpenAI.state,'not_connected');
+ assert.equal(d.agents.Gemini.state,'idle');assert.equal(d.agents.Cloudflare.state,'idle');
  assert.equal(d.agents.NVIDIA.state,'idle');
 });
 test('unauthorized user cannot inspect activity',async()=>{

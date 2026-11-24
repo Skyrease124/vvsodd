@@ -84,7 +84,7 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 <h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · recorded agent activity</div>
 <div id="gate" role="status">Verifying owner access and loading recorded agent activity…</div>
 <div class="only-authorized">
-<div class="stage"><canvas id="reactorCanvas" class="reactor-canvas" aria-hidden="true"></canvas><svg class="network" id="network" viewBox="0 0 700 730" role="img" aria-label="Decorative animated information paths connecting Gemini, OpenAI, Groq and Mapping to NVIDIA">
+<div class="stage"><canvas id="reactorCanvas" class="reactor-canvas" aria-hidden="true"></canvas><svg class="network" id="network" viewBox="0 0 700 730" role="img" aria-label="Decorative animated information paths connecting Gemini, Cloudflare, Groq and Mapping to NVIDIA">
 <defs><radialGradient id="nodeGlass" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#2d4d6e"/><stop offset="1" stop-color="#08111f"/></radialGradient><radialGradient id="core"><stop stop-color="#2a9476"/><stop offset=".62" stop-color="#143c3a"/><stop offset="1" stop-color="#071923"/></radialGradient><linearGradient id="sweep"><stop stop-color="#63f5ca" stop-opacity="0"/><stop offset=".5" stop-color="#d7fff4" stop-opacity=".95"/><stop offset="1" stop-color="#4e95fa" stop-opacity="0"/></linearGradient></defs>
 
 
@@ -110,13 +110,13 @@ body.still .event-wave,body.still .event-beam,body.still .event-reactor{animatio
 <label>Parcel <input id="eventParcel" type="search" placeholder="Parcel ID"></label>
 <button id="replayToggle" type="button" hidden>Play replay</button>
 </div><div id="eventWindow" class="update" role="status">Showing recent recorded events only · historical archive not yet verified</div><div class="activity-window"  id="activity" role="log" aria-live="off"><p class="empty">Loading recorded activity…</p></div></section>
-<div class="foot">The reactor pathways are a visual representation. Each agent card shows its stored state: Gemini and Groq show stored results only, and OpenAI has no job yet. Only recorded worker and publication events appear in this activity feed. An event reads “Helper agents → NVIDIA” only when stored helper results were actually sent to NVIDIA; other events show where the result was stored. New records refresh automatically while this page is visible.</div>
+<div class="foot">The reactor pathways are a visual representation. Each agent card shows its stored state: Gemini and Groq show stored results only, and Cloudflare shows second opinions on NVIDIA proposals, display only. Only recorded worker and publication events appear in this activity feed. An event reads “Helper agents → NVIDIA” only when stored helper results were actually sent to NVIDIA; other events show where the result was stored. New records refresh automatically while this page is visible.</div>
 </div></main>
 <script>
 'use strict';
 const NS='http://www.w3.org/2000/svg';
 const svg=(name,attrs={},parent)=>{const el=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);if(parent)parent.append(el);return el};
-const positions=[{x:120,y:120,name:'Gemini',role:'DOCUMENTS',color:'#72b9ff'},{x:580,y:120,name:'OpenAI',role:'VALIDATION',color:'#52ebba'},{x:120,y:610,name:'Groq',role:'PARCEL DATA',color:'#ffb477'},{x:580,y:610,name:'Mapping',role:'GIS LAYERS',color:'#bd9dff'}];
+const positions=[{x:120,y:120,name:'Gemini',role:'DOCUMENTS',color:'#72b9ff'},{x:580,y:120,name:'Cloudflare',role:'SECOND OPINION',color:'#52ebba'},{x:120,y:610,name:'Groq',role:'PARCEL DATA',color:'#ffb477'},{x:580,y:610,name:'Mapping',role:'GIS LAYERS',color:'#bd9dff'}];
 const reactorFibers=[],fibersByNode=[];
 const CORE={x:350,y:365,r:84},RIM={rx:88,ry:57};
 for(const [group,n] of positions.entries()){

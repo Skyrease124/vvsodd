@@ -7,6 +7,7 @@
  const fmt = iso => (iso ? new Date(iso).toLocaleString() : '—');
  const REVIEW = '/.netlify/functions/owner-brain-review';
  const NVIDIA = '/.netlify/functions/owner-brain-nvidia';
+ const OPINION = '/.netlify/functions/owner-brain-second-opinion';
  const REASON = 'The request did not finish. Refresh the queue before trying again.';
 
  async function call(url, method, body) {
@@ -111,6 +112,10 @@
    const key = data.configured ? 'Key configured (' + (data.keySource === 'env' ? 'environment' : 'saved in admin setup') + '). The key is never shown.' : 'No key configured. Nothing will be sent.';
    status.textContent = (STATE_TEXT[data.state] || data.state) + ' · ' + key + ' · Used today ' + data.usedToday + ' of ' + data.dailyLimit;
    $('nvidiaRun').disabled = !data.configured || data.remainingToday <= 0;
+   // Second opinions are display only: they never change, add or approve a proposal.
+   let op = null; try { op = await call(OPINION, 'GET'); } catch (e) { op = null; }
+   const again = $('cloudflareResume'); if (again) again.hidden = !(op && op.stopped);
+   const opinionOf = id => (op && op.results || []).find(x => x.receiptId === id);
    const box = $('nvidiaReceipts'); box.replaceChildren();
    for (const r of (data.receipts || []).slice(0, 5)) {
     const card = el('article', 'approval-card');
@@ -125,6 +130,22 @@
      if (refs) card.append(el('p', 'small', 'Sources: ' + refs));
      const loc = p.facts && p.facts.location;
      card.append(el('p', 'small', loc ? 'Official location: ' + loc.lat + ', ' + loc.lon + ' (from ' + loc.ref + ')' : 'No official location in the sources: nothing is placed on the map.'));
+    }
+    if (r.outcome === 'completed' && (r.proposals || []).length && op && op.ok) {
+     const found = opinionOf(r.id);
+     if (found) {
+      card.append(el('p', 'small', 'Second opinion (Cloudflare, ' + found.model + '). It is a warning only: no proposal was changed.'));
+      for (const o of found.opinions) card.append(el('p', 'small' + (o.verdict === 'supported' ? '' : ' warn'), (o.verdict === 'supported' ? 'Supported' : o.verdict === 'partly' ? 'Only partly supported' : 'Not supported') + ' · parcel ' + o.parcelId + ': ' + o.reason));
+     } else {
+      const ask = el('button', '', 'Ask Cloudflare for a second opinion'); ask.type = 'button'; ask.disabled = !op.enabled || op.stopped || op.used >= op.daily;
+      ask.addEventListener('click', async () => {
+       if (!window.confirm('Send these proposals (parcel, summary and source labels only, no positions) to Cloudflare for one second opinion? It uses one of today\'s ' + op.daily + ' allowed requests. Nothing is changed or published.')) return;
+       ask.disabled = true; const note = el('p', 'small', 'Asking Cloudflare…'); card.append(note);
+       try { await call(OPINION, 'POST', {action: 'second-opinion', receiptId: r.id, confirmed: true}); } catch (error) { note.textContent = error.message; ask.disabled = false; return; }
+       await loadNvidia();
+      });
+      card.append(ask, el('p', 'small', op.stopped ? 'Stopped after a provider error. Use the button below to turn it on again.' : !op.enabled ? 'Switched off in settings.' : 'Used today ' + op.used + ' of ' + op.daily + '. One request per receipt.'));
+     }
     }
     if (r.incomplete) card.append(el('p', 'small', 'Incomplete answer: nothing was proposed from it.'));
     for (const c of (r.conflicts || []).slice(0, 5)) card.append(el('p', 'small', 'Conflict on parcel ' + c.parcelId + ': ' + c.detail));
@@ -146,6 +167,7 @@
  }
 
  const approvalButton = $('publishApprovedBtn'); if (approvalButton) approvalButton.addEventListener('click', publishApproved);
+ const resume = $('cloudflareResume'); if (resume) resume.addEventListener('click', async () => { try { await call(OPINION, 'POST', {action: 'cloudflare-resume'}); } catch (e) { /* shown on reload */ } await loadNvidia(); });
  const runButton = $('nvidiaRun'); if (runButton) runButton.addEventListener('click', runNvidia);
  if ($('approvalItems')) loadQueue();
  if ($('nvidiaReceipts')) loadNvidia();

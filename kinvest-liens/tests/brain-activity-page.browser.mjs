@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import {PUTNAM, putnamActivity} from '../../netlify/lib/brain-gis-putnam.mjs';
 import {geminiCaps, geminiUsedToday} from '../../netlify/lib/gemini-limits.mjs';
+import {cloudflareCaps, cloudflareUsedToday} from '../../netlify/lib/cloudflare-limits.mjs';
 const require = createRequire(import.meta.url);
 const {chromium} = require('playwright');
 const NOW = Date.parse('2026-11-23T20:00:00.000Z');
@@ -30,7 +31,8 @@ async function activity(store, quota = {active: false, count: 0}) {
   const mod = new vm.SourceTextModule(fs.readFileSync('netlify/functions/owner-brain-activity.mjs', 'utf8'), {context});
   const rl = new vm.SyntheticModule(['peek', 'hit'], function () { this.setExport('peek', async () => ({used: 0})); this.setExport('hit', async () => ({ok: true})); }, {context});
   const gl = new vm.SyntheticModule(['geminiCaps', 'geminiUsedToday'], function () { this.setExport('geminiCaps', geminiCaps); this.setExport('geminiUsedToday', geminiUsedToday); }, {context});
-  await mod.link(s => s.includes('ratelimit') ? rl : s.includes('gemini-limits') ? gl : s.includes('brain-auth') ? auth : s.includes('brain-gis-putnam') ? putnam : s.includes('brain-gis-universal') ? ops : cp);
+  const cl = new vm.SyntheticModule(['cloudflareCaps', 'cloudflareUsedToday'], function () { this.setExport('cloudflareCaps', cloudflareCaps); this.setExport('cloudflareUsedToday', cloudflareUsedToday); }, {context});
+  await mod.link(s => s.includes('ratelimit') ? rl : s.includes('cloudflare-limits') ? cl : s.includes('gemini-limits') ? gl : s.includes('brain-auth') ? auth : s.includes('brain-gis-putnam') ? putnam : s.includes('brain-gis-universal') ? ops : cp);
   await mod.evaluate();
   return (await mod.namespace.default(new Request('https://preview.test/.netlify/functions/owner-brain-activity'))).json();
 }
@@ -91,7 +93,7 @@ try {
     assert.equal(byName.NVIDIA.label, 'COMPLETED');
     assert.equal(byName['Official GIS'].state, 'completed', 'last Wayne batch finished, below the shared daily cap');
     assert.equal(byName.Gemini.state, 'idle', 'the upload only reader has stored nothing yet');
-    assert.equal(byName.OpenAI.state, 'not_connected', 'OpenAI has no job');
+    assert.equal(byName.Cloudflare.state, 'idle', 'no second opinion stored yet');
     assert.equal(await page.locator('#activity .log-entry').count(), JSON.parse(liveJson).events.length, 'every recorded event is listed');
     // First load: recorded activity is not replayed as new animation.
     assert.deepEqual(await sample(page, 2500, pulses), [], 'no replay of recorded events on first load');
@@ -119,6 +121,7 @@ try {
     await page.route('**/.netlify/functions/owner-brain-activity', r => r.fulfill({status: 200, contentType: 'application/json', body: liveJson}));
     await page.route('**/.netlify/functions/owner-brain-review', r => r.fulfill({status: 200, contentType: 'application/json', body: reviewJson}));
     await page.route('**/.netlify/functions/owner-brain-nvidia', r => r.fulfill({status: 200, contentType: 'application/json', body: nvidiaJson}));
+    await page.route('**/.netlify/functions/owner-brain-second-opinion', r => r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, enabled: true, stopped: false, used: 0, daily: 3, model: 'm', results: []})}));
     await page.goto('http://127.0.0.1:8765/owner/brain/', {waitUntil: 'domcontentloaded'});
     await page.waitForFunction(() => !document.getElementById('approvalStatus').textContent.startsWith('Loading'), null, {timeout: 20000});
     assert.match(await page.locator('#approvalStatus').textContent(), /1 waiting for your decision · 1 already public/);
