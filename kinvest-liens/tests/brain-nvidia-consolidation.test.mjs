@@ -45,7 +45,11 @@ process.env.NVIDIA_API_URL = `http://127.0.0.1:${server.address().port}/v1/chat/
 process.env.NVIDIA_MODELS_URL = `http://127.0.0.1:${server.address().port}/v1/models`;
 const lib = await import('../../netlify/lib/brain-nvidia.mjs');
 const {tokenBudget} = lib;
-const {collectItems, deterministicConflicts, validateConsolidation, runConsolidation, DAILY_LIMIT, RECEIPTS, USAGE} = lib;
+const {deterministicConflicts, validateConsolidation, DAILY_LIMIT, RECEIPTS, USAGE} = lib;
+// Hermetic by default: no registered parcel-match audit and no county worker is read unless a test supplies one.
+const NONE = {matches: {}, countyIds: []};
+const collectItems = (auth, options = NONE) => lib.collectItems(auth, options);
+const runConsolidation = args => lib.runConsolidation({sources: NONE, ...args});
 const {LEDGER} = await import('../../netlify/lib/brain-approvals.mjs');
 
 const now = Date.parse('2026-11-23T20:00:00.000Z');
@@ -311,4 +315,80 @@ test('the consolidation names no state or county', async () => {
   const text = fs.readFileSync('netlify/lib/brain-nvidia.mjs', 'utf8');
   assert.equal(/MI_BOX|Michigan|inBox/.test(text), false);
   assert.equal((text.match(/MI-wayne/g) || []).length, 1, 'only the Wayne worker store names its own dataset');
+});
+
+// ---- Step 3: county worker results and parcel-match audits as stored inputs ----
+const REGISTRY = (await import('../../netlify/lib/parcel-matches-registry.mjs')).MATCHES;
+
+test('county worker evidence is an official item and skipped parcels are context only; the polygon is never an input', async () => {
+  const store = {'brain-gis-operations-v1-CO-larimer': {
+    evidence: {0: {parcelId: 'R0001', checkedAt: ago(30), geometry: [[1, 2], [3, 4]], objectId: 7, officialAddress: '1 Main St'}},
+    review: {1: {parcelId: 'R0002', status: 'skipped', reason: 'Situs address mismatch', checkedAt: ago(20)}, 2: {parcelId: 'R0003', status: 'skipped', checkedAt: ago(10), resolvedAt: ago(5)}}}};
+  const items = (await lib.collectItems(fakeAuth(store), {matches: {}, countyIds: ['CO-larimer']})).filter(i => i.source === 'county-worker');
+  assert.equal(items.length, 2, 'a resolved skip is not reported again');
+  const ev = items.find(i => i.status === 'official_evidence');
+  assert.equal(ev.official, true); assert.equal(ev.dataset, 'CO-larimer'); assert.equal(ev.parcelId, 'R0001');
+  assert.equal(JSON.stringify(items).includes('geometry'), false, 'no polygon is collected');
+  assert.equal(JSON.stringify(items).includes('1 Main St'), false, 'no address text is collected');
+  const skipped = items.find(i => i.parcelId === 'R0002');
+  assert.notEqual(skipped.official, true);
+  assert.equal(skipped.reason, 'Situs address mismatch');
+});
+
+test('parcel-match audits supply official matched records, those another helper also reported come first, at most eight', async () => {
+  const seedScott = {'owner-brain-photon-status-v1': {recent: [{dataset: 'IA-scott', parcelId: 'J0029-04', status: 'address_candidates_unverified', checkedAt: ago(5), candidates: [{lat: 41.5169, lon: -90.6223}]}]}};
+  const items = await lib.collectItems(fakeAuth(seedScott), {matches: REGISTRY, countyIds: []});
+  const pm = items.filter(i => i.source === 'parcel-match');
+  assert.ok(pm.length > 0 && pm.length <= 8);
+  assert.ok(pm.every(i => i.official === true && i.status === 'matched' && /^https:\/\//.test(i.evidenceUrl)));
+  assert.ok(pm.some(i => i.dataset === 'IA-scott' && i.parcelId === 'J0029-04'), 'the matched record that Photon also checked is included');
+  assert.ok(pm.every(i => i.lat !== null), 'positions are kept server side for conflict checks');
+  const conflicts = deterministicConflicts(items).filter(c => c.parcelId === 'J0029-04');
+  assert.equal(conflicts.length, 0, 'Photon is about 20 m from the official point: no location conflict');
+});
+
+test('parcel-match positions are withheld from what NVIDIA is shown, and a number the model was not shown is rejected', () => {
+  const items = [{ref: 'H1', source: 'parcel-match', dataset: 'IA-scott', parcelId: 'J0029-04', status: 'matched', official: true, lat: 41.1234567, lon: -90.7654321, checkedAt: ago(1)}];
+  const shown = JSON.parse(lib.buildPrompt(items).user)[0];
+  assert.equal(shown.lat, null); assert.equal(shown.lon, null);
+  assert.equal(lib.buildPrompt(items).user.includes('41.1234'), false);
+  const out = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'J0029-04', refs: ['H1'], summary: 'Official match at 41.1234567.'}]}), items);
+  assert.equal(out.proposals.length, 0);
+  assert.ok(out.rejected.some(r => /do not contain/.test(r)));
+  const ok = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'J0029-04', refs: ['H1'], summary: 'Official parcel record agrees.'}]}), items);
+  assert.equal(ok.proposals.length, 1, 'a parcel-match record alone is an official source');
+  assert.equal(ok.proposals[0].facts.location.lat, 41.1234567, 'the stored official position comes from the record, not the model');
+});
+
+test('a proposal needs an official source: skipped county worker parcels and geocoder candidates are not enough', () => {
+  const items = [
+    {ref: 'H1', source: 'county-worker', dataset: 'CO-larimer', parcelId: 'R0002', status: 'skipped', reason: 'Situs address mismatch'},
+    {ref: 'H2', source: 'photon', dataset: 'CO-larimer', parcelId: 'R0002', status: 'address_candidates_unverified', unverified: true},
+    {ref: 'H3', source: 'county-worker', dataset: 'CO-larimer', parcelId: 'R0001', status: 'official_evidence', official: true}];
+  const weak = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'R0002', refs: ['H1', 'H2'], summary: 'Looks fine.'}]}), items);
+  assert.equal(weak.proposals.length, 0);
+  assert.ok(weak.rejected.includes('proposal has no official or validator source'));
+  const strong = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'R0001', refs: ['H3'], summary: 'Official evidence saved.'}]}), items);
+  assert.equal(strong.proposals.length, 1);
+});
+
+test('an official match and an official worker that disagree on the same parcel are flagged without the model', () => {
+  const items = [
+    {ref: 'H1', source: 'parcel-match', dataset: 'MI-wayne', parcelId: '01002754', status: 'matched', official: true, lat: 42.3, lon: -83.1},
+    {ref: 'H2', source: 'official-gis-worker', dataset: 'MI-wayne', parcelId: '01002754', status: 'needs_review'}];
+  const found = deterministicConflicts(items);
+  assert.equal(found.length, 1); assert.equal(found[0].kind, 'status_disagreement'); assert.equal(found[0].dataset, 'MI-wayne');
+});
+
+test('a run includes the new sources in the receipt, and the matched position never leaves the server', async () => {
+  mode = 'good';
+  const auth = fakeAuth({...seed(), 'brain-gis-operations-v1-CO-larimer': {evidence: {0: {parcelId: 'R0001', checkedAt: ago(3)}}}});
+  const receipt = await lib.runConsolidation({auth, now, config: cfg, sources: {matches: REGISTRY, countyIds: ['CO-larimer']}});
+  assert.equal(receipt.outcome, 'completed');
+  assert.ok(receipt.inputs.sources['parcel-match'] > 0 && receipt.inputs.sources['county-worker'] === 1);
+  const body = sent.at(-1).body;
+  const matched = REGISTRY['IA-scott'].records.filter(r => r.status === 'matched');
+  assert.ok(matched.length > 0);
+  for (const r of matched) assert.equal(body.includes(String(r.point[1])), false, 'no official matched latitude is in the request');
+  assert.ok(receipt.inputs.datasets.includes('IA-scott') && receipt.inputs.datasets.includes('CO-larimer'));
 });

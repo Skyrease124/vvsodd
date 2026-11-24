@@ -6,11 +6,14 @@
 // Nothing is published here. Every proposal waits for owner approval.
 import {complete} from './llm.mjs';
 import {updateJson, LEDGER, DECISION} from './brain-approvals.mjs';
+import {operationCountyIds, countyOperation} from './brain-gis-universal.mjs';
+import {countyCheckpointKey} from './brain-gis-county-worker.mjs';
+import {MATCHES} from './parcel-matches-registry.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
 export const DAILY_LIMIT = 3; // owner-triggered consolidations per UTC day, to stay inside free allowances
-const MAX_ITEMS = 30, COORD_TOLERANCE = 0.002; // degrees, about 200 m
+const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
 const US_BOUNDS = {minLat: 18, maxLat: 72, minLon: -180, maxLon: -60};
@@ -28,8 +31,16 @@ const scrub = (text, secret) => {
   return out.replace(/nvapi-[A-Za-z0-9_-]+/g, '[redacted]').replace(/Bearer\s+\S+/gi, 'Bearer [redacted]');
 };
 
+// Official sources: items that come from an official county record or an owner-visible validator decision.
+// Geocoder candidates and skipped parcels are context only and can never back a proposal.
+const isOfficial = i => i.source === 'validator' || i.source === 'official-gis-worker' || i.official === true;
+const https = v => (/^https:\/\//.test(v || '') ? clip(v, 300) : null);
+
 // Reads stored helper output. Each item keeps its source and timestamp.
-export async function collectItems(auth) {
+// options.matches: parcel-match audits by dataset (default: the registered audits). options.countyIds: county worker datasets.
+export async function collectItems(auth, options = {}) {
+  const matches = options.matches ?? MATCHES;
+  const countyIds = options.countyIds ?? operationCountyIds().filter(id => countyOperation(id)?.mode !== 'existing-worker');
   const worker = (await auth.kvGet('owner-brain-wayne-worker-v1')) || {};
   const ledger = (await auth.kvGet(LEDGER)) || {entries: []};
   const photon = (await auth.kvGet('owner-brain-photon-status-v1')) || {};
@@ -53,6 +64,33 @@ export async function collectItems(auth) {
         checkedAt: row.checkedAt, unverified: true});
     }
   }
+  // Generic county worker: saved official evidence (identity, situs address, official object and polygon all checked)
+  // and the parcels it skipped. The polygon itself is never sent.
+  const worked = [];
+  for (const id of countyIds) {
+    const cp = await auth.kvGet(countyCheckpointKey(id));
+    if (!cp) continue;
+    const url = https(countyOperation(id)?.source);
+    for (const e of Object.values(cp.evidence || {}).filter(x => x?.parcelId && x?.checkedAt).slice(-5))
+      worked.push({source: 'county-worker', dataset: clip(id, 60), parcelId: clip(e.parcelId, 20), status: 'official_evidence', official: true, evidenceUrl: url, checkedAt: e.checkedAt});
+    for (const r of Object.values(cp.review || {}).filter(x => x?.parcelId && x?.checkedAt && !x.resolvedAt).slice(-5))
+      worked.push({source: 'county-worker', dataset: clip(id, 60), parcelId: clip(r.parcelId, 20), status: clip(r.status, 60) || 'skipped', reason: clip(r.reason), checkedAt: r.checkedAt});
+  }
+  worked.sort((a, b) => String(b.checkedAt).localeCompare(String(a.checkedAt)));
+  raw.push(...worked.slice(0, MAX_COUNTY_WORKER));
+  // Owner-side parcel-match audits: exact parcel number, verified address and official polygon. Matches that
+  // another helper also reported on come first, because they can be cross-checked. Positions stay server-side.
+  const seen = new Set(raw.map(i => (i.dataset || '') + '\n' + i.parcelId));
+  const matched = [];
+  for (const [id, audit] of Object.entries(matches || {}))
+    for (const r of (audit?.records || []).filter(x => x?.status === 'matched' && Array.isArray(x.point))) {
+      const lat = num(r.point[1]), lon = num(r.point[0]);
+      matched.push({source: 'parcel-match', dataset: clip(id, 60), parcelId: clip(r.parcel, 20), status: 'matched', official: true,
+        lat: inUs(lat, lon) ? lat : null, lon: inUs(lat, lon) ? lon : null, evidenceUrl: https(r.evidenceUrl), checkedAt: audit.generatedAt || null,
+        overlap: seen.has(clip(id, 60) + '\n' + clip(r.parcel, 20)) ? 0 : 1});
+    }
+  matched.sort((a, b) => a.overlap - b.overlap || a.dataset.localeCompare(b.dataset) || a.parcelId.localeCompare(b.parcelId));
+  raw.push(...matched.slice(0, MAX_PARCEL_MATCH).map(({overlap, ...item}) => item));
   raw.sort((a, b) => String(b.checkedAt).localeCompare(String(a.checkedAt)));
   return raw.slice(0, MAX_ITEMS).map((item, i) => ({ref: 'H' + (i + 1), ...item}));
 }
@@ -69,8 +107,8 @@ export function deterministicConflicts(items) {
     const parcelId = group[0].parcelId, dataset = group[0].dataset || null;
     // Verified = validator or official worker reported an exact match (pending, approved or published).
     // Unverified = the worker could not confirm the parcel. One of each is a real disagreement.
-    const official = group.filter(i => i.source === 'validator' || i.source === 'official-gis-worker');
-    const classOf = i => (['pending_owner_review', 'approved_for_staging', 'published'].includes(i.status) ? 'verified' : 'unverified');
+    const official = group.filter(isOfficial);
+    const classOf = i => (['pending_owner_review', 'approved_for_staging', 'published', 'official_evidence', 'matched'].includes(i.status) ? 'verified' : 'unverified');
     const classes = new Set(official.map(classOf));
     if (classes.size > 1)
       out.push({parcelId, dataset, refs: official.map(i => i.ref), kind: 'status_disagreement', origin: 'deterministic',
@@ -90,12 +128,12 @@ export function buildPrompt(items) {
   const system = [
     'You consolidate helper-agent results for a county tax-sale research team.',
     'Use ONLY the items provided. Each item has a ref (H1, H2, ...) and a dataset (one county). The same parcel number in two datasets is two different parcels. Do not invent parcel IDs, coordinates, owners, amounts, dates or sources.',
-    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries.',
+    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position.',
     'Return ONLY JSON: {"conflicts":[{"parcelId":"...","refs":["H1"],"detail":"short factual text"}],"proposals":[{"parcelId":"...","refs":["H1"],"summary":"short factual text"}]}.',
-    'Propose an update only when a validator or official-gis-worker item supports it. Every proposal needs owner approval.',
+    'Propose an update only when a validator, official-gis-worker, county-worker official_evidence or parcel-match item supports it. Every proposal needs owner approval.',
   ].join(' ');
   const user = JSON.stringify(items.map(({ref, source, dataset, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified}) =>
-    ({ref, source, dataset, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified: !!unverified})));
+    ({ref, source, dataset, parcelId, recordId, status, reason, lat: source === 'parcel-match' ? null : lat, lon: source === 'parcel-match' ? null : lon, evidenceUrl, checkedAt, unverified: !!unverified})));
   return {system, user};
 }
 
@@ -114,7 +152,9 @@ export function parseAnswer(text) {
 // Every number of three or more digits the model states must appear in the items it cites.
 const numbersIn = text => String(text ?? '').match(/\d[\d.,-]{2,}\d|\d{3,}/g) || [];
 function unsupportedNumber(text, cited) {
-  const pool = JSON.stringify(cited).replace(/,/g, '');
+  // Only what NVIDIA was shown counts: a parcel-match position was withheld from the prompt.
+  const shown = cited.map(i => (i.source === 'parcel-match' ? {...i, lat: null, lon: null} : i));
+  const pool = JSON.stringify(shown).replace(/,/g, '');
   return numbersIn(text).find(n => !pool.includes(n.replace(/,/g, '')));
 }
 // Source references are built from the input items, never from the model.
@@ -122,7 +162,7 @@ const sourcesOf = cited => cited.map(i => ({ref: i.ref, source: i.source, datase
   checkedAt: i.checkedAt || null, unverified: !!i.unverified}));
 // Facts only from official or validator items; geocoder candidates never supply a location.
 function factsOf(parcelId, cited, dataset = null) {
-  const official = cited.filter(i => i.source === 'validator' || i.source === 'official-gis-worker');
+  const official = cited.filter(isOfficial);
   const located = official.find(i => Number.isFinite(i.lat) && Number.isFinite(i.lon));
   return {parcelId, dataset, statuses: [...new Set(official.map(i => i.status).filter(Boolean))],
     location: located ? {lat: located.lat, lon: located.lon, ref: located.ref} : null,
@@ -149,7 +189,7 @@ export function validateConsolidation(text, items) {
     const cited = refsOk(p?.refs) ? p.refs.map(r => byRef.get(r)) : null;
     if (!cited) { rejected.push('proposal cited unknown refs'); continue; }
     if (!cited.every(i => i.parcelId === clip(p.parcelId, 20) && (i.dataset || '') === (cited[0].dataset || ''))) { rejected.push('proposal named a parcel its sources do not cover'); continue; }
-    if (!cited.some(i => i.source === 'validator' || i.source === 'official-gis-worker')) { rejected.push('proposal has no official or validator source'); continue; }
+    if (!cited.some(isOfficial)) { rejected.push('proposal has no official or validator source'); continue; }
     const extra = unsupportedNumber(p.summary, cited);
     if (extra) { rejected.push('proposal stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
     proposals.push({parcelId: clip(p.parcelId, 20), dataset: cited[0].dataset || null, refs: p.refs, summary: clip(p.summary, 300), facts: factsOf(clip(p.parcelId, 20), cited, cited[0].dataset || null),
@@ -176,10 +216,10 @@ export async function usageToday(auth, now = Date.now()) {
 // Runs one owner-triggered consolidation. Returns the receipt that was stored.
 // config comes from the endpoint (keystore.getConfig()). This library never loads the key store itself,
 // so it stays a pure module that runs without installed packages.
-export async function runConsolidation({auth, now = Date.now(), config = null} = {}) {
+export async function runConsolidation({auth, now = Date.now(), config = null, sources = {}} = {}) {
   const started = Date.now();
   const id = 'nv-' + new Date(now).toISOString().replace(/[-:.TZ]/g, '').slice(0, 14) + '-' + Math.random().toString(36).slice(2, 8);
-  const items = await collectItems(auth);
+  const items = await collectItems(auth, sources);
   const cfg = config;
   const base = {id, at: new Date(now).toISOString(), inputs: {count: items.length, sources: {}, datasets: [...new Set(items.map(i => i.dataset).filter(Boolean))].sort(),
       refs: items.map(i => ({ref: i.ref, source: i.source, dataset: i.dataset || null, parcelId: i.parcelId || null, checkedAt: i.checkedAt}))}};
