@@ -95,6 +95,13 @@ function approvedFeed(file,n){
     assert.equal(await f3.locator('#pmStrip .pm-sc').count(),3,'tapping New York shows every approved parcel');
     assert.equal(await f3.evaluate(()=>window.__pm.stSel.value),'NY');
     assert.equal(await f3.evaluate(()=>window.__pm.coSel.value),'','no county was chosen');
+    // Tapping a parcel shows the callout on it: owner or address, amount owed, sale type, tax year, size, and a View parcel button.
+    await f3.locator('#pmStrip .pm-sc').first().click();
+    await f3.locator('.pm-callout').waitFor({state:'visible',timeout:20000});
+    const callText=await f3.locator('.pm-callout').textContent();
+    assert.match(callText,/View parcel/,'callout has the View parcel button');
+    assert.match(callText,/Amount owed/,'callout shows the amount owed');
+    assert.equal(await f3.locator('.pm-callout-view').getAttribute('href')!==null,true,'View parcel links to the parcel');
     await f3.waitForFunction(()=>/3 mapped parcels across 1 loaded county/.test(document.getElementById('pmMsg').textContent),null,{timeout:20000});
     await c3.close();
     console.log('PASS: parcel strip for New York by tap and by choice (3 approved parcels, county list still works), Iowa none until approved then 2, Florida unchanged');

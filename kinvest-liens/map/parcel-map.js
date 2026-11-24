@@ -853,7 +853,7 @@
   }
 
   // ---------- popup ----------
-  function closePop() { $('pmPop').hidden = true; sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
+  function closePop() { $('pmPop').hidden = true; hideCallout(); sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
   function row(dl, k, v) { if (v == null || v === '') return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }
   // Satellite picture of the parcel with its verified outline drawn on top (same projection as the picture, so they line up).
   const MERC = { R: 6378137, X: lng => lng * Math.PI / 180 * 6378137, Y: lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137 };
@@ -1067,8 +1067,40 @@
     bar.append(sp, ai, det, mb); p.append(more, bar); p.hidden = false;
     { const hdr = p.querySelector('.hd'); let y0 = null; hdr.addEventListener('pointerdown', e => { if (isMobile() && !e.target.closest('button')) { y0 = e.clientY; try { hdr.setPointerCapture(e.pointerId); } catch (x) {} p.style.transition = 'none'; } }); hdr.addEventListener('pointermove', e => { if (y0 != null) p.style.transform = 'translateY(' + Math.max(0, e.clientY - y0) + 'px)'; }); const up = e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; p.style.transition = ''; p.style.transform = ''; if (dy > 90) closePop(); }; hdr.addEventListener('pointerup', up); hdr.addEventListener('pointercancel', up); }
   }
+  // Home map only: a callout that sits on the tapped parcel (owner, amount owed, sale type, tax year, size).
+  let callEl = null;
+  const callAnchor = r => { if (r.cx) return r.cx; const g = r.g; if (!g) return null; const ring = g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiPolygon' ? g.coordinates[0][0] : null; if (!ring || !ring.length) return null; let x = 0, y = 0; ring.forEach(q => { x += q[0]; y += q[1]; }); return [x / ring.length, y / ring.length]; };
+  function ensureCallout() {
+    if (callEl) return callEl;
+    if (!document.getElementById('pmCalloutCss')) { const st = mk('style'); st.id = 'pmCalloutCss'; st.textContent = '.pm-callout{position:absolute;z-index:6;width:min(268px,calc(100% - 24px));padding:14px 14px 12px;border-radius:18px;background:rgba(14,24,36,.95);border:1px solid rgba(243,195,87,.7);box-shadow:0 10px 30px rgba(0,0,0,.45);color:#eef5fb;font:13px/1.35 system-ui,-apple-system,sans-serif}.pm-callout[hidden]{display:none}.pm-callout::after{content:"";position:absolute;left:var(--tail,50%);bottom:-8px;width:14px;height:14px;transform:translateX(-50%) rotate(45deg);background:rgba(14,24,36,.95);border-right:1px solid rgba(243,195,87,.7);border-bottom:1px solid rgba(243,195,87,.7)}.pm-callout.below::after{bottom:auto;top:-8px;transform:translateX(-50%) rotate(225deg)}.pm-callout-title{display:flex;gap:8px;align-items:center;font-size:15px;margin-bottom:8px}.pm-callout-title b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.pm-callout-rows{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0 0 12px}.pm-callout-rows dt{color:#a9bccb;margin:0}.pm-callout-rows dd{margin:0;text-align:right;font-weight:600}.pm-callout-rows dd.gold{color:#f3c357}.pm-callout-act{display:flex;gap:8px}.pm-callout-view{flex:1;display:flex;justify-content:center;align-items:center;min-height:40px;border-radius:12px;background:#15835b;color:#fff;font-weight:700;text-decoration:none}.pm-callout-save{width:40px;min-height:40px;display:grid;place-items:center;border-radius:12px;border:1px solid rgba(243,195,87,.7);color:#f3c357;text-decoration:none}'; document.head.append(st); }
+    callEl = mk('div', 'pm-callout'); callEl.hidden = true; callEl.setAttribute('role', 'dialog'); callEl.setAttribute('aria-label', 'Parcel summary'); map.getContainer().append(callEl);
+    map.on('move', placeCallout);
+    return callEl;
+  }
+  function placeCallout() {
+    if (!callEl || callEl.hidden || !callEl._anchor || !map) return;
+    const a = map.project(callEl._anchor), W = map.getContainer().clientWidth, H = map.getContainer().clientHeight, w = callEl.offsetWidth || 268, h = callEl.offsetHeight || 170;
+    const above = a.y - h - 22 > 8, x = Math.min(Math.max(a.x - w / 2, 8), W - w - 8), y = Math.min(Math.max(above ? a.y - h - 18 : a.y + 18, 8), H - h - 8);
+    callEl.style.left = x + 'px'; callEl.style.top = y + 'px'; callEl.classList.toggle('below', !above); callEl.style.setProperty('--tail', Math.min(Math.max(a.x - x, 20), w - 20) + 'px');
+  }
+  function hideCallout() { if (callEl) { callEl.hidden = true; callEl._anchor = null; } }
+  function showCallout(r, d) {
+    if (!homeMap || !mapReady || !d) return; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
+    el.textContent = ''; const cat = CATS[r.c] || {};
+    const title = mk('div', 'pm-callout-title'), ttl = mk('b', '', r.o || r.a || ('Parcel ' + r.p)); title.append(mk('span', '', '🏢'), ttl);
+    const dl = mk('dl', 'pm-callout-rows');
+    [['Amount owed', r.amt != null ? money(r.amt) + ' due' : null, true], ['Sale type', cat.n || null], ['Tax year', r.ty != null ? String(r.ty) : null], ['Parcel size', acres(r) || sqft(r) || null]]
+      .forEach(([k, v, gold]) => { if (v) dl.append(mk('dt', '', k), mk('dd', gold ? 'gold' : '', v)); });
+    const href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c: d.id, p: r.p});
+    const act = mk('div', 'pm-callout-act'), view = mk('a', 'pm-callout-view', 'View parcel →'), save = mk('a', 'pm-callout-save', ''); view.href = href; save.href = href;
+    save.setAttribute('aria-label', 'Open this parcel to watch it'); save.title = 'Open the parcel to watch it';
+    save.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
+    act.append(view, save); el.append(title, dl, act);
+    el._anchor = anchor; el.hidden = false; placeCallout();
+  }
   function select(r, o) {
     sel = r; near = null; popup(r);
+    if (homeMap) showCallout(r, IDX.datasets.find(x => x.id === r._d));
     const dataset = IDX.datasets.find(x => x.id === r._d);
     if (embedded&&pickerMap&&dataset){
       window.parent.dispatchEvent(new CustomEvent('ppa:workshop-parcel',{detail:{
@@ -1474,7 +1506,7 @@
     await Promise.all(Array.from({length:Math.min(3,datasets.length)},()=>worker()));
   }
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
-    if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
+    if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; hideCallout(); if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
     ++stateParcelLoadToken; active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
     if(homeMap){syncStateBadges();drawRadarPins();}
     ppaFocus(a,''); // first, so the previous lock is released before the camera moves
