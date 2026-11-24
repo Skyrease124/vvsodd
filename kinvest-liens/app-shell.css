@@ -194,3 +194,6 @@ details.app-weather{display:block}.app-weather-now{display:flex;align-items:cent
 .ppa-home .hc-dots{display:flex;justify-content:center;align-items:center;gap:8px;min-height:14px;margin:6px 0 2px}
 .ppa-home .hc-dot{width:8px;height:8px;padding:0;border:0;border-radius:99px;background:#3b5566;cursor:pointer;transition:width .25s ease,background .25s ease}
 .ppa-home .hc-dot.on{width:22px;background:#5df1ae;box-shadow:0 0 8px rgba(93,241,174,.6)}
+/* The camera in the middle of the row is the one selected (glow only, so the row does not jump while it moves) */
+.ppa-home .hc-card.hc-focus{border-color:#5df1ae;box-shadow:0 0 0 1px rgba(93,241,174,.55),0 0 26px rgba(16,185,129,.5),0 14px 30px rgba(0,0,0,.35);opacity:1;transform:scale(1)}
+.ppa-home .hc-card:focus-visible{outline:2px solid #5df1ae;outline-offset:3px}

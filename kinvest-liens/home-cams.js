@@ -16,9 +16,10 @@
   // Dots under the row: show where you are in it, and tap one to move there.
   const cardsIn = () => [...grid.querySelectorAll('.hc-card')];
   const nearest = () => { const n = cardsIn().length; if (grid.scrollLeft >= grid.scrollWidth - grid.clientWidth - 2) return n - 1; const g = grid.getBoundingClientRect(), mid = g.left + g.width / 2; let best = 0, bd = Infinity; cardsIn().forEach((c, i) => { const b = c.getBoundingClientRect(), d = Math.abs(b.left + b.width / 2 - mid); if (d < bd) { bd = d; best = i; } }); return best; };
-  const markDot = () => { const on = nearest(); [...dots.children].forEach((d, i) => d.classList.toggle('on', i === on)); };
+  const markDot = () => { const on = nearest(); [...dots.children].forEach((d, i) => d.classList.toggle('on', i === on)); cardsIn().forEach((c, i) => c.classList.toggle('hc-focus', i === on)); };
+  const centre = card => { const g = grid.getBoundingClientRect(), b = card.getBoundingClientRect(); grid.scrollBy({left: (b.left + b.width / 2) - (g.left + g.width / 2), behavior: 'smooth'}); };
   grid.addEventListener('scroll', () => requestAnimationFrame(markDot), {passive: true});
-  const buildDots = () => { dots.replaceChildren(); const n = cardsIn().length; if (n < 2) return; for (let i = 0; i < n; i++) { const d = mk('button', 'hc-dot', ''); d.type = 'button'; d.setAttribute('aria-label', 'Show camera ' + (i + 1)); d.addEventListener('click', () => { const c = cardsIn()[i], g = grid.getBoundingClientRect(), b = c.getBoundingClientRect(); grid.scrollBy({left: (b.left + b.width / 2) - (g.left + g.width / 2), behavior: 'smooth'}); }); dots.append(d); } markDot(); };
+  const buildDots = () => { dots.replaceChildren(); const n = cardsIn().length; if (n < 2) return; for (let i = 0; i < n; i++) { const d = mk('button', 'hc-dot', ''); d.type = 'button'; d.setAttribute('aria-label', 'Show camera ' + (i + 1)); d.addEventListener('click', () => centre(cardsIn()[i])); dots.append(d); } markDot(); };
   let controller, refresh, started = false, currentKey, stopVideos = [], hlsLibrary;
   // Homepage: only live feeds are shown (no snapshot-only cameras), and each visit picks a different state from the list.
   const liveOnly = true, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -116,6 +117,12 @@
           card.append(media,details);
         } else card.append(media,cap);
         media.append(fallback);
+        if (structured) {
+          card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-label', 'Show ' + c.name);
+          const select = e => { if (e.target.closest('a')) return; centre(card); };
+          card.addEventListener('click', select);
+          card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); centre(card); } });
+        }
         grid.append(card);
         if (!c.image) return null;
         const img = Object.assign(mk('img',''),{alt:'',loading:'lazy',decoding:'async',referrerPolicy:'no-referrer'});

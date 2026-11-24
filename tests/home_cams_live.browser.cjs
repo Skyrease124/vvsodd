@@ -27,6 +27,11 @@ const cam = (id, live) => ({kind: 'camera', name: 'Cam ' + id, road: 'I-' + id, 
     assert.equal(await page.locator('#hcams .hc-hero').count(), 1, 'one live hero card');
     assert.equal(await page.locator('#hcams .hc-dot').count(), names.length, 'one dot per camera');
     assert.equal(await page.locator('#hcams .hc-chip', {hasText: 'Near current map'}).count(), 0, 'no Near current map option');
+    // Tapping a camera that is not in the middle selects it: it moves to the centre and takes the glow.
+    const before = await page.locator('#hcams .hc-focus').first().getAttribute('aria-label');
+    await page.locator('#hcams .hc-card').nth(0).click({position: {x: 40, y: 40}}); await page.waitForTimeout(900);
+    const after = await page.locator('#hcams .hc-focus').first().getAttribute('aria-label');
+    assert.notEqual(after, before, 'tapping another camera selects it (was ' + before + ', now ' + after + ')');
     await page.locator('#hcams .hc-dot').nth(names.length - 1).click(); await page.waitForTimeout(900);
     assert.ok(await page.locator('#hcams .hc-dot.on').evaluate((d, n) => [...d.parentNode.children].indexOf(d) === n - 1, names.length), 'tapping the last dot moves to the last camera');
     assert.deepEqual(errors, [], 'no page errors');
