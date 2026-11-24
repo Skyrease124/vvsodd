@@ -1009,7 +1009,7 @@
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
     details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
-    details.addEventListener('click', e => { e.preventDefault(); openParcelPanel(details.href); });
+    details.addEventListener('click', e => { e.preventDefault(); openDetailPanel(r, d); });
     card.append(info, close, details);
     if (r.g && r.bb) {
       const thumbnail = hero(r, d);
@@ -1019,9 +1019,9 @@
     }
     card.hidden = false;
   }
-  function popup(r) {
-    const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
-    if (homeMap) { homeParcelCard(p, r, d); return; }
+  function popup(r, opt = {}) {
+    const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = opt.target || $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
+    if (homeMap && !opt.full) { homeParcelCard(p, r, d); return; }
     const hd = mk('div', 'hd'), ttl = mk('div', 't'); ttl.append(mk('b', r.a ? '' : 'idt', r.a || r.p), mk('span', '', (r.a ? '' : 'Parcel ID · ') + d.county + ', ' + d.state + (r.a ? ' · ' + r.p : ''))); const x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closePop); hd.append(ttl, x); p.appendChild(hd);
     const bd = mk('div', 'bd'); bd.appendChild(hero(r, d));
     // key facts
@@ -1037,7 +1037,7 @@
       if (S && S.sys) dl.appendChild(mk('p', 'note', d.state + ' rules (' + S.sys + ')' + (S.rate ? ': ' + S.rate + '. ' : '. ') + (S.verify ? 'Sources differ for this state: verify with the county. ' : '') + 'A lien and a deed are not the same thing.')); (r.w || []).forEach(w => { if (!/^We could not tell|^No official source/.test(w)) dl.appendChild(mk('p', 'note', w)); }); }));
     bd.appendChild(group('Property', false, dl => { row(dl, 'Parcel ID', r.p); row(dl, 'Address', r.a || 'No street address on the record'); row(dl, 'Acreage', acres(r) || 'Not on file'); row(dl, 'Square footage', sqft(r) || 'Not on file'); row(dl, 'Zoning', r.zn || 'Not on file'); row(dl, 'Land', r.va ? 'Vacant land' : (r.us || 'Not stated')); row(dl, 'Market value', r.mv == null ? 'Market value unavailable' : money(r.mv)); row(dl, 'Assessed value', r.av == null ? null : money(r.av)); row(dl, 'HOA status', hoaText(r.hoa));
       row(dl, 'Flood zone (FEMA)', r.fz ? r.fz.z + (r.fz.sfha != null ? (r.fz.sfha > 0 ? ' · ' + r.fz.sfha + '% in a high-risk zone' : ' · none in a high-risk zone') : '') : 'Not checked'); row(dl, 'Wetlands (NWI)', r.wt != null ? (r.wt > 0 ? r.wt + '% of the lot touches mapped wetlands' : 'None mapped') : 'Not checked'); row(dl, 'Elevation', 'Automatic terrain estimate shown below when available'); }));
-    addSavedElevation(bd,r,d);
+    if (!homeMap) addSavedElevation(bd,r,d); // the homepage hides the elevation line
     if(r.__brainEvidence?.source){
       const source=mk('a','note','Official GIS boundary source');
       source.href=r.__brainEvidence.source;
@@ -1083,21 +1083,18 @@
     const above = a.y - h - 22 > 8, x = Math.min(Math.max(a.x - w / 2, 8), W - w - 8), y = Math.min(Math.max(above ? a.y - h - 18 : a.y + 18, 8), H - h - 8);
     callEl.style.left = x + 'px'; callEl.style.top = y + 'px'; callEl.classList.toggle('below', !above); callEl.style.setProperty('--tail', Math.min(Math.max(a.x - x, 20), w - 20) + 'px');
   }
-  // "View parcel" opens the parcel page inside the map as a panel that scrolls, instead of leaving the map.
-  let parcelPanel = null;
-  function openParcelPanel(url) {
-    if (!map || !url) return; const host = map.getContainer();
-    if (!document.getElementById('pmParcelCss')) { const st = mk('style'); st.id = 'pmParcelCss'; st.textContent = '.pm-parcel-panel{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;background:#0b1620}.pm-parcel-panel[hidden]{display:none}.pm-parcel-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #2a4252;color:#eef5fb;font:600 13px/1.2 system-ui,-apple-system,sans-serif}.pm-parcel-x{min-height:32px;padding:0 12px;border-radius:10px;border:1px solid #69e9a5;background:#086a47;color:#fff;font-weight:700;cursor:pointer}.pm-parcel-frame{flex:1;width:100%;min-height:0;border:0;background:#0b1620}'; document.head.append(st); }
-    if (!parcelPanel) {
-      parcelPanel = mk('div', 'pm-parcel-panel'); parcelPanel.setAttribute('role', 'dialog'); parcelPanel.setAttribute('aria-label', 'Parcel details');
-      const bar = mk('div', 'pm-parcel-bar'), t = mk('b', '', 'Parcel details'), x = mk('button', 'pm-parcel-x', 'Close'); x.type = 'button'; x.addEventListener('click', closeParcelPanel);
-      bar.append(t, x); const fr = mk('iframe', 'pm-parcel-frame'); fr.title = 'Parcel details';
-      fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
-      parcelPanel.append(bar, fr); parcelPanel._frame = fr; host.append(parcelPanel);
-    }
-    parcelPanel._frame.src = url; parcelPanel.hidden = false; hideCallout();
+  // "View parcel" opens a separate panel over the map with the full parcel details (the same content as the parcel page).
+  let detailPanel = null;
+  function openDetailPanel(r, d) {
+    if (!map || !r || !d) return; const host = map.getContainer();
+    if (!document.getElementById('pmDetailCss')) { const st = mk('style'); st.id = 'pmDetailCss'; st.textContent = '.ppa-map-home .pm-pop.pm-detail:not([hidden]){position:absolute;inset:0;z-index:200;display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:auto;max-height:none;margin:0;padding:0 0 14px;border:0;border-radius:0;background:#081d25;grid-template-columns:none;grid-template-rows:none}'; document.head.append(st); }
+    if (!detailPanel) { detailPanel = mk('article', 'pm-pop pm-detail'); detailPanel.setAttribute('aria-label', 'Parcel details'); host.append(detailPanel); }
+    popup(r, {full: true, target: detailPanel});
+    // the builder's own header carries the Close button: make it close this panel
+    const x = detailPanel.querySelector('.hd .x'); if (x) { const nx = x.cloneNode(true); x.replaceWith(nx); nx.addEventListener('click', closeDetailPanel); }
+    detailPanel.hidden = false; detailPanel.scrollTop = 0; hideCallout();
   }
-  function closeParcelPanel() { if (parcelPanel) { parcelPanel.hidden = true; parcelPanel._frame.src = 'about:blank'; } }
+  function closeDetailPanel() { if (detailPanel) detailPanel.hidden = true; }
   function hideCallout() { if (callEl) { callEl.hidden = true; callEl._anchor = null; } }
   function showCallout(r, d) {
     if (!homeMap || !mapReady || !d) return; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
@@ -1110,7 +1107,7 @@
     const act = mk('div', 'pm-callout-act'), view = mk('a', 'pm-callout-view', 'View parcel →'), save = mk('a', 'pm-callout-save', ''); view.href = href; save.href = href;
     save.setAttribute('aria-label', 'Open this parcel to watch it'); save.title = 'Open the parcel to watch it';
     save.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
-    view.addEventListener('click', e => { e.preventDefault(); openParcelPanel(href); });
+    view.addEventListener('click', e => { e.preventDefault(); openDetailPanel(r, d); });
     act.append(view, save); el.append(title, dl, act);
     el._anchor = anchor; el.hidden = false; placeCallout();
   }

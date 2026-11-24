@@ -102,14 +102,17 @@ function approvedFeed(file,n){
     assert.match(callText,/View parcel/,'callout has the View parcel button');
     assert.match(callText,/Amount owed/,'callout shows the amount owed');
     assert.equal(await f3.locator('.pm-callout-view').getAttribute('href')!==null,true,'View parcel links to the parcel');
-    // View parcel opens inside the map as a panel; the map page does not navigate away.
+    // View parcel opens a separate panel over the map with the full parcel details; the map page does not navigate away.
     const urlBefore=await f3.evaluate(()=>location.href);
     await f3.locator('.pm-callout-view').click();
-    await f3.locator('.pm-parcel-panel').waitFor({state:'visible',timeout:20000});
-    assert.ok(await f3.locator('.pm-parcel-frame').getAttribute('src'),'the panel has a page to show');
+    await f3.locator('.pm-detail').waitFor({state:'visible',timeout:20000});
+    const detail=await f3.locator('.pm-detail').textContent();
+    assert.match(detail,/Owner/,'the panel shows the owner section');
+    assert.match(detail,/Sale and taxes/,'the panel shows the sale and tax section');
+    assert.match(detail,/Property/,'the panel shows the property section');
     assert.equal(await f3.evaluate(()=>location.href),urlBefore,'the map page did not navigate away');
-    await f3.locator('.pm-parcel-x').click();
-    await f3.locator('.pm-parcel-panel').waitFor({state:'hidden',timeout:5000});
+    await f3.locator('.pm-detail .hd .x').click();
+    await f3.locator('.pm-detail').waitFor({state:'hidden',timeout:5000});
     await f3.waitForFunction(()=>/3 mapped parcels across 1 loaded county/.test(document.getElementById('pmMsg').textContent),null,{timeout:20000});
     await c3.close();
     console.log('PASS: parcel strip for New York by tap and by choice (3 approved parcels, county list still works), Iowa none until approved then 2, Florida unchanged');
