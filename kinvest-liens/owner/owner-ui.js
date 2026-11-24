@@ -13,7 +13,7 @@ window.OUI = (function () {
     sliders: svg('<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>'),
     info: svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'), bolt: svg('<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>'),
     search: svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'), people: svg('<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/>'),
-    table: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M9 10v9"/>')
+    table: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M9 10v9"/>'), upload: svg('<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'), clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), mail: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'), link: svg('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'), map: svg('<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>')
   };
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const icon = (name, color) => { const s = el('span', 'ou-ico'); s.style.setProperty('--c', color || '#8e8e93'); s.innerHTML = ICON[name] || ICON.info; return s; };
@@ -45,5 +45,16 @@ window.OUI = (function () {
     set(!!o.open);
     return box;
   }
-  return {svg, ICON, el, icon, pill, clean, cleanTree, fold};
+  // Wraps each heading and the siblings that follow it (up to the next heading) into one expandable section.
+  // `meta(h)` returns {icon, color, sub, pills, open}. Existing elements are moved, never re-created.
+  function sectionize(headings, meta) {
+    return headings.map(h => {
+      const box = el('div', 'ou-card'), sibs = []; let n = h.nextElementSibling;
+      while (n && !headings.includes(n)) { sibs.push(n); n = n.nextElementSibling; }
+      h.before(box); box.append(h, ...sibs);
+      const m = meta(h) || {};
+      return fold(box, [h], m);
+    });
+  }
+  return {svg, ICON, el, icon, pill, clean, cleanTree, fold, sectionize};
 })();

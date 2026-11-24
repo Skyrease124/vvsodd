@@ -17,7 +17,7 @@
 .ocr textarea{width:100%;box-sizing:border-box;height:280px;font:13px/1.4 ui-monospace,monospace;background:#070d1c;color:#e6ecf7;border:1px solid #2a3c66;border-radius:10px;padding:10px}
 .ocr .st{color:#9fb1d6;font-size:14px}.ocr .good{color:#7bf0b0}.ocr .bad{color:#ff9b9b}.ocr .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.ocr .btn.ghost{color:#ffd166!important;border-color:#ffd166}
 .ocr ul{margin:6px 0 0 18px;padding:0;font-size:14px}
-</style>
+</style><link rel="stylesheet" href="/owner/owner-ui.css">
 </head>
 <body class="aibody">
 <header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketPro</a><nav><a href="/owner/keys/">API keys</a></nav></div></header>
@@ -69,5 +69,6 @@
   $('cp').onclick = async () => { try { await navigator.clipboard.writeText($('txt').value); $('cp').textContent = 'Copied'; } catch (e) { $('txt').select(); } };
 })();
 </script>
+<script src="/owner/owner-ui.js"></script><script src="/owner/ocr/ocr-ui.js"></script>
 </body>
 </html>

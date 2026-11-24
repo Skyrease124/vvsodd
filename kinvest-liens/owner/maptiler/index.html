@@ -16,7 +16,7 @@ label{display:block;margin:8px 0 5px;font-size:13px;color:#bdd1de}
 #map[hidden]{display:none}.muted{font-size:13px;color:#9eb8c6}.error{color:#ffb9b9}
 #detail{white-space:pre-wrap;overflow-wrap:anywhere;color:#b6d8ec}
 @media(max-width:600px){.controls{grid-template-columns:1fr}#map{height:56vh;min-height:340px}}
-</style></head><body><div class="wrap">
+</style><link rel="stylesheet" href="/owner/owner-ui.css"></head><body><div class="wrap">
 <a href="/owner/">← Owner Dashboard</a>
 <h1>MapTiler — Private Map Preview</h1>
 <p>Test satellite imagery, terrain and your current verified parcel boundaries. Nothing here changes PricePocketAsset's public maps or publishes new properties.</p>
@@ -246,4 +246,5 @@ $('terrain').onclick=()=>{
   msg('Loaded '+states.length+' states and '+window.__datasets.length+' county datasets. Choose a county and load the private map preview.');
  }catch(e){$('state').replaceChildren(new Option('State data unavailable',''));$('county').replaceChildren(new Option('County data unavailable',''));$('county').disabled=true;$('load').disabled=true;msg('Preview unavailable: '+e.message,true);}
 })();
-</script></body></html>
+</script><script src="/owner/owner-ui.js"></script><script src="/owner/maptiler/mt-ui.js"></script>
+</body></html>

@@ -89,3 +89,76 @@ body.ou .ou-bar#x,body.ou .salebox .ou-bar{height:8px!important;margin:8px 0!imp
 body.ou .salebox .ou-bar>#bar{background:linear-gradient(90deg,#2fbf84,#65edab)!important;border-radius:99px;transition:width .7s var(--o-ease)}
 body.ou .salebox .ou-bar.warn>#bar{background:linear-gradient(90deg,#d9a21b,#ffdc7a)!important}
 body.ou .salebox .ou-bar.bad>#bar{background:linear-gradient(90deg,#d64545,#ff8a8a)!important}
+/* Property & Research pages */
+body.ou textarea{border:1px solid transparent!important;border-radius:11px!important;background:#0a1828!important;color:#f4f8ff!important;font:inherit;padding:10px 12px}
+body.ou header{background:transparent!important;border:0!important}
+body.ou .ou-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+body.ou .ou-stats4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:620px){body.ou .ou-stats4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+body.ou .ou-links{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 6px 0}
+body.ou .ou-links a{font-size:.9rem;text-decoration:none}
+body.ou .ou-rel{display:flex;flex-direction:column;gap:1px;padding:8px 0;border-top:1px solid #ffffff12}
+body.ou .ou-rel:first-child{border-top:0}
+/* Map coverage */
+body.p-map main{max-width:860px!important}
+body.p-map .cols{display:grid;grid-template-columns:1fr;gap:0}
+body.p-map .panel{border:0!important;background:var(--o-card)!important}
+body.p-map .county{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid #ffffff12!important;padding:11px 0}
+body.p-map .county:first-child{border-top:0!important}
+body.p-map .meter{height:6px!important;border-radius:99px!important;background:#ffffff14!important;overflow:hidden;margin-top:6px}
+body.p-map .meter span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2fbf84,#65edab)!important;transition:width .7s var(--o-ease)}
+body.p-map .tag{font-size:.72rem;font-weight:600;color:#ffdc7a;background:#ffdc7a1f;border-radius:99px;padding:3px 9px;white-space:nowrap}
+body.p-map .right{display:flex;align-items:center;gap:8px}
+body.p-map .controls{display:flex;gap:10px;flex-wrap:wrap}
+body.p-map .controls label{flex:1 1 150px}
+body.p-map .controls select{width:100%;margin-top:4px}
+body.p-map button{border:0;background:#1a5a47!important;color:#fff!important}
+body.p-map #gate{color:#e8f2fa}
+/* Imports and review */
+body.p-imp .pfcard{background:#ffffff0a!important;border:0!important;border-radius:12px!important;margin:8px 0;padding:10px 12px}
+body.p-imp .ou-in .pfws-form{display:grid;gap:8px}
+body.p-imp .ou-in .tablewrap{overflow-x:auto}
+body.p-imp .ou-in table{width:100%;font-size:.82rem;border-collapse:collapse}
+body.p-imp .ou-in th{color:var(--o-gold);text-align:left;font-weight:600;padding:6px}
+body.p-imp .ou-in td{padding:6px;border-bottom:1px solid #ffffff0d}
+body.p-imp .ou-in .lact{display:flex;gap:8px;flex-wrap:wrap}
+/* Certificates and research releases (light pages made dark) */
+body.p-cert,body.p-rel{color:#e8f2fa!important}
+body.p-cert main,body.p-rel main{max-width:760px!important;color:#e8f2fa}
+body.p-cert .summary,body.p-cert .review-panel,body.p-rel form{background:var(--o-card)!important;border:0!important;color:#e8f2fa!important}
+body.p-rel form{padding:0!important;display:block}
+body.p-rel .ou-in form,body.p-rel .ou-in label{color:#c7dce7}
+body.p-rel label,body.p-cert label{color:#c7dce7!important}
+body.p-rel small,body.p-cert .sub,body.p-cert .auto-status,body.p-cert .card p,body.p-cert .auto-item{color:#9fb4c8!important}
+body.p-cert .auto-item{border-top:1px solid #ffffff12!important}
+body.p-cert .cards{display:block!important;margin:0!important}
+body.p-cert .controls{display:flex;gap:8px;flex-wrap:wrap}
+body.p-cert .controls input[type=search]{flex:1;min-width:180px}
+body.p-cert button.secondary{background:#ffffff14!important;color:#f4f8ff!important}
+body.p-cert .ou-in p{margin:6px 0}
+body.p-rel .ou-in form{display:grid;gap:12px;padding:0}
+body.p-rel .ou-in input,body.p-rel .ou-in select,body.p-rel .ou-in textarea{width:100%;box-sizing:border-box}
+body.p-rel .ou-in input[type=checkbox]{width:auto}
+/* County PDF reader */
+body.p-ocr .ocr{max-width:760px}
+body.p-ocr .ou-upload input[type=file]{width:100%;color:#c7dce7;background:#ffffff0a;border-radius:11px;padding:14px;box-sizing:border-box;border:1px dashed #ffffff33}
+body.p-ocr .ou-bar>#bar{display:block;height:100%;width:0;background:linear-gradient(90deg,#2fbf84,#65edab);border-radius:99px;transition:width .4s var(--o-ease)}
+body.p-ocr textarea{width:100%;box-sizing:border-box;height:240px;font:12px/1.4 ui-monospace,monospace}
+body.p-ocr .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+body.p-ocr .st{color:#9fb4c8}body.p-ocr .st.good{color:#7bf0b0}body.p-ocr .st.bad{color:#ff9b9b}
+/* MapTiler: surrounding interface only. Nothing here touches #map or its controls. */
+body.oum{--o-ease:cubic-bezier(.2,.75,.22,1);--o-card:linear-gradient(180deg,#112236,#0d1b2d);--o-gold:#ffdc7a;--o-green:#65edab;background:radial-gradient(1200px 500px at 50% -10%,#10304a55,transparent),#07121e!important;-webkit-font-smoothing:antialiased}
+body.oum .wrap{max-width:900px}
+body.oum h1{font-size:clamp(28px,6vw,36px);letter-spacing:-.02em;color:#fff}
+body.oum .ou-back{display:inline-flex;min-height:36px;align-items:center;text-decoration:none}
+body.oum>.wrap>.panel,body.oum #parcelControls,body.oum #details{border:0!important;border-radius:16px!important;background:var(--o-card)!important;box-shadow:0 1px 0 #ffffff0d inset,0 8px 24px #0004!important}
+body.oum #controls select{border:1px solid transparent!important;border-radius:11px!important;background:#0a1828!important;color:#f4f8ff!important;padding:10px 12px}
+body.oum .actions>button,body.oum #parcelControls button{border:0!important;border-radius:11px!important;background:#1a5a47!important;color:#fff!important;font-weight:600;min-height:42px;padding:9px 16px;transition:transform .12s var(--o-ease),filter .2s}
+body.oum .actions>button:hover{filter:brightness(1.15)}body.oum .actions>button:active{transform:scale(.97)}
+body.oum .actions>button:disabled{opacity:.45;background:#ffffff14!important}
+body.oum #map{border-radius:16px;overflow:hidden}
+body.oum #status{margin:8px 6px}
+/* Scoped to the Property & Research pages only */
+html:has(body.p-map),html:has(body.p-imp),html:has(body.p-cert),html:has(body.p-rel),html:has(body.p-ocr),html:has(body.oum){background:#07121e!important}
+body.p-map .ou-card.ou-item,body.p-imp .ou-card.ou-item,body.p-cert .ou-card.ou-item,body.p-rel .ou-card.ou-item,body.p-ocr .ou-card.ou-item,body.oum .ou-card.ou-item{background:var(--o-card)!important;box-shadow:0 1px 0 #ffffff0d inset,0 8px 24px #0004!important;margin:12px 0!important;border-radius:16px!important;overflow:hidden}
+body.p-cert .ou-list>.ou-item,body.p-rel .ou-list>.ou-card.ou-item{margin:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important}
