@@ -1009,6 +1009,7 @@
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
     details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
+    details.addEventListener('click', e => { e.preventDefault(); openParcelPanel(details.href); });
     card.append(info, close, details);
     if (r.g && r.bb) {
       const thumbnail = hero(r, d);
@@ -1082,6 +1083,21 @@
     const above = a.y - h - 22 > 8, x = Math.min(Math.max(a.x - w / 2, 8), W - w - 8), y = Math.min(Math.max(above ? a.y - h - 18 : a.y + 18, 8), H - h - 8);
     callEl.style.left = x + 'px'; callEl.style.top = y + 'px'; callEl.classList.toggle('below', !above); callEl.style.setProperty('--tail', Math.min(Math.max(a.x - x, 20), w - 20) + 'px');
   }
+  // "View parcel" opens the parcel page inside the map as a panel that scrolls, instead of leaving the map.
+  let parcelPanel = null;
+  function openParcelPanel(url) {
+    if (!map || !url) return; const host = map.getContainer();
+    if (!document.getElementById('pmParcelCss')) { const st = mk('style'); st.id = 'pmParcelCss'; st.textContent = '.pm-parcel-panel{position:absolute;inset:0;z-index:200;display:flex;flex-direction:column;background:#0b1620}.pm-parcel-panel[hidden]{display:none}.pm-parcel-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #2a4252;color:#eef5fb;font:600 13px/1.2 system-ui,-apple-system,sans-serif}.pm-parcel-x{min-height:32px;padding:0 12px;border-radius:10px;border:1px solid #69e9a5;background:#086a47;color:#fff;font-weight:700;cursor:pointer}.pm-parcel-frame{flex:1;width:100%;min-height:0;border:0;background:#0b1620}'; document.head.append(st); }
+    if (!parcelPanel) {
+      parcelPanel = mk('div', 'pm-parcel-panel'); parcelPanel.setAttribute('role', 'dialog'); parcelPanel.setAttribute('aria-label', 'Parcel details');
+      const bar = mk('div', 'pm-parcel-bar'), t = mk('b', '', 'Parcel details'), x = mk('button', 'pm-parcel-x', 'Close'); x.type = 'button'; x.addEventListener('click', closeParcelPanel);
+      bar.append(t, x); const fr = mk('iframe', 'pm-parcel-frame'); fr.title = 'Parcel details';
+      fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox');
+      parcelPanel.append(bar, fr); parcelPanel._frame = fr; host.append(parcelPanel);
+    }
+    parcelPanel._frame.src = url; parcelPanel.hidden = false; hideCallout();
+  }
+  function closeParcelPanel() { if (parcelPanel) { parcelPanel.hidden = true; parcelPanel._frame.src = 'about:blank'; } }
   function hideCallout() { if (callEl) { callEl.hidden = true; callEl._anchor = null; } }
   function showCallout(r, d) {
     if (!homeMap || !mapReady || !d) return; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
@@ -1094,6 +1110,7 @@
     const act = mk('div', 'pm-callout-act'), view = mk('a', 'pm-callout-view', 'View parcel →'), save = mk('a', 'pm-callout-save', ''); view.href = href; save.href = href;
     save.setAttribute('aria-label', 'Open this parcel to watch it'); save.title = 'Open the parcel to watch it';
     save.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
+    view.addEventListener('click', e => { e.preventDefault(); openParcelPanel(href); });
     act.append(view, save); el.append(title, dl, act);
     el._anchor = anchor; el.hidden = false; placeCallout();
   }
