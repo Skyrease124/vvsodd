@@ -9,11 +9,12 @@ import {updateJson, LEDGER, DECISION} from './brain-approvals.mjs';
 import {operationCountyIds, countyOperation} from './brain-gis-universal.mjs';
 import {countyCheckpointKey} from './brain-gis-county-worker.mjs';
 import {MATCHES} from './parcel-matches-registry.mjs';
+import {storedFactOk, DATASET_OK, httpsOnly} from './gemini-extract.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
 export const DAILY_LIMIT = 3; // owner-triggered consolidations per UTC day, to stay inside free allowances
-const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, COORD_TOLERANCE = 0.002; // degrees, about 200 m
+const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
 const US_BOUNDS = {minLat: 18, maxLat: 72, minLon: -180, maxLon: -60};
@@ -99,6 +100,23 @@ export async function collectItems(auth, options = {}) {
   for (const x of triaged)
     raw.push({source: 'groq', dataset: clip(x.dataset, 60), parcelId: clip(x.parcelId, 20), recordId: clip(x.recordId, 40), status: 'triaged_unverified',
       reason: clip(x.triage.summary, 160), checkedAt: x.triage.createdAt, unverified: true});
+  // Gemini document readings: only results the owner verified, with an owner-given dataset and https source link, and only
+  // facts that pass the stored exact-value check again. They are context: official stays false, so they never back a proposal alone.
+  const gem = (await auth.kvGet('brain-helper-results-v1-gemini'))?.results;
+  const readings = (Array.isArray(gem) ? gem : []).filter(r => r?.verified === true && r.decision === 'verified' && DATASET_OK.test(r.dataset || '') && httpsOnly(r.sourceUrl) && r.reviewedAt)
+    .sort((a, b) => String(b.reviewedAt).localeCompare(String(a.reviewedAt)));
+  let gemCount = 0;
+  for (const r of readings) {
+    if (gemCount >= MAX_GEMINI) break;
+    const good = (Array.isArray(r.facts) ? r.facts : []).filter(storedFactOk);
+    const parcels = [...new Set(good.filter(f => f.field === 'parcelId').map(f => f.value))];
+    if (parcels.length !== 1) continue; // one parcel per reading: otherwise it cannot be tied to one record
+    const facts = {};
+    for (const f of good) if (f.field !== 'parcelId' && f.field !== 'documentTitle' && !(f.field in facts)) facts[f.field] = clip(f.value, 40);
+    raw.push({source: 'gemini-document', dataset: clip(r.dataset, 60), parcelId: clip(parcels[0], 20), status: 'owner_verified_reading', facts,
+      evidenceUrl: httpsOnly(r.sourceUrl), checkedAt: r.reviewedAt, official: false, unverified: false});
+    gemCount++;
+  }
   raw.sort((a, b) => String(b.checkedAt).localeCompare(String(a.checkedAt)));
   return raw.slice(0, MAX_ITEMS).map((item, i) => ({ref: 'H' + (i + 1), ...item}));
 }
@@ -136,7 +154,7 @@ export function buildPrompt(items) {
   const system = [
     'You consolidate helper-agent results for a county tax-sale research team.',
     'Use ONLY the items provided. Each item has a ref (H1, H2, ...) and a dataset (one county). The same parcel number in two datasets is two different parcels. Do not invent parcel IDs, coordinates, owners, amounts, dates or sources.',
-    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position. Groq items are unverified AI triage notes: context only, never evidence, and never a reason to propose an update.',
+    'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position. Groq items are unverified AI triage notes: context only, never evidence, and never a reason to propose an update. gemini-document items are readings of an uploaded county file that the owner checked against the quoted text: context only, never official, and never a reason to propose an update on their own.',
     'Return ONLY JSON: {"conflicts":[{"parcelId":"...","refs":["H1"],"detail":"short factual text"}],"proposals":[{"parcelId":"...","refs":["H1"],"summary":"short factual text"}]}.',
     'Propose an update only when a validator, official-gis-worker, county-worker official_evidence or parcel-match item supports it. Every proposal needs owner approval.',
   ].join(' ');

@@ -111,3 +111,8 @@ test('review changes only the decision on one stored result', () => {
   assert.match(block, /\['verified', 'rejected'\]\.includes\(body\.decision\)/);
   assert.doesNotMatch(block, /fetch\(|reserveGemini|extract\(/, 'a decision costs no request');
 });
+test('verifying requires a dataset and an https source link', () => {
+  const e = fs.readFileSync(new URL('../../netlify/functions/owner-brain-gemini.mjs', import.meta.url), 'utf8');
+  assert.match(e, /Enter the dataset/); assert.match(e, /Enter the official source link/);
+  assert.ok(e.indexOf('Enter the dataset') < e.indexOf("r.decision = body.decision"), 'checked before the decision is saved');
+});

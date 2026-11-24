@@ -45,7 +45,7 @@
   </div>
   <div class="box ou-card ou-pad" id="gemSaved">
     <h2 style="margin:0 0 6px;font-size:18px">Saved Gemini results</h2>
-    <p class="st">Each result is unverified until you decide. Check every quote against the county file, then verify or reject. Nothing here is published.</p>
+    <p class="st">Each result is unverified until you decide. Check every quote against the county file. To verify, enter the dataset and the official source link you checked it against. Nothing here is published.</p>
     <p id="gemState" class="st" role="status"></p>
     <div class="row"><button class="btn small ghost" id="gemResume" type="button" hidden>Turn Gemini on again</button></div>
     <ul id="gemList" style="list-style:none;padding:0;margin:0"></ul>
@@ -101,8 +101,12 @@
       const li = mk('li'); li.style.cssText = 'border-top:1px solid #2a3c66;padding:10px 0';
       li.appendChild(mk('div', 'st', (r.fileName || 'Uploaded file') + ' · ' + new Date(r.createdAt).toLocaleString() + ' · ' + r.status));
       const ul = mk('ul'); r.facts.forEach(f => ul.appendChild(mk('li', '', f.field + ': ' + f.value + ' (quote: ' + f.quote + ')'))); li.appendChild(ul);
+      const ds = mk('input'); ds.placeholder = 'Dataset, e.g. IA-scott'; ds.value = r.dataset || ''; ds.setAttribute('aria-label', 'Dataset');
+      const lk = mk('input'); lk.placeholder = 'Official source link (https)'; lk.value = r.sourceUrl || ''; lk.setAttribute('aria-label', 'Official source link');
+      [ds, lk].forEach(i => { i.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2a3c66;background:#070d1c;color:#e6ecf7'; });
+      li.append(ds, lk);
       const row = mk('div', 'row'), tag = mk('span', 'st', r.decision === 'verified' ? 'Verified by you' : r.decision === 'rejected' ? 'Rejected by you' : 'Waiting for your decision');
-      const act = (label, decision, ghost) => { const b = mk('button', 'btn small' + (ghost ? ' ghost' : ''), label); b.type = 'button'; b.onclick = async () => { b.disabled = true; const x = await post({action: 'gemini-review', id: r.id, decision}); if (!x.ok) { tag.textContent = x.error || 'Could not save.'; b.disabled = false; return; } loadGem(); }; return b; };
+      const act = (label, decision, ghost) => { const b = mk('button', 'btn small' + (ghost ? ' ghost' : ''), label); b.type = 'button'; b.onclick = async () => { b.disabled = true; const x = await post({action: 'gemini-review', id: r.id, decision, dataset: ds.value.trim(), sourceUrl: lk.value.trim()}); if (!x.ok) { tag.textContent = x.error || 'Could not save.'; b.disabled = false; return; } loadGem(); }; return b; };
       row.append(act('Verify', 'verified'), act('Reject', 'rejected', true), tag); li.appendChild(row); list.appendChild(li);
     });
   }

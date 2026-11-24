@@ -440,3 +440,40 @@ test('a run reads Groq triage as context and records it in the receipt', async (
   assert.match(sent.at(-1).body, /triaged_unverified/);
   assert.equal(sent.at(-1).body.includes('"checks"'), false);
 });
+
+// ---- Step 6: Gemini document readings, owner verified, context only ----
+const gem = (over = {}) => ({id: 'g1', verified: true, decision: 'verified', reviewedAt: ago(5), dataset: 'IA-scott', sourceUrl: 'https://example.gov/county/list.pdf',
+  facts: [{field: 'parcelId', value: 'C0050-21', quote: 'Parcel C0050-21'}, {field: 'amount', value: '$1,234.56', quote: 'Amount $1,234.56'}, {field: 'documentTitle', value: 'Tax list', quote: 'Tax list'}], ...over});
+const gemStore = (...r) => ({'brain-helper-results-v1-gemini': {version: 1, results: r}});
+const gemItems = async (...r) => (await collectItems(fakeAuth(gemStore(...r)))).filter(i => i.source === 'gemini-document');
+
+test('a verified Gemini reading becomes one non-official item with its source link and exact values', async () => {
+  const [it] = await gemItems(gem());
+  assert.equal(it.dataset, 'IA-scott'); assert.equal(it.parcelId, 'C0050-21');
+  assert.equal(it.evidenceUrl, 'https://example.gov/county/list.pdf');
+  assert.deepEqual(it.facts, {amount: '$1,234.56'}, 'the title is not sent and quotes are not collected');
+  assert.equal(it.official, false); assert.match(it.ref, /^H\d+$/);
+});
+test('unverified, rejected, link-less, dataset-less, tampered or multi-parcel readings are never collected', async () => {
+  assert.equal((await gemItems(gem({verified: false, decision: null}), gem({decision: 'rejected', verified: false}))).length, 0);
+  assert.equal((await gemItems(gem({sourceUrl: 'http://example.gov/x'}), gem({sourceUrl: ''}), gem({dataset: 'Scott'}), gem({dataset: undefined}))).length, 0);
+  assert.equal((await gemItems(gem({facts: [{field: 'parcelId', value: 'C0050-21', quote: 'Parcel C0050-99'}]}))).length, 0, 'value not inside its quote');
+  assert.equal((await gemItems(gem({facts: [{field: 'amount', value: '$1.00', quote: '$1.00'}]}))).length, 0, 'no parcel');
+  assert.equal((await gemItems(gem({facts: [{field: 'parcelId', value: 'C0050-21', quote: 'C0050-21'}, {field: 'parcelId', value: 'C0050-22', quote: 'C0050-22'}]}))).length, 0, 'two parcels cannot be tied to one record');
+  assert.equal((await gemItems(gem({facts: [{field: 'parcelId', value: 'C0050-21', quote: 'C0050-21'}, {field: 'amount', value: 'lots', quote: 'lots'}]})))[0].facts.amount, undefined, 'a bad format is dropped');
+});
+test('Gemini readings are capped and can never back a proposal alone', async () => {
+  const many = Array.from({length: 7}, (_, i) => gem({id: 'g' + i, reviewedAt: ago(i + 1), facts: [{field: 'parcelId', value: 'C1-' + i, quote: 'C1-' + i}]}));
+  assert.equal((await gemItems(...many)).length, 4);
+  const items = [{ref: 'H1', source: 'gemini-document', dataset: 'IA-scott', parcelId: 'C0050-21', status: 'owner_verified_reading', facts: {amount: '$1,234.56'}, official: false, unverified: false}];
+  const out = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'C0050-21', refs: ['H1'], summary: 'Amount is $1,234.56.'}]}), items);
+  assert.equal(out.proposals.length, 0); assert.ok(out.rejected.includes('proposal has no official or validator source'));
+  assert.match(lib.buildPrompt(items).system, /gemini-document items are readings .* never official/);
+});
+test('a run reads the verified reading and records it in the receipt', async () => {
+  mode = 'good';
+  const receipt = await runConsolidation({auth: fakeAuth({...seed(), ...gemStore(gem())}), now, config: cfg});
+  assert.equal(receipt.outcome, 'completed'); assert.equal(receipt.inputs.sources['gemini-document'], 1);
+  assert.match(sent.at(-1).body, /owner_verified_reading/);
+  assert.equal(sent.at(-1).body.includes('Parcel C0050-21'), false, 'quotes are not sent');
+});

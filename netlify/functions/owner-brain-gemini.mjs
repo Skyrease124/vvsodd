@@ -32,6 +32,13 @@ async function handler(req) {
   if (body.action === 'gemini-review') {
     const r = doc.results.find(x => x.id === body.id);
     if (!r || !['verified', 'rejected'].includes(body.decision)) return j(400, {ok: false, error: 'Unknown result or decision'});
+    if (body.decision === 'verified') {
+      // NVIDIA reads a verified result only with a dataset (one county) and the official source link you checked it against.
+      if (!GX.DATASET_OK.test(String(body.dataset || ''))) return j(400, {ok: false, error: 'Enter the dataset, for example IA-scott.'});
+      const link = GX.httpsOnly(body.sourceUrl);
+      if (!link) return j(400, {ok: false, error: 'Enter the official source link (https).'});
+      r.dataset = String(body.dataset); r.sourceUrl = link;
+    }
     r.decision = body.decision; r.verified = body.decision === 'verified'; r.reviewedAt = new Date().toISOString();
     await auth.kvPut(STORE, doc);
     return j(200, {ok: true, id: r.id, decision: r.decision});

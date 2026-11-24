@@ -71,3 +71,9 @@ export async function extract({key, base, model, pdfBase64, docText, fetchImpl =
   if (!v.facts.length) return {ok: false, error: 'No fact passed the quote check. Nothing was saved.', dropped: v.dropped};
   return {ok: true, model, ...v};
 }
+
+// Re-checks one stored fact without the document: allowed field, value inside its quote, format. Used before NVIDIA reads it.
+export const storedFactOk = f => !!f && FIELDS.includes(f.field) && typeof f.value === 'string' && typeof f.quote === 'string' &&
+  f.value.length > 0 && f.value.length <= 120 && f.quote.includes(f.value) && FORMAT[f.field](f.value);
+export const DATASET_OK = /^[A-Z]{2}-[a-z0-9][a-z0-9-]{1,60}$/;
+export const httpsOnly = v => (/^https:\/\/[^\s]{4,290}$/.test(String(v || '')) ? String(v) : null);
