@@ -23,6 +23,7 @@
       const d = el('details'); const sm = el('summary', 'row'); sm.style.cursor = 'pointer'; sm.append(el('span', '', s.name + (s.course ? '  ·  course: ' + s.course.title : '') + '  ·  ' + s.bank + ' verified questions'));
       sm.append(statusSel(s.status, v => post({ action: 'state-status', state: s.state, status: v }).then(x => say(x.ok ? s.name + ': ' + v : x.error))));
       d.append(sm);
+      if (s.work && s.work.research) { const w = el('div', 'tile'); [['Batch', s.work.batch], ['System', s.work.system], ['Research', s.work.research], ['Writing', s.work.writing], ['Review', s.work.review], ['Publication', s.work.publication], ['What remains', s.work.remaining]].forEach(([k, v]) => { if (v) { const r = el('div', 'small'); r.append(el('span', 'layer', k + ' '), document.createTextNode(v)); w.append(r); } }); d.append(w); }
       D.stateTopics.forEach(tp => { const r = el('div', 'row'); r.append(el('span', 'small', tp.name), statusSel(s.topics[tp.id], v => post({ action: 'state-status', state: s.state, topic: tp.id, status: v }).then(x => say(x.ok ? s.name + ' · ' + tp.name + ': ' + v : x.error)))); d.append(r); });
       S.append(d);
     });

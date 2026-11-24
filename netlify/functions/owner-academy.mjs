@@ -2,6 +2,7 @@
 // and proposed curriculum updates (nothing is published from here without the owner's click; no AI is called here).
 import * as auth from '../lib/auth.mjs';
 import * as A from '../lib/academy/academy.mjs';
+import { TRACKER } from '../lib/curriculum/index.mjs';
 
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'X-Robots-Tag': 'noindex' } });
 
@@ -10,7 +11,7 @@ export default async (req) => {
   if (!me || !me.owner) return json(me ? 403 : 401, { ok: false, error: 'Owner access required' });
   if (req.method === 'GET') {
     const [saved, cov, log, certs, props] = await Promise.all([A.SETTINGS_KEY, A.COVERAGE_KEY, A.LOG_KEY, A.CERT_INDEX_KEY, A.PROPOSALS_KEY].map(k => auth.kvGet(k)));
-    const states = A.stateCoverage(cov).map(r => ({ ...r, bank: A.bankFor(r.state).length }));
+    const states = A.stateCoverage(cov).map(r => { const t = TRACKER.find(x => x.state === r.state) || {}; return { ...r, bank: A.bankFor(r.state).length, work: { system: t.system, batch: t.batch, research: t.research, writing: t.writing, review: t.review, publication: t.publication, remaining: t.remaining } }; });
     return json(200, { ok: true, settings: A.mergeSettings(saved), statuses: A.STATUSES, states, stateTopics: A.STATE_TOPICS, countyTopics: A.COUNTY_TOPICS,
       counties: A.countyCoverage(cov), attempts: (log || []).slice(-200).reverse(), certificates: (certs || []).slice(-200).reverse(), proposals: props || [] });
   }
