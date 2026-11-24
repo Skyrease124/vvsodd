@@ -210,10 +210,10 @@
       const finish = () => {
         if (mySeq !== seq || !target) return;
         const f = frame(), done = () => { if (mySeq !== seq || !target) return; try { map.setMaxBounds(paddedBounds(target.bb)); } catch (_) { /* ignore */ } };
-        if (f && Math.abs(f.zoom - map.getZoom()) > 0.04) { map.easeTo({ center: f.center, zoom: f.zoom, duration: dur(500), easing: ease }); map.once('moveend', () => setTimeout(done, 0)); } else done();
+        if (f && Math.abs(f.zoom - map.getZoom()) > 0.04) { map.easeTo({ center: f.center, zoom: f.zoom, duration: dur(500), easing: ease }); if (map.isMoving()) map.once('moveend', () => setTimeout(done, 0)); else done(); } else done();
       };
       try { map.easeTo({ pitch: PITCH, duration: dur(900), easing: ease }); } catch (_) { /* ignore */ }
-      if (REDUCED || !dur(900)) setTimeout(finish, 60); else map.once('moveend', () => setTimeout(finish, 0));
+      if (map.isMoving()) map.once('moveend', () => setTimeout(finish, 0)); else setTimeout(finish, 60); // an instant move has already finished
     });
   }
   function onMoveEnd(e) {
