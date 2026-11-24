@@ -4,6 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import fs from 'node:fs';
 
 const DUMMY_KEY = 'test-dummy-key-not-a-credential-0000';
 let mode = 'good';
@@ -199,7 +200,7 @@ test('consolidation turns reasoning off and uses a bounded token budget', async 
   assert.match(body.messages[0].content, /^detailed thinking off\. /);
   assert.equal(body.max_tokens, receipt.maxTokens);
   assert.ok(body.max_tokens >= 600 && body.max_tokens <= 2048);
-  assert.equal(tokenBudget(0), 600); assert.equal(tokenBudget(1000), 2048);
+  assert.equal(tokenBudget(0), 600); assert.equal(tokenBudget(1000), 1200);
 });
 
 test('an empty reasoning-only answer is a failed, incomplete run with no proposals and an honest message', async () => {
@@ -476,4 +477,23 @@ test('a run reads the verified reading and records it in the receipt', async () 
   assert.equal(receipt.outcome, 'completed'); assert.equal(receipt.inputs.sources['gemini-document'], 1);
   assert.match(sent.at(-1).body, /owner_verified_reading/);
   assert.equal(sent.at(-1).body.includes('Parcel C0050-21'), false, 'quotes are not sent');
+});
+
+// ---- A smaller request: at most 24 helper results, official first ----
+test('a run sends at most 24 helper results and keeps official ones ahead of context and candidates', async () => {
+  const ledger = Array.from({length: 30}, (_, i) => ({caseKey: 'k' + i, dataset: 'MI-wayne', recordId: 'R' + i, parcelId: '0100' + (3000 + i), decision: 'pending_owner_review', reviewedBy: 'v', reviewedAt: ago(100 + i), proposedPosition: {lat: 42.3, lon: -83.1}}));
+  const photon = {results: undefined};
+  const queue = Array.from({length: 6}, (_, i) => ({dataset: 'IA-scott', recordId: 'q' + i, parcelId: 'C' + i, triage: {status: 'complete', summary: 's' + i, createdAt: ago(1 + i)}}));
+  const items = await collectItems(fakeAuth({...seed(), [LEDGER]: {entries: ledger}, 'owner-brain-scanner-v1': {queue}}));
+  assert.equal(items.length, 24, 'capped at 24 (more were available)');
+  assert.deepEqual(items.map(i => i.ref), items.map((_, i) => 'H' + (i + 1)));
+  const flags = items.map(i => (i.source === 'validator' || i.source === 'official-gis-worker' || i.official === true));
+  assert.equal(flags.join(',').includes('false,true'), false, 'no context item sits ahead of an official one');
+});
+test('a timed out request is reported with the model, the number of results and no invented answer', () => {
+  const s = fs.readFileSync(new URL('../../netlify/lib/brain-nvidia.mjs', import.meta.url), 'utf8');
+  assert.match(s, /NVIDIA did not answer within 25 seconds \(/);
+  const l = fs.readFileSync(new URL('../../netlify/lib/llm.mjs', import.meta.url), 'utf8');
+  assert.match(l, /e\.model = model/);
+  assert.equal(lib.DAILY_LIMIT, 6);
 });

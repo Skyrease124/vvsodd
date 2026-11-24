@@ -13,8 +13,8 @@ import {storedFactOk, DATASET_OK, httpsOnly} from './gemini-extract.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
-export const DAILY_LIMIT = 4; // owner-triggered consolidations per UTC day, to stay inside free allowances
-const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
+export const DAILY_LIMIT = 6; // owner-triggered consolidations per UTC day, to stay inside free allowances
+const MAX_ITEMS = 24, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
 const US_BOUNDS = {minLat: 18, maxLat: 72, minLon: -180, maxLon: -60};
@@ -117,7 +117,9 @@ export async function collectItems(auth, options = {}) {
       evidenceUrl: httpsOnly(r.sourceUrl), checkedAt: r.reviewedAt, official: false, unverified: false});
     gemCount++;
   }
-  raw.sort((a, b) => String(b.checkedAt).localeCompare(String(a.checkedAt)));
+  // A smaller request finishes inside the function time limit. Official items come first because only they can back a
+  // proposal; within each group the newest result comes first.
+  raw.sort((a, b) => (isOfficial(b) ? 1 : 0) - (isOfficial(a) ? 1 : 0) || String(b.checkedAt).localeCompare(String(a.checkedAt)));
   return raw.slice(0, MAX_ITEMS).map((item, i) => ({ref: 'H' + (i + 1), ...item}));
 }
 
@@ -164,7 +166,7 @@ export function buildPrompt(items) {
 }
 
 // Output budget: enough for one short conflict or proposal per item, bounded for free-tier use.
-export const tokenBudget = n => Math.min(2048, Math.max(600, 300 + 60 * (n || 0)));
+export const tokenBudget = n => Math.min(1200, Math.max(600, 300 + 60 * (n || 0)));
 
 // Parses the JSON answer. Accepts a fenced block or JSON surrounded by a sentence; anything else is not JSON.
 export function parseAnswer(text) {
@@ -275,7 +277,7 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
       // An empty answer means NVIDIA responded but gave no visible text; the receipt says so instead of a bare failure.
       const empty = error.code === 'EMPTY_ANSWER';
       receipt = {...base, model: error.model || null, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
-        error: scrub((empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
+        error: scrub(error.name === 'AbortError' ? 'NVIDIA did not answer within 25 seconds (' + (error.model || 'unknown model') + ', ' + items.length + ' helper results sent). Nothing was proposed.' : (empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
         conflicts: deterministic, proposals: [], rejected: [], durationMs: Date.now() - started};
     }
   }

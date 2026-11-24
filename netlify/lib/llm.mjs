@@ -40,9 +40,10 @@ export async function complete(cfg, system, user, opts = {}) {
   const sys = opts.thinking === false && !/^detailed thinking off/i.test(system) ? 'detailed thinking off. ' + system : system;
   const body = (model) => JSON.stringify({model, temperature: opts.temperature ?? 0.1, max_tokens: opts.maxTokens || 700, messages: [{role: 'system', content: sys}, {role: 'user', content: user}]});
   const call = (model) => fetch(API_URL, {method: 'POST', signal: ctl.signal, headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.key}, body: body(model)});
+  let model = null;
   try {
     const usable = m => m && !RETIRED.has(m) && !refused.has(m);
-    let model = [cfg.model, autoModel, DEFAULT_MODEL].find(usable) || DEFAULT_MODEL;
+    model = [cfg.model, autoModel, DEFAULT_MODEL].find(usable) || DEFAULT_MODEL;
     let r = await call(model);
     let fallbackFrom = null;
     if (!r.ok && [400, 404, 410].includes(r.status)) {
@@ -71,5 +72,5 @@ export async function complete(cfg, system, user, opts = {}) {
       throw e;
     }
     return {text, model, fallbackFrom, finishReason: (choice && choice.finish_reason) || null};
-  } finally { clearTimeout(timer); }
+  } catch (e) { if (e && !e.model && model) e.model = model; throw e; } finally { clearTimeout(timer); }
 }
