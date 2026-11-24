@@ -17,7 +17,7 @@ main section,main .panel{padding:16px!important;margin:14px 0!important;animatio
 .wayne-metrics div,.pi-card,.pi-batch,.approval-card{border:0!important;border-radius:12px!important;background:#ffffff0a!important}
 .pi-storage{border:0!important;background:#65edab14;border-radius:10px}
 /* controls */
-main button,.pi-btn,main a[href="/owner/brain/activity/"]{border:0!important;border-radius:11px!important;background:#1a5a47!important;color:#fff!important;font:inherit;font-weight:600;min-height:42px;padding:9px 16px!important;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s var(--b-ease),filter .2s,background .2s;text-decoration:none!important}
+main button,.pi-btn,main>p>a[href="/owner/brain/activity/"]{border:0!important;border-radius:11px!important;background:#1a5a47!important;color:#fff!important;font:inherit;font-weight:600;min-height:42px;padding:9px 16px!important;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s var(--b-ease),filter .2s,background .2s;text-decoration:none!important}
 main button:hover,.pi-btn:hover{filter:brightness(1.15)}
 main button:active,.pi-btn:active{transform:scale(.97)}
 main button:focus-visible,main a:focus-visible,main input:focus-visible,main select:focus-visible,main textarea:focus-visible{outline:2px solid var(--b-green);outline-offset:2px}
@@ -51,3 +51,6 @@ html{scroll-behavior:smooth;scroll-padding-top:12px}
 @keyframes b-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @media(max-width:520px){.stats{gap:8px}.stats .num{font-size:1.05rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}main section,main .panel{animation:none}*{transition:none!important}}
+.bn-about{margin:16px 0 0;border-radius:14px;background:var(--b-card);padding:0 14px}
+.bn-about summary{min-height:46px;display:flex;align-items:center;color:var(--b-gold);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;font-weight:600}
+.bn-about p{margin:0 0 14px;color:#9fb4c8;font-size:.9rem;line-height:1.5}

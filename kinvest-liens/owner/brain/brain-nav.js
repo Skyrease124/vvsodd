@@ -39,10 +39,31 @@
     if (!groups.has(g)) { const sec = document.createElement('div'); sec.className = 'bn-group'; sec.innerHTML = '<h3></h3><ul class="bn-list"></ul>'; sec.firstChild.textContent = g; groups.set(g, sec); nav.appendChild(sec); }
     const li = document.createElement('li'), a = document.createElement('a'); a.className = 'bn-row'; a.href = '#' + s.id;
     const ico = document.createElement('span'); ico.className = 'bn-ico'; ico.style.setProperty('--c', colors[ic]); ico.innerHTML = ICON[ic];
-    const name = document.createElement('span'); name.className = 'bn-name'; name.textContent = s.querySelector('h2').textContent.replace(/\s+/g, ' ').trim();
+    const name = document.createElement('span'); name.className = 'bn-name'; name.textContent = s.querySelector('h2').textContent.replace(/\s+/g, ' ').trim().replace(/\s[\u2014\u2013-]\s/g, ': ');
     const chev = document.createElement('span'); chev.innerHTML = svg('<path d="M9 6l6 6-6 6"/>'); chev.firstChild.setAttribute('class', 'bn-chev');
     a.append(ico, name, chev.firstChild); li.appendChild(a); groups.get(g).querySelector('ul').appendChild(li);
     rows.push({li, s, text: (s.querySelector('section') ? s.querySelector('h2').textContent : (s.textContent || '')).toLowerCase().replace(/\s+/g, ' ')});
+  });
+
+  // Tools: the two links that sit above the panels become compact rows. The original links stay in the page, hidden.
+  const tools = [['County Connectors', '/owner/brain/connectors/', 'map'], ['NVIDIA Pulse Reactor', '/owner/brain/activity/', 'spark']];
+  const toolRows = [];
+  const toolGroup = document.createElement('div'); toolGroup.className = 'bn-group'; toolGroup.innerHTML = '<h3>Tools</h3><ul class="bn-list"></ul>';
+  tools.forEach(([name, href, ic]) => {
+    const li = document.createElement('li'), a = document.createElement('a'); a.className = 'bn-row'; a.href = href;
+    const ico = document.createElement('span'); ico.className = 'bn-ico'; ico.style.setProperty('--c', ic === 'map' ? '#2f80ed' : '#7a5af8'); ico.innerHTML = ICON[ic];
+    const label = document.createElement('span'); label.className = 'bn-name'; label.textContent = name;
+    const chev = document.createElement('span'); chev.innerHTML = svg('<path d="M9 6l6 6-6 6"/>'); chev.firstChild.setAttribute('class', 'bn-chev');
+    a.append(ico, label, chev.firstChild); li.appendChild(a); toolGroup.querySelector('ul').appendChild(li); toolRows.push({li, text: name.toLowerCase() + ' tools'});
+  });
+  nav.insertBefore(toolGroup, box.nextSibling);
+  main.querySelectorAll(':scope > p').forEach(p => {
+    if (p.querySelector('a[href="/owner/brain/connectors/"], a[href="/owner/brain/activity/"]')) p.classList.add('bn-hide');
+    else if (/AI Brain runs scheduled research/.test(p.textContent)) {
+      p.classList.add('bn-hide');
+      const d = document.createElement('details'); d.className = 'bn-about'; const sm = document.createElement('summary'); sm.textContent = 'About the AI Brain';
+      const t = document.createElement('p'); t.textContent = p.textContent; d.append(sm, t); nav.appendChild(d);
+    }
   });
   const empty = document.createElement('p'); empty.className = 'bn-empty'; empty.hidden = true; empty.textContent = 'Nothing matches your search.';
   nav.appendChild(empty);
@@ -50,8 +71,10 @@
   const filter = () => {
     const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean); let n = 0;
     rows.forEach(r => { const ok = terms.every(t => r.text.includes(t)); r.li.classList.toggle('bn-hide', !ok && !r.s.querySelector('section')); if (!r.s.querySelector('section')) r.s.classList.toggle('bn-hide', !ok); if (ok) n++; });
+    toolRows.forEach(r => r.li.classList.toggle('bn-hide', !terms.every(t => r.text.includes(t))));
+    toolGroup.classList.toggle('bn-hide', !toolRows.some(r => !r.li.classList.contains('bn-hide')));
     groups.forEach(g => g.classList.toggle('bn-hide', ![...g.querySelectorAll('li')].some(li => !li.classList.contains('bn-hide'))));
-    empty.hidden = n > 0;
+    empty.hidden = n > 0 || toolRows.some(r => !r.li.classList.contains('bn-hide'));
   };
   input.addEventListener('input', filter);
 })();
