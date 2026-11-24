@@ -1,14 +1,19 @@
 // Shared AI helper: calls NVIDIA's chat API and, if the model has been retired, finds a working one automatically.
 const API_URL = process.env.NVIDIA_API_URL || 'https://integrate.api.nvidia.com/v1/chat/completions';
-export const DEFAULT_MODEL = process.env.NVIDIA_MODEL || 'meta/llama-3.3-70b-instruct';
+// Confirmed working on the preview (2026-11-24). meta/llama-3.3-70b-instruct was retired by NVIDIA (HTTP 410).
+export const DEFAULT_MODEL = process.env.NVIDIA_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b';
+// Models NVIDIA has retired. They are never tried, as the configured model or as a fallback.
+export const RETIRED = new Set(['meta/llama-3.3-70b-instruct']);
+// Models refused with 404 or 410 during this function instance are not tried again.
+const refused = new Set();
 // ---- Model selection: NVIDIA retires models, so if ours is gone we find a working one automatically. ----
 const MODELS_URL = process.env.NVIDIA_MODELS_URL || API_URL.replace(/\/chat\/completions$/, '/models');
 const SKIP = /embed|rerank|guard|safety|reward|vision|\bvl\b|vlm|clip|retriev|parse|asr|tts|image|audio|speech|translate|code|math|bge|nv-embed|riva|diffusion|flux|sdxl|video|molmim|bio|dna|protein/i;
-const PREFER = [/nemotron.*(ultra|super)/i, /nemotron/i, /llama-3\.3/i, /llama-4/i, /llama-3\.1-70b/i, /gpt-oss-120b/i, /qwen.*(72b|32b|30b)/i, /gpt-oss/i, /llama-3\.1-8b/i, /mistral/i, /gemma/i, /deepseek/i, /./];
+const PREFER = [/nemotron.*(ultra|super)/i, /nemotron/i, /llama-4/i, /llama-3\.1-70b/i, /gpt-oss-120b/i, /qwen.*(72b|32b|30b)/i, /gpt-oss/i, /llama-3\.1-8b/i, /mistral/i, /gemma/i, /deepseek/i, /./];
 let autoModel = null;
 
 export function rankModels(ids) {
-  const ok = ids.filter(id => !SKIP.test(id) && /instruct|chat|nemotron|gpt-oss|qwen|llama|mistral|gemma|deepseek|phi/i.test(id));
+  const ok = ids.filter(id => !RETIRED.has(id) && !refused.has(id) && !SKIP.test(id) && /instruct|chat|nemotron|gpt-oss|qwen|llama|mistral|gemma|deepseek|phi/i.test(id));
   const out = [];
   PREFER.forEach(rx => ok.filter(id => rx.test(id) && !out.includes(id)).sort().reverse().forEach(id => out.push(id)));
   return out;
@@ -30,15 +35,20 @@ async function chat(key, model, system, q, signal) {
 // Returns {text, model}. Throws an Error with .status and .detail when the service fails.
 export async function complete(cfg, system, user, opts = {}) {
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), opts.timeoutMs || 25000);
-  const body = (model) => JSON.stringify({model, temperature: opts.temperature ?? 0.1, max_tokens: opts.maxTokens || 700, messages: [{role: 'system', content: system}, {role: 'user', content: user}]});
+  // opts.thinking === false asks reasoning models (Nemotron) to answer without hidden reasoning, through the system
+  // prompt only, so no request parameter can be refused by another model.
+  const sys = opts.thinking === false && !/^detailed thinking off/i.test(system) ? 'detailed thinking off. ' + system : system;
+  const body = (model) => JSON.stringify({model, temperature: opts.temperature ?? 0.1, max_tokens: opts.maxTokens || 700, messages: [{role: 'system', content: sys}, {role: 'user', content: user}]});
   const call = (model) => fetch(API_URL, {method: 'POST', signal: ctl.signal, headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.key}, body: body(model)});
   try {
-    let model = cfg.model || autoModel || DEFAULT_MODEL;
+    const usable = m => m && !RETIRED.has(m) && !refused.has(m);
+    let model = [cfg.model, autoModel, DEFAULT_MODEL].find(usable) || DEFAULT_MODEL;
     let r = await call(model);
     let fallbackFrom = null;
     if (!r.ok && [400, 404, 410].includes(r.status)) {
       // Logged without the key: which model NVIDIA refused, and with what status.
       fallbackFrom = {model, status: r.status};
+      if (r.status === 404 || r.status === 410) refused.add(model);
       console.warn('NVIDIA refused model', model, 'with HTTP', r.status, '- trying a fallback');
       const tried = [model];
       let ids = []; try { ids = await listModels(cfg.key); } catch (e) {}
@@ -52,7 +62,7 @@ export async function complete(cfg, system, user, opts = {}) {
     const out = await r.json();
     const choice = out && out.choices && out.choices[0];
     const raw = choice && choice.message && choice.message.content;
-    const text = String(raw || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    const text = String(raw || '').replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^\s*<think>[\s\S]*$/i, '').trim();
     if (!text) {
       // NVIDIA answered (HTTP 200) but with no visible text: usually a reasoning model that spent the token limit thinking.
       const reasoning = !!(choice && choice.message && (choice.message.reasoning_content || /<think>/i.test(String(raw || ''))));
@@ -60,6 +70,6 @@ export async function complete(cfg, system, user, opts = {}) {
       e.detail = 'Empty answer from ' + model + ' (finish: ' + ((choice && choice.finish_reason) || 'unknown') + (reasoning ? ', reasoning only' : '') + ')';
       throw e;
     }
-    return {text, model, fallbackFrom};
+    return {text, model, fallbackFrom, finishReason: (choice && choice.finish_reason) || null};
   } finally { clearTimeout(timer); }
 }

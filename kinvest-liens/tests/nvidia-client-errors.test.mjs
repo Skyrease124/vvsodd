@@ -44,15 +44,24 @@ test('the preview failure: NVIDIA answered HTTP 200 with reasoning only; our bac
   assert.equal(d.detail.includes(KEY), false);
 });
 
-test('a visible answer succeeds and reports the fallback that was used', async () => {
+test('a model NVIDIA refused is not requested again; the default answers with visible text', async () => {
   scenario = 'answer'; seen.length = 0;
   const out = await complete({key: KEY, model: 'retired/model'}, 'detailed thinking off. Reply with the single word OK.', 'Ping.', {maxTokens: 256});
   assert.equal(out.text, 'OK');
-  assert.deepEqual(out.fallbackFrom, {model: 'retired/model', status: 404});
+  assert.equal(seen.some(x => x.model === 'retired/model'), false, 'the refused model is skipped without a request');
+  assert.equal(out.model, 'nvidia/nemotron-3-ultra-550b-a55b');
+  assert.equal(out.fallbackFrom, null);
+  assert.equal(seen.length, 1, 'one request only');
   assert.equal(seen.at(-1).max_tokens, 256);
   const d = describeNvidia(out, null);
   assert.equal(d.outcome, 'ok');
-  assert.match(d.detail, /answered with model nvidia\/nemotron-3-ultra-550b-a55b/);
+  assert.equal(d.detail, 'NVIDIA answered with model nvidia/nemotron-3-ultra-550b-a55b.');
+});
+
+test('the retired Llama model is never requested, even when configured', async () => {
+  scenario = 'answer'; seen.length = 0;
+  await complete({key: KEY, model: 'meta/llama-3.3-70b-instruct'}, 's', 'u', {maxTokens: 64});
+  assert.deepEqual(seen.map(x => x.model), ['nvidia/nemotron-3-ultra-550b-a55b']);
 });
 
 test('a real upstream error keeps NVIDIA\'s own status, separate from our label', async () => {

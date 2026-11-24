@@ -10,7 +10,8 @@ These checks need a signed-in owner account on the **preview** site. They were n
 
 ## Test 1: NVIDIA consolidation (one run, uses one of three daily runs)
 1. Press **Run NVIDIA consolidation** and confirm.
-2. Expected: a receipt appears with "Sent: N helper results (official-gis-worker …, validator …)", the model name, and the conflict and proposal counts. Every proposal names its parcel and cites its source references.
+2. Under each proposal, expect a "Sources:" line (H-refs and their sources, taken from the helper results, not from the model) and either "Official location: …" or "No official location in the sources". A proposal that states a number its sources do not contain is rejected and counted under "citation(s) rejected". If NVIDIA stops before finishing, the receipt shows "Incomplete answer: nothing was proposed from it."
+3. Expected: a receipt appears with "Sent: N helper results (official-gis-worker …, validator …)", the model name, and the conflict and proposal counts. Every proposal names its parcel and cites its source references.
 3. Expected: "Used today" increases by one. The key does not appear anywhere on the page.
 4. Press the button again until the limit is reached. The fourth run must be refused with "Daily NVIDIA consolidation limit reached. Nothing was sent."
 

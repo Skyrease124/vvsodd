@@ -118,7 +118,15 @@
     const sources = Object.entries(r.inputs?.sources || {}).map(([k, v]) => k + ' ' + v).join(', ') || 'none';
     card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '')));
     if (r.outcome === 'completed') card.append(el('p', 'small', (r.conflicts || []).length + ' conflict(s) flagged · ' + (r.proposals || []).length + ' proposal(s) await your approval · ' + (r.rejected || []).length + ' citation(s) rejected'));
-    for (const p of (r.proposals || []).slice(0, 5)) card.append(el('p', 'small', 'Parcel ' + p.parcelId + ': ' + p.summary));
+    for (const p of (r.proposals || []).slice(0, 5)) {
+     card.append(el('p', 'small', 'Parcel ' + p.parcelId + ': ' + p.summary));
+     // Source references come from the helper results NVIDIA received, not from the model's text.
+     const refs = (p.sources || []).map(x => x.ref + ' ' + x.source + (x.checkedAt ? ' (' + String(x.checkedAt).slice(0, 10) + ')' : '')).join('; ');
+     if (refs) card.append(el('p', 'small', 'Sources: ' + refs));
+     const loc = p.facts && p.facts.location;
+     card.append(el('p', 'small', loc ? 'Official location: ' + loc.lat + ', ' + loc.lon + ' (from ' + loc.ref + ')' : 'No official location in the sources: nothing is placed on the map.'));
+    }
+    if (r.incomplete) card.append(el('p', 'small', 'Incomplete answer: nothing was proposed from it.'));
     for (const c of (r.conflicts || []).slice(0, 5)) card.append(el('p', 'small', 'Conflict on parcel ' + c.parcelId + ': ' + c.detail));
     if (r.error) card.append(el('p', 'small', 'Error: ' + r.error));
     box.append(card);

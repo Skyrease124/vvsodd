@@ -92,26 +92,60 @@ export function buildPrompt(items) {
   return {system, user};
 }
 
+// Output budget: enough for one short conflict or proposal per item, bounded for free-tier use.
+export const tokenBudget = n => Math.min(2048, Math.max(600, 300 + 60 * (n || 0)));
+
+// Parses the JSON answer. Accepts a fenced block or JSON surrounded by a sentence; anything else is not JSON.
+export function parseAnswer(text) {
+  const t = String(text ?? '').replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+  try { return JSON.parse(t); } catch { /* try the outermost object */ }
+  const a = t.indexOf('{'), b = t.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch { /* not JSON */ } }
+  return null;
+}
+
+// Every number of three or more digits the model states must appear in the items it cites.
+const numbersIn = text => String(text ?? '').match(/\d[\d.,-]{2,}\d|\d{3,}/g) || [];
+function unsupportedNumber(text, cited) {
+  const pool = JSON.stringify(cited).replace(/,/g, '');
+  return numbersIn(text).find(n => !pool.includes(n.replace(/,/g, '')));
+}
+// Source references are built from the input items, never from the model.
+const sourcesOf = cited => cited.map(i => ({ref: i.ref, source: i.source, status: i.status || null, evidenceUrl: i.evidenceUrl || null,
+  checkedAt: i.checkedAt || null, unverified: !!i.unverified}));
+// Facts only from official or validator items; geocoder candidates never supply a location.
+function factsOf(parcelId, cited) {
+  const official = cited.filter(i => i.source === 'validator' || i.source === 'official-gis-worker');
+  const located = official.find(i => Number.isFinite(i.lat) && Number.isFinite(i.lon));
+  return {parcelId, statuses: [...new Set(official.map(i => i.status).filter(Boolean))],
+    location: located ? {lat: located.lat, lon: located.lon, ref: located.ref} : null,
+    evidenceUrls: [...new Set(official.map(i => i.evidenceUrl).filter(Boolean))]};
+}
+
 // Strict check of NVIDIA's answer. Anything that cannot be traced to an input item is dropped.
 export function validateConsolidation(text, items) {
   const rejected = [];
-  let parsed;
-  try { parsed = JSON.parse(String(text).replace(/^```(?:json)?\s*|\s*```$/g, '').trim()); }
-  catch { return {conflicts: [], proposals: [], rejected: ['answer was not valid JSON']}; }
+  const parsed = parseAnswer(text);
+  if (!parsed || typeof parsed !== 'object') return {conflicts: [], proposals: [], rejected: ['answer was not valid JSON']};
   const byRef = new Map(items.map(i => [i.ref, i]));
   const refsOk = refs => Array.isArray(refs) && refs.length > 0 && refs.length <= 6 && refs.every(r => byRef.has(r));
   const conflicts = [], proposals = [];
   for (const c of (Array.isArray(parsed?.conflicts) ? parsed.conflicts : []).slice(0, 20)) {
     const parcels = refsOk(c?.refs) ? new Set(c.refs.map(r => byRef.get(r).parcelId)) : null;
     if (!parcels || parcels.size !== 1 || !parcels.has(clip(c.parcelId, 20))) { rejected.push('conflict cited unknown refs or another parcel'); continue; }
-    conflicts.push({parcelId: clip(c.parcelId, 20), refs: c.refs, kind: 'model_flag', origin: 'nvidia', detail: clip(c.detail, 240)});
+    const extra = unsupportedNumber(c.detail, c.refs.map(r => byRef.get(r)));
+    if (extra) { rejected.push('conflict stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
+    conflicts.push({parcelId: clip(c.parcelId, 20), refs: c.refs, kind: 'model_flag', origin: 'nvidia', detail: clip(c.detail, 240), sources: sourcesOf(c.refs.map(r => byRef.get(r)))});
   }
   for (const p of (Array.isArray(parsed?.proposals) ? parsed.proposals : []).slice(0, 20)) {
     const cited = refsOk(p?.refs) ? p.refs.map(r => byRef.get(r)) : null;
     if (!cited) { rejected.push('proposal cited unknown refs'); continue; }
     if (!cited.every(i => i.parcelId === clip(p.parcelId, 20))) { rejected.push('proposal named a parcel its sources do not cover'); continue; }
     if (!cited.some(i => i.source === 'validator' || i.source === 'official-gis-worker')) { rejected.push('proposal has no official or validator source'); continue; }
-    proposals.push({parcelId: clip(p.parcelId, 20), refs: p.refs, summary: clip(p.summary, 300), requiresOwnerApproval: true});
+    const extra = unsupportedNumber(p.summary, cited);
+    if (extra) { rejected.push('proposal stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
+    proposals.push({parcelId: clip(p.parcelId, 20), refs: p.refs, summary: clip(p.summary, 300), facts: factsOf(clip(p.parcelId, 20), cited),
+      sources: sourcesOf(cited), requiresOwnerApproval: true});
   }
   return {conflicts, proposals, rejected};
 }
@@ -151,13 +185,21 @@ export async function runConsolidation({auth, now = Date.now(), config = null} =
     await reserveRun(auth, now); // throws QUOTA when the daily allowance is used; nothing is sent then
     const {system, user} = buildPrompt(items);
     try {
-      const answer = await complete(cfg, system, user, {maxTokens: 900, timeoutMs: 25000, temperature: 0.1});
+      const maxTokens = tokenBudget(items.length);
+      const answer = await complete(cfg, system, user, {maxTokens, timeoutMs: 25000, temperature: 0.1, thinking: false});
       const checked = validateConsolidation(answer.text, items);
-      receipt = {...base, model: answer.model, outcome: 'completed', bytesSent: Buffer.byteLength(system + user),
-        conflicts: [...deterministic, ...checked.conflicts], proposals: checked.proposals, rejected: checked.rejected, durationMs: Date.now() - started};
+      // An answer cut off at the token limit that is not valid JSON is incomplete: nothing is proposed from it.
+      const cutOff = answer.finishReason === 'length' && checked.rejected.includes('answer was not valid JSON');
+      receipt = {...base, model: answer.model, outcome: cutOff ? 'failed' : 'completed', incomplete: cutOff || undefined,
+        error: cutOff ? 'NVIDIA answered but stopped at the ' + maxTokens + '-token limit before finishing its JSON; nothing was proposed.' : undefined,
+        maxTokens, fallbackFrom: answer.fallbackFrom || undefined, bytesSent: Buffer.byteLength(system + user),
+        conflicts: [...deterministic, ...(cutOff ? [] : checked.conflicts)], proposals: cutOff ? [] : checked.proposals, rejected: checked.rejected, durationMs: Date.now() - started};
     } catch (error) {
-      const quota = /NVIDIA said 429/.test(String(error.detail || ''));
-      receipt = {...base, model: null, outcome: quota ? 'quota_limited' : 'failed', error: scrub(error.detail || error.message, cfg.key),
+      const quota = error.upstreamStatus === 429 || /NVIDIA said 429/.test(String(error.detail || ''));
+      // An empty answer means NVIDIA responded but gave no visible text; the receipt says so instead of a bare failure.
+      const empty = error.code === 'EMPTY_ANSWER';
+      receipt = {...base, model: error.model || null, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
+        error: scrub((empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
         conflicts: deterministic, proposals: [], rejected: [], durationMs: Date.now() - started};
     }
   }

@@ -10,7 +10,7 @@ function publicReceipt(r) {
   return {id: r.id, at: r.at, outcome: r.outcome, model: r.model || null, durationMs: r.durationMs ?? null,
     inputs: {count: r.inputs?.count ?? 0, sources: r.inputs?.sources || {}, refs: (r.inputs?.refs || []).slice(0, 30)},
     conflicts: (r.conflicts || []).slice(0, 30), proposals: (r.proposals || []).slice(0, 20), rejected: (r.rejected || []).slice(0, 20),
-    error: r.error || null, bytesSent: r.bytesSent ?? null};
+    error: r.error || null, bytesSent: r.bytesSent ?? null, incomplete: r.incomplete === true, maxTokens: r.maxTokens ?? null, fallbackFrom: r.fallbackFrom || null};
 }
 
 async function handler(req) {

@@ -20,12 +20,16 @@ const server = http.createServer((req, res) => {
     sent.push({model: parsed.model, auth: req.headers.authorization, body});
     if (mode === '500') { res.writeHead(500); return res.end('upstream failure, echoed ' + DUMMY_KEY); }
     if (mode === '429') { res.writeHead(429); return res.end('rate limited'); }
-    if (mode === 'retired' && parsed.model === 'meta/llama-3.3-70b-instruct') { res.writeHead(404); return res.end('{"error":"model retired"}'); }
+    if (mode === 'retired' && parsed.model === 'nvidia/nemotron-3-ultra-550b-a55b') { res.writeHead(410); return res.end('{"error":"model gone"}'); }
+    if (mode === 'empty') { res.writeHead(200, {'Content-Type': 'application/json'}); return res.end(JSON.stringify({choices: [{finish_reason: 'length', message: {content: null, reasoning_content: 'Thinking'}}]})); }
+    if (mode === 'truncated') { res.writeHead(200, {'Content-Type': 'application/json'}); return res.end(JSON.stringify({choices: [{finish_reason: 'length', message: {content: '{"conflicts":[{"parcelId":"0100'}}]})); }
     const user = parsed.messages?.[1]?.content || '[]';
     const items = JSON.parse(user);
     const validator = items.find(i => i.source === 'validator');
     let answer;
     if (mode === 'text') answer = 'Here is my summary, not JSON.';
+    else if (mode === 'fabricated') answer = JSON.stringify({conflicts: [], proposals: [{parcelId: validator.parcelId, refs: [validator.ref], summary: 'Sold for 98765 dollars on the official list.'}]});
+    else if (mode === 'prose') answer = 'Here is the result: ' + JSON.stringify({conflicts: [], proposals: [{parcelId: validator.parcelId, refs: [validator.ref], summary: 'Official polygon matches.'}]}) + ' Done.';
     else if (mode === 'badref') answer = JSON.stringify({conflicts: [], proposals: [{parcelId: validator.parcelId, refs: ['H99'], summary: 'invented source'}]});
     else answer = '```json\n' + JSON.stringify({
       conflicts: [{parcelId: validator.parcelId, refs: [validator.ref], detail: 'Validator reports a pending match; confirm before publishing.'}],
@@ -40,6 +44,7 @@ await new Promise(r => server.listen(0, '127.0.0.1', r));
 process.env.NVIDIA_API_URL = `http://127.0.0.1:${server.address().port}/v1/chat/completions`;
 process.env.NVIDIA_MODELS_URL = `http://127.0.0.1:${server.address().port}/v1/models`;
 const lib = await import('../../netlify/lib/brain-nvidia.mjs');
+const {tokenBudget} = lib;
 const {collectItems, deterministicConflicts, validateConsolidation, runConsolidation, DAILY_LIMIT, RECEIPTS, USAGE} = lib;
 const {LEDGER} = await import('../../netlify/lib/brain-approvals.mjs');
 
@@ -110,7 +115,7 @@ test('a completed run stores a receipt with sourced proposals, and the key appea
   const auth = fakeAuth(seed());
   const receipt = await runConsolidation({auth, now, config: cfg});
   assert.equal(receipt.outcome, 'completed');
-  assert.equal(receipt.model, 'meta/llama-3.3-70b-instruct');
+  assert.equal(receipt.model, 'nvidia/nemotron-3-ultra-550b-a55b', 'the confirmed default model');
   assert.ok(receipt.proposals.length >= 1);
   assert.ok(receipt.rejected.length >= 1, 'the mixed-citation proposal with an invented ref was rejected');
   assert.equal(sent.length, 1);
@@ -162,11 +167,72 @@ test('provider failures are recorded honestly and never echo the key', async () 
   mode = 'good';
 });
 
-test('a retired model falls back to a working one, and the receipt names the model that answered', async () => {
+test('a model refused at run time falls back to a working one; the retired Llama model is never requested', async () => {
   mode = 'retired'; sent.length = 0;
   const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
   assert.equal(receipt.outcome, 'completed');
   assert.equal(receipt.model, 'nvidia/llama-3.1-nemotron-70b-instruct');
+  assert.deepEqual(receipt.fallbackFrom, {model: 'nvidia/nemotron-3-ultra-550b-a55b', status: 410});
+  assert.equal(sent.some(x => x.model === 'meta/llama-3.3-70b-instruct'), false, 'the retired model is not in the fallback sequence');
+  mode = 'good';
+});
+
+test('a configured retired model is skipped without a request', async () => {
+  mode = 'good'; sent.length = 0;
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: {...cfg, model: 'meta/llama-3.3-70b-instruct'}});
+  assert.equal(receipt.outcome, 'completed');
+  assert.equal(sent.length, 1);
+  assert.notEqual(sent[0].model, 'meta/llama-3.3-70b-instruct');
+});
+
+test('consolidation turns reasoning off and uses a bounded token budget', async () => {
+  mode = 'good'; sent.length = 0;
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+  const body = JSON.parse(sent[0].body);
+  assert.match(body.messages[0].content, /^detailed thinking off\. /);
+  assert.equal(body.max_tokens, receipt.maxTokens);
+  assert.ok(body.max_tokens >= 600 && body.max_tokens <= 2048);
+  assert.equal(tokenBudget(0), 600); assert.equal(tokenBudget(1000), 2048);
+});
+
+test('an empty reasoning-only answer is a failed, incomplete run with no proposals and an honest message', async () => {
+  mode = 'empty';
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+  assert.equal(receipt.outcome, 'failed');
+  assert.equal(receipt.incomplete, true);
+  assert.equal(receipt.proposals.length, 0);
+  assert.match(receipt.error, /NVIDIA responded \(HTTP 200\) but returned no visible text/);
+  mode = 'good';
+});
+
+test('an answer cut off at the token limit is incomplete and proposes nothing', async () => {
+  mode = 'truncated';
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+  assert.equal(receipt.outcome, 'failed');
+  assert.equal(receipt.incomplete, true);
+  assert.equal(receipt.proposals.length, 0);
+  assert.match(receipt.error, /stopped at the \d+-token limit/);
+  mode = 'good';
+});
+
+test('a proposal that states a value its sources do not contain is rejected', async () => {
+  mode = 'fabricated';
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+  assert.equal(receipt.outcome, 'completed');
+  assert.equal(receipt.proposals.length, 0);
+  assert.match(receipt.rejected.join(' '), /value its sources do not contain \(98765\)/);
+  mode = 'good';
+});
+
+test('JSON inside a sentence is accepted; proposals carry structured facts and sources from the inputs', async () => {
+  mode = 'prose';
+  const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+  assert.equal(receipt.proposals.length, 1);
+  const p = receipt.proposals[0];
+  assert.equal(p.requiresOwnerApproval, true);
+  assert.ok(p.sources.length >= 1 && p.sources.every(x => x.ref && x.source));
+  assert.equal(p.facts.parcelId, p.parcelId);
+  assert.ok(p.sources.every(x => x.source === 'validator' || x.source === 'official-gis-worker'), 'cited sources only');
   mode = 'good';
 });
 
