@@ -66,3 +66,17 @@ export async function ask({token, accountId, model, payload, base = 'https://api
   if (!v.opinions.length) return {ok: false, error: 'No opinion passed the checks. Nothing was saved.', dropped: v.dropped};
   return {ok: true, model, ...v};
 }
+
+// Free key check: asks Cloudflare whether the token is active. No model request is made and no allowance is used.
+// It confirms the token and the account ID are accepted, not that the token has the Workers AI permission.
+export async function keyCheck({token, accountId, base = 'https://api.cloudflare.com', fetchImpl = fetch}) {
+  if (!token) return {ok: false, error: 'Save the Cloudflare API token first.'};
+  if (!ACCOUNT_OK.test(accountId || '')) return {ok: false, error: 'Save the Cloudflare account ID first (32 letters and digits).'};
+  for (const path of ['/client/v4/accounts/' + accountId + '/tokens/verify', '/client/v4/user/tokens/verify']) {
+    let r; try { r = await fetchImpl(base + path, {headers: {Authorization: 'Bearer ' + token}, signal: AbortSignal.timeout(12000), redirect: 'error'}); } catch { return {ok: false, error: 'Cloudflare did not respond. Try again later.'}; }
+    const d = await r.json().catch(() => null);
+    if (r.ok && d?.success && d?.result?.status === 'active') return {ok: true, text: 'Cloudflare accepted the token (status active). No model request was made and no allowance was used. This does not prove the Workers AI permission or your free plan.'};
+    if (r.status !== 401 && r.status !== 403 && r.status !== 404) return {ok: false, error: 'Cloudflare token check returned HTTP ' + r.status + '.'};
+  }
+  return {ok: false, error: 'Cloudflare did not accept the token (invalid, expired, or it belongs to another account).'};
+}

@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import fs from 'node:fs';
-import {ask, buildPayload, verifyOpinions, SYSTEM, DEFAULT_MODEL} from '../../netlify/lib/cloudflare-opinion.mjs';
+import {ask, keyCheck, buildPayload, verifyOpinions, SYSTEM, DEFAULT_MODEL} from '../../netlify/lib/cloudflare-opinion.mjs';
 import {cloudflareCaps, reserveCloudflare, cloudflareUsedToday, CF_CEILING} from '../../netlify/lib/cloudflare-limits.mjs';
 
 const TOKEN = 'test-dummy-cloudflare-token-0000', ACCOUNT = 'a'.repeat(32);
@@ -18,6 +18,12 @@ const server = http.createServer((req, res) => {
   let b = ''; req.on('data', c => b += c); req.on('end', () => {
     sent.push({url: req.url, auth: req.headers.authorization, body: b});
     const reply = (code, o) => { res.writeHead(code, {'Content-Type': 'application/json'}); res.end(typeof o === 'string' ? o : JSON.stringify(o)); };
+    if (/tokens\/verify$/.test(req.url)) {
+      if (mode === 'verify-ok') return reply(200, {success: true, result: {status: 'active'}});
+      if (mode === 'verify-user') return req.url.includes('/accounts/') ? reply(404, {success: false}) : reply(200, {success: true, result: {status: 'active'}});
+      if (mode === 'verify-500') return reply(500, 'x');
+      return reply(401, {success: false, errors: ['bad ' + TOKEN]});
+    }
     if (mode === '429') return reply(429, 'limit ' + TOKEN);
     if (mode === '500') return reply(500, 'oops');
     const answer = {
@@ -84,4 +90,16 @@ test('endpoint source: owner only, same origin, confirmed, one per receipt, comp
   assert.ok(s.indexOf('reserveCloudflare') < s.indexOf('CO.ask('));
   assert.deepEqual([...new Set([...s.matchAll(/kvPut\(([A-Za-z_]+)/g)].map(m => m[1]))], ['STORE']);
   assert.doesNotMatch(s.replace(/\/\/.*$/gm, ''), /schedule|cron|fetch\(|approved|RECEIPTS,/);
+});
+
+test('the free key check accepts an active token and never makes a model request or echoes the token', async () => {
+  const check = (m, extra = {}) => { mode = m; sent = []; return keyCheck({token: TOKEN, accountId: ACCOUNT, base, ...extra}); };
+  const ok = await check('verify-ok'); assert.equal(ok.ok, true); assert.match(ok.text, /No model request was made/);
+  assert.equal(sent.length, 1); assert.match(sent[0].url, /tokens\/verify$/); assert.equal(sent.some(x => /ai\/v1/.test(x.url)), false);
+  assert.equal((await check('verify-user')).ok, true, 'an owner level token falls back to the user check');
+  const bad = await check('verify-401'); assert.equal(bad.ok, false); assert.equal(JSON.stringify(bad).includes(TOKEN), false);
+  assert.match((await check('verify-500')).error, /HTTP 500/);
+  sent = []; assert.match((await check('verify-ok', {accountId: 'zz'})).error, /account ID/); assert.match((await check('verify-ok', {token: ''})).error, /token first/); assert.equal(sent.length, 0);
+  const o = fs.readFileSync(new URL('../../netlify/functions/ownerkeys.mjs', import.meta.url), 'utf8'), h = fs.readFileSync(new URL('../../kinvest-liens/owner/keys/index.html', import.meta.url), 'utf8');
+  assert.match(o, /b\.test === 'cloudflare'/); assert.match(h, /CLOUDFLARE_API_TOKEN:'cloudflare',CLOUDFLARE_ACCOUNT_ID:'cloudflare'/);
 });

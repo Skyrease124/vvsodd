@@ -6,6 +6,7 @@ import * as auth from '../lib/auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 import * as GL from '../lib/groq-limits.mjs';
+import * as CO from '../lib/cloudflare-opinion.mjs';
 import { APP_ID as OSAPP, postAny as OSPOST, candidates as OSKEYS } from '../lib/onesignal.mjs';
 import { PROVIDERS } from './cameras.mjs';
 import * as FIRMS from '../lib/firms.mjs';
@@ -110,6 +111,11 @@ export default async function handler(req) {
       if (!r.ok) return json(200,{ok:false,error:'OpenAI key test returned HTTP '+r.status+(r.status===401?' (invalid or revoked key).':r.status===403?' (project access denied).':'')});
       return json(200,{ok:true,nlr:true,text:'OpenAI API key authenticated. No model inference was requested and no text-generation tokens were spent. This does not verify your prepaid balance.'});
     } catch {return json(200,{ok:false,error:'OpenAI did not respond. Try again later.'});}
+  }
+  if (b.test === 'cloudflare') {
+    // Free token check only: no Workers AI request is made and no allowance is used.
+    const r = await CO.keyCheck({token: KEYS.keyOf('CLOUDFLARE_API_TOKEN'), accountId: KEYS.keyOf('CLOUDFLARE_ACCOUNT_ID')});
+    return json(200, r.ok ? {ok: true, nlr: true, text: r.text} : r);
   }
   if (b.test === 'groq') {
     const key=KEYS.keyOf('GROQ_API_KEY');
