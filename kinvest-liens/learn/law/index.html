@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Law Studies | PricePocket Academy</title>
+<meta name="description" content="PricePocket Academy State and County Law Studies: state tax sale law, county procedures, examinations and certificates.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/learn/law/law.css">
+</head>
+<body class="lawbody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a><nav><a href="/learn/">Academy</a></nav></div></header>
+<main class="law">
+  <p class="kick">PricePocket Academy</p>
+  <h1>State and County <span class="g">Law Studies</span></h1>
+  <p class="lead">A department of the Academy for the law behind tax sales: each state's statutes, each county's procedures, and examinations that test understanding, not memory. Every lesson cites its official source.</p>
+  <div id="me" class="small muted" style="margin-top:14px"></div>
+
+  <details class="dept" open><summary><span class="orb">⚖️</span><div><h2>State Law Studies</h2><span class="small muted">One course per state, with lessons, quizzes and a final examination</span></div><span class="chev">⌄</span></summary>
+    <div class="in">
+      <div class="pick"><select id="st" aria-label="Choose a state"><option value="">Choose a state</option></select></div>
+      <div id="stview"></div>
+      <div id="stgrid" class="grid"></div>
+    </div>
+  </details>
+
+  <details class="dept"><summary><span class="orb">🏛️</span><div><h2>County Law and Procedures</h2><span class="small muted">Ordinances, auction rules and local procedures, county by county</span></div><span class="chev">⌄</span></summary>
+    <div class="in" id="county"></div>
+  </details>
+
+  <details class="dept"><summary><span class="orb">🎓</span><div><h2>My progress and certificates</h2><span class="small muted">Examination history, scores and credential IDs</span></div><span class="chev">⌄</span></summary>
+    <div class="in" id="prog"></div>
+  </details>
+
+  <p class="note" style="margin-top:40px">Educational only. Not legal, tax or investment advice. Laws change; always confirm with the official source and the county. PricePocket certificates are educational credentials, not accredited degrees or professional licenses.</p>
+</main>
+<script src="/learn/law/law.js"></script>
+<script src="/auth-nav.js" defer></script>
+</body>
+</html>
