@@ -20,6 +20,8 @@ const server = http.createServer((req, res) => {
     const parsed = JSON.parse(body || '{}');
     sent.push({model: parsed.model, auth: req.headers.authorization, body});
     if (mode === 'fast-hang' && /lightning/.test(parsed.model || '')) { setTimeout(() => res.destroy(), 1500); return; }
+    if (mode === 'fast-empty' && /lightning/.test(parsed.model || '')) { res.writeHead(200, {'Content-Type': 'application/json'}); return res.end(JSON.stringify({choices: [{finish_reason: 'length', message: {content: null, reasoning_content: 'Thinking'}}]})); }
+    if (mode === 'fast-400' && /lightning/.test(parsed.model || '')) { res.writeHead(400); return res.end('unsupported parameter'); }
     if (mode === '500') { res.writeHead(500); return res.end('upstream failure, echoed ' + DUMMY_KEY); }
     if (mode === '429') { res.writeHead(429); return res.end('rate limited'); }
     if (mode === 'retired' && parsed.model === 'nvidia/nemotron-3-ultra-550b-a55b') { res.writeHead(410); return res.end('{"error":"model gone"}'); }
@@ -566,4 +568,24 @@ test('the cap keeps the parcels several sources reported on together, so a disag
   const pair = items.filter(i => i.parcelId === '01002754');
   assert.ok(new Set(pair.map(i => i.source)).size >= 3, 'the parcel several sources reported on is kept together even though its newest result is old');
   assert.ok(deterministicConflicts(items).some(c => c.parcelId === '01002754'), 'and its disagreement is still found');
+});
+
+test('the fast attempt asks the reasoning model not to reason, once, and the default attempt does not send that switch', async () => {
+  await withFast({}, async () => {
+    mode = 'fast-empty'; sent.length = 0;
+    const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+    assert.equal(receipt.outcome, 'completed'); assert.equal(receipt.attempts[0].ok, false);
+    assert.match(receipt.attempts[0].reason, /empty answer \(finish: length, reasoning only\)/, 'the receipt says why it was empty');
+    assert.deepEqual(JSON.parse(sent[0].body).chat_template_kwargs, {enable_thinking: false});
+    assert.equal(JSON.parse(sent.at(-1).body).chat_template_kwargs, undefined);
+    assert.equal(sent.filter(x => x.model === FAST).length, 1, 'one strict attempt, no search for other models');
+  });
+});
+test('if NVIDIA refuses the fast model or the switch, the default model is tried next in the same run', async () => {
+  await withFast({}, async () => {
+    mode = 'fast-400'; sent.length = 0;
+    const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+    assert.equal(receipt.outcome, 'completed'); assert.equal(receipt.attempts[0].reason, 'HTTP 400'); assert.equal(sent.length, 2);
+    assert.equal(sent.some(x => x.model === 'meta/llama-3.3-70b-instruct'), false);
+  });
 });

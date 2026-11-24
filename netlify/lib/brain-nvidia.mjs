@@ -281,12 +281,15 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
       const maxTokens = tokenBudget(items.length);
       const tried = [];
       const attempts = [];
-      const attempt = async (config, ms) => {
+      // The fast model is a reasoning model: it is asked not to reason (chat template switch), in one strict attempt. If NVIDIA
+      // refuses the switch or the model, the default model is tried next without it.
+      const FAST_OPTS = {strict: true, extraBody: {chat_template_kwargs: {enable_thinking: false}}};
+      const attempt = async (config, ms, extra = {}) => {
         const t0 = Date.now();
-        try { const a = await complete(config, system, user, {maxTokens, timeoutMs: ms, temperature: 0.1, thinking: false}); tried.push(a.model); attempts.push({model: a.model, ok: true, ms: Date.now() - t0}); return a; }
+        try { const a = await complete(config, system, user, {maxTokens, timeoutMs: ms, temperature: 0.1, thinking: false, ...extra}); tried.push(a.model); attempts.push({model: a.model, ok: true, ms: Date.now() - t0}); return a; }
         catch (e) {
           const model = e.model || config.model || 'unknown'; tried.push(model);
-          const reason = e.name === 'AbortError' ? 'no answer in ' + Math.round(ms / 1000) + ' s' : e.code === 'EMPTY_ANSWER' ? 'empty answer' : e.upstreamStatus ? 'HTTP ' + e.upstreamStatus : 'error';
+          const reason = e.name === 'AbortError' ? 'no answer in ' + Math.round(ms / 1000) + ' s' : e.code === 'EMPTY_ANSWER' ? String(e.detail || 'empty answer').replace(/^Empty answer from \S+ /, 'empty answer ').slice(0, 80) : e.upstreamStatus ? 'HTTP ' + e.upstreamStatus : 'error';
           attempts.push({model, ok: false, ms: Date.now() - t0, reason}); e.tried = tried; e.attempts = attempts; throw e;
         }
       };
@@ -295,9 +298,9 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
       const fast = cfg.model ? null : await fastModel(cfg.key);
       let answer;
       if (fast) {
-        try { answer = await attempt({...cfg, model: fast}, Math.min(TIMING.fastMs, left())); }
+        try { answer = await attempt({...cfg, model: fast}, Math.min(TIMING.fastMs, left()), FAST_OPTS); }
         catch (e) {
-          const recoverable = e.name === 'AbortError' || e.code === 'EMPTY_ANSWER' || e.upstreamStatus >= 500;
+          const recoverable = e.name === 'AbortError' || e.code === 'EMPTY_ANSWER' || (e.code === 'UPSTREAM' && e.upstreamStatus !== 429);
           if (!recoverable || left() < TIMING.minRetryMs) throw e;
           answer = await attempt(cfg, left());
         }

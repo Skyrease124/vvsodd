@@ -19,7 +19,7 @@ function buildChecks(now) {
   return {
     nvidia: {
       label: 'NVIDIA chat check',
-      cost: 'One chat request, up to 256 tokens. Uses one of the 3 daily NVIDIA runs shared with consolidation.',
+      cost: 'One chat request, up to 256 tokens. Uses one of the daily NVIDIA runs shared with consolidation.',
       limit: DAILY_LIMIT,
       missing: 'NVIDIA key is not configured. Nothing was sent.',
       available: async () => !!(await keystore.getConfig())?.key,

@@ -49,7 +49,7 @@ export async function complete(cfg, system, user, opts = {}) {
   // opts.thinking === false asks reasoning models (Nemotron) to answer without hidden reasoning, through the system
   // prompt only, so no request parameter can be refused by another model.
   const sys = opts.thinking === false && !/^detailed thinking off/i.test(system) ? 'detailed thinking off. ' + system : system;
-  const body = (model) => JSON.stringify({model, temperature: opts.temperature ?? 0.1, max_tokens: opts.maxTokens || 700, messages: [{role: 'system', content: sys}, {role: 'user', content: user}]});
+  const body = (model) => JSON.stringify({model, temperature: opts.temperature ?? 0.1, max_tokens: opts.maxTokens || 700, messages: [{role: 'system', content: sys}, {role: 'user', content: user}], ...(opts.extraBody || {})});
   const call = (model) => fetch(API_URL, {method: 'POST', signal: ctl.signal, headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.key}, body: body(model)});
   let model = null;
   try {
@@ -57,7 +57,8 @@ export async function complete(cfg, system, user, opts = {}) {
     model = [cfg.model, autoModel, DEFAULT_MODEL].find(usable) || DEFAULT_MODEL;
     let r = await call(model);
     let fallbackFrom = null;
-    if (!r.ok && [400, 404, 410].includes(r.status)) {
+    // opts.strict: a single attempt with this model only (no automatic search for another model), so the caller decides.
+    if (!r.ok && !opts.strict && [400, 404, 410].includes(r.status)) {
       // Logged without the key: which model NVIDIA refused, and with what status.
       fallbackFrom = {model, status: r.status};
       if (r.status === 404 || r.status === 410) refused.add(model);
