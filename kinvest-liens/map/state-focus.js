@@ -83,9 +83,6 @@
     const before = map.getLayer('p-fill') ? 'p-fill' : undefined;
     map.addSource('ppa-focus', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addSource('ppa-counties', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addSource('ppa-dem', { type: 'raster-dem', tiles: ['ppaelev://0/{z}/{x}/{y}'], tileSize: 256, maxzoom: 12, encoding: 'terrarium' });
-    map.addSource('ppa-dem-shade', { type: 'raster-dem', tiles: ['ppaelev://0/{z}/{x}/{y}'], tileSize: 256, maxzoom: 12, encoding: 'terrarium' }); // a second source for the shading, as MapLibre advises
-    map.addLayer({ id: 'ppa-wall', type: 'hillshade', source: 'ppa-dem-shade', paint: { 'hillshade-exaggeration': 0.95, 'hillshade-shadow-color': '#021a12', 'hillshade-highlight-color': '#a7f3d0', 'hillshade-accent-color': '#059669', 'hillshade-illumination-direction': 320, 'hillshade-illumination-anchor': 'viewport' } }, before);
     map.addLayer({ id: 'ppa-county-lines', type: 'line', source: 'ppa-counties', paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 8, 0.9, 12, 1.4] } }, before);
   }
 
@@ -134,19 +131,20 @@
     // surroundings: a small copy of the map stretched back up (soft), darkened, with the raised shape cut out
     const sw = Math.max(8, Math.round(W / 8)), sh = Math.max(8, Math.round(H / 8));
     if (small.width !== sw || small.height !== sh) { small.width = sw; small.height = sh; }
-    smallc.imageSmoothingEnabled = true; smallc.drawImage(src, 0, 0, sw, sh);
+    if (blurOk && !map.isMoving()) { smallc.imageSmoothingEnabled = true; smallc.drawImage(src, 0, 0, sw, sh); } // the one costly step, done only when still
     // Zoomed in past the framed view (a parcel, a street): the shape fills the screen, so the surroundings blur fades out
     // and the close-up stays sharp.
     const zin = target.fz ? Math.max(0, Math.min(1, (map.getZoom() - target.fz - 1) / 1)) : 0, va = veilT * (1 - zin); lastVeil = va;
     if (va > 0.003) {
     fxc.save(); fxc.beginPath(); fxc.rect(0, 0, W, H);
     target.veilRings.forEach(r => { const s2 = silhouette(r); s2.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }); fxc.closePath(); });
-    fxc.clip('evenodd'); fxc.globalAlpha = va; fxc.imageSmoothingEnabled = true; fxc.imageSmoothingQuality = 'high';
-    fxc.drawImage(small, 0, 0, W, H); fxc.fillStyle = 'rgba(2,10,8,0.46)'; fxc.fillRect(0, 0, W, H); fxc.restore();
+    fxc.clip('evenodd'); fxc.globalAlpha = va;
+    if (blurOk && !map.isMoving()) { fxc.imageSmoothingEnabled = true; fxc.drawImage(small, 0, 0, W, H); fxc.fillStyle = 'rgba(2,10,8,0.46)'; } else fxc.fillStyle = 'rgba(2,10,8,0.62)';
+    fxc.fillRect(0, 0, W, H); fxc.restore();
     }
     // a thin emerald rim along the true border at the top of the raised shape (kept subtle so it never looks busy)
     if (rimOn) {
-      fxc.save(); fxc.lineJoin = 'round'; fxc.lineCap = 'round';
+      fxc.save(); fxc.lineJoin = 'round'; fxc.lineCap = 'round'; fxc.shadowColor = 'rgba(0,0,0,0.55)'; fxc.shadowBlur = 10 * k; fxc.shadowOffsetY = 5 * k;
       const rings = target.rimRings.map(r => projectRing(r, target.elev * exag));
       [[7, 0.16, GLOW], [1.6, 0.9, RIM]].forEach(([wd, o, col]) => {
         fxc.beginPath(); rings.forEach(t => t.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }));
@@ -157,7 +155,7 @@
   }
   // Drawn only inside the map's own render event (when its picture is still available); this just asks for another frame.
   const schedule = () => { if (map && target) map.triggerRepaint(); };
-  let rimOn = false, rimT = 0, lastVeil = 0;
+  let rimOn = false, rimT = 0, lastVeil = 0, blurOk = false;
   function fade(to, ms) {
     cancelAnimationFrame(veilAnim); const v0 = veilT, r0 = rimT, t0 = performance.now(); rimOn = true;
     const set = (v, r) => { veilT = v; rimT = r; if (to === 0 && v <= 0.003) rimOn = false; schedule(); };
@@ -244,7 +242,7 @@
       if (!big) return;
       rimRings.push(pl[0]); veilRings.push(simplify(pl[0], tol)); outers.push(chaikin(simplify(pl[0], tol / 2), 2));
     }));
-    const elev = Math.min(MAX_ELEV, Math.max(1200, kmDiag(bb) * 70));
+    const elev = 0;
     return { outers, veilRings, rimRings, bb, elev, geoms, key: '' };
   }
   async function apply(detail) {
@@ -261,18 +259,18 @@
     if (my !== seq) return;
     if (target && exag > 0.002) lift(0, 0); // instantly, so the camera travels over a flat map
     target = build(geoms); target.key = state + '|' + (countyName || ''); window.PPAFocus.active = true;
-    addLayers(); ensureFx(); demRefresh();
+    addLayers(); ensureFx(); blurOk = false;
     map.getSource('ppa-focus').setData({ type: 'FeatureCollection', features: geoms.map(g => ({ type: 'Feature', properties: {}, geometry: g })) });
     if (list && map.getSource('ppa-counties')) map.getSource('ppa-counties').setData(list);
     fade(1, 650); schedule();
     // The existing fit-to-selection runs first; the lift and tilt follow it.
-    settled(() => { if (my !== seq) return; if (lowPower) { lockCamera(my); return; } lift(1, 700, () => { if (my === seq) lockCamera(my); }); watchSmoothness(); });
+    settled(() => { if (my !== seq) return; lockCamera(my); });
   }
   function clear(my) {
     window.PPAFocus.active = false; clearTimeout(lockTimer);
     try { map.setMaxBounds(null); } catch (_) { /* ignore */ }
     fade(0, 500);
-    const done = () => { if (my !== seq) return; target = null; try { if (map.getSource('ppa-counties')) map.getSource('ppa-counties').setData({ type: 'FeatureCollection', features: [] }); } catch (_) { /* ignore */ } };
+    const done = () => { if (my !== seq) return; target = null; if (fx) fx.style.display = 'none'; try { if (map.getSource('ppa-counties')) map.getSource('ppa-counties').setData({ type: 'FeatureCollection', features: [] }); } catch (_) { /* ignore */ } };
     lift(0, 600, done); setTimeout(done, 900); // done() also runs if the lift is interrupted
     if (map.getPitch() > 0.5) map.easeTo({ pitch: 0, duration: dur(700), easing: ease });
   }
@@ -282,7 +280,8 @@
   (function boot() {
     const t = setInterval(() => {
       const m = window.__ppaMap; if (!m || !m.isStyleLoaded || !m.getSource || !m.getSource('states')) return;
-      clearInterval(t); map = m; ready = ensureProtocol(); map.on('render', drawFx); map.on('moveend', onMoveEnd);
+      clearInterval(t); map = m; ready = true; // light version: no 3D terrain (it was the costly part on phones)
+      map.on('movestart', () => { blurOk = false; }); map.on('idle', () => { if (target && !blurOk && veilT > 0.003) { blurOk = true; map.triggerRepaint(); } }); map.on('render', drawFx); map.on('moveend', onMoveEnd);
       if (window.__ppaFocusPending) { const d = window.__ppaFocusPending; window.__ppaFocusPending = null; apply(d); }
     }, 150);
   })();

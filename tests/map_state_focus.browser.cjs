@@ -41,14 +41,14 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
     // 1. Selecting a state raises it, dims the rest, tilts the camera and locks it to the state.
     await pick('State', 'IA');
-    await until(() => window.__ppaMap.getTerrain() && window.__ppaMap.getPitch() > 40 && window.__ppaMap.getMaxBounds(), 'the state is raised, tilted and locked');
+    await until(() => window.PPAFocus.active && window.__ppaMap.getPitch() > 40 && window.__ppaMap.getMaxBounds(), 'the state is raised, tilted and locked');
     const st = await read();
-    assert.ok(st.active && st.terrain && st.fx, label + ': raised with the dimming layer on'); assert.ok(Math.abs(st.pitch - 42) < 1, label + ': tilted');
+    assert.ok(st.active && !st.terrain && st.fx, label + ': raised with the dimming layer on'); assert.ok(Math.abs(st.pitch - 42) < 1, label + ': tilted');
     assert.ok(st.bounds[0] < -96.5 && st.bounds[2] > -90.1 && st.bounds[1] < 40.5 && st.bounds[3] > 43.4, label + ': locked to Iowa, not the country');
     // A wide screen shows more than the state, so its lock is as wide as the view; it is still far from the whole country.
     assert.ok(st.bounds[2] - st.bounds[0] < 30 && st.bounds[3] - st.bounds[1] < 18 && st.bounds[0] > -106 && st.bounds[2] < -82, label + ': and not beyond a margin around it');
-    const layers = await f.evaluate(() => ['sat', 'st-line', 'pts', 'ppa-wall', 'ppa-county-lines'].map(id => !!window.__ppaMap.getLayer(id)));
-    assert.deepEqual(layers, [true, true, true, true, true], label + ': the existing layers stay and the new ones are added');
+    const layers = await f.evaluate(() => ['sat', 'st-line', 'pts', 'ppa-county-lines'].map(id => !!window.__ppaMap.getLayer(id)));
+    assert.deepEqual(layers, [true, true, true, true], label + ': the existing layers stay and the new ones are added');
     assert.equal(await f.evaluate(() => window.__ppaMap.getLayoutProperty('sat', 'visibility') !== 'none'), true, label + ': the satellite imagery is still shown');
     await until(() => window.__ppaMap.getSource('ppa-counties') && window.__ppaMap.getSource('ppa-counties')._data.features && window.__ppaMap.getSource('ppa-counties')._data.features.length === 2, 'county lines are drawn');
     const after = await read(); assert.deepEqual(after.added, ['ppa-fx'], label + ': the only element it adds is the dimming layer itself: no button, toggle, banner or status');
@@ -63,8 +63,8 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
     // 3. Selecting a county raises that county in the same way and tightens the lock.
     await pick('County', {index: 1});
-    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const d = window.__ppaMap.getSource('ppa-focus'); return d && d._data.features && d._data.features.length === 1 && mb && mb.getEast() - mb.getWest() < 3 && window.__ppaMap.getTerrain() && window.__ppaMap.getPitch() > 41; }, 'the county is raised and the lock tightens');
-    const co = await read(); assert.ok(co.terrain && co.fx && Math.abs(co.pitch - 42) < 1, label + ': the county is raised and tilted');
+    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const d = window.__ppaMap.getSource('ppa-focus'); return d && d._data.features && d._data.features.length === 1 && mb && mb.getEast() - mb.getWest() < 3 && window.__ppaMap.getPitch() > 41; }, 'the county is raised and the lock tightens');
+    const co = await read(); assert.ok(!co.terrain && co.fx && Math.abs(co.pitch - 42) < 1, label + ': the county is raised and tilted');
     assert.ok(co.bounds[2] - co.bounds[0] < st.bounds[2] - st.bounds[0], label + ': locked to the county, tighter than the state');
     const sel = await f.evaluate(() => JSON.stringify(window.__ppaMap.getSource('ppa-focus')._data.features[0].geometry.coordinates[0][0]));
     assert.match(sel, /-90\.9|-90\.2|-93\.9|-93\.2/, label + ': the raised shape is that county\'s own outline');
@@ -76,15 +76,15 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
     // 4. Changing the state moves the effect to the new state.
     await pick('State', 'FL');
-    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const c = window.__ppaMap.getCenter(); return window.__ppaMap.getTerrain() && mb && mb.getWest() < -86 && mb.getEast() > -81 && mb.getSouth() < 26 && mb.getNorth() > 29 && c.lng > -88 && c.lng < -79.5 && c.lat > 24 && c.lat < 31.5; }, 'the effect moves to Florida');
+    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const c = window.__ppaMap.getCenter(); return window.PPAFocus.active && mb && mb.getWest() < -86 && mb.getEast() > -81 && mb.getSouth() < 26 && mb.getNorth() > 29 && c.lng > -88 && c.lng < -79.5 && c.lat > 24 && c.lat < 31.5; }, 'the effect moves to Florida');
 
     // 4b. Switching quickly several times never leaves the map stuck on an earlier state.
     for (const a of ['TX', 'IA', 'GA']) { await pick('State', a); await page.waitForTimeout(150); }
-    await until(() => { const mb = window.__ppaMap.getMaxBounds(), c = window.__ppaMap.getCenter(); return mb && window.__ppaMap.getTerrain() && c.lng > -86 && c.lng < -80 && c.lat > 30 && c.lat < 35.5; }, 'quick switching ends on the last state (Georgia)').catch(async e => { throw new Error(e.message + ' ' + JSON.stringify(await f.evaluate(() => ({c: window.__ppaMap.getCenter(), t: !!window.__ppaMap.getTerrain(), mb: !!window.__ppaMap.getMaxBounds(), z: window.__ppaMap.getZoom(), st: document.querySelector('select') && [...document.querySelectorAll('select')].map(x => x.value)})))); });
+    await until(() => { const mb = window.__ppaMap.getMaxBounds(), c = window.__ppaMap.getCenter(); return mb && window.PPAFocus.active && c.lng > -86 && c.lng < -80 && c.lat > 30 && c.lat < 35.5; }, 'quick switching ends on the last state (Georgia)').catch(async e => { throw new Error(e.message + ' ' + JSON.stringify(await f.evaluate(() => ({c: window.__ppaMap.getCenter(), t: !!window.__ppaMap.getTerrain(), mb: !!window.__ppaMap.getMaxBounds(), z: window.__ppaMap.getZoom(), st: document.querySelector('select') && [...document.querySelectorAll('select')].map(x => x.value)})))); });
 
     // 5. Clearing restores the national map.
     await pick('State', '');
-    await until(() => !window.__ppaMap.getTerrain() && window.__ppaMap.getPitch() < 0.5 && !window.__ppaMap.getMaxBounds() && !window.PPAFocus.active, 'clearing restores the national map');
+    await until(() => window.__ppaMap.getPitch() < 0.5 && !window.__ppaMap.getMaxBounds() && !window.PPAFocus.active && document.querySelector('.ppa-fx').style.display === 'none', 'clearing restores the national map');
     const off = await read(); assert.equal(off.fx, false, label + ': the dimming layer is hidden again');
     const bad = errors.filter(e => /ReferenceError|TypeError|SyntaxError/.test(e)); assert.equal(bad.length, 0, label + ': ' + bad.join('; '));
     await context.close();
