@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Owner Intelligence Center | PricePocketAsset</title>
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app-shell.css">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app-shell.css"><link rel="stylesheet" href="/owner/owner-ui.css">
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#edf7fa;background:#0a1a2a}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0e2638,#071522);min-height:100vh}
@@ -52,7 +52,7 @@ body,main,#ownerMain,#workspace{color:#eff9fd!important}
  #ownerMain .card h2{font-size:20px}
 }
 
-</style></head><body>
+</style></head><body class="ou">
 <main id="ownerMain" hidden><p><a href="/owner/">← Owner Dashboard</a></p>
 <section class="hero"><h1>Owner Intelligence Center</h1>
 <p class="muted">Your private command center for official county-source monitoring, research evidence and AI-assisted summaries. Certificate approvals and Research Releases stay separate.</p>
@@ -146,4 +146,4 @@ async function act(input){
 }
 reload().catch(()=>{window.location.replace('/owner/');});
 </script>
-<script src="/owner/pipeline.js" defer></script></body></html>
+<script src="/owner/owner-ui.js" defer></script><script src="/owner/intelligence/intel-ui.js" defer></script><script src="/owner/pipeline.js" defer></script></body></html>
