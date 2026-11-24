@@ -40,6 +40,62 @@
 
  // ---- Property intake ----
  let intakeItems = [];
+ // Batch approval: up to 50 per request, each record with its own audit entry under one batch id.
+ async function batchApprove() {
+  const ids = selectedIds();
+  const status = $('batchStatus');
+  if (!ids.length) return say(status, 'Select at least one verified, located record.', true);
+  if (!window.confirm('Approve ' + ids.length + ' record' + (ids.length === 1 ? '' : 's') + '?\n\nPro members see each one now. Free and anonymous visitors see it 48 hours later. Each record keeps its own audit entry.')) return;
+  const batchId = 'batch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  $('batchApprove').disabled = true;
+  let approved = 0; const refused = [];
+  try {
+   for (let k = 0; k < ids.length; k += 50) {
+    say(status, 'Approving ' + Math.min(k + 50, ids.length) + ' of ' + ids.length + '…');
+    const data = await call(INTAKE, 'POST', {confirmed: true, action: 'batch-approve', ids: ids.slice(k, k + 50), batchId});
+    approved += data.approved;
+    for (const r of data.results) if (!r.ok) refused.push(r.error);
+   }
+   const why = refused.length ? ' Refused: ' + refused.length + ' (' + [...new Set(refused)].slice(0, 3).join('; ') + ').' : '';
+   say(status, 'Approved ' + approved + ' of ' + ids.length + '. Batch ' + batchId + '.' + why, refused.length > 0);
+  } catch (error) {
+   say(status, error.message + ' Approved so far: ' + approved + '. Refresh before trying again.', true);
+  }
+  await loadIntake();
+  await loadMatches();
+ }
+
+ // Parcel matches: a summary of the official-source match and the records that need investigation.
+ async function loadMatches() {
+  const status = $('matchStatus');
+  try {
+   const d = await call(INTAKE + '?scope=matches', 'GET');
+   const s = d.summary;
+   $('matchSummary').textContent = d.county + ', ' + d.state + ': ' + s.records + ' records · ' + s.matched + ' matched to an official parcel (' + s.matchedWithBoundary + ' with a boundary) · '
+    + s.pending + ' pending · ' + d.imported + ' already in the approval queue';
+   const list = $('matchSources'); list.replaceChildren();
+   for (const src of d.sources) list.appendChild(el('li', 'pi-meta', src.label + ' · data ' + src.dataDate + ' · parcel numbers found ' + src.coverage.foundParcelNumbers + ' of ' + src.coverage.requested + ' · terms: ' + src.terms.summary));
+   const pend = $('matchPending'); pend.replaceChildren();
+   for (const p of d.pending) pend.appendChild(el('li', 'pi-meta', p.parcel + ' · ' + (p.address || 'no address') + ' · ' + p.reason.replace(/_/g, ' ')
+      + (p.candidates && p.candidates.length ? ' · leads, not matches: ' + p.candidates.map(c => c.printKey + ' ' + c.siteAddress).join('; ') : '')));
+   if (!d.pending.length) pend.appendChild(el('li', 'pi-meta', 'No pending records.'));
+   say(status, 'Generated ' + fmt(d.generatedAt) + '.');
+  } catch (error) { say(status, error.message, true); }
+ }
+ async function importMatches() {
+  const status = $('matchStatus');
+  if (!window.confirm('Import the matched records into the approval queue?\n\nNothing appears on the map until you approve each record. Pending records stay in the intake for investigation.')) return;
+  $('matchImport').disabled = true;
+  try {
+   const d = await call(INTAKE, 'POST', {confirmed: true, action: 'import-matches'});
+   const message = 'Imported ' + d.created + ' (' + d.awaitingApproval + ' ready for approval, ' + d.pendingInvestigation + ' pending investigation, ' + d.skipped + ' already present' + (d.refused.length ? ', ' + d.refused.length + ' refused' : '') + ').';
+   await loadIntake();
+   await loadMatches();
+   say(status, message);   // after the reloads, which also write to this line
+  } catch (error) { say(status, error.message, true); }
+  finally { $('matchImport').disabled = false; }
+ }
+
  async function loadIntake() {
   const status = $('intakeStatus');
   try {
@@ -58,6 +114,24 @@
   const list = $('intakeList');
   list.replaceChildren();
   for (const item of intakeItems) list.appendChild(intakeCard(item));
+  updateBatchBar();
+ }
+ // Only verified, located records can be selected for batch approval: the server enforces the same rule.
+ const selectable = item => item.status === 'awaiting_approval' && !!item.property && item.property.hasCoordinates && item.locationVerified === true;
+ function selectedIds() { return [...document.querySelectorAll('#intakeList input.pi-select:checked')].map(x => x.dataset.id); }
+ function updateBatchBar() {
+  const all = intakeItems.filter(selectable);
+  const picked = selectedIds().length;
+  $('batchCount').textContent = all.length + ' verified, located record' + (all.length === 1 ? '' : 's') + ' ready · ' + picked + ' selected';
+  $('batchApprove').disabled = picked === 0;
+  $('batchSelectAll').disabled = all.length === 0;
+  $('batchSelectAll').textContent = picked === all.length && all.length ? 'Clear selection' : 'Select all ready (' + all.length + ')';
+ }
+ function toggleAllReady() {
+  const boxes = [...document.querySelectorAll('#intakeList input.pi-select')];
+  const clear = selectedIds().length === boxes.length && boxes.length > 0;
+  boxes.forEach(b => { b.checked = !clear; });
+  updateBatchBar();
  }
  function intakeCard(item) {
   const card = el('article', 'pi-card');
@@ -87,6 +161,13 @@
    actions.appendChild(button('Withdraw…', 'pi-btn pi-danger', () => openWithdraw('intake', item.id, item.title)));
   }
   card.append(actions, panel, auditBlock(item.audit));
+  if (selectable(item)) {
+    const label = el('label', 'pi-check pi-select-row');
+    const box = el('input'); box.type = 'checkbox'; box.className = 'pi-select'; box.dataset.id = item.id;
+    box.addEventListener('change', updateBatchBar);
+    label.append(box, ' Select for batch approval (Pro first, Free after 48 hours)');
+    card.prepend(label);
+  }
   return card;
  }
  // Opens a form in the card's panel; pressing the same button again closes it.
@@ -277,11 +358,16 @@
 
  $('intakeSubmit').addEventListener('click', submitIntake);
  $('intakeRefresh').addEventListener('click', loadIntake);
+$('batchSelectAll').addEventListener('click', toggleAllReady);
+$('batchApprove').addEventListener('click', batchApprove);
+$('matchImport').addEventListener('click', importMatches);
+$('matchRefresh').addEventListener('click', loadMatches);
  $('researchRefresh').addEventListener('click', loadResearch);
  $('liveRefresh').addEventListener('click', loadLive);
  $('withdrawCancel').addEventListener('click', () => { pending = null; $('withdrawDialog').close(); });
  $('withdrawForm').addEventListener('submit', confirmWithdraw);
  loadIntake();
+ loadMatches();
  loadResearch();
  loadLive();
 })();

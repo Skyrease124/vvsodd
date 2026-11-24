@@ -53,7 +53,7 @@ export function makeRelease(data, time, reviewer) {
   if (!data || !RELEASE_TYPES.has(data.type)) throw Error('Unsupported update type.');
   if (!STATES.has(data.state)) throw Error('Unsupported state.');
   if (!/^[a-zA-Z0-9._ -]{2,80}$/.test(String(data.county || ''))) throw Error('Invalid county.');
-  if (!/^[a-zA-Z0-9._ -]{3,100}$/.test(String(data.parcelId || ''))) throw Error('Invalid parcel.');
+  if (!/^[a-zA-Z0-9._ /-]{3,100}$/.test(String(data.parcelId || ''))) throw Error('Invalid parcel.');
   if (typeof data.title !== 'string' || data.title.trim().length < 6 || data.title.length > 140) throw Error('Title required.');
   if (typeof data.description !== 'string' || data.description.trim().length < 20 || data.description.length > 1400) throw Error('Describe the verified update (20–1400 characters).');
   if (typeof data.evidenceUrl !== 'string' || data.evidenceUrl.length > 2000) throw Error('Official evidence URL required.');

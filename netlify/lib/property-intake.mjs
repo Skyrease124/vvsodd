@@ -27,7 +27,7 @@ export const STATUS = Object.freeze({
 });
 const OPEN = new Set([STATUS.awaiting_verification, STATUS.awaiting_approval]);
 const COUNTY = /^[a-zA-Z0-9._ -]{2,80}$/;
-const PARCEL = /^[a-zA-Z0-9._ -]{3,100}$/;
+const PARCEL = /^[a-zA-Z0-9._ /-]{3,100}$/;
 const clip = (v, n) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
 export const httpsUrl = v => {
   try {
@@ -110,7 +110,7 @@ export function verifyItem(item, {evidenceUrl, notes, checklist, now, actor}) {
 }
 
 // Step 3: the owner approves. Builds the release through makeRelease, which enforces the release rules.
-export function approveItem(item, {releaseMode = 'pro_first_48h', criticalReason, criticalConfirmed, now, actor}) {
+export function approveItem(item, {releaseMode = 'pro_first_48h', criticalReason, criticalConfirmed, now, actor, batchId = null}) {
   if (item.status !== STATUS.awaiting_approval) return {error: 409, message: 'Only verified items can be approved'};
   if (!RELEASE_MODES.includes(releaseMode)) return {error: 400, message: 'Unknown release mode'};
   const reason = clip(criticalReason, 500);
@@ -129,8 +129,8 @@ export function approveItem(item, {releaseMode = 'pro_first_48h', criticalReason
   // The property block turns the release into a map record; legacy research-only items have no property fields.
   if (item.property) release.property = propertyBlock(item);
   return {release, item: {...item, status: STATUS.released, releaseId: release.id,
-    approval: {decision: 'approved', at, releaseMode, criticalReason: releaseMode === 'immediate_critical' ? reason : null, by: actor},
-    audit: [...item.audit, {at, action: 'approved', by: actor, note: releaseMode}]}};
+    approval: {decision: 'approved', at, releaseMode, criticalReason: releaseMode === 'immediate_critical' ? reason : null, by: actor, batchId},
+    audit: [...item.audit, {at, action: 'approved', by: actor, note: (batchId ? batchId + ' · ' : '') + releaseMode}]}};
 }
 
 export function rejectItem(item, {notes, now, actor}) {

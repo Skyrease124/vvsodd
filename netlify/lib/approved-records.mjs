@@ -58,6 +58,8 @@ export function propertyBlock(item) {
     category: f.category || KIND_CATEGORY[item.kind] || null, address: f.address || null, ownerName: f.ownerName || null,
     amount: f.amount ?? null, acreage: f.acreage ?? null,
     point: located ? f.candidatePoint : null, ring: inside ? ring : null, bb: inside ? bb : null,
+    // Set by the server from the source configuration, never from the browser: the required usage wording and dates.
+    attribution: f.attribution || null, sourceLabel: f.sourceLabel || null, dataDate: f.dataDate || null,
   };
 }
 
@@ -86,7 +88,9 @@ export function mapRecord(r) {
     i: r.state + '|' + r.county + '|' + r.parcelId + '|', p: r.parcelId, c: p.category,
     a: p.address || null, o: p.ownerName || null, amt: p.amount ?? null, ac: p.acreage ?? null,
     v: 1, t: 'Owner-approved update', st: r.title, sl: null,
-    src: 'Owner-verified against the official record' + (r.evidenceUrl ? ' (' + new URL(r.evidenceUrl).hostname + ')' : ''),
+    src: p.sourceLabel && p.attribution
+      ? 'Owner-verified against ' + p.sourceLabel + (p.dataDate ? ' (data ' + p.dataDate + ')' : '') + '. ' + p.attribution
+      : 'Owner-verified against the official record' + (r.evidenceUrl ? ' (' + new URL(r.evidenceUrl).hostname + ')' : ''),
     fr: 'Approved ' + String(r.proReleaseAt).slice(0, 10),
     cx: located ? p.point : null, g: located && p.ring ? [p.ring] : null, bb: located && p.ring ? p.bb : null,
     why: located ? null : 'Location not verified yet. Listed without a map position; nothing is guessed.',

@@ -43,10 +43,16 @@ const nodeCrypto = await import('node:crypto');
 const cryptoSyn = syn(['default'], s => s.setExport('default', nodeCrypto.default));
 
 const libCache = new Map();
+const jsonCache = new Map();
 const resolveFor = (spec, parent) => {
   if (spec === 'node:crypto') return cryptoSyn;
   if (/(^|\/)(brain-auth|auth)\.mjs$/.test(spec)) return authMock;
   if (spec.endsWith('certificate-review.mjs')) return certMock;
+  if (spec.endsWith('.json')) {
+    const file = path.resolve(path.dirname(parent), spec);
+    if (!jsonCache.has(file)) jsonCache.set(file, syn(['default'], x => x.setExport('default', JSON.parse(fs.readFileSync(file, 'utf8')))));
+    return jsonCache.get(file);
+  }
   if (spec.startsWith('.')) return loadLib(path.resolve(path.dirname(parent), spec));
   throw new Error('unexpected import ' + spec);
 };
@@ -63,7 +69,7 @@ const recordsMod = await loadLib(ROOT + 'netlify/functions/brain-map-records.mjs
 await intakeMod.evaluate();
 await feedMod.evaluate();
 await recordsMod.evaluate();
-const mapRecords = async (who, county = 'Palm Beach') => { const r = await recordsMod.namespace.default(new Request(ORIGIN + '/.netlify/functions/brain-map-records?state=FL&county=' + encodeURIComponent(county), {headers: who ? {cookie: 'sess=' + who} : {}})); return {status: r.status, ...(await r.json())}; };
+const mapRecords = async (who, county = 'Palm Beach', state = 'FL') => { const r = await recordsMod.namespace.default(new Request(ORIGIN + '/.netlify/functions/brain-map-records?state=' + state + '&county=' + encodeURIComponent(county), {headers: who ? {cookie: 'sess=' + who} : {}})); return {status: r.status, ...(await r.json())}; };
 const intake = intakeMod.namespace.default;
 const feed = feedMod.namespace.default;
 
@@ -334,4 +340,72 @@ test('a new property needs a category and coordinates inside the United States',
 test('the map records feed refuses malformed counties', async () => {
   const r = await recordsMod.namespace.default(new Request(ORIGIN + '/.netlify/functions/brain-map-records?state=Florida&county=x'));
   assert.equal(r.status, 400);
+});
+
+test('the matches summary is owner-only and carries no geometry', async () => {
+  fresh();
+  const owner = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches'})).json();
+  assert.equal(owner.ok, true);
+  assert.equal(owner.summary.records, 191);
+  assert.equal(JSON.stringify(owner).includes('"boundary"'), false, 'no polygon in the summary');
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'free', search: '?scope=matches'})).status, 403);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {search: '?scope=matches'})).status, 401);
+});
+
+test('importing the matches queues all 191 for approval with verification and attribution; a repeat import adds nothing', async () => {
+  fresh();
+  const first = await (await act({action: 'import-matches'})).json();
+  assert.equal(first.created, 191);
+  assert.equal(first.awaitingApproval, 191);
+  assert.equal(first.pendingInvestigation, 0);
+  const items = await listItems();
+  assert.equal(items.length, 191);
+  assert.ok(items.every(i => i.status === 'awaiting_approval' && i.origin === 'gis-import' && i.locationVerified && i.property.hasCoordinates && i.property.hasBoundary));
+  const again = await (await act({action: 'import-matches'})).json();
+  assert.equal(again.created, 0);
+  assert.equal(again.skipped, 191);
+  assert.equal((await listItems()).length, 191);
+});
+
+test('batch approval releases up to 50 at once, Pro first, with a separate audit entry for each record', async () => {
+  fresh();
+  await act({action: 'import-matches'});
+  const ids = (await listItems()).slice(0, 50).map(i => i.id);
+  const res = await act({action: 'batch-approve', ids, batchId: 'batch-test-0001'});
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.approved, 50);
+  assert.equal(body.refused, 0);
+  assert.ok(body.results.every(r => r.ok && r.releaseId));
+  const after = await listItems();
+  assert.equal(after.filter(i => i.status === 'released').length, 50);
+  assert.equal(after.filter(i => i.status === 'awaiting_approval').length, 141);
+  for (const i of after.filter(x => ids.includes(x.id))) {
+    const entries = i.audit.filter(a => a.action === 'approved');
+    assert.equal(entries.length, 1, 'one approval entry per record');
+    assert.match(entries[0].note, /batch-test-0001 · pro_first_48h/);
+  }
+  const again = await (await act({action: 'batch-approve', ids: [ids[0], '00000000-0000-4000-8000-000000000000']})).json();
+  assert.equal(again.approved, 0);
+  assert.equal(again.results[0].ok, false, 'an already released item is refused, not released twice');
+  assert.equal((await act({action: 'batch-approve', ids: ids.slice(0, 2), releaseMode: 'immediate_critical'})).status, 400, 'no critical batch');
+  assert.equal((await act({action: 'batch-approve', ids: Array.from({length: 51}, (_, n) => '00000000-0000-4000-8000-' + String(n).padStart(12, '0'))})).status, 400, 'at most 50');
+});
+
+test('approved positions reach the map Pro first and Free after 48 hours, with the source wording and the official spelling', async () => {
+  fresh();
+  await act({action: 'import-matches'});
+  const ids = (await listItems()).map(i => i.id);
+  for (let k = 0; k < ids.length; k += 50) assert.equal((await (await act({action: 'batch-approve', ids: ids.slice(k, k + 50)})).json()).approved, Math.min(50, ids.length - k));
+  const pro = await mapRecords('pro', 'City of Rochester', 'NY');
+  assert.equal(pro.records.length, 191);
+  const r = pro.records.find(x => x.p === '106.22-4-23');
+  assert.ok(r.cx && r.g && r.bb, 'a located record with a boundary');
+  assert.equal(r.a, '363 Avenue A, Rochester NY 14621', 'the official spelling replaces the list artifact');
+  assert.match(r.src, /City of Rochester Tax Parcels/);
+  assert.match(r.src, /modified for use from its original source, which is the official website of the City of Rochester/);
+  assert.equal((await mapRecords('free', 'City of Rochester', 'NY')).records.length, 0, 'Free waits');
+  assert.equal((await mapRecords(null, 'City of Rochester', 'NY')).records.length, 0, 'anonymous waits');
+  NOW = T0 + 48 * H;
+  assert.equal((await mapRecords(null, 'City of Rochester', 'NY')).records.length, 191, 'anonymous sees them at 48 hours');
 });

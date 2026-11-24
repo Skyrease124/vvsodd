@@ -22,7 +22,17 @@ const ITEMS = [
     property: {category: 'land_bank', address: '2 Test Way', ownerName: null, amount: null, acreage: null, hasCoordinates: false, hasBoundary: false}, locationVerified: false},
   {...base, id: '33333333-3333-4333-8333-333333333333', title: 'Released parcel', status: 'released',
     releaseId: 'rel-33333333-3333-4333-8333-333333333333', approval: {releaseMode: 'pro_first_48h', at: NOW}},
+  // Verified against the official layer and located: the only kind of record the batch bar can select.
+  {...base, id: '44444444-4444-4444-8444-444444444444', title: 'Verified official position', status: 'awaiting_approval', origin: 'gis-import',
+    verification: {evidenceUrl: 'https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D%27106.22-4-23%27', notes: 'Matched on parcel number and address.', verifiedAt: NOW},
+    locationVerified: true, property: {category: 'tax_deed', address: '363 Avenue A, Rochester NY 14621', ownerName: null, amount: 1000, acreage: 0.1, hasCoordinates: true, hasBoundary: true}},
 ];
+const MATCHES = {ok: true, dataset: 'NY-city-of-rochester', generatedAt: NOW, state: 'NY', county: 'City of Rochester',
+  summary: {records: 3, matched: 2, matchedWithBoundary: 2, matchedPointOnly: 0, pending: 1, byReason: {verified: 2, sbl_not_found: 1}},
+  sources: [{id: 'city-of-rochester-tax-parcels', label: 'City of Rochester Tax Parcels (Open Data, updated 2025)', dataDate: '2025', itemModified: '2025-06-09', retrievedAt: NOW,
+    coverage: {requested: 3, foundParcelNumbers: 2, features: 2}, terms: {summary: 'Free public informational service. Provided as is.'}, itemUrl: 'https://example.test/item'}],
+  pending: [{parcel: '999.99-9-99', address: '5 Nowhere St, Rochester NY 14604', reason: 'sbl_not_found', candidates: [{printKey: '120.74-2-14', siteAddress: '7 Nowhere St', zip: '14604'}], identifierNote: null}],
+  imported: 0};
 const RELEASES = [
   {id: 'rel-33333333-3333-4333-8333-333333333333', type: 'property', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200', title: 'Released parcel',
    releaseMode: 'pro_first_48h', proReleaseAt: NOW, freeReleaseAt: FUTURE, withdrawn: false, withdrawnAt: null, withdrawal: null,
@@ -48,8 +58,16 @@ async function install(page, {liveHidden = false, storage = 'preview-isolated'} 
     const method = request.method();
     const json = (status, body) => route.fulfill({status, contentType: 'application/json', body: JSON.stringify(body), headers: {'Cache-Control': 'no-store'}});
     if (method === 'POST') writes.push({name, body: request.postDataJSON()});
-    if (name === 'owner-property-intake') return method === 'GET' ? json(200, {ok: true, items: ITEMS, count: ITEMS.length, storage})
-      : json(200, {ok: true, item: null, notice: 'Saved.', created: 0, duplicates: [], withdrawnAt: NOW});
+    if (name === 'owner-property-intake') {
+      if (method === 'GET' && new URL(request.url()).searchParams.get('scope') === 'matches') return json(200, MATCHES);
+      if (method === 'GET') return json(200, {ok: true, items: ITEMS, count: ITEMS.length, storage});
+      const body = request.postDataJSON();
+      if (body.action === 'batch-approve') return json(200, {ok: true, batchId: body.batchId, approved: body.ids.length, refused: 0,
+        results: body.ids.map(id => ({id, ok: true, releaseId: 'rel-' + id}))});
+      if (body.action === 'import-matches') return json(200, {ok: true, created: 3, awaitingApproval: 2, pendingInvestigation: 1, skipped: 0, refused: [],
+        notice: 'Imported for review.'});
+      return json(200, {ok: true, item: null, notice: 'Saved.', created: 0, duplicates: [], withdrawnAt: NOW});
+    }
     if (name === 'research-updates') return method === 'GET' ? json(200, {ok: true, releases: RELEASES}) : json(200, {ok: true, withdrawnAt: NOW});
     if (name === 'owner-brain-live-checks') {
       if (method === 'GET') return liveHidden ? json(404, {ok: false, error: 'Not available on this site.'}) : json(200, {ok: true, previewOnly: true, items: live});
@@ -75,7 +93,7 @@ try {
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
     const intake = page.locator('#intakeList article');
     await intake.nth(0).waitFor();
-    assert.equal(await intake.count(), 3, 'three intake cards');
+    assert.equal(await intake.count(), 4, 'four intake cards');
     assert.equal(await page.evaluate(() => window.__xss), undefined, 'hostile title did not execute');
     assert.equal(await page.locator('#intakeList img').count(), 0, 'hostile title rendered as text, not an element');
     assert.match(await page.locator('#intakeList article').nth(1).innerText(), /Verified <img src=x/);
@@ -235,6 +253,37 @@ try {
     assert.equal(await page.locator('#liveChecksPanel').isVisible(), false, 'live checks stay hidden where they are not available');
     await context.close();
   }
+  // 9. Batch approval: only a verified, located record can be selected; one confirmed batch; the matches panel; import.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.waitForSelector('#intakeList article');
+    assert.match(await page.locator('#batchCount').innerText(), /1 verified, located record ready · 0 selected/);
+    assert.equal(await page.locator('#batchApprove').isDisabled(), true, 'nothing selected, nothing to approve');
+    assert.equal(await page.locator('#intakeList input.pi-select').count(), 1, 'only the verified, located record can be selected');
+    await page.locator('#intakeList input.pi-select').check();
+    assert.match(await page.locator('#batchCount').innerText(), /1 selected/);
+    assert.equal(await page.locator('#batchApprove').isDisabled(), false);
+    page.once('dialog', d => d.accept());
+    await page.locator('#batchApprove').click();
+    await page.waitForFunction(() => document.getElementById('batchStatus').textContent.startsWith('Approved 1 of 1'));
+    const sent = writes.find(w => w.body && w.body.action === 'batch-approve');
+    assert.deepEqual(sent.body.ids, ['44444444-4444-4444-8444-444444444444']);
+    assert.equal(sent.body.confirmed, true);
+    assert.match(sent.body.batchId, /^batch-/);
+    assert.equal(sent.body.releaseMode, undefined, 'the dashboard never asks for a critical batch');
+    assert.match(await page.locator('#matchSummary').innerText(), /3 records · 2 matched to an official parcel \(2 with a boundary\) · 1 pending · 0 already in the approval queue/);
+    assert.match(await page.locator('#matchPending').innerText(), /999\.99-9-99 · 5 Nowhere St.*leads, not matches/);
+    assert.match(await page.locator('#matchSources').innerText(), /Open Data, updated 2025/);
+    page.once('dialog', d => d.accept());
+    await page.locator('#matchImport').click();
+    await page.waitForFunction(() => document.getElementById('matchStatus').textContent.startsWith('Imported 3'));
+    assert.ok(writes.find(w => w.body && w.body.action === 'import-matches'), 'import sent');
+    await context.close();
+  }
+
   console.log('PASS: intake layout and escaping, verification rules, approval rules, rejection, intake and research withdrawal dialogs, live checks and hidden panel');
 } finally {
   await browser.close();

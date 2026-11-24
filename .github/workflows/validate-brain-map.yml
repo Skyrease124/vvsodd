@@ -30,6 +30,17 @@ on:
       - 'kinvest-liens/tests/export-approved-records.test.mjs'
       - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
+      - 'kinvest-liens/tests/parcel-match.test.mjs'
+      - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
+      - 'kinvest-liens/tests/rochester-map-merge.test.mjs'
+      - 'netlify/lib/parcel-match.mjs'
+      - 'netlify/lib/parcel-import.mjs'
+      - 'netlify/lib/gis-sources.mjs'
+      - 'netlify/lib/parcel-matches-registry.mjs'
+      - 'netlify/lib/data/parcel-matches/**'
+      - 'tools/parcel-match/**'
+      - 'kinvest-liens/map/brain-map-merge.js'
+      - 'kinvest-liens/map/parcel-map.js'
       - 'netlify/lib/llm.mjs'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
@@ -101,6 +112,17 @@ on:
       - 'kinvest-liens/tests/export-approved-records.test.mjs'
       - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
       - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
+      - 'kinvest-liens/tests/parcel-match.test.mjs'
+      - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
+      - 'kinvest-liens/tests/rochester-map-merge.test.mjs'
+      - 'netlify/lib/parcel-match.mjs'
+      - 'netlify/lib/parcel-import.mjs'
+      - 'netlify/lib/gis-sources.mjs'
+      - 'netlify/lib/parcel-matches-registry.mjs'
+      - 'netlify/lib/data/parcel-matches/**'
+      - 'tools/parcel-match/**'
+      - 'kinvest-liens/map/brain-map-merge.js'
+      - 'kinvest-liens/map/parcel-map.js'
       - 'netlify/lib/llm.mjs'
       - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
       - 'kinvest-liens/tests/support/**'
@@ -193,3 +215,6 @@ jobs:
       - run: node --experimental-vm-modules kinvest-liens/tests/export-approved-records.test.mjs
       - run: node --experimental-vm-modules kinvest-liens/tests/brain-preview-isolation.test.mjs
       - run: node kinvest-liens/tests/nvidia-client-errors.test.mjs
+      - run: node kinvest-liens/tests/parcel-match.test.mjs
+      - run: node kinvest-liens/tests/rochester-matches-output.test.mjs
+      - run: node kinvest-liens/tests/rochester-map-merge.test.mjs

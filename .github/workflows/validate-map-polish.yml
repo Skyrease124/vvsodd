@@ -19,6 +19,8 @@ on:
       - kinvest-liens/tests/brain-reactor-mobile.cjs
       - tests/map_approved_records.browser.cjs
       - kinvest-liens/map/brain-map-merge.js
+      - kinvest-liens/map/parcel-map.js
+      - netlify/lib/data/parcel-matches/**
       - kinvest-liens/tests/home-map-combined.test.mjs
       - .github/workflows/validate-map-polish.yml
   workflow_dispatch:

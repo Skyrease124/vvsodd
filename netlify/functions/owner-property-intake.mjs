@@ -6,12 +6,18 @@
 //   POST {action:'approve', id, releaseMode, criticalReason, criticalConfirmed}
 //   POST {action:'reject', id, notes}
 //   POST {action:'withdraw', id, reason}    removes a released item for every viewer
+//   GET  ?scope=matches                     parcel-match summary and pending records (no geometry)
+//   POST {action:'import-matches'}          matched records enter the approval queue; the rest stay pending
+//   POST {action:'batch-approve', ids:[..]} approve up to 50 items at once, Pro first; one audit entry each
 // All POSTs need an owner session, a same-origin request and confirmed:true.
 import * as auth from '../lib/brain-auth.mjs';
+import crypto from 'node:crypto';
 import {
   validateBatch, newItem, verifyItem, approveItem, rejectItem, withdrawReleaseInList, findDuplicate,
-  readIntake, mutateIntake, mutateReleases, cleanReleases, describeStatus, releaseIdFor, KINDS,
+  readIntake, mutateIntake, mutateReleases, cleanReleases, describeStatus, releaseIdFor, KINDS, STATUS,
 } from '../lib/property-intake.mjs';
+import {buildImportPlan} from '../lib/parcel-import.mjs';
+import {MATCHES} from '../lib/parcel-matches-registry.mjs';
 
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
 const summarize = (item, releases) => ({
@@ -30,9 +36,24 @@ async function handler(req) {
   const me = await auth.userFromCookie(req.headers.get('cookie') || '');
   if (!me?.owner) return json(me ? 403 : 401, {ok: false, error: 'Owner access required'});
   if (req.method === 'GET') {
+    const q = new URL(req.url).searchParams;
+    if (q.get('scope') === 'matches') {
+      const dataset = q.get('dataset') || 'NY-city-of-rochester';
+      const doc = MATCHES[dataset];
+      if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+      const intake = await readIntake(auth);
+      const parcels = new Set(doc.records.map(r => r.parcel));
+      const imported = (intake.items || []).filter(x => x.origin === 'gis-import' && parcels.has(x.parcelId)).length;
+      return json(200, {ok: true, dataset, generatedAt: doc.generatedAt, state: doc.state, county: doc.county, summary: doc.summary,
+        sources: doc.sources.map(x => ({id: x.id, label: x.label, dataDate: x.dataDate, itemModified: x.itemModified, retrievedAt: x.retrievedAt,
+          coverage: x.coverage, terms: x.terms, itemUrl: x.itemUrl})),
+        pending: doc.records.filter(r => r.status !== 'matched').map(r => ({parcel: r.parcel, address: r.address, reason: r.reason,
+          candidates: r.candidates || [], identifierNote: r.identifierNote || null})),
+        imported});
+    }
     const intake = await readIntake(auth);
     const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
-    const items = (intake.items || []).slice(-200).reverse().map(item => summarize(item, releases));
+    const items = (intake.items || []).slice(-500).reverse().map(item => summarize(item, releases));
     // storage tells the owner, before any write, whether this site writes to the isolated preview store.
     return json(200, {ok: true, items, count: (intake.items || []).length, storage: auth.isBrainPreview() ? 'preview-isolated' : 'production'});
   }
@@ -44,6 +65,68 @@ async function handler(req) {
   const actor = 'owner';
   const now = new Date();
   const fail = (r) => json(r.error, {ok: false, error: r.message});
+
+  if (b.action === 'import-matches') {
+    const dataset = typeof b.dataset === 'string' ? b.dataset : 'NY-city-of-rochester';
+    const doc = MATCHES[dataset];
+    if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+    const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
+    let plan = {created: [], skipped: [], refused: []};
+    await mutateIntake(auth, intake => {
+      plan = buildImportPlan({matches: doc, existingItems: intake.items, releases, now, actor});
+      return plan.created.length ? {...intake, items: [...intake.items, ...plan.created]} : undefined;
+    });
+    return json(200, {ok: true, created: plan.created.length,
+      awaitingApproval: plan.created.filter(x => x.status === STATUS.awaiting_approval).length,
+      pendingInvestigation: plan.created.filter(x => x.status === STATUS.awaiting_verification).length,
+      skipped: plan.skipped.length, refused: plan.refused.slice(0, 20),
+      notice: 'Imported for review. Nothing appears on the map until you approve each record (Pro first, Free after 48 hours).'});
+  }
+
+  if (b.action === 'batch-approve') {
+    const ids = [...new Set(Array.isArray(b.ids) ? b.ids : [])];
+    if (!ids.length || ids.length > 50 || !ids.every(x => typeof x === 'string' && /^[0-9a-f-]{36}$/.test(x)))
+      return json(400, {ok: false, error: 'Choose 1 to 50 items to approve.'});
+    if (b.releaseMode !== undefined && b.releaseMode !== 'pro_first_48h')
+      return json(400, {ok: false, error: 'Batch approval uses Pro first, Free after 48 hours. Approve a critical release one item at a time.'});
+    const batchId = typeof b.batchId === 'string' && /^[A-Za-z0-9-]{8,40}$/.test(b.batchId) ? b.batchId : 'batch-' + crypto.randomUUID().slice(0, 8);
+    // Pass 1 (read only): every release is written before any item is marked released, so a failure between the
+    // two passes leaves releases that a retry reuses (release ids come from the item ids) and never a released item
+    // without its release.
+    const snapshot = await readIntake(auth);
+    const pass1 = [];
+    for (const id of ids) {
+      const item = (snapshot.items || []).find(x => x.id === id);
+      if (!item || item.status !== STATUS.awaiting_approval) continue;
+      const a = approveItem(item, {releaseMode: 'pro_first_48h', now, actor, batchId});
+      if (!a.error) pass1.push(a.release);
+    }
+    if (pass1.length) await mutateReleases(auth, list => {
+      const have = new Set(list.map(r => r.id));
+      const add = pass1.filter(r => !have.has(r.id));
+      return add.length ? [...add, ...list] : undefined;
+    });
+    // Pass 2: mark each item released, re-checking its state at write time. The same timestamp gives the same release.
+    const rows = new Map();
+    await mutateIntake(auth, cur => {
+      rows.clear();
+      let changed = false;
+      const items = cur.items.map(x => {
+        if (!ids.includes(x.id)) return x;
+        if (x.status !== STATUS.awaiting_approval) { rows.set(x.id, {ok: false, error: 'Not awaiting approval (' + String(x.status).replace(/_/g, ' ') + ')'}); return x; }
+        const a = approveItem(x, {releaseMode: 'pro_first_48h', now, actor, batchId});
+        if (a.error) { rows.set(x.id, {ok: false, error: a.message}); return x; }
+        changed = true;
+        rows.set(x.id, {ok: true, releaseId: a.release.id});
+        return a.item;
+      });
+      return changed ? {...cur, items} : undefined;
+    });
+    const results = ids.map(id => ({id, ...(rows.get(id) || {ok: false, error: 'Item not found'})}));
+    const approved = results.filter(r => r.ok).length;
+    return json(200, {ok: true, batchId, approved, refused: results.length - approved, results,
+      notice: approved + ' approved: Pro now, Free and anonymous after 48 hours. Each record keeps its own audit entry under ' + batchId + '.'});
+  }
 
   if (b.action === 'submit') {
     const batch = validateBatch(b.items);

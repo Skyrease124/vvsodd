@@ -98,5 +98,15 @@ Use only the synthetic parcels below (TEST-PB-…), never a production parcel.
 2. The NVIDIA key status is in the dashboard's **NVIDIA consolidation** panel ("Key configured (environment)" or "(saved in admin setup)"). The Wayne GIS check needs no key.
 3. Record only the names that are set. Test 11 should match.
 
+## Test 13: Rochester parcel positions (import, batch approval, map)
+Preview only. Every step below writes to the isolated preview store. No step queries an outside service.
+1. Open the owner dashboard and scroll to **Parcel matches · official positions**. Expected summary: "City of Rochester, NY: 191 records · 191 matched to an official parcel (191 with a boundary) · 0 pending · 0 already in the approval queue". The sources line names the City of Rochester Tax Parcels (data 2025) and its terms.
+2. Press **Import matched records for review…**, then OK. Expected: "Imported 191 (191 ready for approval, 0 pending investigation, 0 already present)." Pressing it again must report 191 already present and import nothing new.
+3. Under **Property intake · owner approval**, press **Select all ready (191)**. The counter reads "191 verified, located records ready · 191 selected". Open any card's "official source" link: it is the City's own parcel record for that parcel number.
+4. Press **Approve selected…**, then OK. The dashboard sends four requests of up to 50. Expected: "Approved 191 of 191. Batch batch-…". Each card now reads Released, and its audit history has one "approved" entry with the batch id.
+5. Map, signed in as a Pro account: https://deploy-preview-454--pricepocketasset.netlify.app/map/?c=NY-city-of-rochester . Search "Avenue A". The parcel at 363 Avenue A shows its marker and boundary, and its details show the official spelling and, under Sources, "Owner-verified against City of Rochester Tax Parcels … modified for use from its original source, which is the official website of the City of Rochester, NY."
+6. Map, signed out (private window): the same parcels should not show until 48 hours after step 4. Check again then; they should show.
+7. Optional: withdraw one record from its card (Test 10). Its marker and boundary disappear from the map after a reload.
+
 ## Recording results
 For each test, write the date (UTC), the preview URL, the outcome in the words above, and whether it matched the expected result. Note any difference exactly. Do not include keys, tokens or session cookies.

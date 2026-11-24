@@ -68,6 +68,8 @@ function validRecord(x){
  return true;
 }
 function correction(x){const p={};for(const k of ['a','o','amt','ac','c'])if(x[k]!=null)p[k]=x[k];p.v=1;if(x.cx){p.cx=x.cx;p.why=null;}if(x.g){p.g=x.g;p.bb=x.bb;}return p;}
+// What the details panel shows for an approved record: the approval facts and the source line with the required wording.
+const approvedInfo=x=>({...(x.approved||{}),sourceLine:typeof x.src==='string'?x.src:null});
 const fresh=(x,ds)=>({i:ds.state+'|'+ds.county+'|'+x.p+'|',p:x.p,c:x.c,a:x.a??null,o:x.o??null,amt:x.amt??null,ac:x.ac??null,v:1,
  t:x.t||'Owner-approved update',st:x.st||null,sl:null,src:x.src||null,fr:x.fr||null,cx:x.cx??null,g:x.g??null,bb:x.bb??null,why:x.why||null});
 async function applyRecords(ds){
@@ -86,12 +88,12 @@ async function applyRecords(ds){
   const existing=byParcel.get(key);
   if(existing){
    if(!st.patched.has(key))st.patched.set(key,{rec:existing,base:snapshot(existing)});
-   if(existing.__approvedSig!==sig){restore(existing,st.patched.get(key).base);Object.assign(existing,correction(x));existing.__approved=x.approved||{};existing.__approvedSig=sig;reindex(existing);count++;}
+   if(existing.__approvedSig!==sig){restore(existing,st.patched.get(key).base);Object.assign(existing,correction(x));existing.__approved=approvedInfo(x);existing.__approvedSig=sig;reindex(existing);count++;}
   }else{
    let rec=st.added.get(key);
    if(!rec){rec=fresh(x,ds);rec._d=ds.id;rec.__approvedNew=true;st.added.set(key,rec);ds.recs.push(rec);count++;}
    else if(rec.__approvedSig!==sig){Object.assign(rec,fresh(x,ds));count++;}
-   rec.__approvedSig=sig;rec.__approved=x.approved||{};reindex(rec);
+   rec.__approvedSig=sig;rec.__approved=approvedInfo(x);reindex(rec);
   }
  }
  for(const [key,{rec,base}] of st.patched)if(!seen.has(key)){restore(rec,base);delete rec.__approved;delete rec.__approvedSig;reindex(rec);st.patched.delete(key);count++;}
