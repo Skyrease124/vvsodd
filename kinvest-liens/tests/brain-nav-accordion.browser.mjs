@@ -81,7 +81,13 @@ const row = page => page.locator('.bn-row[aria-controls="nvidiaPanel"]');
     const sec = document.createElement('section'); sec.className = 'panel'; sec.innerHTML = '<h2>Automatic preview — 90 Chandler</h2><p>Retrieves the official record.</p>'; app.prepend(sec);
     const p = document.createElement('p'); p.className = 'muted'; p.textContent = 'Automatic polygon verification currently supports Detroit. Agents compare the parcel.'; app.append(p);
   });
+  // The shared research pipeline panel is prepended to the page itself by another script, after the nav is built.
+  await page.evaluate(() => { const sec = document.createElement('section'); sec.className = 'panel'; sec.style.cssText = 'border:1px solid #345361;padding:18px;background:#112d3c'; sec.innerHTML = '<h2>Shared research pipeline status</h2><p>0 source records</p><a href="/owner/intelligence/" id="pipeLink">Open intelligence</a>'; document.querySelector('main').prepend(sec); });
   await page.waitForTimeout(400);
+  assert.equal(await page.evaluate(() => [...document.querySelector('main').children].filter(n => n.tagName === 'SECTION' && n.id !== 'app').length), 0, 'no panel is left loose in the page');
+  const pipe = page.locator('.bn-row', {hasText: 'Shared research pipeline status'});
+  assert.equal(await pipe.count(), 1); await pipe.click(); await page.waitForTimeout(500);
+  assert.equal(await page.locator('#pipeLink').isVisible(), true, 'its links open under its row');
   assert.equal(await page.evaluate(() => [...document.getElementById('app').children].filter(n => !/^(STYLE|SCRIPT|DIALOG)$/.test(n.tagName)).length), 0, 'nothing loose in the section');
   const tools = page.locator('.bn-row', {hasText: 'Preview and test tools'});
   assert.equal(await tools.count(), 1);

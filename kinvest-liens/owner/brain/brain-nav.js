@@ -18,6 +18,7 @@
     if (s.id === 'unattendedStatus') return ['Automation', 'bolt'];
     if (s.id === 'bn-loose') return ['Preview tools', 'shield'];
     if (/county agent progress/.test(l)) return ['Automation', 'map'];
+    if (/research pipeline/.test(l)) return ['Automation', 'list'];
     if (/monitor|photon|geoapify|publication/.test(l)) return ['Automation', /publication/.test(l) ? 'map' : 'bolt'];
     if (/approval queue|nvidia|correction review|review queue/.test(l)) return ['Review & Approval', /nvidia/.test(l) ? 'spark' : 'check'];
     if (/intake/.test(l)) return ['Property Data', 'inbox'];
@@ -129,6 +130,8 @@
     if (loose) loose.li.classList.remove('bn-hide');
   }
   if (app) { new MutationObserver(() => setTimeout(sweep, 30)).observe(app, {childList: true}); sweep(); app.classList.add('bn-shell'); }
+  // A status panel another script prepends to the page (the shared research pipeline) also becomes a row.
+  new MutationObserver(() => [...main.children].filter(n => n.tagName === 'SECTION' && n.id !== 'app' && !n.dataset.bnDone && n.querySelector('h2') && !n.querySelector('section')).forEach(n => { n.dataset.bnDone = '1'; if (!addPanel(n, 'main' + (++dyn))) { const l = looseRow(); if (l) l.s.appendChild(n); } })).observe(main, {childList: true});
   // A link such as /owner/brain/#nvidiaPanel opens that panel where it sits.
   const fromHash = () => { const id = decodeURIComponent(location.hash.slice(1)); const r = id && rows.find(x => x.s.id === id && x.inner); if (r) setOpen(r, true); };
   fromHash(); window.addEventListener('hashchange', fromHash);

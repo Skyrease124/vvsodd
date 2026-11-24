@@ -59,7 +59,7 @@ html{scroll-behavior:smooth;scroll-padding-top:12px}
 .bn-fold{display:grid;grid-template-rows:0fr;visibility:hidden;transition:grid-template-rows .34s var(--b-ease),visibility 0s linear .34s}
 .bn-open>.bn-fold{grid-template-rows:1fr;visibility:visible;transition:grid-template-rows .34s var(--b-ease),visibility 0s}
 .bn-inner{min-height:0;overflow:hidden}
-.bn-inner>section{margin:2px 8px 10px!important;background:#ffffff08!important;box-shadow:none!important;opacity:0;transform:translateY(-6px);transition:opacity .28s var(--b-ease) .06s,transform .34s var(--b-ease) .06s;animation:none!important}
+.bn-inner>section{margin:2px 8px 10px!important;background:#ffffff08!important;border:0!important;box-shadow:none!important;opacity:0;transform:translateY(-6px);transition:opacity .28s var(--b-ease) .06s,transform .34s var(--b-ease) .06s;animation:none!important}
 .bn-open>.bn-fold .bn-inner>section{opacity:1;transform:none}
 .bn-open>.bn-row .bn-chev{transform:rotate(90deg)!important;color:var(--b-green)}
 .bn-open>.bn-row{background:#ffffff0a}
