@@ -33,11 +33,20 @@ const audits = fs.readdirSync(AUDIT_DIR).filter(f => f.endsWith('.json')).map(f 
 const restrictedIds = new Set();
 const restrictedNumbers = new Set();
 const longEnough = v => /\.\d{4,}$/.test(String(v));
+// Pending candidates are restricted as well: an official ID or a candidate position stays server-side until approval.
+const addNumbers = (point, boundary) => {
+  for (const v of point || []) if (longEnough(v)) restrictedNumbers.add(String(v));
+  for (const p of boundary || []) for (const v of p) if (longEnough(v)) restrictedNumbers.add(String(v));
+};
 for (const audit of audits) for (const r of audit.records) {
-  if (r.status !== 'matched') continue;
-  if (r.official && r.official.parcelId) restrictedIds.add(String(r.official.parcelId));
-  for (const v of r.point || []) if (longEnough(v)) restrictedNumbers.add(String(v));
-  for (const p of r.boundary || []) for (const v of p) if (longEnough(v)) restrictedNumbers.add(String(v));
+  if (r.status === 'matched') {
+    if (r.official && r.official.parcelId) restrictedIds.add(String(r.official.parcelId));
+    addNumbers(r.point, r.boundary);
+  }
+  if (r.candidate) {
+    if (r.candidate.official && r.candidate.official.parcelId) restrictedIds.add(String(r.candidate.official.parcelId));
+    addNumbers(r.candidate.point, r.candidate.boundary);
+  }
 }
 // Corrected official spellings stay off the public site until the corrections are applied (after the window).
 const embargoed = manifest.appliedAt ? [] : manifest.corrections.map(c => c.corrected);
@@ -57,8 +66,9 @@ test('no published file carries an official parcel ID, a matched position or a b
   for (const file of files) {
     const text = fs.readFileSync(file, 'utf8');
     for (const m of text.matchAll(/-?\d+\.\d{4,}/g)) if (restrictedNumbers.has(m[0])) leaks.push(rel(file) + ': matched position ' + m[0]);
-    // Whole tokens, so short official identifiers (for example "C40035") are caught as well as long ones.
-    const tokens = new Set(text.match(/[A-Za-z0-9]+/g) || []);
+    // Whole tokens, so short official identifiers (for example "C40035") are caught as well as long ones. A decimal
+    // number is one token: the digits of a coordinate such as 40.306056 are not a parcel number.
+    const tokens = new Set(text.match(/[A-Za-z0-9]+(?:\.\d+)*/g) || []);
     for (const id of restrictedIds) if (tokens.has(id)) leaks.push(rel(file) + ': official parcel ID ' + id);
     for (const s of embargoed) if (text.includes(s)) leaks.push(rel(file) + ': corrected official spelling before the window ends: ' + s);
     if (leaks.length > 20) break;

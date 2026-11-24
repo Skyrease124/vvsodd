@@ -43,7 +43,9 @@ test('each matched record agrees with the layer: exact PIN, address crosscheck, 
 test('records that stay pending give a reason, and a same-address lead never changes the status', () => {
   const pending = AUDIT.records.filter(r => r.status !== 'matched');
   assert.equal(AUDIT.summary.pending, pending.length);
-  for (const r of pending) assert.ok(['address_missing', 'sbl_not_found'].includes(r.reason), r.parcel + ': ' + r.reason);
+  const REASONS = ['identifier_only', 'manufactured_home_address_point', 'manufactured_home_no_address_point', 'lot_address_ambiguous',
+    'retired_parcel_number', 'no_official_record', 'lot_number_missing'];
+  for (const r of pending) assert.ok(REASONS.includes(r.reason), r.parcel + ': ' + r.reason);
   for (const r of pending.filter(x => x.candidates)) assert.equal(r.status, 'pending', r.parcel);
 });
 

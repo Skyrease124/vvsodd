@@ -344,24 +344,24 @@ test('the map records feed refuses malformed counties', async () => {
 
 test('the matches summary is owner-only and carries no geometry', async () => {
   fresh();
-  const owner = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches'})).json();
+  const owner = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches&dataset=NY-city-of-rochester'})).json();
   assert.equal(owner.ok, true);
   assert.equal(owner.summary.records, 191);
   assert.equal(JSON.stringify(owner).includes('"boundary"'), false, 'no polygon in the summary');
-  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'free', search: '?scope=matches'})).status, 403);
-  assert.equal((await call(intake, 'GET', 'owner-property-intake', {search: '?scope=matches'})).status, 401);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'free', search: '?scope=matches&dataset=NY-city-of-rochester'})).status, 403);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {search: '?scope=matches&dataset=NY-city-of-rochester'})).status, 401);
 });
 
 test('importing the matches queues all 191 for approval with verification and attribution; a repeat import adds nothing', async () => {
   fresh();
-  const first = await (await act({action: 'import-matches'})).json();
+  const first = await (await act({action: 'import-matches', dataset: 'NY-city-of-rochester'})).json();
   assert.equal(first.created, 191);
   assert.equal(first.awaitingApproval, 191);
   assert.equal(first.pendingInvestigation, 0);
   const items = await listItems();
   assert.equal(items.length, 191);
   assert.ok(items.every(i => i.status === 'awaiting_approval' && i.origin === 'gis-import' && i.locationVerified && i.property.hasCoordinates && i.property.hasBoundary));
-  const again = await (await act({action: 'import-matches'})).json();
+  const again = await (await act({action: 'import-matches', dataset: 'NY-city-of-rochester'})).json();
   assert.equal(again.created, 0);
   assert.equal(again.skipped, 191);
   assert.equal((await listItems()).length, 191);
@@ -369,7 +369,7 @@ test('importing the matches queues all 191 for approval with verification and at
 
 test('batch approval releases up to 50 at once, Pro first, with a separate audit entry for each record', async () => {
   fresh();
-  await act({action: 'import-matches'});
+  await act({action: 'import-matches', dataset: 'NY-city-of-rochester'});
   const ids = (await listItems()).slice(0, 50).map(i => i.id);
   const res = await act({action: 'batch-approve', ids, batchId: 'batch-test-0001'});
   assert.equal(res.status, 200);
@@ -394,7 +394,7 @@ test('batch approval releases up to 50 at once, Pro first, with a separate audit
 
 test('approved positions reach the map Pro first and Free after 48 hours, with the source wording and the official spelling', async () => {
   fresh();
-  await act({action: 'import-matches'});
+  await act({action: 'import-matches', dataset: 'NY-city-of-rochester'});
   const ids = (await listItems()).map(i => i.id);
   for (let k = 0; k < ids.length; k += 50) assert.equal((await (await act({action: 'batch-approve', ids: ids.slice(k, k + 50)})).json()).approved, Math.min(50, ids.length - k));
   const pro = await mapRecords('pro', 'City of Rochester', 'NY');
@@ -410,4 +410,77 @@ test('approved positions reach the map Pro first and Free after 48 hours, with t
   assert.equal((await mapRecords(null, 'City of Rochester', 'NY')).records.length, 0, 'anonymous waits');
   NOW = T0 + 48 * H;
   assert.equal((await mapRecords(null, 'City of Rochester', 'NY')).records.length, 191, 'anonymous sees them at 48 hours');
+});
+
+test('the owner names a county for every read and import; nothing defaults to a county', async () => {
+  fresh();
+  const list = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=datasets'})).json();
+  assert.equal(list.ok, true);
+  assert.deepEqual(list.datasets.map(d => d.id), ['IA-scott', 'NY-city-of-rochester'], 'every registered county, ordered by state');
+  const scott = list.datasets.find(d => d.id === 'IA-scott');
+  assert.equal(scott.county, 'Scott');
+  assert.equal(scott.state, 'IA');
+  assert.equal(scott.records, 144);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'free', search: '?scope=datasets'})).status, 403);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches'})).status, 400, 'no default county');
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches&dataset=ZZ-nowhere'})).status, 404);
+  assert.equal((await act({action: 'import-matches'})).status, 400, 'an import names its county');
+  assert.equal((await act({action: 'import-matches', dataset: 'ZZ-nowhere'})).status, 404);
+  assert.equal((await listItems()).length, 0, 'the refused requests imported nothing');
+});
+
+test('importing Scott County: 22 matched records wait for approval, 122 pending records wait for verification, and 88 carry an unverified candidate position', async () => {
+  fresh();
+  const first = await (await act({action: 'import-matches', dataset: 'IA-scott'})).json();
+  assert.equal(first.ok, true);
+  assert.equal(first.dataset, 'IA-scott');
+  assert.equal(first.created, 144);
+  assert.equal(first.awaitingApproval, 22);
+  assert.equal(first.pendingInvestigation, 122);
+  const items = await listItems();
+  assert.equal(items.length, 144);
+  assert.ok(items.every(i => i.state === 'IA' && i.county === 'Scott' && i.origin === 'gis-import'));
+  const ready = items.filter(i => i.status === 'awaiting_approval');
+  assert.equal(ready.length, 22);
+  assert.ok(ready.every(i => i.locationVerified && i.property.hasCoordinates && i.property.hasBoundary));
+  const pending = items.filter(i => i.status === 'awaiting_verification');
+  assert.equal(pending.length, 122);
+  const candidates = pending.filter(i => i.property.hasCoordinates);
+  assert.equal(candidates.length, 88, '23 official parcel boundaries and 65 official address points');
+  assert.ok(candidates.every(i => i.locationVerified === false), 'the import verifies no candidate');
+  assert.equal(items.filter(i => i.property.hasBoundary).length, 45, 'only the 22 matches and the 23 parcel candidates carry a boundary');
+  const again = await (await act({action: 'import-matches', dataset: 'IA-scott'})).json();
+  assert.equal(again.created, 0);
+  assert.equal(again.skipped, 144, 'a repeat import adds nothing');
+  assert.equal((await listItems()).length, 144);
+});
+
+test('the Scott candidates stay off the public map: nothing is shown until the owner verifies and approves', async () => {
+  fresh();
+  await act({action: 'import-matches', dataset: 'IA-scott'});
+  assert.equal((await mapRecords('pro', 'Scott', 'IA')).records.length, 0, 'Pro waits: nothing is released yet');
+  assert.equal((await mapRecords(null, 'Scott', 'IA')).records.length, 0, 'anonymous waits');
+});
+
+test('the Scott summary names each pending reason and its official checks, and carries no coordinates or polygons', async () => {
+  fresh();
+  const s = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=matches&dataset=IA-scott'})).json();
+  assert.equal(s.ok, true);
+  assert.equal(s.summary.matched, 22);
+  assert.equal(s.pending.length, 122);
+  assert.equal(JSON.stringify(s).includes('"boundary"'), false, 'no polygon in the summary');
+  assert.equal(JSON.stringify(s).includes('"point"'), false, 'no position in the summary');
+  assert.ok(s.pending.some(p => p.candidate && p.candidate.strength === 'strong'), 'the strength grade is shown');
+  assert.ok(s.pending.every(p => p.reason && Array.isArray(p.crossChecks)), 'every pending record names its reason and checks');
+  assert.ok(s.crossCheckSources.length >= 6, 'the cross-check sources are named');
+});
+
+test('the free-access end is read for the county asked for, and only the owner may read it', async () => {
+  fresh();
+  const w = await (await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=window&dataset=IA-scott'})).json();
+  assert.equal(w.ok, true);
+  assert.equal(w.dataset, 'IA-scott');
+  assert.equal(w.latestFreeReleaseAt, null, 'nothing is released yet');
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'owner', search: '?scope=window'})).status, 400);
+  assert.equal((await call(intake, 'GET', 'owner-property-intake', {who: 'free', search: '?scope=window&dataset=IA-scott'})).status, 403);
 });

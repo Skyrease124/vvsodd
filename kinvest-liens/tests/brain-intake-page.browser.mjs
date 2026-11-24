@@ -33,6 +33,23 @@ const MATCHES = {ok: true, dataset: 'NY-city-of-rochester', generatedAt: NOW, st
     coverage: {requested: 3, foundParcelNumbers: 2, features: 2}, terms: {summary: 'Free public informational service. Provided as is.'}, itemUrl: 'https://example.test/item'}],
   pending: [{parcel: '999.99-9-99', address: '5 Nowhere St, Rochester NY 14604', reason: 'sbl_not_found', candidates: [{printKey: '120.74-2-14', siteAddress: '7 Nowhere St', zip: '14604'}], identifierNote: null}],
   imported: 0};
+// The county datasets the server would list (sorted by state, then county). Palm Beach is the synthetic dataset the
+// intake items belong to; Scott and Rochester come from their own summaries.
+const PALM_MATCHES = {...MATCHES, dataset: 'FL-palm-beach', state: 'FL', county: 'Palm Beach'};
+const SCOTT_MATCHES = {ok: true, dataset: 'IA-scott', generatedAt: NOW, state: 'IA', county: 'Scott',
+  summary: {records: 144, matched: 22, matchedWithBoundary: 22, matchedPointOnly: 0, pending: 122, byReason: {verified: 22, identifier_only: 23}},
+  sources: [{id: 'scott-county-ia-parcels', label: 'Scott County, Iowa Cadastral service: Parcel layer (county GIS, ArcGIS)', dataDate: 'layer last data edit 2026-11-13',
+    itemModified: '2026-11-13', retrievedAt: NOW, coverage: {requested: 144, foundParcelNumbers: 45, features: 45}, terms: {summary: 'Free public county GIS. Provided as is.'}, itemUrl: 'https://example.test/item'}],
+  crossCheckSources: [{id: 'scott-county-ia-cadastral-parcels', label: 'Scott County Cadastral: parcel layer (legal description, owner, acreage, polygon)', layerUrl: 'https://example.test/layer', retrievedAt: NOW}],
+  pending: [{parcel: 'P1401C09A', address: null, reason: 'identifier_only', candidates: [], identifierNote: null,
+    candidate: {precision: 'parcel_polygon', strength: 'review', acres: 0.014}, crossChecks: [{check: 'acreage', result: 'differs', detail: '0.014 acre from the drawn parcel · assessor 0.023 acre'}], landContext: []}],
+  imported: 0};
+const DATASETS = [
+  {id: 'FL-palm-beach', state: 'FL', county: 'Palm Beach', generatedAt: NOW, records: 3, matched: 2, pending: 1, imported: 0},
+  {id: 'IA-scott', state: 'IA', county: 'Scott', generatedAt: NOW, records: 144, matched: 22, pending: 122, imported: 0},
+  {id: 'NY-city-of-rochester', state: 'NY', county: 'City of Rochester', generatedAt: NOW, records: 3, matched: 2, pending: 1, imported: 0},
+];
+const MATCHES_BY_ID = {'FL-palm-beach': PALM_MATCHES, 'IA-scott': SCOTT_MATCHES, 'NY-city-of-rochester': MATCHES};
 const RELEASES = [
   {id: 'rel-33333333-3333-4333-8333-333333333333', type: 'property', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200', title: 'Released parcel',
    releaseMode: 'pro_first_48h', proReleaseAt: NOW, freeReleaseAt: FUTURE, withdrawn: false, withdrawnAt: null, withdrawal: null,
@@ -51,6 +68,7 @@ const LIVE = [
 // Installs the mocks and returns the list of writes the page sent.
 async function install(page, {liveHidden = false, storage = 'preview-isolated'} = {}) {
   const writes = [];
+  writes.reads = [];   // every GET for a county summary, so the test can check which county was asked for
   const live = structuredClone(LIVE);
   await page.route('**/.netlify/functions/**', async route => {
     const request = route.request();
@@ -59,7 +77,13 @@ async function install(page, {liveHidden = false, storage = 'preview-isolated'} 
     const json = (status, body) => route.fulfill({status, contentType: 'application/json', body: JSON.stringify(body), headers: {'Cache-Control': 'no-store'}});
     if (method === 'POST') writes.push({name, body: request.postDataJSON()});
     if (name === 'owner-property-intake') {
-      if (method === 'GET' && new URL(request.url()).searchParams.get('scope') === 'matches') return json(200, MATCHES);
+      const params = new URL(request.url()).searchParams;
+      if (method === 'GET' && params.get('scope') === 'datasets') return json(200, {ok: true, datasets: DATASETS});
+      if (method === 'GET' && params.get('scope') === 'matches') {
+        writes.reads.push({scope: 'matches', dataset: params.get('dataset')});
+        const summary = MATCHES_BY_ID[params.get('dataset')];
+        return summary ? json(200, summary) : json(400, {ok: false, error: 'Choose a county dataset.'});
+      }
       if (method === 'GET') return json(200, {ok: true, items: ITEMS, count: ITEMS.length, storage});
       const body = request.postDataJSON();
       if (body.action === 'batch-approve') return json(200, {ok: true, batchId: body.batchId, approved: body.ids.length, refused: 0,
@@ -260,7 +284,7 @@ try {
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
     await page.waitForSelector('#intakeList article');
-    assert.match(await page.locator('#batchCount').innerText(), /1 verified, located record ready · 0 selected/);
+    assert.match(await page.locator('#batchCount').innerText(), /1 verified, located record ready in Palm Beach, FL · 0 selected/);
     assert.equal(await page.locator('#batchApprove').isDisabled(), true, 'nothing selected, nothing to approve');
     assert.equal(await page.locator('#intakeList input.pi-select').count(), 1, 'only the verified, located record can be selected');
     await page.locator('#intakeList input.pi-select').check();
@@ -284,7 +308,36 @@ try {
     await context.close();
   }
 
-  console.log('PASS: intake layout and escaping, verification rules, approval rules, rejection, intake and research withdrawal dialogs, live checks and hidden panel');
+  // 10. The county selector: states and counties come from the server; each county asks for its own summary and import;
+  // the intake follows the county, and every county is one tick away.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.waitForSelector('#intakeList article');
+    assert.deepEqual(await page.locator('#datasetState option').allInnerTexts(), ['FL', 'IA', 'NY'], 'every registered state is listed');
+    assert.equal(await page.locator('#datasetState').inputValue(), 'FL', 'the first registered county is selected; no county is named in the page');
+    await page.locator('#datasetState').selectOption('IA');
+    await page.waitForFunction(() => document.getElementById('matchSummary').textContent.startsWith('Scott, IA'));
+    assert.match(await page.locator('#matchSummary').innerText(), /^Scott, IA: 144 records · 22 matched to an official parcel/);
+    assert.ok(writes.reads.some(r => r.scope === 'matches' && r.dataset === 'IA-scott'), 'Scott was asked for by its own id');
+    assert.equal(await page.locator('#intakeList article').count(), 0, 'no Palm Beach record is shown under Scott');
+    assert.equal(await page.locator('#batchCount').innerText(), '0 verified, located records ready in Scott, IA · 0 selected · 4 in other counties, not shown');
+    assert.match(await page.locator('#matchPending').innerText(), /P1401C09A · no address · identifier only · candidate: official parcel boundary, a check needs a look · checks: acreage: differs/);
+    page.once('dialog', d => d.accept());
+    await page.locator('#matchImport').click();
+    await page.waitForFunction(() => document.getElementById('matchStatus').textContent.startsWith('Imported 3 from Scott'));
+    const imports = writes.filter(w => w.body && w.body.action === 'import-matches');
+    assert.equal(imports.at(-1).body.dataset, 'IA-scott', 'the import names the county it was asked for');
+    await page.locator('#intakeAllCounties').check();
+    assert.equal(await page.locator('#intakeList article').count(), 4, 'every county shows when the owner asks for it');
+    await page.locator('#intakeAllCounties').uncheck();
+    assert.equal(await page.locator('#intakeList article').count(), 0, 'and the view returns to the selected county');
+    await context.close();
+  }
+
+  console.log('PASS: intake layout and escaping, verification rules, approval rules, rejection, intake and research withdrawal dialogs, live checks and hidden panel, county selector');
 } finally {
   await browser.close();
 }

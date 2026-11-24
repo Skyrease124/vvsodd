@@ -62,35 +62,87 @@
    say(status, error.message + ' Approved so far: ' + approved + '. Refresh before trying again.', true);
   }
   await loadIntake();
-  await loadMatches();
+  await loadDatasets();
+ }
+
+ // ---- County dataset selector: state, then county. Every county registered on the server appears here, so this file names none.
+ let datasets = [];
+ let datasetId = null;
+ const selectedDataset = () => datasets.find(d => d.id === datasetId) || null;
+ // The intake shows the selected county unless "every county" is ticked. With no selection yet, everything shows.
+ const inSelection = item => { const d = selectedDataset(); return $('intakeAllCounties').checked || !d || (item.state === d.state && item.county === d.county); };
+ function fillCounties() {
+  const state = $('datasetState').value;
+  const countySel = $('datasetCounty');
+  countySel.replaceChildren();
+  for (const d of datasets.filter(x => x.state === state)) countySel.appendChild(option(d.id, d.county + ' · ' + d.records + ' records · ' + d.imported + ' in intake'));
+  if (!datasets.some(x => x.id === datasetId && x.state === state)) datasetId = countySel.options.length ? countySel.options[0].value : null;
+  countySel.value = datasetId || '';
+ }
+ async function loadDatasets() {
+  const status = $('datasetNote');
+  try {
+   const d = await call(INTAKE + '?scope=datasets', 'GET');
+   datasets = d.datasets || [];
+   const stateSel = $('datasetState');
+   stateSel.replaceChildren();
+   for (const s of [...new Set(datasets.map(x => x.state))]) stateSel.appendChild(option(s, s));
+   if (!datasets.length) {
+    datasetId = null;
+    $('datasetCounty').replaceChildren();
+    say(status, 'No county dataset is registered yet, so there is nothing to import or approve by county.', true);
+    renderIntake();
+    return;
+   }
+   if (!selectedDataset()) datasetId = datasets[0].id;
+   stateSel.value = selectedDataset().state;
+   fillCounties();
+   say(status, 'The import, the pending list and the intake below follow this choice.');
+   await loadMatches();
+   renderIntake();
+  } catch (error) { say(status, error.message, true); }
+ }
+ async function datasetChanged() { await loadMatches(); renderIntake(); }
+ // Pending text for one record: its reason, the candidate's kind and grade, the checks, and any leads (never matches).
+ function pendingLine(p) {
+  const candidate = !p.candidate ? '' : p.candidate.precision === 'parcel_polygon'
+   ? ' · candidate: official parcel boundary, ' + (p.candidate.strength === 'strong' ? 'every check agrees' : 'a check needs a look')
+   : ' · candidate: official address point for this lot; the home itself is not verified';
+  const checks = (p.crossChecks || []).filter(c => c.result !== 'not_on_list').map(c => c.check.replace(/_/g, ' ') + ': ' + c.result.replace(/_/g, ' ')).join('; ');
+  const leads = p.candidates && p.candidates.length ? ' · leads, not matches: ' + p.candidates.map(c => c.printKey + ' ' + c.siteAddress).join('; ') : '';
+  return p.parcel + ' · ' + (p.address || 'no address') + ' · ' + p.reason.replace(/_/g, ' ') + candidate + (checks ? ' · checks: ' + checks : '') + leads;
  }
 
  // Parcel matches: a summary of the official-source match and the records that need investigation.
  async function loadMatches() {
   const status = $('matchStatus');
+  const chosen = selectedDataset();
+  if (!chosen) return say(status, 'Choose a county dataset.', true);
   try {
-   const d = await call(INTAKE + '?scope=matches', 'GET');
+   const d = await call(INTAKE + '?scope=matches&dataset=' + encodeURIComponent(chosen.id), 'GET');
    const s = d.summary;
    $('matchSummary').textContent = d.county + ', ' + d.state + ': ' + s.records + ' records · ' + s.matched + ' matched to an official parcel (' + s.matchedWithBoundary + ' with a boundary) · '
     + s.pending + ' pending · ' + d.imported + ' already in the approval queue';
    const list = $('matchSources'); list.replaceChildren();
    for (const src of d.sources) list.appendChild(el('li', 'pi-meta', src.label + ' · data ' + src.dataDate + ' · parcel numbers found ' + src.coverage.foundParcelNumbers + ' of ' + src.coverage.requested + ' · terms: ' + src.terms.summary));
    const pend = $('matchPending'); pend.replaceChildren();
-   for (const p of d.pending) pend.appendChild(el('li', 'pi-meta', p.parcel + ' · ' + (p.address || 'no address') + ' · ' + p.reason.replace(/_/g, ' ')
-      + (p.candidates && p.candidates.length ? ' · leads, not matches: ' + p.candidates.map(c => c.printKey + ' ' + c.siteAddress).join('; ') : '')));
+   for (const src of d.crossCheckSources || []) list.appendChild(el('li', 'pi-meta', 'Cross-check: ' + src.label + ' · retrieved ' + fmt(src.retrievedAt)));
+   for (const p of d.pending) pend.appendChild(el('li', 'pi-meta', pendingLine(p)));
    if (!d.pending.length) pend.appendChild(el('li', 'pi-meta', 'No pending records.'));
    say(status, 'Generated ' + fmt(d.generatedAt) + '.');
   } catch (error) { say(status, error.message, true); }
  }
  async function importMatches() {
   const status = $('matchStatus');
-  if (!window.confirm('Import the matched records into the approval queue?\n\nNothing appears on the map until you approve each record. Pending records stay in the intake for investigation.')) return;
+  const chosen = selectedDataset();
+  if (!chosen) return say(status, 'Choose a county dataset first.', true);
+  if (!window.confirm('Import the ' + chosen.county + ', ' + chosen.state + ' records into the approval queue?\n\nMatched records wait for your approval. Records without a match stay in the intake for investigation, and any candidate position stays unverified until you verify it. Nothing appears on the map until you approve each record.')) return;
   $('matchImport').disabled = true;
   try {
-   const d = await call(INTAKE, 'POST', {confirmed: true, action: 'import-matches'});
-   const message = 'Imported ' + d.created + ' (' + d.awaitingApproval + ' ready for approval, ' + d.pendingInvestigation + ' pending investigation, ' + d.skipped + ' already present' + (d.refused.length ? ', ' + d.refused.length + ' refused' : '') + ').';
+   const d = await call(INTAKE, 'POST', {confirmed: true, action: 'import-matches', dataset: chosen.id});
+   const message = 'Imported ' + d.created + ' from ' + chosen.county + ' (' + d.awaitingApproval + ' ready for approval, ' + d.pendingInvestigation + ' pending investigation, ' + d.skipped + ' already present' + (d.refused.length ? ', ' + d.refused.length + ' refused' : '') + ').';
    await loadIntake();
-   await loadMatches();
+   await loadDatasets();
    say(status, message);   // after the reloads, which also write to this line
   } catch (error) { say(status, error.message, true); }
   finally { $('matchImport').disabled = false; }
@@ -113,16 +165,21 @@
  function renderIntake() {
   const list = $('intakeList');
   list.replaceChildren();
-  for (const item of intakeItems) list.appendChild(intakeCard(item));
+  for (const item of intakeItems.filter(inSelection)) list.appendChild(intakeCard(item));
   updateBatchBar();
  }
  // Only verified, located records can be selected for batch approval: the server enforces the same rule.
  const selectable = item => item.status === 'awaiting_approval' && !!item.property && item.property.hasCoordinates && item.locationVerified === true;
  function selectedIds() { return [...document.querySelectorAll('#intakeList input.pi-select:checked')].map(x => x.dataset.id); }
  function updateBatchBar() {
-  const all = intakeItems.filter(selectable);
+  const shown = intakeItems.filter(inSelection);
+  const all = shown.filter(selectable);
   const picked = selectedIds().length;
-  $('batchCount').textContent = all.length + ' verified, located record' + (all.length === 1 ? '' : 's') + ' ready · ' + picked + ' selected';
+  const chosen = selectedDataset();
+  const where = chosen && !$('intakeAllCounties').checked ? ' in ' + chosen.county + ', ' + chosen.state : '';
+  const others = intakeItems.length - shown.length;
+  $('batchCount').textContent = all.length + ' verified, located record' + (all.length === 1 ? '' : 's') + ' ready' + where + ' · ' + picked + ' selected'
+   + (others ? ' · ' + others + ' in other counties, not shown' : '');
   $('batchApprove').disabled = picked === 0;
   $('batchSelectAll').disabled = all.length === 0;
   $('batchSelectAll').textContent = picked === all.length && all.length ? 'Clear selection' : 'Select all ready (' + all.length + ')';
@@ -361,13 +418,16 @@
 $('batchSelectAll').addEventListener('click', toggleAllReady);
 $('batchApprove').addEventListener('click', batchApprove);
 $('matchImport').addEventListener('click', importMatches);
-$('matchRefresh').addEventListener('click', loadMatches);
+$('matchRefresh').addEventListener('click', loadDatasets);
+$('datasetState').addEventListener('change', () => { fillCounties(); datasetChanged(); });
+$('datasetCounty').addEventListener('change', () => { datasetId = $('datasetCounty').value || null; datasetChanged(); });
+$('intakeAllCounties').addEventListener('change', renderIntake);
  $('researchRefresh').addEventListener('click', loadResearch);
  $('liveRefresh').addEventListener('click', loadLive);
  $('withdrawCancel').addEventListener('click', () => { pending = null; $('withdrawDialog').close(); });
  $('withdrawForm').addEventListener('submit', confirmWithdraw);
  loadIntake();
- loadMatches();
+ loadDatasets();
  loadResearch();
  loadLive();
 })();

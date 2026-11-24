@@ -190,7 +190,7 @@
       for(const option of selected.options){
         if(!option.value)continue;
         const n=counts[option.value]||{},parts=[];
-        if(mapped[option.value])parts.push(mapped[option.value]+' mapped counties');
+        if(mapped[option.value])parts.push(mapped[option.value]+(mapped[option.value]===1?' county':' counties')+' with records');
         if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
         if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
         if(n.land)parts.push(n.land.toLocaleString()+' land records');

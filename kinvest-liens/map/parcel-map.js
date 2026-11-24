@@ -370,7 +370,7 @@
       const url=verifiedGISLink();
       if(url){window.open(url,'_blank','noopener,noreferrer');return;}
       const name=curState||'the selected state';
-      say((curState?name+' GIS':'GIS')+': no verified parcel GIS viewer for this county. Select a mapped county to check available links.',true);
+      say((curState?name+' GIS':'GIS')+': no verified parcel GIS viewer for this county. Select a county with records to check available links.',true);
       return;
     }
     flGisOn=!flGisOn;button.setAttribute('aria-pressed',String(flGisOn));
@@ -411,8 +411,10 @@
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
-    const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
-    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
+    // Coverage is counted from the index: counties that have records, and the records in them. A verified map position
+    // is shown per county once that county loads, so no state label claims one.
+    const have = {}, recs = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; recs[d.state] = (recs[d.state] || 0) + (d.records || 0); });
+    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' with records · ' + recs[s.a].toLocaleString('en-US') + ' records)' : '')); o.value = s.a; stSel.appendChild(o); });
     // In a homepage Tools mode (Land Only, Tax Liens or Deeds), the state picker lists only states with that category in the index.
     const syncModeStates=()=>{
       if(!homeMap)return;
@@ -440,7 +442,7 @@
         if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
         if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
         if(n.land)parts.push(n.land.toLocaleString()+' land records');
-        option.textContent=s.n+(have[s.a]?' · '+have[s.a]+' mapped counties':'')+(parts.length?' · '+parts.join(' · '):'');
+        option.textContent=s.n+(have[s.a]?' · '+have[s.a]+(have[s.a]===1?' county':' counties')+' with records':'')+(parts.length?' · '+parts.join(' · '):'');
       }
     };
     // Same official Radar dataset for homepage, full AI map, and Workshop.
@@ -1430,7 +1432,7 @@
     const datasets=IDX.datasets.filter(d=>d.state===a&&(!homeMap||homeModeAllows(d))).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
     if(!datasets.length){say('No parcel datasets for this state.');return;}
     active=new Set(datasets.map(d=>d.id));
-    say('Loading parcels across '+datasets.length+' mapped counties…',true);
+    say('Loading parcels across '+datasets.length+' counties with records…',true);
     let cursor=0,done=0,failed=0,paintTimer=0;
     const schedulePaint=()=>{if(paintTimer)return;paintTimer=setTimeout(()=>{paintTimer=0;if(token===stateParcelLoadToken)refresh();},120);};
     const worker=async()=>{

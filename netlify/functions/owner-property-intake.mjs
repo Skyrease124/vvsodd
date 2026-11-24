@@ -6,8 +6,10 @@
 //   POST {action:'approve', id, releaseMode, criticalReason, criticalConfirmed}
 //   POST {action:'reject', id, notes}
 //   POST {action:'withdraw', id, reason}    removes a released item for every viewer
-//   GET  ?scope=matches                     parcel-match summary and pending records (no geometry)
-//   POST {action:'import-matches'}          matched records enter the approval queue; the rest stay pending
+//   GET  ?scope=datasets                    the registered county datasets (state, county, counts, imported)
+//   GET  ?scope=matches&dataset=ID          parcel-match summary and pending records of one county (no geometry)
+//   GET  ?scope=window&dataset=ID           the free-access end of that county's released records
+//   POST {action:'import-matches', dataset:ID}  matched records enter the approval queue; the rest stay pending
 //   POST {action:'batch-approve', ids:[..]} approve up to 50 items at once, Pro first; one audit entry each
 // All POSTs need an owner session, a same-origin request and confirmed:true.
 import * as auth from '../lib/brain-auth.mjs';
@@ -17,10 +19,23 @@ import {
   readIntake, mutateIntake, mutateReleases, cleanReleases, describeStatus, releaseIdFor, KINDS, STATUS,
 } from '../lib/property-intake.mjs';
 import {buildImportPlan} from '../lib/parcel-import.mjs';
-import {MATCHES} from '../lib/parcel-matches-registry.mjs';
+import {datasetById, datasetList} from '../lib/parcel-matches-registry.mjs';
 import {releaseWindowFor} from '../lib/research-releases.mjs';
 
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
+// The county dataset a request names. Every request names one: nothing defaults to a county.
+function pickDataset(value) {
+  if (!value) return {error: 'Choose a county dataset.', status: 400};
+  const doc = datasetById(value);
+  return doc ? {id: value, doc} : {error: 'No parcel matches for that dataset', status: 404};
+}
+// Items in the intake that came from this dataset: the same state, county and parcel numbers.
+function importedCount(items, id) {
+  const doc = datasetById(id);
+  if (!doc) return 0;
+  const parcels = new Set(doc.records.map(r => r.parcel));
+  return items.filter(x => x.origin === 'gis-import' && x.state === doc.state && x.county === doc.county && parcels.has(x.parcelId)).length;
+}
 const summarize = (item, releases) => ({
   id: item.id, kind: item.kind, kindLabel: KINDS[item.kind]?.label || item.kind, origin: item.origin, state: item.state, county: item.county,
   parcelId: item.parcelId, title: item.title, description: item.description, certificateNumber: item.certificateNumber, taxYear: item.taxYear,
@@ -38,27 +53,36 @@ async function handler(req) {
   if (!me?.owner) return json(me ? 403 : 401, {ok: false, error: 'Owner access required'});
   if (req.method === 'GET') {
     const q = new URL(req.url).searchParams;
+    if (q.get('scope') === 'datasets') {
+      // The counties the dashboard can choose from. A county appears here once it is registered; nothing else names one.
+      const items = (await readIntake(auth)).items || [];
+      return json(200, {ok: true, datasets: datasetList().map(d => ({...d, imported: importedCount(items, d.id)}))});
+    }
     if (q.get('scope') === 'window') {
-      // The free-access end for the released records of a dataset: after it, the approved records (and so any corrected
+      // The free-access end for the released records of one county: after it, the approved records (and so any corrected
       // public spelling) are visible to everyone. Read-only; the owner check above applies.
-      const doc = MATCHES[q.get('dataset') || 'NY-city-of-rochester'];
-      if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+      const picked = pickDataset(q.get('dataset'));
+      if (picked.error) return json(picked.status, {ok: false, error: picked.error});
       const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
-      return json(200, {ok: true, dataset: doc.dataset, state: doc.state, county: doc.county, ...releaseWindowFor(releases, {state: doc.state, county: doc.county})});
+      const {doc} = picked;
+      return json(200, {ok: true, dataset: picked.id, state: doc.state, county: doc.county, ...releaseWindowFor(releases, {state: doc.state, county: doc.county})});
     }
     if (q.get('scope') === 'matches') {
-      const dataset = q.get('dataset') || 'NY-city-of-rochester';
-      const doc = MATCHES[dataset];
-      if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+      const picked = pickDataset(q.get('dataset'));
+      if (picked.error) return json(picked.status, {ok: false, error: picked.error});
+      const {id: dataset, doc} = picked;
       const intake = await readIntake(auth);
-      const parcels = new Set(doc.records.map(r => r.parcel));
-      const imported = (intake.items || []).filter(x => x.origin === 'gis-import' && parcels.has(x.parcelId)).length;
       return json(200, {ok: true, dataset, generatedAt: doc.generatedAt, state: doc.state, county: doc.county, summary: doc.summary,
         sources: doc.sources.map(x => ({id: x.id, label: x.label, dataDate: x.dataDate, itemModified: x.itemModified, retrievedAt: x.retrievedAt,
           coverage: x.coverage, terms: x.terms, itemUrl: x.itemUrl})),
+        crossCheckSources: (doc.crossCheckSources || []).map(x => ({id: x.id, label: x.label, layerUrl: x.layerUrl, retrievedAt: x.retrievedAt})),
+        // Pending records: why each one is pending, the official check that was possible, and the candidate's kind and grade.
+        // No coordinates: a candidate position reaches the owner only through the intake, after import.
         pending: doc.records.filter(r => r.status !== 'matched').map(r => ({parcel: r.parcel, address: r.address, reason: r.reason,
-          candidates: r.candidates || [], identifierNote: r.identifierNote || null})),
-        imported});
+          candidates: r.candidates || [], identifierNote: r.identifierNote || null,
+          candidate: r.candidate ? {precision: r.candidate.precision, strength: r.candidate.strength || null, acres: r.candidate.acres ?? null} : null,
+          crossChecks: r.crossChecks || [], landContext: r.landContext || []})),
+        imported: importedCount(intake.items || [], dataset)});
     }
     const intake = await readIntake(auth);
     const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
@@ -76,16 +100,16 @@ async function handler(req) {
   const fail = (r) => json(r.error, {ok: false, error: r.message});
 
   if (b.action === 'import-matches') {
-    const dataset = typeof b.dataset === 'string' ? b.dataset : 'NY-city-of-rochester';
-    const doc = MATCHES[dataset];
-    if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+    const picked = pickDataset(typeof b.dataset === 'string' ? b.dataset : null);
+    if (picked.error) return json(picked.status, {ok: false, error: picked.error});
+    const doc = picked.doc;
     const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
     let plan = {created: [], skipped: [], refused: []};
     await mutateIntake(auth, intake => {
       plan = buildImportPlan({matches: doc, existingItems: intake.items, releases, now, actor});
       return plan.created.length ? {...intake, items: [...intake.items, ...plan.created]} : undefined;
     });
-    return json(200, {ok: true, created: plan.created.length,
+    return json(200, {ok: true, dataset: picked.id, created: plan.created.length,
       awaitingApproval: plan.created.filter(x => x.status === STATUS.awaiting_approval).length,
       pendingInvestigation: plan.created.filter(x => x.status === STATUS.awaiting_verification).length,
       skipped: plan.skipped.length, refused: plan.refused.slice(0, 20),

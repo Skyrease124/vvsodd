@@ -25,6 +25,21 @@ that before committing a change to the matcher.
 - Two official sources that disagree by more than 150 m hold the record as a source conflict.
 - Records that do not match stay pending, with the reason. Candidate parcels at the same address are leads only.
 
+## Cross-checks and candidates (Scott County)
+
+`tools/parcel-match/crosscheck-scott.mjs` runs after the matcher. It checks the records the exact match could not place
+against the other free county layers (legal description, owner, acreage, city limits, parcel history, address points), and
+records each check in the audit. Its results are **candidates**, never matches:
+
+- A *parcel candidate* (`candidate.precision: "parcel_polygon"`): the PIN is in the official layer and the list has no
+  address to check against. Its grade is `strong` when owner, acreage, legal and jurisdiction all agree, else `review`.
+- An *address-point candidate* (`candidate.precision: "address_point"`): a manufactured home on a lot whose address matches
+  one official address point. It is a position for the lot, never a parcel polygon, and the home itself is not verified.
+- Land parcels at the same street number are `landContext`: text only, never a position for a home.
+
+`tools/parcel-match/crosscheck-core.mjs` holds the pure rules, and `tests/scott-crosscheck.test.mjs` checks them. Candidates
+reach the owner's intake only through the import, unverified, and stay off the public map until the owner verifies and approves them.
+
 ## Identifiers
 
 Each source says how its parcel numbers are compared (`normalize` in `netlify/lib/gis-sources.mjs`):
