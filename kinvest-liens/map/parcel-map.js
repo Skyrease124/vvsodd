@@ -864,8 +864,8 @@
     path.setAttribute('fill', cat.c + '40'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '3'); path.setAttribute('vector-effect', 'non-scaling-stroke'); path.setAttribute('stroke-linejoin', 'round'); svg.appendChild(path);
     const tag = mk('span', 'ptag', cat.n); tag.style.background = cat.c; w.append(img, svg, tag); if (r.va) { const v = mk('span', 'ptag v', 'Vacant land'); w.appendChild(v); } return w;
   }
-  // ---------- Homepage parcel strip: swipeable satellite thumbnails of the selected state's parcels (Florida first) ----------
-  const STRIP_STATES = new Set(['FL']);
+  // ---------- Homepage parcel strip: swipeable satellite thumbnails of the selected state's parcels, for every state ----------
+  // A state's strip lists only parcels that have a public drawn boundary, so a state with none yet shows no strip.
   let stripEl = null, stripTimer = 0, stripSig = '', stripList = [], stripShown = 0, stripScroller = null;
   function stripThumb(r) {
     const W = 300, H = 188, w = mk('span', 'pm-sc-img');
@@ -897,7 +897,7 @@
   }
   function renderStrip() {
     if (!stripEl) return;
-    const on = homeMap && STRIP_STATES.has(curState);
+    const on = homeMap && !!curState;
     const list = on ? shown().filter(passes).filter(r => r.bb && r.g) : [];
     if (!list.length) { stripEl.hidden = true; stripSig = ''; return; }
     const key = r => (isUpcoming(r) ? '0' + r.sd.slice(0, 10) : '1' + String(r.amt == null ? 9e9 : r.amt).padStart(12, '0'));
@@ -1453,7 +1453,10 @@
         if(done===datasets.length){
           const records=shown().filter(passes),mapped=records.filter(p=>p.g||p.cx).length;
           if(paintTimer){clearTimeout(paintTimer);paintTimer=0;}refresh();
-          say(mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded counties'+(failed?' · '+failed+' unavailable':'')+'.');
+          const listed=records.length;
+          say(mapped||!listed
+            ? mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded '+(done-failed===1?'county':'counties')+(failed?' · '+failed+' unavailable':'')+'.'
+            : listed.toLocaleString('en-US')+' tax sale records are listed. Parcel outlines for this state are still being verified.');
         }
       }
     };

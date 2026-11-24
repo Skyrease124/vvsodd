@@ -11,6 +11,7 @@ on:
       - tests/map_polish.test.mjs
       - tests/map_polish.browser.cjs
       - tests/map_behavior.browser.cjs
+      - tests/map_state_strip.browser.cjs
       - tests/map_polish.static-server.cjs
       - kinvest-liens/map/index.html
       - kinvest-liens/owner/brain/**
@@ -57,6 +58,7 @@ jobs:
           node tests/map_polish.static-server.cjs >/tmp/ppa-serve.log 2>&1 &
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_polish.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_behavior.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_state_strip.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-activity-page.browser.mjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/cloudflare-opinion-page.browser.mjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-nav-accordion.browser.mjs
