@@ -276,6 +276,7 @@
       ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); });
       // Tapping a parcel: exact hit first, then the nearest dot within a finger-sized area, then the parcel shape. A miss closes the card.
       map.on('click', e => {
+        if (detailPanel && !detailPanel.hidden) return; // the open parcel card keeps the selection
         const other = ['research-pin', 'hz-c'].filter(id => map.getLayer(id));
         if (other.length && map.queryRenderedFeatures(e.point, { layers: other }).length) return;
         let hit = map.queryRenderedFeatures(e.point, { layers: ['pts', 'p-dots'] });
@@ -1087,17 +1088,41 @@
   let detailPanel = null;
   function openDetailPanel(r, d) {
     if (!map || !r || !d) return; const host = map.getContainer();
-    if (!document.getElementById('pmDetailCss')) { const st = mk('style'); st.id = 'pmDetailCss'; st.textContent = '.ppa-map-home .pm-pop.pm-detail:not([hidden]){position:absolute;inset:0;z-index:200;display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:auto;max-height:none;margin:0;padding:0 0 14px;border:0;border-radius:0;background:#081d25;grid-template-columns:none;grid-template-rows:none}'; document.head.append(st); }
+    if (!document.getElementById('pmDetailCss')) { const st = mk('style'); st.id = 'pmDetailCss'; st.textContent = '.ppa-map-home .pm-pop.pm-detail:not([hidden]){position:absolute;left:8px;right:8px;top:8px;bottom:8px;z-index:200;display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:auto;max-height:none;margin:0;padding:0 0 12px;border:1px solid rgba(232,190,90,.55);border-radius:20px;background:rgba(4,8,10,.96);box-shadow:0 0 0 1px rgba(16,185,129,.18),0 18px 44px rgba(0,0,0,.6);grid-template-columns:none;grid-template-rows:none;transform-origin:50% 40%;animation:pmDetailIn .26s cubic-bezier(.2,.8,.2,1) both}.ppa-map-home .pm-pop.pm-detail.leaving{animation:pmDetailOut .18s ease-in both}@keyframes pmDetailIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}@keyframes pmDetailOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.94)}}.ppa-map-home .pm-pop.pm-detail .hd{position:sticky;top:0;z-index:4;background:rgba(4,8,10,.98);margin:0;padding:10px 12px;border-bottom:1px solid #1f3a32}.ppa-map-home .pm-pop.pm-detail .hd .x{width:34px;height:34px;min-width:34px;font-size:22px;color:#eef5fb}.pm-tabs{position:sticky;z-index:3;display:flex;gap:6px;padding:8px 10px;background:rgba(4,8,10,.98);border-bottom:1px solid #1f3a32;overflow-x:auto;scrollbar-width:none}.pm-tabs button{flex:none;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid #2a4a40;background:#0d1a17;color:#cfe8dd;font:650 12px system-ui,-apple-system,sans-serif;cursor:pointer}.pm-tabs button.on{background:#0f6b4b;border-color:#37d69a;color:#fff}.pm-detail-links{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px 4px}.pm-detail-dir,.pm-detail-county{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:12px;font:700 13px system-ui,-apple-system,sans-serif;text-decoration:none}.pm-detail-dir{background:linear-gradient(180deg,#e8be5a,#c9962f);color:#111;flex:1 1 140px}.pm-detail-county{border:1px solid #37d69a;color:#bff5dd;flex:1 1 180px}.ppa-map-home .pm-callout{animation:pmCallIn .2s ease-out both}@keyframes pmCallIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.ppa-map-home .pm-pop.pm-detail,.ppa-map-home .pm-pop.pm-detail.leaving,.ppa-map-home .pm-callout{animation:none}}'; document.head.append(st); }
     if (!detailPanel) { detailPanel = mk('article', 'pm-pop pm-detail'); detailPanel.setAttribute('aria-label', 'Parcel details'); host.append(detailPanel); }
+    clearTimeout(detailPanel._t); detailPanel.classList.remove('leaving');
     popup(r, {full: true, target: detailPanel});
     // the builder's own header carries the Close button: make it close this panel
     const x = detailPanel.querySelector('.hd .x'); if (x) { const nx = x.cloneNode(true); x.replaceWith(nx); nx.addEventListener('click', closeDetailPanel); }
+    detailPanel.querySelectorAll('details.pm-extra').forEach(x => { x.open = true; }); // the big card shows everything, not a folded list
+    // Tabs jump between sections of the same details.
+    const hd = detailPanel.querySelector('.hd'), grp = name => [...detailPanel.querySelectorAll('details.grp')].find(g => g.querySelector('summary span')?.textContent === name);
+    const tabs = mk('div', 'pm-tabs');
+    const tab = (label, fn) => { const b = mk('button', '', label); b.type = 'button'; b.addEventListener('click', () => { [...tabs.children].forEach(t => t.classList.toggle('on', t === b)); fn(); }); return b; };
+    const toGroup = name => { const g = grp(name); if (!g) return; g.open = true; detailPanel.scrollTo({top: g.offsetTop - 60, behavior: 'smooth'}); };
+    const first = tab('Overview', () => detailPanel.scrollTo({top: 0, behavior: 'smooth'})); first.classList.add('on');
+    tabs.append(first, tab('Records', () => toGroup('Sale and taxes')), tab('Map Tools', () => { const m = detailPanel.querySelector('.pm-spatial'); if (m) detailPanel.scrollTo({top: m.offsetTop - 60, behavior: 'smooth'}); }), tab('Layers', () => toGroup('Property')));
+    if (hd) { hd.after(tabs); tabs.style.top = hd.offsetHeight + 'px'; }
+    // Directions and the county map, as on the parcel page.
+    const extra = mk('div', 'pm-detail-links'); const dir = mk('a', 'pm-detail-dir', 'Directions →'); dir.target = '_blank'; dir.rel = 'noopener noreferrer';
+    if (r.cx) dir.href = 'https://www.google.com/maps/dir/?api=1&destination=' + r.cx[1] + ',' + r.cx[0];
+    extra.append(dir); if (d.gis && d.gis.url) { const cm = mk('a', 'pm-detail-county', 'Open county parcel map ↗'); cm.href = d.gis.url; cm.target = '_blank'; cm.rel = 'noopener noreferrer'; extra.append(cm); }
+    detailPanel.append(extra);
+    // The map stays visible behind the card but does not move while the card is open.
+    if (!lockPrev) { lockPrev = {drag: map.dragPan.isEnabled(), zoom: map.scrollZoom.isEnabled(), touch: map.touchZoomRotate.isEnabled(), dbl: map.doubleClickZoom.isEnabled()}; ['dragPan', 'scrollZoom', 'touchZoomRotate', 'doubleClickZoom', 'boxZoom', 'keyboard'].forEach(h => { try { map[h].disable(); } catch (_) {} }); }
     detailPanel.hidden = false; detailPanel.scrollTop = 0; hideCallout();
   }
-  function closeDetailPanel() { if (detailPanel) detailPanel.hidden = true; }
+  function closeDetailPanel() {
+    if (!detailPanel || detailPanel.hidden || detailPanel.classList.contains('leaving')) return;
+    detailPanel.classList.add('leaving');
+    if (lockPrev && mapReady) { const k = lockPrev; lockPrev = null; if (k.drag) map.dragPan.enable(); if (k.zoom) map.scrollZoom.enable(); if (k.touch) map.touchZoomRotate.enable(); if (k.dbl) map.doubleClickZoom.enable(); map.boxZoom.enable(); map.keyboard.enable(); }
+    // The small card returns for the same parcel (it is the one that was open before the full details).
+    detailPanel._t = setTimeout(() => { detailPanel.hidden = true; detailPanel.classList.remove('leaving'); if (lastSel && sel) showCallout(lastSel.r, lastSel.d); }, 180);
+  }
   function hideCallout() { if (callEl) { callEl.hidden = true; callEl._anchor = null; } }
+  let lastSel = null, lockPrev = null;
   function showCallout(r, d) {
-    if (!homeMap || !mapReady || !d) return; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
+    if (!homeMap || !mapReady || !d) return; lastSel = {r, d}; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
     el.textContent = ''; const cat = CATS[r.c] || {};
     const title = mk('div', 'pm-callout-title'), ttl = mk('b', '', r.o || r.a || ('Parcel ' + r.p)); title.append(mk('span', '', '🏢'), ttl);
     const dl = mk('dl', 'pm-callout-rows');

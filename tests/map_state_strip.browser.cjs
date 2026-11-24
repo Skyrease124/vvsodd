@@ -111,8 +111,16 @@ function approvedFeed(file,n){
     assert.match(detail,/Sale and taxes/,'the panel shows the sale and tax section');
     assert.match(detail,/Property/,'the panel shows the property section');
     assert.equal(await f3.evaluate(()=>location.href),urlBefore,'the map page did not navigate away');
+    // One card at a time: the small card is gone while the big one is open, and the map does not move under it.
+    assert.equal(await f3.locator('.pm-callout').isVisible(),false,'the small card is replaced, not shown alongside');
+    assert.equal(await f3.locator('.pm-tabs button').count(),4,'Overview, Records, Map Tools and Layers tabs');
+    assert.equal(await f3.evaluate(()=>window.__ppaMap.dragPan.isEnabled()),false,'the map is locked behind the open card');
+    await f3.locator('.pm-tabs button').nth(1).click(); await f3.waitForTimeout(400);
+    await p3.screenshot({path:'/tmp/claude-0/-home-user-vvsodd/bf604de6-2661-56bf-bbdc-299b08c4a426/scratchpad/expanded.png'});
     await f3.locator('.pm-detail .hd .x').click();
     await f3.locator('.pm-detail').waitFor({state:'hidden',timeout:5000});
+    await f3.locator('.pm-callout').waitFor({state:'visible',timeout:5000});
+    assert.equal(await f3.evaluate(()=>window.__ppaMap.dragPan.isEnabled()),true,'the map moves again after closing');
     await f3.waitForFunction(()=>/3 mapped parcels across 1 loaded county/.test(document.getElementById('pmMsg').textContent),null,{timeout:20000});
     await c3.close();
     console.log('PASS: parcel strip for New York by tap and by choice (3 approved parcels, county list still works), Iowa none until approved then 2, Florida unchanged');
