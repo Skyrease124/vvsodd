@@ -42,6 +42,8 @@
   let landOnly = false; // Homepage Tools mode; existing land-bank datasets are research inventory, not confirmed offers.
   const F = { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: params.get('vacant') === '1', small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false };
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
+  // Tells the selection effect (state-focus.js) which state and county are selected. Display only; it changes no data.
+  const ppaFocus = (state, county) => { try { window.dispatchEvent(new CustomEvent('ppa:map-focus', { detail: { state: state || '', county: county || '' } })); } catch (_) { /* the map works without it */ } };
   const say = (t, keep) => { const m = $('pmMsg'); m.textContent = ''; if (t) { m.appendChild(mk('span', 'm', t)); if (!keep) setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 6500); } };
 
   // Keep all visible map instances current without restarting MapLibre or redeploying.
@@ -402,7 +404,9 @@
     const core = [q(xs, .02), q(ys, .02), q(xs, .98), q(ys, .98)], full = Math.max(d.bb[2] - d.bb[0], d.bb[3] - d.bb[1]), cw = Math.max(core[2] - core[0], core[3] - core[1], 1e-4);
     if (full / cw < 2.5) return d.bb; const pad = cw * 0.06; return [core[0] - pad, core[1] - pad, core[2] + pad, core[3] + pad];
   }
-  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || fitPad(), maxZoom: 17.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3) }); }
+  // While a state or county is raised (state-focus.js) every fit keeps the tilt, so a later fit never flattens it.
+  const focusPitch = () => (window.PPAFocus && window.PPAFocus.active ? window.PPAFocus.pitch() : 0);
+  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || fitPad(), maxZoom: 17.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3), pitch: focusPitch() }); }
 
   // ---------- top bar and filters ----------
   const ICON = { haz: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/></svg>', layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
@@ -464,7 +468,7 @@
       if(event.data?.type==='ppa:radar-state-inventory')applyStateInventory(event.data.counts);
     });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
-    stSel.addEventListener('change', () => { if (!stSel.value) { ++stateParcelLoadToken;curState = ''; curCounty = '';active=new Set(['__none__']);fillCounties(coSel);syncGISButton();refresh();syncStateBadges();drawRadarPins();if(mapReady)map.fitBounds([[-126,23.5],[-65.5,50.5]],{padding:fitPad(),duration:500});aiRefresh();return; } focusState(stSel.value,{remember:!homeMap,panel:!homeMap}); });
+    stSel.addEventListener('change', () => { if (!stSel.value) { ++stateParcelLoadToken;curState = ''; curCounty = '';active=new Set(['__none__']);fillCounties(coSel);syncGISButton();refresh();syncStateBadges();drawRadarPins();ppaFocus('','');if(mapReady)map.fitBounds([[-126,23.5],[-65.5,50.5]],{padding:fitPad(),duration:500,pitch:0});aiRefresh();return; } focusState(stSel.value,{remember:!homeMap,panel:!homeMap}); });
     coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); else if(curState) focusState(curState,{remember:false,panel:false,zoom:true}); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
@@ -731,7 +735,7 @@
     const correctedBounds=fitBB(ds),mappedCount=ds.recs.filter(r=>r.g||r.cx).length;
     if (correctedBounds) fitTo(correctedBounds); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
     if (announce && mappedCount && mappedCount < d.records) setTimeout(() => { if (curCounty === d.id) say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'); }, 1500); // only while that county is still the one on screen
-    setMapUrl(id);
+    setMapUrl(id); ppaFocus(d.state, d.county);
     if (remember && locationContext) rememberArea(locationContext.countyArea(d));
   }
   async function searchArea() {
@@ -1476,6 +1480,7 @@
     if (panel && !homeMap) stateCard(a,true);
     if(homeMap){openRight(false);if(isMobile())setSnap('peek');}
     if(homeMap)void showStateParcels(a);
+    ppaFocus(a,'');
     aiRefresh();
     if (remember && locationContext && !homeMap) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
     const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
