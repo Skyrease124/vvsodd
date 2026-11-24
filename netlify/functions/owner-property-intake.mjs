@@ -18,6 +18,7 @@ import {
 } from '../lib/property-intake.mjs';
 import {buildImportPlan} from '../lib/parcel-import.mjs';
 import {MATCHES} from '../lib/parcel-matches-registry.mjs';
+import {releaseWindowFor} from '../lib/research-releases.mjs';
 
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
 const summarize = (item, releases) => ({
@@ -37,6 +38,14 @@ async function handler(req) {
   if (!me?.owner) return json(me ? 403 : 401, {ok: false, error: 'Owner access required'});
   if (req.method === 'GET') {
     const q = new URL(req.url).searchParams;
+    if (q.get('scope') === 'window') {
+      // The free-access end for the released records of a dataset: after it, the approved records (and so any corrected
+      // public spelling) are visible to everyone. Read-only; the owner check above applies.
+      const doc = MATCHES[q.get('dataset') || 'NY-city-of-rochester'];
+      if (!doc) return json(404, {ok: false, error: 'No parcel matches for that dataset'});
+      const releases = cleanReleases(await auth.kvGet('approved-research-releases-v1'));
+      return json(200, {ok: true, dataset: doc.dataset, state: doc.state, county: doc.county, ...releaseWindowFor(releases, {state: doc.state, county: doc.county})});
+    }
     if (q.get('scope') === 'matches') {
       const dataset = q.get('dataset') || 'NY-city-of-rochester';
       const doc = MATCHES[dataset];

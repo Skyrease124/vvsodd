@@ -110,7 +110,7 @@ async function runOne(datasetId) {
   const primary = configs[0];
   const parcelField = primary.parcelField;
   const siteField = (primary.fields && primary.fields.siteAddress) || 'SITEADDRESS';
-  const zipField = (primary.fields && primary.fields.zip) || 'ZIP5';
+  const zipField = primary.fields && primary.fields.zip;
   const dir = path.join(CACHE, primary.id);
   for (const r of output.records) {
     if (r.status === 'matched' || r.reason !== 'sbl_not_found' || !r.address) continue;
@@ -122,7 +122,7 @@ async function runOne(datasetId) {
     if (!cached) {
       if (offline) { r.candidates = []; continue; }
       const body = new URLSearchParams({where: "UPPER(" + siteField + ") LIKE '" + num + " " + word + "%'",
-        outFields: [parcelField, siteField, zipField].join(','), returnGeometry: 'false', f: 'json'});
+        outFields: [parcelField, siteField, zipField].filter(Boolean).join(','), returnGeometry: 'false', f: 'json'});
       const json = await (await fetch(primary.layerUrl + '/query', {method: 'POST', body, signal: AbortSignal.timeout(60000),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}})).json();
       if (json.error) throw new Error(primary.id + ' candidate query: ' + (json.error.message || json.error.code));
@@ -130,7 +130,7 @@ async function runOne(datasetId) {
       fs.mkdirSync(dir, {recursive: true}); fs.writeFileSync(file, JSON.stringify(cached));
     }
     r.candidates = (cached.response.features || []).map(x => ({printKey: x.attributes[parcelField], siteAddress: x.attributes[siteField],
-      zip: x.attributes[zipField] || null}));
+      zip: zipField ? (x.attributes[zipField] || null) : null}));
   }
   // Re-write so the candidate leads are part of the audit document.
   fs.writeFileSync(out, JSON.stringify({...output}, null, 1) + '\n');

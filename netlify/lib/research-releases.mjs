@@ -1,5 +1,22 @@
 // Approved lien and parcel-land research release policy. Private server-side data only.
 export const PRO_EARLY_ACCESS_MS = 48 * 60 * 60 * 1000;
+
+// The end of free-access waiting for the released items of one state and county: the latest pro release plus the 48-hour
+// early-access window (an immediate critical release is free at once). Withdrawn items are not counted. Read-only.
+export function releaseWindowFor(releases, {state, county} = {}) {
+  let count = 0, latestStart = null, latestFree = null;
+  for (const r of releases || []) {
+    if (!r || r.withdrawn === true || r.state !== state || r.county !== county) continue;
+    const start = Date.parse(r.proReleaseAt);
+    if (!Number.isFinite(start)) continue;
+    const free = r.releaseMode === 'immediate_critical' ? start : start + PRO_EARLY_ACCESS_MS;
+    count++;
+    latestStart = latestStart === null ? start : Math.max(latestStart, start);
+    latestFree = latestFree === null ? free : Math.max(latestFree, free);
+  }
+  if (!count) return {releases: 0, latestProReleaseAt: null, latestFreeReleaseAt: null};
+  return {releases: count, latestProReleaseAt: new Date(latestStart).toISOString(), latestFreeReleaseAt: new Date(latestFree).toISOString()};
+}
 export const RELEASE_TYPES = new Set(['lien', 'land', 'tax_deed', 'property']);
 export const RELEASE_MODES = new Set(['pro_first_48h', 'immediate_critical']);
 export const STATES = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WI WV WY'.split(' '));

@@ -1,0 +1,5243 @@
+{
+ "schemaVersion": 1,
+ "dataset": "IA-scott",
+ "state": "IA",
+ "county": "Scott",
+ "summary": {
+  "records": 144,
+  "matched": 22,
+  "matchedWithBoundary": 22,
+  "matchedPointOnly": 0,
+  "pending": 122,
+  "byReason": {
+   "verified": 22,
+   "address_missing": 26,
+   "sbl_not_found": 96
+  }
+ },
+ "records": [
+  {
+   "parcel": "J0029-04",
+   "sblKey": "J0029-04",
+   "identifierNote": null,
+   "address": "2903 Indian Rd",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.6222714,
+    41.5168404
+   ],
+   "boundary": [
+    [
+     -90.6221938,
+     41.5168264
+    ],
+    [
+     -90.6222887,
+     41.5167183
+    ],
+    [
+     -90.6225599,
+     41.5169146
+    ],
+    [
+     -90.6223782,
+     41.5170484
+    ],
+    [
+     -90.6221938,
+     41.5168264
+    ]
+   ],
+   "bbox": [
+    -90.6225599,
+    41.5167183,
+    -90.6221938,
+    41.5170484
+   ],
+   "official": {
+    "parcelId": "J22001",
+    "printKey": "J0029-04",
+    "siteAddress": "2903 INDIAN RD",
+    "zip": null,
+    "acres": 0.117
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'J0029-04'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|J0029-04|",
+   "amount": 2304.83,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0044-17",
+   "sblKey": "F0044-17",
+   "identifierNote": null,
+   "address": "808 E 6Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5621299,
+    41.5277272
+   ],
+   "boundary": [
+    [
+     -90.5619507,
+     41.5275502
+    ],
+    [
+     -90.5621551,
+     41.5275089
+    ],
+    [
+     -90.5621563,
+     41.5278572
+    ],
+    [
+     -90.5619837,
+     41.527857
+    ],
+    [
+     -90.5619517,
+     41.5278569
+    ],
+    [
+     -90.5619507,
+     41.5275502
+    ]
+   ],
+   "bbox": [
+    -90.5621563,
+    41.5275089,
+    -90.5619507,
+    41.5278572
+   ],
+   "official": {
+    "parcelId": "F25002",
+    "printKey": "F0044-17",
+    "siteAddress": "808 E 6TH ST",
+    "zip": null,
+    "acres": 0.154
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0044-17'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0044-17|",
+   "amount": 992,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0051-10",
+   "sblKey": "G0051-10",
+   "identifierNote": null,
+   "address": "802 W 5Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5846413,
+    41.5248647
+   ],
+   "boundary": [
+    [
+     -90.5846986,
+     41.5247272
+    ],
+    [
+     -90.5846957,
+     41.5250016
+    ],
+    [
+     -90.5845825,
+     41.5250016
+    ],
+    [
+     -90.5845854,
+     41.5247271
+    ],
+    [
+     -90.5846986,
+     41.5247272
+    ]
+   ],
+   "bbox": [
+    -90.5846986,
+    41.5247271,
+    -90.5845825,
+    41.5250016
+   ],
+   "official": {
+    "parcelId": "G24060",
+    "printKey": "G0051-10",
+    "siteAddress": "802 W 5TH ST",
+    "zip": null,
+    "acres": 0.071
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'G0051-10'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|G0051-10|",
+   "amount": 1709.82,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "P1401C09A",
+   "sblKey": "P1401C09A",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|P1401C09A|",
+   "amount": 94,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0064-01",
+   "sblKey": "G0064-01",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0064-01|",
+   "amount": 44,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "K0019-22",
+   "sblKey": "K0019-22",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|K0019-22|",
+   "amount": 122,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0019-08",
+   "sblKey": "F0019-08",
+   "identifierNote": null,
+   "address": "1314 Farnam St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5672918,
+    41.5335109
+   ],
+   "boundary": [
+    [
+     -90.5672617,
+     41.5334103
+    ],
+    [
+     -90.5674807,
+     41.5334111
+    ],
+    [
+     -90.5674805,
+     41.5335346
+    ],
+    [
+     -90.567261,
+     41.5335338
+    ],
+    [
+     -90.5672548,
+     41.5335338
+    ],
+    [
+     -90.5669326,
+     41.5335326
+    ],
+    [
+     -90.5669323,
+     41.5334091
+    ],
+    [
+     -90.5672554,
+     41.5334103
+    ],
+    [
+     -90.5672617,
+     41.5334103
+    ]
+   ],
+   "bbox": [
+    -90.5674807,
+    41.5334091,
+    -90.5669323,
+    41.5335346
+   ],
+   "official": {
+    "parcelId": "F18059",
+    "printKey": "F0019-08",
+    "siteAddress": "1314 FARNAM ST",
+    "zip": null,
+    "acres": 0.155
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0019-08'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0019-08|",
+   "amount": 3094,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0035-01",
+   "sblKey": "F0035-01",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|F0035-01|",
+   "amount": 122,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0019-38",
+   "sblKey": "F0019-38",
+   "identifierNote": null,
+   "address": "624 E 13Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5657936,
+    41.5331536
+   ],
+   "boundary": [
+    [
+     -90.5657371,
+     41.5330892
+    ],
+    [
+     -90.5658499,
+     41.5330896
+    ],
+    [
+     -90.5658507,
+     41.5335013
+    ],
+    [
+     -90.5657379,
+     41.5335009
+    ],
+    [
+     -90.5657371,
+     41.5330892
+    ]
+   ],
+   "bbox": [
+    -90.5658507,
+    41.5330892,
+    -90.5657371,
+    41.5335013
+   ],
+   "official": {
+    "parcelId": "F19072",
+    "printKey": "F0019-38",
+    "siteAddress": "624 E 13TH ST",
+    "zip": null,
+    "acres": 0.106
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0019-38'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0019-38|",
+   "amount": 528.33,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0036-03",
+   "sblKey": "F0036-03",
+   "identifierNote": null,
+   "address": "1019 Sylvan Av",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5630273,
+    41.5306716
+   ],
+   "boundary": [
+    [
+     -90.5632108,
+     41.5303664
+    ],
+    [
+     -90.5634403,
+     41.5303652
+    ],
+    [
+     -90.5633416,
+     41.5306601
+    ],
+    [
+     -90.5632684,
+     41.530879
+    ],
+    [
+     -90.5626646,
+     41.5308823
+    ],
+    [
+     -90.5626639,
+     41.5306638
+    ],
+    [
+     -90.5626636,
+     41.530576
+    ],
+    [
+     -90.5632114,
+     41.530573
+    ],
+    [
+     -90.5632112,
+     41.5304852
+    ],
+    [
+     -90.563211,
+     41.5304413
+    ],
+    [
+     -90.5632109,
+     41.5303974
+    ],
+    [
+     -90.5632108,
+     41.5303664
+    ]
+   ],
+   "bbox": [
+    -90.5634403,
+    41.5303652,
+    -90.5626636,
+    41.5308823
+   ],
+   "official": {
+    "parcelId": "F20001",
+    "printKey": "F0036-03",
+    "siteAddress": "1019 SYLVAN AV",
+    "zip": null,
+    "acres": 0.557
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0036-03'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0036-03|",
+   "amount": 253,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "Y0823-OLA",
+   "sblKey": "Y0823-OLA",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|Y0823-OLA|",
+   "amount": 141,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "H0056-20",
+   "sblKey": "H0056-20",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|H0056-20|",
+   "amount": 461.25,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0001-22",
+   "sblKey": "F0001-22",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|F0001-22|",
+   "amount": 139,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "INFL455A10829HP13",
+   "sblKey": "INFL455A10829HP13",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 076",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|INFL455A10829HP13|",
+   "amount": 118,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "INFLN76A03833AT",
+   "sblKey": "INFLN76A03833AT",
+   "identifierNote": null,
+   "address": "3624 State St Lot 006",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|INFLN76A03833AT|",
+   "amount": 118,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842737509--1",
+     "siteAddress": "3624 STATE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0029-18",
+   "sblKey": "F0029-18",
+   "identifierNote": null,
+   "address": "1 Riverview Pl",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5646347,
+    41.5307262
+   ],
+   "boundary": [
+    [
+     -90.5645434,
+     41.5306374
+    ],
+    [
+     -90.564726,
+     41.5306364
+    ],
+    [
+     -90.564726,
+     41.530815
+    ],
+    [
+     -90.5645434,
+     41.530816
+    ],
+    [
+     -90.5645434,
+     41.5306374
+    ]
+   ],
+   "bbox": [
+    -90.564726,
+    41.5306364,
+    -90.5645434,
+    41.530816
+   ],
+   "official": {
+    "parcelId": "F19028",
+    "printKey": "F0029-18",
+    "siteAddress": "1 RIVERVIEW PL",
+    "zip": null,
+    "acres": 0.075
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0029-18'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0029-18|",
+   "amount": 105,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "27300369ABU",
+   "sblKey": "27300369ABU",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 050",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|27300369ABU|",
+   "amount": 224,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "G0046-08",
+   "sblKey": "G0046-08",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0046-08|",
+   "amount": 89,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0049-49A",
+   "sblKey": "F0049-49A",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|F0049-49A|",
+   "amount": 108,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0051-24",
+   "sblKey": "G0051-24",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0051-24|",
+   "amount": 55,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0028-14",
+   "sblKey": "G0028-14",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0028-14|",
+   "amount": 59,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "H0056-57",
+   "sblKey": "H0056-57",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|H0056-57|",
+   "amount": 45,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0028-15",
+   "sblKey": "G0028-15",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0028-15|",
+   "amount": 70,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0035-27",
+   "sblKey": "G0035-27",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0035-27|",
+   "amount": 97,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "MY9281058K",
+   "sblKey": "MY9281058K",
+   "identifierNote": null,
+   "address": "3305 W 48Th St Lot 105",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9281058K|",
+   "amount": 111,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2110A31",
+     "siteAddress": "3305 W DOVER CT",
+     "zip": null
+    },
+    {
+     "printKey": "I0007D28",
+     "siteAddress": "3305 W 11TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0435B36",
+     "siteAddress": "3305 W 66TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649218",
+     "siteAddress": "3305 WELSHIRE DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2110D24",
+     "siteAddress": "3305 W RUSHOLME ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "BE3280F",
+   "sblKey": "BE3280F",
+   "identifierNote": null,
+   "address": "3010 W 49Th St Lot 048",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|BE3280F|",
+   "amount": 141,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "W0428-40",
+     "siteAddress": "3010 W 68TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04B",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110B14",
+     "siteAddress": "3010 W DENISON AV",
+     "zip": null
+    },
+    {
+     "printKey": "841651302",
+     "siteAddress": "3010 WESTMAR DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0428-50",
+     "siteAddress": "3010 W 67TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110C23",
+     "siteAddress": "3010 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1651B09H",
+     "siteAddress": "3010 W 34TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649123",
+     "siteAddress": "3010 WESTWOOD RD",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-18",
+     "siteAddress": "3010 W 71ST ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04A",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "J0014-22",
+     "siteAddress": "3010 W 2ND ST",
+     "zip": null
+    },
+    {
+     "printKey": "841533823",
+     "siteAddress": "3010 WILLOWWOOD DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-37",
+     "siteAddress": "3010 W 69TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1619B24",
+     "siteAddress": "3010 W 40TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651318",
+     "siteAddress": "3010 WINDSOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2115B35",
+     "siteAddress": "3010 W HIGH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0034-16",
+   "sblKey": "F0034-16",
+   "identifierNote": null,
+   "address": "514 E 9Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5675493,
+    41.5291385
+   ],
+   "boundary": [
+    [
+     -90.5675082,
+     41.5289408
+    ],
+    [
+     -90.5676253,
+     41.5289409
+    ],
+    [
+     -90.5676258,
+     41.5293525
+    ],
+    [
+     -90.5675088,
+     41.5293524
+    ],
+    [
+     -90.5675082,
+     41.5289408
+    ]
+   ],
+   "bbox": [
+    -90.5676258,
+    41.5289408,
+    -90.5675082,
+    41.5293525
+   ],
+   "official": {
+    "parcelId": "F24070",
+    "printKey": "F0034-16",
+    "siteAddress": "514 E 9TH ST",
+    "zip": null,
+    "acres": 0.11
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0034-16'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0034-16|",
+   "amount": 105,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "607232",
+   "sblKey": "607232",
+   "identifierNote": null,
+   "address": "3624 State St Lot 011",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|607232|",
+   "amount": 159,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842737509--1",
+     "siteAddress": "3624 STATE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MII7752",
+   "sblKey": "MII7752",
+   "identifierNote": null,
+   "address": "3732 Santa Fe Trl Lot 002",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MII7752|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "5176",
+   "sblKey": "5176",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 122",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|5176|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY05123072K",
+   "sblKey": "MY05123072K",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 096",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY05123072K|",
+   "amount": 250,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "5493036D6834AB",
+   "sblKey": "5493036D6834AB",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 076",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|5493036D6834AB|",
+   "amount": 126,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "0230307K",
+   "sblKey": "0230307K",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 044",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|0230307K|",
+   "amount": 107,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "M602528",
+   "sblKey": "M602528",
+   "identifierNote": null,
+   "address": "4422 State St Lot 008B",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|M602528|",
+   "amount": 98,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842617001",
+     "siteAddress": "4422 STATE ST",
+     "zip": null
+    },
+    {
+     "printKey": "842723001",
+     "siteAddress": "4422 STATE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "01560300L",
+   "sblKey": "01560300L",
+   "identifierNote": null,
+   "address": "21445 Scott Park Rd Lot 024",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|01560300L|",
+   "amount": 171,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "932535002",
+     "siteAddress": "21445 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "DHIN32287D",
+   "sblKey": "DHIN32287D",
+   "identifierNote": null,
+   "address": "21445 Scott Park Rd Lot 043",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|DHIN32287D|",
+   "amount": 201,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "932535002",
+     "siteAddress": "21445 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "20380331PAB",
+   "sblKey": "20380331PAB",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 138",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|20380331PAB|",
+   "amount": 135,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY05122751K",
+   "sblKey": "MY05122751K",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 183",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY05122751K|",
+   "amount": 261,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "M602035",
+   "sblKey": "M602035",
+   "identifierNote": null,
+   "address": "3340 W 51St St Lot 286",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|M602035|",
+   "amount": 180,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "8414493061",
+     "siteAddress": "3340 WOODCREST DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2109D29",
+     "siteAddress": "3340 W LOMBARD ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "M034257",
+   "sblKey": "M034257",
+   "identifierNote": null,
+   "address": "3717 N Fairmount St Lot 150",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|M034257|",
+   "amount": 171,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O1639B24",
+     "siteAddress": "3717 N LINWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "O1637A30",
+     "siteAddress": "3717 N BIRCHWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "M1509D27",
+     "siteAddress": "3717 N PINE ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1633-10D",
+     "siteAddress": "3717 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0024-04",
+   "sblKey": "F0024-04",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|F0024-04|",
+   "amount": 111,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "O1619B27",
+   "sblKey": "O1619B27",
+   "identifierNote": null,
+   "address": "4022 Hillandale Rd",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.6208367,
+    41.5621963
+   ],
+   "boundary": [
+    [
+     -90.6205763,
+     41.562131
+    ],
+    [
+     -90.6212092,
+     41.5621314
+    ],
+    [
+     -90.6212074,
+     41.5621354
+    ],
+    [
+     -90.6211294,
+     41.5622988
+    ],
+    [
+     -90.6205761,
+     41.5622984
+    ],
+    [
+     -90.6205763,
+     41.562131
+    ]
+   ],
+   "bbox": [
+    -90.6212092,
+    41.562131,
+    -90.6205761,
+    41.5622988
+   ],
+   "official": {
+    "parcelId": "O09072",
+    "printKey": "O1619B27",
+    "siteAddress": "4022 HILLANDALE RD",
+    "zip": null,
+    "acres": 0.227
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'O1619B27'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|O1619B27|",
+   "amount": 2441,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0036-05",
+   "sblKey": "F0036-05",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|F0036-05|",
+   "amount": 76,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "F0006-42",
+   "sblKey": "F0006-42",
+   "identifierNote": null,
+   "address": "1701 Bridge Av",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5574511,
+    41.5363458
+   ],
+   "boundary": [
+    [
+     -90.5573642,
+     41.5363065
+    ],
+    [
+     -90.5577882,
+     41.5363058
+    ],
+    [
+     -90.5577888,
+     41.536443
+    ],
+    [
+     -90.5576008,
+     41.5364434
+    ],
+    [
+     -90.557241,
+     41.536444
+    ],
+    [
+     -90.5572404,
+     41.5363068
+    ],
+    [
+     -90.5573642,
+     41.5363065
+    ]
+   ],
+   "bbox": [
+    -90.5577888,
+    41.5363058,
+    -90.5572404,
+    41.536444
+   ],
+   "official": {
+    "parcelId": "F04080",
+    "printKey": "F0006-42",
+    "siteAddress": "1701 BRIDGE AV",
+    "zip": null,
+    "acres": 0.196
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0006-42'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0006-42|",
+   "amount": 882,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "65672",
+   "sblKey": "65672",
+   "identifierNote": null,
+   "address": "3717 N Fairmount St Lot 035",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|65672|",
+   "amount": 226,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O1639B24",
+     "siteAddress": "3717 N LINWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "O1637A30",
+     "siteAddress": "3717 N BIRCHWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "M1509D27",
+     "siteAddress": "3717 N PINE ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1633-10D",
+     "siteAddress": "3717 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "OILP20413",
+   "sblKey": "OILP20413",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 017",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|OILP20413|",
+   "amount": 234,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "INFLN76A04874AT",
+   "sblKey": "INFLN76A04874AT",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 033",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|INFLN76A04874AT|",
+   "amount": 250,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "601234781",
+   "sblKey": "601234781",
+   "identifierNote": null,
+   "address": "4422 State St Lot 019B",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|601234781|",
+   "amount": 159,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842617001",
+     "siteAddress": "4422 STATE ST",
+     "zip": null
+    },
+    {
+     "printKey": "842723001",
+     "siteAddress": "4422 STATE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0007-39",
+   "sblKey": "F0007-39",
+   "identifierNote": null,
+   "address": "1223 E Locust St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5567614,
+    41.5381124
+   ],
+   "boundary": [
+    [
+     -90.5566194,
+     41.5379485
+    ],
+    [
+     -90.5568043,
+     41.5379474
+    ],
+    [
+     -90.5568049,
+     41.5380852
+    ],
+    [
+     -90.5568054,
+     41.5382312
+    ],
+    [
+     -90.5566205,
+     41.5382325
+    ],
+    [
+     -90.5566199,
+     41.5380864
+    ],
+    [
+     -90.5566194,
+     41.5379485
+    ]
+   ],
+   "bbox": [
+    -90.5568054,
+    41.5379474,
+    -90.5566194,
+    41.5382325
+   ],
+   "official": {
+    "parcelId": "F04066",
+    "printKey": "F0007-39",
+    "siteAddress": "1223 E LOCUST ST",
+    "zip": null,
+    "acres": 0.13
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0007-39'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0007-39|",
+   "amount": 370,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "82U728781",
+   "sblKey": "82U728781",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 060",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|82U728781|",
+   "amount": 226,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "CL9877",
+   "sblKey": "CL9877",
+   "identifierNote": null,
+   "address": "3018 W 52Nd St Ct Lot 214",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|CL9877|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2110C06",
+     "siteAddress": "3018 W LOMBARD ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110B13",
+     "siteAddress": "3018 W DENISON AV",
+     "zip": null
+    },
+    {
+     "printKey": "841533825",
+     "siteAddress": "3018 WILLOWWOOD DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2115B34",
+     "siteAddress": "3018 W HIGH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1635C03K",
+     "siteAddress": "3018 W 35TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1651B08H",
+     "siteAddress": "3018 W 34TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651319",
+     "siteAddress": "3018 WINDSOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "I0007C08",
+     "siteAddress": "3018 W 11TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110C22",
+     "siteAddress": "3018 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651303",
+     "siteAddress": "3018 WESTMAR DR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "PAT24812IN",
+   "sblKey": "PAT24812IN",
+   "identifierNote": null,
+   "address": "4910 N Elsie Ave Lot 359",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|PAT24812IN|",
+   "amount": 129,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "1260S2FK2738",
+   "sblKey": "1260S2FK2738",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 032",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|1260S2FK2738|",
+   "amount": 149,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "1208186",
+   "sblKey": "1208186",
+   "identifierNote": null,
+   "address": "527 Shannon Trl Lot 149",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|1208186|",
+   "amount": 153,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "0109AB",
+   "sblKey": "0109AB",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 008",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|0109AB|",
+   "amount": 203,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "NT4113929",
+   "sblKey": "NT4113929",
+   "identifierNote": null,
+   "address": "4853 Wood Dale Dr Lot 027",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|NT4113929|",
+   "amount": 213,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "MY9594481K",
+   "sblKey": "MY9594481K",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 257",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9594481K|",
+   "amount": 261,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "M602257",
+   "sblKey": "M602257",
+   "identifierNote": null,
+   "address": "5425 Valley Dr Lot 055",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|M602257|",
+   "amount": 171,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842323021",
+     "siteAddress": "5425 VALLEY DR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "03644N",
+   "sblKey": "03644N",
+   "identifierNote": null,
+   "address": "21445 Scott Park Rd Lot 063",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|03644N|",
+   "amount": 149,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "932535002",
+     "siteAddress": "21445 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY9488805K",
+   "sblKey": "MY9488805K",
+   "identifierNote": null,
+   "address": "3828 Chisholm Trl Lot 047",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9488805K|",
+   "amount": 107,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "X0239-14",
+   "sblKey": "X0239-14",
+   "identifierNote": null,
+   "address": "6611 Main St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5751752,
+    41.5881558
+   ],
+   "boundary": [
+    [
+     -90.5749544,
+     41.5881003
+    ],
+    [
+     -90.5754628,
+     41.5881039
+    ],
+    [
+     -90.575461,
+     41.5882401
+    ],
+    [
+     -90.5749527,
+     41.5882378
+    ],
+    [
+     -90.5749544,
+     41.5881003
+    ]
+   ],
+   "bbox": [
+    -90.5754628,
+    41.5881003,
+    -90.5749527,
+    41.5882401
+   ],
+   "official": {
+    "parcelId": "X08010",
+    "printKey": "X0239-14",
+    "siteAddress": "6611 MAIN ST",
+    "zip": null,
+    "acres": 0.16
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'X0239-14'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|X0239-14|",
+   "amount": 1741,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "60123650",
+   "sblKey": "60123650",
+   "identifierNote": null,
+   "address": "4004 Cody Trl Lot 108",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|60123650|",
+   "amount": 159,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "06L24544",
+   "sblKey": "06L24544",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 087",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|06L24544|",
+   "amount": 236,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "IA18215",
+   "sblKey": "IA18215",
+   "identifierNote": null,
+   "address": "3312 W 52Nd St Ct Lot 230",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|IA18215|",
+   "amount": 243,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2110D13",
+     "siteAddress": "3312 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110A05",
+     "siteAddress": "3312 W COLORADO ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649222",
+     "siteAddress": "3312 WELSHIRE DR",
+     "zip": null
+    },
+    {
+     "printKey": "O1601C04",
+     "siteAddress": "3312 W 42ND ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "9585",
+   "sblKey": "9585",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 245",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|9585|",
+   "amount": 220,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "30300511G",
+   "sblKey": "30300511G",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 045",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|30300511G|",
+   "amount": 133,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "423839S4899UTCBC",
+   "sblKey": "423839S4899UTCBC",
+   "identifierNote": null,
+   "address": "3310 W 51St St Lot 279",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|423839S4899UTCBC|",
+   "amount": 205,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "I0002D10",
+     "siteAddress": "3310 W 16TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1601C42",
+     "siteAddress": "3310 W 43RD ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651435",
+     "siteAddress": "3310 WESTMAR DR",
+     "zip": null
+    },
+    {
+     "printKey": "850449401",
+     "siteAddress": "3310 WOODLAND DR",
+     "zip": null
+    },
+    {
+     "printKey": "I0002D30",
+     "siteAddress": "3310 W 17TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841449305",
+     "siteAddress": "3310 WOODCREST DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2110A23",
+     "siteAddress": "3310 W DOVER CT",
+     "zip": null
+    },
+    {
+     "printKey": "O2110A40",
+     "siteAddress": "3310 W DENISON AV",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "4340244059",
+   "sblKey": "4340244059",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 010",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|4340244059|",
+   "amount": 190,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MDC377118IN",
+   "sblKey": "MDC377118IN",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 132",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MDC377118IN|",
+   "amount": 229,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "HH8400INAB1",
+   "sblKey": "HH8400INAB1",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 127",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|HH8400INAB1|",
+   "amount": 346,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "8507054OLA",
+   "sblKey": "8507054OLA",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|8507054OLA|",
+   "amount": 64,
+   "acreage": 1.572,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "01FR23011",
+   "sblKey": "01FR23011",
+   "identifierNote": null,
+   "address": "3910 Cody Trl Lot 094",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|01FR23011|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "5267",
+   "sblKey": "5267",
+   "identifierNote": null,
+   "address": "3010 W 49Th St Lt 070",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|5267|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "W0428-40",
+     "siteAddress": "3010 W 68TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04B",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110B14",
+     "siteAddress": "3010 W DENISON AV",
+     "zip": null
+    },
+    {
+     "printKey": "841651302",
+     "siteAddress": "3010 WESTMAR DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0428-50",
+     "siteAddress": "3010 W 67TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110C23",
+     "siteAddress": "3010 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1651B09H",
+     "siteAddress": "3010 W 34TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649123",
+     "siteAddress": "3010 WESTWOOD RD",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-18",
+     "siteAddress": "3010 W 71ST ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04A",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "J0014-22",
+     "siteAddress": "3010 W 2ND ST",
+     "zip": null
+    },
+    {
+     "printKey": "841533823",
+     "siteAddress": "3010 WILLOWWOOD DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-37",
+     "siteAddress": "3010 W 69TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1619B24",
+     "siteAddress": "3010 W 40TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651318",
+     "siteAddress": "3010 WINDSOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2115B35",
+     "siteAddress": "3010 W HIGH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY9180267",
+   "sblKey": "MY9180267",
+   "identifierNote": null,
+   "address": "4202 Chisholm Trl Lot 081",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9180267|",
+   "amount": 131,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "G0052-45E",
+   "sblKey": "G0052-45E",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0052-45E|",
+   "amount": 56,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "H0042-22",
+   "sblKey": "H0042-22",
+   "identifierNote": null,
+   "address": "1414 W 8Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5950644,
+    41.5280979
+   ],
+   "boundary": [
+    [
+     -90.594968,
+     41.5278934
+    ],
+    [
+     -90.595151,
+     41.5278932
+    ],
+    [
+     -90.5951451,
+     41.528296
+    ],
+    [
+     -90.5949623,
+     41.5282948
+    ],
+    [
+     -90.594968,
+     41.5278934
+    ]
+   ],
+   "bbox": [
+    -90.595151,
+    41.5278932,
+    -90.5949623,
+    41.528296
+   ],
+   "official": {
+    "parcelId": "H26065",
+    "printKey": "H0042-22",
+    "siteAddress": "1414 W 8TH ST",
+    "zip": null,
+    "acres": 0.172
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'H0042-22'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|H0042-22|",
+   "amount": 537,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "KGI0362I",
+   "sblKey": "KGI0362I",
+   "identifierNote": null,
+   "address": "3203 W 47Th Pl Lot 116",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|KGI0362I|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "W0437A38",
+     "siteAddress": "3203 W 65TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1619D23",
+     "siteAddress": "3203 W 40TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0437A19",
+     "siteAddress": "3203 W 66TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "I0002A02",
+     "siteAddress": "3203 W 18TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0437D25",
+     "siteAddress": "3203 W 63RD ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0428-08",
+     "siteAddress": "3203 W 67TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "I0007A07",
+     "siteAddress": "3203 W 15TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-26",
+     "siteAddress": "3203 W 70TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-43",
+     "siteAddress": "3203 W 69TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "VP8383ABIN",
+   "sblKey": "VP8383ABIN",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 098",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|VP8383ABIN|",
+   "amount": 336,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "06L27770",
+   "sblKey": "06L27770",
+   "identifierNote": null,
+   "address": "5029 N Concord St Lot 269",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|06L27770|",
+   "amount": 107,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "M1033-47",
+     "siteAddress": "5029 N PINE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "5494904R7387",
+   "sblKey": "5494904R7387",
+   "identifierNote": null,
+   "address": "3106 W 52Nd St Lot 219",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|5494904R7387|",
+   "amount": 118,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2115B31",
+     "siteAddress": "3106 W HIGH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0428-37",
+     "siteAddress": "3106 W 68TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649147",
+     "siteAddress": "3106 WOODMAYR RD",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-34",
+     "siteAddress": "3106 W 69TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "T1907-08G",
+     "siteAddress": "3106 WISCONSIN AV",
+     "zip": null
+    },
+    {
+     "printKey": "O2110C20",
+     "siteAddress": "3106 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649106",
+     "siteAddress": "3106 WELSHIRE DR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "7014C2352",
+   "sblKey": "7014C2352",
+   "identifierNote": null,
+   "address": "30980 Scott Park Rd Lot 036",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|7014C2352|",
+   "amount": 108,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "040705005",
+     "siteAddress": "30980 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "HE3774F",
+   "sblKey": "HE3774F",
+   "identifierNote": null,
+   "address": "3705 W Locust St Lot 029",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|HE3774F|",
+   "amount": 134,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "T2040-10",
+     "siteAddress": "3705 W CENTRAL PARK AV",
+     "zip": null
+    },
+    {
+     "printKey": "U1707B24",
+     "siteAddress": "3705 W 44TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "S2907-01A",
+     "siteAddress": "3705 W LOCUST ST",
+     "zip": null
+    },
+    {
+     "printKey": "U1707D02",
+     "siteAddress": "3705 W 46TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841633416",
+     "siteAddress": "3705 WAKONDA DR",
+     "zip": null
+    },
+    {
+     "printKey": "851835228",
+     "siteAddress": "3705 W HARBOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "T2056-24",
+     "siteAddress": "3705 W LOMBARD ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "G0028-16",
+   "sblKey": "G0028-16",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0028-16|",
+   "amount": 97,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0018-22",
+   "sblKey": "G0018-22",
+   "identifierNote": null,
+   "address": "1319 Myrtle St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5887003,
+    41.5336101
+   ],
+   "boundary": [
+    [
+     -90.5888164,
+     41.5335412
+    ],
+    [
+     -90.5888143,
+     41.5336784
+    ],
+    [
+     -90.5885842,
+     41.533679
+    ],
+    [
+     -90.5885863,
+     41.5335418
+    ],
+    [
+     -90.5888164,
+     41.5335412
+    ]
+   ],
+   "bbox": [
+    -90.5888164,
+    41.5335412,
+    -90.5885842,
+    41.533679
+   ],
+   "official": {
+    "parcelId": "G07009",
+    "printKey": "G0018-22",
+    "siteAddress": "1319 MYRTLE ST",
+    "zip": null,
+    "acres": 0.072
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'G0018-22'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|G0018-22|",
+   "amount": 1881.5,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "6582D",
+   "sblKey": "6582D",
+   "identifierNote": null,
+   "address": "4601 Oakwood Dr Lot 064",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|6582D|",
+   "amount": 133,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "56411895",
+   "sblKey": "56411895",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 057",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|56411895|",
+   "amount": 190,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "FMT430IN1813613A",
+   "sblKey": "FMT430IN1813613A",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 154",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|FMT430IN1813613A|",
+   "amount": 255,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "2859",
+   "sblKey": "2859",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 018",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|2859|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "KGI0372I",
+   "sblKey": "KGI0372I",
+   "identifierNote": null,
+   "address": "3217 W 48Th St Lot 104",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|KGI0372I|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "I0002A04",
+     "siteAddress": "3217 W 18TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "W0437D01",
+     "siteAddress": "3217 W 64TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110D21",
+     "siteAddress": "3217 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "I0007D31",
+     "siteAddress": "3217 W 11TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "T1749-01",
+     "siteAddress": "3217 WISCONSIN AV",
+     "zip": null
+    },
+    {
+     "printKey": "841649324",
+     "siteAddress": "3217 WAKONDA DR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "282439721",
+   "sblKey": "282439721",
+   "identifierNote": null,
+   "address": "5016 N Elsie Ave Lot 372",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|282439721|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "G0046-07",
+   "sblKey": "G0046-07",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0046-07|",
+   "amount": 89,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "244433451",
+   "sblKey": "244433451",
+   "identifierNote": null,
+   "address": "30980 Scott Park Rd Lot 005",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|244433451|",
+   "amount": 220,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "040705005",
+     "siteAddress": "30980 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "G0035-04",
+   "sblKey": "G0035-04",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|G0035-04|",
+   "amount": 44,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "82T79793",
+   "sblKey": "82T79793",
+   "identifierNote": null,
+   "address": "5106 N Elsie Ave Lot 379",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|82T79793|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "841405620",
+     "siteAddress": "5106 N RICHMOND CR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "CIN103360W",
+   "sblKey": "CIN103360W",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 113",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|CIN103360W|",
+   "amount": 125,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "BL45802106",
+   "sblKey": "BL45802106",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 014",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|BL45802106|",
+   "amount": 182,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY9699699K",
+   "sblKey": "MY9699699K",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 264",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9699699K|",
+   "amount": 121,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "260M3TL23730",
+   "sblKey": "260M3TL23730",
+   "identifierNote": null,
+   "address": "3624 State St Lot 015",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|260M3TL23730|",
+   "amount": 80,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "842737509--1",
+     "siteAddress": "3624 STATE ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "CIN103462W",
+   "sblKey": "CIN103462W",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 058",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|CIN103462W|",
+   "amount": 257,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "0549691408D",
+   "sblKey": "0549691408D",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 052",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|0549691408D|",
+   "amount": 91,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "B1421278LAB",
+   "sblKey": "B1421278LAB",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 066",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|B1421278LAB|",
+   "amount": 294,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "18D203TS0088",
+   "sblKey": "18D203TS0088",
+   "identifierNote": null,
+   "address": "3928 Chisholm Trl Lot 059",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|18D203TS0088|",
+   "amount": 22,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "E0017-09",
+   "sblKey": "E0017-09",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|E0017-09|",
+   "amount": 91,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "KB0618A",
+   "sblKey": "KB0618A",
+   "identifierNote": null,
+   "address": "3320 W 52Nd St Lot 232",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|KB0618A|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2110A21",
+     "siteAddress": "3320 W DOVER CT",
+     "zip": null
+    },
+    {
+     "printKey": "840351408",
+     "siteAddress": "3320 WESTMINSTER RD",
+     "zip": null
+    },
+    {
+     "printKey": "8518511121",
+     "siteAddress": "3320 W HARBOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "O1601C05",
+     "siteAddress": "3320 W 42ND ST",
+     "zip": null
+    },
+    {
+     "printKey": "841633151",
+     "siteAddress": "3320 WAKONDA DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0435A17",
+     "siteAddress": "3320 W 66TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841503154",
+     "siteAddress": "3320 WINSTON DR",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "W1729",
+   "sblKey": "W1729",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 001",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|W1729|",
+   "amount": 168,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "GAFLP75A18464WE",
+   "sblKey": "GAFLP75A18464WE",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 255",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|GAFLP75A18464WE|",
+   "amount": 234,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "82U688475",
+   "sblKey": "82U688475",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 104",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|82U688475|",
+   "amount": 315,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "K57777W",
+   "sblKey": "K57777W",
+   "identifierNote": null,
+   "address": "3934 Cody Trl Lot 106",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|K57777W|",
+   "amount": 149,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "M192151",
+   "sblKey": "M192151",
+   "identifierNote": null,
+   "address": "3909 Cody Trl Lot 093",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|M192151|",
+   "amount": 192,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "72317",
+   "sblKey": "72317",
+   "identifierNote": null,
+   "address": "3820 Chisholm Trl Lot 043",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|72317|",
+   "amount": 109,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "17642576",
+   "sblKey": "17642576",
+   "identifierNote": null,
+   "address": "3717 N Fairmount St Lot 040",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|17642576|",
+   "amount": 102,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O1639B24",
+     "siteAddress": "3717 N LINWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "O1637A30",
+     "siteAddress": "3717 N BIRCHWOOD AV",
+     "zip": null
+    },
+    {
+     "printKey": "M1509D27",
+     "siteAddress": "3717 N PINE ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1633-10D",
+     "siteAddress": "3717 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "KC1080A",
+   "sblKey": "KC1080A",
+   "identifierNote": null,
+   "address": "7171 W 60Th St Lot 011",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|KC1080A|",
+   "amount": 103,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "V1205-01",
+     "siteAddress": "7171 W 60TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MAKY1323",
+   "sblKey": "MAKY1323",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 201",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MAKY1323|",
+   "amount": 138,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0037-21",
+   "sblKey": "F0037-21",
+   "identifierNote": null,
+   "address": "1018 E 10Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5601409,
+    41.5302227
+   ],
+   "boundary": [
+    [
+     -90.5600567,
+     41.5302227
+    ],
+    [
+     -90.5600566,
+     41.5300026
+    ],
+    [
+     -90.5602904,
+     41.5300029
+    ],
+    [
+     -90.5602906,
+     41.5304728
+    ],
+    [
+     -90.5600568,
+     41.5304725
+    ],
+    [
+     -90.5600568,
+     41.5304423
+    ],
+    [
+     -90.5600567,
+     41.5302227
+    ]
+   ],
+   "bbox": [
+    -90.5602906,
+    41.5300026,
+    -90.5600566,
+    41.5304728
+   ],
+   "official": {
+    "parcelId": "F36025",
+    "printKey": "F0037-21",
+    "siteAddress": "1018 E 10TH ST",
+    "zip": null,
+    "acres": 0.251
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0037-21'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0037-21|",
+   "amount": 957.75,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "31851-18",
+   "sblKey": "31851-18",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|31851-18|",
+   "amount": 43,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "N07079",
+   "sblKey": "N07079",
+   "identifierNote": null,
+   "address": "30980 Scott Park Rd Lot 027",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|N07079|",
+   "amount": 159,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "040705005",
+     "siteAddress": "30980 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "722248101012",
+   "sblKey": "722248101012",
+   "identifierNote": null,
+   "address": "628 W Front St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.7248262,
+    41.4554283
+   ],
+   "boundary": [
+    [
+     -90.724669,
+     41.455512
+    ],
+    [
+     -90.7246354,
+     41.455324
+    ],
+    [
+     -90.7248809,
+     41.4552977
+    ],
+    [
+     -90.7249155,
+     41.4554859
+    ],
+    [
+     -90.724669,
+     41.455512
+    ]
+   ],
+   "bbox": [
+    -90.7249155,
+    41.4552977,
+    -90.7246354,
+    41.455512
+   ],
+   "official": {
+    "parcelId": null,
+    "printKey": "722248101012",
+    "siteAddress": "628 W FRONT ST",
+    "zip": null,
+    "acres": 0.108
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'722248101012'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|722248101012|",
+   "amount": 161,
+   "acreage": 0.108,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "6098",
+   "sblKey": "6098",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 061",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|6098|",
+   "amount": 125,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "1W300616Y",
+   "sblKey": "1W300616Y",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 109",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|1W300616Y|",
+   "amount": 261,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "06L19727",
+   "sblKey": "06L19727",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 005",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|06L19727|",
+   "amount": 149,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "HH6228",
+   "sblKey": "HH6228",
+   "identifierNote": null,
+   "address": "30980 Scott Park Rd Lot 089",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|HH6228|",
+   "amount": 192,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "040705005",
+     "siteAddress": "30980 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "MY9699061K",
+   "sblKey": "MY9699061K",
+   "identifierNote": null,
+   "address": "3824 Chisholm Trl L0T 045",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|MY9699061K|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": []
+  },
+  {
+   "parcel": "J0039-05",
+   "sblKey": "J0039-05",
+   "identifierNote": null,
+   "address": "2502 Boies Av",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.6148673,
+    41.514975
+   ],
+   "boundary": [
+    [
+     -90.6147442,
+     41.5147539
+    ],
+    [
+     -90.6149458,
+     41.5149747
+    ],
+    [
+     -90.6150686,
+     41.5151885
+    ],
+    [
+     -90.6149875,
+     41.5151982
+    ],
+    [
+     -90.6149276,
+     41.5151334
+    ],
+    [
+     -90.6148963,
+     41.5150995
+    ],
+    [
+     -90.6146262,
+     41.5148073
+    ],
+    [
+     -90.6147442,
+     41.5147539
+    ]
+   ],
+   "bbox": [
+    -90.6150686,
+    41.5147539,
+    -90.6146262,
+    41.5151982
+   ],
+   "official": {
+    "parcelId": "J33037",
+    "printKey": "J0039-05",
+    "siteAddress": "2502 BOIES AV",
+    "zip": null,
+    "acres": 0.148
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'J0039-05'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|J0039-05|",
+   "amount": 2225.69,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "N014282X",
+   "sblKey": "N014282X",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 015",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|N014282X|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "F0035-09",
+   "sblKey": "F0035-09",
+   "identifierNote": null,
+   "address": "1020 Farnam St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5672715,
+    41.530499
+   ],
+   "boundary": [
+    [
+     -90.5672698,
+     41.530414
+    ],
+    [
+     -90.5674794,
+     41.5304146
+    ],
+    [
+     -90.5674794,
+     41.5305224
+    ],
+    [
+     -90.5672688,
+     41.5305216
+    ],
+    [
+     -90.5669263,
+     41.5305204
+    ],
+    [
+     -90.566926,
+     41.5304129
+    ],
+    [
+     -90.5672673,
+     41.530414
+    ],
+    [
+     -90.5672698,
+     41.530414
+    ]
+   ],
+   "bbox": [
+    -90.5674794,
+    41.5304129,
+    -90.566926,
+    41.5305224
+   ],
+   "official": {
+    "parcelId": "F18032",
+    "printKey": "F0035-09",
+    "siteAddress": "1020 FARNAM ST",
+    "zip": null,
+    "acres": 0.138
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'F0035-09'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|F0035-09|",
+   "amount": 126,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "K0006-32",
+   "sblKey": "K0006-32",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|K0006-32|",
+   "amount": 49,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "0330301R",
+   "sblKey": "0330301R",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 034",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|0330301R|",
+   "amount": 128,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "03791470IN2968",
+   "sblKey": "03791470IN2968",
+   "identifierNote": null,
+   "address": "3010 W 49Th St Lot 025",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|03791470IN2968|",
+   "amount": 190,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "W0428-40",
+     "siteAddress": "3010 W 68TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04B",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110B14",
+     "siteAddress": "3010 W DENISON AV",
+     "zip": null
+    },
+    {
+     "printKey": "841651302",
+     "siteAddress": "3010 WESTMAR DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0428-50",
+     "siteAddress": "3010 W 67TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110C23",
+     "siteAddress": "3010 W RUSHOLME ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1651B09H",
+     "siteAddress": "3010 W 34TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841649123",
+     "siteAddress": "3010 WESTWOOD RD",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-18",
+     "siteAddress": "3010 W 71ST ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0951-04A",
+     "siteAddress": "3010 W 49TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "J0014-22",
+     "siteAddress": "3010 W 2ND ST",
+     "zip": null
+    },
+    {
+     "printKey": "841533823",
+     "siteAddress": "3010 WILLOWWOOD DR",
+     "zip": null
+    },
+    {
+     "printKey": "W0421-37",
+     "siteAddress": "3010 W 69TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1619B24",
+     "siteAddress": "3010 W 40TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "841651318",
+     "siteAddress": "3010 WINDSOR DR",
+     "zip": null
+    },
+    {
+     "printKey": "O2115B35",
+     "siteAddress": "3010 W HIGH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "LPP9789BAIN",
+   "sblKey": "LPP9789BAIN",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 147",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|LPP9789BAIN|",
+   "amount": 294,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "5572",
+   "sblKey": "5572",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|5572|",
+   "amount": 111,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "70143768",
+   "sblKey": "70143768",
+   "identifierNote": null,
+   "address": "30980 Scott Park Rd Lot 063",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|70143768|",
+   "amount": 199,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "040705005",
+     "siteAddress": "30980 SCOTT PARK RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "03560286K",
+   "sblKey": "03560286K",
+   "identifierNote": null,
+   "address": "781 W Walcott Rd Lot 018",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|03560286K|",
+   "amount": 171,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "820601001",
+     "siteAddress": "781 W WALCOTT RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "RV6490798",
+   "sblKey": "RV6490798",
+   "identifierNote": null,
+   "address": "3336 W 50Th St Lot 315",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|RV6490798|",
+   "amount": 173,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2107A20",
+     "siteAddress": "3336 W HAYES ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2107A23",
+     "siteAddress": "3336 W GARFIELD ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2107D01",
+     "siteAddress": "3336 W CENTRAL PARK AV",
+     "zip": null
+    },
+    {
+     "printKey": "O2110A09",
+     "siteAddress": "3336 W COLORADO ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "INFL555A10957HP13",
+   "sblKey": "INFL555A10957HP13",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 078",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|INFL555A10957HP13|",
+   "amount": 129,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "G0047-06",
+   "sblKey": "G0047-06",
+   "identifierNote": null,
+   "address": "1028 W 7Th St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5884139,
+    41.5269343
+   ],
+   "boundary": [
+    [
+     -90.5884011,
+     41.5268676
+    ],
+    [
+     -90.5886515,
+     41.5268674
+    ],
+    [
+     -90.5886504,
+     41.5270733
+    ],
+    [
+     -90.5886503,
+     41.5271034
+    ],
+    [
+     -90.5883997,
+     41.5271036
+    ],
+    [
+     -90.5884011,
+     41.5268676
+    ]
+   ],
+   "bbox": [
+    -90.5886515,
+    41.5268674,
+    -90.5883997,
+    41.5271036
+   ],
+   "official": {
+    "parcelId": "G18015",
+    "printKey": "G0047-06",
+    "siteAddress": "1028 W 7TH ST",
+    "zip": null,
+    "acres": 0.134
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'G0047-06'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|G0047-06|",
+   "amount": 1420,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "30737",
+   "sblKey": "30737",
+   "identifierNote": null,
+   "address": "600 N Hwy 67 Lot 038",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|30737|",
+   "amount": 171,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "9502210062",
+     "siteAddress": "600 N HWY 67",
+     "zip": null
+    },
+    {
+     "printKey": "931039322",
+     "siteAddress": "600 N 5TH PL",
+     "zip": null
+    },
+    {
+     "printKey": "931039307",
+     "siteAddress": "600 N 6TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "931137621",
+     "siteAddress": "600 N 2ND AVE",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "1470PBI364",
+   "sblKey": "1470PBI364",
+   "identifierNote": null,
+   "address": "5112 N Fairmount St Lot 122",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|1470PBI364|",
+   "amount": 108,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "U0839-01",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    },
+    {
+     "printKey": "U0839-01A",
+     "siteAddress": "5112 N FAIRMOUNT ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "1HP991178",
+   "sblKey": "1HP991178",
+   "identifierNote": null,
+   "address": "11325 140Th St Lot 055",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|1HP991178|",
+   "amount": 197,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "720103007",
+     "siteAddress": "11325 140TH ST",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "G0037-13",
+   "sblKey": "G0037-13",
+   "identifierNote": null,
+   "address": "1025 Scott St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5796458,
+    41.5307675
+   ],
+   "boundary": [
+    [
+     -90.5795173,
+     41.5306848
+    ],
+    [
+     -90.5797922,
+     41.5306854
+    ],
+    [
+     -90.5797917,
+     41.5308582
+    ],
+    [
+     -90.5795167,
+     41.5308574
+    ],
+    [
+     -90.5795173,
+     41.5306848
+    ]
+   ],
+   "bbox": [
+    -90.5797922,
+    41.5306848,
+    -90.5795167,
+    41.5308582
+   ],
+   "official": {
+    "parcelId": "G15044",
+    "printKey": "G0037-13",
+    "siteAddress": "1025 SCOTT ST",
+    "zip": null,
+    "acres": 0.11
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'G0037-13'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|G0037-13|",
+   "amount": 1070,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "G0027-38",
+   "sblKey": "G0027-38",
+   "identifierNote": null,
+   "address": "1118 Ripley St",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.5788877,
+    41.5314553
+   ],
+   "boundary": [
+    [
+     -90.5786167,
+     41.5313693
+    ],
+    [
+     -90.5791667,
+     41.5313701
+    ],
+    [
+     -90.5791663,
+     41.5315446
+    ],
+    [
+     -90.5786164,
+     41.5315441
+    ],
+    [
+     -90.5786167,
+     41.5313693
+    ]
+   ],
+   "bbox": [
+    -90.5791667,
+    41.5313693,
+    -90.5786164,
+    41.5315446
+   ],
+   "official": {
+    "parcelId": "G16009",
+    "printKey": "G0027-38",
+    "siteAddress": "1118 RIPLEY ST",
+    "zip": null,
+    "acres": 0.219
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'G0027-38'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|G0027-38|",
+   "amount": 704,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "822055001--L",
+   "sblKey": "822055001--L",
+   "identifierNote": null,
+   "address": null,
+   "status": "pending",
+   "reason": "address_missing",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|822055001--L|",
+   "amount": 150,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "243000HA012474A",
+   "sblKey": "243000HA012474A",
+   "identifierNote": null,
+   "address": "3301 W 48Th Pl Lot 087",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|243000HA012474A|",
+   "amount": 152,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "I0002A27",
+     "siteAddress": "3301 W 18TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1635-02A",
+     "siteAddress": "3301 W KIMBERLY RD",
+     "zip": null
+    }
+   ]
+  },
+  {
+   "parcel": "31845-21A",
+   "sblKey": "31845-21A",
+   "identifierNote": null,
+   "address": "6030 Fossen Dr",
+   "status": "matched",
+   "reason": "verified",
+   "source": "scott-county-ia-parcels",
+   "point": [
+    -90.6617175,
+    41.4703357
+   ],
+   "boundary": [
+    [
+     -90.6614076,
+     41.4702422
+    ],
+    [
+     -90.6615677,
+     41.4701765
+    ],
+    [
+     -90.6616638,
+     41.470137
+    ],
+    [
+     -90.6617075,
+     41.4701973
+    ],
+    [
+     -90.6617716,
+     41.470171
+    ],
+    [
+     -90.6619053,
+     41.4703553
+    ],
+    [
+     -90.6617452,
+     41.470421
+    ],
+    [
+     -90.661585,
+     41.4704868
+    ],
+    [
+     -90.6614076,
+     41.4702422
+    ]
+   ],
+   "bbox": [
+    -90.6619053,
+    41.470137,
+    -90.6614076,
+    41.4704868
+   ],
+   "official": {
+    "parcelId": "306012",
+    "printKey": "31845-21A",
+    "siteAddress": "6030 FOSSEN DR",
+    "zip": null,
+    "acres": 0.218
+   },
+   "evidenceUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3/query?where=PIN%3D'31845-21A'&outFields=*&f=html",
+   "crossChecks": [],
+   "addressChecked": true,
+   "zipChecked": false,
+   "id": "IA|Scott|31845-21A|",
+   "amount": 22297.15,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null
+  },
+  {
+   "parcel": "243000HA012475A",
+   "sblKey": "243000HA012475A",
+   "identifierNote": null,
+   "address": "3309 W 48Th Pl Lot 089",
+   "status": "pending",
+   "reason": "sbl_not_found",
+   "source": null,
+   "point": null,
+   "boundary": null,
+   "bbox": null,
+   "official": null,
+   "evidenceUrl": null,
+   "crossChecks": [],
+   "id": "IA|Scott|243000HA012475A|",
+   "amount": 222,
+   "acreage": null,
+   "category": "tax_lien",
+   "addressAsListed": null,
+   "candidates": [
+    {
+     "printKey": "O2110D06",
+     "siteAddress": "3309 W DENISON AV",
+     "zip": null
+    },
+    {
+     "printKey": "841651456",
+     "siteAddress": "3309 WESTMAR DR",
+     "zip": null
+    },
+    {
+     "printKey": "I0002D25",
+     "siteAddress": "3309 W 17TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "I0002D08",
+     "siteAddress": "3309 W 16TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1601C29",
+     "siteAddress": "3309 W 43RD ST",
+     "zip": null
+    },
+    {
+     "printKey": "O2110A14",
+     "siteAddress": "3309 W COLORADO ST",
+     "zip": null
+    },
+    {
+     "printKey": "841503102",
+     "siteAddress": "3309 WINSTON DR",
+     "zip": null
+    },
+    {
+     "printKey": "I0007D27A",
+     "siteAddress": "3309 W 11TH ST",
+     "zip": null
+    },
+    {
+     "printKey": "O1617B12",
+     "siteAddress": "3309 W 42ND ST",
+     "zip": null
+    }
+   ]
+  }
+ ],
+ "generatedAt": "2026-11-24T02:51:04.085Z",
+ "sources": [
+  {
+   "id": "scott-county-ia-parcels",
+   "label": "Scott County, Iowa Cadastral service: Parcel layer (county GIS, ArcGIS)",
+   "layerUrl": "https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3",
+   "itemUrl": "https://www.arcgis.com/home/item.html?id=09c82cc24dd24af6beb2ebf85bd6fa30",
+   "dataDate": "layer last data edit 2026-11-13 (ArcGIS editingInfo)",
+   "itemModified": "2026-11-13",
+   "retrievedAt": "2026-11-24T02:51:03.772Z",
+   "terms": {
+    "url": "https://www.arcgis.com/home/item.html?id=09c82cc24dd24af6beb2ebf85bd6fa30",
+    "summary": "Copyright: Scott County, Iowa GIS, as published on the county ArcGIS service. The service publishes no separate terms of use. Confirm the county terms before publishing derived data."
+   },
+   "disclaimer": "Source: Scott County, Iowa GIS, Cadastral Parcel layer (ArcGIS). Boundaries as published by the county; not a survey.",
+   "coverage": {
+    "requested": 144,
+    "foundParcelNumbers": 45,
+    "features": 45
+   }
+  }
+ ]
+}

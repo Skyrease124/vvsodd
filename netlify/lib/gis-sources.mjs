@@ -9,6 +9,9 @@ const quote = v => "'" + String(v).replace(/'/g, "''") + "'";
 
 const ROCHESTER_LAYER = 'https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0';
 const MONROE_LAYER = 'https://services2.arcgis.com/WosK7QpOS4eVSn36/ArcGIS/rest/services/Public_Parcels_2024/FeatureServer/0';
+// Scott County, Iowa Cadastral service, layer 3 "Parcel" (polygons). Layer 0 is parcel points, 1 Subdivision, 2 Block,
+// 4 ROW and 5 Lot. Layer 5 has only a lot number, so it cannot be matched to a record and is not used.
+const SCOTT_LAYER = 'https://services.arcgis.com/ovln19YRWV44nBqV/arcgis/rest/services/Cadastral/FeatureServer/3';
 
 // Known defects in a dataset's addresses, reversed for matching only. Found while matching: the City list builder
 // (tools/rochester-ny/build.py) replaced " Av" with " Ave" inside words, so "Avenue", "Averill" and "Avis" were stored
@@ -41,6 +44,7 @@ export const SOURCES = Object.freeze({
     itemModified: '2025-06-09',
     parcelField: 'PRINTKEY',
     normalize: 'ny-sbl',
+    fields: {parcel: 'PRINTKEY', siteAddress: 'SITEADDRESS', zip: 'ZIP5', parcelId: 'PARCELID', printKey: 'PRINTKEY', acres: 'SHAPEACRES'},
     bbox: [-77.85, 43.0, -77.45, 43.3],
     toAddress: a => {
       const site = parseAddress(a.SITEADDRESS || '');
@@ -86,6 +90,28 @@ export const SOURCES = Object.freeze({
       summary: 'Monroe County licence: free to copy and use; no warranty of any kind; not to be sold except under a written agreement with Monroe County.',
     },
     disclaimer: 'Parcel data from the Monroe County Public Parcels layer. Provided without warranty of any kind.',
+  },
+  'scott-county-ia-parcels': {
+    id: 'scott-county-ia-parcels',
+    label: 'Scott County, Iowa Cadastral service: Parcel layer (county GIS, ArcGIS)',
+    priority: 1,
+    covers: [{state: 'IA', county: 'Scott'}],
+    layerUrl: SCOTT_LAYER,
+    itemUrl: 'https://www.arcgis.com/home/item.html?id=09c82cc24dd24af6beb2ebf85bd6fa30',
+    // Read from the layer's editingInfo on the service (2026-11-24): the last data edit was 2026-11-13.
+    dataDate: 'layer last data edit 2026-11-13 (ArcGIS editingInfo)',
+    itemModified: '2026-11-13',
+    parcelField: 'PIN',
+    // The county's PIN is compared exactly as written. Records keyed by other numbers (for example manufactured-home
+    // serials) are not in this layer and stay pending.
+    normalize: 'exact',
+    bbox: [-91.0, 41.4, -90.25, 41.85],
+    fields: {parcel: 'PIN', siteAddress: 'PropertyAddress', parcelId: 'AlternateID', printKey: 'PIN', acres: 'Gross_AC'},
+    terms: {
+      url: 'https://www.arcgis.com/home/item.html?id=09c82cc24dd24af6beb2ebf85bd6fa30',
+      summary: 'Copyright: Scott County, Iowa GIS, as published on the county ArcGIS service. The service publishes no separate terms of use. Confirm the county terms before publishing derived data.',
+    },
+    disclaimer: 'Source: Scott County, Iowa GIS, Cadastral Parcel layer (ArcGIS). Boundaries as published by the county; not a survey.',
   },
 });
 

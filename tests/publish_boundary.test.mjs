@@ -24,16 +24,18 @@ function publicFiles(dir = PUBLIC, out = []) {
   return out;
 }
 
-const audit = JSON.parse(fs.readFileSync(path.join(ROOT, 'netlify', 'lib', 'data', 'parcel-matches', 'NY-city-of-rochester.json'), 'utf8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools', 'rochester-ny', 'address-corrections.json'), 'utf8'));
 
-// Restricted values of the approved records, from the matches audit. Numbers are the stored precision (seven decimals).
+// Restricted values of every matches audit (all counties): official parcel IDs of matched records, and their exact
+// positions and boundary points. Numbers are the stored precision (seven decimals).
+const AUDIT_DIR = path.join(ROOT, 'netlify', 'lib', 'data', 'parcel-matches');
+const audits = fs.readdirSync(AUDIT_DIR).filter(f => f.endsWith('.json')).map(f => JSON.parse(fs.readFileSync(path.join(AUDIT_DIR, f), 'utf8')));
 const restrictedIds = new Set();
 const restrictedNumbers = new Set();
 const longEnough = v => /\.\d{4,}$/.test(String(v));
-for (const r of audit.records) {
+for (const audit of audits) for (const r of audit.records) {
   if (r.status !== 'matched') continue;
-  if (r.official && r.official.parcelId) restrictedIds.add(r.official.parcelId);
+  if (r.official && r.official.parcelId) restrictedIds.add(String(r.official.parcelId));
   for (const v of r.point || []) if (longEnough(v)) restrictedNumbers.add(String(v));
   for (const p of r.boundary || []) for (const v of p) if (longEnough(v)) restrictedNumbers.add(String(v));
 }
@@ -43,7 +45,7 @@ const embargoed = manifest.appliedAt ? [] : manifest.corrections.map(c => c.corr
 test('the published directory is kinvest-liens, and the matches audit gives the restricted values', () => {
   const toml = fs.readFileSync(path.join(ROOT, 'netlify.toml'), 'utf8');
   assert.match(toml, /publish = "kinvest-liens"/);
-  assert.equal(restrictedIds.size, 191, 'one official parcel ID per approved record');
+  assert.ok(audits.length >= 2 && restrictedIds.size > 200, 'every matches audit is checked (' + audits.length + ' audits, ' + restrictedIds.size + ' official parcel IDs)');
   assert.ok(restrictedNumbers.size > 1000, 'matched positions and boundary points are checked (' + restrictedNumbers.size + ')');
   assert.ok(embargoed.length === 0 || embargoed.length === 11, 'the corrections are embargoed or applied');
 });
@@ -55,7 +57,9 @@ test('no published file carries an official parcel ID, a matched position or a b
   for (const file of files) {
     const text = fs.readFileSync(file, 'utf8');
     for (const m of text.matchAll(/-?\d+\.\d{4,}/g)) if (restrictedNumbers.has(m[0])) leaks.push(rel(file) + ': matched position ' + m[0]);
-    for (const m of text.matchAll(/\d{14,}/g)) if (restrictedIds.has(m[0])) leaks.push(rel(file) + ': official parcel ID ' + m[0]);
+    // Whole tokens, so short official identifiers (for example "C40035") are caught as well as long ones.
+    const tokens = new Set(text.match(/[A-Za-z0-9]+/g) || []);
+    for (const id of restrictedIds) if (tokens.has(id)) leaks.push(rel(file) + ': official parcel ID ' + id);
     for (const s of embargoed) if (text.includes(s)) leaks.push(rel(file) + ': corrected official spelling before the window ends: ' + s);
     if (leaks.length > 20) break;
   }

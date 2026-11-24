@@ -36,6 +36,9 @@ on:
       - 'tests/rochester-map-merge.test.mjs'
       - 'tests/rochester-address-corrections.test.mjs'
       - 'tests/location-coverage.test.mjs'
+      - 'tests/scott-county-match.test.mjs'
+      - 'tests/release-window.test.mjs'
+      - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
       - 'docs/location-coverage.md'
@@ -125,6 +128,9 @@ on:
       - 'tests/rochester-map-merge.test.mjs'
       - 'tests/rochester-address-corrections.test.mjs'
       - 'tests/location-coverage.test.mjs'
+      - 'tests/scott-county-match.test.mjs'
+      - 'tests/release-window.test.mjs'
+      - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
       - 'docs/location-coverage.md'
@@ -236,3 +242,5 @@ jobs:
       - run: node tests/rochester-address-corrections.test.mjs
       - run: python3 tools/rochester-ny/test_build.py
       - run: node tests/location-coverage.test.mjs
+      - run: node --test tests/scott-county-match.test.mjs
+      - run: node --test tests/release-window.test.mjs

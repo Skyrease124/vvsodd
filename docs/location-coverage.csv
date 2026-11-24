@@ -104,7 +104,7 @@ FL,Volusia,FL-volusia,950,13,13,937,none,,,,listed (unverified)
 FL,Walton,FL-walton,76,5,5,71,none,,,,listed (unverified)
 GA,Bibb,GA-bibb,1762,0,0,1762,none,,,,
 GA,Fulton,GA-fulton,110,0,0,110,none,,,,
-IA,Scott,IA-scott,144,0,0,144,none,,,,
+IA,Scott,IA-scott,144,0,0,144,scott-county-ia-parcels,22,22,122,
 MI,Wayne,MI-wayne,4161,0,0,4161,none,,,,
 MS,Adams County,MS-adams,31,5,5,26,none,,,,
 MS,Alcorn County,MS-alcorn,26,0,0,26,none,,,,
