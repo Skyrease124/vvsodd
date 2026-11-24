@@ -88,6 +88,11 @@
   @keyframes flyover-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   @media(max-width:650px){.flyover-teaser{margin:12px 14px 16px;padding:13px;gap:10px}.flyover-teaser-icon{width:40px;height:40px}.flyover-teaser-pro{display:none}.flyover-teaser-heading strong{font-size:15px}.flyover-teaser-copy p{font-size:12px}}
   @media(prefers-reduced-motion:reduce){.flyover-teaser-icon{animation:none}}
+  .flyover-teaser{position:relative;isolation:isolate;max-width:none;margin:12px 16px 16px;padding:16px 18px;min-height:88px;border-radius:18px;border:1px solid rgba(93,241,174,.5);background:linear-gradient(100deg,#0d2b2e 0%,#0b1f2c 58%,#11343a 100%);box-shadow:0 0 0 1px rgba(93,241,174,.08),0 14px 34px rgba(0,0,0,.35)}
+  .flyover-teaser::before{content:"";position:absolute;inset:0 0 0 46%;z-index:-1;border-radius:0 18px 18px 0;background:repeating-linear-gradient(0deg,rgba(93,241,174,.10) 0 1px,transparent 1px 16px),repeating-linear-gradient(90deg,rgba(93,241,174,.10) 0 1px,transparent 1px 16px),linear-gradient(120deg,#16454a,#0d2a36);opacity:.85;-webkit-mask:linear-gradient(90deg,transparent,#000 40%);mask:linear-gradient(90deg,transparent,#000 40%)}
+  .flyover-teaser-heading strong{font-size:18px}.flyover-teaser-copy p{font-size:13.5px;max-width:58%}
+  @media(max-width:650px){.flyover-teaser::before{inset:0 0 0 55%}.flyover-teaser-copy p{max-width:70%}}
+  .hc-title-icon{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,#1d3d6b,#0f2440);border:1px solid rgba(93,160,255,.35);color:#9ec8ff;margin-right:10px;box-shadow:0 0 18px rgba(59,130,246,.25)}
   </style>
   <section class="app-section" aria-labelledby="foryou-title" hidden>
     <div class="app-section-title"><h2 id="foryou-title">For You</h2></div>
@@ -102,7 +107,7 @@
 <div class="app-home">
 <section id="hcams-wrap" class="wrap section hcams-sec">
   <div id="hcams" class="hcams" aria-live="polite">
-    <div class="hc-head"><div class="hc-title"><h2>Live Cameras</h2><span class="app-badge">Pro</span></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
+    <div class="hc-head"><div class="hc-title"><span class="hc-title-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg></span><h2>Live Cameras</h2><span class="app-badge">Pro</span></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
     <p class="hc-sub">Public cameras from state transportation and tourism feeds. They show conditions at the camera, not at any property.</p>
   </div>
 </section>

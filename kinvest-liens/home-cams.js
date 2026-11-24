@@ -27,11 +27,11 @@
     const stop = () => {
       clearTimeout(timeout); observer.disconnect();
       if (!video.isConnected) return;
-      video.pause(); video.remove(); player?.destroy(); badge.textContent = 'Snapshot';
+      video.pause(); video.remove(); player?.destroy(); badge.textContent = 'Snapshot'; badge.classList.remove('is-live');
     };
     const play = () => video.play().catch(() => {});
     video.addEventListener('canplay', () => video.classList.add('is-ready'));
-    video.addEventListener('playing', () => { clearTimeout(timeout); badge.textContent = 'Live'; });
+    video.addEventListener('playing', () => { clearTimeout(timeout); badge.textContent = 'Live'; badge.classList.add('is-live'); });
     video.addEventListener('error', stop, {once:true});
     const observer = new IntersectionObserver(async entries => {
       if (!entries.some(entry => entry.isIntersecting)) return;
@@ -96,9 +96,11 @@
       const cams = liveOnly ? d.cameras.filter(c => c.video && c.image).slice(0, 4) : d.cameras.filter(c => c.image || c.video || c.viewer);
       const featured = reduced ? null : cams.find(c => c.video && c.image);
       msg.textContent = cams.length ? 'Live near ' + name + ' · Swipe for more' : (liveOnly ? 'No live cameras found near ' : 'No cameras found near ') + name + '.';
+      // The live hero sits in the middle of the row, as in the reference layout.
+      if (featured && cams.length > 2) { cams.splice(cams.indexOf(featured), 1); cams.splice(Math.floor(cams.length / 2), 0, featured); }
       const update = cams.map(c => {
         const structured = c === featured || liveOnly;
-        const card = structured ? mk('article','hc-card') : link('',path(c.lat,c.lng,15)); card.className = 'hc-card';
+        const card = structured ? mk('article','hc-card') : link('',path(c.lat,c.lng,15)); card.className = 'hc-card' + (c === featured ? ' hc-hero' : '');
         if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
         const media = mk('div','hc-media');
         const fallback = mk('span','hc-viewer',c.kind === 'viewer' ? 'Open official camera ↗' : 'Open camera →');
@@ -120,6 +122,8 @@
         if (c === featured || (liveOnly && !reduced)) stopVideos.push(watchVideo(c, media, badge, job.signal));
         return set;
       }).filter(Boolean);
+      const hero = grid.querySelector('.hc-hero');
+      if (hero) requestAnimationFrame(() => { const g = grid.getBoundingClientRect(), h = hero.getBoundingClientRect(); grid.scrollLeft += (h.left + h.width / 2) - (g.left + g.width / 2); });
       if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
     } catch(e) {
       if (!job.signal.aborted) { currentKey = null; msg.textContent = 'Cameras are temporarily unavailable.'; }
