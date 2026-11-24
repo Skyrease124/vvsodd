@@ -67,10 +67,10 @@
   const CHECK = ['Which system is my state: lien, deed or redeemable deed?', 'Rate or penalty, and how bidding works', 'Redemption period', 'Registered, W-9 filed, deposit sent', 'Parcel is a real, usable lot (not a sliver, easement or mineral-only)', 'Road access checked', 'Flood zone and wetlands checked (Land Information)', 'Other liens and bankruptcy checked', 'Maximum bid written down before the sale', 'Funds ready by the payment deadline', 'Records saved in My portfolio', 'Confirmed everything with the county'];
   function extras() {
     const x = $('extras'); if (!x) return; x.textContent = '';
-    const exam = prog().exam, passed = !!(exam && exam.score >= 16), all = state.lessons.every(l => isDone(l.id));
+    const exam = prog().exam, passed = !!(exam && (exam.passed === true || (exam.of === 20 && exam.score >= 16))), all = state.lessons.every(l => isDone(l.id));
     const box = mk('div', 'mcxtra');
     const card = (t, d, label, fn, cls) => { const c = mk('div', 'mccard' + (cls ? ' ' + cls : '')); c.append(mk('b', '', t), mk('span', 'small', d)); const b = mk('button', 'btn small', label); b.type = 'button'; b.addEventListener('click', fn); c.appendChild(b); return c; };
-    box.appendChild(card(passed ? '🏆 Certificate earned' : '🎓 Final exam', passed ? 'You scored ' + exam.score + ' of 20. Open your certificate.' : '20 questions from the whole course. You need 16 to pass and can retake it. Members only.' + (all ? '' : ' Finish the lessons first for the best result.'), passed ? 'Open certificate' : 'Start the exam', () => go('exam'), 'gold'));
+    box.appendChild(card(passed ? '🏆 Certificate earned' : '🎓 Final exam', passed ? 'You scored ' + exam.score + ' of ' + (exam.of || 20) + '. Open your certificate.' : '40 questions from the whole course in 45 minutes. You need 36 (90%) to pass and can retake it. Members only.' + (all ? '' : ' Finish the lessons first for the best result.'), passed ? 'Open certificate' : 'Start the exam', () => go('exam'), 'gold'));
     box.appendChild(card('🧭 Walkthroughs', 'Follow a lien sale and a deed sale from start to finish, using the researched steps for each state.', 'Open walkthroughs', () => go('walk')));
     box.appendChild(card('📖 Glossary', GLOSS.length + ' plain-English words you will see on every sale notice.', 'Open glossary', () => go('glossary')));
     box.appendChild(card('✅ Before-you-bid checklist', 'A one-page checklist to print or save as a PDF from your phone.', 'Open checklist', () => go('checklist')));
@@ -117,13 +117,14 @@
   async function showExam(box) {
     backBtn(box); box.appendChild(mk('h1', '', 'Final exam'));
     const prev = prog().exam;
-    if (prev && prev.score >= 16) certificate(box, prev);
+    if (prev && (prev.passed === true || (prev.of === 20 && prev.score >= 16))) certificate(box, prev);
     let d; try { const r = await fetch(API + '?id=exam'); d = await r.json(); } catch (e) { box.appendChild(mk('p', '', 'Could not load the exam. Try again.')); return; }
     if (d.locked) {
       const n = mk('div', 'salebox'); n.append(mk('h3', '', '🔒 For members'), mk('p', '', 'The final exam and certificate are part of membership ($5.50 a week).'));
       const a = mk('a', 'btn', 'See the Pro plan'); a.href = '/plans/?from=' + encodeURIComponent('/learn/?l=exam') + '&src=' + encodeURIComponent('The final exam'); n.appendChild(a); box.appendChild(n); return;
     }
-    const ex = d.exam; box.appendChild(mk('p', 'lead', '20 questions from the whole course. You need ' + ex.pass + ' right to pass. You can retake it as often as you like.'));
+    const ex = d.exam; box.appendChild(mk('p', 'lead', ex.questions.length + ' questions from the whole course, in random order. You have ' + ex.minutes + ' minutes and need ' + ex.pass + ' right (90%) to pass. Answers are shown after you submit.'));
+    const clock = mk('p', 'small'); clock.style.cssText = 'position:sticky;top:64px;z-index:5;background:rgba(7,13,28,.92);padding:8px 12px;border-radius:12px;font-weight:700'; box.appendChild(clock);
     const f = mk('form', 'quiz');
     ex.questions.forEach((q, i) => {
       const fs = mk('fieldset'); fs.appendChild(mk('legend', '', (i + 1) + '. ' + q.q));
@@ -131,17 +132,20 @@
       f.appendChild(fs);
     });
     const sub = mk('button', 'btn', 'Submit my exam'); sub.type = 'submit'; const res = mk('p', '', ''); res.setAttribute('role', 'status'); f.append(sub, res); box.appendChild(f);
-    f.addEventListener('submit', async e => {
-      e.preventDefault(); let score = 0;
-      ex.questions.forEach((q, i) => {
-        const sel = f.querySelector('input[name=q' + i + ']:checked'), fs = f.querySelectorAll('fieldset')[i], old = fs.querySelector('.why'); if (old) old.remove();
-        const ok = sel && Number(sel.value) === q.c; if (ok) score++;
-        fs.appendChild(mk('p', 'why ' + (ok ? 'ok' : 'bad'), (ok ? '✔ Right. ' : '✖ ' + (sel ? 'Not quite. ' : 'No answer. ') + 'The answer is: ' + q.a[q.c] + '. ') + q.why));
-      });
-      const pass = score >= ex.pass;
-      res.textContent = 'You got ' + score + ' of 20. ' + (pass ? 'You passed! 🎉' : 'You need ' + ex.pass + '. Review the lessons and retake it.');
-      try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: 'exam', score})}); const x = await r.json(); if (x.progress) { state.progress = x.progress; if (pass) certificate(box, x.progress.exam, true); } } catch (er) {}
-    });
+    let sent = false, t = 0; const end = Date.parse(ex.started) + ex.minutes * 60e3;
+    const tick = () => { const ms = end - Date.now(); if (ms <= 0) { clock.textContent = 'Time is up'; submit(); return; } clock.textContent = 'Time left ' + Math.floor(ms / 60e3) + ':' + String(Math.floor(ms % 60e3 / 1e3)).padStart(2, '0'); t = setTimeout(tick, 1000); };
+    async function submit() {
+      if (sent) return; sent = true; clearTimeout(t); sub.disabled = true; res.textContent = 'Grading…';
+      const answers = ex.questions.map((q, i) => { const sel = f.querySelector('input[name=q' + i + ']:checked'); return sel ? Number(sel.value) : null; });
+      let x; try { const r = await fetch(API, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({id: 'exam', answers})}); x = await r.json(); } catch (er) { res.textContent = 'Your answers could not be sent. Check your connection.'; sent = false; sub.disabled = false; return; }
+      if (!x.result) { res.textContent = x.error || 'Grading failed.'; return; }
+      const g = x.result;
+      f.querySelectorAll('fieldset').forEach((fs, i) => { const v = g.review[i]; if (!v) return; fs.querySelectorAll('input').forEach(r => { r.disabled = true; }); fs.appendChild(mk('p', 'why ' + (v.ok ? 'ok' : 'bad'), (v.ok ? '✔ Right. ' : '✖ ' + (v.answered ? 'Not quite. ' : 'No answer. ') + 'The answer is: ' + v.answer + '. ') + v.why)); });
+      res.textContent = 'You got ' + g.score + ' of ' + g.of + '. ' + (g.passed ? 'You passed! 🎉' : (g.late ? 'Submitted after the time limit. ' : '') + 'You need ' + g.pass + '. Review the lessons and retake it.');
+      if (x.progress) { state.progress = x.progress; if (g.passed) certificate(box, x.progress.exam, true); }
+    }
+    f.addEventListener('submit', e => { e.preventDefault(); submit(); });
+    tick();
     note(box);
   }
   function certificate(box, rec, fresh) {
@@ -149,7 +153,7 @@
     const c = mk('div', 'mccert'); c.append(mk('span', 'mcseal', '★'), mk('p', 'small', 'PricePocketAsset'), mk('h2', '', 'Certificate of Completion'), mk('p', '', 'Liens & Deeds Master Class'));
     const name = mk('input', 'mcname'); name.placeholder = 'Type your name'; name.maxLength = 60; name.setAttribute('aria-label', 'Your name'); try { name.value = localStorage.getItem('ppa_certname') || ''; } catch (e) {}
     name.addEventListener('input', () => { try { localStorage.setItem('ppa_certname', name.value); } catch (e) {} });
-    c.append(name, mk('p', 'small', 'Exam score: ' + rec.score + ' of 20 · ' + String(rec.at || new Date().toISOString()).slice(0, 10)), mk('p', 'small', 'Educational completion only. Not a license, and not legal, tax or investment advice.'));
+    c.append(name, mk('p', 'small', 'Exam score: ' + rec.score + ' of ' + (rec.of || 20) + ' · ' + String(rec.at || new Date().toISOString()).slice(0, 10)), mk('p', 'small', 'Educational completion only. Not a license, and not legal, tax or investment advice.'));
     const pr = mk('button', 'btn small', 'Print or save as PDF'); pr.type = 'button'; pr.addEventListener('click', () => window.print()); c.appendChild(pr);
     box.insertBefore(c, box.querySelector('h1').nextSibling);
     if (fresh) c.scrollIntoView({behavior: 'smooth', block: 'center'});
