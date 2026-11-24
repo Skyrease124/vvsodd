@@ -30,7 +30,8 @@ const COUNTIES = {type: 'FeatureCollection', features: [
     await page.waitForTimeout(800);
     const read = () => f.evaluate(() => { const m = window.__ppaMap, mb = m.getMaxBounds && m.getMaxBounds(), fx = document.querySelector('.ppa-fx'), c = m.getCenter();
       return {pitch: m.getPitch(), terrain: !!m.getTerrain(), bounds: mb ? [mb.getWest(), mb.getSouth(), mb.getEast(), mb.getNorth()] : null, fx: !!fx && fx.style.display !== 'none', active: window.PPAFocus.active,
-        center: [c.lng, c.lat], ui: document.querySelectorAll('button,[role=switch],[role=alert],[role=status],[role=dialog]').length}; });
+        center: [c.lng, c.lat], ui: document.querySelectorAll('#pmMap button,#pmMap [role=switch],#pmMap [role=alert],#pmMap [role=status],#pmMap [role=dialog]').length,
+        added: [...document.querySelectorAll('[class*="ppa-"]')].map(e => e.className).filter(c => /(^| )ppa-(fx|veil|rim)/.test(String(c)))}; });
     const until = (fn, msg) => f.waitForFunction(fn, null, {timeout: 60000}).catch(() => { throw new Error(label + ': ' + msg); });
     const pick = (name, v) => f.getByRole('combobox', {name}).selectOption(v);
 
@@ -49,7 +50,7 @@ const COUNTIES = {type: 'FeatureCollection', features: [
     assert.deepEqual(layers, [true, true, true, true, true], label + ': the existing layers stay and the new ones are added');
     assert.equal(await f.evaluate(() => window.__ppaMap.getLayoutProperty('sat', 'visibility') !== 'none'), true, label + ': the satellite imagery is still shown');
     await until(() => window.__ppaMap.getSource('ppa-counties') && window.__ppaMap.getSource('ppa-counties')._data.features && window.__ppaMap.getSource('ppa-counties')._data.features.length === 2, 'county lines are drawn');
-    assert.equal((await read()).ui, before.ui, label + ': no button, toggle, banner or status was added');
+    const after = await read(); assert.equal(after.ui, before.ui, label + ': no button, toggle, banner or status was added to the map'); assert.deepEqual(after.added, ['ppa-fx'], label + ': the only thing added is the dimming layer itself');
 
     // 2. The camera cannot leave: a move far away is pulled back inside the lock, and a drag that ends outside the state eases back in.
     await f.evaluate(() => window.__ppaMap.jumpTo({center: [-120, 35]}));

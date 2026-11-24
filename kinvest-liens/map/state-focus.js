@@ -186,7 +186,11 @@
   // by the lock. Staying within the shape itself is handled by easing the centre back (see onMoveEnd).
   function paddedBounds(bb) {
     const px = (bb[2] - bb[0]) * 0.08, py = (bb[3] - bb[1]) * 0.08; let w = bb[0] - px, s = bb[1] - py, e = bb[2] + px, n = bb[3] + py;
-    try { const v = map.getBounds(); w = Math.min(w, v.getWest()); s = Math.min(s, v.getSouth()); e = Math.max(e, v.getEast()); n = Math.max(n, v.getNorth()); } catch (_) { /* keep the padded shape */ }
+    try {
+      // The framed view itself (as the map's own limit measures it, flat), so a long or narrow shape is never cropped.
+      const c = map.getContainer(), z = map.getZoom(), ctr = map.getCenter(), lonSpan = c.clientWidth / (512 * Math.pow(2, z)) * 360, latSpan = c.clientHeight / (512 * Math.pow(2, z)) * 360 * Math.cos(ctr.lat * Math.PI / 180);
+      w = Math.min(w, ctr.lng - lonSpan / 2); e = Math.max(e, ctr.lng + lonSpan / 2); s = Math.min(s, ctr.lat - latSpan / 2); n = Math.max(n, ctr.lat + latSpan / 2);
+    } catch (_) { /* keep the padded shape */ }
     return [[Math.max(-179.9, w), Math.max(-85, s)], [Math.min(179.9, e), Math.min(85, n)]];
   }
   function settled(cb) { if (map.isMoving()) map.once('moveend', () => setTimeout(cb, 0)); else cb(); }
