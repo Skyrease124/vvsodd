@@ -4,7 +4,7 @@
 // references (H1, H2, ...). Its answer is checked deterministically: every cited reference must
 // exist in the input and every proposal must be backed by an official or validator item.
 // Nothing is published here. Every proposal waits for owner approval.
-import {complete} from './llm.mjs';
+import {complete, fastModel} from './llm.mjs';
 import {updateJson, LEDGER, DECISION} from './brain-approvals.mjs';
 import {operationCountyIds, countyOperation} from './brain-gis-universal.mjs';
 import {countyCheckpointKey} from './brain-gis-county-worker.mjs';
@@ -13,7 +13,9 @@ import {storedFactOk, DATASET_OK, httpsOnly} from './gemini-extract.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
-export const DAILY_LIMIT = 6; // owner-triggered consolidations per UTC day, to stay inside free allowances
+export const DAILY_LIMIT = 10;
+// One function call can wait about 26 seconds. The fast model gets the first 15; a second model is tried only if at least 8 are left.
+export const TIMING = {budgetMs: 24000, fastMs: 15000, minRetryMs: 8000}; // owner-triggered consolidations per UTC day, to stay inside free allowances
 const MAX_ITEMS = 24, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
@@ -265,20 +267,37 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
     const {system, user} = buildPrompt(items);
     try {
       const maxTokens = tokenBudget(items.length);
-      const answer = await complete(cfg, system, user, {maxTokens, timeoutMs: 25000, temperature: 0.1, thinking: false});
+      const tried = [];
+      const attempt = async (config, ms) => {
+        try { const a = await complete(config, system, user, {maxTokens, timeoutMs: ms, temperature: 0.1, thinking: false}); tried.push(a.model); return a; }
+        catch (e) { tried.push(e.model || config.model || 'unknown'); e.tried = tried; throw e; }
+      };
+      const left = () => TIMING.budgetMs - (Date.now() - started);
+      // The owner's saved or environment model always wins. Otherwise a fast model goes first, then the default if time remains.
+      const fast = cfg.model ? null : await fastModel(cfg.key);
+      let answer;
+      if (fast) {
+        try { answer = await attempt({...cfg, model: fast}, Math.min(TIMING.fastMs, left())); }
+        catch (e) {
+          const recoverable = e.name === 'AbortError' || e.code === 'EMPTY_ANSWER' || e.upstreamStatus >= 500;
+          if (!recoverable || left() < TIMING.minRetryMs) throw e;
+          answer = await attempt(cfg, left());
+        }
+      } else answer = await attempt(cfg, left());
+      answer.tried = tried;
       const checked = validateConsolidation(answer.text, items);
       // An answer cut off at the token limit that is not valid JSON is incomplete: nothing is proposed from it.
       const cutOff = answer.finishReason === 'length' && checked.rejected.includes('answer was not valid JSON');
       receipt = {...base, model: answer.model, outcome: cutOff ? 'failed' : 'completed', incomplete: cutOff || undefined,
         error: cutOff ? 'NVIDIA answered but stopped at the ' + maxTokens + '-token limit before finishing its JSON; nothing was proposed.' : undefined,
-        maxTokens, fallbackFrom: answer.fallbackFrom || undefined, bytesSent: Buffer.byteLength(system + user),
+        tried: answer.tried, maxTokens, fallbackFrom: answer.fallbackFrom || undefined, bytesSent: Buffer.byteLength(system + user),
         conflicts: [...deterministic, ...(cutOff ? [] : checked.conflicts)], proposals: cutOff ? [] : checked.proposals, rejected: checked.rejected, durationMs: Date.now() - started};
     } catch (error) {
       const quota = error.upstreamStatus === 429 || /NVIDIA said 429/.test(String(error.detail || ''));
       // An empty answer means NVIDIA responded but gave no visible text; the receipt says so instead of a bare failure.
       const empty = error.code === 'EMPTY_ANSWER';
-      receipt = {...base, model: error.model || null, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
-        error: scrub(error.name === 'AbortError' ? 'NVIDIA did not answer within 25 seconds (' + (error.model || 'unknown model') + ', ' + items.length + ' helper results sent). Nothing was proposed.' : (empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
+      receipt = {...base, model: error.model || null, tried: error.tried, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
+        error: scrub(error.name === 'AbortError' ? 'NVIDIA did not answer in time (' + (error.model || 'unknown model') + ', ' + items.length + ' helper results sent). Nothing was proposed.' : (empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
         conflicts: deterministic, proposals: [], rejected: [], durationMs: Date.now() - started};
     }
   }

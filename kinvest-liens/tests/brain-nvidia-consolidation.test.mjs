@@ -7,7 +7,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 
 const DUMMY_KEY = 'test-dummy-key-not-a-credential-0000';
-let mode = 'good';
+let mode = 'good', listLightning = false;
 const sent = [];
 const server = http.createServer((req, res) => {
   let body = '';
@@ -15,10 +15,11 @@ const server = http.createServer((req, res) => {
   req.on('end', () => {
     if (req.method === 'GET' && req.url === '/v1/models') {
       res.writeHead(200, {'Content-Type': 'application/json'});
-      return res.end(JSON.stringify({data: [{id: 'meta/llama-3.3-70b-instruct'}, {id: 'nvidia/llama-3.1-nemotron-70b-instruct'}]}));
+      return res.end(JSON.stringify({data: [{id: 'meta/llama-3.3-70b-instruct'}, {id: 'nvidia/llama-3.1-nemotron-70b-instruct'}, ...(listLightning ? [{id: 'nvidia/nemotron-3.5-lightning-30b-a3b'}] : [])]}));
     }
     const parsed = JSON.parse(body || '{}');
     sent.push({model: parsed.model, auth: req.headers.authorization, body});
+    if (mode === 'fast-hang' && /lightning/.test(parsed.model || '')) { setTimeout(() => res.destroy(), 1500); return; }
     if (mode === '500') { res.writeHead(500); return res.end('upstream failure, echoed ' + DUMMY_KEY); }
     if (mode === '429') { res.writeHead(429); return res.end('rate limited'); }
     if (mode === 'retired' && parsed.model === 'nvidia/nemotron-3-ultra-550b-a55b') { res.writeHead(410); return res.end('{"error":"model gone"}'); }
@@ -492,14 +493,60 @@ test('a run sends at most 24 helper results and keeps official ones ahead of con
 });
 test('a timed out request is reported with the model, the number of results and no invented answer', () => {
   const s = fs.readFileSync(new URL('../../netlify/lib/brain-nvidia.mjs', import.meta.url), 'utf8');
-  assert.match(s, /NVIDIA did not answer within 25 seconds \(/);
+  assert.match(s, /NVIDIA did not answer in time \(/);
   const l = fs.readFileSync(new URL('../../netlify/lib/llm.mjs', import.meta.url), 'utf8');
   assert.match(l, /e\.model = model/);
-  assert.equal(lib.DAILY_LIMIT, 6);
+  assert.equal(lib.DAILY_LIMIT, 10);
 });
 
 test('the prompt asks for a short answer: at most 5 conflicts and 5 proposals of 20 words, compact JSON', () => {
   const {system} = lib.buildPrompt([{ref: 'H1', source: 'validator', dataset: 'IA-scott', parcelId: 'P1', status: 'pending_owner_review'}]);
   assert.match(system, /at most 5 conflicts and at most 5 proposals/); assert.match(system, /at most 20 words/); assert.match(system, /compact JSON/);
   assert.equal(lib.tokenBudget(24), 1200, 'the output cap stays inside the function time limit');
+});
+
+// ---- Fast model first, then the default if time remains ----
+const FAST = 'nvidia/nemotron-3.5-lightning-30b-a3b';
+async function withFast(timing, fn) {
+  const old = {...lib.TIMING}; process.env.NVIDIA_FAST_MODEL = FAST; Object.assign(lib.TIMING, timing);
+  try { await fn(); } finally { delete process.env.NVIDIA_FAST_MODEL; Object.assign(lib.TIMING, old); }
+}
+test('a fast model goes first and the receipt names the models tried', async () => {
+  await withFast({}, async () => {
+    mode = 'good'; sent.length = 0;
+    const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+    assert.equal(receipt.outcome, 'completed'); assert.equal(receipt.model, FAST); assert.deepEqual(receipt.tried, [FAST]);
+    assert.equal(sent[0].model, FAST);
+  });
+});
+test('if the fast model does not answer in time the default is tried with the time left, in the same run', async () => {
+  await withFast({budgetMs: 4000, fastMs: 300, minRetryMs: 500}, async () => {
+    mode = 'fast-hang'; sent.length = 0;
+    const auth = fakeAuth(seed()), before = (await auth.kvGet(USAGE))?.count || 0;
+    const receipt = await runConsolidation({auth, now, config: cfg});
+    assert.equal(receipt.outcome, 'completed'); assert.notEqual(receipt.model, FAST); assert.deepEqual(receipt.tried, [FAST, receipt.model]);
+    assert.equal(((await auth.kvGet(USAGE))?.count || 0) - before, 1, 'one run is counted, not one per model');
+  });
+});
+test('with too little time left there is no second attempt, and the failure names the model that was tried', async () => {
+  await withFast({budgetMs: 400, fastMs: 300, minRetryMs: 200}, async () => {
+    mode = 'fast-hang'; sent.length = 0;
+    const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
+    assert.equal(receipt.outcome, 'failed'); assert.deepEqual(receipt.tried, [FAST]); assert.match(receipt.error, /did not answer in time \(nvidia\/nemotron-3\.5-lightning/);
+    assert.equal(sent.length, 1);
+  });
+});
+test('a model the owner saved always wins over the fast model', async () => {
+  await withFast({}, async () => {
+    mode = 'good'; sent.length = 0;
+    const OWN = 'nvidia/llama-3.1-nemotron-70b-instruct';
+    const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: {...cfg, model: OWN}});
+    assert.equal(receipt.model, OWN); assert.equal(sent[0].model, OWN); assert.equal(sent.some(x => x.model === FAST), false);
+  });
+});
+test('the fast model is found from the free models listing, and is null when none is listed', async () => {
+  delete process.env.NVIDIA_FAST_MODEL;
+  listLightning = true; const found = await (await import('../../netlify/lib/llm.mjs?found')).fastModel(DUMMY_KEY);
+  listLightning = false; const none = await (await import('../../netlify/lib/llm.mjs?none')).fastModel(DUMMY_KEY);
+  assert.equal(found, FAST); assert.equal(none, null);
 });

@@ -121,7 +121,7 @@
     const card = el('article', 'approval-card');
     card.append(el('h3', '', fmt(r.at) + ' · ' + (STATE_TEXT[r.outcome] || r.outcome)));
     const sources = Object.entries(r.inputs?.sources || {}).map(([k, v]) => k + ' ' + v).join(', ') || 'none';
-    card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '')));
+    card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '') + (r.tried && r.tried.length > 1 ? ' (tried ' + r.tried.join(', then ') + ')' : '')));
     if (r.outcome === 'completed') card.append(el('p', 'small', (r.conflicts || []).length + ' conflict(s) flagged · ' + (r.proposals || []).length + ' proposal(s) await your approval · ' + (r.rejected || []).length + ' citation(s) rejected'));
     for (const p of (r.proposals || []).slice(0, 5)) {
      card.append(el('p', 'small', 'Parcel ' + p.parcelId + (p.dataset ? ' (' + p.dataset + ')' : '') + ': ' + p.summary));

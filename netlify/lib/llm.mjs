@@ -33,6 +33,17 @@ async function chat(key, model, system, q, signal) {
 
 
 // Returns {text, model}. Throws an Error with .status and .detail when the service fails.
+// The fast model for short structured jobs. NVIDIA_FAST_MODEL names it; otherwise the first listed Nemotron "Lightning" model.
+// A free models listing (no generation) finds it; null when none is listed. The owner's saved or env model always wins elsewhere.
+let fastCache;
+export async function fastModel(key) {
+  const set = process.env.NVIDIA_FAST_MODEL;
+  if (set && /^[A-Za-z0-9._\/-]{3,100}$/.test(set) && !RETIRED.has(set)) return set;
+  if (fastCache !== undefined) return fastCache;
+  try { fastCache = (await listModels(key)).find(id => /nemotron/i.test(id) && /lightning/i.test(id) && !RETIRED.has(id) && !refused.has(id)) || null; } catch (e) { fastCache = null; }
+  return fastCache;
+}
+
 export async function complete(cfg, system, user, opts = {}) {
   const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), opts.timeoutMs || 25000);
   // opts.thinking === false asks reasoning models (Nemotron) to answer without hidden reasoning, through the system
