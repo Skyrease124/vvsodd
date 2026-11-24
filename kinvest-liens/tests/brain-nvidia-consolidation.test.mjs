@@ -139,7 +139,7 @@ test('the daily allowance stops the fourth run before anything is sent', async (
   for (let i = 0; i < DAILY_LIMIT; i++) await runConsolidation({auth, now, config: cfg});
   assert.equal(sent.length, DAILY_LIMIT);
   await assert.rejects(() => runConsolidation({auth, now, config: cfg}), e => e.code === 'QUOTA');
-  assert.equal(sent.length, DAILY_LIMIT, 'no fourth request was sent');
+  assert.equal(sent.length, DAILY_LIMIT, 'no request beyond the daily limit was sent');
 });
 
 test('without a configured key nothing is sent and no allowance is used', async () => {

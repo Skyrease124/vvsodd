@@ -13,7 +13,7 @@ import {storedFactOk, DATASET_OK, httpsOnly} from './gemini-extract.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
-export const DAILY_LIMIT = 3; // owner-triggered consolidations per UTC day, to stay inside free allowances
+export const DAILY_LIMIT = 4; // owner-triggered consolidations per UTC day, to stay inside free allowances
 const MAX_ITEMS = 40, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
 // Plausibility only: a coordinate must be inside the United States (including Alaska and Hawaii). No state or county is
 // named here. A dataset's own geography is enforced by the official-source checks, never by this module.
