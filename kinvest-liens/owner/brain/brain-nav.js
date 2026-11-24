@@ -30,6 +30,8 @@
   box.appendChild(input); nav.appendChild(box);
   const groups = new Map(), rows = [];
   const seen = new Set();
+  function setOpen(row, open) { row.li.classList.toggle('bn-open', open); row.a.setAttribute('aria-expanded', String(open)); if (row.inner) row.inner.inert = !open; }
+  function syncRow(row) { row.li.classList.toggle('bn-hide', row.searchHidden || (!!row.inner && row.s.hidden)); }
   panels.forEach((s, i) => {
     const title = s.querySelector('h2').textContent.replace(/\s+/g, ' ').trim();
     if (seen.has(title)) return;
@@ -42,7 +44,18 @@
     const name = document.createElement('span'); name.className = 'bn-name'; name.textContent = s.querySelector('h2').textContent.replace(/\s+/g, ' ').trim().replace(/\s[\u2014\u2013-]\s/g, ': ');
     const chev = document.createElement('span'); chev.innerHTML = svg('<path d="M9 6l6 6-6 6"/>'); chev.firstChild.setAttribute('class', 'bn-chev');
     a.append(ico, name, chev.firstChild); li.appendChild(a); groups.get(g).querySelector('ul').appendChild(li);
-    rows.push({li, s, text: (s.querySelector('section') ? s.querySelector('h2').textContent : (s.textContent || '')).toLowerCase().replace(/\s+/g, ' ')});
+    const row = {li, a, s, searchHidden: false, text: (s.querySelector('section') ? s.querySelector('h2').textContent : (s.textContent || '')).toLowerCase().replace(/\s+/g, ' ')};
+    // A panel with no panels inside it opens in place, under its own row: no jump down the page.
+    if (!s.querySelector('section') && s.id !== 'app') {
+      const fold = document.createElement('div'), inner = document.createElement('div');
+      fold.className = 'bn-fold'; inner.className = 'bn-inner'; inner.inert = true; fold.appendChild(inner); li.appendChild(fold); inner.appendChild(s);
+      row.inner = inner; a.setAttribute('aria-expanded', 'false'); a.setAttribute('aria-controls', s.id);
+      a.addEventListener('click', e => { e.preventDefault(); setOpen(row, !li.classList.contains('bn-open')); });
+      // A panel the page keeps hidden (for example preview only tools) has no row either.
+      new MutationObserver(() => syncRow(row)).observe(s, {attributes: true, attributeFilter: ['hidden']});
+      syncRow(row);
+    }
+    rows.push(row);
   });
 
   // Tools: the two links that sit above the panels become compact rows. The original links stay in the page, hidden.
@@ -70,11 +83,17 @@
   main.querySelector('h1').after(nav);
   const filter = () => {
     const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean); let n = 0;
-    rows.forEach(r => { const ok = terms.every(t => r.text.includes(t)); r.li.classList.toggle('bn-hide', !ok && !r.s.querySelector('section')); if (!r.s.querySelector('section')) r.s.classList.toggle('bn-hide', !ok); if (ok) n++; });
+    rows.forEach(r => { const ok = terms.every(t => r.text.includes(t)); r.searchHidden = !ok && !r.s.querySelector('section'); if (r.inner) syncRow(r); else r.li.classList.toggle('bn-hide', r.searchHidden); if (!r.inner && !r.s.querySelector('section')) r.s.classList.toggle('bn-hide', !ok); if (ok) n++; });
     toolRows.forEach(r => r.li.classList.toggle('bn-hide', !terms.every(t => r.text.includes(t))));
     toolGroup.classList.toggle('bn-hide', !toolRows.some(r => !r.li.classList.contains('bn-hide')));
     groups.forEach(g => g.classList.toggle('bn-hide', ![...g.querySelectorAll('li')].some(li => !li.classList.contains('bn-hide'))));
     empty.hidden = n > 0 || toolRows.some(r => !r.li.classList.contains('bn-hide'));
   };
   input.addEventListener('input', filter);
+  // Panels live in the rows, outside the page's locked section, so the nav hides itself while that section is hidden.
+  const app = document.getElementById('app');
+  if (app) { const lock = () => nav.classList.toggle('bn-locked', app.hidden); lock(); new MutationObserver(lock).observe(app, {attributes: true, attributeFilter: ['hidden']}); }
+  // A link such as /owner/brain/#nvidiaPanel opens that panel where it sits.
+  const fromHash = () => { const id = decodeURIComponent(location.hash.slice(1)); const r = id && rows.find(x => x.s.id === id && x.inner); if (r) setOpen(r, true); };
+  fromHash(); window.addEventListener('hashchange', fromHash);
 })();

@@ -115,8 +115,10 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const intake = page.locator('#intakeList article');
     await intake.nth(0).waitFor();
+    await page.waitForTimeout(700); // the panels finish opening
     assert.equal(await intake.count(), 4, 'four intake cards');
     assert.equal(await page.evaluate(() => window.__xss), undefined, 'hostile title did not execute');
     assert.equal(await page.locator('#intakeList img').count(), 0, 'hostile title rendered as text, not an element');
@@ -141,6 +143,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#intakeList article', {hasText: 'Parcel awaiting check'});
     await card.getByRole('button', {name: 'Verify this item'}).click();
     await card.locator('.pi-form input[type=url]').fill('http://www.pbcgov.org/records/1');
@@ -172,6 +175,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#intakeList article', {hasText: 'Verified <img'});
     await card.getByRole('button', {name: 'Approve…'}).click();
     await card.getByRole('button', {name: 'Approve and release'}).click();
@@ -199,6 +203,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#intakeList article', {hasText: 'Verified <img'});
     await card.getByRole('button', {name: 'Reject…'}).click();
     await card.getByRole('button', {name: /Reject: nothing is published/}).click();
@@ -217,6 +222,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#intakeList article', {hasText: 'Released parcel'});
     await card.getByRole('button', {name: 'Withdraw…'}).click();
     assert.equal(await page.locator('#withdrawDialog').evaluate(d => d.open), true, 'confirmation dialog opens');
@@ -239,6 +245,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#researchList article', {hasText: 'Released parcel'});
     await card.getByRole('button', {name: /Withdraw from every viewer/}).click();
     await page.locator('#withdrawReason').fill('Withdrawn by owner from the research list.');
@@ -256,6 +263,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     const card = page.locator('#liveList article', {hasText: 'Wayne County GIS layer check'});
     page.once('dialog', d => d.accept());
     await card.getByRole('button', {name: 'Run once…'}).click();
@@ -272,6 +280,7 @@ try {
     const page = await context.newPage();
     await install(page, {liveHidden: true, storage: 'production'});
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     await page.waitForSelector('#intakeList article');
     assert.match(await page.locator('#intakeStorage').innerText(), /PRODUCTION/, 'production is announced before any write');
     assert.equal(await page.locator('#liveChecksPanel').isVisible(), false, 'live checks stay hidden where they are not available');
@@ -283,6 +292,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     await page.waitForSelector('#intakeList article');
     assert.match(await page.locator('#batchCount').innerText(), /1 verified, located record ready in Palm Beach, FL · 0 selected/);
     assert.equal(await page.locator('#batchApprove').isDisabled(), true, 'nothing selected, nothing to approve');
@@ -315,6 +325,7 @@ try {
     const page = await context.newPage();
     const writes = await install(page);
     await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     await page.waitForSelector('#intakeList article');
     assert.deepEqual(await page.locator('#datasetState option').allInnerTexts(), ['FL', 'IA', 'NY'], 'every registered state is listed');
     assert.equal(await page.locator('#datasetState').inputValue(), 'FL', 'the first registered county is selected; no county is named in the page');

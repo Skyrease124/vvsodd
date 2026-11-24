@@ -105,6 +105,8 @@
  }
 
  const STATE_TEXT = {completed: 'Completed', failed: 'Failed', quota_limited: 'Daily limit reached', idle: 'Idle', not_configured: 'Not configured'};
+ const nvSeen = new Set();
+ let nvAsked = null;
  async function loadNvidia() {
   const status = $('nvidiaStatus');
   try {
@@ -118,7 +120,8 @@
    const opinionOf = id => (op && op.results || []).find(x => x.receiptId === id);
    const box = $('nvidiaReceipts'); box.replaceChildren();
    for (const r of (data.receipts || []).slice(0, 5)) {
-    const card = el('article', 'approval-card');
+    const fresh = nvSeen.size > 0 && !nvSeen.has(r.id);
+    const card = el('article', 'approval-card' + (fresh ? ' nv-new' : ''));
     card.append(el('h3', '', fmt(r.at) + ' · ' + (STATE_TEXT[r.outcome] || r.outcome)));
     const sources = Object.entries(r.inputs?.sources || {}).map(([k, v]) => k + ' ' + v).join(', ') || 'none';
     card.append(el('p', 'small', 'Sent: ' + (r.inputs?.count || 0) + ' helper results (' + sources + ')' + (r.model ? ' · model ' + r.model : '') + (r.attempts && r.attempts.length > 1 ? ' (tried ' + r.attempts.map(a => a.model + (a.ok ? '' : ': ' + a.reason)).join(', then ') + ')' : r.tried && r.tried.length > 1 ? ' (tried ' + r.tried.join(', then ') + ')' : '')));
@@ -134,14 +137,15 @@
     if (r.outcome === 'completed' && (r.proposals || []).length && op && op.ok) {
      const found = opinionOf(r.id);
      if (found) {
-      card.append(el('p', 'small', 'Second opinion (Cloudflare, ' + found.model + '). It is a warning only: no proposal was changed.'));
-      for (const o of found.opinions) card.append(el('p', 'small' + (o.verdict === 'supported' || o.verdict === 'cannot_check' ? '' : ' warn'), (o.verdict === 'supported' ? 'Supported' : o.verdict === 'partly' ? 'Only partly supported' : o.verdict === 'cannot_check' ? 'Cannot check: the sources give too little detail' : 'Contradicted or not supported') + ' · parcel ' + o.parcelId + ': ' + o.reason));
+      const justNow = nvAsked === r.id; nvAsked = justNow ? null : nvAsked;
+      card.append(el('p', 'small' + (justNow ? ' nv-new' : ''), 'Second opinion (Cloudflare, ' + found.model + '). It is a warning only: no proposal was changed.'));
+      for (const o of found.opinions) card.append(el('p', 'small' + (o.verdict === 'supported' || o.verdict === 'cannot_check' ? '' : ' warn') + (justNow ? ' nv-new' : ''), (o.verdict === 'supported' ? 'Supported' : o.verdict === 'partly' ? 'Only partly supported' : o.verdict === 'cannot_check' ? 'Cannot check: the sources give too little detail' : 'Contradicted or not supported') + ' · parcel ' + o.parcelId + ': ' + o.reason));
      } else {
       const ask = el('button', '', 'Ask Cloudflare for a second opinion'); ask.type = 'button'; ask.disabled = !op.enabled || op.stopped || op.used >= op.daily;
       ask.addEventListener('click', async () => {
        if (!window.confirm('Send these proposals (parcel, summary and source labels only, no positions) to Cloudflare for one second opinion? It uses one of today\'s ' + op.daily + ' allowed requests. Nothing is changed or published.')) return;
-       ask.disabled = true; const note = el('p', 'small', 'Asking Cloudflare…'); card.append(note);
-       try { await call(OPINION, 'POST', {action: 'second-opinion', receiptId: r.id, confirmed: true}); } catch (error) { note.textContent = error.message; ask.disabled = false; return; }
+       ask.disabled = true; card.classList.add('nv-busy'); const note = el('p', 'small', 'Asking Cloudflare…'); card.append(note);
+       try { await call(OPINION, 'POST', {action: 'second-opinion', receiptId: r.id, confirmed: true}); nvAsked = r.id; } catch (error) { note.textContent = error.message; ask.disabled = false; card.classList.remove('nv-busy'); return; }
        await loadNvidia();
       });
       card.append(ask, el('p', 'small', op.stopped ? 'Stopped after a provider error. Use the button below to turn it on again.' : !op.enabled ? 'Switched off in settings.' : 'Used today ' + op.used + ' of ' + op.daily + '. One request per receipt.'));
@@ -152,17 +156,21 @@
     if (r.error) card.append(el('p', 'small', 'Error: ' + r.error));
     box.append(card);
    }
+   (data.receipts || []).forEach(x => nvSeen.add(x.id)); if (!nvSeen.size) nvSeen.add('none');
   } catch (error) { status.textContent = 'NVIDIA status unavailable: ' + error.message; }
  }
 
  async function runNvidia() {
   if (!window.confirm('Send the current stored helper results to NVIDIA? This uses one of today\'s allowed runs. Nothing is published.')) return;
-  const result = $('nvidiaStatus');
+  const result = $('nvidiaStatus'), panel = $('nvidiaPanel');
   $('nvidiaRun').disabled = true;
+  if (panel) panel.classList.add('nv-busy');
+  result.textContent = 'Asking NVIDIA. This can take up to 25 seconds…';
   try {
    const data = await call(NVIDIA, 'POST', {action: 'consolidate', confirmed: true});
    result.textContent = data.notice || 'Consolidation finished.';
   } catch (error) { result.textContent = error.message; }
+  if (panel) panel.classList.remove('nv-busy');
   await loadNvidia();
  }
 

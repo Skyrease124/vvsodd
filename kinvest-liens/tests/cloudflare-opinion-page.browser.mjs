@@ -15,23 +15,28 @@ let stored = null; const posts = [];
 // Registered first so the specific routes below win.
 await page.route('**/.netlify/functions/**', r => r.fulfill(json({ok: true, entries: [], cases: []})));
 await page.route('**/.netlify/functions/owner-brain-nvidia', r => r.fulfill(json({ok: true, configured: true, state: 'completed', dailyLimit: 3, usedToday: 1, remainingToday: 2, receipts: [receipt]})));
-await page.route('**/.netlify/functions/owner-brain-second-opinion', r => {
-  if (r.request().method() === 'POST') { posts.push(JSON.parse(r.request().postData())); stored = {receiptId: 'r1', at: new Date().toISOString(), model: '@cf/test/model', opinions: [{parcelId: 'C0050-21', verdict: 'partly', reason: 'Only one source backs it.'}]}; return r.fulfill(json({ok: true, result: stored})); }
+await page.route('**/.netlify/functions/owner-brain-second-opinion', async r => {
+  if (r.request().method() === 'POST') { await new Promise(done => setTimeout(done, 600)); posts.push(JSON.parse(r.request().postData())); stored = {receiptId: 'r1', at: new Date().toISOString(), model: '@cf/test/model', opinions: [{parcelId: 'C0050-21', verdict: 'partly', reason: 'Only one source backs it.'}]}; return r.fulfill(json({ok: true, result: stored})); }
   return r.fulfill(json({ok: true, enabled: true, stopped: false, used: stored ? 1 : 0, daily: 3, model: '@cf/test/model', results: stored ? [stored] : []}));
 });
 page.on('dialog', d => d.accept());
 await page.goto('http://127.0.0.1:8765/owner/brain/', {waitUntil: 'domcontentloaded'});
+// Tap the NVIDIA consolidation row: its panel opens in place.
+await page.locator('.bn-row[aria-controls="nvidiaPanel"]').click();
 const ask = page.locator('#nvidiaReceipts button', {hasText: 'Ask Cloudflare for a second opinion'});
 await page.locator('#nvidiaReceipts button').first().waitFor({state: 'attached', timeout: 20000});
 await ask.waitFor({timeout: 10000});
 assert.match(await page.locator('#nvidiaReceipts').textContent(), /Used today 0 of 3\. One request per receipt\./);
 await ask.click();
+await page.waitForTimeout(200);
+assert.equal(await page.locator('#nvidiaReceipts .nv-busy').count(), 1, 'the card shows it is working while Cloudflare answers');
 await page.locator('#nvidiaReceipts', {hasText: 'Only partly supported'}).waitFor({timeout: 10000});
 assert.deepEqual(posts, [{action: 'second-opinion', receiptId: 'r1', confirmed: true}]);
 const text = await page.locator('#nvidiaReceipts').textContent();
 assert.match(text, /warning only: no proposal was changed/); assert.match(text, /parcel C0050-21: Only one source backs it\./);
 assert.equal(await page.locator('#nvidiaReceipts button', {hasText: 'Ask Cloudflare'}).count(), 0, 'one request per receipt');
 assert.match(text, /Official match\./, 'the proposal itself is unchanged');
+assert.ok(await page.locator('#nvidiaReceipts p.nv-new').count() >= 1, 'the new opinion rises in');
 assert.deepEqual(errors, []);
 await browser.close();
 console.log('PASS: Cloudflare second opinion button, one request, warning only');

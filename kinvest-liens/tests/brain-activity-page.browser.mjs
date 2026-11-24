@@ -123,6 +123,7 @@ try {
     await page.route('**/.netlify/functions/owner-brain-nvidia', r => r.fulfill({status: 200, contentType: 'application/json', body: nvidiaJson}));
     await page.route('**/.netlify/functions/owner-brain-second-opinion', r => r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, enabled: true, stopped: false, used: 0, daily: 3, model: 'm', results: []})}));
     await page.goto('http://127.0.0.1:8765/owner/brain/', {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
     await page.waitForFunction(() => !document.getElementById('approvalStatus').textContent.startsWith('Loading'), null, {timeout: 20000});
     assert.match(await page.locator('#approvalStatus').textContent(), /1 waiting for your decision · 1 already public/);
     assert.equal(await page.locator('#approvalItems .approval-card').count(), 2, 'pending and already-public corrections');

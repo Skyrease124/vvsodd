@@ -16,6 +16,7 @@ on:
       - kinvest-liens/owner/brain/**
       - kinvest-liens/tests/brain-activity-page.browser.mjs
       - kinvest-liens/tests/cloudflare-opinion-page.browser.mjs
+      - kinvest-liens/tests/brain-nav-accordion.browser.mjs
       - kinvest-liens/tests/brain-intake-page.browser.mjs
       - kinvest-liens/tests/brain-reactor-mobile.cjs
       - tests/map_approved_records.browser.cjs
@@ -58,6 +59,7 @@ jobs:
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_behavior.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-activity-page.browser.mjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/cloudflare-opinion-page.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-nav-accordion.browser.mjs
           NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-intake-page.browser.mjs
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_approved_records.browser.cjs
           NODE_PATH=/tmp/ppa-browser/node_modules node kinvest-liens/tests/brain-reactor-mobile.cjs
