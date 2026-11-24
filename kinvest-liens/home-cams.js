@@ -10,9 +10,15 @@
     ['San Diego, CA',32.7157,-117.1611],['Austin, TX',30.2672,-97.7431],['Milwaukee, WI',43.0389,-87.9065]];
   const link = (text, href) => Object.assign(mk('a','',text),{href});
   const allLink = document.getElementById('hcAll');
-  const grid = mk('div','hc-grid'), msg = mk('p','hc-msg'), options = mk('details','hc-options');
+  const grid = mk('div','hc-grid'), dots = mk('div','hc-dots'), msg = mk('p','hc-msg'), options = mk('details','hc-options');
   options.append(mk('summary','','Browse other camera areas'));
-  const chips = mk('div','hc-chips'); options.append(chips); host.append(grid,msg,options);
+  const chips = mk('div','hc-chips'); options.append(chips); host.append(grid,dots,msg,options);
+  // Dots under the row: show where you are in it, and tap one to move there.
+  const cardsIn = () => [...grid.querySelectorAll('.hc-card')];
+  const nearest = () => { const n = cardsIn().length; if (grid.scrollLeft >= grid.scrollWidth - grid.clientWidth - 2) return n - 1; const g = grid.getBoundingClientRect(), mid = g.left + g.width / 2; let best = 0, bd = Infinity; cardsIn().forEach((c, i) => { const b = c.getBoundingClientRect(), d = Math.abs(b.left + b.width / 2 - mid); if (d < bd) { bd = d; best = i; } }); return best; };
+  const markDot = () => { const on = nearest(); [...dots.children].forEach((d, i) => d.classList.toggle('on', i === on)); };
+  grid.addEventListener('scroll', () => requestAnimationFrame(markDot), {passive: true});
+  const buildDots = () => { dots.replaceChildren(); const n = cardsIn().length; if (n < 2) return; for (let i = 0; i < n; i++) { const d = mk('button', 'hc-dot', ''); d.type = 'button'; d.setAttribute('aria-label', 'Show camera ' + (i + 1)); d.addEventListener('click', () => { const c = cardsIn()[i], g = grid.getBoundingClientRect(), b = c.getBoundingClientRect(); grid.scrollBy({left: (b.left + b.width / 2) - (g.left + g.width / 2), behavior: 'smooth'}); }); dots.append(d); } markDot(); };
   let controller, refresh, started = false, currentKey, stopVideos = [], hlsLibrary;
   // Homepage: only live feeds are shown (no snapshot-only cameras), and each visit picks a different state from the list.
   const liveOnly = true, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -77,7 +83,7 @@
     clearInterval(refresh); stopVideos.forEach(stop => stop?.()); stopVideos = [];
     controller?.abort();
     const job = new AbortController(); controller = job;
-    grid.replaceChildren();
+    grid.replaceChildren(); dots.replaceChildren();
     allLink.href = '/cams/'; allLink.textContent = 'View all →';
     if (!loc.coordinates(area?.lat,area?.lng)) {
       msg.textContent = area?.label ? 'Choose a county or browse a camera area to see cameras in ' + area.label + '.' : 'Choose a map location or browse a camera area.';
@@ -124,6 +130,7 @@
       }).filter(Boolean);
       const hero = grid.querySelector('.hc-hero');
       if (hero) requestAnimationFrame(() => { const g = grid.getBoundingClientRect(), h = hero.getBoundingClientRect(); grid.scrollLeft += (h.left + h.width / 2) - (g.left + g.width / 2); });
+      buildDots();
       if (update.length) refresh = setInterval(() => { if (!document.hidden) update.forEach(set => set()); }, 60000);
     } catch(e) {
       if (!job.signal.aborted) { currentKey = null; msg.textContent = 'Cameras are temporarily unavailable.'; }
@@ -138,9 +145,6 @@
     if (started) return; started = true;
     const user = await window.ppaAccount;
     if (!user?.paid && !user?.owner) { locked(); loc.subscribe(locked); return; }
-    const nearby = mk('button','hc-chip','Near current map'); nearby.type = 'button';
-    nearby.addEventListener('click', async () => { options.open = false; load(await loc.ready()); });
-    chips.prepend(nearby);
     const [label,lat,lng] = liveOnly ? places[Math.floor(Math.random() * places.length)] : losAngeles;
     load({label,lat,lng});
   };

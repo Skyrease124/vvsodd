@@ -25,6 +25,10 @@ const cam = (id, live) => ({kind: 'camera', name: 'Cam ' + id, road: 'I-' + id, 
     assert.ok(names.every(n => ['Cam 2', 'Cam 3', 'Cam 5', 'Cam 6'].includes(n)), 'snapshot-only cameras are dropped: ' + names);
     assert.equal(await page.locator('#hcams .hc-card').count(), names.length);
     assert.equal(await page.locator('#hcams .hc-hero').count(), 1, 'one live hero card');
+    assert.equal(await page.locator('#hcams .hc-dot').count(), names.length, 'one dot per camera');
+    assert.equal(await page.locator('#hcams .hc-chip', {hasText: 'Near current map'}).count(), 0, 'no Near current map option');
+    await page.locator('#hcams .hc-dot').nth(names.length - 1).click(); await page.waitForTimeout(900);
+    assert.ok(await page.locator('#hcams .hc-dot.on').evaluate((d, n) => [...d.parentNode.children].indexOf(d) === n - 1, names.length), 'tapping the last dot moves to the last camera');
     assert.deepEqual(errors, [], 'no page errors');
     await page.screenshot({path: '/tmp/claude-0/-home-user-vvsodd/bf604de6-2661-56bf-bbdc-299b08c4a426/scratchpad/home-cams-' + visit + '.png', fullPage: false}).catch(() => {});
     seen.add(await page.locator('#hcams .hc-msg').textContent());
