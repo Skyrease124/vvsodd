@@ -17,6 +17,10 @@ await p.waitForTimeout(600);await p.screenshot({path:'/tmp/claude-0/-home-user-v
 await p.locator('.land-callout').waitFor({state:'detached',timeout:2000});
 assert.equal(await p.evaluate(()=>document.getElementById('landmap').contains(document.querySelector('.land-floating'))),true,'the card is inside the map');
 assert.equal(await p.evaluate(()=>__landMap.dragging.enabled()),false,'the map is locked while the card is open');
+assert.equal(await p.locator('.land-tabs button').count(),4,'Overview, Records, Map Tools, Layers');
+await p.locator('.land-explore .tool').first().waitFor({state:'attached',timeout:15000});
+assert.ok(await p.locator('.land-explore .tool').count()>=6,'the Explore tools are in the card');
+await p.screenshot({path:'/tmp/claude-0/-home-user-vvsodd/bf604de6-2661-56bf-bbdc-299b08c4a426/scratchpad/land-card.png'});
 await p.locator('.land-property-heading button').click();
 await p.locator('.land-callout .lc').waitFor({state:'visible',timeout:5000});
 assert.equal(await p.evaluate(()=>__landMap.dragging.enabled()),true,'the map moves again after closing');
