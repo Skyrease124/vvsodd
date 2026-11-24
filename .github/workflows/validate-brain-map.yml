@@ -42,6 +42,10 @@ on:
       - 'tests/parcel-match-registry.test.mjs'
       - 'kinvest-liens/tests/groq-limits.test.mjs'
       - 'netlify/lib/groq-limits.mjs'
+      - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'netlify/lib/gemini-limits.mjs'
+      - 'netlify/lib/gemini-extract.mjs'
+      - 'netlify/functions/owner-brain-gemini.mjs'
       - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
@@ -138,6 +142,10 @@ on:
       - 'tests/parcel-match-registry.test.mjs'
       - 'kinvest-liens/tests/groq-limits.test.mjs'
       - 'netlify/lib/groq-limits.mjs'
+      - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'netlify/lib/gemini-limits.mjs'
+      - 'netlify/lib/gemini-extract.mjs'
+      - 'netlify/functions/owner-brain-gemini.mjs'
       - 'docs/scott-county-ia.md'
       - 'tools/rochester-ny/**'
       - 'tools/coverage/**'
@@ -255,3 +263,4 @@ jobs:
       - run: node --test tests/scott-crosscheck.test.mjs
       - run: node --test tests/parcel-match-registry.test.mjs
       - run: node --test kinvest-liens/tests/groq-limits.test.mjs
+      - run: node --test kinvest-liens/tests/gemini-extract.test.mjs

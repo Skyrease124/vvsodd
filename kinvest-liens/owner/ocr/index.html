@@ -35,6 +35,13 @@
     <ul id="samp"></ul>
     <textarea id="txt" readonly></textarea>
     <div class="row"><button class="btn small" id="dl" type="button">Download text</button><button class="btn small ghost" id="cp" type="button">Copy text</button></div>
+    <div id="gem" style="margin-top:14px">
+      <h2 style="margin:0 0 6px;font-size:16px">Gemini fact check</h2>
+      <p class="st">One request on this file. Gemini lists parcel numbers, amounts and dates, each with an exact quote. A value is kept only if its quote is found in the text above. Results stay unverified until you decide. Free tier only, at most 5 a day.</p>
+      <div class="row"><button class="btn small" id="gemBtn" type="button">Ask Gemini (1 request)</button></div>
+      <p id="gemSt" class="st" role="status"></p>
+      <ul id="gemOut"></ul>
+    </div>
   </div>
 </main>
 <script>
@@ -43,9 +50,9 @@
   const MAX = 4.2e6;
   const b64 = file => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(file); });
   const call = async (pdf, from) => { const r = await fetch('/.netlify/functions/ocr', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pdf, from})}); return r.json().catch(() => ({ok: false, error: r.status === 413 ? 'File too big for one upload.' : 'No answer (HTTP ' + r.status + ').'})); };
-  let name = 'county-list';
+  let name = 'county-list', cur = null;
   $('f').onchange = async () => {
-    const file = $('f').files[0]; if (!file) return; name = file.name.replace(/\.pdf$/i, '');
+    const file = $('f').files[0]; if (!file) return; name = file.name.replace(/\.pdf$/i, ''); cur = null;
     $('res').hidden = true; $('bar').style.width = '0';
     if (file.size > MAX) { $('st').className = 'st bad'; $('st').textContent = 'That PDF is ' + (file.size / 1e6).toFixed(1) + ' MB. The limit is about 4 MB: send it to Claude directly instead.'; return; }
     $('st').className = 'st'; $('st').textContent = 'Reading pages 1–5…';
@@ -63,7 +70,15 @@
     const lines = text.split('\n'), pid = lines.filter(l => /\b\d{2,}[-.][0-9A-Z]{2,}[-.][0-9A-Z]{2,}/.test(l) || /\b[A-Z]?\d{3,4}-\d{4}\b/.test(l));
     $('sum').textContent = all.length + ' pages · ' + lines.length.toLocaleString() + ' lines of text · about ' + pid.length.toLocaleString() + ' lines that look like parcel IDs (a rough count: Claude checks the real total).';
     $('samp').textContent = ''; pid.slice(0, 5).forEach(l => { const li = document.createElement('li'); li.textContent = l.slice(0, 120); $('samp').appendChild(li); });
-    $('txt').value = text; $('res').hidden = false;
+    $('txt').value = text; $('res').hidden = false; cur = {pdf, file: file.name}; $('gemSt').textContent = ''; $('gemOut').textContent = ''; $('gemBtn').disabled = false;
+  };
+  $('gemBtn').onclick = async () => {
+    if (!cur) return; const st = $('gemSt'); $('gemBtn').disabled = true; $('gemOut').textContent = '';
+    st.className = 'st'; st.textContent = 'Asking Gemini (one request)…';
+    let d; try { const r = await fetch('/.netlify/functions/owner-brain-gemini', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'gemini-extract', confirmed: true, pdf: cur.pdf, text: $('txt').value, fileName: cur.file})}); d = await r.json().catch(() => ({ok: false, error: 'No answer (HTTP ' + r.status + ').'})); } catch (e) { d = {ok: false, error: 'Request failed.'}; }
+    if (!d.ok) { st.className = 'st bad'; st.textContent = d.error || 'Stopped.'; return; }
+    st.className = 'st good'; st.textContent = 'Saved as ' + d.result.status + ' (not verified). ' + d.result.facts.length + ' fact' + (d.result.facts.length === 1 ? '' : 's') + ' passed the quote check' + (d.result.droppedCount ? ', ' + d.result.droppedCount + ' dropped' : '') + '.';
+    d.result.facts.forEach(f => { const li = document.createElement('li'); li.textContent = f.field + ': ' + f.value + '  (quote: ' + f.quote + ')'; $('gemOut').appendChild(li); });
   };
   $('dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('txt').value], {type: 'text/plain'})); a.download = name + '-text.txt'; a.click(); };
   $('cp').onclick = async () => { try { await navigator.clipboard.writeText($('txt').value); $('cp').textContent = 'Copied'; } catch (e) { $('txt').select(); } };
