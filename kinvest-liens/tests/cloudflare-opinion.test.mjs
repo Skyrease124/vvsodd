@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import fs from 'node:fs';
-import {ask, keyCheck, buildPayload, verifyOpinions, SYSTEM, DEFAULT_MODEL} from '../../netlify/lib/cloudflare-opinion.mjs';
+import {ask, keyCheck, buildPayload, verifyOpinions, SYSTEM, DEFAULT_MODEL, VERDICTS} from '../../netlify/lib/cloudflare-opinion.mjs';
 import {cloudflareCaps, reserveCloudflare, cloudflareUsedToday, CF_CEILING} from '../../netlify/lib/cloudflare-limits.mjs';
 
 const TOKEN = 'test-dummy-cloudflare-token-0000', ACCOUNT = 'a'.repeat(32);
@@ -111,4 +111,13 @@ test('each source note is sent so a summary can be checked against it, still wit
   assert.equal(JSON.stringify(p).includes('x.gov'), false);
   assert.match(SYSTEM, /source note is that source's own short text/);
   assert.equal(buildPayload({proposals: [{parcelId: 'P', summary: 's', sources: [{ref: 'H1', source: 'validator', note: 'n'.repeat(500)}]}]}).items[0].sources[0].note.length, 160);
+});
+
+test('a summary the sources give too little detail to judge is cannot_check, not a failure', () => {
+  assert.ok(VERDICTS.includes('cannot_check')); assert.match(SYSTEM, /cannot_check when the sources have no note/); assert.match(SYSTEM, /not_supported only when the sources contradict/);
+  const payload = buildPayload(receipt);
+  const v = verifyOpinions({opinions: [{parcelId: 'C0050-21', verdict: 'cannot_check', reason: 'There is no source note to compare.'}]}, payload);
+  assert.deepEqual(v.opinions.map(o => o.verdict), ['cannot_check']); assert.equal(v.dropped.length, 0);
+  const h = fs.readFileSync(new URL('../../kinvest-liens/owner/brain/approval-queue.js', import.meta.url), 'utf8');
+  assert.match(h, /Cannot check: the sources give too little detail/);
 });

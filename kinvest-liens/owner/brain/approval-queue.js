@@ -135,7 +135,7 @@
      const found = opinionOf(r.id);
      if (found) {
       card.append(el('p', 'small', 'Second opinion (Cloudflare, ' + found.model + '). It is a warning only: no proposal was changed.'));
-      for (const o of found.opinions) card.append(el('p', 'small' + (o.verdict === 'supported' ? '' : ' warn'), (o.verdict === 'supported' ? 'Supported' : o.verdict === 'partly' ? 'Only partly supported' : 'Not supported') + ' · parcel ' + o.parcelId + ': ' + o.reason));
+      for (const o of found.opinions) card.append(el('p', 'small' + (o.verdict === 'supported' || o.verdict === 'cannot_check' ? '' : ' warn'), (o.verdict === 'supported' ? 'Supported' : o.verdict === 'partly' ? 'Only partly supported' : o.verdict === 'cannot_check' ? 'Cannot check: the sources give too little detail' : 'Contradicted or not supported') + ' · parcel ' + o.parcelId + ': ' + o.reason));
      } else {
       const ask = el('button', '', 'Ask Cloudflare for a second opinion'); ask.type = 'button'; ask.disabled = !op.enabled || op.stopped || op.used >= op.daily;
       ask.addEventListener('click', async () => {
