@@ -15,8 +15,8 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
 (async () => {
   const browser = await chromium.launch({headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist']});
-  const run = async (viewport, label) => {
-    const context = await browser.newContext({viewport, deviceScaleFactor: 1, reducedMotion: 'reduce'});
+  const run = async (viewport, label, motion = 'reduce') => {
+    const context = await browser.newContext({viewport, deviceScaleFactor: 1, reducedMotion: motion});
     await context.addInitScript(() => { window.__ppaFocusAdaptive = false; }); // the weak device guard is not under test, and software rendering is slow
     const page = await context.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.route('**/.netlify/functions/account', r => r.fulfill({status: 200, contentType: 'application/json', body: '{}'}));
@@ -63,7 +63,7 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
     // 3. Selecting a county raises that county in the same way and tightens the lock.
     await pick('County', {index: 1});
-    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const d = window.__ppaMap.getSource('ppa-focus'); return d && d._data.features && d._data.features.length === 1 && mb && mb.getEast() - mb.getWest() < 3; }, 'the county is raised and the lock tightens');
+    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const d = window.__ppaMap.getSource('ppa-focus'); return d && d._data.features && d._data.features.length === 1 && mb && mb.getEast() - mb.getWest() < 3 && window.__ppaMap.getTerrain() && window.__ppaMap.getPitch() > 41; }, 'the county is raised and the lock tightens');
     const co = await read(); assert.ok(co.terrain && co.fx && Math.abs(co.pitch - 42) < 1, label + ': the county is raised and tilted');
     assert.ok(co.bounds[2] - co.bounds[0] < st.bounds[2] - st.bounds[0], label + ': locked to the county, tighter than the state');
     const sel = await f.evaluate(() => JSON.stringify(window.__ppaMap.getSource('ppa-focus')._data.features[0].geometry.coordinates[0][0]));
@@ -71,7 +71,7 @@ const COUNTIES = {type: 'FeatureCollection', features: [
 
     // 4. Changing the state moves the effect to the new state.
     await pick('State', 'FL');
-    await until(() => { const mb = window.__ppaMap.getMaxBounds(); return window.__ppaMap.getTerrain() && mb && mb.getWest() < -86 && mb.getEast() > -81 && mb.getSouth() < 26 && mb.getNorth() > 29; }, 'the effect moves to Florida');
+    await until(() => { const mb = window.__ppaMap.getMaxBounds(); const c = window.__ppaMap.getCenter(); return window.__ppaMap.getTerrain() && mb && mb.getWest() < -86 && mb.getEast() > -81 && mb.getSouth() < 26 && mb.getNorth() > 29 && c.lng > -88 && c.lng < -79.5 && c.lat > 24 && c.lat < 31.5; }, 'the effect moves to Florida');
 
     // 4b. Switching quickly several times never leaves the map stuck on an earlier state.
     for (const a of ['TX', 'IA', 'GA']) { await pick('State', a); await page.waitForTimeout(150); }
@@ -88,5 +88,6 @@ const COUNTIES = {type: 'FeatureCollection', features: [
   try {
     await run({width: 390, height: 844}, 'phone 390px');
     await run({width: 1365, height: 900}, 'desktop 1365px');
+    await run({width: 390, height: 844}, 'phone 390px with animations', 'no-preference'); // the real phone case: every move animates
   } finally { await browser.close(); }
 })().catch(e => { console.error(e); process.exit(1); });

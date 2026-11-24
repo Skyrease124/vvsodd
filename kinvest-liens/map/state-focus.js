@@ -169,7 +169,7 @@
       exag = v;
       try {
         if (v <= 0.002) { if (map.getTerrain()) map.setTerrain(null); }
-        else if (!map.getTerrain()) map.setTerrain({ source: 'ppa-dem', exaggeration: v });
+        else if (!map.getTerrain()) { if (map.isMoving()) { exag = 0; return; } map.setTerrain({ source: 'ppa-dem', exaggeration: v }); }
         else if (map.terrain && typeof map.terrain.exaggeration === 'number') { map.terrain.exaggeration = v; map.triggerRepaint(); }
         else map.setTerrain({ source: 'ppa-dem', exaggeration: v });
       } catch (_) { /* keep going */ }
@@ -184,40 +184,31 @@
   // ---------- camera ----------
   // The camera may roam the shape plus a margin, and always the framed view itself, so a long or narrow state is never cropped
   // by the lock. Staying within the shape itself is handled by easing the centre back (see onMoveEnd).
-  function paddedBounds(bb) {
+  function paddedBounds(bb, f) {
     const px = (bb[2] - bb[0]) * 0.6, py = (bb[3] - bb[1]) * 0.6; let w = bb[0] - px, s = bb[1] - py, e = bb[2] + px, n = bb[3] + py;
     try {
       // The framed view itself (as the map's own limit measures it, flat), so a long or narrow shape is never cropped.
-      const c = map.getContainer(), z = map.getZoom(), ctr = map.getCenter(), lonSpan = c.clientWidth / (512 * Math.pow(2, z)) * 360, latSpan = c.clientHeight / (512 * Math.pow(2, z)) * 360 * Math.cos(ctr.lat * Math.PI / 180);
+      const c = map.getContainer(), z = f ? f.zoom : map.getZoom(), ctr = f ? { lng: f.center[0], lat: f.center[1] } : map.getCenter(), lonSpan = c.clientWidth / (512 * Math.pow(2, z)) * 360, latSpan = c.clientHeight / (512 * Math.pow(2, z)) * 360 * Math.cos(ctr.lat * Math.PI / 180);
       w = Math.min(w, ctr.lng - lonSpan / 2); e = Math.max(e, ctr.lng + lonSpan / 2); s = Math.min(s, ctr.lat - latSpan / 2); n = Math.max(n, ctr.lat + latSpan / 2);
     } catch (_) { /* keep the padded shape */ }
     return [[Math.max(-179.9, w), Math.max(-85, s)], [Math.min(179.9, e), Math.min(85, n)]];
   }
-  function settled(cb) { if (map.isMoving()) map.once('moveend', () => setTimeout(cb, 0)); else cb(); }
+  // Runs cb once the camera is truly still. A "moveend" also fires when one move interrupts another, so it checks again.
+  function settled(cb, tries = 0) { if (!map.isMoving() || tries > 40) return cb(); setTimeout(() => settled(cb, tries + 1), 80); }
   // After the tilt, zoom and centre so the whole raised shape sits inside the map with a little air around it.
   function frame() {
     const c = map.getContainer(), W = c.clientWidth, H = c.clientHeight; if (!W || !H || !target) return null;
-    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    target.veilRings.forEach(r => projectRing(r, target.elev * exag).concat(projectRing(r, 0)).forEach(p => { if (p[0] < x0) x0 = p[0]; if (p[0] > x1) x1 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[1] > y1) y1 = p[1]; }));
-    // Room above the shape for the search bar and menus that sit on the map, so the shape is not hidden behind them.
     let over = 0; try { const t = document.getElementById('pmTop'), cr = c.getBoundingClientRect(); if (t) { const tr = t.getBoundingClientRect(); if (tr.bottom > cr.top && tr.top < cr.bottom) over = Math.max(0, Math.min(H * 0.5, tr.bottom - cr.top + 8)); } } catch (_) { /* no overlay */ }
-    const padX = W * 0.06, padT = Math.max(H * 0.1, over), padB = H * 0.08, bw = x1 - x0, bh = y1 - y0; if (!(bw > 0 && bh > 0)) return null;
-    const sc = Math.min((W - 2 * padX) / bw, (H - padT - padB) / bh), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-    const to = map.unproject([cx + 0, cy - (padT - padB) / 2]); // keeps the room for the controls above the shape
-    // Zoom out if the shape does not fit; zoom in (up to the map's own limit) if it is small in the view, as a county is.
-    const dz = sc < 1 ? Math.log2(sc) : sc > 1.15 ? Math.log2(sc) - 0.05 : 0;
-    return { center: [to.lng, to.lat], zoom: Math.min(16, map.getZoom() + dz) };
+    const b = target.bb, pad = { top: Math.max(H * 0.1, over), bottom: H * 0.08, left: W * 0.06, right: W * 0.06 };
+    try { const cam = map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: pad, pitch: PITCH, maxZoom: 16 }); if (cam && cam.center) { const cc = maplibregl.LngLat.convert(cam.center); return { center: [cc.lng, cc.lat], zoom: cam.zoom }; } } catch (_) { /* fall through */ }
+    return null;
   }
   function lockCamera(mySeq) {
     settled(() => {
       if (mySeq !== seq || !target) return;
-      const finish = () => {
-        if (mySeq !== seq || !target) return;
-        const f = frame(), done = () => { if (mySeq !== seq || !target) return; try { map.setMaxBounds(paddedBounds(target.bb)); } catch (_) { /* ignore */ } };
-        if (f && Math.abs(f.zoom - map.getZoom()) > 0.04) { map.easeTo({ center: f.center, zoom: f.zoom, duration: dur(500), easing: ease }); if (map.isMoving()) map.once('moveend', () => setTimeout(done, 0)); else done(); } else done();
-      };
-      try { map.easeTo({ pitch: PITCH, duration: dur(900), easing: ease }); } catch (_) { /* ignore */ }
-      if (map.isMoving()) map.once('moveend', () => setTimeout(finish, 0)); else setTimeout(finish, 60); // an instant move has already finished
+      const f = frame(); let fired = false; const done = () => { if (fired || mySeq !== seq || !target) return; fired = true; try { map.setMaxBounds(paddedBounds(target.bb, f)); } catch (_) { /* ignore */ } };
+      try { map.easeTo(Object.assign({ pitch: PITCH, duration: dur(800), easing: ease }, f ? { center: f.center, zoom: f.zoom } : {})); } catch (_) { /* ignore */ }
+      setTimeout(() => settled(done), 60);
     });
   }
   function onMoveEnd(e) {
@@ -263,14 +254,14 @@
     if (countyName) { try { const gj = await counties(state); list = gj; const k = norm(countyName); const hit = gj.features.find(f => norm(f.properties && f.properties.NAME) === k); if (hit && my === seq) geoms = [hit.geometry]; } catch (_) { /* keep the state */ } }
     else { counties(state).then(gj => { list = gj; if (my === seq && map.getSource('ppa-counties')) map.getSource('ppa-counties').setData(gj); }).catch(() => {}); }
     if (my !== seq) return;
-    const changing = !!target; if (changing && exag > 0.02) { await new Promise(ok => lift(0, 260, ok)); if (my !== seq) return; }
+    if (target && exag > 0.002) lift(0, 0); // instantly, so the camera travels over a flat map
     target = build(geoms); target.key = state + '|' + (countyName || ''); window.PPAFocus.active = true;
     addLayers(); ensureFx(); demRefresh();
     map.getSource('ppa-focus').setData({ type: 'FeatureCollection', features: geoms.map(g => ({ type: 'Feature', properties: {}, geometry: g })) });
     if (list && map.getSource('ppa-counties')) map.getSource('ppa-counties').setData(list);
     fade(1, 650); schedule();
     // The existing fit-to-selection runs first; the lift and tilt follow it.
-    settled(() => { if (my !== seq) return; if (!lowPower) lift(1, 900); lockCamera(my); watchSmoothness(); });
+    settled(() => { if (my !== seq) return; if (lowPower) { lockCamera(my); return; } lift(1, 700, () => { if (my === seq) lockCamera(my); }); watchSmoothness(); });
   }
   function clear(my) {
     window.PPAFocus.active = false; clearTimeout(lockTimer);
