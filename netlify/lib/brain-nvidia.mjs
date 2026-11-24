@@ -203,7 +203,9 @@ function unsupportedNumber(text, cited) {
 }
 // Source references are built from the input items, never from the model.
 const sourcesOf = cited => cited.map(i => ({ref: i.ref, source: i.source, dataset: i.dataset || null, status: i.status || null, evidenceUrl: i.evidenceUrl || null,
-  checkedAt: i.checkedAt || null, unverified: !!i.unverified}));
+  checkedAt: i.checkedAt || null, unverified: !!i.unverified,
+  // The source's own short note, so a reviewer can check a summary against it. Groq's AI text is never passed on as evidence.
+  note: i.source === 'groq' ? null : clip(i.reason, 160) || null}));
 // Facts only from official or validator items; geocoder candidates never supply a location.
 function factsOf(parcelId, cited, dataset = null) {
   const official = cited.filter(isOfficial);

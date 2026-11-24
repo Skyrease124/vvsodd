@@ -589,3 +589,13 @@ test('if NVIDIA refuses the fast model or the switch, the default model is tried
     assert.equal(sent.some(x => x.model === 'meta/llama-3.3-70b-instruct'), false);
   });
 });
+
+test('a source note is kept on the receipt for official sources, and Groq text is never passed on as a note', () => {
+  const items = [
+    {ref: 'H1', source: 'official-gis-worker', dataset: 'MI-wayne', parcelId: '01003591', status: 'retry_later', reason: 'Timeout from the county service', checkedAt: ago(5)},
+    {ref: 'H2', source: 'groq', dataset: 'MI-wayne', parcelId: '01003591', status: 'triaged_unverified', reason: 'AI guess about the parcel', unverified: true}];
+  const out = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: '01003591', refs: ['H1', 'H2'], summary: 'Status is retry later.'}]}), items);
+  assert.equal(out.proposals.length, 1);
+  const [w, g] = out.proposals[0].sources;
+  assert.equal(w.note, 'Timeout from the county service'); assert.equal(g.note, null);
+});

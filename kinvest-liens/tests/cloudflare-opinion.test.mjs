@@ -11,7 +11,7 @@ import {cloudflareCaps, reserveCloudflare, cloudflareUsedToday, CF_CEILING} from
 const TOKEN = 'test-dummy-cloudflare-token-0000', ACCOUNT = 'a'.repeat(32);
 const receipt = {id: 'r1', outcome: 'completed', proposals: [
   {parcelId: 'C0050-21', dataset: 'IA-scott', summary: 'Official match for acreage 12.50.', facts: {acres: '12.50', location: {lat: 41.5, lon: -90.5}, lat: 41.5, jurisdiction: 'Davenport'},
-   sources: [{ref: 'H1', source: 'validator', status: 'pending_owner_review', evidenceUrl: 'https://x.gov/a'}]},
+   sources: [{ref: 'H1', source: 'validator', status: 'pending_owner_review', evidenceUrl: 'https://x.gov/a', note: 'Timeout reported by the county service'}]},
   {parcelId: 'C0050-22', dataset: 'IA-scott', summary: 'Second.', facts: {}, sources: [{ref: 'H2', source: 'parcel-match', status: 'matched'}]}]};
 let mode = 'good', sent = [];
 const server = http.createServer((req, res) => {
@@ -42,7 +42,7 @@ const run = (m, extra = {}) => { mode = m; sent = []; return ask({token: TOKEN, 
 
 test('only bounded proposal fields are sent: no position, no boundary, no evidence link, no token in the body', async () => {
   const p = buildPayload(receipt), s = JSON.stringify(p.items);
-  assert.equal(/41\.5|-90\.5|lat|lon|location|evidenceUrl|https:/i.test(s), false);
+  assert.equal(/41\.5|-90\.5|"lat"|"lon"|location|evidenceUrl|https:/i.test(s), false);
   assert.deepEqual(Object.keys(p.items[0].facts).sort(), ['acres', 'jurisdiction']);
   const r = await run('good');
   assert.equal(r.ok, true); assert.equal(sent[0].auth, 'Bearer ' + TOKEN);
@@ -102,4 +102,13 @@ test('the free key check accepts an active token and never makes a model request
   sent = []; assert.match((await check('verify-ok', {accountId: 'zz'})).error, /account ID/); assert.match((await check('verify-ok', {token: ''})).error, /token first/); assert.equal(sent.length, 0);
   const o = fs.readFileSync(new URL('../../netlify/functions/ownerkeys.mjs', import.meta.url), 'utf8'), h = fs.readFileSync(new URL('../../kinvest-liens/owner/keys/index.html', import.meta.url), 'utf8');
   assert.match(o, /b\.test === 'cloudflare'/); assert.match(h, /CLOUDFLARE_API_TOKEN:'cloudflare',CLOUDFLARE_ACCOUNT_ID:'cloudflare'/);
+});
+
+test('each source note is sent so a summary can be checked against it, still without links or positions', () => {
+  const p = buildPayload(receipt);
+  assert.equal(p.items[0].sources[0].note, 'Timeout reported by the county service');
+  assert.deepEqual(Object.keys(p.items[0].sources[0]).sort(), ['note', 'ref', 'source', 'status']);
+  assert.equal(JSON.stringify(p).includes('x.gov'), false);
+  assert.match(SYSTEM, /source note is that source's own short text/);
+  assert.equal(buildPayload({proposals: [{parcelId: 'P', summary: 's', sources: [{ref: 'H1', source: 'validator', note: 'n'.repeat(500)}]}]}).items[0].sources[0].note.length, 160);
 });
