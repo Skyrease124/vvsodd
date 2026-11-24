@@ -159,6 +159,7 @@
       const lmsg = document.createElement('a'); lmsg.href = '/messages/'; lmsg.textContent = 'Messages';
       fetch('/.netlify/functions/messages?unread=1', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => { const n = d ? (d.unread || 0) + (d.requests || 0) : 0; if (n) { const b = document.createElement('b'); b.textContent = n > 99 ? '99+' : String(n); b.style.cssText = 'margin-left:8px;min-width:20px;height:20px;border-radius:10px;background:#d70015;color:#fff;font-size:.72rem;display:inline-grid;place-items:center;padding:0 5px'; (lmsg.querySelector('span') || lmsg).append(b); } }).catch(() => {});
       const lrt = document.createElement('a'); lrt.href = '/retail/'; lrt.textContent = 'Retail Alerts';
+      const lcalc = document.createElement('a'); lcalc.href = '/tools/calculator/'; lcalc.textContent = 'Lien calculator';
       const isPro = user.owner || user.paid;
       let aiLink = null; if (isPro) { aiLink = document.createElement('a'); aiLink.href = '/map/?ai=1'; aiLink.textContent = 'Parcel Map + AI'; }
       let ms = null;
@@ -196,6 +197,7 @@
       mg.append(
         rowOf(lmsg, '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>', 'Messages'),
         rowOf(lcam, '<rect x="2" y="5" width="14" height="14" rx="2"/><path d="m16 9 6-3v12l-6-3"/>'),
+        rowOf(lcalc, '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M8 6h8M8 11h2m4 0h2M8 15h2m4 0h2M8 19h2m4 0h2"/>'),
         rowOf(lrt, bellIcon + '<path d="M3 6 2 9m19-3 1 3"/>'));
       lnot.href = '/notifications/';
       mg.appendChild(rowOf(lnot, bellIcon));
