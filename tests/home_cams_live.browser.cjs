@@ -10,7 +10,10 @@ const cam = (id, live) => ({kind: 'camera', name: 'Cam ' + id, road: 'I-' + id, 
     const page = await browser.newPage({viewport: {width: 390, height: 844}, reducedMotion: 'no-preference'});
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     await page.route('**/.netlify/functions/account', r => r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({user: {paid: true}})}));
-    await page.route('**/.netlify/functions/cameras**', r => r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, cameras: [cam(1, false), cam(2, true), cam(3, true), cam(4, false), cam(5, true), cam(6, true)]})}));
+    // Only Los Angeles has live feeds in this mock; other places have snapshots only, so a random pick must fall back to Los Angeles.
+    await page.route('**/.netlify/functions/cameras**', r => { const isLA = new URL(r.request().url()).searchParams.get('lat') === '34.0522';
+      const cameras = isLA ? [cam(1, false), cam(2, true), cam(3, true), cam(4, false), cam(5, true), cam(6, true)] : [cam(7, false), cam(8, false)];
+      return r.fulfill({status: 200, contentType: 'application/json', body: JSON.stringify({ok: true, cameras})}); });
     await page.route('**/hls.min.js', r => r.fulfill({status: 200, contentType: 'application/javascript', body: ''}));
     const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
     await page.route('**/x.test/**', r => /\.jpg/.test(r.request().url()) ? r.fulfill({status: 200, contentType: 'image/png', body: PNG}) : r.abort());
@@ -20,9 +23,11 @@ const cam = (id, live) => ({kind: 'camera', name: 'Cam ' + id, road: 'I-' + id, 
     await page.waitForTimeout(900);
     const centre = await page.evaluate(() => { const g = document.querySelector('#hcams .hc-grid').getBoundingClientRect(), h = document.querySelector('#hcams .hc-hero').getBoundingClientRect(); return Math.abs((h.left + h.width / 2) - (g.left + g.width / 2)); });
     assert.ok(centre < 40, 'the live hero is centred in the row (off by ' + Math.round(centre) + 'px)');
+    await page.waitForTimeout(600);
     const names = await page.locator('#hcams .hc-card b').allTextContents();
     assert.ok(names.length > 0, 'cards are shown: msg=' + await page.locator('#hcams').textContent());
-    assert.ok(names.every(n => ['Cam 2', 'Cam 3', 'Cam 5', 'Cam 6'].includes(n)), 'snapshot-only cameras are dropped: ' + names);
+    assert.ok(names.every(n => ['Cam 2', 'Cam 3', 'Cam 5', 'Cam 6'].includes(n)), 'the default opens on live feeds only: ' + names);
+    assert.ok(!(await page.locator('#hcams .hc-msg').textContent()).includes('No '), 'no empty-state message on the default');
     assert.equal(await page.locator('#hcams .hc-card').count(), names.length);
     assert.equal(await page.locator('#hcams .hc-hero').count(), 1, 'one live hero card');
     assert.equal(await page.locator('#hcams .hc-dot').count(), names.length, 'one dot per camera');

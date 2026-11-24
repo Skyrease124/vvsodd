@@ -5,6 +5,7 @@
   const loc = window.ppaLocation;
   const mk = (tag, cls, text) => Object.assign(document.createElement(tag), {className:cls,textContent:text || ''});
   const losAngeles = ['Los Angeles, CA',34.0522,-118.2437];
+  const DEFAULT = {label:losAngeles[0], lat:losAngeles[1], lng:losAngeles[2]}; // the feed the homepage opens on when a random pick has no live cameras
   const places = [losAngeles,['Tampa, FL',27.9506,-82.4572],['Orlando, FL',28.5383,-81.3792],
     ['Miami, FL',25.7617,-80.1918],['Fort Myers Beach, FL',26.452,-81.9495],
     ['San Diego, CA',32.7157,-117.1611],['Austin, TX',30.2672,-97.7431],['Milwaukee, WI',43.0389,-87.9065]];
@@ -22,7 +23,8 @@
   const buildDots = () => { dots.replaceChildren(); const n = cardsIn().length; if (n < 2) return; for (let i = 0; i < n; i++) { const d = mk('button', 'hc-dot', ''); d.type = 'button'; d.setAttribute('aria-label', 'Show camera ' + (i + 1)); d.addEventListener('click', () => centre(cardsIn()[i])); dots.append(d); } markDot(); };
   let controller, refresh, started = false, currentKey, stopVideos = [], hlsLibrary;
   // Homepage: only live feeds are shown (no snapshot-only cameras), and each visit picks a different state from the list.
-  const liveOnly = true, reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isLive = c => !!(c.video && c.image);
   const plans = '/plans/?src=Live%20cameras';
   function watchVideo(camera, media, badge, signal) {
     const video = mk('video','hc-video');
@@ -77,7 +79,7 @@
     grid.replaceChildren(preview); msg.textContent = '';
   }
   const path = (lat,lng,radius) => '/map/?' + new URLSearchParams({cams:'1',lat,lng,radius});
-  async function load(area) {
+  async function load(area, opts = {}) {
     const key = [area?.lat,area?.lng,area?.label].join('|');
     if (key === currentKey) return;
     currentKey = key;
@@ -94,20 +96,23 @@
     allLink.href = path(lat,lng,radius);
     msg.textContent = 'Finding cameras near ' + name + '…';
     try {
-      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:liveOnly ? 8 : 4,preview:1,video:1}), {signal:job.signal});
+      const r = await fetch('/.netlify/functions/cameras?' + new URLSearchParams({lat,lng,radius,limit:8,preview:1,video:1}), {signal:job.signal});
       if (job.signal.aborted) return;
       if (r.status === 401 || r.status === 402) { locked(); return; }
       const d = await r.json();
       if (job.signal.aborted) return;
       if (!r.ok || !d.ok) throw new Error('unavailable');
-      const cams = liveOnly ? d.cameras.filter(c => c.video && c.image).slice(0, 4) : d.cameras.filter(c => c.image || c.video || c.viewer);
-      const featured = reduced ? null : cams.find(c => c.video && c.image);
-      msg.textContent = cams.length ? 'Live near ' + name + ' · Swipe for more' : (liveOnly ? 'No live cameras found near ' : 'No cameras found near ') + name + '.';
+      // The homepage opens on live feeds only. Browsing an area shows its live feeds first, then snapshots where there is no live feed.
+      const pool = d.cameras.filter(c => c.image || c.video || c.viewer), live = pool.filter(isLive);
+      if (opts.liveOnly && !live.length && opts.fallback) { currentKey = null; return load(DEFAULT, {liveOnly: true}); }
+      const cams = (opts.liveOnly ? live : pool.slice().sort((a, b) => isLive(b) - isLive(a))).slice(0, 4);
+      const featured = reduced ? null : cams.find(isLive);
+      msg.textContent = !cams.length ? (opts.liveOnly ? 'Live cameras are unavailable near ' : 'No cameras found near ') + name + ' right now.' : (isLive(cams[0]) ? 'Live near ' : 'Cameras near ') + name + ' · Swipe for more';
       // The live hero sits in the middle of the row, as in the reference layout.
       if (featured && cams.length > 2) { cams.splice(cams.indexOf(featured), 1); cams.splice(Math.floor(cams.length / 2), 0, featured); }
       const update = cams.map(c => {
-        const structured = c === featured || liveOnly;
-        const card = structured ? mk('article','hc-card') : link('',path(c.lat,c.lng,15)); card.className = 'hc-card' + (c === featured ? ' hc-hero' : '');
+        const structured = true;
+        const card = mk('article','hc-card'); card.className = 'hc-card' + (c === featured ? ' hc-hero' : '');
         if (c.kind === 'viewer' && c.viewer?.startsWith('https://')) card.href = c.viewer;
         const media = mk('div','hc-media');
         const fallback = mk('span','hc-viewer',c.kind === 'viewer' ? 'Open official camera ↗' : 'Open camera →');
@@ -132,7 +137,7 @@
         img.onerror = () => { media.classList.remove('has-snapshot'); badge.hidden = true; fallback.hidden = false; };
         img.onload = () => { media.classList.add('has-snapshot'); badge.hidden = false; fallback.hidden = true; };
         media.append(img,badge); set();
-        if (c === featured || (liveOnly && !reduced)) stopVideos.push(watchVideo(c, media, badge, job.signal));
+        if (isLive(c) && !reduced) stopVideos.push(watchVideo(c, media, badge, job.signal));
         return set;
       }).filter(Boolean);
       const hero = grid.querySelector('.hc-hero');
@@ -152,8 +157,8 @@
     if (started) return; started = true;
     const user = await window.ppaAccount;
     if (!user?.paid && !user?.owner) { locked(); loc.subscribe(locked); return; }
-    const [label,lat,lng] = liveOnly ? places[Math.floor(Math.random() * places.length)] : losAngeles;
-    load({label,lat,lng});
+    const [label,lat,lng] = places[Math.floor(Math.random() * places.length)];
+    load({label,lat,lng}, {liveOnly: true, fallback: true});
   };
   const observer = new IntersectionObserver(entries => { if (entries.some(e => e.isIntersecting)) { observer.disconnect(); go(); } }, {rootMargin:'220px'});
   observer.observe(host);
