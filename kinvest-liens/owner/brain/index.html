@@ -6,7 +6,7 @@
 #wayneReviewQueue summary{cursor:pointer;padding:10px 0}#wayneReviewEntries{padding-inline-start:1.15rem}
 #wayneReviewEntries li{margin-block:8px}#wayneReviewEntries button{min-height:44px}
 @media(max-width:500px){.wayne-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
+</style><link rel="stylesheet" href="/owner/brain/brain.css"></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
 <section id="unattendedStatus" style="margin:14px 0;padding:16px;border:1px solid #537675;border-radius:14px;background:#142d32;color:#def6ed">
  <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
@@ -202,7 +202,7 @@ async function action(which){if(which==='clear'&&!confirm('Clear all currently q
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
-</script><script src="approval-queue.js" defer></script><script src="property-intake.js" defer></script><script src="preview-test.js" defer></script><script src="/owner/pipeline.js" defer></script><script>
+</script><script src="brain-nav.js" defer></script><script src="approval-queue.js" defer></script><script src="property-intake.js" defer></script><script src="preview-test.js" defer></script><script src="/owner/pipeline.js" defer></script><script>
 (async()=>{
  const summary=document.getElementById('unattendedSummary'),checks=document.getElementById('unattendedChecks');
  let pilotRunning=false, shownPilotAt=null;
