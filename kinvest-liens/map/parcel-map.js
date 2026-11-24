@@ -730,7 +730,7 @@
     refresh(); closePop(); showTab('list', false); aiRefresh(); if (isMobile()) setSnap('peek'); // collapse the sheet so the county is in view; pull it up for the list
     const correctedBounds=fitBB(ds),mappedCount=ds.recs.filter(r=>r.g||r.cx).length;
     if (correctedBounds) fitTo(correctedBounds); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
-    if (announce && mappedCount && mappedCount < d.records) setTimeout(() => say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'), 1500);
+    if (announce && mappedCount && mappedCount < d.records) setTimeout(() => { if (curCounty === d.id) say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'); }, 1500); // only while that county is still the one on screen
     setMapUrl(id);
     if (remember && locationContext) rememberArea(locationContext.countyArea(d));
   }
