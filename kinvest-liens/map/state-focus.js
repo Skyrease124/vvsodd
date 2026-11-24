@@ -139,11 +139,11 @@
     target.veilRings.forEach(r => { const s2 = silhouette(r); s2.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }); fxc.closePath(); });
     fxc.clip('evenodd'); fxc.globalAlpha = veilT; fxc.imageSmoothingEnabled = true; fxc.imageSmoothingQuality = 'high';
     fxc.drawImage(small, 0, 0, W, H); fxc.fillStyle = 'rgba(2,10,8,0.46)'; fxc.fillRect(0, 0, W, H); fxc.restore();
-    // emerald rim along the true border at the top of the raised shape: three soft strokes, then a crisp line
+    // a thin emerald rim along the true border at the top of the raised shape (kept subtle so it never looks busy)
     if (rimOn) {
       fxc.save(); fxc.lineJoin = 'round'; fxc.lineCap = 'round';
       const rings = target.rimRings.map(r => projectRing(r, target.elev * exag));
-      [[26, 0.10, GLOW], [14, 0.20, GLOW], [6, 0.38, GLOW], [1.8, 0.95, RIM]].forEach(([wd, o, col]) => {
+      [[7, 0.16, GLOW], [1.6, 0.9, RIM]].forEach(([wd, o, col]) => {
         fxc.beginPath(); rings.forEach(t => t.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }));
         fxc.strokeStyle = col; fxc.globalAlpha = o * rimT; fxc.lineWidth = wd * k; fxc.stroke();
       });
