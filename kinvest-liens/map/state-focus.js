@@ -1,7 +1,7 @@
 // Selected state or county visual treatment for the Price Pocket map. Automatic: it follows the existing state and county
 // selection (event "ppa:map-focus" from parcel-map.js) and has no toggle, button or banner of its own.
 //   * the selected shape is raised from the map (real terrain built from the shape's actual geometry, with the satellite
-//     imagery, county lines and parcel markers draped on top of it), with an emerald rim and glow
+//     imagery, county lines and parcel markers draped on top of it) (no outline or glow)
 //   * everything around it is blurred and darkened
 //   * the camera is kept inside the selection, and eases back if a drag ends outside it
 //   * selecting, changing and clearing animate smoothly (instant when the device asks for reduced motion)
@@ -9,11 +9,11 @@
 (function () {
   'use strict';
   const REDUCED = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const PITCH = 42, GLOW = '#10b981', RIM = '#8ff0c4', COUNTY_URL = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0/query';
+  const PITCH = 42, COUNTY_URL = 'https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Counties_Generalized_Boundaries/FeatureServer/0/query';
   const MAX_ELEV = 30000;
   let map = null, seq = 0, ver = 0, target = null, raf = 0, exag = 0, anim = 0, lockTimer = 0, protocolOn = false, ready = false;
   const countyCache = new Map();
-  // Weak devices keep the tilt, rim and dimming but skip the terrain lift, which is the one costly part. It is decided from the
+  // Weak devices keep the tilt and dimming but skip the terrain lift, which is the one costly part. It is decided from the
   // device (very little memory or few cores) and from how smoothly the first transition actually ran.
   const adaptive = () => window.__ppaFocusAdaptive !== false;
   let lowPower = false; try { lowPower = sessionStorage.getItem('ppaFocusLow') === '1'; } catch (_) { /* storage may be blocked */ }
@@ -47,7 +47,7 @@
       const q = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t], d = Math.hypot((q[0] - p[0]) * k, q[1] - p[1]); if (d < bd) { bd = d; best = q; } } });
     return best;
   }
-  // Keeps the outline light: a few hundred points are plenty for the veil, the rim and the lift.
+  // Keeps the outline light: a few hundred points are plenty for the veil and the lift.
   function simplify(ring, tol) {
     if (ring.length < 40) return ring;
     const out = [ring[0]]; let last = ring[0];
@@ -86,7 +86,7 @@
     map.addLayer({ id: 'ppa-county-lines', type: 'line', source: 'ppa-counties', paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 4, 0.4, 8, 0.9, 12, 1.4] } }, before);
   }
 
-  // ---------- overlay: blurs and darkens everything outside the raised shape, and draws the emerald rim ----------
+  // ---------- overlay: blurs and darkens everything outside the raised shape, and draws the dimming ----------
   // One small canvas above the map, drawn in the same frame as the map from a downscaled copy of it, so it can never lag or
   // fall out of step with the camera, and it behaves the same in every browser.
   let fx = null, fxc = null, small = null, smallc = null, veilT = 0, veilAnim = 0;
@@ -123,7 +123,7 @@
   }
   function drawFx() {
     if (!fx || !map) return;
-    if (!target || (veilT <= 0.003 && !rimOn)) { fx.style.display = 'none'; return; }
+    if (!target || veilT <= 0.003) { fx.style.display = 'none'; return; }
     const src = map.getCanvas(), W = src.width, H = src.height; if (!W || !H) return;
     const k = W / (map.getContainer().clientWidth || W);
     if (fx.width !== W || fx.height !== H) { fx.width = W; fx.height = H; }
@@ -142,25 +142,15 @@
     if (blurOk && !map.isMoving()) { fxc.imageSmoothingEnabled = true; fxc.drawImage(small, 0, 0, W, H); fxc.fillStyle = 'rgba(2,10,8,0.46)'; } else fxc.fillStyle = 'rgba(2,10,8,0.62)';
     fxc.fillRect(0, 0, W, H); fxc.restore();
     }
-    // a thin emerald rim along the true border at the top of the raised shape (kept subtle so it never looks busy)
-    if (rimOn) {
-      fxc.save(); fxc.lineJoin = 'round'; fxc.lineCap = 'round'; fxc.shadowColor = 'rgba(0,0,0,0.55)'; fxc.shadowBlur = 10 * k; fxc.shadowOffsetY = 5 * k;
-      const rings = target.rimRings.map(r => projectRing(r, target.elev * exag));
-      [[7, 0.16, GLOW], [1.6, 0.9, RIM]].forEach(([wd, o, col]) => {
-        fxc.beginPath(); rings.forEach(t => t.forEach((p, i) => { if (i) fxc.lineTo(p[0] * k, p[1] * k); else fxc.moveTo(p[0] * k, p[1] * k); }));
-        fxc.strokeStyle = col; fxc.globalAlpha = o * rimT; fxc.lineWidth = wd * k; fxc.stroke();
-      });
-      fxc.restore();
-    }
   }
   // Drawn only inside the map's own render event (when its picture is still available); this just asks for another frame.
   const schedule = () => { if (map && target) map.triggerRepaint(); };
-  let rimOn = false, rimT = 0, lastVeil = 0, blurOk = false;
+  let lastVeil = 0, blurOk = false; // no rim or glow: the selected shape is not outlined
   function fade(to, ms) {
-    cancelAnimationFrame(veilAnim); const v0 = veilT, r0 = rimT, t0 = performance.now(); rimOn = true;
-    const set = (v, r) => { veilT = v; rimT = r; if (to === 0 && v <= 0.003) rimOn = false; schedule(); };
-    if (!dur(ms)) { set(to, to); return; }
-    const step = now => { const t = Math.min(1, (now - t0) / ms), e = ease(t); set(v0 + (to - v0) * e, r0 + (to - r0) * e); if (t < 1) veilAnim = requestAnimationFrame(step); };
+    cancelAnimationFrame(veilAnim); const v0 = veilT, t0 = performance.now();
+    const set = v => { veilT = v; schedule(); };
+    if (!dur(ms)) { set(to); return; }
+    const step = now => { const t = Math.min(1, (now - t0) / ms), e = ease(t); set(v0 + (to - v0) * e); if (t < 1) veilAnim = requestAnimationFrame(step); };
     veilAnim = requestAnimationFrame(step);
   }
 
@@ -236,14 +226,13 @@
   function stateFeature(a) { const src = map.getSource('states'); const gj = src && src._data; return gj && gj.features ? gj.features.find(f => f.properties && f.properties.a === a) : null; }
   function build(geoms) {
     const outers = [], veilRings = []; const bb = bboxOf(geoms), tol = Math.max(bb[2] - bb[0], bb[3] - bb[1]) / 260;
-    const rimRings = [];
     geoms.forEach(g => polys(g).forEach(pl => {
       const big = kmDiag(bboxOf([{ type: 'Polygon', coordinates: [pl[0]] }])) > kmDiag(bb) * 0.02; // islands too small to read are left flat
       if (!big) return;
-      rimRings.push(pl[0]); veilRings.push(simplify(pl[0], tol)); outers.push(chaikin(simplify(pl[0], tol / 2), 2));
+      veilRings.push(simplify(pl[0], tol)); outers.push(chaikin(simplify(pl[0], tol / 2), 2));
     }));
     const elev = 0;
-    return { outers, veilRings, rimRings, bb, elev, geoms, key: '' };
+    return { outers, veilRings, bb, elev, geoms, key: '' };
   }
   async function apply(detail) {
     if (!map || !ready) return;
