@@ -599,3 +599,19 @@ test('a source note is kept on the receipt for official sources, and Groq text i
   const [w, g] = out.proposals[0].sources;
   assert.equal(w.note, 'Timeout from the county service'); assert.equal(g.note, null);
 });
+
+test('a proposal that rests only on a processing state such as retry_later is rejected, while a property fact is kept', () => {
+  const items = [
+    {ref: 'H1', source: 'official-gis-worker', dataset: 'MI-wayne', parcelId: '01003591', status: 'retry_later', checkedAt: ago(5)},
+    {ref: 'H2', source: 'validator', dataset: 'MI-wayne', parcelId: '01002754', status: 'pending_owner_review', lat: 42.3005, lon: -83.0995, checkedAt: ago(5)}];
+  const out = validateConsolidation(JSON.stringify({conflicts: [{parcelId: '01003591', refs: ['H1'], detail: 'Worker could not finish this parcel.'}],
+    proposals: [{parcelId: '01003591', refs: ['H1'], summary: 'Status needs resolution.'}, {parcelId: '01002754', refs: ['H2'], summary: 'Validator found an exact official match.'}]}), items);
+  assert.deepEqual(out.proposals.map(p => p.parcelId), ['01002754']);
+  assert.ok(out.rejected.includes('proposal rests only on a processing state, not a property fact'));
+  assert.equal(out.conflicts.length, 1, 'the processing state can still be reported as a conflict');
+  for (const status of ['timeout', 'provider_error', 'retrying', 'http_500']) {
+    const r = validateConsolidation(JSON.stringify({conflicts: [], proposals: [{parcelId: 'P', refs: ['H1'], summary: 'x'}]}), [{ref: 'H1', source: 'validator', dataset: 'D', parcelId: 'P', status}]);
+    assert.equal(r.proposals.length, 0, status);
+  }
+  assert.match(lib.buildPrompt(items).system, /A proposal must change a property fact/);
+});

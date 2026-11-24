@@ -34,6 +34,9 @@ const scrub = (text, secret) => {
   return out.replace(/nvapi-[A-Za-z0-9_-]+/g, '[redacted]').replace(/Bearer\s+\S+/gi, 'Bearer [redacted]');
 };
 
+// Worker states that describe processing, not a property fact: a timeout or a retry says nothing about the parcel itself.
+// A proposal that rests only on these is rejected; they may still appear as conflicts.
+const PROCESSING_STATES = /^(retry_later|retrying|provider_error|error|timeout|attention|quota_wait|transport_or_payload|http_\d+|incomplete_results)$/;
 // Official sources: items that come from an official county record or an owner-visible validator decision.
 // Geocoder candidates and skipped parcels are context only and can never back a proposal.
 const isOfficial = i => i.source === 'validator' || i.source === 'official-gis-worker' || i.official === true;
@@ -173,6 +176,7 @@ export function buildPrompt(items) {
     'Photon and Geoapify items are unverified geocoder candidates, not parcel boundaries. Items from county-worker with status official_evidence and from parcel-match are official county records; county-worker items with another status are parcels it skipped, which are context only. parcel-match items never show a position. Groq items are unverified AI triage notes: context only, never evidence, and never a reason to propose an update. gemini-document items are readings of an uploaded county file that the owner checked against the quoted text: context only, never official, and never a reason to propose an update on their own.',
     'Return ONLY JSON: {"conflicts":[{"parcelId":"...","refs":["H1"],"detail":"short factual text"}],"proposals":[{"parcelId":"...","refs":["H1"],"summary":"short factual text"}]}.',
     'Keep the answer short so it finishes: at most 5 conflicts and at most 5 proposals, the most important first, each detail or summary at most 20 words, one line of compact JSON and nothing else.',
+    'A proposal must change a property fact: a position, an address, or the verification of a record. A worker state such as retry_later, timeout or error describes processing, not the parcel, so never propose from it; report it as a conflict if it disagrees with another source.',
     'Propose an update only when a validator, official-gis-worker, county-worker official_evidence or parcel-match item supports it. Every proposal needs owner approval.',
   ].join(' ');
   const user = JSON.stringify(items.map(({ref, source, dataset, parcelId, recordId, status, reason, lat, lon, evidenceUrl, checkedAt, unverified}) =>
@@ -236,6 +240,7 @@ export function validateConsolidation(text, items) {
     if (!cited) { rejected.push('proposal cited unknown refs'); continue; }
     if (!cited.every(i => i.parcelId === clip(p.parcelId, 20) && (i.dataset || '') === (cited[0].dataset || ''))) { rejected.push('proposal named a parcel its sources do not cover'); continue; }
     if (!cited.some(isOfficial)) { rejected.push('proposal has no official or validator source'); continue; }
+    if (cited.every(i => PROCESSING_STATES.test(i.status || ''))) { rejected.push('proposal rests only on a processing state, not a property fact'); continue; }
     const extra = unsupportedNumber(p.summary, cited);
     if (extra) { rejected.push('proposal stated a value its sources do not contain (' + clip(extra, 20) + ')'); continue; }
     proposals.push({parcelId: clip(p.parcelId, 20), dataset: cited[0].dataset || null, refs: p.refs, summary: clip(p.summary, 300), facts: factsOf(clip(p.parcelId, 20), cited, cited[0].dataset || null),
