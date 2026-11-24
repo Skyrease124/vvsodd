@@ -73,8 +73,8 @@ test('a receipt with no proposals, or too large, has nothing to send', () => {
 
 function fakeRL() { const n = new Map(); return {hit: async (k, l) => { const c = n.get(k) || 0; if (c >= l) return {ok: false}; n.set(k, c + 1); return {ok: true}; }, peek: async k => ({used: n.get(k) || 0})}; }
 test('the allowance is tiny, shared and never above the reviewed ceiling', async () => {
-  assert.deepEqual(CF_CEILING, {daily: 3, minute: 1});
-  assert.deepEqual(cloudflareCaps({cloudflareDailyCap: 500}), {enabled: true, daily: 3, minute: 1});
+  assert.deepEqual(CF_CEILING, {daily: 10, minute: 1});
+  assert.deepEqual(cloudflareCaps({cloudflareDailyCap: 500}), {enabled: true, daily: 10, minute: 1});
   assert.equal(cloudflareCaps({cloudflareEnabled: false}).enabled, false); assert.equal(cloudflareCaps({cloudflareDailyCap: 0}).enabled, false);
   const RL = fakeRL(), caps = cloudflareCaps(null);
   assert.equal((await reserveCloudflare(RL, caps)).ok, true);

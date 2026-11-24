@@ -156,6 +156,6 @@ test('Cloudflare shows its real state: stored second opinions, the allowance and
   const done = (await run(c(one))).body.agents.Cloudflare;
   assert.equal(done.state, 'completed'); assert.match(done.detail, /1 second opinion\(s\) stored, 1 flagged/); assert.match(done.detail, /never changed/); assert.equal(done.lastAt, ago(20));
   assert.equal((await run(c(one, {stopped: true}))).body.agents.Cloudflare.state, 'failed');
-  assert.equal((await run(new Map([...c(one), ['cloudflare-used', 3]]))).body.agents.Cloudflare.state, 'quota_limited');
+  assert.equal((await run(new Map([...c(one), ['cloudflare-used', 10]]))).body.agents.Cloudflare.state, 'quota_limited');
   assert.equal((await run(new Map([...c(one), ['owner-ai-research-api-controls', {cloudflareEnabled: false}]]))).body.agents.Cloudflare.state, 'idle');
 });

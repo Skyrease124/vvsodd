@@ -2,7 +2,7 @@
 // above the reviewed ceiling below, which only changes here, in reviewed code. Same shape as gemini-limits.mjs.
 export const CF_DAILY_KEY = 'owner-cloudflare-daily';
 export const CF_MINUTE_KEY = 'owner-cloudflare-minute';
-export const CF_CEILING = Object.freeze({daily: 3, minute: 1});
+export const CF_CEILING = Object.freeze({daily: 10, minute: 1});
 const DAY = 86400000, MINUTE = 60000;
 
 export function cloudflareCaps(settings) {

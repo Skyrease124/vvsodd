@@ -102,7 +102,7 @@ the proposal in the approval queue. It never removes a proposal and never raises
   OpenAI project in OpenAI's dashboard as well.
 - Size of one request: roughly 2,000 tokens in and 1,000 out. Pricing changes, so **you check the current price of the model
   you choose** and multiply by the daily cap. This design does not state a price.
-- Code ceiling to start: 3 requests per day (the same as NVIDIA runs), 1 per minute, one request per receipt, a hard output
+- Code ceiling: started at 3 requests per day and raised to 10 by the owner after the first real request worked; 1 per minute, one request per receipt, a hard output
   token limit, and a cheap model chosen by you. A switch turns it off. The owner's cap may be lower, never higher.
 - No automatic second opinion. It is a button on a completed receipt.
 - An error, an empty answer or a billing error ends the job and is recorded.
