@@ -21,6 +21,8 @@ window.ppaAccount.then(user => {
     people: svg('<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 5a3 3 0 0 1 0 6M18 20a6 6 0 0 0-2-4.5"/>'),
     card: svg('<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>'),
     receipt: svg('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>'),
+    pulse: svg('<path d="M3 12h4l2-6 4 12 2-6h6"/>'),
+    plug: svg('<path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0z"/><path d="M12 17v4"/>'),
     bell: svg('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>')
   };
   const chev = svg('<path d="M9 6l6 6-6 6"/>');
@@ -28,12 +30,14 @@ window.ppaAccount.then(user => {
     ['Intelligence', [
       ['AI Brain Control Center', '/owner/brain/', 'brain', '#7a5af8', 'ai brain agents queue'],
       ['Intelligence Center', '/owner/intelligence/', 'spark', '#d9a21b', 'research sources firecrawl'],
+      ['NVIDIA Pulse Reactor', '/owner/brain/activity/', 'pulse', '#2fbfa6', 'live activity pulse reactor agents'],
       ['API Keys', '/owner/keys/', 'key', '#8e8e93', 'credentials services'],
       ['Usage & Limits', '/usage/', 'gauge', '#0a84ff', 'usage limits activity']
     ]],
     ['Property & Research', [
       ['Map Coverage & Repair', '/owner/map-coverage/', 'map', '#30b46c', 'parcel locations maps'],
       ['Imports & Review', '/admin/imports/', 'inbox', '#ff9f0a', 'county data imports'],
+      ['County Connectors', '/owner/brain/connectors/', 'plug', '#5e5ce6', 'county operations connectors discovery'],
       ['Certificate Review', '/owner/certificates/', 'cert', '#ff453a', 'florida tax certificates'],
       ['Research Releases', '/owner/research-releases/', 'send', '#1fb5ad', 'pro early access liens land'],
       ['County PDF Reader', '/owner/ocr/', 'pdf', '#e5484d', 'ocr extract records'],

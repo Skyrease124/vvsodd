@@ -72,6 +72,7 @@ const trial={used:3,limit:3,cursor:0,parcelIds:['9701400014'],evidence:[],retry:
     if(path===base)return route.fulfill({contentType:'text/html',body:await fs.readFile(root+'index.html','utf8')});
     if(path===base+'dashboard.js')return route.fulfill({contentType:'text/javascript',body:await fs.readFile(root+'dashboard.js','utf8')});
     if(path===base+'dashboard.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'dashboard.css','utf8')});
+    if(path===base+'connectors-ui.css')return route.fulfill({contentType:'text/css',body:await fs.readFile(root+'connectors-ui.css','utf8')});
     if(path===api+'owner-brain-putnam-verification'){
      if(request.method()==='POST'){
       assert.deepEqual(request.postDataJSON(),{confirmed:true,requestId:'fixture'});

@@ -26,6 +26,7 @@ const detail = county => ({county, coverage:{available:0,mapped:0,verified:0,rem
     if (url.pathname === base) return route.fulfill({ contentType: 'text/html', body: await fs.readFile(root + 'index.html', 'utf8') });
     if (url.pathname === base + 'dashboard.js') return route.fulfill({ contentType: 'text/javascript', body: await fs.readFile(root + 'dashboard.js', 'utf8') });
     if (url.pathname === base + 'dashboard.css') return route.fulfill({ contentType: 'text/css', body: await fs.readFile(root + 'dashboard.css', 'utf8') });
+    if (url.pathname === base + 'connectors-ui.css') return route.fulfill({ contentType: 'text/css', body: await fs.readFile(root + 'connectors-ui.css', 'utf8') });
     if (url.pathname === '/.netlify/functions/owner-brain-connectors') {
       const id = url.searchParams.get('dataset');
       if (!id) return route.fulfill({ json: { counties } });
