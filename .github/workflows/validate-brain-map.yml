@@ -43,6 +43,7 @@ on:
       - 'kinvest-liens/tests/groq-limits.test.mjs'
       - 'netlify/lib/groq-limits.mjs'
       - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'kinvest-liens/tests/helper-boundaries.test.mjs'
       - 'netlify/lib/gemini-limits.mjs'
       - 'netlify/lib/gemini-extract.mjs'
       - 'netlify/functions/owner-brain-gemini.mjs'
@@ -143,6 +144,7 @@ on:
       - 'kinvest-liens/tests/groq-limits.test.mjs'
       - 'netlify/lib/groq-limits.mjs'
       - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'kinvest-liens/tests/helper-boundaries.test.mjs'
       - 'netlify/lib/gemini-limits.mjs'
       - 'netlify/lib/gemini-extract.mjs'
       - 'netlify/functions/owner-brain-gemini.mjs'
@@ -264,3 +266,4 @@ jobs:
       - run: node --test tests/parcel-match-registry.test.mjs
       - run: node --test kinvest-liens/tests/groq-limits.test.mjs
       - run: node --test kinvest-liens/tests/gemini-extract.test.mjs
+      - run: node --test kinvest-liens/tests/helper-boundaries.test.mjs

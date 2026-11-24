@@ -32,7 +32,8 @@ async function create(owner,research=null,quota={active:true,count:21},county=nu
  const putnam=new vm.SyntheticModule(['putnamActivity'],function(){
   this.setExport('putnamActivity',putnamActivity);
  },{context});
- await mod.link(async specifier=>specifier.includes('brain-auth')?auth:specifier.includes('brain-gis-putnam')?putnam:specifier.includes('brain-gis-universal')||specifier.includes('brain-gis-county')?operations:(await pureModule(specifier,context))||operations);await mod.evaluate();
+ const rl=new vm.SyntheticModule(['peek','hit'],function(){this.setExport('peek',async()=>({used:0}));this.setExport('hit',async()=>({ok:true}));},{context});
+ await mod.link(async specifier=>specifier.includes('ratelimit')?rl:specifier.includes('brain-auth')?auth:specifier.includes('brain-gis-putnam')?putnam:specifier.includes('brain-gis-universal')||specifier.includes('brain-gis-county')?operations:(await pureModule(specifier,context))||operations);await mod.evaluate();
  return mod.namespace.default;
 }
 test('owner alone reads actual saved worker and publication events',async()=>{
@@ -42,7 +43,7 @@ test('owner alone reads actual saved worker and publication events',async()=>{
  assert.equal(d.health.dailyUsed,21);assert.equal(d.health.remaining,9);assert.equal(d.summary.processed,null);
  assert.equal(d.events.filter(e=>e.type==='published').length,1);
  assert.equal(d.events.find(e=>e.type==='published').parcelId,'01002754');
- assert.equal(d.agents.Gemini.state,'not_connected');
+ assert.equal(d.agents.Gemini.state,'idle');assert.equal(d.agents.OpenAI.state,'not_connected');
  assert.equal(d.agents.NVIDIA.state,'idle');
 });
 test('unauthorized user cannot inspect activity',async()=>{

@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import {PUTNAM, putnamActivity} from '../../netlify/lib/brain-gis-putnam.mjs';
+import {geminiCaps, geminiUsedToday} from '../../netlify/lib/gemini-limits.mjs';
 
 const source = fs.readFileSync('netlify/functions/owner-brain-activity.mjs', 'utf8');
 const NOW = Date.parse('2026-11-23T20:00:00.000Z');
@@ -26,8 +27,10 @@ async function run(store, {quota = {active: false, count: 0}} = {}) {
   }, {context});
   const putnam = new vm.SyntheticModule(['putnamActivity'], function () { this.setExport('putnamActivity', putnamActivity); }, {context});
   const cp = new vm.SyntheticModule(['countyCheckpointKey'], function () { this.setExport('countyCheckpointKey', id => 'x-' + id); }, {context});
+  const rl = new vm.SyntheticModule(['peek', 'hit'], function () { this.setExport('peek', async () => ({used: store.get('gemini-used') ?? 0})); this.setExport('hit', async () => ({ok: true})); }, {context});
+  const gl = new vm.SyntheticModule(['geminiCaps', 'geminiUsedToday'], function () { this.setExport('geminiCaps', geminiCaps); this.setExport('geminiUsedToday', geminiUsedToday); }, {context});
   const mod = new vm.SourceTextModule(source, {context});
-  await mod.link(s => s.includes('brain-auth') ? auth : s.includes('brain-gis-putnam') ? putnam : s.includes('brain-gis-universal') ? ops : cp);
+  await mod.link(s => s.includes('ratelimit') ? rl : s.includes('gemini-limits') ? gl : s.includes('brain-auth') ? auth : s.includes('brain-gis-putnam') ? putnam : s.includes('brain-gis-universal') ? ops : cp);
   await mod.evaluate();
   const res = await mod.namespace.default(new Request('https://preview.test/.netlify/functions/owner-brain-activity'));
   return {status: res.status, body: await res.json()};
@@ -76,7 +79,8 @@ test('every agent reports an explicit state; Gemini, OpenAI and Groq are not par
   }
   assert.equal(body.agents['Official GIS'].state, 'quota_limited', 'the shared GIS allowance is used up');
   assert.equal(body.agents.NVIDIA.state, 'idle', 'no consolidation run yet');
-  assert.equal(body.agents.Gemini.state, 'not_connected');
+  assert.equal(body.agents.Gemini.state, 'idle', 'the upload only reader has stored nothing yet');
+  assert.equal(body.agents.OpenAI.state, 'not_connected', 'OpenAI has no job');
 });
 
 test('an active Wayne batch is reported as active, and a finished one as completed', async () => {
@@ -86,9 +90,9 @@ test('an active Wayne batch is reported as active, and a finished one as complet
   assert.equal(done.body.agents['Official GIS'].state, 'completed');
 });
 
-test('Gemini and OpenAI report a key check only; Groq reports its standalone triage honestly', async () => {
+test('OpenAI reports a key check only; Groq and Gemini report their stored results honestly', async () => {
   const idle = (await run(new Map())).body.agents;
-  assert.equal(idle.Gemini.state, 'not_connected'); assert.match(idle.Gemini.detail, /Key check only/);
+  assert.equal(idle.Gemini.state, 'idle'); assert.match(idle.Gemini.detail, /No result stored yet/);
   assert.equal(idle.OpenAI.state, 'not_connected'); assert.match(idle.OpenAI.detail, /no results reach NVIDIA/);
   assert.equal(idle.Groq.state, 'idle'); assert.match(idle.Groq.detail, /context only/i);
   const queue = [{triage: {status: 'complete', createdAt: ago(40)}}, {triage: {status: 'complete', createdAt: ago(10)}}, {triage: {status: 'pending'}}, {}];
@@ -97,7 +101,8 @@ test('Gemini and OpenAI report a key check only; Groq reports its standalone tri
   assert.match(done.Groq.detail, /2 unverified triage result\(s\) stored/);
   assert.match(done.Groq.detail, /Not yet read by NVIDIA/);
   assert.equal(done.Groq.lastAt, ago(10));
-  assert.equal(done.Gemini.state, 'not_connected', 'stored Groq results do not connect the other helpers');
+  assert.equal(done.Gemini.state, 'idle', 'stored Groq results do not change Gemini');
+  assert.equal(done.OpenAI.state, 'not_connected', 'or OpenAI');
   const read = (await run(new Map([['owner-brain-scanner-v1', {queue}], ['brain-nvidia-consolidation-v1', {receipts: [receipt('a', 'completed', {inputs: {count: 4, sources: {validator: 2, groq: 2}, refs: []}})]}]]))).body.agents;
   assert.match(read.Groq.detail, /Last NVIDIA run read 2 as context only/);
 });
@@ -126,4 +131,19 @@ test('NVIDIA events name the datasets the receipt covered, not a fixed county', 
   assert.equal(await county({datasets: ['IA-scott']}), 'IA-scott');
   assert.equal(await county({datasets: ['IA-scott', 'NY-city-of-rochester']}), 'Multiple counties');
   assert.equal(await county({}), 'MI-wayne', 'receipts from before the datasets field were Wayne only');
+});
+
+test('Gemini shows its real state from stored results, the allowance and the owner stop', async () => {
+  const g = (results, extra = {}) => new Map([['brain-helper-results-v1-gemini', {version: 1, stopped: false, results, ...extra}]]);
+  const one = [{id: 'g1', createdAt: ago(30), verified: false}, {id: 'g2', createdAt: ago(10), verified: true, decision: 'verified'}];
+  const done = (await run(g(one))).body.agents.Gemini;
+  assert.equal(done.state, 'completed'); assert.match(done.detail, /2 stored reading\(s\), 1 verified by you/); assert.match(done.detail, /Not yet read by NVIDIA/); assert.equal(done.lastAt, ago(10));
+  const read = (await run(new Map([...g(one), ['brain-nvidia-consolidation-v1', {receipts: [receipt('a', 'completed', {inputs: {count: 3, sources: {validator: 1, 'gemini-document': 1}, refs: []}})]}]]))).body.agents.Gemini;
+  assert.match(read.detail, /Last NVIDIA run read 1 as context only/);
+  const stopped = (await run(g(one, {stopped: true}))).body.agents.Gemini;
+  assert.equal(stopped.state, 'failed'); assert.match(stopped.detail, /Stopped after a provider error/);
+  const used = new Map([...g(one), ['gemini-used', 5]]);
+  assert.equal((await run(used)).body.agents.Gemini.state, 'quota_limited');
+  const off = new Map([...g(one), ['owner-ai-research-api-controls', {geminiEnabled: false}]]);
+  assert.equal((await run(off)).body.agents.Gemini.state, 'idle');
 });

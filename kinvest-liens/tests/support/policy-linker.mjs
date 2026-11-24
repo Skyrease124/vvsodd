@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 const LIB = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../netlify/lib');
-const PURE = ['brain-approvals.mjs', 'update-release.mjs', 'research-releases.mjs'];
+const PURE = ['brain-approvals.mjs', 'update-release.mjs', 'research-releases.mjs', 'gemini-limits.mjs'];
 const loaded = new Map();
 export async function pureModule(specifier, context) {
   const file = PURE.find(name => specifier === name || specifier.endsWith('/' + name));
