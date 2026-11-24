@@ -87,7 +87,7 @@ Use only the synthetic parcels below (TEST-PB-…), never a production parcel.
 
 ## Test 11: live checks (preview only; one request per press)
 1. In **Live checks · preview only** press **Refresh availability**. Four cards appear; each says "Configured on the server. The value is never shown." or names what is missing.
-2. **NVIDIA chat check** → **Run once…** → OK in the browser prompt. Expected: "OK: NVIDIA answered one request with an 8-token limit." (uses one of the 3 daily NVIDIA runs). If the key is missing the button is greyed out.
+2. **NVIDIA chat check** → **Run once…** → OK in the browser prompt. Expected: "OK: NVIDIA answered with model <name>." If NVIDIA refused the configured model, the message also says which model and status, and that a fallback was used. A failure names its source: "NVIDIA returned HTTP <status>" is NVIDIA's own answer; "NVIDIA responded (HTTP 200) but returned no visible text" means NVIDIA answered and our backend rejected the empty reply. Uses one of the 3 daily NVIDIA runs. If the key is missing the button is greyed out.
 3. **Geoapify geocode check** → **Run once…** → OK. Expected: "OK: Geoapify answered with N result(s)."
 4. **Wayne County GIS layer check** → **Run once…** → OK. Expected: "OK: Wayne County GIS answered layer metadata. No parcel was queried."
 5. **Intake round trip** → **Run once…** → OK. Expected: "OK: Round trip: submitted, verified, approved Pro first…, then withdrawn. Stored in the preview store only." A `live-check` item appears in the intake list as **Withdrawn**.

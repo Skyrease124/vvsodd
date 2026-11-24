@@ -35,20 +35,31 @@ export async function complete(cfg, system, user, opts = {}) {
   try {
     let model = cfg.model || autoModel || DEFAULT_MODEL;
     let r = await call(model);
+    let fallbackFrom = null;
     if (!r.ok && [400, 404, 410].includes(r.status)) {
+      // Logged without the key: which model NVIDIA refused, and with what status.
+      fallbackFrom = {model, status: r.status};
+      console.warn('NVIDIA refused model', model, 'with HTTP', r.status, '- trying a fallback');
       const tried = [model];
       let ids = []; try { ids = await listModels(cfg.key); } catch (e) {}
       for (const id of rankModels(ids).filter(x => x !== model).slice(0, 8)) {
         const r2 = await call(id); tried.push(id);
         if (r2.ok) { r = r2; model = id; autoModel = id; console.log('Using model', id); break; }
       }
-      if (!r.ok) { const e = new Error('no working model'); e.status = 502; e.detail = 'No working model found. Tried: ' + tried.join(', ').slice(0, 300); throw e; }
+      if (!r.ok) { const e = new Error('no working model'); e.status = 502; e.code = 'NO_MODEL'; e.upstreamStatus = r.status; e.detail = 'No working model found. Tried: ' + tried.join(', ').slice(0, 300); throw e; }
     }
-    if (!r.ok) { let d = ''; try { d = (await r.text()).replace(/\s+/g, ' ').slice(0, 200); } catch (e) {} const e = new Error('nvidia error'); e.status = 502; e.detail = 'NVIDIA said ' + r.status + (d ? ': ' + d : ''); throw e; }
+    if (!r.ok) { let d = ''; try { d = (await r.text()).replace(/\s+/g, ' ').slice(0, 200); } catch (e) {} const e = new Error('nvidia error'); e.status = 502; e.code = 'UPSTREAM'; e.upstreamStatus = r.status; e.detail = 'NVIDIA said ' + r.status + (d ? ': ' + d : ''); throw e; }
     const out = await r.json();
-    const raw = out && out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content;
+    const choice = out && out.choices && out.choices[0];
+    const raw = choice && choice.message && choice.message.content;
     const text = String(raw || '').replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-    if (!text) { const e = new Error('empty'); e.status = 502; e.detail = 'Empty answer from ' + model; throw e; }
-    return {text, model};
+    if (!text) {
+      // NVIDIA answered (HTTP 200) but with no visible text: usually a reasoning model that spent the token limit thinking.
+      const reasoning = !!(choice && choice.message && (choice.message.reasoning_content || /<think>/i.test(String(raw || ''))));
+      const e = new Error('empty'); e.status = 502; e.code = 'EMPTY_ANSWER'; e.upstreamStatus = r.status; e.model = model; e.fallbackFrom = fallbackFrom;
+      e.detail = 'Empty answer from ' + model + ' (finish: ' + ((choice && choice.finish_reason) || 'unknown') + (reasoning ? ', reasoning only' : '') + ')';
+      throw e;
+    }
+    return {text, model, fallbackFrom};
   } finally { clearTimeout(timer); }
 }

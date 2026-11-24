@@ -7,7 +7,7 @@ import * as KEYS from '../lib/apikeys.mjs';
 import {complete} from '../lib/llm.mjs';
 import {reserveRun, usageToday, DAILY_LIMIT} from '../lib/brain-nvidia.mjs';
 import {DETROIT_GIS} from '../lib/brain-official-verification.mjs';
-import {runLiveCheck, summary, reserveOwnBudget, usedOwnBudget, intakeRoundTrip} from '../lib/live-checks.mjs';
+import {runLiveCheck, summary, reserveOwnBudget, usedOwnBudget, intakeRoundTrip, describeNvidia} from '../lib/live-checks.mjs';
 
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
 const GEOAPIFY_LIMIT = 5;   // live-check geocodes per day, far inside the account's 300 per day
@@ -17,7 +17,7 @@ function buildChecks(now) {
   return {
     nvidia: {
       label: 'NVIDIA chat check',
-      cost: 'One chat request with an 8-token limit. Uses one of the 3 daily NVIDIA runs shared with consolidation.',
+      cost: 'One chat request, up to 256 tokens. Uses one of the 3 daily NVIDIA runs shared with consolidation.',
       limit: DAILY_LIMIT,
       missing: 'NVIDIA key is not configured. Nothing was sent.',
       available: async () => !!(await keystore.getConfig())?.key,
@@ -26,11 +26,13 @@ function buildChecks(now) {
       secrets: async () => [(await keystore.getConfig())?.key],
       run: async () => {
         const cfg = await keystore.getConfig();
+        // Reasoning models spend their first tokens thinking, so a tiny limit returns no visible text. 256 tokens with
+        // thinking turned off is still one small request. The reply text is never stored.
         try {
-          await complete(cfg, 'Reply with OK.', 'Ping.', {maxTokens: 8, timeoutMs: 15000});
-          return {outcome: 'ok', detail: 'NVIDIA answered one request with an 8-token limit. The reply is not stored.'};
+          return describeNvidia(await complete(cfg, 'detailed thinking off. Reply with the single word OK.', 'Ping.', {maxTokens: 256, timeoutMs: 20000}), null);
         } catch (error) {
-          return {outcome: 'failed', detail: 'NVIDIA did not answer' + (error?.status ? ' (HTTP ' + error.status + ')' : '') + '.'};
+          console.warn('NVIDIA live check failed', error?.code || error?.name, error?.upstreamStatus || '', error?.detail || '');
+          return describeNvidia(null, error);
         }
       },
     },

@@ -143,3 +143,19 @@ export async function intakeRoundTrip({auth, now = Date.now()}) {
   if (failed.length) return {outcome: 'failed', detail: 'Round trip finished with failed expectations: ' + failed.join('; ') + '.'};
   return {outcome: 'ok', detail: 'Round trip: submitted, verified, approved Pro first, checked the Pro and Free timing, then withdrawn. Stored in the preview store only.'};
 }
+
+// Describes an NVIDIA chat result for the owner, naming where a failure came from. Never includes a key.
+// ok -> {outcome:'ok'}; errors come from netlify/lib/llm.mjs complete(), whose own status 502 is a label, not NVIDIA's.
+export function describeNvidia(result, error) {
+  if (!error) {
+    const fb = result?.fallbackFrom;
+    return {outcome: 'ok', detail: 'NVIDIA answered with model ' + result.model + '.'
+      + (fb ? ' The configured model ' + fb.model + ' was refused by NVIDIA with HTTP ' + fb.status + ', so a fallback was used.' : '')};
+  }
+  const fb = error.fallbackFrom ? ' The configured model ' + error.fallbackFrom.model + ' was refused by NVIDIA with HTTP ' + error.fallbackFrom.status + '.' : '';
+  if (error.code === 'EMPTY_ANSWER') return {outcome: 'failed', detail: 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' + error.detail + '. Our backend counts this as a failure.' + fb};
+  if (error.code === 'UPSTREAM') return {outcome: 'failed', detail: 'NVIDIA returned HTTP ' + error.upstreamStatus + '.'};
+  if (error.code === 'NO_MODEL') return {outcome: 'failed', detail: 'NVIDIA refused the configured model (HTTP ' + error.upstreamStatus + ') and no fallback model answered.'};
+  if (error.name === 'AbortError') return {outcome: 'failed', detail: 'NVIDIA did not answer before the time limit. Nothing was received.'};
+  return {outcome: 'failed', detail: 'The request did not reach NVIDIA or failed in our backend before a response.'};
+}
