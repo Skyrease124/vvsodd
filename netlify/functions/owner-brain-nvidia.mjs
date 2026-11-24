@@ -7,7 +7,7 @@ import {RECEIPTS, DAILY_LIMIT, usageToday, runConsolidation} from '../lib/brain-
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
 
 function publicReceipt(r) {
-  return {id: r.id, at: r.at, outcome: r.outcome, model: r.model || null, tried: Array.isArray(r.tried) ? r.tried.slice(0, 3) : undefined, durationMs: r.durationMs ?? null,
+  return {id: r.id, at: r.at, outcome: r.outcome, model: r.model || null, tried: Array.isArray(r.tried) ? r.tried.slice(0, 3) : undefined, attempts: Array.isArray(r.attempts) ? r.attempts.slice(0, 3) : undefined, durationMs: r.durationMs ?? null,
     inputs: {count: r.inputs?.count ?? 0, sources: r.inputs?.sources || {}, datasets: r.inputs?.datasets || [], refs: (r.inputs?.refs || []).slice(0, 30)},
     conflicts: (r.conflicts || []).slice(0, 30), proposals: (r.proposals || []).slice(0, 20), rejected: (r.rejected || []).slice(0, 20),
     error: r.error || null, bytesSent: r.bytesSent ?? null, incomplete: r.incomplete === true, maxTokens: r.maxTokens ?? null, fallbackFrom: r.fallbackFrom || null};

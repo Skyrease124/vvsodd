@@ -119,8 +119,20 @@ export async function collectItems(auth, options = {}) {
       evidenceUrl: httpsOnly(r.sourceUrl), checkedAt: r.reviewedAt, official: false, unverified: false});
     gemCount++;
   }
-  // A smaller request finishes inside the function time limit. Official items come first because only they can back a
-  // proposal; within each group the newest result comes first.
+  // A smaller request finishes inside the function time limit. Parcels whose sources already disagree come first and stay
+  // together, because disagreements are the most valuable thing to compare; a cap must never split such a pair.
+  const groupKey = (i, n) => i.parcelId ? (i.dataset || '') + '\n' + i.parcelId : '#' + n;
+  const groups = new Map();
+  raw.forEach((item, n) => { const k = groupKey(item, n); groups.set(k, [...(groups.get(k) || []), item]); });
+  // A parcel whose results already disagree comes first, then parcels with more sources, then official, then newest.
+  const rank = g => [g.length > 1 && deterministicConflicts(g.map(i => ({...i, ref: 'x'}))).length ? 1 : 0, new Set(g.map(i => i.source)).size, g.some(isOfficial) ? 1 : 0, g.map(i => String(i.checkedAt)).sort().at(-1) || ''];
+  const picked = [];
+  for (const g of [...groups.values()].sort((a, b) => { const x = rank(a), y = rank(b); return y[0] - x[0] || y[1] - x[1] || y[2] - x[2] || y[3].localeCompare(x[3]); })) {
+    if (picked.length + g.length > MAX_ITEMS && picked.length) { if (g.length > 1) continue; }
+    for (const item of g) if (picked.length < MAX_ITEMS) picked.push(item);
+    if (picked.length >= MAX_ITEMS) break;
+  }
+  raw.length = 0; raw.push(...picked);
   raw.sort((a, b) => (isOfficial(b) ? 1 : 0) - (isOfficial(a) ? 1 : 0) || String(b.checkedAt).localeCompare(String(a.checkedAt)));
   return raw.slice(0, MAX_ITEMS).map((item, i) => ({ref: 'H' + (i + 1), ...item}));
 }
@@ -268,9 +280,15 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
     try {
       const maxTokens = tokenBudget(items.length);
       const tried = [];
+      const attempts = [];
       const attempt = async (config, ms) => {
-        try { const a = await complete(config, system, user, {maxTokens, timeoutMs: ms, temperature: 0.1, thinking: false}); tried.push(a.model); return a; }
-        catch (e) { tried.push(e.model || config.model || 'unknown'); e.tried = tried; throw e; }
+        const t0 = Date.now();
+        try { const a = await complete(config, system, user, {maxTokens, timeoutMs: ms, temperature: 0.1, thinking: false}); tried.push(a.model); attempts.push({model: a.model, ok: true, ms: Date.now() - t0}); return a; }
+        catch (e) {
+          const model = e.model || config.model || 'unknown'; tried.push(model);
+          const reason = e.name === 'AbortError' ? 'no answer in ' + Math.round(ms / 1000) + ' s' : e.code === 'EMPTY_ANSWER' ? 'empty answer' : e.upstreamStatus ? 'HTTP ' + e.upstreamStatus : 'error';
+          attempts.push({model, ok: false, ms: Date.now() - t0, reason}); e.tried = tried; e.attempts = attempts; throw e;
+        }
       };
       const left = () => TIMING.budgetMs - (Date.now() - started);
       // The owner's saved or environment model always wins. Otherwise a fast model goes first, then the default if time remains.
@@ -284,19 +302,19 @@ export async function runConsolidation({auth, now = Date.now(), config = null, s
           answer = await attempt(cfg, left());
         }
       } else answer = await attempt(cfg, left());
-      answer.tried = tried;
+      answer.tried = tried; answer.attempts = attempts;
       const checked = validateConsolidation(answer.text, items);
       // An answer cut off at the token limit that is not valid JSON is incomplete: nothing is proposed from it.
       const cutOff = answer.finishReason === 'length' && checked.rejected.includes('answer was not valid JSON');
       receipt = {...base, model: answer.model, outcome: cutOff ? 'failed' : 'completed', incomplete: cutOff || undefined,
         error: cutOff ? 'NVIDIA answered but stopped at the ' + maxTokens + '-token limit before finishing its JSON; nothing was proposed.' : undefined,
-        tried: answer.tried, maxTokens, fallbackFrom: answer.fallbackFrom || undefined, bytesSent: Buffer.byteLength(system + user),
+        tried: answer.tried, attempts: answer.attempts, maxTokens, fallbackFrom: answer.fallbackFrom || undefined, bytesSent: Buffer.byteLength(system + user),
         conflicts: [...deterministic, ...(cutOff ? [] : checked.conflicts)], proposals: cutOff ? [] : checked.proposals, rejected: checked.rejected, durationMs: Date.now() - started};
     } catch (error) {
       const quota = error.upstreamStatus === 429 || /NVIDIA said 429/.test(String(error.detail || ''));
       // An empty answer means NVIDIA responded but gave no visible text; the receipt says so instead of a bare failure.
       const empty = error.code === 'EMPTY_ANSWER';
-      receipt = {...base, model: error.model || null, tried: error.tried, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
+      receipt = {...base, model: error.model || null, tried: error.tried, attempts: error.attempts, outcome: quota ? 'quota_limited' : 'failed', incomplete: empty || undefined,
         error: scrub(error.name === 'AbortError' ? 'NVIDIA did not answer in time (' + (error.model || 'unknown model') + ', ' + items.length + ' helper results sent). Nothing was proposed.' : (empty ? 'NVIDIA responded (HTTP ' + (error.upstreamStatus || 200) + ') but returned no visible text: ' : '') + (error.detail || error.message), cfg.key),
         conflicts: deterministic, proposals: [], rejected: [], durationMs: Date.now() - started};
     }

@@ -525,6 +525,7 @@ test('if the fast model does not answer in time the default is tried with the ti
     const auth = fakeAuth(seed()), before = (await auth.kvGet(USAGE))?.count || 0;
     const receipt = await runConsolidation({auth, now, config: cfg});
     assert.equal(receipt.outcome, 'completed'); assert.notEqual(receipt.model, FAST); assert.deepEqual(receipt.tried, [FAST, receipt.model]);
+    assert.equal(receipt.attempts[0].ok, false); assert.match(receipt.attempts[0].reason, /no answer in/); assert.equal(receipt.attempts[1].ok, true);
     assert.equal(((await auth.kvGet(USAGE))?.count || 0) - before, 1, 'one run is counted, not one per model');
   });
 });
@@ -532,7 +533,7 @@ test('with too little time left there is no second attempt, and the failure name
   await withFast({budgetMs: 400, fastMs: 300, minRetryMs: 200}, async () => {
     mode = 'fast-hang'; sent.length = 0;
     const receipt = await runConsolidation({auth: fakeAuth(seed()), now, config: cfg});
-    assert.equal(receipt.outcome, 'failed'); assert.deepEqual(receipt.tried, [FAST]); assert.match(receipt.error, /did not answer in time \(nvidia\/nemotron-3\.5-lightning/);
+    assert.equal(receipt.outcome, 'failed'); assert.deepEqual(receipt.tried, [FAST]); assert.equal(receipt.attempts.length, 1); assert.match(receipt.error, /did not answer in time \(nvidia\/nemotron-3\.5-lightning/);
     assert.equal(sent.length, 1);
   });
 });
@@ -549,4 +550,20 @@ test('the fast model is found from the free models listing, and is null when non
   listLightning = true; const found = await (await import('../../netlify/lib/llm.mjs?found')).fastModel(DUMMY_KEY);
   listLightning = false; const none = await (await import('../../netlify/lib/llm.mjs?none')).fastModel(DUMMY_KEY);
   assert.equal(found, FAST); assert.equal(none, null);
+});
+
+test('the cap keeps the parcels several sources reported on together, so a disagreement between them survives', async () => {
+  const others = n => Array.from({length: n}, (_, i) => '0200' + (1000 + i));
+  const row = (parcelId, minutes, extra = {}) => ({parcelId, status: 'published', checkedAt: ago(minutes), ...extra});
+  const store = {
+    'owner-brain-wayne-worker-v1': {recent: [...others(14).map((p, i) => row(p, 1 + i % 4)), row('01002754', 30, {status: 'needs_review'})]},
+    [LEDGER]: {entries: [{dataset: 'MI-wayne', recordId: 'old', parcelId: '01002754', decision: 'pending_owner_review', reviewedBy: 'v', reviewedAt: ago(500), proposedPosition: {lat: 42.3005, lon: -83.0995}},
+      ...others(14).map((p, i) => ({dataset: 'MI-wayne', recordId: 'n' + i, parcelId: p, decision: 'pending_owner_review', reviewedBy: 'v', reviewedAt: ago(1 + i % 4), proposedPosition: {lat: 42.3, lon: -83.1}}))]},
+    'owner-brain-photon-status-v1': {recent: [...others(9).map((p, i) => row(p, 2 + i, {status: 'address_candidates_unverified', candidates: [{lat: 42.4, lon: -83.2}]})), row('01002754', 20, {status: 'address_candidates_unverified', candidates: [{lat: 42.3006, lon: -83.0994}]})]},
+    'owner-brain-geoapify-status-v1': {recent: [...others(9).map((p, i) => row(p, 2 + i, {status: 'address_candidates_unverified', candidates: [{lat: 42.4, lon: -83.2}]})), row('01002754', 15, {status: 'address_candidates_unverified', candidates: [{lat: 42.5, lon: -83.1}]})]}};
+  const items = await collectItems(fakeAuth(store));
+  assert.equal(items.length, 24, 'more than 24 were available');
+  const pair = items.filter(i => i.parcelId === '01002754');
+  assert.ok(new Set(pair.map(i => i.source)).size >= 3, 'the parcel several sources reported on is kept together even though its newest result is old');
+  assert.ok(deterministicConflicts(items).some(c => c.parcelId === '01002754'), 'and its disagreement is still found');
 });
