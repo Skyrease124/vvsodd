@@ -497,3 +497,9 @@ test('a timed out request is reported with the model, the number of results and 
   assert.match(l, /e\.model = model/);
   assert.equal(lib.DAILY_LIMIT, 6);
 });
+
+test('the prompt asks for a short answer: at most 5 conflicts and 5 proposals of 20 words, compact JSON', () => {
+  const {system} = lib.buildPrompt([{ref: 'H1', source: 'validator', dataset: 'IA-scott', parcelId: 'P1', status: 'pending_owner_review'}]);
+  assert.match(system, /at most 5 conflicts and at most 5 proposals/); assert.match(system, /at most 20 words/); assert.match(system, /compact JSON/);
+  assert.equal(lib.tokenBudget(24), 1200, 'the output cap stays inside the function time limit');
+});
