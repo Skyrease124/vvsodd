@@ -13,8 +13,8 @@ function fakeRL() {
 }
 
 test('the owner caps apply but never above the reviewed ceiling', () => {
-  assert.deepEqual(GROQ_CEILING, {daily: 10, minute: 2});
-  assert.deepEqual(groqCaps(null), {enabled: true, daily: 10, minute: 2}, 'the default 800 and 20 are clamped');
+  assert.deepEqual(GROQ_CEILING, {daily: 100, minute: 2});
+  assert.deepEqual(groqCaps(null), {enabled: true, daily: 100, minute: 2}, 'the default 800 and 20 are clamped');
   assert.deepEqual(groqCaps({groqDailyCap: 3, groqMinuteCap: 1}), {enabled: true, daily: 3, minute: 1});
   assert.equal(groqCaps({groqDailyCap: 0}).enabled, false, 'a zero daily cap switches Groq off');
   assert.equal(groqCaps({groqEnabled: false}).enabled, false);

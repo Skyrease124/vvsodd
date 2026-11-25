@@ -498,7 +498,7 @@ test('a timed out request is reported with the model, the number of results and 
   assert.match(s, /NVIDIA did not answer in time \(/);
   const l = fs.readFileSync(new URL('../../netlify/lib/llm.mjs', import.meta.url), 'utf8');
   assert.match(l, /e\.model = model/);
-  assert.equal(lib.DAILY_LIMIT, 10);
+  assert.equal(lib.DAILY_LIMIT, 25);
 });
 
 test('the prompt asks for a short answer: at most 5 conflicts and 5 proposals of 20 words, compact JSON', () => {

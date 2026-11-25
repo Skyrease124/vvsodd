@@ -12,7 +12,7 @@ import {DETROIT_GIS} from '../lib/brain-official-verification.mjs';
 import {runLiveCheck, summary, reserveOwnBudget, usedOwnBudget, intakeRoundTrip, describeNvidia} from '../lib/live-checks.mjs';
 
 const json = (status, body) => new Response(JSON.stringify(body), {status, headers: {'Content-Type': 'application/json', 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Robots-Tag': 'noindex, nofollow'}});
-const GEOAPIFY_LIMIT = 5;   // live-check geocodes per day, far inside the account's 300 per day
+const GEOAPIFY_LIMIT = 25;  // live-check geocodes per day (raised from 5 by the owner); the account's 300 a day is shared with the automatic finder
 const ROUND_TRIP_LIMIT = 3; // intake round trips per day
 
 function buildChecks(now) {

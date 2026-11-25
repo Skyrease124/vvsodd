@@ -3,7 +3,7 @@
 // ceiling below. The ceiling is deliberately small (free tier) and only changes here, in reviewed code.
 export const GROQ_DAILY_KEY = 'owner-groq-daily';
 export const GROQ_MINUTE_KEY = 'owner-groq-minute';
-export const GROQ_CEILING = Object.freeze({daily: 10, minute: 2});
+export const GROQ_CEILING = Object.freeze({daily: 100, minute: 2}); // daily raised from 10 by the owner; free tier
 const DAY = 86400000, MINUTE = 60000;
 
 export function groqCaps(settings) {

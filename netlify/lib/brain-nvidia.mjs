@@ -13,7 +13,7 @@ import {storedFactOk, DATASET_OK, httpsOnly} from './gemini-extract.mjs';
 
 export const RECEIPTS = 'brain-nvidia-consolidation-v1';
 export const USAGE = 'brain-nvidia-usage-v1';
-export const DAILY_LIMIT = 10;
+export const DAILY_LIMIT = 25; // raised from 10 by the owner
 // One function call can wait about 26 seconds. The fast model gets the first 15; a second model is tried only if at least 8 are left.
 export const TIMING = {budgetMs: 24000, fastMs: 15000, minRetryMs: 8000}; // owner-triggered consolidations per UTC day, to stay inside free allowances
 const MAX_ITEMS = 24, MAX_COUNTY_WORKER = 10, MAX_PARCEL_MATCH = 8, MAX_GROQ = 6, MAX_GEMINI = 4, COORD_TOLERANCE = 0.002; // degrees, about 200 m
