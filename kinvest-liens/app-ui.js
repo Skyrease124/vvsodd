@@ -35,7 +35,6 @@
       document.querySelector('[data-saved]').textContent = count === 1 ? '1 saved property' : count.toLocaleString() + ' saved properties';
     }).catch(() => {});
     if (paid) {
-      document.querySelector('[data-map-label]').textContent = 'Map + AI';
       const ai = document.querySelector('[data-full-ai]'); ai.href = '/ai/'; ai.querySelector('[data-icon]').innerHTML = icon('spark');
       document.querySelector('[data-upgrade]').hidden = true;
     }

@@ -124,7 +124,7 @@
       const nav = document.createElement('nav'); nav.className = 'app-bottom'; nav.setAttribute('aria-label', 'Mobile navigation');
       const bottomPaths = [
         ['Home','/','M3 11l9-8 9 8v10h-6v-6H9v6H3z'],
-        ['Map','/map/','M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14m6-12v14'],
+        [(user.owner || user.paid) ? 'Map + AI' : 'Map','/map/','M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14m6-12v14'],
         ['Tools',null,'M3 8l9-5 9 5-9 5zM3 13l9 5 9-5M3 18l9 5 9-5'],
         ['Watchlist','/account/watchlist/','M6 3h12v18l-6-4-6 4z'],
         ['Community','/community/','M2 21v-2a7 7 0 0 1 14 0v2m0-16a3 3 0 0 1 0 6m3 3a5 5 0 0 1 3 5v2M12.5 8a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0z'],
