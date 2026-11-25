@@ -130,6 +130,19 @@
     root.textContent = ''; root.append(mk('h1', '', 'Retail Alerts'), mk('p', 'rt-muted', 'Owner tools. Members never see this page.'));
     let flash = ''; try { flash = sessionStorage.getItem('rt-flash') || ''; sessionStorage.removeItem('rt-flash'); } catch (e) { /* ignore */ }
     if (flash) root.append(mk('div', 'rt-box rt-flash', flash));
+    // monitor findings: what the automatic checks found, and why
+    { const fd = x.j.findings || { items: [], control: {}, last: null }, box = mk('div', 'rt-box');
+      box.append(mk('h3', '', 'Stock monitor'));
+      const on = fd.control && fd.control.enabled === true;
+      box.append(mk('p', 'rt-muted rt-small', (on ? 'ON: checks due products about every 30 minutes (up to 10 per run).' : 'OFF: nothing is checked automatically. Turn it on to check every 30 minutes.') + (fd.last ? ' Last run ' + ago(fd.last.at) + (fd.last.status === 'completed' ? ': ' + fd.last.checked + ' checked, ' + fd.last.changed + ' changed.' : ': ' + (fd.last.reason || 'error')) : '')));
+      const row = mk('div', 'rt-row'), tg = mk('button', 'rt-btn ' + (on ? '' : 'gold'), on ? 'Turn off' : 'Turn on'); tg.type = 'button';
+      tg.onclick = async () => { if (!(await confirmSheet(on ? 'Turn the monitor off?' : 'Turn the monitor on?', on ? 'Products will stop being checked automatically.' : 'The live site will check store pages every 30 minutes and send alerts when stock changes. If a page cannot be read, an AI reader may help; it can only mark a product out of stock, never in stock.', on ? 'Turn off' : 'Turn on'))) return; const r = await post({ action: 'monitorControl', enabled: !on }); toast(r.s === 200 ? 'Saved.' : (r.j.error || 'Not saved')); setTimeout(() => location.reload(), 600); };
+      const cl = mk('button', 'rt-btn', 'Clear notes'); cl.type = 'button'; cl.onclick = async () => { await post({ action: 'clearFindings' }); location.reload(); };
+      row.append(cl, tg); box.append(row);
+      box.append(mk('h4', '', 'What the monitor found (' + fd.items.length + ')'));
+      if (!fd.items.length) box.append(mk('p', 'rt-muted rt-small', 'Nothing yet. Findings appear after the first check.'));
+      fd.items.slice(0, 40).forEach(i => { const d = mk('div', 'rt-al' + (i.attention ? ' unread' : '')), t = mk('div'); t.append(mk('b', '', i.name + ' · ' + i.retailer), mk('p', '', (STATUS[i.status] || i.status) + (i.price != null ? ' · ' + money(i.price) : '') + ' — ' + (i.reason || '')), i.note ? mk('p', 'rt-err', i.note) : mk('span'), mk('small', '', ago(i.at) + ' · ' + (i.source === 'ai' ? 'AI reader' : 'page rules'))); d.append(mk('span', 'dot'), t); box.append(d); });
+      root.append(box); }
     // add product
     const add = mk('div', 'rt-box'); add.append(mk('h3', '', 'Add a product'));
     const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn rt-read', 'Read page'); look.type = 'button';

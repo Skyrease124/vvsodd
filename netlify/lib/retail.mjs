@@ -128,7 +128,7 @@ async function bestBuy(url) {
   const d = await r.json(); return { name: clean(d.name, 160), image: d.image, price: +d.salePrice || undefined, releaseDate: d.releaseDate || undefined };
 }
 // {ok, info:{name,image,price,status,reason,releaseDate}, readable, note}. readable = a real state was found (not UNKNOWN), so automatic checks can run.
-export async function lookup(url, { timeoutMs = 9000 } = {}) {
+export async function lookup(url, { timeoutMs = 9000, excerpt = false } = {}) {
   const c = checkUrl(url); if (!c) return err(400, 'Paste a https link from a supported store.');
   const store = RETAILERS[c.retailer].name;
   if (RETAILERS[c.retailer].noFetch) return { ok: true, info: { status: 'unknown', reason: store + ' does not allow automatic checks. You confirm stock yourself.' }, readable: false, note: store + ' does not allow automatic checks. You confirm stock yourself.' };
@@ -139,7 +139,7 @@ export async function lookup(url, { timeoutMs = 9000 } = {}) {
     if (c.retailer === 'bestbuy') { try { const a = await bestBuy(c.url); if (a) { info.name = a.name || info.name; if (a.price) info.price = a.price; if (a.releaseDate) info.releaseDate = a.releaseDate; } } catch (e) { /* the page still decides stock */ } }
     const k = classifyStock({ html, schemaAvail: info.schemaAvail || '', retailer: c.retailer, price: info.price ?? null });
     info.status = k.status; info.reason = k.reason; info.matched = k.matched; delete info.schemaAvail;
-    return { ok: true, info, readable: k.status !== 'unknown', note: k.reason };
+    return { ok: true, info, readable: k.status !== 'unknown', note: k.reason, excerpt: excerpt && k.status === 'unknown' ? stripHtml(html).slice(0, 3500) : undefined };
   } catch (e) { return { ok: true, info: { status: 'unknown', reason: 'Could not read the page' }, readable: false, note: 'Could not read the page (' + String(e.message || e).slice(0, 60) + '). Fill in the details yourself.' }; }
 }
 
@@ -377,23 +377,54 @@ export function dueIn(p) {
 }
 // One automatic check of one product. The monitor and the owner's "Check now" both use it, so the rules are the same.
 export async function checkOne(p, opts = {}) {
-  const r = await lookup(p.url, opts);
+  const r = await lookup(p.url, Object.assign({}, opts, { excerpt: !!opts.reader }));
+  // Fallback reader (Groq) for pages the fixed rules could not classify. It may only confirm OUT OF STOCK.
+  let reader = null;
+  if (opts.reader && r.ok && !r.readable && r.excerpt) {
+    reader = await opts.reader(p, r.excerpt).catch(() => null);
+    if (reader && reader.status === 'out_of_stock') {
+      p.fails = 0; p.lastError = '';
+      const before0 = p.status; const sent0 = await applyResult(p, { status: 'out_of_stock', reason: 'AI reader found on the page: "' + reader.evidence + '"' }, 'groq');
+      await recordFinding(p, { source: 'ai', reason: 'AI reader (page said: "' + reader.evidence + '")', note: 'Set to out of stock by the AI reader. Rules could not read the page.' });
+      return { readable: true, failedNow: false, note: 'ai', changed: p.status !== before0, alerts: sent0.filter(x => !x.skipped).length, sent: sent0 };
+    }
+  }
   if (!r.ok || !r.readable) {
     p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable';
     if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; }
     await auth.kvPut(KP(p.id), p);
+    await recordFinding(p, { source: 'rules', reason: p.lastError, attention: true, note: reader && reader.status === 'in_stock' ? 'AI reader thinks this may be IN STOCK ("' + reader.evidence + '"). Not applied. Confirm on the store.' : 'Page could not be read. Status kept; check the store yourself.' });
     return { readable: false, failedNow: p.fails === 3, note: p.lastError, changed: false, alerts: 0, sent: [] };
   }
   p.fails = 0; p.lastError = '';
   if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
   const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
+  await recordFinding(p, { source: 'rules', reason: r.info.reason, attention: r.info.status === 'unknown', note: r.info.status === 'unknown' ? 'No clear stock signal on the page. Status unchanged.' : '' });
   return { readable: true, failedNow: false, note: r.note, changed: p.status !== before, alerts: sent.filter(x => !x.skipped).length, sent };
 }
-export async function monitor({ limit = 25 } = {}) {
+// ---- monitor findings (owner dashboard): the latest result and a plain-words reason for each product ----
+const FK = 'retail-findings-v1', MON = 'retail-monitor-control-v1', MONLAST = 'retail-monitor-last-v1';
+export async function recordFinding(p, f) {
+  try {
+    const d = (await auth.kvGet(FK)) || { items: {} }; d.items = d.items || {};
+    d.items[p.id] = { id: p.id, name: p.name, retailer: (RETAILERS[p.retailer] || {}).name || p.retailer, status: p.status, price: p.price == null ? null : p.price, at: now(), source: f.source || 'rules', reason: clean(f.reason, 240), attention: !!f.attention, note: clean(f.note, 240) };
+    const ids = Object.keys(d.items); if (ids.length > 200) ids.sort((a, b) => d.items[a].at < d.items[b].at ? -1 : 1).slice(0, ids.length - 200).forEach(i => delete d.items[i]);
+    await auth.kvPut(FK, d);
+  } catch (e) { /* a notes failure never breaks a check */ }
+}
+export async function getFindings() {
+  const d = (await auth.kvGet(FK)) || { items: {} };
+  return { items: Object.values(d.items || {}).sort((a, b) => (b.attention - a.attention) || (a.at < b.at ? 1 : -1)), control: (await auth.kvGet(MON)) || { enabled: false }, last: (await auth.kvGet(MONLAST)) || null };
+}
+export const clearFindings = async () => { await auth.kvPut(FK, { items: {} }); return { ok: true }; };
+export const setMonitorControl = async (owner, enabled) => { const c = { enabled: enabled === true, by: owner, at: now() }; await auth.kvPut(MON, c); return { ok: true, control: c }; };
+export const monitorEnabled = async () => ((await auth.kvGet(MON)) || {}).enabled === true;
+export const saveMonitorRun = r => auth.kvPut(MONLAST, Object.assign({ at: now() }, r));
+export async function monitor({ limit = 25, reader = null } = {}) {
   const ps = (await listProducts()).filter(p => p.auto && !RETAILERS[p.retailer].noFetch && (!p.checkedAt || Date.now() - Date.parse(p.checkedAt) >= dueIn(p)));
   const res = { checked: 0, changed: 0, alerts: 0, failed: [] };
   for (const p of ps.slice(0, limit)) {
-    const c = await checkOne(p); res.checked++;
+    const c = await checkOne(p, reader ? { reader } : {}); res.checked++;
     if (c.failedNow) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError });
     if (c.changed) res.changed++; res.alerts += c.alerts;
   }
