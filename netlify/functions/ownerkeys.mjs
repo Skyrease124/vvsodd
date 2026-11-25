@@ -137,6 +137,17 @@ export default async function handler(req) {
       return json(200,{ok:true,nlr:true,text:'Groq connected (GPT-OSS 120B).'+(answer?' Test reply: '+answer:'')+' This test consumes a free-tier request if available.'});
     } catch(e){console.warn('Groq connection test failed:',String(e?.message||e).slice(0,80));return json(200,{ok:false,error:'Groq did not respond. Check the key and try later.'});}
   }
+  if (b.test === 'brightdata') {
+    // Free check only: asks Bright Data for the account status. No scrape is requested and no credits are used.
+    const key = KEYS.keyOf('BRIGHTDATA_API_KEY');
+    if (!key) return json(200, { ok: false, error: 'Save a Bright Data key first.' });
+    try {
+      const r = await fetch('https://api.brightdata.com/status', { headers: { Authorization: 'Bearer ' + key }, signal: AbortSignal.timeout(12000) });
+      if (r.status === 401 || r.status === 403) return json(200, { ok: false, error: 'Bright Data did not accept this key (HTTP ' + r.status + '). Check it was created with permission for the Web Scraper API.' });
+      if (!r.ok) return json(200, { ok: false, error: 'Bright Data answered HTTP ' + r.status + '. The key may still work; use Check Amazon now on the Retail owner page to confirm.' });
+      return json(200, { ok: true, nlr: true, text: 'Bright Data accepted the key. No scrape was requested and no credits were used.' });
+    } catch (e) { return json(200, { ok: false, error: 'Bright Data did not respond. Try again later.' }); }
+  }
   if (b.test === 'tavily') {
     const key=KEYS.keyOf('TAVILY_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save a Tavily key first.'});
