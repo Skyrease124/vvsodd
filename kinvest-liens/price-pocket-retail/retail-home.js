@@ -19,7 +19,9 @@
   const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
   let _unused = null; // LIVE = real products from Retail Alerts (signed-in members); null keeps the demo cards
   const money = v => (v == null || v === '' ? '' : '$' + Number(v).toFixed(2));
-  const liveState = st => (st === 'in_stock' || st === 'low_stock' ? 'in_stock' : st === 'upcoming' ? 'upcoming' : st === 'sold_out' ? 'sold_out' : st === 'limited_access' ? 'invite_only' : 'monitoring');
+  const LABEL = { in_stock: 'In stock', low_stock: 'Low stock', sold_out: 'Out of stock', out_of_stock: 'Out of stock', invite_only: 'Invite only', preorder: 'Preorder', coming_soon: 'Coming soon', waitlist: 'Waitlist', limited_access: 'Limited access', upcoming: 'Upcoming', monitoring: 'Monitoring' };
+  const ago = iso => { if (!iso) return ''; const s = (Date.now() - Date.parse(iso)) / 1000; if (!(s >= 0)) return ''; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+  const liveState = st => (st === 'in_stock' || st === 'low_stock' ? 'in_stock' : st === 'upcoming' ? 'upcoming' : st === 'sold_out' || st === 'out_of_stock' ? 'sold_out' : st === 'limited_access' ? 'invite_only' : 'monitoring');
 
   function card(item) {
     const art = document.createElement('article'); art.className = 'pprt-item';
@@ -31,8 +33,9 @@
     const meta = document.createElement('p'); meta.className = 'pprt-meta'; meta.textContent = item.store + ' · ' + CATS[item.cat];
     const avail = document.createElement('p'); avail.className = 'pprt-avail s-' + item.state;
     const dot = document.createElement('i'); dot.setAttribute('aria-hidden', 'true');
-    avail.append(dot, document.createTextNode((item.live ? '' : 'Demo: ') + STATES[item.state] + (item.price ? ' · ' + money(item.price) : '')));
+    avail.append(dot, document.createTextNode((item.live ? (LABEL[item.raw] || STATES[item.state]) : 'Demo: ' + STATES[item.state]) + (item.price ? ' · ' + money(item.price) : '')));
     body.append(tag, h, meta, avail);
+    if (item.live) { const bits = [item.checkedAt ? (item.auto ? 'Checked ' : 'Updated ') + ago(item.checkedAt) : '', item.watchers ? item.watchers + ' watching' : ''].filter(Boolean).join(' · '); if (bits) { const u = document.createElement('p'); u.className = 'pprt-meta'; u.textContent = bits; body.append(u); } }
     if (item.live && /^https:\/\//.test(item.url || '')) { const a = document.createElement('a'); a.className = 'pprt-link'; a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer sponsored'; a.textContent = 'View at ' + item.store + ' →'; body.append(a); }
     if (item.live) {
       const w = document.createElement('button'); w.type = 'button'; w.className = 'pprt-watch' + (WATCH.has(item.id) ? ' on' : '');
@@ -53,10 +56,11 @@
 
   function render() {
     const text = q.value.trim().toLowerCase();
-    const base = !LIVE ? DEMO : (tab === 'watch' ? LIVE.filter(i => WATCH.has(i.id)) : LIVE.filter(i => tab === 'upcoming' ? i.group === 'upcoming' : i.group !== 'upcoming'));
+    const base = !LIVE ? DEMO : (tab === 'watch' ? LIVE.filter(i => WATCH.has(i.id)) : LIVE.filter(i => tab === 'upcoming' ? i.group === 'upcoming' : i.group !== 'upcoming').sort((a, b) => (a.group === 'stock' ? 0 : 1) - (b.group === 'stock' ? 0 : 1)));
     const list = base.filter(item => (cat === 'all' || item.cat === cat) && (!text || (item.name + ' ' + item.store + ' ' + CATS[item.cat]).toLowerCase().includes(text)));
     grid.textContent = '';
-    list.forEach(item => grid.append(card(item)));
+    let sub = false;
+    list.forEach(item => { if (LIVE && tab === 'stock' && !sub && item.group !== 'stock') { sub = true; const h = document.createElement('h3'); h.className = 'pprt-sub'; h.textContent = 'Being monitored'; grid.append(h); } grid.append(card(item)); });
     empty.hidden = list.length > 0;
     if (LIVE) empty.textContent = tab === 'watch' ? 'You are not watching anything yet. Tap Add to watchlist on a product.' : tab === 'upcoming' ? 'No upcoming drops yet.' : 'Nothing matches right now.';
   }
@@ -78,7 +82,7 @@
       PAID = !!d.paid;
       if (!all.length) return;
       const known = Object.keys(CATS);
-      LIVE = all.map(p => ({ id: p.id, live: true, group: p._g, name: p.name, store: p.retailerName || p.retailer || 'Store', cat: p.category === 'gaming' ? 'electronics' : known.includes(p.category) ? p.category : (/pok|card/i.test(p.category + ' ' + p.name) ? 'cards' : 'other'), state: liveState(p.status), price: p.price, image: p.image, url: p.buyUrl || p.url }));
+      LIVE = all.map(p => ({ id: p.id, live: true, group: p._g, name: p.name, store: p.retailerName || p.retailer || 'Store', cat: p.category === 'gaming' ? 'electronics' : known.includes(p.category) ? p.category : (/pok|card/i.test(p.category + ' ' + p.name) ? 'cards' : 'other'), state: liveState(p.status), raw: p.status, checkedAt: p.checkedAt, auto: p.auto, watchers: p.watchers, price: p.price, image: p.image, url: p.buyUrl || p.url }));
       const note = document.querySelector('.pprt-notice');
       if (note) note.innerHTML = '<b>Live products.</b> From Retail Alerts. Availability is checked by our monitor; always confirm on the store\'s own page before you buy.';
       const kick = document.querySelector('.pprt-kicker'); if (kick) kick.textContent = 'Live from Retail Alerts';
