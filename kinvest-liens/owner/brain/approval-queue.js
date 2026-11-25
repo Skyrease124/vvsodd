@@ -32,17 +32,27 @@
    const legacy = entries.filter(e => e.dataset === 'MI-wayne' && publicLegacy(e));
    const waiting = entries.filter(e => e.dataset === 'MI-wayne' && e.decision === 'approved_for_staging' && e.reviewedBy === 'owner' && e.publishStatus !== 'published');
    status.textContent = pending.length + ' waiting for your decision · ' + legacy.length + ' already public from older validator approvals · ' + waiting.length + ' approved and waiting to publish';
-   renderQueue(pending.concat(legacy));
+   // The publish button sits right under the counts and appears only when something is waiting to publish.
+   const pub = $('publishApprovedBtn');
+   if (pub) { status.after(pub); pub.hidden = !waiting.length; pub.textContent = 'Publish ' + waiting.length + ' approved correction' + (waiting.length === 1 ? '' : 's'); }
+   renderQueue(pending, legacy);
   } catch (error) {
    status.textContent = 'Queue unavailable: ' + error.message;
   }
  }
 
- function renderQueue(items) {
+ function renderQueue(pending, legacy) {
   const box = $('approvalItems');
   box.replaceChildren();
-  if (!items.length) { box.append(el('p', 'small', 'No validator-verified corrections are waiting for review.')); return; }
-  for (const entry of items.slice(0, 25)) {
+  if (!pending.length) box.append(el('p', 'small', 'Nothing is waiting for your decision.'));
+  // Corrections that are already public are folded away; open the group to approve or withdraw one.
+  let target = box, group = null;
+  const items = pending.concat(legacy);
+  for (const entry of items.slice(0, 40)) {
+   if (entry.publishStatus === 'published' && !group) {
+    group = el('details', 'approval-group'); const sum = el('summary', '', legacy.length + ' already public from older validator approvals (open to review or withdraw)');
+    sum.style.cssText = 'cursor:pointer;padding:12px 0;font-weight:600'; group.append(sum); box.append(group); target = group;
+   }
    const card = el('article', 'approval-card');
    const isPublic = entry.publishStatus === 'published';
    card.append(el('h3', '', 'Parcel ' + entry.parcelId + ' · record ' + entry.recordId + (isPublic ? ' · already public' : '')));
@@ -70,7 +80,7 @@
    const result = el('p', 'small'); result.setAttribute('role', 'status');
    const actions = el('div', 'controls'); actions.append(approve, reject);
    card.append(notes, confirmLabel, mode, criticalBox, actions, result);
-   box.append(card);
+   target.append(card);
 
    const send = async (action) => {
     if (!confirm.checked && action === 'approve') { result.textContent = 'Confirm that you personally checked the official record.'; return; }
