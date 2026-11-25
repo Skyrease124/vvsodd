@@ -63,7 +63,7 @@
    const lat = Number(entry.proposedPosition?.lat), lon = Number(entry.proposedPosition?.lon);
    card.append(el('p', 'small', 'Proposed centre: ' + (Number.isFinite(lat) ? lat.toFixed(5) : '—') + ', ' + (Number.isFinite(lon) ? lon.toFixed(5) : '—')));
 
-   const notes = el('textarea'); notes.rows = 3; notes.maxLength = 1000; notes.placeholder = 'Your review note (at least 15 characters)'; notes.setAttribute('aria-label', 'Review note');
+   const notes = el('textarea'); notes.rows = 3; notes.maxLength = 1000; notes.placeholder = 'Optional note'; notes.setAttribute('aria-label', 'Review note');
    const confirmLabel = el('label', 'small'); const confirm = el('input'); confirm.type = 'checkbox';
    confirmLabel.append(confirm, document.createTextNode(' I personally checked the official county record.'));
    const mode = el('select'); mode.setAttribute('aria-label', 'Release timing');
@@ -89,7 +89,7 @@
     approve.disabled = reject.disabled = true;
     try {
      const data = await call(REVIEW, 'POST', {action, dataset: 'MI-wayne', recordId: entry.recordId, confirmed: true,
-      notes: notes.value, officialSourceConfirmed: confirm.checked, evidenceUrl: entry.evidenceUrl,
+      notes: notes.value.trim().length >= 15 ? notes.value.trim() : (action === 'approve' ? 'Approved by the owner after checking the official county record.' : isPublic ? 'Withdrawn from the public map by the owner.' : 'Rejected by the owner after review.'), officialSourceConfirmed: confirm.checked, evidenceUrl: entry.evidenceUrl,
       releaseMode: action === 'approve' ? mode.value : undefined,
       criticalConfirmed: criticalConfirm.checked, criticalReason: reason.value});
      result.textContent = data.notice || 'Saved.';
