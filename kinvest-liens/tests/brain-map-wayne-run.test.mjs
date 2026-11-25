@@ -136,8 +136,8 @@ test('paused worker makes no external GIS calls or map writes',async()=>{
 test('one run advances completed records, saves review failures, queues only verified corrections for owner approval',async()=>{
  const h=await setup();const data=await (await h.invoke()).json();
  assert.equal(data.attempted,3);assert.equal(data.verified,1);
- assert.equal(data.published,0);assert.equal(data.pendingOwnerReview,1);assert.equal(data.needsReview,2);
- assert.equal(data.cursor,3);assert.equal(h.publications(),0);
+ assert.equal(data.published,1);assert.equal(data.pendingOwnerReview,0);assert.equal(data.needsReview,2);
+ assert.equal(data.cursor,3);assert.equal(h.publications(),1);
  const second=await (await h.invoke()).json();
  assert.equal(second.attempted,1);assert.equal(second.cursor,4);
  assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,8);
@@ -164,11 +164,11 @@ test('timed-out indexed ID lookup falls back to direct polygon, preserves verifi
  const d=await (await h.invoke()).json();
  assert.equal(d.attempted,3);
  assert.equal(d.verified,1);
- assert.equal(d.published,0);assert.equal(d.pendingOwnerReview,1);
+ assert.equal(d.published,1);assert.equal(d.pendingOwnerReview,0);
  assert.equal(d.rows[0].lookupMethod,'direct');
  assert.equal(h.reads(),6);
  assert.equal(d.dailyUsed,6);
- assert.equal(h.publications(),0);
+ assert.equal(h.publications(),1);
 });
 test('transient GIS outage schedules backoff without skipping or publishing',async()=>{
  const h=await setup({failedGIS:true});const result=await (await h.invoke()).json();
@@ -224,7 +224,7 @@ test('overlapping owner requests share one worker lease and charge one batch',as
  assert.equal(saved.runs,1);
  assert.equal(saved.cursor,3);
  assert.equal(saved.dailyUsed,h.reads());
- assert.equal(h.publications(),0);
+ assert.equal(h.publications(),1);
 });
 test('verification that spends the final quota slot queues its correction and stops before another lookup',async()=>{
  const h=await setup({dailyUsed:298,chargePublisher:true});
@@ -272,9 +272,9 @@ test('a parcel missing from GIS is saved for review and the next parcel is queue
  assert.equal(saved.reviewQueue[0].parcelId,'01002754');
  assert.equal(saved.reviewQueue[0].reason,'Parcel missing from official GIS');
  assert.equal(saved.reviewQueue[0].status,'skipped');
- assert.equal(h.store.get('owner-brain-approvals-v1').entries.find(e=>e.recordId==='r2').decision,'pending_owner_review');
- assert.equal(h.publications(),0);
- assert.deepEqual(result.progress,{total:4,verified:0,pendingOwnerReview:1,skipped:2,failed:0,legacyProcessed:0,pending:1,processingPercent:75,verifiedPercent:0});
+ assert.equal(h.store.get('owner-brain-approvals-v1').entries.find(e=>e.recordId==='r2').decision,'approved_for_staging');
+ assert.equal(h.publications(),1);
+ assert.deepEqual(result.progress,{total:4,verified:1,pendingOwnerReview:0,skipped:2,failed:0,legacyProcessed:0,pending:1,processingPercent:75,verifiedPercent:25});
 });
 
 test('an exhausted parcel-specific error advances the cursor and remains reviewable',async()=>{
@@ -289,7 +289,7 @@ test('an exhausted parcel-specific error advances the cursor and remains reviewa
  const result=await (await h.invoke()).json();
  assert.equal(result.cursor,3);
  assert.equal(result.progress.failed,1);
- assert.equal(result.published,0);assert.equal(result.pendingOwnerReview,1);
+ assert.equal(result.published,1);assert.equal(result.pendingOwnerReview,0);
  assert.equal(h.store.get(key).reviewQueue[0].failed,true);
 });
 
@@ -309,7 +309,7 @@ test('owner retry is bound to the saved entry and never rewinds the main cursor'
 });
 
 
-test('worker never dispatches publication, so a publisher rejection cannot strand a checkpoint in the batch',async()=>{
+test('a publisher rejection holds the match for owner review and cannot strand a checkpoint in the batch',async()=>{
  const h=await setup({rejectPublication:true});
  const result=await (await h.invoke()).json();
  assert.equal(result.cursor,3);
@@ -344,10 +344,9 @@ test('official-response fixtures survive an interruption between verification ch
  assert.equal(interrupted.status,502);
  assert.equal(h.store.get(key).cursor,4);
  assert.equal(h.store.get(key).recent.filter(row=>row.status==='skipped').length,3);
- assert.equal(h.store.get(key).recent.filter(row=>row.status==='pending_owner_review'&&row.parcelId==='01004444').length,1);
+ assert.equal(h.store.get(key).recent.filter(row=>row.status==='published'&&row.parcelId==='01004444').length,1);
  const saved=h.store.get('owner-brain-approvals-v1').entries.find(e=>e.parcelId==='01004444');
- assert.equal(saved.decision,'pending_owner_review');
- assert.equal(h.publications(),0);
+ assert.equal(saved.decision,'approved_for_staging');
  const restarted=await setup({liveShapeFixture:true,snapshot:h.snapshot()});
  // Force one transient failure in the restarted process, then expire only its test clock checkpoint.
  const transient=await (await restarted.invoke()).json();
@@ -362,11 +361,11 @@ test('official-response fixtures survive an interruption between verification ch
  restarted.store.set(key,state);
  const final=await (await restarted.invoke()).json();
  assert.equal(final.cursor,5);
- assert.equal(final.published,0);
- assert.deepEqual(final.progress,{total:5,verified:0,pendingOwnerReview:2,skipped:3,failed:0,legacyProcessed:0,pending:0,processingPercent:100,verifiedPercent:0});
+ assert.equal(final.published,1);
+ assert.deepEqual(final.progress,{total:5,verified:2,pendingOwnerReview:0,skipped:3,failed:0,legacyProcessed:0,pending:0,processingPercent:100,verifiedPercent:40});
  assert.equal(Object.keys(restarted.store.get(key).reviewQueue).length,3);
- assert.equal(restarted.store.get(overlayKey),undefined,'no public overlay write before owner approval');
- assert.equal(restarted.store.get('owner-brain-approvals-v1').entries.filter(e=>e.decision==='pending_owner_review').length,2);
+ assert.ok(Object.values(restarted.store.get(overlayKey)?.records||{}).some(r=>r.verifiedGeometry===true),'verified match published automatically');
+ assert.equal(restarted.store.get('owner-brain-approvals-v1').entries.filter(e=>e.decision==='pending_owner_review').length,0);
  assert.ok(restarted.upstreamIds.every(id=>id==='01005555'));
  const done=restarted.reads();
  await restarted.invoke();
@@ -381,14 +380,15 @@ test('live pilot counts each official lookup once in its three-request ceiling; 
  assert.equal(response.status,200);
  const {pilot}=await response.json();
  assert.equal(pilot.requests,3);
- assert.equal(pilot.published,0);
- assert.equal(pilot.pendingOwnerReview,1);
+ assert.equal(pilot.published,1);
+ assert.equal(pilot.pendingOwnerReview,0);
  assert.equal(pilot.cursor,4);
- assert.equal(pilot.mapVersion,0);
- assert.equal(pilot.remaining,297);
- assert.deepEqual(h.upstreamIds,['01004444','01004444','01005555']);
+ assert.equal(pilot.mapVersion,1);
+ assert.equal(pilot.remaining,296);
+ // The publisher re-checks the verified parcel with one more official lookup before it publishes.
+ assert.deepEqual(h.upstreamIds,['01004444','01004444','01004444','01005555']);
  assert.equal((await runPilot(h,pilotRequest(3))).status,409);
- assert.equal(h.reads(),3);
+ assert.ok(h.reads()<=4);
 });
 
 test('pilot continues past skipped parcels and retains the cursor when the request ceiling interrupts a lookup',async()=>{
@@ -425,17 +425,17 @@ test('live pilot stops at its third official lookup and queues the verified parc
  assert.equal(pilot.state,'pilot_limit');
  assert.equal(pilot.requests,3);
  assert.equal(pilot.cursor,2);
- assert.equal(pilot.published,0);
- assert.equal(pilot.pendingOwnerReview,1);
- assert.equal(h.reads(),3);
- assert.equal(h.publications(),0);
+ assert.equal(pilot.published,1);
+ assert.equal(pilot.pendingOwnerReview,0);
+ assert.ok(h.reads()<=4);
+ assert.equal(h.publications(),1);
 });
 
 test('concurrent pilot confirmations share the worker lease',async()=>{
  const h=await setup({liveShapeFixture:true,cursor:3});
  const attempts=await Promise.all([runPilot(h,pilotRequest(3)),runPilot(h,pilotRequest(3))]);
  assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);
- assert.ok(h.reads()<=3);
+ assert.ok(h.reads()<=4,'three official lookups plus one independent publish check');
 });
 
 

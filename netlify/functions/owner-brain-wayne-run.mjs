@@ -3,7 +3,7 @@
 import * as auth from '../lib/brain-auth.mjs';
 import {verifyOfficial,DETROIT_GIS} from '../lib/brain-official-verification.mjs';
 import publish from './brain-map-publish-auto.mjs';
-import {updateJson,addPendingIfAbsent} from '../lib/brain-approvals.mjs';
+import {updateJson,addPendingIfAbsent,AUTO_VALIDATOR,AUTO_METHOD,OVERLAY as OVERLAY_KEY} from '../lib/brain-approvals.mjs';
 import crypto from 'node:crypto';
 
 const DATA='https://pricepocketasset.com/map/data/MI-wayne.json';
@@ -102,7 +102,7 @@ async function handler(req,context){
   if(!version)throw Error('Batch lost its lease');
  }
  let pilotRequests=0, savedRows=0;
- const result={attempted:0,verified:0,published:0,needsReview:0,failures:0,rows:[]};
+ const result={attempted:0,verified:0,published:0,pendingOwnerReview:0,needsReview:0,failures:0,rows:[]};
  function saveRecent(){
   const fresh=result.rows.slice(savedRows);
   if(!fresh.length)return;
@@ -290,21 +290,37 @@ async function handler(req,context){
    const now=new Date().toISOString();
    const caseKey=crypto.createHash('sha256').update('MI-wayne\n'+r.i).digest('hex').slice(0,28);
    const item={caseKey,dataset:'MI-wayne',recordId:r.i,parcelId:r.p,state:'MI',county:'Wayne',
-    decision:'pending_owner_review',reviewedAt:now,reviewedBy:'preview-wayne-batch-validator',
-    reviewMethod:'exact_identity_address_polygon',independentlyChecked:true,officialObjectId:verified.officialObjectId,
+    decision:'approved_for_staging',reviewedAt:now,reviewedBy:AUTO_VALIDATOR,autoPublish:true,releaseMode:'pro_first_48h',
+    reviewMethod:AUTO_METHOD,independentlyChecked:true,officialObjectId:verified.officialObjectId,
     evidenceUrl:verified.evidenceUrl,notes:verified.notes,checks:verified.checks,
     proposedPosition:{lat:verified.cx[1],lon:verified.cx[0]},publishStatus:'not_published'};
    const beforeWrite=await auth.kvGet(CONTROL);
    if(beforeWrite?.status==='paused'){s.state='paused';break;}
-   // Validator output is never publication. It becomes a pending owner decision, and only an
-   // owner approval (owner-brain-review) can release the correction to the public map.
+   // An exact identity, address and polygon match is approved automatically and published by the guarded
+   // publisher, which re-checks identity, bounds and the official source. The owner reviews afterwards and can withdraw.
    const queued=await updateJson(auth,APPROVALS,ledger=>{
     const next=addPendingIfAbsent(ledger?.entries||[],item);
     return next?{...ledger,entries:next}:undefined;
    });
    if(review)s.reviewQueue[i]={...review,resolvedAt:now};
-   result.rows.push({parcelId:id,status:'pending_owner_review',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice(),queued:queued.changed});
-   result.pendingOwnerReview=(result.pendingOwnerReview||0)+1;
+   let publishedNow=false;
+   if(queued.changed){
+    await publish(req,{waynePublisherInternal:true,wayneCurrentRecord:r.i,wayneCurrentOnly:true,wayneHeldRecords:new Set(),
+     wayneRecordRejected:()=>{},chargeWayneGisRequest:async()=>{await auth.reserveWayneGisRequest();}});
+    publishedNow=(((await auth.kvGet(OVERLAY_KEY))?.records||{})[r.i]?.verifiedGeometry===true);
+   }
+   // If the publisher did not confirm the match, it goes back to the owner queue as pending. It is never retried automatically.
+   if(queued.changed&&!publishedNow){
+    await updateJson(auth,APPROVALS,ledger=>{
+     const entries=ledger?.entries||[];const i=entries.findIndex(e=>e.caseKey===item.caseKey);
+     if(i<0||entries[i].reviewedBy!==AUTO_VALIDATOR)return undefined;
+     const next=entries.slice();next[i]={...entries[i],decision:'pending_owner_review',autoPublish:false,reviewedBy:'auto-validator-held',heldReason:'Publisher did not confirm this match; owner review needed'};
+     return {...ledger,entries:next};
+    });
+   }
+   if(publishedNow)result.published++;
+   result.rows.push({parcelId:id,status:publishedNow?'published':'pending_owner_review',lookupMethod:method,checkedAt:new Date().toISOString(),gisTrace:trace.slice(),queued:queued.changed});
+   if(!publishedNow)result.pendingOwnerReview=(result.pendingOwnerReview||0)+1;
    i++;
    await checkpoint();
   }
