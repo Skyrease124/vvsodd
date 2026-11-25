@@ -1,6 +1,8 @@
 // Read-only owner release gate for the unattended Wayne pilot.
 // No GIS calls, map changes, schedule changes, or credit usage.
 import * as auth from '../lib/brain-auth.mjs';
+// Same value as WAYNE_DAILY_LIMIT in lib/brain-wayne-gis-quota.mjs (kept local so this module's test mocks stay valid).
+const WAYNE_DAILY_LIMIT=300;
 const reply=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private,no-store','Vary':'Cookie','X-Robots-Tag':'noindex,nofollow'}});
 async function handler(req,context){
  if(req.method!=='GET')return reply(405,{ok:false,error:'GET only'});
@@ -19,7 +21,7 @@ async function handler(req,context){
  const verifiedOverlayCount=Object.values(overlay?.records||{}).filter(r=>r?.verifiedGeometry===true&&r?.i&&Array.isArray(r.g)&&r.g.length).length;
  const now=Date.now();
  const pending=Object.values(overlay?.records||{}).some(r=>r?.publicationPending===true);
- const remaining=quota.active?Math.max(0,30-quota.count):null;
+ const remaining=quota.active?Math.max(0,WAYNE_DAILY_LIMIT-quota.count):null;
  const utcRollover=new Date(now);
  utcRollover.setUTCHours(24,0,0,0);
  const readyAt=[quota.resumeAt,worker?.retry?.nextAt,worker?.sourcePause?.nextAt,worker?.lockedUntil,
@@ -37,7 +39,7 @@ async function handler(req,context){
  ].filter(([blocked])=>blocked).map(([,reason])=>reason);
  const steps=[
   {key:'preview_validation',name:'Preview GIS and publisher verified',ready:!!worker?.published&&!!worker?.cursor},
-  {key:'safety',name:'30-request daily cap and owner pause',ready:quota.active},
+  {key:'safety',name:WAYNE_DAILY_LIMIT+'-request daily cap and owner pause',ready:quota.active},
   {key:'schedule',name:'Production scheduled runner enabled',ready:!preview&&configured},
   {key:'county_scope',name:'County connectors beyond Detroit',ready:false},
   {key:'preview_scheduler',name:'Unattended processing on Deploy Preview',ready:false}
@@ -56,7 +58,7 @@ async function handler(req,context){
    paused:control?.status==='paused',retryExhausted:worker?.retry?.exhausted===true,
    retryNextAt:worker?.retry?.nextAt||null,retryParcel:worker?.retry?.parcelId||null,retryAttempt:Number(worker?.retry?.attempts||0),retryLastError:worker?.retry?.lastError||null,
    lastSuccessfulBatch:worker?.lastSuccessfulBatch||null,lastError:worker?.state==='error'?worker.lastError||null:null,
-   lastCompleted:worker?.lastCompleted||null,dailyUsed:quota.active?quota.count:null,legacyDailyUsed:quota.active?undefined:Number(worker?.dailyUsed||0),quotaActive:quota.active,quotaResumeAt:quota.resumeAt,dailyLimit:30},
+   lastCompleted:worker?.lastCompleted||null,dailyUsed:quota.active?quota.count:null,legacyDailyUsed:quota.active?undefined:Number(worker?.dailyUsed||0),quotaActive:quota.active,quotaResumeAt:quota.resumeAt,dailyLimit:WAYNE_DAILY_LIMIT},
   pilotReadiness:{eligible:blockers.length===0,blockers,remaining,nextEligibleAt:readyAt?new Date(readyAt).toISOString():null},
   lastScheduledRun:audit?.last||null,scheduledRuns:Number(audit?.runs||0),
   nextCountyAutomatic:false,allCountiesConfigured:false,checks:steps,

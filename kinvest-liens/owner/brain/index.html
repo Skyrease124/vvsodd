@@ -11,7 +11,7 @@
  <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
  <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
  <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
- <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button><p id="unattendedToggleResult" role="status" class="small" style="margin:6px 0 0"></p>
  <dl class="wayne-metrics">
   <div><dt>Processing complete</dt><dd id="wayneComplete">—</dd></div>
   <div><dt>Verified coverage</dt><dd id="wayneCoverage">—</dd></div>
@@ -432,15 +432,17 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
   }finally{readinessButton.disabled=false;}
  };
  document.getElementById('unattendedToggle').onclick=async()=>{
-  const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
+  const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true',out=document.getElementById('unattendedToggleResult');
   if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
-  btn.disabled=true;
+  {out.textContent='Cancelled. Nothing was changed.';return;}
+  btn.disabled=true;out.textContent=enable?'Turning on…':'Turning off…';
   try{
    const res=await fetch('/.netlify/functions/owner-brain-scheduler-control',{method:'POST',credentials:'same-origin',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({action:enable?'enable':'disable',confirmed:true,scope:'wayne-verified-gis-only'})});
    const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Control unavailable');
    await loadAutonomy();
-  }catch(e){summary.textContent='Could not update scheduler: '+e.message;}finally{btn.disabled=false;}
+   out.textContent=enable?'24/7 Wayne is ON. It runs every 30 minutes on the published site.':'24/7 Wayne is OFF.';
+  }catch(e){out.textContent='Could not update scheduler: '+e.message;summary.textContent='Could not update scheduler: '+e.message;}finally{btn.disabled=false;}
  };
  await loadAutonomy();
 })();
