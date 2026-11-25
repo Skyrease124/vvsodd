@@ -58,3 +58,6 @@
 @media (max-width:720px){.pprt-links{display:none}.pprt-hero{padding-top:40px}}
 @media (max-width:440px){.pprt-name{font-size:14px}.pprt-account{min-height:30px;padding:0 12px;font-size:12.5px}}
 @media (prefers-reduced-motion: reduce){.pprt *{transition:none!important;animation:none!important}}
+
+.pprt-link{display:inline-block;margin-top:10px;color:var(--accent-a,#8bd0ff);font-weight:650;text-decoration:none}
+.pprt-link:hover{text-decoration:underline}
