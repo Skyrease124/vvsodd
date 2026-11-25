@@ -36,7 +36,7 @@
     if (item.live && /^https:\/\//.test(item.url || '')) { const a = document.createElement('a'); a.className = 'pprt-link'; a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer sponsored'; a.textContent = 'View at ' + item.store + ' →'; body.append(a); }
     if (item.live) {
       const w = document.createElement('button'); w.type = 'button'; w.className = 'pprt-watch' + (WATCH.has(item.id) ? ' on' : '');
-      w.textContent = WATCH.has(item.id) ? '✓ Watching' : (item.state === 'upcoming' ? 'Watch' : 'Alert me');
+      w.textContent = WATCH.has(item.id) ? '✓ In your watchlist' : '+ Add to watchlist';
       w.addEventListener('click', async () => {
         if (!PAID) { sheet(s => { s.append(el('h3', '', 'Watching is part of Pro'), el('p', 'pprt-mute', 'Upgrade to watch products and get alerts. Everyone can still browse In Stock Now and Upcoming Drops.')); const a = el('a', 'pprt-btn', 'See plans'); a.href = '/plans/'; s.append(a); }); return; }
         w.disabled = true;
@@ -58,7 +58,7 @@
     grid.textContent = '';
     list.forEach(item => grid.append(card(item)));
     empty.hidden = list.length > 0;
-    if (LIVE) empty.textContent = tab === 'watch' ? 'You are not watching anything yet. Tap Alert me on a product.' : tab === 'upcoming' ? 'No upcoming drops yet.' : 'Nothing matches right now.';
+    if (LIVE) empty.textContent = tab === 'watch' ? 'You are not watching anything yet. Tap Add to watchlist on a product.' : tab === 'upcoming' ? 'No upcoming drops yet.' : 'Nothing matches right now.';
   }
 
   document.querySelectorAll('.pprt-chip').forEach(btn => btn.addEventListener('click', () => {
@@ -127,7 +127,7 @@
     sheet(sh => {
       sh.append(el('h3', '', 'Watchlist'));
       const box = el('div', 'pprt-alist'); sh.append(box);
-      const paint = () => { box.textContent = ''; const mine = (LIVE || []).filter(i => WATCH.has(i.id)); if (!mine.length) box.append(el('p', 'pprt-mute', PAID ? 'You are not watching anything yet. Tap Alert me on a product.' : 'Watching products is part of Pro.'));
+      const paint = () => { box.textContent = ''; const mine = (LIVE || []).filter(i => WATCH.has(i.id)); if (!mine.length) box.append(el('p', 'pprt-mute', PAID ? 'You are not watching anything yet. Tap Add to watchlist on a product.' : 'Watching products is part of Pro.'));
         mine.forEach(i => { const row = el('div', 'pprt-al'); row.append(el('b', '', i.name), el('span', '', i.store + ' · ' + STATES[i.state] + (i.price ? ' · ' + money(i.price) : '')));
           const rm = el('button', 'pprt-watch on', 'Stop watching'); rm.type = 'button'; rm.onclick = async () => { const r = await call({ action: 'unwatch', id: i.id }); if (r.s === 200) { WATCH.delete(i.id); paint(); render(); } }; row.append(rm); box.append(row); }); };
       paint();
