@@ -6,6 +6,8 @@ import * as auth from '../lib/auth.mjs';
 import * as C from '../lib/community.mjs';
 import * as R from '../lib/retail.mjs';
 import * as RL from '../lib/ratelimit.mjs';
+import * as A from '../lib/retail-amazon.mjs';
+import { makeReader } from '../lib/retail-groq.mjs';
 
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' } });
 const done = r => json(r.ok === false ? (r.status || 400) : 200, r.ok === false ? { ok: false, error: r.error, id: r.id } : r);
@@ -22,7 +24,7 @@ export default async function handler(req, context) {
     if (q.get('prefs')) return json(200, { ok: true, prefs: await R.getPrefs(me.uid), categories: R.CAT_LABEL, retailers: Object.fromEntries(Object.entries(R.RETAILERS).map(([k, v]) => [k, v.name])) });
     if (q.get('inbox')) return json(200, Object.assign({ ok: true }, await R.inbox(me.uid)));
     if (!owner) return json(403, { ok: false, error: 'Owner only.' });
-    if (q.get('admin')) return json(200, { ok: true, products: (await R.listProducts({ all: true })).map(p => Object.assign(R.card(p), { rawStatus: p.status, active: p.active, lastError: p.lastError || '', fails: p.fails || 0, priceManual: p.priceManual })), requests: await R.listRequests(), history: await R.history(30), findings: await R.getFindings() });
+    if (q.get('admin')) return json(200, { ok: true, products: (await R.listProducts({ all: true })).map(p => Object.assign(R.card(p), { rawStatus: p.status, active: p.active, lastError: p.lastError || '', fails: p.fails || 0, priceManual: p.priceManual })), requests: await R.listRequests(), history: await R.history(30), findings: await R.getFindings(), amazon: await A.status() });
     if (q.get('lookup')) return done(await R.lookup(q.get('lookup')));
     if (q.get('checkJob')) return done(await R.checkStatus(q.get('checkJob')));
     return json(400, { ok: false, error: 'Nothing asked.' });
@@ -47,6 +49,8 @@ export default async function handler(req, context) {
   if (a === 'checkNow') return done(await R.checkNow(b.id, { origin: new URL(req.url).origin }));
   if (a === 'broadcast') return done(await R.broadcast(b));
   if (a === 'decide') return done(await R.decide(me.uid, b.id, b));
+  if (a === 'amazonControl') return done(await A.setEnabled(me.uid, b.enabled === true));
+  if (a === 'amazonCheck') return done(Object.assign({ ok: true }, await A.step({ force: true, limit: 3, reader: makeReader({ maxCalls: 2 }) })));   // owner test: at most 3 credits, still under the monthly cap
   if (a === 'clearFindings') return done(await R.clearFindings());
   if (a === 'monitorControl') return done(await R.setMonitorControl(me.uid, b.enabled === true));
   if (a === 'test') return done(await R.notifyOwner('Test owner alert', 'Owner notifications are working.', '/owner/retail/'));
