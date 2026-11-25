@@ -13,10 +13,9 @@ for(const signedIn of [true,false]){
   await p.click('#pprtTabs [data-tab=stock]');
   // account menu opens on the page and never navigates away
   const url=p.url();await p.click('#pprtAccount');assert.equal(await p.locator('#pprtMenu').isVisible(),true,'menu opens');assert.equal(p.url(),url,'stays on Retail');
-  assert.deepEqual(await p.locator('#pprtMenu button').allTextContents(),['My watchlist','Alerts','Alert settings','Sign out']);
-  await p.click('#pprtMenu button:has-text("My watchlist")');assert.equal(await p.locator('#pprtTabs [data-tab=watch]').getAttribute('aria-selected'),'true');assert.ok(p.url().includes('price-pocket-retail'));
-  // alerts sheet opens in place
-  await p.click('#pprtBell');assert.equal(await p.locator('.pprt-sheet h3').first().textContent(),'Alerts');
+  assert.deepEqual(await p.locator('#pprtMenu button').allTextContents(),['Watchlist','Notifications','Alert settings','Sign out']);
+  await p.click('#pprtMenu button:has-text("Watchlist")');assert.equal(await p.locator('.pprt-sheet h3').first().textContent(),'Watchlist');assert.ok(p.url().includes('price-pocket-retail'));
+  await p.click('.pprt-x');await p.click('#pprtAccount');await p.click('#pprtMenu button:has-text("Notifications")');assert.equal(await p.locator('.pprt-sheet h3').first().textContent(),'Notifications');
   }
  else{assert.ok(names.some(n=>/Sample/.test(n)),'visitors keep the demo cards');assert.equal(links.length,0);}
  assert.deepEqual(errs,[]);await p.close();}

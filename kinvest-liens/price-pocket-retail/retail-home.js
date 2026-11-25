@@ -106,7 +106,7 @@
   }
   async function alertsSheet() {
     sheet(async sh => {
-      sh.append(el('h3', '', 'Alerts'));
+      sh.append(el('h3', '', 'Notifications'));
       const box = el('div', 'pprt-alist'); sh.append(box); box.textContent = 'Loading…';
       const x = await call(null, { inbox: 1 }); const items = (x.j && x.j.items) || []; box.textContent = '';
       if (!items.length) box.append(el('p', 'pprt-mute', 'No alerts yet. Alerts you receive appear here.'));
@@ -114,16 +114,24 @@
       if (items.some(i => !i.read)) { const m = el('button', 'pprt-btn pprt-ghost', 'Mark all read'); m.type = 'button'; m.onclick = async () => { await call({ action: 'read', ids: 'all' }); box.querySelectorAll('.unread').forEach(n => n.classList.remove('unread')); badge(); }; sh.append(m); }
     });
   }
-  async function badge() { const x = await call(null, { inbox: 1 }); const n = (x.j && x.j.unread) || 0; const b = $('pprtBell'); if (b) { b.textContent = '🔔 Alerts'; if (n) b.append(el('b', '', n > 99 ? '99+' : String(n))); } }
+  async function badge() { const x = await call(null, { inbox: 1 }); const n = (x.j && x.j.unread) || 0; const b = window.pprtNotifBtn; if (b) { b.textContent = 'Notifications'; if (n) b.append(el('b', 'pprt-count', n > 99 ? '99+' : String(n))); } const ac = $('pprtAccount'); if (ac) ac.classList.toggle('has-new', n > 0); }
   async function startMember() {
     if (TABBED) return; TABBED = true;
     const tabs = $('pprtTabs'); tabs.hidden = false;
     tabs.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; tabs.querySelectorAll('[data-tab]').forEach(t => t.setAttribute('aria-selected', String(t === b))); render(); }));
-    $('pprtBell').addEventListener('click', alertsSheet);
-    const nav = $('pprtAlertsNav'); nav.hidden = false; nav.addEventListener('click', alertsSheet);
-    const open = $('pprtOpenAlerts'); if (open) open.addEventListener('click', e => { e.preventDefault(); alertsSheet(); });
+    const open = $('pprtOpenAlerts'); if (open) open.addEventListener('click', e => { e.preventDefault(); $('browse').scrollIntoView({ behavior: 'smooth' }); });
     if (PAID) { const m = await call(null, { mine: 1 }); ((m.j && m.j.watches) || []).forEach(w => WATCH.add(w.id)); }
     render(); badge();
+  }
+  function watchSheet() {
+    sheet(sh => {
+      sh.append(el('h3', '', 'Watchlist'));
+      const box = el('div', 'pprt-alist'); sh.append(box);
+      const paint = () => { box.textContent = ''; const mine = (LIVE || []).filter(i => WATCH.has(i.id)); if (!mine.length) box.append(el('p', 'pprt-mute', PAID ? 'You are not watching anything yet. Tap Alert me on a product.' : 'Watching products is part of Pro.'));
+        mine.forEach(i => { const row = el('div', 'pprt-al'); row.append(el('b', '', i.name), el('span', '', i.store + ' · ' + STATES[i.state] + (i.price ? ' · ' + money(i.price) : '')));
+          const rm = el('button', 'pprt-watch on', 'Stop watching'); rm.type = 'button'; rm.onclick = async () => { const r = await call({ action: 'unwatch', id: i.id }); if (r.s === 200) { WATCH.delete(i.id); paint(); render(); } }; row.append(rm); box.append(row); }); };
+      paint();
+    });
   }
 
   // Same sign-in as the rest of the site: the account endpoint says who is signed in.
@@ -134,10 +142,10 @@
       if (d && d.user) {
         a.textContent = 'My account'; a.href = '#'; a.setAttribute('aria-haspopup', 'menu'); a.setAttribute('aria-expanded', 'false');
         const menu = $('pprtMenu');
-        const item = (label, fn) => { const b = el('button', '', label); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.onclick = () => { menu.hidden = true; a.setAttribute('aria-expanded', 'false'); fn(); }; menu.append(b); };
+        const item = (label, fn) => { const b = el('button', '', label); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.onclick = () => { menu.hidden = true; a.setAttribute('aria-expanded', 'false'); fn(); }; menu.append(b); return b; };
         const goTab = k => { tab = k; const t = document.querySelector('#pprtTabs [data-tab="' + k + '"]'); document.querySelectorAll('#pprtTabs [data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === t))); render(); $('browse').scrollIntoView({ behavior: 'smooth' }); };
-        item('My watchlist', () => goTab('watch'));
-        item('Alerts', alertsSheet);
+        item('Watchlist', watchSheet);
+        const nb = item('Notifications', alertsSheet); window.pprtNotifBtn = nb;
         item('Alert settings', settingsSheet);
         item('Sign out', async () => { try { await fetch('/.netlify/functions/account', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); } catch (e) { /* reload anyway */ } location.reload(); });
         a.addEventListener('click', e => { e.preventDefault(); menu.hidden = !menu.hidden; a.setAttribute('aria-expanded', String(!menu.hidden)); });
