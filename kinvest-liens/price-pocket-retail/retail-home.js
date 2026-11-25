@@ -14,7 +14,10 @@
   ];
   const $ = id => document.getElementById(id);
   const grid = $('pprtGrid'), empty = $('pprtEmpty'), q = $('pprtQ');
-  let cat = 'all', LIVE = null; // LIVE = real products from Retail Alerts (signed-in members); null keeps the demo cards
+  let cat = 'all', LIVE = null, tab = 'stock', PAID = false, TABBED = false; const WATCH = new Set(); const API = '/.netlify/functions/retail';
+  const call = async (o, q) => { try { const r = o ? await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }) : await fetch(API + '?' + new URLSearchParams(q), { credentials: 'same-origin' }); return { s: r.status, j: await r.json().catch(() => ({})) }; } catch (e) { return { s: 0, j: {} }; } };
+  const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+  let _unused = null; // LIVE = real products from Retail Alerts (signed-in members); null keeps the demo cards
   const money = v => (v == null || v === '' ? '' : '$' + Number(v).toFixed(2));
   const liveState = st => (st === 'in_stock' || st === 'low_stock' ? 'in_stock' : st === 'upcoming' ? 'upcoming' : st === 'sold_out' ? 'sold_out' : st === 'limited_access' ? 'invite_only' : 'monitoring');
 
@@ -31,16 +34,31 @@
     avail.append(dot, document.createTextNode((item.live ? '' : 'Demo: ') + STATES[item.state] + (item.price ? ' · ' + money(item.price) : '')));
     body.append(tag, h, meta, avail);
     if (item.live && /^https:\/\//.test(item.url || '')) { const a = document.createElement('a'); a.className = 'pprt-link'; a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer sponsored'; a.textContent = 'View at ' + item.store + ' →'; body.append(a); }
+    if (item.live) {
+      const w = document.createElement('button'); w.type = 'button'; w.className = 'pprt-watch' + (WATCH.has(item.id) ? ' on' : '');
+      w.textContent = WATCH.has(item.id) ? '✓ Watching' : (item.state === 'upcoming' ? 'Watch' : 'Alert me');
+      w.addEventListener('click', async () => {
+        if (!PAID) { sheet(s => { s.append(el('h3', '', 'Watching is part of Pro'), el('p', 'pprt-mute', 'Upgrade to watch products and get alerts. Everyone can still browse In Stock Now and Upcoming Drops.')); const a = el('a', 'pprt-btn', 'See plans'); a.href = '/plans/'; s.append(a); }); return; }
+        w.disabled = true;
+        const on = WATCH.has(item.id);
+        const r = await call(on ? { action: 'unwatch', id: item.id } : { action: 'watch', id: item.id, inStock: true, release: true, priceDrop: true });
+        w.disabled = false;
+        if (r.s === 200) { if (on) WATCH.delete(item.id); else WATCH.add(item.id); render(); }
+      });
+      body.append(w);
+    }
     art.append(thumb, body);
     return art;
   }
 
   function render() {
     const text = q.value.trim().toLowerCase();
-    const list = (LIVE || DEMO).filter(item => (cat === 'all' || item.cat === cat) && (!text || (item.name + ' ' + item.store + ' ' + CATS[item.cat]).toLowerCase().includes(text)));
+    const base = !LIVE ? DEMO : (tab === 'watch' ? LIVE.filter(i => WATCH.has(i.id)) : LIVE.filter(i => tab === 'upcoming' ? i.group === 'upcoming' : i.group !== 'upcoming'));
+    const list = base.filter(item => (cat === 'all' || item.cat === cat) && (!text || (item.name + ' ' + item.store + ' ' + CATS[item.cat]).toLowerCase().includes(text)));
     grid.textContent = '';
     list.forEach(item => grid.append(card(item)));
     empty.hidden = list.length > 0;
+    if (LIVE) empty.textContent = tab === 'watch' ? 'You are not watching anything yet. Tap Alert me on a product.' : tab === 'upcoming' ? 'No upcoming drops yet.' : 'Nothing matches right now.';
   }
 
   document.querySelectorAll('.pprt-chip').forEach(btn => btn.addEventListener('click', () => {
@@ -56,23 +74,76 @@
     .then(r => (r.ok ? r.json() : null))
     .then(d => {
       if (!d || !d.ok) return;
-      const all = [].concat(d.inStock || [], d.upcoming || [], d.other || []);
+      const all = [].concat((d.inStock || []).map(p => Object.assign({}, p, { _g: 'stock' })), (d.upcoming || []).map(p => Object.assign({}, p, { _g: 'upcoming' })), (d.other || []).map(p => Object.assign({}, p, { _g: 'other' })));
+      PAID = !!d.paid;
       if (!all.length) return;
       const known = Object.keys(CATS);
-      LIVE = all.map(p => ({ id: p.id, live: true, name: p.name, store: p.retailerName || p.retailer || 'Store', cat: p.category === 'gaming' ? 'electronics' : known.includes(p.category) ? p.category : (/pok|card/i.test(p.category + ' ' + p.name) ? 'cards' : 'other'), state: liveState(p.status), price: p.price, image: p.image, url: p.buyUrl || p.url }));
+      LIVE = all.map(p => ({ id: p.id, live: true, group: p._g, name: p.name, store: p.retailerName || p.retailer || 'Store', cat: p.category === 'gaming' ? 'electronics' : known.includes(p.category) ? p.category : (/pok|card/i.test(p.category + ' ' + p.name) ? 'cards' : 'other'), state: liveState(p.status), price: p.price, image: p.image, url: p.buyUrl || p.url }));
       const note = document.querySelector('.pprt-notice');
       if (note) note.innerHTML = '<b>Live products.</b> From Retail Alerts. Availability is checked by our monitor; always confirm on the store\'s own page before you buy.';
       const kick = document.querySelector('.pprt-kicker'); if (kick) kick.textContent = 'Live from Retail Alerts';
-      render();
+      if (note) note.innerHTML += ' Some store links are affiliate links: PricePocketAsset may earn a commission at no extra cost to you.';
+      startMember();
     })
     .catch(() => { /* stays on the demo cards */ });
+
+  async function settingsSheet() {
+    sheet(async sh => {
+      sh.append(el('h3', '', 'Alert settings'));
+      const x = await call(null, { prefs: 1 }); const p = x.j && x.j.prefs; if (!p) { sh.append(el('p', 'pprt-mute', 'Sign in to change alert settings.')); return; }
+      const msg = el('p', 'pprt-mute', ''); const cats = x.j.categories || {};
+      const sec = (title, obj, key, labels) => { sh.append(el('h4', '', title)); Object.entries(labels).forEach(([k, l]) => { const row = el('label', 'pprt-tog'); const i = el('input'); i.type = 'checkbox'; i.checked = !!obj[k]; i.onchange = async () => { const r = await call(Object.assign({ action: 'prefs' }, { [key]: { [k]: i.checked } })); msg.textContent = r.s === 200 ? 'Saved.' : 'Could not save.'; }; row.append(i, el('span', '', l)); sh.append(row); }); };
+      sec('Categories', p.cats || {}, 'cats', cats); sec('Alert types', p.types || {}, 'types', { release: 'New releases', restock: 'Restocks', price: 'Price drops' }); sh.append(msg);
+    });
+  }
+  function sheet(build) {
+    const ov = el('div', 'pprt-ov'), sh = el('div', 'pprt-sheet'); sh.setAttribute('role', 'dialog'); sh.setAttribute('aria-modal', 'true');
+    const close = () => { ov.remove(); document.removeEventListener('keydown', esc); };
+    const esc = e => { if (e.key === 'Escape') close(); };
+    const x = el('button', 'pprt-x', 'Close'); x.type = 'button'; x.onclick = close; sh.append(x);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); }); document.addEventListener('keydown', esc);
+    build(sh, close); ov.append(sh); document.body.append(ov); return close;
+  }
+  async function alertsSheet() {
+    sheet(async sh => {
+      sh.append(el('h3', '', 'Alerts'));
+      const box = el('div', 'pprt-alist'); sh.append(box); box.textContent = 'Loading…';
+      const x = await call(null, { inbox: 1 }); const items = (x.j && x.j.items) || []; box.textContent = '';
+      if (!items.length) box.append(el('p', 'pprt-mute', 'No alerts yet. Alerts you receive appear here.'));
+      items.forEach(i => { const href = /^https:\/\//.test(i.url || '') ? i.url : ''; const a = el(href ? 'a' : 'div', 'pprt-al' + (i.read ? '' : ' unread')); if (href) { a.href = href; a.target = '_blank'; a.rel = 'noopener noreferrer'; } a.append(el('b', '', i.title || 'Alert'), el('span', '', i.body || '')); box.append(a); });
+      if (items.some(i => !i.read)) { const m = el('button', 'pprt-btn pprt-ghost', 'Mark all read'); m.type = 'button'; m.onclick = async () => { await call({ action: 'read', ids: 'all' }); box.querySelectorAll('.unread').forEach(n => n.classList.remove('unread')); badge(); }; sh.append(m); }
+    });
+  }
+  async function badge() { const x = await call(null, { inbox: 1 }); const n = (x.j && x.j.unread) || 0; const b = $('pprtBell'); if (b) { b.textContent = '🔔 Alerts'; if (n) b.append(el('b', '', n > 99 ? '99+' : String(n))); } }
+  async function startMember() {
+    if (TABBED) return; TABBED = true;
+    const tabs = $('pprtTabs'); tabs.hidden = false;
+    tabs.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; tabs.querySelectorAll('[data-tab]').forEach(t => t.setAttribute('aria-selected', String(t === b))); render(); }));
+    $('pprtBell').addEventListener('click', alertsSheet);
+    const nav = $('pprtAlertsNav'); nav.hidden = false; nav.addEventListener('click', alertsSheet);
+    const open = $('pprtOpenAlerts'); if (open) open.addEventListener('click', e => { e.preventDefault(); alertsSheet(); });
+    if (PAID) { const m = await call(null, { mine: 1 }); ((m.j && m.j.watches) || []).forEach(w => WATCH.add(w.id)); }
+    render(); badge();
+  }
 
   // Same sign-in as the rest of the site: the account endpoint says who is signed in.
   fetch('/.netlify/functions/account', { credentials: 'same-origin' })
     .then(r => (r.ok ? r.json() : null))
     .then(d => {
       const a = $('pprtAccount');
-      if (d && d.user) { a.textContent = 'My account'; a.href = '/account/'; }
+      if (d && d.user) {
+        a.textContent = 'My account'; a.href = '#'; a.setAttribute('aria-haspopup', 'menu'); a.setAttribute('aria-expanded', 'false');
+        const menu = $('pprtMenu');
+        const item = (label, fn) => { const b = el('button', '', label); b.type = 'button'; b.setAttribute('role', 'menuitem'); b.onclick = () => { menu.hidden = true; a.setAttribute('aria-expanded', 'false'); fn(); }; menu.append(b); };
+        const goTab = k => { tab = k; const t = document.querySelector('#pprtTabs [data-tab="' + k + '"]'); document.querySelectorAll('#pprtTabs [data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === t))); render(); $('browse').scrollIntoView({ behavior: 'smooth' }); };
+        item('My watchlist', () => goTab('watch'));
+        item('Alerts', alertsSheet);
+        item('Alert settings', settingsSheet);
+        item('Sign out', async () => { try { await fetch('/.netlify/functions/account', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) }); } catch (e) { /* reload anyway */ } location.reload(); });
+        a.addEventListener('click', e => { e.preventDefault(); menu.hidden = !menu.hidden; a.setAttribute('aria-expanded', String(!menu.hidden)); });
+        document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target) && e.target !== a) { menu.hidden = true; a.setAttribute('aria-expanded', 'false'); } });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.hidden = true; a.setAttribute('aria-expanded', 'false'); } });
+      }
     })
     .catch(() => { /* stays "Sign in" */ });
 })();

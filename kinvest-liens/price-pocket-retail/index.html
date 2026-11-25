@@ -25,10 +25,10 @@
   </a>
   <nav class="pprt-links" aria-label="Retail sections">
     <a href="#browse">Browse</a>
-    <a href="/retail/">Alerts</a>
-    <span class="pprt-soon" aria-disabled="true">Watchlist · soon</span>
+    <button type="button" class="pprt-navbtn" id="pprtAlertsNav" hidden>Alerts</button>
   </nav>
   <a class="pprt-account" id="pprtAccount" href="/login/?next=%2Fprice-pocket-retail%2F">Sign in</a>
+  <div class="pprt-menu" id="pprtMenu" role="menu" hidden></div>
 </header>
 <main id="main" class="pprt-main">
   <section class="pprt-hero" aria-labelledby="pprtHero">
@@ -37,12 +37,18 @@
     <p class="pprt-lede">Price Pocket Retail watches approved products and tells you when they become available. We send alerts. We never buy anything for you.</p>
     <div class="pprt-cta">
       <a class="pprt-btn" href="#browse">Browse demo listings</a>
-      <a class="pprt-btn pprt-ghost" href="/retail/">Open Retail Alerts</a>
+      <a class="pprt-btn pprt-ghost" href="#browse" id="pprtOpenAlerts">Open Retail Alerts</a>
     </div>
   </section>
 
   <section id="browse" class="pprt-section" aria-labelledby="pprtBrowse">
     <h2 id="pprtBrowse">Featured products</h2>
+    <div class="pprt-tabs" id="pprtTabs" role="tablist" hidden>
+      <button type="button" role="tab" data-tab="stock" aria-selected="true">In Stock Now</button>
+      <button type="button" role="tab" data-tab="upcoming" aria-selected="false">Upcoming Drops</button>
+      <button type="button" role="tab" data-tab="watch" aria-selected="false">My Watchlist</button>
+      <button type="button" class="pprt-bell" id="pprtBell">🔔 Alerts</button>
+    </div>
     <div class="pprt-search">
       <label for="pprtQ">Search products</label>
       <input id="pprtQ" type="search" placeholder="Search sneakers, cards, electronics…" autocomplete="off" spellcheck="false">
