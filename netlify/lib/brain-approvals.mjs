@@ -7,8 +7,14 @@ export const OVERLAY = 'brain-map-county-v1-MI-wayne';
 export const DECISION = Object.freeze({pending: 'pending_owner_review', approved: 'approved_for_staging', rejected: 'rejected'});
 export const caseKeyFor = (dataset, recordId) =>
   crypto.createHash('sha256').update(dataset + '\n' + recordId).digest('hex').slice(0, 28);
+// Automatic approval: a validator match that passed the exact identity, address and polygon checks.
+// It publishes without an owner click (the owner reviews afterwards and can withdraw it). Owner decisions
+// stay final and are never replaced by automatic ones.
+export const AUTO_VALIDATOR = 'auto-validator';
+export const AUTO_METHOD = 'exact_identity_address_polygon';
 export const ownerDecided = entry => entry?.reviewedBy === 'owner';
-export const publishable = entry => entry?.decision === DECISION.approved && entry.reviewedBy === 'owner';
+export const autoApproved = entry => entry?.reviewedBy === AUTO_VALIDATOR && entry?.decision === DECISION.approved && entry?.reviewMethod === AUTO_METHOD && entry?.autoPublish === true;
+export const publishable = entry => entry?.decision === DECISION.approved && (entry.reviewedBy === 'owner' || autoApproved(entry));
 
 // Adds a validator decision only when the case has no decision yet. Never overwrites.
 export function addPendingIfAbsent(entries, entry) {
