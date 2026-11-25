@@ -74,7 +74,7 @@ test('a failed or quota-limited request is shown as an error, not as a completed
 });
 
 test('every agent reports an explicit state; Gemini, Cloudflare and Groq report only what is stored', async () => {
-  const {body} = await run(new Map(), {quota: {active: true, count: 30}});
+  const {body} = await run(new Map(), {quota: {active: true, count: 300}});
   const allowed = ['active', 'idle', 'completed', 'failed', 'quota_limited', 'not_connected'];
   for (const name of ['Official GIS', 'Photon', 'Geoapify', 'Mapping', 'NVIDIA', 'Gemini', 'Cloudflare', 'Groq']) {
     assert.ok(allowed.includes(body.agents[name].state), name + ' has a valid state');

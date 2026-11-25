@@ -6,6 +6,8 @@ import {countyCheckpointKey} from '../lib/brain-gis-county-worker.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as GL from '../lib/gemini-limits.mjs';
 import * as CL from '../lib/cloudflare-limits.mjs';
+// Same value as WAYNE_DAILY_LIMIT in lib/brain-wayne-gis-quota.mjs (kept here so this module's test mocks stay valid).
+const WAYNE_DAILY_LIMIT = 300;
 const respond=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex, nofollow'}});
 const clean=s=>String(s??'').slice(0,160);
 // Explicit states: active, idle, completed, failed, quota_limited, not_connected. Derived from stored state only.
@@ -14,7 +16,7 @@ function agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,queue,g
  const workerRunning=!!worker?.lockedUntil&&Date.parse(worker.lockedUntil)>now&&worker?.state==='running';
  const gisCount=quota?.active?Number(quota.count)||0:0;
  const gis=workerRunning?st('active','Official GIS batch running',worker?.lastStarted):
-  gisCount>=30?st('quota_limited','Shared official GIS budget used for today',worker?.lastCompleted):
+  gisCount>=WAYNE_DAILY_LIMIT?st('quota_limited','Shared official GIS budget used for today',worker?.lastCompleted):
   worker?.retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?st('failed',clean(worker?.lastError||worker?.state),worker?.lastCompleted):
   worker?.lastCompleted?st('completed','Last Wayne batch finished',worker.lastCompleted):st('idle','No Wayne batch recorded',null);
  const pState=(s,limited)=>s?.state==='running'?st('active','Address lookup running',s.lastStarted):
@@ -203,9 +205,9 @@ async function handler(req){
   const state=control?.status==='paused'?'paused':
    running?'processing':Date.parse(worker?.sourcePause?.nextAt)>now?'source_paused':cooling?'retrying':
    retry?.exhausted||['provider_error','error','publish_pending'].includes(worker?.state)?'attention':
-   worker?.state==='source_scanned'?'complete':!quota.active||quota.count>=30?'quota_wait':'idle';
+   worker?.state==='source_scanned'?'complete':!quota.active||quota.count>=WAYNE_DAILY_LIMIT?'quota_wait':'idle';
   const dailyUsed=quota.active?quota.count:null;
-  const remaining=dailyUsed===null?null:Math.max(0,30-dailyUsed);
+  const remaining=dailyUsed===null?null:Math.max(0,WAYNE_DAILY_LIMIT-dailyUsed);
   const pendingReview=Object.values(worker?.reviewQueue||{}).filter(entry=>!entry.resolvedAt&&overlay?.records?.[entry.recordId]?.verifiedGeometry!==true).length;
   const progress=worker?.progress;
   const verifiedPolygons=Object.values(overlay?.records||{}).filter(row=>row?.verifiedGeometry===true&&!row.publicationPending&&Array.isArray(row.g)&&row.g.length).length;
@@ -219,12 +221,12 @@ async function handler(req){
     retryParcel:retry?.parcelId||null,retryAttempt:retry?.attempts||0,
     retryMaximum:retry?.maxAttempts||3,nextRetryAt:date(retry?.nextAt),
     failedStage:clean(retry?.failedStage||''),lastGisTrace:(retry?.gisTrace||[]).slice(0,5),
-    lastCompleted:date(worker?.lastCompleted),dailyUsed,remaining,dailyLimit:30,quotaActive:quota.active===true,quotaResumeAt:date(quota.resumeAt)};
+    lastCompleted:date(worker?.lastCompleted),dailyUsed,remaining,dailyLimit:WAYNE_DAILY_LIMIT,quotaActive:quota.active===true,quotaResumeAt:date(quota.resumeAt)};
   return respond(200,{ok:true,preview:auth.isBrainPreview(),source:'persisted_agent_status',health,
    capturedAt:new Date().toISOString(),county:'Wayne, Michigan',
    summary:{verifiedPolygons,processed:progress?progress.total-progress.pending:null,skipped:progress?.skipped??null,pendingReview,
     verifiedCoverage:progress?.verifiedPercent??null,processingCompletion:progress?.processingPercent??null,cursor:Number(worker?.cursor||0),runs:Number(worker?.runs||0),verified:Number(worker?.verified||0),published:Number(worker?.published||0),
-    needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed,remaining,dailyLimit:30,
+    needsReview:Number(worker?.needsReview||0),failures:Number(worker?.failures||0),dailyUsed,remaining,dailyLimit:WAYNE_DAILY_LIMIT,
     state:clean(worker?.state||'not_started'),paused:control?.status==='paused',
     lastSuccessfulBatch:date(worker?.lastSuccessfulBatch),lastCompleted:date(worker?.lastCompleted)},
    agents:agentStates({worker,quota,photon,geo,publication,nvidiaReceipts,queue:control?.queue,gemini,cloudflare,now}),
