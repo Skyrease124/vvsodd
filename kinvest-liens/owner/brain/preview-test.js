@@ -13,7 +13,7 @@
   for(const [action,label] of [['prepare','1. Fetch official candidate'],['publish','2. Publish approved correction'],['rollback','3. Reverse preview correction']]){
    const button=document.createElement('button');button.type='button';button.textContent=label;buttons.push(button);
    button.onclick=async()=>{
-    if(!confirm(label+' in this isolated preview?'))return;
+    if(!await ppaConfirm(label+' in this isolated preview?'))return;
     buttons.forEach(b=>b.disabled=true);note.textContent='Working…';
     try{
      const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
@@ -52,7 +52,7 @@
   const batchResults=document.createElement('div');batchResults.setAttribute('role','status');
   batchResults.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
   batchButton.onclick=async()=>{
-   if(!confirm('Check up to three additional unmapped Wayne/Detroit parcels against official GIS? Read-only, no paid AI calls.'))return;
+   if(!await ppaConfirm('Check up to three additional unmapped Wayne/Detroit parcels against official GIS? Read-only, no paid AI calls.'))return;
    batchButton.disabled=true;batchResults.textContent='Checking up to 3 official parcel records…';
    try{
     const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-batch-test',{
@@ -77,7 +77,7 @@
   const publishThreeResult=document.createElement('div');publishThreeResult.setAttribute('role','status');
   publishThreeResult.style.cssText='margin:12px 0;color:#d7f6e8;overflow-wrap:anywhere';
   publishThree.onclick=async()=>{
-   if(!confirm('Reverify parcels 01002754, 01002830 and 01003357 against official GIS, then publish confirmed polygons ONLY to this isolated Netlify preview? This cannot change production.'))return;
+   if(!await ppaConfirm('Reverify parcels 01002754, 01002830 and 01003357 against official GIS, then publish confirmed polygons ONLY to this isolated Netlify preview? This cannot change production.'))return;
    publishThree.disabled=true;publishThreeResult.textContent='Reverifying official GIS and publishing eligible preview corrections…';
    try{
     const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-batch-publish',{
@@ -109,7 +109,7 @@
    }catch(e){continueStatus.textContent='Wayne batch status unavailable: '+e.message;}
   }
   continueButton.onclick=async()=>{
-   if(!confirm('Process up to 3 more Detroit-address Wayne parcels, save the cursor and publish only officially verified polygons in this isolated preview? No paid AI calls.'))return;
+   if(!await ppaConfirm('Process up to 3 more Detroit-address Wayne parcels, save the cursor and publish only officially verified polygons in this isolated preview? No paid AI calls.'))return;
    continueButton.disabled=true;continueStatus.textContent='Running bounded official GIS checks…';
    try{
     const r=await window.PPABrainRequest('/.netlify/functions/owner-brain-wayne-run',{

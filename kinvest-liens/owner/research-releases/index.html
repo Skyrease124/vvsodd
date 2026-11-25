@@ -27,6 +27,7 @@ small{color:#596d7f;font-weight:400}a{color:#19775c}header a{color:#c2ffe1}[hidd
 <p id="result" role="status"></p></form>
 <p><a href="/owner/certificates/">Open Certificate Review</a> · <a href="/reviewed-certificates.html">View member research updates</a></p>
 </main>
+<script src="/owner/ppa-confirm.js"></script>
 <script>
 const status=document.getElementById('status'),form=document.getElementById('form'),type=document.getElementById('type');
 function toggle(){const isLien=type.value==='lien';for(const id of ['certGroup','keyGroup'])document.getElementById(id).hidden=!isLien;}
@@ -39,7 +40,7 @@ fetch('/.netlify/functions/research-updates',{credentials:'same-origin'}).then(a
 }).catch(e=>status.textContent=e.message);
 form.addEventListener('submit',async e=>{
  e.preventDefault();const result=document.getElementById('result'),save=document.getElementById('save');
- if(!confirm('Release this research update to Pro now and Free after 48 hours?'))return;
+ if(!await ppaConfirm('Release this research update to Pro now and Free after 48 hours?'))return;
  save.disabled=true;result.textContent='Publishing approved research update…';
  const fields=Object.fromEntries(new FormData(form));fields.approvedForResearch=true;fields.action='release';
  try{const r=await fetch('/.netlify/functions/research-updates',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify(fields)});

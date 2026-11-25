@@ -9,6 +9,7 @@
 <section class="panel" id="detail"><h2>County research</h2><div class="muted">Choose a county to view its known official sources and a sample of missing parcel IDs.</div><div id="aiBox" aria-live="polite"></div><div id="countyDetail"></div></section></div>
 <p class="small">Read-only research • Uses the published national map index • Configure Tavily limits in Owner Dashboard → API Keys • GIS matches still require official verification before any map changes.</p></main>
 <div id="gate" role="status" style="max-width:700px;margin:40px auto;padding:20px">Checking owner access…</div>
+<script src="/owner/ppa-confirm.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id),n=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e};

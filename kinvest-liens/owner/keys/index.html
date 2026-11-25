@@ -70,6 +70,7 @@
     <p id="researchStatus" class="st" role="status"></p>
   </section>
 </main>
+<script src="/owner/ppa-confirm.js"></script>
 <script>
 (function () {
   const $ = id => document.getElementById(id), mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
@@ -102,13 +103,13 @@
           }catch(e){out.className='bad';out.textContent='MapTiler test failed: '+(e.message||'Network error')+'. Check allowed HTTP origins (pricepocketasset.com) and your MapTiler plan.';}
           return;
         }
-        if(k.name==='FLORIDA_PROPERTY_API_KEY' && !confirm('Florida Property API may charge 1 trial credit for this connection test. Continue?')) return;if(k.name==='GEOCODE_MAPS_CO_API_KEY' && !confirm('Test Geocode.maps.co with one geocoding request? This can count toward your free usage allowance.')) return; out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name], ...(k.name==='FLORIDA_PROPERTY_API_KEY'?{allowTrialCredit:true}:{})});
+        if(k.name==='FLORIDA_PROPERTY_API_KEY' && !await ppaConfirm('Florida Property API may charge 1 trial credit for this connection test. Continue?')) return;if(k.name==='GEOCODE_MAPS_CO_API_KEY' && !await ppaConfirm('Test Geocode.maps.co with one geocoding request? This can count toward your free usage allowance.')) return; out.className = ''; out.textContent = 'Testing…'; const r = await api({test: TEST[k.name], ...(k.name==='FLORIDA_PROPERTY_API_KEY'?{allowTrialCredit:true}:{})});
         if (!r.ok) { out.className = 'bad'; out.textContent = 'Test failed: ' + (r.error || 'unknown'); return; }
         if (r.nlr) { out.className = 'good'; out.textContent = ({GEOCODE_MAPS_CO_API_KEY:'Geocode.maps.co', WEATHERAPI_KEY: 'WeatherAPI', DATAGOV_KEY: 'api.data.gov', GOOGLE_VISION_KEY: 'Google', RENTCAST_KEY: 'RentCast', CENSUS_KEY: 'Census', BLS_KEY: 'BLS', LIVEKIT_URL: 'LiveKit', LIVEKIT_API_KEY: 'LiveKit', LIVEKIT_API_SECRET: 'LiveKit', CONGRESS_API_KEY: 'Congress.gov', ONESIGNAL_REST_API_KEY: 'OneSignal'}[k.name] || 'NLR') + ' answered: key works. ' + r.text; return; }
         if (r.firms) { out.className = 'good'; out.textContent = 'NASA FIRMS answered: key works. ' + r.fires + ' fire detection(s) in the last 2 days within 50 miles of a test spot in central California' + (r.partial ? ' (one satellite feed did not answer)' : '') + '.'; return; }
         out.className = r.image.ok ? 'good' : 'bad'; out.textContent = r.provider + ': ' + r.cameras + ' cameras\nSample: ' + r.sample.name + (r.sample.road ? ' (' + r.sample.road + ')' : '') + '\nPicture: ' + (r.image.ok ? 'loads OK' : 'did not load') ;
         if (r.image.ok) { const im = mk('img'); im.src = r.sample.image; im.alt = r.sample.name; im.style.cssText = 'width:100%;border-radius:10px;margin-top:8px'; out.after(im); } };
-      clr.onclick = async () => { if (!confirm('Remove this key?')) return; draw(await api({name: k.name, remove: true})); };
+      clr.onclick = async () => { if (!await ppaConfirm('Remove this key?')) return; draw(await api({name: k.name, remove: true})); };
       row.append(save, test); if (k.set && k.source === 'Saved here') row.append(clr); c.append(row, out); box.appendChild(c);
     });
   }

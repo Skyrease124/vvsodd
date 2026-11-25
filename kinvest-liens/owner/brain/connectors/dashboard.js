@@ -298,7 +298,7 @@ async function runDiscovery(countyId,trigger){
   await loadDiscovery();
 }
 async function approveSource(countyId,candidateId,trigger){
-  if(!window.confirm('Approve this source for the owner record? The map will not change.'))return;
+  if(!await ppaConfirm('Approve this source for the owner record? The map will not change.'))return;
   trigger.disabled=true;
   try{
     await discoveryPost({confirmed:true,action:'approve-source',countyId,candidateId});
@@ -355,7 +355,7 @@ async function showTrial(request){
   button.disabled=result.used>=result.limit||result.cursor>=result.parcelIds.length||
     result.retry?.exhausted===true||Number(result.retry?.nextAt)>Date.now();
   button.onclick=async()=>{
-    if(!confirm('Send one request to Larimer County GIS and save the result in preview research?'))return;
+    if(!await ppaConfirm('Send one request to Larimer County GIS and save the result in preview research?'))return;
     button.disabled=true;
     statusLine.textContent='Checking the official parcel…';
     try{
@@ -429,7 +429,7 @@ async function showTrial(request){
     const diagnostic=document.createElement('button');
     diagnostic.textContent='Run final address diagnostic';
     diagnostic.onclick=async()=>{
-      if(!confirm('Use the final Larimer request for 741 Lindenmeier Rd, Fort Collins? This saves research only and keeps the parcel on review.'))return;
+      if(!await ppaConfirm('Use the final Larimer request for 741 Lindenmeier Rd, Fort Collins? This saves research only and keeps the parcel on review.'))return;
       diagnostic.disabled=true;
       statusLine.textContent='Checking the address with Larimer County…';
       try{
@@ -445,7 +445,7 @@ async function showTrial(request){
     const review=document.createElement('button');
     review.textContent='Approve retry of same Larimer parcel';
     review.onclick=async()=>{
-      if(!confirm('Re-arm ONLY parcel '+result.retry.recordId+' for one additional owner-confirmed GIS request later? This does NOT send a GIS request now. The existing '+result.used+'/'+result.limit+' reservation stays unchanged.'))return;
+      if(!await ppaConfirm('Re-arm ONLY parcel '+result.retry.recordId+' for one additional owner-confirmed GIS request later? This does NOT send a GIS request now. The existing '+result.used+'/'+result.limit+' reservation stays unchanged.'))return;
       review.disabled=true;
       statusLine.textContent='Re-arming the same saved review checkpoint…';
       try{
@@ -523,7 +523,7 @@ async function showResearch(request){
     const action=data.paused?'resume':'pause';
     button.textContent=data.paused?'Resume research queue':'Pause research queue';
     button.onclick=async()=>{
-      if(!confirm('Save '+action+' for the preview research queue? No research requests will run.'))return;
+      if(!await ppaConfirm('Save '+action+' for the preview research queue? No research requests will run.'))return;
       button.disabled=true;
       try{
         await read(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,confirmed:true})});
@@ -536,7 +536,7 @@ async function showResearch(request){
     run.textContent='Run One Research Test';
     run.disabled=data.paused||data.planningTestStatus!=='available';
     run.onclick=async()=>{
-      if(!confirm('Send one read-only request to Fort Collins Planning for BDR240012? This saves research evidence only.'))return;
+      if(!await ppaConfirm('Send one read-only request to Fort Collins Planning for BDR240012? This saves research evidence only.'))return;
       run.disabled=true;
       statusLine.textContent='Checking the public Fort Collins planning record…';
       try{
@@ -558,7 +558,7 @@ async function showResearch(request){
           'Next retry after '+new Date(data.retryAt).toLocaleString()+'.');
       }
       next.onclick=async()=>{
-        if(!confirm('Send one public metadata request to '+source.authority+'? No forms, document images or parcel GIS will be requested.'))return;
+        if(!await ppaConfirm('Send one public metadata request to '+source.authority+'? No forms, document images or parcel GIS will be requested.'))return;
         next.disabled=true;
         try{
           await read(url,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -687,7 +687,7 @@ async function showCountyPilot(id,selectionAtLoad){
   button.textContent=label;
   button.disabled=kind==='run'?!state.runAllowed:!state.active;
   button.onclick=async()=>{
-   if(!confirm(label+' for this county?'))return;
+   if(!await ppaConfirm(label+' for this county?'))return;
    button.disabled=true;
    try{
     await read(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -826,7 +826,7 @@ async function showFloridaLand(florida,request){
     approve.type='button';approve.textContent=row.approved?'Review approved':'Approve for review';
     approve.disabled=row.approved||!row.eligible;
     approve.onclick=async()=>{
-     if(!confirm('Approve this exact listing and evidence revision for owner review?'))return;
+     if(!await ppaConfirm('Approve this exact listing and evidence revision for owner review?'))return;
      approve.disabled=true;
      try{await send({action:'approve',id:row.id,revision:row.revision,reviewToken:row.reviewToken});await showCounty();}
      catch(error){status.textContent=error.message;approve.disabled=false;}
@@ -848,7 +848,7 @@ async function showFloridaLand(florida,request){
   file.onchange=()=>{upload.disabled=!file.files.length;};
   upload.onclick=async()=>{
    const selected=file.files[0];
-   if(!selected||!confirm('Import this approved local evidence file into the preview review queue?'))return;
+   if(!selected||!await ppaConfirm('Import this approved local evidence file into the preview review queue?'))return;
    upload.disabled=true;
    try{
     if(selected.size>480*1024)throw Error('Select a prepared file under 480 KB.');
@@ -903,7 +903,7 @@ async function showPutnamVerification(panel,line,request){
   const button=document.createElement('button');
   button.type='button';button.textContent='Verify Putnam Parcel';button.disabled=!state.canRun;
   button.onclick=async()=>{
-   if(!confirm('Reserve one shared GIS request for '+state.parcelId+' and verify it in this private preview?'))return;
+   if(!await ppaConfirm('Reserve one shared GIS request for '+state.parcelId+' and verify it in this private preview?'))return;
    button.disabled=true;note.textContent='Request in progress';
    try{
     render(await read(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(25000),

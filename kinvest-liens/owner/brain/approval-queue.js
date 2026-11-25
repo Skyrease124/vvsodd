@@ -85,7 +85,7 @@
    const send = async (action) => {
     if (!confirm.checked && action === 'approve') { result.textContent = 'Confirm that you personally checked the official record.'; return; }
     const verb = action === 'approve' ? (mode.value === 'immediate_critical' ? 'Approve and release to everyone now' : 'Approve; Pro first, Free after 48 hours') : (isPublic ? 'Withdraw this public correction from every viewer' : 'Reject');
-    if (!window.confirm(verb + ' this correction for parcel ' + entry.parcelId + '?')) return;
+    if (!await ppaConfirm(verb + ' this correction for parcel ' + entry.parcelId + '?')) return;
     approve.disabled = reject.disabled = true;
     try {
      const data = await call(REVIEW, 'POST', {action, dataset: 'MI-wayne', recordId: entry.recordId, confirmed: true,
@@ -106,7 +106,7 @@
 
  async function publishApproved() {
   const result = $('approvalStatus');
-  if (!window.confirm('Publish every approved correction that is waiting? Each publication uses the shared official GIS budget.')) return;
+  if (!await ppaConfirm('Publish every approved correction that is waiting? Each publication uses the shared official GIS budget.')) return;
   try {
    const data = await call(REVIEW, 'POST', {action: 'publish-approved', confirmed: true});
    result.textContent = data.notice || 'Publication attempted.';
@@ -153,7 +153,7 @@
      } else {
       const ask = el('button', '', 'Ask Cloudflare for a second opinion'); ask.type = 'button'; ask.disabled = !op.enabled || op.stopped || op.used >= op.daily;
       ask.addEventListener('click', async () => {
-       if (!window.confirm('Send these proposals (parcel, summary and source labels only, no positions) to Cloudflare for one second opinion? It uses one of today\'s ' + op.daily + ' allowed requests. Nothing is changed or published.')) return;
+       if (!await ppaConfirm('Send these proposals (parcel, summary and source labels only, no positions) to Cloudflare for one second opinion? It uses one of today\'s ' + op.daily + ' allowed requests. Nothing is changed or published.')) return;
        ask.disabled = true; card.classList.add('nv-busy'); const note = el('p', 'small', 'Asking Cloudflare…'); card.append(note);
        try { await call(OPINION, 'POST', {action: 'second-opinion', receiptId: r.id, confirmed: true}); nvAsked = r.id; } catch (error) { note.textContent = error.message; ask.disabled = false; card.classList.remove('nv-busy'); return; }
        await loadNvidia();
@@ -171,7 +171,7 @@
  }
 
  async function runNvidia() {
-  if (!window.confirm('Send the current stored helper results to NVIDIA? This uses one of today\'s allowed runs. Nothing is published.')) return;
+  if (!await ppaConfirm('Send the current stored helper results to NVIDIA? This uses one of today\'s allowed runs. Nothing is published.')) return;
   const result = $('nvidiaStatus'), panel = $('nvidiaPanel');
   $('nvidiaRun').disabled = true;
   if (panel) panel.classList.add('nv-busy');

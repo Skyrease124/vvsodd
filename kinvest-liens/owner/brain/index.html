@@ -84,6 +84,7 @@
 <section class="panel"><h2>Correction review ledger</h2><p class="muted">Agents save official evidence and verification notes automatically when exact identity, address and polygon checks pass. Decisions wait in the owner approval queue above until you approve or reject them. Unresolved cases remain flagged. Select Preview Map Repair on an approved decision to see the exact record-level proposed point correction. No updates are applied.</p><div id="ledger" class="small">Loading decisions…</div></section>
 <section class="panel"><h2>Review queue <span id="queueCount" class="small"></span></h2><label for="filter">Filter by state</label><input id="filter" placeholder="Example: FL" maxlength="2"><div id="cases"></div></section>
 <p class="muted">Automatic polygon verification currently supports Detroit. Agents compare the official parcel ID, street address and polygon with the county record, save attributed evidence and decisions, and pass verified cases to the owner approval queue. The guarded publisher runs only after you approve a case. Other counties and ambiguous records remain research leads; geocoded points alone never become boundaries.</p></section></main>
+<script src="/owner/ppa-confirm.js"></script>
 <script src="requests.js"></script><script>
 'use strict';
 const $=id=>document.getElementById(id),endpoint='/.netlify/functions/owner-brain-queue';
@@ -152,37 +153,37 @@ async function previewRepair(caseKey,btn,out){
  }catch(e){out.textContent='No changes made: '+e.message;}finally{btn.disabled=false;}
 }
 async function reviewCase(r,decision,url,notes,checked,btn){
- if(!confirm(decision==='approve'?'Confirm official evidence reviewed? This stages a PRIVATE correction only; public maps stay unchanged.':'Reject this candidate and retain the review record?'))return;
+ if(!await ppaConfirm(decision==='approve'?'Confirm official evidence reviewed? This stages a PRIVATE correction only; public maps stay unchanged.':'Reject this candidate and retain the review record?'))return;
  btn.disabled=true;
  try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
  catch(e){$('note').textContent=e.message;btn.disabled=false;}
 }
 async function lookupDetroitAddress(r,btn){
- if(!confirm('Search Detroit official parcel data using the street address recorded in your published property list? Only unverified candidates will be shown; no map changes.'))return;
+ if(!await ppaConfirm('Search Detroit official parcel data using the street address recorded in your published property list? Only unverified candidates will be shown; no map changes.'))return;
  btn.disabled=true;btn.textContent='Searching street address…';
  try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
  catch(e){btn.disabled=false;btn.textContent='Search by street address';$('note').textContent=e.message;}
 }
 async function lookupDetroit(r,btn){
- if(!confirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
+ if(!await ppaConfirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking Detroit GIS…';
  try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Check Detroit Assessor GIS';$('note').textContent=e.message;}
 }
 async function lookupFlorida(r,btn){
- if(!confirm('Use 1 Florida Property API trial credit to look up this parcel by exact county and parcel ID? This may reduce your trial balance. No paid fallback and no map edits.'))return;
+ if(!await ppaConfirm('Use 1 Florida Property API trial credit to look up this parcel by exact county and parcel ID? This may reduce your trial balance. No paid fallback and no map edits.'))return;
  btn.disabled=true;btn.textContent='Checking Florida API…';
  try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-florida',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'florida-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Florida API lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Florida API: Match parcel';$('note').textContent=e.message;}
 }
 async function lookupGIS(r,btn){
- if(!confirm('Search a public Wayne County GIS layer for an exact parcel-ID match? No paid API and no map updates.'))return;
+ if(!await ppaConfirm('Search a public Wayne County GIS layer for an exact parcel-ID match? No paid API and no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking GIS…';
  try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-gis',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'gis-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'GIS lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Find exact GIS match';$('note').textContent=e.message;}
 }
 async function triageCase(r,btn){
- if(!confirm('Use 1 Groq free-tier API request to prepare an unverified research checklist for this parcel?'))return;
+ if(!await ppaConfirm('Use 1 Groq free-tier API request to prepare an unverified research checklist for this parcel?'))return;
  btn.disabled=true;btn.textContent='Groq researching…';
  try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-research',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'groq-triage',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Groq failed');$('note').textContent='Groq checklist saved (unverified).';await load();}
  catch(e){btn.disabled=false;btn.textContent='Groq: Research this case';$('note').textContent=e.message;}
@@ -198,7 +199,7 @@ async function loadPublication(){
  }catch(e){$('pipelineStatus').textContent='Publication history unavailable: '+e.message;}
 }
 async function load(){loadPublication().catch(()=>{});try{const r=await window.PPABrainRequest(endpoint,{credentials:'same-origin',cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'Access denied');draw(d)}catch(e){$('gate').textContent=e.message||'Unavailable';$('note').textContent=e.message||'Status unavailable';}}
-async function action(which){if(which==='clear'&&!confirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
+async function action(which){if(which==='clear'&&!await ppaConfirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
@@ -309,7 +310,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
      retry.disabled=sourceCooling||d.worker.paused||Date.parse(d.worker.quotaResumeAt)>Date.now()||
       (d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit);
      retry.onclick=async()=>{
-      if(!confirm('Run one bounded official GIS retry for '+entry.parcelId+' in preview? Verified results may be published to the preview map.'))return;
+      if(!await ppaConfirm('Run one bounded official GIS retry for '+entry.parcelId+' in preview? Verified results may be published to the preview map.'))return;
       retry.disabled=true;
       try{
        const res=await fetch('/.netlify/functions/owner-brain-wayne-run',{method:'POST',credentials:'same-origin',
@@ -364,7 +365,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  document.getElementById('wayneRetryRearm').onclick=async()=>{
   const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);
   if(!parcelId||!Number.isSafeInteger(cursor))return;
-  if(!confirm('Allow a fresh official GIS verification attempt for parcel '+parcelId+'? This does NOT skip it, reset the daily request limit, or publish anything automatically.'))return;
+  if(!await ppaConfirm('Allow a fresh official GIS verification attempt for parcel '+parcelId+'? This does NOT skip it, reset the daily request limit, or publish anything automatically.'))return;
   btn.disabled=true;
   try{
    const r=await fetch('/.netlify/functions/owner-brain-wayne-retry-review',{method:'POST',
@@ -378,7 +379,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  };
  document.getElementById('wayneQuotaActivate').onclick=async()=>{
   const btn=document.getElementById('wayneQuotaActivate'),out=document.getElementById('wayneQuotaActivationResult');
-  if(!confirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 300-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
+  if(!await ppaConfirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 300-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
   btn.disabled=true;out.textContent='Activating budget marker…';
   try{
    const r=await fetch('/.netlify/functions/owner-brain-wayne-quota-activate',{
@@ -392,7 +393,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  };
  document.getElementById('wayneTestBatch').onclick=async()=>{
   const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
-  if(!confirm('Run one live Detroit GIS pilot in this preview? Up to three official GIS requests, including the independent publisher, count against the shared daily quota. Verified polygons may publish to the preview maps.'))return;
+  if(!await ppaConfirm('Run one live Detroit GIS pilot in this preview? Up to three official GIS requests, including the independent publisher, count against the shared daily quota. Verified polygons may publish to the preview maps.'))return;
   pilotRunning=true;
   const startedBefore=btn.dataset.lastStarted||null;
   btn.disabled=true;out.hidden=false;out.textContent='Running the live Wayne pilot…';
@@ -433,8 +434,7 @@ load();setInterval(()=>{if(!document.hidden)load()},30000);
  };
  document.getElementById('unattendedToggle').onclick=async()=>{
   const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true',out=document.getElementById('unattendedToggleResult');
-  if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
-  {out.textContent='Cancelled. Nothing was changed.';return;}
+  if(!await ppaConfirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.')){out.textContent='Cancelled. Nothing was changed.';return;}
   btn.disabled=true;out.textContent=enable?'Turning on…':'Turning off…';
   try{
    const res=await fetch('/.netlify/functions/owner-brain-scheduler-control',{method:'POST',credentials:'same-origin',

@@ -45,7 +45,7 @@
   const ids = selectedIds();
   const status = $('batchStatus');
   if (!ids.length) return say(status, 'Select at least one verified, located record.', true);
-  if (!window.confirm('Approve ' + ids.length + ' record' + (ids.length === 1 ? '' : 's') + '?\n\nPro members see each one now. Free and anonymous visitors see it 48 hours later. Each record keeps its own audit entry.')) return;
+  if (!await ppaConfirm('Approve ' + ids.length + ' record' + (ids.length === 1 ? '' : 's') + '?\n\nPro members see each one now. Free and anonymous visitors see it 48 hours later. Each record keeps its own audit entry.')) return;
   const batchId = 'batch-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
   $('batchApprove').disabled = true;
   let approved = 0; const refused = [];
@@ -136,7 +136,7 @@
   const status = $('matchStatus');
   const chosen = selectedDataset();
   if (!chosen) return say(status, 'Choose a county dataset first.', true);
-  if (!window.confirm('Import the ' + chosen.county + ', ' + chosen.state + ' records into the approval queue?\n\nMatched records wait for your approval. Records without a match stay in the intake for investigation, and any candidate position stays unverified until you verify it. Nothing appears on the map until you approve each record.')) return;
+  if (!await ppaConfirm('Import the ' + chosen.county + ', ' + chosen.state + ' records into the approval queue?\n\nMatched records wait for your approval. Records without a match stay in the intake for investigation, and any candidate position stays unverified until you verify it. Nothing appears on the map until you approve each record.')) return;
   $('matchImport').disabled = true;
   try {
    const d = await call(INTAKE, 'POST', {confirmed: true, action: 'import-matches', dataset: chosen.id});
@@ -400,7 +400,7 @@
   }
  }
  async function runLive(item, btn, msg) {
-  if (!window.confirm('Run "' + item.label + '" once?\n\n' + item.cost)) return;
+  if (!await ppaConfirm('Run "' + item.label + '" once?\n\n' + item.cost)) return;
   btn.disabled = true;
   say(msg, 'Running…');
   try {

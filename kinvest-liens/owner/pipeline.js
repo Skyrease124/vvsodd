@@ -107,7 +107,7 @@
  }
  async function runBatch(manual){
   if(runInProgress||!autoAllowed)return;
-  if(manual&&!confirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
+  if(manual&&!await ppaConfirm('Force an immediate Wayne County batch of up to 3 eligible parcels in the isolated preview? Official GIS checks, pause controls and the 30-request daily limit still apply.'))return;
   runInProgress=true;force.disabled=true;autoButton.disabled=true;
   forceResult.textContent=manual?'Running guarded Wayne County batch…':'Automatic Wayne County batch running…';
   try{
