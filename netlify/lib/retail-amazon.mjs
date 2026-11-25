@@ -88,7 +88,7 @@ export async function step({ force = false, limit = PER_RUN, reader = null } = {
   }
   // 2) request fresh data for due products (credits reserved first)
   const busy = new Set(keep.flatMap(j => j.ids));
-  const due = (await R.listProducts()).filter(p => isAmazonProduct(p) && !busy.has(p.id) && (force || !p.checkedAt || Date.now() - Date.parse(p.checkedAt) >= dueMs(p))).slice(0, limit);
+  const due = (await R.listProducts()).filter(p => isAmazonProduct(p) && !busy.has(p.id) && (!p.checkedAt || Date.now() - Date.parse(p.checkedAt) >= (force ? 10 * 60e3 : dueMs(p)))).slice(0, limit);
   if (due.length) {
     if (!(await reserve(due.length))) { await auth.kvPut(PEND, { jobs: keep }); return Object.assign(out, { skipped: 'Monthly credit cap reached (' + MONTHLY_CAP + '). No more requests this month.' }); }
     try {
