@@ -34,17 +34,48 @@
   const sqft = r => r.sf ? r.sf.toLocaleString('en-US') + ' sq ft' : (r.ac != null ? Math.round(r.ac * 43560).toLocaleString('en-US') + ' sq ft' : null);
   const slugState = a => a;
   let IDX = null, map = null, mapReady = false, loaded = {}, sel = null, near = null, paid = false, signedIn = false, acctDone = false, base = 'satellite', sort = params.get('sort') === 'low' ? 'low' : 'sale', pageN = 40, curState = '', curCounty = '';
+  // Homepage Tools: Land Only, Tax Liens and Deeds are one choice at a time (none selected shows everything).
+  const HOME_CAT = { lien: 'tax_lien', deed: 'tax_deed', land: 'land_bank' };
+  const HOME_RADAR = { lien: ['lien-sale', 'county-held'], deed: ['deed'], land: ['state-held'] };
+  const HOME_RESEARCH = { lien: 'lien', land: 'land' };
+  const RESEARCH_LABEL = { lien: 'lien', land: 'land', tax_deed: 'tax deed', property: 'property' };
+  let landOnly = false; // Homepage Tools mode; existing land-bank datasets are research inventory, not confirmed offers.
   const F = { cats: { tax_deed: true, tax_lien: true, land_bank: true }, vacantOnly: params.get('vacant') === '1', small: false, acMin: '', acMax: '', amtMin: '', amtMax: '', upcoming: false, otc: false, flood: 'any', wet: 'any', verified: false, inView: false };
   const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : Promise.reject(r.status));
+  // Tells the selection effect (state-focus.js) which state and county are selected. Display only; it changes no data.
+  const ppaFocus = (state, county) => { try { window.dispatchEvent(new CustomEvent('ppa:map-focus', { detail: { state: state || '', county: county || '' } })); } catch (_) { /* the map works without it */ } };
   const say = (t, keep) => { const m = $('pmMsg'); m.textContent = ''; if (t) { m.appendChild(mk('span', 'm', t)); if (!keep) setTimeout(() => { if (m.textContent === t) m.textContent = ''; }, 6500); } };
 
+  // Keep all visible map instances current without restarting MapLibre or redeploying.
+  // The Workshop map uses this same script; saved corrections refresh every 2 minutes.
+  let overlayRefreshRunning=false,overlayRefreshCursor=0;
+  async function refreshVerifiedOverlays(){
+    if(document.hidden||overlayRefreshRunning||!window.PPABrainMap)return;
+    overlayRefreshRunning=true;let visibleChanged=false;
+    try{
+      const counties=Object.values(loaded);
+      // Rotate bounded batches so the ninth and later loaded counties are never starved.
+      // Each failed county is isolated; the other maps still receive their updates.
+      for(let i=0;i<Math.min(8,counties.length);i++){
+        const ds=counties[(overlayRefreshCursor+i)%counties.length];
+        try{
+          const result=await window.PPABrainMap.apply(ds);
+          // Cached offscreen counties still update, but do not trigger an
+          // expensive MapLibre redraw or rebuild the mobile result list.
+          if(result.changed&&(!active.size||active.has(ds.id)))visibleChanged=true;
+        }catch(_){/* Keep existing polygons until the source recovers. */}
+      }
+      if(counties.length)overlayRefreshCursor=(overlayRefreshCursor+8)%counties.length;
+      if(visibleChanged){refresh();if(sel&&loaded[sel._d]&&(!active.size||active.has(sel._d)))popup(sel);}
+    }finally{overlayRefreshRunning=false;}
+  }
   // ---------- data ----------
   function expand(ds) { const D = ds.dict; ds.recs.forEach(r => { for (const k in D) if (r[k] != null) r[k] = D[k][r[k]]; r._d = ds.id; r._n = ((r.a || '') + ' ' + (r.o || '') + ' ' + r.p).toLowerCase(); }); return ds; }
   function skeleton() { const R = $('pmResults'); R.textContent = ''; for (let i = 0; i < 6; i++) { const s = mk('div', 'pm-skel'); s.append(mk('i'), mk('i'), mk('i')); R.appendChild(s); } }
   async function load(id) {
     if (loaded[id]) return loaded[id]; const d = IDX.datasets.find(x => x.id === id); if (!d) return null;
     say('Loading ' + d.county + ', ' + d.state + '…', true); skeleton();
-    try { const ds = expand(await api('/map/data/' + d.file)); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
+    try { const ds = expand(await api('/map/data/' + d.file)); if(window.PPABrainMap)await window.PPABrainMap.apply(ds).catch(()=>{}); ds.meta = d; loaded[id] = ds; say(''); return ds; } catch (e) { say('Could not load that county. Please try again.'); return null; }
   }
   const all = () => Object.values(loaded).flatMap(d => d.recs);
   // Only the county (or the counties in a "Search this area" view) you picked is drawn and listed; counties you opened earlier stay cached but are not mixed in.
@@ -55,6 +86,7 @@
   const isOtc = r => r.k === 'otc' || /over[- ]the[- ]counter|surplus|\botc\b/i.test((r.t || '') + ' ' + (r.st || ''));
   const sfha = r => r.fz && r.fz.sfha != null ? r.fz.sfha > 0 : null;
   function passes(r) {
+    if (homeMap && landOnly && r.c !== 'land_bank') return false;
     if (F.query && !F.query.every(term => r._n.includes(term))) return false;
     if (F.vacantOnly && !r.va) return false; if (!F.cats[r.c] && !(F.vacantOnly && r.va)) return false;
     if (F.small && !(r.ac != null && r.ac <= 1)) return false;
@@ -102,8 +134,8 @@
     const byCounty = new Map([...Object.values(researchMapped), ...Object.values(loaded)].map(d => [d.meta.id, d]));
     const relevant = [...byCounty.values()].filter(d =>
       (!active.size || active.has(d.meta.id)) && (!curState || d.meta.state === curState));
-    researchPins = window.PPAResearchMap.match(researchUpdates, relevant);
-    const features = researchOn ? researchPins.map(item => ({
+    researchPins = window.PPAResearchMap.match(researchUpdates.filter(u => !u.mapRecord), relevant);
+    const features = researchOn ? researchPins.filter(item => !homeMap || researchInMode(item)).map(item => ({
       type: 'Feature', geometry: {type:'Point', coordinates:item.coordinates},
       properties: {id:item.release.id, type:item.release.type}
     })) : [];
@@ -121,7 +153,7 @@
       if (!data.ok || !Array.isArray(data.records)) throw Error('Invalid research response');
       researchAccess = data.access === 'pro' ? 'pro' : 'free';
       researchUpdates = data.records.filter(r => r &&
-        (r.type === 'lien' || r.type === 'land') && r.researchOnly === true &&
+        RESEARCH_LABEL[r.type] && r.researchOnly === true &&
         r.availableForPurchase === false && typeof r.id === 'string');
     } catch (error) { researchUpdates = []; researchAccess = 'free'; }
     paintResearch();
@@ -134,7 +166,7 @@
     if (!item) return;
     const r = item.release, pane = mk('div');
     pane.style.cssText = 'color:#13263b;font:14px/1.5 system-ui;max-width:270px';
-    pane.appendChild(mk('b', '', 'New approved ' + (r.type === 'lien' ? 'lien' : 'land') + ' research'));
+    pane.appendChild(mk('b', '', 'New approved ' + (RESEARCH_LABEL[r.type] || 'land') + ' research'));
     pane.appendChild(mk('div', '', r.title || 'Research update'));
     pane.appendChild(mk('div', '', (r.county || '') + ', ' + (r.state || '') + ' · Parcel ' + r.parcelId));
     if (r.description) pane.appendChild(mk('p', '', r.description));
@@ -158,9 +190,21 @@
     sources: { osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors' },
       sat: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19, attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics' },
       ref: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 } },
+    // 'ref' (white boundaries and place labels) is opt-in via Layers > Hybrid only; the default is satellite with black state borders.
     layers: [{ id: 'osm', type: 'raster', source: 'osm', layout: { visibility: 'none' }, paint: { 'raster-saturation': -0.35, 'raster-brightness-max': 0.9, 'raster-fade-duration': 250 } }, { id: 'sat', type: 'raster', source: 'sat', paint: { 'raster-brightness-max': 0.86, 'raster-saturation': -0.08, 'raster-fade-duration': 250 } }, { id: 'ref', type: 'raster', source: 'ref', layout: { visibility: 'none' } }] });
   const catColor = ['match', ['get', 'c'], 'tax_deed', CATS.tax_deed.c, 'tax_lien', CATS.tax_lien.c, 'land_bank', CATS.land_bank.c, '#94a3b8'];
   const empty = { type: 'FeatureCollection', features: [] };
+  // Current homepage Tools mode: 'all', 'lien', 'deed' or 'land'.
+  // Returns 'all', 'land', 'lien', 'deed' or 'lien+deed' (Tax Liens and Deeds can both be on).
+  function homeMode() {
+    if (landOnly) return 'land';
+    const names = Object.keys(HOME_CAT).filter(m => F.cats[HOME_CAT[m]]);
+    if (!names.length || names.length === 3 || (names.includes('land') && names.length > 1)) return 'all';
+    return names.join('+');
+  }
+  const modeParts = m => m === 'all' ? [] : m.split('+');
+  function homeModeAllows(d) { const p = modeParts(homeMode()); return !p.length || p.some(x => !!(d.cats && d.cats[HOME_CAT[x]])); }
+  function researchInMode(item) { const p = modeParts(homeMode()); return !p.length || p.some(x => HOME_RESEARCH[x] === item.release.type); }
   function setBase(b) { base = b; if (!mapReady) return; map.setLayoutProperty('osm', 'visibility', b === 'map' ? 'visible' : 'none'); map.setLayoutProperty('sat', 'visibility', b === 'map' ? 'none' : 'visible'); map.setLayoutProperty('ref', 'visibility', b === 'hybrid' ? 'visible' : 'none'); document.querySelectorAll('[data-base]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.base === b))); }
   function moveNativeMapControls(){
     const menu=window.__pmDock?.menu;
@@ -180,7 +224,6 @@
     if (homeMap) {
       map.addControl(navigationControl, controlSide);
       map.addControl(locationControl, controlSide);
-      map.addControl(new maplibregl.ScaleControl({ maxWidth: 65, unit: 'imperial' }), 'bottom-left');
       // Keep MapLibre's original button handlers but place their controls inside the dock.
       moveNativeMapControls();
       const repaint = () => {
@@ -195,6 +238,7 @@
     }
     if(!homeMap&&!pickerMap)moveNativeMapControls();
     map.touchZoomRotate.disableRotation();
+    if(homeMap)map.on('zoomend',drawRadarPins);
     map.on('load', () => {
       mapReady = true; ['parcels', 'near', 'sel', 'sel-point', 'pts', 'dots'].forEach(s => map.addSource(s, { type: 'geojson', data: empty }));
       // At county zoom a lot is smaller than a pixel, so each drawn parcel also gets a dot that fades out as the real outline appears.
@@ -229,8 +273,23 @@
       map.on('mouseenter','research-pin',()=>{map.getCanvas().style.cursor='pointer';});
       map.on('mouseleave','research-pin',()=>{map.getCanvas().style.cursor='';});
       paintResearch();
-      ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); map.on('click', l, e => { const f = e.features && e.features[0]; if (f) { const r = byId(f.properties.i); if (r) select(r, { fly: false }); } }); });
-      map.on('click', e => { if (!map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts', 'p-dots'] }).length) closePop(); });
+      ['p-fill', 'pts', 'p-dots'].forEach(l => { map.on('mouseenter', l, () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; }); });
+      // Tapping a parcel: exact hit first, then the nearest dot within a finger-sized area, then the parcel shape. A miss closes the card.
+      map.on('click', e => {
+        if (detailPanel && !detailPanel.hidden) return; // the open parcel card keeps the selection
+        const other = ['research-pin', 'hz-c'].filter(id => map.getLayer(id));
+        if (other.length && map.queryRenderedFeatures(e.point, { layers: other }).length) return;
+        let hit = map.queryRenderedFeatures(e.point, { layers: ['pts', 'p-dots'] });
+        if (!hit.length) {
+          const pad = 24, box = [[e.point.x - pad, e.point.y - pad], [e.point.x + pad, e.point.y + pad]];
+          const near = map.queryRenderedFeatures(box, { layers: ['pts', 'p-dots'] }).filter(f => f.geometry && f.geometry.type === 'Point');
+          const dist = f => { const q = map.project(f.geometry.coordinates); return Math.hypot(q.x - e.point.x, q.y - e.point.y); };
+          near.sort((a, b) => dist(a) - dist(b)); if (near.length) hit = [near[0]];
+        }
+        if (!hit.length) hit = map.queryRenderedFeatures(e.point, { layers: ['p-fill'] });
+        const f = hit[0], r = f && byId(f.properties.i);
+        if (r) select(r, { fly: false }); else closePop();
+      });
       setBase(base); addStates().then(() => { refresh(); start2(); }); map.on('zoom', natLegend); natLegend(); map.on('moveend', () => { const a = $('pmArea'); if (a) a.hidden = !(map.getZoom() >= 9 && !F.inView); });
     });
   }
@@ -314,7 +373,7 @@
       const url=verifiedGISLink();
       if(url){window.open(url,'_blank','noopener,noreferrer');return;}
       const name=curState||'the selected state';
-      say((curState?name+' GIS':'GIS')+': no verified parcel GIS viewer for this county. Select a mapped county to check available links.',true);
+      say((curState?name+' GIS':'GIS')+': no verified parcel GIS viewer for this county. Select a county with records to check available links.',true);
       return;
     }
     flGisOn=!flGisOn;button.setAttribute('aria-pressed',String(flGisOn));
@@ -333,17 +392,22 @@
     const rs = shown().filter(passes); const polys = rs.filter(r => r.g), pts = rs.filter(r => !r.g && r.cx);
     if (mapReady) { map.getSource('parcels').setData({ type: 'FeatureCollection', features: polys.map(feature) }); map.getSource('dots').setData({ type: 'FeatureCollection', features: polys.filter(r => r.cx).map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); map.getSource('pts').setData({ type: 'FeatureCollection', features: pts.map(r => ({ type: 'Feature', properties: { i: r.i, c: r.c }, geometry: { type: 'Point', coordinates: r.cx } })) }); }
     renderResults(rs); renderCounts(); paintResearch();
+    if (homeMap) scheduleStrip();
   }
   // Padding keeps the records clear of the search pill, the round buttons and the phone's bottom sheet, so a county lands centered in what you can actually see.
   const fitPad = () => homeMap ? {top:18,bottom:28,left:14,right:14} : embedded ? {top:pickerMap ? 8 : 100,bottom:pickerMap ? 8 : 58,left:10,right:38} : isMobile() ? { top: 140, bottom: snap === 'half' ? Math.round(innerHeight * 0.56) : snap === 'full' ? Math.round(innerHeight * 0.9) : 150, left: 24, right: 76 } : { top: 100, bottom: 40, left: 30, right: 80 };
   // The box to zoom to: the county's records, ignoring a few far-away strays (bad addresses) so the view lands on where the parcels really are.
   function fitBB(ds) {
-    const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx); if (!d.bb || pts.length < 8) return d.bb;
+    const d = ds.meta, pts = ds.recs.filter(r => r.cx).map(r => r.cx);
+    if(!d.bb){const boxes=ds.recs.filter(r=>r.bb&&r.cx).map(r=>r.bb);return boxes.length?[Math.min(...boxes.map(b=>b[0])),Math.min(...boxes.map(b=>b[1])),Math.max(...boxes.map(b=>b[2])),Math.max(...boxes.map(b=>b[3]))]:null;}
+    if (pts.length < 8) return d.bb;
     const xs = pts.map(p => p[0]).sort((a, b) => a - b), ys = pts.map(p => p[1]).sort((a, b) => a - b), q = (a, p) => a[Math.floor((a.length - 1) * p)];
     const core = [q(xs, .02), q(ys, .02), q(xs, .98), q(ys, .98)], full = Math.max(d.bb[2] - d.bb[0], d.bb[3] - d.bb[1]), cw = Math.max(core[2] - core[0], core[3] - core[1], 1e-4);
     if (full / cw < 2.5) return d.bb; const pad = cw * 0.06; return [core[0] - pad, core[1] - pad, core[2] + pad, core[3] + pad];
   }
-  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || fitPad(), maxZoom: 17.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3) }); }
+  // While a state or county is raised (state-focus.js) every fit keeps the tilt, so a later fit never flattens it.
+  const focusPitch = () => (window.PPAFocus && window.PPAFocus.active ? window.PPAFocus.pitch() : 0);
+  function fitTo(bb, pad) { if (!bb || !mapReady) return; map.fitBounds([[bb[0], bb[1]], [bb[2], bb[3]]], { padding: pad || fitPad(), maxZoom: 17.5, duration: REDUCED ? 0 : 240, easing: t => 1 - Math.pow(1 - t, 3), pitch: focusPitch() }); }
 
   // ---------- top bar and filters ----------
   const ICON = { haz: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 10v4"/><path d="M12 17.2v.1"/></svg>', layers: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg>', filter: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>', spark: '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.9 7 7.5 7.5-4.6.5-7 2.9-7.5 7.5-.5-4.6-2.9-7-7.5-7.5 4.6-.5 7-2.9 7.5-7.5Z"/><path d="M19 15.5c.2 1.8 1.2 2.8 3 3-1.8.2-2.8 1.2-3 3-.2-1.8-1.2-2.8-3-3 1.8-.2 2.8-1.2 3-3Z" opacity=".8"/></svg>', cam: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.5"/></svg>', pin: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' };
@@ -352,11 +416,61 @@
   function buildTop() {
     const t = $('pmTop'); t.textContent = '';
     const stSel = mk('select'); stSel.setAttribute('aria-label', 'State'); const o0 = mk('option', '', 'Choose a state'); o0.value = ''; stSel.appendChild(o0);
-    const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
-    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' mapped)' : '')); o.value = s.a; stSel.appendChild(o); });
+    // Coverage is counted from the index: counties that have records, and the records in them. A verified map position
+    // is shown per county once that county loads, so no state label claims one.
+    const have = {}, recs = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; recs[d.state] = (recs[d.state] || 0) + (d.records || 0); });
+    IDX.allStates.forEach(s => { const o = mk('option', '', s.n + (!homeMap && have[s.a] ? ' (' + have[s.a] + (have[s.a] === 1 ? ' county' : ' counties') + ' with records · ' + recs[s.a].toLocaleString('en-US') + ' records)' : '')); o.value = s.a; stSel.appendChild(o); });
+    // In a homepage Tools mode (Land Only, Tax Liens or Deeds), the state picker lists only states with that category in the index.
+    const syncModeStates=()=>{
+      if(!homeMap)return;
+      const limited=homeMode()!=='all';
+      const eligible=new Set(IDX.datasets.filter(d=>homeModeAllows(d)).map(d=>d.state));
+      for(const option of stSel.options){
+        if(!option.value)continue;
+        option.hidden=limited&&!eligible.has(option.value);
+        option.disabled=limited&&!eligible.has(option.value);
+      }
+      if(limited&&stSel.value&&!eligible.has(stSel.value)){
+        stSel.value='';curState='';curCounty='';active=new Set(['__none__']);
+        if(window.__pm)fillCounties(window.__pm.coSel);
+      }
+    };
+    // Native iOS state picker shows a concise, source-labelled Radar inventory summary.
+    // Counts describe tracked records, not a guarantee that a listing remains purchasable.
+    const applyStateInventory=counts=>{
+      if(!counts||typeof counts!=='object')return;
+      for(const option of stSel.options){
+        if(!option.value)continue;
+        const s=IDX.allStates.find(v=>v.a===option.value);
+        if(!s)continue;
+        const n=counts[s.a]||{},parts=[];
+        if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
+        if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
+        if(n.land)parts.push(n.land.toLocaleString()+' land records');
+        option.textContent=s.n+(have[s.a]?' · '+have[s.a]+(have[s.a]===1?' county':' counties')+' with records':'')+(parts.length?' · '+parts.join(' · '):'');
+      }
+    };
+    // Same official Radar dataset for homepage, full AI map, and Workshop.
+    // Fetch directly so labels work even when the homepage's Radar panel is not mounted.
+    api('/liens/states/radar.json').then(data=>{
+      const counts={};
+      for(const row of data.counties||[]){
+        if(!/^[A-Z]{2}$/.test(row.state||''))continue;
+        const n=counts[row.state]||(counts[row.state]={liens:0,deeds:0,land:0});
+        const amount=Math.max(0,Number(row.open)||0);
+        if(row.group==='county-held'||row.group==='lien-sale')n.liens+=amount;
+        else if(row.group==='deed')n.deeds+=amount;
+        else if(row.group==='state-held')n.land+=amount;
+      }
+      applyStateInventory(counts);
+    }).catch(()=>{/* Keep mapped county labels if Radar is unavailable. */});
+    if(homeMap)window.addEventListener('message',event=>{
+      if(event.origin!==location.origin||event.source!==window.parent)return;
+      if(event.data?.type==='ppa:radar-state-inventory')applyStateInventory(event.data.counts);
+    });
     const coSel = mk('select'); coSel.setAttribute('aria-label', 'County'); coSel.id = 'pmCounty'; coSel.disabled = true; const c0 = mk('option', '', 'County'); c0.value = ''; coSel.appendChild(c0);
-    stSel.addEventListener('change', () => { if (!stSel.value) { curState = ''; curCounty = ''; fillCounties(coSel); syncGISButton(); aiRefresh(); return; } focusState(stSel.value); });
-    coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); });
+    stSel.addEventListener('change', () => { if (!stSel.value) { ++stateParcelLoadToken;curState = ''; curCounty = '';active=new Set(['__none__']);fillCounties(coSel);syncGISButton();refresh();syncStateBadges();drawRadarPins();ppaFocus('','');if(mapReady)map.fitBounds([[-126,23.5],[-65.5,50.5]],{padding:fitPad(),duration:500,pitch:0});aiRefresh();return; } focusState(stSel.value,{remember:!homeMap,panel:!homeMap}); });
+    coSel.addEventListener('change', () => { if (coSel.value) pickCounty(coSel.value); else if(curState) focusState(curState,{remember:false,panel:false,zoom:true}); });
     const pill = mk('div', 'pm-pill'); const pi = mk('span', 'pi'); pi.innerHTML = ICON.pin; pill.append(pi, stSel, mk('i', 'sep'), coSel);
     const seg = mk('div', 'pm-seg'); seg.hidden = true; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', 'Map type'); [['map', 'Map'], ['satellite', 'Satellite'], ['hybrid', 'Hybrid']].forEach(([k, n]) => { const b = mk('button', '', n); b.type = 'button'; b.dataset.base = k; b.setAttribute('aria-pressed', String(k === base)); b.addEventListener('click', () => { setBase(k); seg.hidden = true; }); seg.appendChild(b); });
     let asking = false, mapDraft = '', aiDraft = '';
@@ -370,6 +484,7 @@
       else mapDraft = input.value;
       asking = on;
       aib.setAttribute('aria-checked', String(on));
+      aib.closest('.pm-home-search')?.classList.toggle('pm-ai-active',on);
       input.value = on ? aiDraft : mapDraft;
       input.placeholder = on ? 'Ask about this map area…' : 'Search state, county, parcel, owner…';
       input.enterKeyHint = on ? 'send' : 'search';
@@ -431,28 +546,92 @@
     });
     input.addEventListener(homeMap ? 'input' : 'search', () => { if (!asking && !input.value && F.query) { F.query = null; refresh(); } });
     // Compact floating control dock; reuses the existing action handlers and map controls.
+    let syncMore=()=>{};
     const dock=mk('div','pm-tool-dock'), menu=mk('div','pm-tool-menu');
     menu.id='pmToolMenu';menu.setAttribute('aria-label','Map tools');menu.inert=true;
     const trigger=iconBtn(ICON.layers,'Open map tools',()=>setDock(!dock.classList.contains('open')),'pm-tool-trigger');
     trigger.id='pmToolTrigger';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','pmToolMenu');
     const triggerLabel=mk('span','pm-tool-trigger-label','Tools');trigger.append(triggerLabel);
     function setDock(open){
-      dock.classList.toggle('open',!!open);trigger.setAttribute('aria-expanded',String(!!open));
+      dock.classList.toggle('open',!!open);trigger.setAttribute('aria-expanded',String(!!open));if(open)syncMore();
       trigger.setAttribute('aria-label',open?'Close map tools':'Open map tools');
       menu.inert=!open;
       if(!open)seg.hidden=true;
     }
     const tools=mk('div','pm-tools');tools.append(camb,hzb);
+    if(homeMap){
+      // Homepage Tools panel (reference design): Map Layers with Land Only, Tax Liens, Deeds, Map Style, Boundary and More Layers.
+      // It reuses the existing controls and handlers; the map itself is unchanged.
+      menu.classList.add('pm-ml');
+      const ic=svg=>{const x=mk('span','pm-ml-ic');x.innerHTML=svg;return x;};
+      const sw=input=>{const l=mk('span','pm-sw');l.append(input,mk('i'));return l;};
+      const head=mk('div','pm-ml-head');head.append(mk('b','','Map Layers'),mk('span','pm-ml-chev','›'));
+      // Land Only: same checkbox id and behaviour as before
+      const landRow=mk('label','pm-ml-row');
+      const landInput=mk('input');landInput.id='pmLandOnly';landInput.type='checkbox';landInput.setAttribute('aria-label','Land Only map filter');
+      landRow.append(ic(ICON.pin),mk('span','pm-ml-t','Land Only'),sw(landInput));
+      const note=mk('p','pm-land-note','Government land inventory may accept offers or applications; confirm each parcel’s current status with the agency.');
+      note.hidden=true;
+      // Land Only, Tax Liens and Deeds: one choice at a time. Turning one on turns the others off; turning it off shows everything.
+      const setHomeMode=m=>{
+        const p=m==='all'?['lien','deed','land']:m.split('+');
+        F.cats.tax_lien=p.includes('lien');
+        F.cats.tax_deed=p.includes('deed');
+        F.cats.land_bank=p.includes('land');
+        landOnly=m==='land';
+        note.hidden=true;
+        syncModeStates();
+        if(sel&&(!F.cats[sel.c]||(landOnly&&sel.c!=='land_bank'))){sel=null;closePop();}
+        pageN=40;
+        document.querySelectorAll('#pmFbox input[data-cat-key]').forEach(cb=>{cb.checked=!!F.cats[cb.dataset.catKey];});
+        // Keep the county the user picked when the new view still has records for it; otherwise show the state.
+        const keepCounty=!!curCounty&&IDX.datasets.some(d=>d.id===curCounty&&homeModeAllows(d));
+        if(homeMap&&curState)fillCounties(window.__pm.coSel);
+        if(keepCounty)window.__pm.coSel.value=curCounty;
+        refresh();
+        syncStateBadges();
+        drawRadarPins();
+        if(homeMap&&curState&&!keepCounty)void focusState(curState,{remember:false,panel:false,zoom:false});
+        syncMore();
+      };
+      landInput.addEventListener('change',()=>setHomeMode(landInput.checked?'land':'all'));
+      // Tax Liens and Deeds: the same category filters as the Filters panel
+      const lienIn=mk('input');lienIn.type='checkbox';lienIn.setAttribute('aria-label','Tax liens');
+      const lienDeed=()=>setHomeMode([lienIn.checked&&'lien',deedIn.checked&&'deed'].filter(Boolean).join('+')||'all');
+      lienIn.addEventListener('change',lienDeed);
+      const lienRow=mk('label','pm-ml-row');lienRow.append(ic(ICON.filter),mk('span','pm-ml-t','Tax Liens'),sw(lienIn));
+      const deedIn=mk('input');deedIn.type='checkbox';deedIn.setAttribute('aria-label','Deeds');
+      deedIn.addEventListener('change',lienDeed);
+      const deedRow=mk('label','pm-ml-row');deedRow.append(ic(ICON.filter),mk('span','pm-ml-t','Deeds'),sw(deedIn));
+      // Map Style: opens the existing Map / Satellite / Hybrid buttons
+      const baseName={map:'Map',satellite:'Satellite',hybrid:'Hybrid'};
+      const styleVal=mk('span','pm-ml-val',baseName[base]||'');
+      const styleBtn=mk('button','pm-ml-row pm-ml-link');styleBtn.type='button';
+      styleBtn.append(ic(ICON.layers),mk('span','pm-ml-t','Map Style'),styleVal,mk('span','pm-ml-chev','›'));
+      styleBtn.addEventListener('click',()=>{seg.hidden=!seg.hidden;});
+      seg.addEventListener('click',()=>{styleVal.textContent=baseName[base]||'';});
+      // Boundary: the county level the map is using (display only)
+      const boundRow=mk('div','pm-ml-row pm-ml-static');boundRow.append(ic(ICON.pin),mk('span','pm-ml-t','Boundary'),mk('span','pm-ml-val','County'));
+      // More Layers: cameras, hazards, GIS and filters (the same buttons as before)
+      const more=mk('div','pm-ml-more');more.hidden=true;more.append(camb,hzb,floridaBtn,fb);
+      const moreVal=mk('span','pm-ml-val','');
+      const moreBtn=mk('button','pm-ml-row pm-ml-link');moreBtn.type='button';
+      moreBtn.append(ic(ICON.layers),mk('span','pm-ml-t','More Layers'),moreVal,mk('span','pm-ml-chev','›'));
+      moreBtn.addEventListener('click',()=>{more.hidden=!more.hidden;});
+      syncMore=function(){const n=[camb,hzb].filter(b=>b.classList.contains('on')).length+(floridaBtn.getAttribute('aria-pressed')==='true'?1:0);moreVal.textContent=n+' active';const m=homeMode();landInput.checked=m==='land';lienIn.checked=m==='lien'||m==='lien+deed';deedIn.checked=m==='deed'||m==='lien+deed';};
+      syncMore();
+      menu.append(head,landRow,note,lienRow,deedRow,styleBtn,seg,boundRow,moreBtn,more);
+    }
     for(const [button,label] of [[lay,'Layers'],[fb,'Filters'],[camb,'Cameras'],[hzb,'Hazards']]){
       button.appendChild(mk('span','pm-control-label',label));
     }
-    menu.append(lay,fb,floridaBtn,tools);
-    dock.append(trigger,menu);
+    if(!homeMap)menu.append(lay,fb,floridaBtn,tools);
+    dock.prepend(trigger,menu);
     stack.replaceChildren(dock,aib);
     menu.addEventListener('click',e=>{
       const button=e.target.closest('button');
       if(!button)return;
-      if(button===lay){return;} // Keep menu open while user chooses basemap.
+      if(button===lay||button.classList.contains('pm-ml-link')){return;} // Keep menu open for the Map Style and More Layers rows; every other button closes it, as before.
       if(button.closest('.pm-seg'))return;
       setDock(false);
     });
@@ -485,10 +664,12 @@
       const layout = $('pm'), rail = mk('div','pm-home-rail'), content = mk('div','pm-home-content');
       rail.id = 'pmHomeRail'; rail.setAttribute('role','group'); rail.setAttribute('aria-label','Map controls');
       content.id = 'pmHomeContent';
-      rail.append(stack);menu.append(seg);
+      rail.append(stack);
+      rail.append(mk('p','pm-attrib','Imagery © Esri, Maxar, Earthstar Geographics'));
       content.append($('pmLeft'), $('pmRight'), $('pmPop'), $('pmMsg'));
       $('pmMap').parentElement.before(t);
       layout.append(rail,content);
+      stripEl=mk('section','pm-strip');stripEl.id='pmStrip';stripEl.hidden=true;stripEl.setAttribute('aria-label','Parcels in this state');layout.append(stripEl);
       const resizeFrame = () => {
         const height = Math.ceil(layout.getBoundingClientRect().height);
         if (height > 0 && window.frameElement) window.frameElement.style.height = height + 'px';
@@ -540,7 +721,7 @@
   }
   function fillCounties(coSel) {
     coSel.textContent = ''; const c0 = mk('option', '', curState ? 'Choose a county' : 'County'); c0.value = ''; coSel.appendChild(c0);
-    const list = IDX.datasets.filter(d => d.state === curState); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
+    const list = IDX.datasets.filter(d => d.state === curState && (!homeMap || homeModeAllows(d))); list.forEach(d => { const o = mk('option', '', d.county + (homeMap ? '' : ' · ' + d.records.toLocaleString('en-US') + ' records')); o.value = d.id; coSel.appendChild(o); }); coSel.disabled = !list.length;
   }
   function stateNote() {
     const R = $('pmResults'); if (!curState) return; const has = IDX.datasets.some(d => d.state === curState), s = IDX.allStates.find(x => x.a === curState);
@@ -548,11 +729,14 @@
     else say('Choose a county to load its records.');
   }
   async function pickCounty(id, {announce = true, remember = true} = {}) {
+    ++stateParcelLoadToken;
     const ds = await load(id); if (!ds) return; curCounty = id; const d = ds.meta; if (window.__pm) { window.__pm.stSel.value = d.state; curState = d.state; fillCounties(window.__pm.coSel); window.__pm.coSel.value = id; }
     F.query = null; active = new Set([id]); F.inView = false; syncGISButton(); { const a = $('pmArea'); if (a) { a.textContent = 'Search this area'; a.classList.remove('on'); a.hidden = true; } }
     refresh(); closePop(); showTab('list', false); aiRefresh(); if (isMobile()) setSnap('peek'); // collapse the sheet so the county is in view; pull it up for the list
-    if (d.bb) fitTo(fitBB(ds)); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
-    if (announce && d.mapped && d.mapped < d.records) setTimeout(() => say(d.mapped.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'), 1500);
+    ppaFocus(d.state, d.county); // releases any earlier lock before the camera moves
+    const correctedBounds=fitBB(ds),mappedCount=ds.recs.filter(r=>r.g||r.cx).length;
+    if (correctedBounds) fitTo(correctedBounds); else say(d.county + ': ' + d.records.toLocaleString('en-US') + ' records, but none has a verified boundary or map position yet. They are listed on the right.', true);
+    if (announce && mappedCount && mappedCount < d.records) setTimeout(() => { if (curCounty === d.id) say(mappedCount.toLocaleString('en-US') + ' of ' + d.records.toLocaleString('en-US') + ' records have a verified boundary. The rest are listed, not drawn.'); }, 1500); // only while that county is still the one on screen
     setMapUrl(id);
     if (remember && locationContext) rememberArea(locationContext.countyArea(d));
   }
@@ -573,7 +757,7 @@
   function buildFilters() {
     const f = $('pmFilters'); f.textContent = ''; const box = mk('div', 'pm-f'); f.appendChild(box); box.id = 'pmFbox';
     box.appendChild(mk('h3', '', 'Property type'));
-    Object.entries(CATS).forEach(([k, v]) => { const l = mk('label'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = F.cats[k]; cb.addEventListener('change', () => { F.cats[k] = cb.checked; refresh(); }); const sw = mk('span', 'sw'); sw.style.background = v.c; const n = mk('span', 'n'); n.dataset.cat = k; l.append(cb, sw, document.createTextNode(v.n), n); box.appendChild(l); });
+    Object.entries(CATS).forEach(([k, v]) => { const l = mk('label'), cb = mk('input'); cb.type = 'checkbox'; cb.checked = F.cats[k]; cb.dataset.catKey = k; cb.addEventListener('change', () => { F.cats[k] = cb.checked; refresh(); }); const sw = mk('span', 'sw'); sw.style.background = v.c; const n = mk('span', 'n'); n.dataset.cat = k; l.append(cb, sw, document.createTextNode(v.n), n); box.appendChild(l); });
     const lv = mk('label'), cv = mk('input'); cv.type = 'checkbox'; cv.addEventListener('change', () => { F.vacantOnly = cv.checked; refresh(); }); const sv = mk('span', 'sw'); sv.style.background = 'transparent'; sv.style.border = '2px solid ' + VAC; const nv = mk('span', 'n'); nv.dataset.cat = 'vac'; lv.append(cv, sv, document.createTextNode('Vacant land only'), nv); box.appendChild(lv);
     box.appendChild(mk('h3', '', 'Research updates'));
     const researchLabel = mk('label');
@@ -595,7 +779,7 @@
     const nt = mk('p', 'pm-empty'); nt.style.fontSize = '.8rem'; nt.textContent = 'Solid outline: on the official list we checked. Dashed outline: historical or not confirmed. Yellow edge: vacant land. Colors show the kind of record, not that a property is available.'; box.appendChild(nt);
   }
   function renderCounts() {
-    const rs = shown(); const c = { tax_deed: 0, tax_lien: 0, land_bank: 0, vac: 0 }; rs.forEach(r => { c[r.c]++; if (r.va) c.vac++; });
+    const rs = shown().filter(passes); const c = { tax_deed: 0, tax_lien: 0, land_bank: 0, vac: 0 }; rs.forEach(r => { c[r.c]++; if (r.va) c.vac++; });
     document.querySelectorAll('#pmFbox [data-cat]').forEach(n => { n.textContent = rs.length ? c[n.dataset.cat].toLocaleString('en-US') : ''; });
     const lg = $('pmLegend'); lg.textContent = ''; Object.entries(CATS).forEach(([k, v]) => { const s = mk('span'); const i = mk('i'); i.style.background = v.c; s.append(i, document.createTextNode(v.n)); lg.appendChild(s); }); Object.entries(COL).forEach(([k, c]) => { const s = mk('span', 'lg-st'); const i = mk('i'); i.style.background = c; s.append(i, document.createTextNode(k)); lg.appendChild(s); }); lg.querySelectorAll(':scope > span:not(.lg-st)').forEach(x => x.classList.add('lg-pc')); const sv = mk('span', 'lg-pc'); const iv = mk('i'); iv.style.border = '2px solid ' + VAC; iv.style.background = 'transparent'; sv.append(iv, document.createTextNode('Vacant land')); lg.appendChild(sv);
   }
@@ -632,14 +816,14 @@
     R.textContent = '';
     $('tabList').textContent = rs.length ? 'Properties · ' + rs.length.toLocaleString('en-US') : 'Properties';
     updateHomeDrawer(loadedAny ? rs.length.toLocaleString('en-US') + (rs.length === 1 ? ' property' : ' properties') : 'Properties', loadedAny && rs.length > 0);
-    if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
+    if (!Object.keys(loaded).length) { R.appendChild(mk('h3', '', landOnly && homeMap ? 'Land inventory' : 'Start here')); R.appendChild(mk('p', 'pm-empty', 'Choose a state and county above, or open one of these.')); const row = mk('div', 'pm-chips-row'); [...IDX.datasets].filter(d => d.mapped > 20).sort((a, b) => b.mapped - a.mapped).slice(0, 10).forEach(d => { const b = mk('button', '', d.county.replace(/^City of /, '') + ', ' + d.state); b.type = 'button'; b.addEventListener('click', () => pickCounty(d.id)); row.appendChild(b); }); R.appendChild(row); R.appendChild(mk('p', 'pm-empty', IDX.note)); return; }
     if (!homeMap) {
       R.append(mk('h3', '', 'Properties'), mk('p', 'cnt', rs.length.toLocaleString('en-US') + ' match your filters' + (F.inView ? ' in this view' : '') + '. Showing ' + Math.min(rs.length, pageN) + '.'));
       const control = makeSort(); control.style.cssText = 'width:100%;margin-bottom:6px'; R.append(control);
     }
     [...rs].sort(sortFns[sort]).slice(0, pageN).forEach(r => R.appendChild(card(r)));
     if (rs.length > pageN) { const m = mk('button', 'pm-btn', 'Show more'); m.type = 'button'; m.style.width = '100%'; m.addEventListener('click', () => { pageN += 40; refresh(); }); R.appendChild(m); }
-    if (!rs.length) R.appendChild(mk('p', 'pm-empty', 'Nothing matches these filters. Try resetting them.'));
+    if (!rs.length) R.appendChild(mk('p', 'pm-empty', landOnly && homeMap ? 'No matching land-bank parcel records loaded. Choose a county with land inventory; sale availability must be verified with the source.' : 'Nothing matches these filters. Try resetting them.'));
     if (homeMap) R.scrollTop = scroll;
   }
   const REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches), isMobile = () => homeMap || window.innerWidth < 980;
@@ -670,7 +854,7 @@
   }
 
   // ---------- popup ----------
-  function closePop() { $('pmPop').hidden = true; sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
+  function closePop() { $('pmPop').hidden = true; hideCallout(); sel = null; near = null; if (mapReady) { map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); map.getSource('near').setData(empty); } refresh(); setMapUrl(curCounty); }
   function row(dl, k, v) { if (v == null || v === '') return; const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }
   // Satellite picture of the parcel with its verified outline drawn on top (same projection as the picture, so they line up).
   const MERC = { R: 6378137, X: lng => lng * Math.PI / 180 * 6378137, Y: lat => Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 6378137 };
@@ -686,6 +870,54 @@
     path.setAttribute('fill', cat.c + '40'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '3'); path.setAttribute('vector-effect', 'non-scaling-stroke'); path.setAttribute('stroke-linejoin', 'round'); svg.appendChild(path);
     const tag = mk('span', 'ptag', cat.n); tag.style.background = cat.c; w.append(img, svg, tag); if (r.va) { const v = mk('span', 'ptag v', 'Vacant land'); w.appendChild(v); } return w;
   }
+  // ---------- Homepage parcel strip: swipeable satellite thumbnails of the selected state's parcels, for every state ----------
+  // A state's strip lists only parcels that have a public drawn boundary, so a state with none yet shows no strip.
+  let stripEl = null, stripTimer = 0, stripSig = '', stripList = [], stripShown = 0, stripScroller = null;
+  function stripThumb(r) {
+    const W = 300, H = 188, w = mk('span', 'pm-sc-img');
+    let x0 = MERC.X(r.bb[0]), x1 = MERC.X(r.bb[2]), y0 = MERC.Y(r.bb[1]), y1 = MERC.Y(r.bb[3]); const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    let pw = Math.max((x1 - x0) * 1.7, 170), ph = Math.max((y1 - y0) * 1.7, 95); if (pw / ph > W / H) ph = pw * H / W; else pw = ph * W / H; x0 = cx - pw / 2; x1 = cx + pw / 2; y0 = cy - ph / 2; y1 = cy + ph / 2;
+    const img = mk('img'); img.alt = ''; img.width = W; img.height = H; img.loading = 'lazy'; img.decoding = 'async';
+    img.src = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=' + [x0, y0, x1, y1].map(v => v.toFixed(1)).join(',') + '&bboxSR=3857&imageSR=3857&size=' + W + ',' + H + '&format=jpg&f=image';
+    const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('d', r.g.map(ring => 'M' + ring.map(p => ((MERC.X(p[0]) - x0) / pw * W).toFixed(1) + ',' + ((y1 - MERC.Y(p[1])) / ph * H).toFixed(1)).join('L') + 'Z').join(' '));
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#fff'); path.setAttribute('stroke-width', '2'); path.setAttribute('vector-effect', 'non-scaling-stroke'); svg.appendChild(path);
+    w.append(img, svg); return w;
+  }
+  function markStripSel() { if (!stripScroller) return; stripScroller.querySelectorAll('.pm-sc').forEach(b => b.setAttribute('aria-current', String(!!sel && String(sel.i) === b.dataset.i))); }
+  function stripMore() {
+    if (!stripScroller) return;
+    for (const r of stripList.slice(stripShown, stripShown + 30)) {
+      const ds = IDX.datasets.find(x => x.id === r._d), cat = CATS[r.c];
+      const b = mk('button', 'pm-sc'); b.type = 'button'; b.dataset.i = String(r.i);
+      const acres = r.ac != null ? (r.ac >= 10 ? Math.round(r.ac) : r.ac.toFixed(r.ac >= 1 ? 1 : 2)) + ' ac' : '';
+      const meta = [r.amt != null ? '$' + Math.round(r.amt).toLocaleString('en-US') : '', r.sd && /^\d{4}-\d{2}-\d{2}/.test(r.sd) ? r.sd.slice(5, 10).replace('-', '/') : ''].filter(Boolean).join(' · ');
+      b.setAttribute('aria-label', (ds ? ds.county + ' County' : 'Parcel') + (acres ? ', ' + acres : '') + (meta ? ', ' + meta : '') + '. Show on map');
+      const tag = mk('i', 'pm-sc-dot'); if (cat) tag.style.background = cat.c;
+      const t = mk('span', 'pm-sc-t'); t.append(tag, mk('b', '', (ds ? ds.county.replace(/ County$/, '') : 'Parcel') + (acres ? ' · ' + acres : '')));
+      b.append(stripThumb(r), t, mk('small', '', meta || (cat ? cat.n : '')));
+      b.addEventListener('click', () => { select(r, { fly: true }); markStripSel(); });
+      stripScroller.appendChild(b);
+    }
+    stripShown = Math.min(stripList.length, stripShown + 30); markStripSel();
+  }
+  function renderStrip() {
+    if (!stripEl) return;
+    const on = homeMap && !!curState;
+    const list = on ? shown().filter(passes).filter(r => r.bb && r.g) : [];
+    if (!list.length) { stripEl.hidden = true; stripSig = ''; return; }
+    const key = r => (isUpcoming(r) ? '0' + r.sd.slice(0, 10) : '1' + String(r.amt == null ? 9e9 : r.amt).padStart(12, '0'));
+    list.sort((a, b) => key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0);
+    const sig = curState + '|' + curCounty + '|' + list.length + '|' + list[0].i;
+    stripEl.hidden = false;
+    if (sig === stripSig) { markStripSel(); return; }
+    stripSig = sig; stripList = list; stripShown = 0; stripEl.textContent = '';
+    const head = mk('div', 'pm-strip-h'); head.append(mk('b', '', (IDX.states[curState]?.n || curState) + ' parcels'), mk('span', '', list.length.toLocaleString('en-US') + ' with a drawn boundary · swipe'));
+    stripScroller = mk('div', 'pm-strip-sc'); stripScroller.setAttribute('role', 'list');
+    stripScroller.addEventListener('scroll', () => { if (stripShown < stripList.length && stripScroller.scrollLeft + stripScroller.clientWidth > stripScroller.scrollWidth - 300) stripMore(); }, { passive: true });
+    stripEl.append(head, stripScroller); stripMore();
+  }
+  function scheduleStrip() { if (stripEl) { clearTimeout(stripTimer); stripTimer = setTimeout(renderStrip, 250); } }
   const hoaText = v => !v ? 'Not on file' : v === 'unknown' ? 'Not confirmed' : v;
   const tile = (k, v, s) => { const t = mk('div', 't'); t.append(mk('span', 'k', k), mk('b', '', v == null || v === '' ? '—' : String(v))); if (s) t.appendChild(mk('span', 's', s)); return t; };
   // Turf is strictly opt-in browser-side property research; no county records are rewritten.
@@ -702,9 +934,7 @@
     const buildings=mk('p','pm-spatial-result');
     const box=lib?.buildingQueryBBox(r,d);
     if(!box){
-      buildings.textContent=d?.state==='FL'&&/^Lee(?: County)?$/i.test(d?.county||'')
-        ?'Building overlap: unavailable for this parcel boundary or query area.'
-        :'Building overlap: not available for this county (Lee County coverage only).';
+      buildings.textContent='Building overlap: unavailable for this parcel boundary or query area.';
       panel.appendChild(buildings);
       return panel;
     }
@@ -713,9 +943,10 @@
     check.type='button';
     check.addEventListener('click',async()=>{
       if(!panel.isConnected)return;
-      check.disabled=true;buildings.textContent='Checking Lee County mapped building footprints…';
+      const lee=lib.buildingSource(d)==='lee-buildings';
+      check.disabled=true;buildings.textContent=lee?'Checking Lee County mapped building footprints…':'Checking mapped building footprints…';
       try{
-        const url='/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source:'lee-buildings',bbox:box});
+        const url=lee?'/.netlify/functions/florida-gis-overlay?'+new URLSearchParams({source:'lee-buildings',bbox:box}):'/.netlify/functions/building-footprints?'+new URLSearchParams({bbox:box});
         const response=await fetch(url,{credentials:'same-origin'});
         if(!response.ok)throw Error('County GIS service unavailable');
         const data=await response.json();
@@ -723,11 +954,11 @@
         const result=lib.buildingOverlap(r,data,turfLib);
         if(result.status==='overlap')buildings.textContent='Mapped building overlap detected ('+result.count+' footprint'+(result.count===1?'':'s')+').'+
           (result.partial?' Results may be incomplete.':'');
-        else if(result.status==='no-overlap')buildings.textContent='No overlap in the returned building footprints. Not confirmation of vacant land.';
+        else if(result.status==='no-overlap')buildings.textContent='No overlap in the returned building footprints.'+(lee?'':' OpenStreetMap coverage can be incomplete.')+' Not confirmation of vacant land.';
         else if(result.status==='incomplete')buildings.textContent='Building overlap inconclusive: returned data incomplete.';
         else buildings.textContent='Building overlap unavailable: '+result.reason+'.';
       }catch{
-        if(panel.isConnected)buildings.textContent='Building overlap unavailable: county GIS could not be checked.';
+        if(panel.isConnected)buildings.textContent='Building overlap unavailable: building data could not be checked.';
       }finally{if(panel.isConnected){check.disabled=false;check.textContent='Check again';}}
     });
     panel.append(check,buildings,mk('p','pm-spatial-note','Footprints are a map-data research signal, not proof of current building condition or vacancy.'));
@@ -775,11 +1006,11 @@
       if (fact) facts.append(mk('span', '', fact));
     }
     info.append(facts);
-    addSavedElevation(info,r,d);
-    info.appendChild(spatialPanel(r,d));
+    info.appendChild(spatialPanel(r,d)); // the homepage card no longer shows the elevation line
     const close = mk('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close property'); close.addEventListener('click', closePop);
     const details = mk('a', 'pm-home-property', 'View property →');
     details.href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c:d.id,p:r.p});
+    details.addEventListener('click', e => { e.preventDefault(); openDetailPanel(r, d); });
     card.append(info, close, details);
     if (r.g && r.bb) {
       const thumbnail = hero(r, d);
@@ -789,9 +1020,9 @@
     }
     card.hidden = false;
   }
-  function popup(r) {
-    const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
-    if (homeMap) { homeParcelCard(p, r, d); return; }
+  function popup(r, opt = {}) {
+    const ap = $('pmAi'); if (ap) ap.hidden = true; if (isMobile()) { const cp = $('pmCam'); if (cp) cp.hidden = true; } const p = opt.target || $('pmPop'); p.textContent = ''; const cat = CATS[r.c], d = IDX.datasets.find(x => x.id === r._d), S = IDX.states[d.state] || (typeof STATES !== 'undefined' && STATES.find(x => x.a === d.state)) || null;
+    if (homeMap && !opt.full) { homeParcelCard(p, r, d); return; }
     const hd = mk('div', 'hd'), ttl = mk('div', 't'); ttl.append(mk('b', r.a ? '' : 'idt', r.a || r.p), mk('span', '', (r.a ? '' : 'Parcel ID · ') + d.county + ', ' + d.state + (r.a ? ' · ' + r.p : ''))); const x = mk('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Close'); x.addEventListener('click', closePop); hd.append(ttl, x); p.appendChild(hd);
     const bd = mk('div', 'bd'); bd.appendChild(hero(r, d));
     // key facts
@@ -807,8 +1038,14 @@
       if (S && S.sys) dl.appendChild(mk('p', 'note', d.state + ' rules (' + S.sys + ')' + (S.rate ? ': ' + S.rate + '. ' : '. ') + (S.verify ? 'Sources differ for this state: verify with the county. ' : '') + 'A lien and a deed are not the same thing.')); (r.w || []).forEach(w => { if (!/^We could not tell|^No official source/.test(w)) dl.appendChild(mk('p', 'note', w)); }); }));
     bd.appendChild(group('Property', false, dl => { row(dl, 'Parcel ID', r.p); row(dl, 'Address', r.a || 'No street address on the record'); row(dl, 'Acreage', acres(r) || 'Not on file'); row(dl, 'Square footage', sqft(r) || 'Not on file'); row(dl, 'Zoning', r.zn || 'Not on file'); row(dl, 'Land', r.va ? 'Vacant land' : (r.us || 'Not stated')); row(dl, 'Market value', r.mv == null ? 'Market value unavailable' : money(r.mv)); row(dl, 'Assessed value', r.av == null ? null : money(r.av)); row(dl, 'HOA status', hoaText(r.hoa));
       row(dl, 'Flood zone (FEMA)', r.fz ? r.fz.z + (r.fz.sfha != null ? (r.fz.sfha > 0 ? ' · ' + r.fz.sfha + '% in a high-risk zone' : ' · none in a high-risk zone') : '') : 'Not checked'); row(dl, 'Wetlands (NWI)', r.wt != null ? (r.wt > 0 ? r.wt + '% of the lot touches mapped wetlands' : 'None mapped') : 'Not checked'); row(dl, 'Elevation', 'Automatic terrain estimate shown below when available'); }));
-    addSavedElevation(bd,r,d);
-    bd.appendChild(group('Sources', false, dl => { const src = mk('p', 'note'); src.appendChild(document.createTextNode('Official list: ')); if (r.su) { const a = mk('a', '', 'county list'); a.href = r.su; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); src.appendChild(document.createTextNode(r.ck ? ' (checked ' + r.ck + ')' : '')); } else src.appendChild(document.createTextNode((r.src || 'see the county') + (r.ck ? ' (checked ' + r.ck + ')' : ''))); dl.appendChild(src); if (d.gis) { const g = mk('p', 'note'); g.appendChild(document.createTextNode('County map: ')); const a = mk('a', '', d.gis.name); a.href = d.gis.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; g.appendChild(a); dl.appendChild(g); } }));
+    if (!homeMap) addSavedElevation(bd,r,d); // the homepage hides the elevation line
+    if(r.__brainEvidence?.source){
+      const source=mk('a','note','Official GIS boundary source');
+      source.href=r.__brainEvidence.source;
+      source.target='_blank';source.rel='noopener noreferrer';
+      bd.appendChild(source);
+    }
+    bd.appendChild(group('Sources', false, dl => { if (r.__approved && r.__approved.sourceLine) { const ap = mk('p', 'note'); ap.textContent = r.__approved.sourceLine; dl.appendChild(ap); } const src = mk('p', 'note'); src.appendChild(document.createTextNode('Official list: ')); if (r.su) { const a = mk('a', '', 'county list'); a.href = r.su; a.target = '_blank'; a.rel = 'noopener noreferrer'; src.appendChild(a); src.appendChild(document.createTextNode(r.ck ? ' (checked ' + r.ck + ')' : '')); } else src.appendChild(document.createTextNode((r.src || 'see the county') + (r.ck ? ' (checked ' + r.ck + ')' : ''))); dl.appendChild(src); if (d.gis) { const g = mk('p', 'note'); g.appendChild(document.createTextNode('County map: ')); const a = mk('a', '', d.gis.name); a.href = d.gis.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; g.appendChild(a); dl.appendChild(g); } }));
     const brief = mk('div', 'pm-brief');
     brief.append(mk('span', '', d.county + ', ' + d.state + ' · Parcel ' + r.p));
     brief.append(mk('span', '', [acres(r), r.amt != null ? (r.al || 'Listed amount') + ' ' + money(r.amt) : null, r.mv != null ? 'Market value ' + money(r.mv) : 'Market value unavailable'].filter(Boolean).join(' · ')));
@@ -831,9 +1068,85 @@
     bar.append(sp, ai, det, mb); p.append(more, bar); p.hidden = false;
     { const hdr = p.querySelector('.hd'); let y0 = null; hdr.addEventListener('pointerdown', e => { if (isMobile() && !e.target.closest('button')) { y0 = e.clientY; try { hdr.setPointerCapture(e.pointerId); } catch (x) {} p.style.transition = 'none'; } }); hdr.addEventListener('pointermove', e => { if (y0 != null) p.style.transform = 'translateY(' + Math.max(0, e.clientY - y0) + 'px)'; }); const up = e => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; p.style.transition = ''; p.style.transform = ''; if (dy > 90) closePop(); }; hdr.addEventListener('pointerup', up); hdr.addEventListener('pointercancel', up); }
   }
+  // Home map only: a callout that sits on the tapped parcel (owner, amount owed, sale type, tax year, size).
+  let callEl = null;
+  const callAnchor = r => { if (r.cx) return r.cx; const g = r.g; if (!g) return null; const ring = g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiPolygon' ? g.coordinates[0][0] : null; if (!ring || !ring.length) return null; let x = 0, y = 0; ring.forEach(q => { x += q[0]; y += q[1]; }); return [x / ring.length, y / ring.length]; };
+  function ensureCallout() {
+    if (callEl) return callEl;
+    if (!document.getElementById('pmCalloutCss')) { const st = mk('style'); st.id = 'pmCalloutCss'; st.textContent = '.pm-callout{position:absolute;z-index:6;width:min(224px,calc(100% - 24px));padding:10px 10px 9px;border-radius:14px;background:rgba(14,24,36,.95);border:1px solid rgba(243,195,87,.7);box-shadow:0 10px 30px rgba(0,0,0,.45);color:#eef5fb;font:12px/1.3 system-ui,-apple-system,sans-serif}.pm-callout[hidden]{display:none}.pm-callout::after{content:"";position:absolute;left:var(--tail,50%);bottom:-8px;width:14px;height:14px;transform:translateX(-50%) rotate(45deg);background:rgba(14,24,36,.95);border-right:1px solid rgba(243,195,87,.7);border-bottom:1px solid rgba(243,195,87,.7)}.pm-callout.below::after{bottom:auto;top:-8px;transform:translateX(-50%) rotate(225deg)}.pm-callout-title{display:flex;gap:6px;align-items:center;font-size:13px;margin-bottom:6px}.pm-callout-title b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.pm-callout-rows{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:0 0 8px}.pm-callout-rows dt{color:#a9bccb;margin:0}.pm-callout-rows dd{margin:0;text-align:right;font-weight:600}.pm-callout-rows dd.gold{color:#f3c357}.pm-callout-act{display:flex;gap:8px}.pm-callout-view{flex:1;display:flex;justify-content:center;align-items:center;min-height:34px;border-radius:10px;background:#15835b;color:#fff;font-weight:700;font-size:12px;text-decoration:none}.pm-callout-save{width:34px;min-height:34px;display:grid;place-items:center;border-radius:10px;border:1px solid rgba(243,195,87,.7);color:#f3c357;text-decoration:none}'; document.head.append(st); }
+    callEl = mk('div', 'pm-callout'); callEl.hidden = true; callEl.setAttribute('role', 'dialog'); callEl.setAttribute('aria-label', 'Parcel summary'); map.getContainer().append(callEl);
+    map.on('move', placeCallout);
+    return callEl;
+  }
+  function placeCallout() {
+    if (!callEl || callEl.hidden || !callEl._anchor || !map) return;
+    const a = map.project(callEl._anchor), W = map.getContainer().clientWidth, H = map.getContainer().clientHeight, w = callEl.offsetWidth || 268, h = callEl.offsetHeight || 170;
+    const above = a.y - h - 22 > 8, x = Math.min(Math.max(a.x - w / 2, 8), W - w - 8), y = Math.min(Math.max(above ? a.y - h - 18 : a.y + 18, 8), H - h - 8);
+    callEl.style.left = x + 'px'; callEl.style.top = y + 'px'; callEl.classList.toggle('below', !above); callEl.style.setProperty('--tail', Math.min(Math.max(a.x - x, 20), w - 20) + 'px');
+  }
+  // "View parcel" opens a separate panel over the map with the full parcel details (the same content as the parcel page).
+  let detailPanel = null;
+  function openDetailPanel(r, d) {
+    if (!map || !r || !d) return; const host = map.getContainer();
+    if (!document.getElementById('pmDetailCss')) { const st = mk('style'); st.id = 'pmDetailCss'; st.textContent = '.ppa-map-home .pm-pop.pm-detail:not([hidden]){position:absolute;left:8px;right:8px;top:8px;bottom:8px;z-index:200;display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;width:auto;max-height:none;margin:0;padding:0 0 12px;border:1px solid rgba(232,190,90,.55);border-radius:20px;background:rgba(4,8,10,.96);box-shadow:0 0 0 1px rgba(16,185,129,.18),0 18px 44px rgba(0,0,0,.6);grid-template-columns:none;grid-template-rows:none;transform-origin:50% 40%;animation:pmDetailIn .26s cubic-bezier(.2,.8,.2,1) both}.ppa-map-home .pm-pop.pm-detail.leaving{animation:pmDetailOut .18s ease-in both}@keyframes pmDetailIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}@keyframes pmDetailOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.94)}}.ppa-map-home .pm-pop.pm-detail .hd{position:sticky;top:0;z-index:4;background:rgba(4,8,10,.98);margin:0;padding:10px 12px;border-bottom:1px solid #1f3a32}.ppa-map-home .pm-pop.pm-detail .hd .x{width:34px;height:34px;min-width:34px;font-size:22px;color:#eef5fb}.pm-tabs{position:sticky;z-index:3;display:flex;gap:6px;padding:8px 10px;background:rgba(4,8,10,.98);border-bottom:1px solid #1f3a32;overflow-x:auto;scrollbar-width:none}.pm-tabs button{flex:none;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid #2a4a40;background:#0d1a17;color:#cfe8dd;font:650 12px system-ui,-apple-system,sans-serif;cursor:pointer}.pm-tabs button.on{background:#0f6b4b;border-color:#37d69a;color:#fff}.pm-detail-links{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px 4px}.pm-detail-dir,.pm-detail-county{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border-radius:12px;font:700 13px system-ui,-apple-system,sans-serif;text-decoration:none}.pm-detail-dir{background:linear-gradient(180deg,#e8be5a,#c9962f);color:#111;flex:1 1 140px}.pm-detail-county{border:1px solid #37d69a;color:#bff5dd;flex:1 1 180px}.ppa-map-home .pm-callout{animation:pmCallIn .2s ease-out both}@keyframes pmCallIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){.ppa-map-home .pm-pop.pm-detail,.ppa-map-home .pm-pop.pm-detail.leaving,.ppa-map-home .pm-callout{animation:none}}'; document.head.append(st); }
+    if (!detailPanel) { detailPanel = mk('article', 'pm-pop pm-detail'); detailPanel.setAttribute('aria-label', 'Parcel details'); host.append(detailPanel); }
+    clearTimeout(detailPanel._t); detailPanel.classList.remove('leaving');
+    popup(r, {full: true, target: detailPanel});
+    // the builder's own header carries the Close button: make it close this panel
+    const x = detailPanel.querySelector('.hd .x'); if (x) { const nx = x.cloneNode(true); x.replaceWith(nx); nx.addEventListener('click', closeDetailPanel); }
+    detailPanel.querySelectorAll('details.pm-extra').forEach(x => { x.open = true; }); // the big card shows everything, not a folded list
+    // Tabs jump between sections of the same details.
+    const hd = detailPanel.querySelector('.hd'), grp = name => [...detailPanel.querySelectorAll('details.grp')].find(g => g.querySelector('summary span')?.textContent === name);
+    const tabs = mk('div', 'pm-tabs');
+    const tab = (label, fn) => { const b = mk('button', '', label); b.type = 'button'; b.addEventListener('click', () => { [...tabs.children].forEach(t => t.classList.toggle('on', t === b)); fn(); }); return b; };
+    const toGroup = name => { const g = grp(name); if (!g) return; g.open = true; detailPanel.scrollTo({top: g.offsetTop - 60, behavior: 'smooth'}); };
+    const first = tab('Overview', () => detailPanel.scrollTo({top: 0, behavior: 'smooth'})); first.classList.add('on');
+    tabs.append(first, tab('Records', () => toGroup('Sale and taxes')), tab('Map Tools', () => { const m = detailPanel.querySelector('.pm-spatial'); if (m) detailPanel.scrollTo({top: m.offsetTop - 60, behavior: 'smooth'}); }), tab('Layers', () => toGroup('Property')));
+    if (hd) { hd.after(tabs); tabs.style.top = hd.offsetHeight + 'px'; }
+    // Directions and the county map, as on the parcel page.
+    const extra = mk('div', 'pm-detail-links'); const dir = mk('a', 'pm-detail-dir', 'Directions →'); dir.target = '_blank'; dir.rel = 'noopener noreferrer';
+    if (r.cx) dir.href = 'https://www.google.com/maps/dir/?api=1&destination=' + r.cx[1] + ',' + r.cx[0];
+    extra.append(dir); if (d.gis && d.gis.url) { const cm = mk('a', 'pm-detail-county', 'Open county parcel map ↗'); cm.href = d.gis.url; cm.target = '_blank'; cm.rel = 'noopener noreferrer'; extra.append(cm); }
+    detailPanel.append(extra);
+    // The map stays visible behind the card but does not move while the card is open.
+    if (!lockPrev) { lockPrev = {drag: map.dragPan.isEnabled(), zoom: map.scrollZoom.isEnabled(), touch: map.touchZoomRotate.isEnabled(), dbl: map.doubleClickZoom.isEnabled()}; ['dragPan', 'scrollZoom', 'touchZoomRotate', 'doubleClickZoom', 'boxZoom', 'keyboard'].forEach(h => { try { map[h].disable(); } catch (_) {} }); }
+    detailPanel.hidden = false; detailPanel.scrollTop = 0; hideCallout();
+  }
+  function closeDetailPanel() {
+    if (!detailPanel || detailPanel.hidden || detailPanel.classList.contains('leaving')) return;
+    detailPanel.classList.add('leaving');
+    if (lockPrev && mapReady) { const k = lockPrev; lockPrev = null; if (k.drag) map.dragPan.enable(); if (k.zoom) map.scrollZoom.enable(); if (k.touch) map.touchZoomRotate.enable(); if (k.dbl) map.doubleClickZoom.enable(); map.boxZoom.enable(); map.keyboard.enable(); }
+    // The small card returns for the same parcel (it is the one that was open before the full details).
+    detailPanel._t = setTimeout(() => { detailPanel.hidden = true; detailPanel.classList.remove('leaving'); if (lastSel && sel) showCallout(lastSel.r, lastSel.d); }, 180);
+  }
+  function hideCallout() { if (callEl) { callEl.hidden = true; callEl._anchor = null; } }
+  let lastSel = null, lockPrev = null;
+  function showCallout(r, d) {
+    if (!homeMap || !mapReady || !d) return; lastSel = {r, d}; const el = ensureCallout(), anchor = callAnchor(r); if (!anchor) { hideCallout(); return; }
+    el.textContent = ''; const cat = CATS[r.c] || {};
+    const title = mk('div', 'pm-callout-title'), ttl = mk('b', '', r.o || r.a || ('Parcel ' + r.p)); title.append(mk('span', '', '🏢'), ttl);
+    const dl = mk('dl', 'pm-callout-rows');
+    [['Amount owed', r.amt != null ? money(r.amt) + ' due' : null, true], ['Sale type', cat.n || null], ['Tax year', r.ty != null ? String(r.ty) : null], ['Parcel size', acres(r) || sqft(r) || null]]
+      .forEach(([k, v, gold]) => { if (v) dl.append(mk('dt', '', k), mk('dd', gold ? 'gold' : '', v)); });
+    const href = d.detail ? '/liens/parcel/?k=' + encodeURIComponent(r.i) : '/map/?' + new URLSearchParams({c: d.id, p: r.p});
+    const act = mk('div', 'pm-callout-act'), view = mk('a', 'pm-callout-view', 'View parcel →'), save = mk('a', 'pm-callout-save', ''); view.href = href; save.href = href;
+    save.setAttribute('aria-label', 'Open this parcel to watch it'); save.title = 'Open the parcel to watch it';
+    save.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>';
+    view.addEventListener('click', e => { e.preventDefault(); openDetailPanel(r, d); });
+    act.append(view, save); el.append(title, dl, act);
+    el._anchor = anchor; el.hidden = false; placeCallout();
+  }
   function select(r, o) {
-    sel = r; near = null; popup(r);
+    sel = r; near = null;
+    if (homeMap) { const pop = $('pmPop'); if (pop) pop.hidden = true; showCallout(r, IDX.datasets.find(x => x.id === r._d)); } // homepage: only the small card on the map
+    else popup(r);
     const dataset = IDX.datasets.find(x => x.id === r._d);
+    if (embedded&&pickerMap&&dataset){
+      window.parent.dispatchEvent(new CustomEvent('ppa:workshop-parcel',{detail:{
+       parcelId:r.p,county:dataset.county,state:dataset.state,acres:r.ac??r.__brainEvidence?.estimatedAcres??null,
+       estimated:r.ac==null,source:r.__brainEvidence?.source??null
+      }}));
+    }
     if (dataset && locationContext && o?.remember !== false) rememberArea(locationContext.countyArea(dataset, r));
     if (mapReady) { map.getSource('near').setData(empty); map.getSource('sel').setData(r.g ? { type: 'FeatureCollection', features: [feature(r)] } : empty); if (homeMap) map.getSource('sel-point').setData(r.cx ? {type:'Feature',geometry:{type:'Point',coordinates:r.cx},properties:{}} : empty); }
     if (homeMap && o?.fly && r.bb && mapReady) {
@@ -1156,25 +1469,92 @@
     const have = {}; IDX.datasets.forEach(d => { have[d.state] = (have[d.state] || 0) + 1; });
     gj.features.forEach(f => { const a = f.properties.a, s = (typeof STATES !== 'undefined' && STATES.find(x => x.a === a)) || IDX.states[a] || {}; f.properties.sys = s.sys || 'Sources differ'; f.properties.n = s.n || a; f.properties.has = have[a] ? 1 : 0; f.properties.col = COL[s.sys] || '#94a3b8'; });
     map.addSource('states', { type: 'geojson', data: gj });
+    if(homeMap)drawRadarPins();
     const before = 'p-fill';
     map.addLayer({ id: 'st-fill', type: 'fill', source: 'states', maxzoom: 9, paint: { 'fill-color': ['get', 'col'], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['==', ['get', 'has'], 1], homeMap ? 0.20 : 0.62, homeMap ? 0.10 : 0.42], 6.5, homeMap ? 0.07 : 0.4, 8.5, 0] } }, before);
-    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 9, layout: { visibility: 'none' }, paint: { 'line-color': '#ffffff', 'line-opacity': 0.55, 'line-width': 0.8 } }, before);
+    map.addLayer({ id: 'st-line', type: 'line', source: 'states', maxzoom: 12, layout: { visibility: 'visible' }, paint: { 'line-color': '#000000', 'line-opacity': 1, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.7, 7, 2.5, 11, 3.2] } }, before);
     map.addLayer({ id: 'st-hl', type: 'line', source: 'states', filter: ['in', ['get', 'a'], ['literal', ['__none__']]], paint: { 'line-color': '#22d3ee', 'line-width': 3.2 } }, before);
     map.addLayer({ id: 'st-sel', type: 'line', source: 'states', layout: { visibility: 'none' }, filter: ['==', ['get', 'a'], '__none__'], paint: { 'line-color': '#ffffff', 'line-width': 3 } }, before);
     map.on('mouseenter', 'st-fill', () => { map.getCanvas().style.cursor = 'pointer'; }); map.on('mouseleave', 'st-fill', () => { map.getCanvas().style.cursor = ''; });
-    map.on('click', 'st-fill', e => { if (map.getZoom() > 7.5 || map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) return; const f = e.features && e.features[0]; if (f) focusState(f.properties.a); });
+    map.on('click', 'st-fill', e => { if (map.getZoom() > 7.5 || map.queryRenderedFeatures(e.point, { layers: ['p-fill', 'pts'] }).length) return; const f = e.features && e.features[0]; if (f) focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); });
+    // Position each badge at a point within its actual state polygon, not at a bounding-box midpoint.
+    const insideRing=(p,ring)=>{let inside=false;for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+      const a=ring[i],b=ring[j];if(((a[1]>p[1])!==(b[1]>p[1]))&&(p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0]))inside=!inside;
+    }return inside;};
+    const insidePoly=(p,poly)=>insideRing(p,poly[0])&&!poly.slice(1).some(hole=>insideRing(p,hole));
+    const insideState=(p,geom)=>(geom.type==='Polygon'?[geom.coordinates]:geom.coordinates).some(poly=>insidePoly(p,poly));
+    const badgePoint=(geom)=>{
+      const polygons=geom.type==='Polygon'?[geom.coordinates]:geom.coordinates;
+      const outer=polygons.map(poly=>poly[0]).sort((a,b)=>b.length-a.length)[0];
+      const xs=outer.map(p=>p[0]),ys=outer.map(p=>p[1]);
+      const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+      const mid=[(minX+maxX)/2,(minY+maxY)/2];
+      if(insideState(mid,geom))return mid;
+      // Scan inward from the center to avoid labels floating over neighboring states or water.
+      for(let step=1;step<=8;step++)for(let dx=-step;dx<=step;dx++)for(let dy=-step;dy<=step;dy++){
+        const p=[mid[0]+dx*(maxX-minX)/20,mid[1]+dy*(maxY-minY)/20];
+        if(insideState(p,geom))return p;
+      }
+      return outer[0];
+    };
     // small labels with how many counties have data
-    const pts = { type: 'FeatureCollection', features: gj.features.filter(f => f.properties.has).map(f => { const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { xs.push(c[0]); ys.push(c[1]); })); return { type: 'Feature', properties: { a: f.properties.a, n: have[f.properties.a] }, geometry: { type: 'Point', coordinates: [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2] } }; }) };
-    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title); el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a); }); new maplibregl.Marker({ element: el }).setLngLat(f.geometry.coordinates).addTo(map); });
+    const pts = { type: 'FeatureCollection', features: gj.features.filter(f => f.properties.has).map(f => { const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { xs.push(c[0]); ys.push(c[1]); })); return { type: 'Feature', properties: { a: f.properties.a, n: have[f.properties.a] }, geometry: { type: 'Point', coordinates: badgePoint(f.geometry) } }; }) };
+    pts.features.forEach(f => { const el = mk('button', 'pm-badge', String(f.properties.n)); el.type = 'button'; el.title = (IDX.states[f.properties.a] || {}).n + ': ' + f.properties.n + (f.properties.n === 1 ? ' county' : ' counties') + ' mapped'; el.setAttribute('aria-label', el.title);el.dataset.state=f.properties.a;el.dataset.count=String(f.properties.n);el.dataset.title=el.title; el.addEventListener('click', e => { e.stopPropagation(); focusState(f.properties.a,{remember:!homeMap,panel:!homeMap}); }); parcelStateBadges.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(f.geometry.coordinates).addTo(map)); }); syncStateBadges();
   }
   function stateBB(a) { if (!mapReady || !map.getSource('states')) return null; const src = map.getSource('states')._data; const f = src && src.features.find(x => x.properties.a === a); if (!f) return null; const xs = [], ys = []; (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates).forEach(p => p[0].forEach(c => { if (c[0] > -170) { xs.push(c[0]); ys.push(c[1]); } })); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
+  let stateParcelLoadToken=0;
+  async function showStateParcels(a) {
+    const token=++stateParcelLoadToken;
+    const datasets=IDX.datasets.filter(d=>d.state===a&&(!homeMap||homeModeAllows(d))).sort((x,y)=>(y.mapped||0)-(x.mapped||0));
+    if(!datasets.length){say('No parcel datasets for this state.');return;}
+    active=new Set(datasets.map(d=>d.id));
+    say('Loading parcels across '+datasets.length+' counties with records…',true);
+    let cursor=0,done=0,failed=0,paintTimer=0;const applies=[];
+    const schedulePaint=()=>{if(paintTimer)return;paintTimer=setTimeout(()=>{paintTimer=0;if(token===stateParcelLoadToken)refresh();},120);};
+    const worker=async()=>{
+      while(cursor<datasets.length&&token===stateParcelLoadToken){
+        const d=datasets[cursor++];
+        try{
+          if(!loaded[d.id]){
+            const data=expand(await api('/map/data/'+d.file));
+            if(token!==stateParcelLoadToken)return;
+            data.meta=d;loaded[d.id]=data;
+            // Avoid blocking the main map on optional GIS enrichment for every county.
+            if(window.PPABrainMap)applies.push(new Promise(ok=>setTimeout(()=>{if(token===stateParcelLoadToken)window.PPABrainMap.apply(data).catch(()=>{}).then(ok,ok);else ok();},0)));
+          }
+        }catch(_){failed++;}
+        done++;
+        if(token!==stateParcelLoadToken)return;
+        schedulePaint();
+        if(done===datasets.length){
+          const records=shown().filter(passes),mapped=records.filter(p=>p.g||p.cx).length;
+          if(paintTimer){clearTimeout(paintTimer);paintTimer=0;}refresh();
+          const listed=records.length,verifying=!mapped&&!!listed;
+          say(mapped||!listed
+            ? mapped.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded '+(done-failed===1?'county':'counties')+(failed?' · '+failed+' unavailable':'')+'.'
+            : listed.toLocaleString('en-US')+' tax sale records are listed. Parcel outlines for this state are still being verified.');
+          // The approved outlines arrive after the lists load. If any turn up, the message says so instead of "still being verified".
+          if(verifying)Promise.all(applies).then(()=>{
+            if(token!==stateParcelLoadToken)return;
+            const now=shown().filter(passes).filter(p=>p.g||p.cx).length;
+            if(now){refresh();say(now.toLocaleString('en-US')+' mapped parcels across '+(done-failed)+' loaded '+(done-failed===1?'county':'counties')+'.');}
+          });
+        }
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(3,datasets.length)},()=>worker()));
+  }
   function focusState(a, {remember = true, panel = true, zoom = true} = {}) {
-    if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
-    active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
+    if (!a) return; curState = a; curCounty = ''; sel = null; near = null; $('pmPop').hidden = true; hideCallout(); if (window.__pm) { window.__pm.stSel.value = a; fillCounties(window.__pm.coSel); }
+    ++stateParcelLoadToken; active = new Set(['__none__']); F.inView = false; syncGISButton(); refresh(); { const ar = $('pmArea'); if (ar) ar.hidden = true; }
+    if(homeMap){syncStateBadges();drawRadarPins();}
+    ppaFocus(a,''); // first, so the previous lock is released before the camera moves
     const bb = stateBB(a); if (bb && zoom) fitTo(bb, fitPad()); if (mapReady) { map.setFilter('st-sel', ['==', ['get', 'a'], a]); map.getSource('sel').setData(empty); map.getSource('sel-point').setData(empty); }
-    if (panel) { stateCard(a, !homeMap); if (homeMap) openRight(false); }
+    if (panel && !homeMap) stateCard(a,true);
+    if(homeMap){openRight(false);if(isMobile())setSnap('peek');}
+    if(homeMap)void showStateParcels(a);
     aiRefresh();
-    if (remember && locationContext) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
+    if (remember && locationContext && !homeMap) rememberArea({ state:a, label:IDX.allStates.find(s => s.a === a)?.n || a });
     const url = new URL(location.href); url.searchParams.set('s', a); url.searchParams.delete('c'); url.searchParams.delete('p'); if (remember) url.hash = ''; history.replaceState(null, '', url);
   }
   function stateCard(a, open = true) {
@@ -1195,6 +1575,224 @@
     showTab('list', open);
   }
 
+  // Unified Radar: county-level markers use named county polygons, never guessed parcel pins.
+  // Plotly's county geometry is derived from the US Census; geometry failure falls back
+  // to clearly labelled state aggregates rather than invented county coordinates.
+  const STATE_FIPS={AL:'01',AK:'02',AZ:'04',AR:'05',CA:'06',CO:'08',CT:'09',DE:'10',DC:'11',FL:'12',GA:'13',HI:'15',ID:'16',IL:'17',IN:'18',IA:'19',KS:'20',KY:'21',LA:'22',ME:'23',MD:'24',MA:'25',MI:'26',MN:'27',MS:'28',MO:'29',MT:'30',NE:'31',NV:'32',NH:'33',NJ:'34',NM:'35',NY:'36',NC:'37',ND:'38',OH:'39',OK:'40',OR:'41',PA:'42',RI:'44',SC:'45',SD:'46',TN:'47',TX:'48',UT:'49',VT:'50',VA:'51',WA:'53',WV:'54',WI:'55',WY:'56'};
+  let radarOverlay={tab:'opp',month:-1,counties:[]},radarPins=[],radarCounties=null,radarGeometryLoading=false;
+  const parcelStateBadges=[];
+  let radarOverlayEnabled=false;
+  function syncStateBadges(){
+    // Only customize state markers while Land Only is active.
+    const landCounts={};
+    if(homeMap&&landOnly&&IDX?.datasets)for(const d of IDX.datasets){
+      const n=Number(d.cats?.land_bank||0);
+      if(n>0)landCounts[d.state]=(landCounts[d.state]||0)+n;
+    }
+    parcelStateBadges.forEach(m=>{
+      const el=m.getElement(),a=el.dataset.state;
+      if(homeMap&&landOnly){
+        const n=landCounts[a]||0;
+        if(!n||curState){el.style.display='none';return;}
+        el.textContent=n.toLocaleString('en-US');
+        el.title=n.toLocaleString('en-US')+' indexed government land parcels in '+(IDX.states[a]?.n||a)+'; sale status not confirmed';
+        el.setAttribute('aria-label',el.title);
+        // Preserve MapLibre's inline transform: replacing cssText detaches the marker
+        // from its geographic position until the next camera movement.
+        const markerTransform=el.style.transform;
+        el.style.cssText='display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:34px;max-width:70px;height:26px;padding:0 5px;border-radius:6px;border:1px solid #baf9df;background:#12b981;color:#062e23;font:700 11px/1 system-ui,-apple-system,sans-serif;white-space:nowrap;box-shadow:0 2px 5px #0005;cursor:pointer;';
+        if(markerTransform)el.style.transform=markerTransform;
+      }else{
+        el.textContent=el.dataset.count;
+        el.title=el.dataset.title;
+        el.setAttribute('aria-label',el.title);
+        const markerTransform=el.style.transform;
+        el.style.cssText='';
+        if(markerTransform)el.style.transform=markerTransform;
+        el.style.display=(radarOverlayEnabled||(homeMap&&!!curState))?'none':'';
+      }
+    });
+  }
+  const radarNorm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough|municipality|census area|city of)\\b/g,'').replace(/[^a-z0-9]/g,'');
+  const radarKind=(c,t)=>t==='opp'?Number(c.open)>0:
+    t==='cal'?(c.group!=='county-held'&&c.group!=='state-held'&&
+      (c.sale?.kind==='scheduled'||(c.sale?.kind==='tentative'&&radarOverlay.month<0))):
+    !!c.history;
+  function clearRadarPins(){radarPins.forEach(p=>p.remove());radarPins=[];}
+  async function loadRadarCounties(){
+    if(radarCounties||radarGeometryLoading)return;
+    radarGeometryLoading=true;
+    try{
+      const response=await fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json');
+      if(!response.ok)throw Error('County geometry unavailable');
+      const gj=await response.json(),by=new Map();
+      for(const f of gj.features||[]){
+        const code=String(f.id||f.properties?.GEO_ID||'').slice(0,5);
+        const name=f.properties?.NAME;
+        if(code.length===5&&name)by.set(code.slice(0,2)+':'+radarNorm(name),f);
+      }
+      radarCounties=by;
+    }catch(e){console.warn('Radar county outlines unavailable; using state aggregates',e);}
+    finally{radarGeometryLoading=false;drawRadarPins();}
+  }
+  function radarBounds(g){
+    const xy=[];
+    const scan=a=>{if(typeof a?.[0]==='number'&&typeof a[1]==='number'){xy.push(a);return;}if(Array.isArray(a))a.forEach(scan);};
+    scan(g.coordinates);if(!xy.length)return null;
+    const xs=xy.map(v=>v[0]).filter(v=>v>=-170&&v<=-65),ys=xy.map(v=>v[1]).filter(v=>v>=17&&v<=72);
+    if(!xs.length||!ys.length)return null;
+    return [Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)];
+  }
+  // Choose an interior label point, not the bounding-box midpoint (which can be water).
+  function radarInteriorPoint(geometry){
+    if(!geometry)return null;
+    const polygons=geometry.type==='Polygon'?[geometry.coordinates]:
+      geometry.type==='MultiPolygon'?geometry.coordinates:[];
+    const inRing=(pt,ring)=>{
+      let inside=false;
+      for(let i=0,j=ring.length-1;i<ring.length;j=i++){
+        const a=ring[i],b=ring[j];
+        if(((a[1]>pt[1])!==(b[1]>pt[1]))&&
+          pt[0]<(b[0]-a[0])*(pt[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;
+      }
+      return inside;
+    };
+    const inside=(pt,p)=>inRing(pt,p[0])&&!p.slice(1).some(h=>inRing(pt,h));
+    let best=null,bestScore=-1;
+    for(const poly of polygons){
+      const outer=poly[0];if(!outer?.length)continue;
+      const xs=outer.map(p=>p[0]),ys=outer.map(p=>p[1]);
+      const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+      // Dense enough for irregular coastal states, while cheap for the small state layer.
+      for(let i=0;i<24;i++)for(let j=0;j<24;j++){
+        const pt=[x0+(i+.5)*(x1-x0)/24,y0+(j+.5)*(y1-y0)/24];
+        if(!inside(pt,poly))continue;
+        let nearest=Infinity;
+        for(const ring of poly)for(let k=0;k<ring.length-1;k++){
+          const a=ring[k],b=ring[k+1],dx=b[0]-a[0],dy=b[1]-a[1];
+          const t=Math.max(0,Math.min(1,((pt[0]-a[0])*dx+(pt[1]-a[1])*dy)/(dx*dx+dy*dy||1)));
+          const d=Math.hypot(pt[0]-a[0]-t*dx,pt[1]-a[1]-t*dy);
+          nearest=Math.min(nearest,d);
+        }
+        const score=nearest*Math.cos(pt[1]*Math.PI/180);
+        if(score>bestScore){bestScore=score;best=pt;}
+      }
+    }
+    return best;
+  }
+  function radarStatePoint(state){
+    const src=map.getSource('states')?._data;
+    const feature=src?.features?.find(f=>f.properties?.a===state);
+    return radarInteriorPoint(feature?.geometry);
+  }
+  function drawRadarPins(){
+    if(!homeMap||!mapReady||!map.getSource('states'))return;
+    clearRadarPins();
+    // Land Only shows the land-for-sale totals (green state badges), not Radar record counts.
+    if(landOnly||(homeMap&&!!curState))return;
+    const radarMode=homeMode();
+    const src=map.getSource('states')._data;if(!src?.features)return;
+    const zoom=map.getZoom(),countyView=zoom>=6.6;
+    const grouped=new Map(),countyGroups=new Map();
+    for(const c of radarOverlay.counties){
+      if(!STATE_FIPS[c.state]||!radarKind(c,radarOverlay.tab))continue;
+      if(radarMode!=='all'&&!modeParts(radarMode).some(x=>(HOME_RADAR[x]||[]).includes(c.group)))continue;
+      if(radarOverlay.tab==='cal'&&radarOverlay.month>=0&&
+        (!c.sale?.date||Number(c.sale.date.slice(5,7))-1!==radarOverlay.month))continue;
+      const list=grouped.get(c.state)||[];list.push(c);grouped.set(c.state,list);
+      const key=STATE_FIPS[c.state]+':'+radarNorm(c.county),feature=radarCounties?.get(key);
+      if(feature){const entry=countyGroups.get(key)||{feature,rows:[]};entry.rows.push(c);countyGroups.set(key,entry);}
+    }
+    const colors={opp:'#3be6a2',cal:'#f6ba49',hist:'#b49aff'};
+    const makePin=(point,rows,state,county,countyBounds)=>{
+      const el=mk('button','ppa-radar-pin',String(rows.length));
+      el.type='button';el.style.cssText='min-width:31px;height:31px;padding:0 6px;border-radius:20px;border:2px solid white;background:'+colors[radarOverlay.tab]+';color:#10222d;font:800 12px system-ui;box-shadow:0 3px 10px #0008;cursor:pointer';
+      const area=county?county+', '+state:state;
+      el.title=rows.length+' Radar record(s) in '+area+'; '+(county?'county location':'state aggregate')+', not parcel coordinates';
+      el.setAttribute('aria-label',el.title);
+      el.addEventListener('click',()=>{
+        if(countyBounds)fitTo(countyBounds,fitPad());else focusState(state,{remember:false,panel:true});
+        window.parent.postMessage({type:'ppa:radar-overlay-select',state,county,tab:radarOverlay.tab},location.origin);
+      });
+      radarPins.push(new maplibregl.Marker({element:el,anchor:'center'}).setLngLat(point).addTo(map));
+    };
+    // National view: exactly one Radar marker per state. No county marker pileups.
+    if(!countyView){
+      for(const [state,rows] of grouped){
+        const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
+        const point=radarStatePoint(state);
+        if(point)makePin(point,rows,state,'',null);
+      }
+      return;
+    }
+    // Zoomed-in view: only markers inside the viewport, with screen-space collision suppression.
+    const bounds=map.getBounds(),used=[],minSpacing=46;
+    const place=(point,rows,state,county,bb)=>{
+      if(!bounds.contains(point))return;
+      const px=map.project(point);
+      if(used.some(p=>Math.hypot(p.x-px.x,p.y-px.y)<minSpacing))return;
+      used.push(px);makePin(point,rows,state,county,bb);
+    };
+    const mappedStates=new Set();
+    for(const entry of countyGroups.values()){
+      const bb=radarBounds(entry.feature.geometry);if(!bb)continue;
+      const state=entry.rows[0].state;
+      const center=[(bb[0]+bb[2])/2,(bb[1]+bb[3])/2];
+      place(center,entry.rows,state,entry.rows[0].county,bb);mappedStates.add(state);
+    }
+    for(const [state,rows] of grouped){
+      if(mappedStates.has(state))continue;
+      const bb=stateBB(state);if(!bb||bb.some(v=>!Number.isFinite(v)))continue;
+      const point=radarStatePoint(state);
+      if(point)place(point,rows,state,'',null);
+    }
+  }
+
+  if(homeMap)window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-overlay'||!['opp','cal','hist'].includes(d.tab)||!Array.isArray(d.counties)||d.counties.length>3000)return;
+    radarOverlayEnabled=true;syncStateBadges();
+    radarOverlay={tab:d.tab,month:Number.isInteger(d.month)&&d.month>=-1&&d.month<=11?d.month:-1,
+      counties:d.counties.filter(c=>c&&typeof c.state==='string'&&typeof c.county==='string').map(c=>({
+        state:c.state,county:c.county,open:Number(c.open)||0,group:String(c.group||''),history:!!c.history,
+        sale:{kind:String(c.sale?.kind||''),date:String(c.sale?.date||'')}
+      }))};
+    drawRadarPins();
+    if(!radarCounties&&!radarGeometryLoading)loadRadarCounties();
+    if(mapReady){map.easeTo({pitch:REDUCED?0:22,duration:REDUCED?0:500});map.once('moveend',drawRadarPins);}
+  });
+  // Explicit state focus avoids depending on embedded selector events or drawer state.
+  if(homeMap)window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==window.parent)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-focus-state'||!/^[A-Z]{2}$/.test(d.state||''))return;
+    if(!IDX?.allStates?.some(s=>s.a===d.state))return;
+    focusState(d.state,{remember:false,panel:false,zoom:true});
+  });
+  // Verified Radar parcel handoff. Exact state + county + parcel ID must match
+  // an existing map dataset and a record with an official GIS geometry.
+  if (homeMap) window.addEventListener('message', async event => {
+    if (event.origin !== location.origin || event.source !== window.parent) return;
+    const d=event.data;
+    if (!d || d.type !== 'ppa:radar-parcel' || !/^[A-Z]{2}$/.test(d.state || '') ||
+        typeof d.county !== 'string' || d.county.length > 100 ||
+        typeof d.parcel !== 'string' || !d.parcel || d.parcel.length > 100) return;
+    const norm=s=>String(s||'').toLowerCase().replace(/\\b(county|parish|borough)\\b/g,'').replace(/[^a-z0-9]/g,'');
+    const datasets=IDX?.datasets.filter(x=>x.state===d.state && norm(x.county)===norm(d.county))||[];
+    let matched=null;
+    if(datasets.length===1){
+      const ds=await load(datasets[0].id);
+      const hits=ds?.recs.filter(r=>String(r.p).trim()===d.parcel.trim() && r.g)||[];
+      if(hits.length===1) matched={record:hits[0],dataset:datasets[0]};
+    }
+    if(matched){
+      await pickCounty(matched.dataset.id,{remember:false});
+      select(matched.record,{fly:true,remember:false});
+    }
+    window.parent.postMessage({type:'ppa:radar-parcel-result',requestId:d.requestId,
+      matched:!!matched,state:d.state,county:d.county,parcel:d.parcel},location.origin);
+  });
   // ---------- start ----------
   async function showArea(area) {
     if (!area) return;
@@ -1217,6 +1815,17 @@
     if (pointed) map.easeTo({center:[area.lng,area.lat], zoom:9.5, duration:REDUCED ? 0 : 240});
   }
   async function start2() {
+    // Homepage map always opens in national Choose a state mode.
+    // Explicit selections during this visit still work normally.
+    if(homeMap){
+      curState='';curCounty='';sel=null;active=new Set(['__none__']);
+      if(window.__pm){window.__pm.stSel.value='';fillCounties(window.__pm.coSel);}
+      const clean=new URL(location.href);
+      ['s','c','p'].forEach(key=>clean.searchParams.delete(key));
+      if(clean.href!==location.href)history.replaceState(null,'',clean);
+      syncStateBadges();
+      return;
+    }
     const q = new URLSearchParams(location.search), county = q.get('c'), parcel = q.get('p'), state = q.get('s');
     const point = new URLSearchParams(location.hash.slice(1));
     const lat = Number(point.get('lat')), lng = Number(point.get('lng'));
@@ -1243,13 +1852,24 @@
       locationContext.subscribe((area, source) => { if (source === 'chosen') showArea(area); });
     }
   }
-  function loadLib() { return new Promise((res, rej) => { if (window.maplibregl) return res(); const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js'; s.crossOrigin = 'anonymous'; s.onload = res; s.onerror = () => rej(new Error('map library')); document.head.appendChild(s); }); }
+  async function loadLib() {
+    if(window.maplibregl?.Map)return;
+    for(const url of ['https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.js','https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js']){
+      try{await new Promise((resolve,reject)=>{
+        const script=document.createElement('script');let timer;
+        const done=error=>{clearTimeout(timer);script.onload=script.onerror=null;if(error){script.remove();reject(error);}else resolve();};
+        script.src=url;script.crossOrigin='anonymous';script.onload=()=>done(window.maplibregl?.Map?null:Error('Map library did not initialize'));script.onerror=()=>done(Error('Map library download failed'));
+        timer=setTimeout(()=>done(Error('Map library download timed out')),9000);document.head.appendChild(script);
+      });return;}catch(error){console.warn('Parcel map library:',error.message);}
+    }
+    throw Error('Map library could not be downloaded');
+  }
   function afterAccount() {
     buildAi();
     const ask = $('pmAsk');
     if (ask) {
-      ask.replaceChildren(mk('span', '', paid ? 'Map Assistant' : '🔒 Map Assistant'), mk('b', '', 'Pro'));
-      ask.setAttribute('aria-label', paid ? 'Map Assistant' : 'Map Assistant, Pro feature');
+      ask.replaceChildren(mk('span', '', paid ? 'AI' : '🔒 AI'));
+      ask.setAttribute('aria-label', paid ? 'AI' : 'AI, members only');
       ask.title = 'Ask questions about the current county, parcel or map area.';
       if (homeMap && paid) {
         ask.setAttribute('role', 'switch');
@@ -1280,9 +1900,14 @@
     try { IDX = await api('/map/index.json'); } catch (e) { ($('pmResults') || $('pmAiBox')).textContent = 'The map data could not be loaded. Please try again.'; return; }
     const account = (embedded ? window.parent.ppaAccount : window.ppaAccount) || fetch('/.netlify/functions/account', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null).then(d => d?.user || null);
     account.then(u => { signedIn = !!u; paid = !!(u && (u.owner || u.paid)); acctDone = true; if (sel) popup(sel); afterAccount(); loadResearch(); }).catch(() => { acctDone = true; afterAccount(); loadResearch(); });
+    setInterval(refreshVerifiedOverlays,120000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshVerifiedOverlays();});
     if (workspace) return;
     buildTop(); buildFilters(); renderCounts(); initSheet(); $('tabAi').addEventListener('click', () => openAi()); $('tabList').addEventListener('click', () => showTab('list', true)); refresh0(); showTab('list');
-    try { await loadLib(); initMap(); } catch (e) { say('The map library could not load. The list on the right still works.', true); }
+    try { await loadLib(); initMap(); } catch (e) { console.error('Parcel map initialization failed:',e);mapReady=false;
+      try{await start2();}catch(error){console.error('Parcel detail fallback failed:',error);}
+      say(window.maplibregl?.Map?'The map could not start in this browser. Parcel details are still available.':'The map library could not be downloaded. Parcel details are still available.', true);
+    }
   }
   function refresh0() { renderResults([]); }
   window.addEventListener('keydown', e => { if (e.key !== 'Escape' || workspace) return;

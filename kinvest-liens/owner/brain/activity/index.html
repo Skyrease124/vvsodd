@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="color-scheme" content="dark">
+<title>PricePocketAsset | NVIDIA Pulse Reactor Activity</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#050b14;color:#ecf6ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow-x:hidden}.world{position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(circle at 50% 46%,#0e3a40 0%,#0a1f33 30%,#060d1c 66%,#020408 100%)}.world:before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 20deg at 55% 45%,transparent,#196c7255,transparent,#394c9350,transparent);filter:blur(46px);animation:bgTurn 20s linear infinite}.world:after{content:'';position:absolute;inset:0;background-image:radial-gradient(#8dbcf944 .6px,transparent 1px);background-size:19px 22px;opacity:.45;mask-image:linear-gradient(transparent,#0009,transparent);animation:starDrift 16s linear infinite}@keyframes bgTurn{to{transform:rotate(360deg)}}@keyframes starDrift{to{background-position:90px 150px}}
+main{max-width:1000px;margin:auto;padding:env(safe-area-inset-top) 14px 65px}header{display:flex;align-items:center;justify-content:space-between;padding:24px 4px 7px;gap:10px}a{color:#9af6c8}.brand{font-size:17px;font-weight:750;letter-spacing:-.5px}.on{font-size:10px;letter-spacing:1.2px;color:#93f6bb;padding:8px 11px;border-radius:999px;border:1px solid #4c9777aa;background:#11332988}.on:before{content:'● ';animation:pulse 2s ease-in-out infinite}@keyframes pulse{50%{opacity:.4}}h1{text-align:center;font-size:clamp(25px,6vw,42px);letter-spacing:-1.1px;margin:18px 0 3px}.sub{text-align:center;color:#a7b7cc;font-size:12px;line-height:1.5}.nav{max-width:760px;margin:15px auto 0;font-size:12px;display:flex;gap:14px;flex-wrap:wrap}.network{width:100%;max-width:720px;margin:8px auto 0;display:block;overflow:visible;} .fiber{stroke-dasharray:2 10;animation:flow var(--dur) linear var(--delay) infinite,fiberLight 4.7s ease-in-out var(--delay) infinite;stroke-linecap:round;opacity:.48}@keyframes flow{to{stroke-dashoffset:-200}}@keyframes fiberLight{0%,100%{opacity:.2}45%{opacity:.95}65%{opacity:.4}}.node{transform-box:fill-box;transform-origin:center;touch-action:none;cursor:grab;user-select:none}.node:active{cursor:grabbing}@keyframes float{50%{transform:translateY(-6px)}}.hub{transform-origin:350px 365px;animation:hubBreath 3s ease-in-out infinite}@keyframes hubBreath{50%{transform:scale(1.045);opacity:.84}}.ring{transform-origin:350px 365px;animation:rot 26s linear infinite}.ring.rev{animation-direction:reverse;animation-duration:19s}@keyframes rot{to{transform:rotate(360deg)}}.core-wave{transform-origin:350px 365px;animation:coreWave 3.1s ease-out infinite}@keyframes coreWave{0%{transform:scale(.78);opacity:.75}72%,100%{transform:scale(1.65);opacity:0}}.ringlight{transform-origin:350px 365px;animation:rot 9s linear infinite}.overview{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 auto 27px;max-width:760px}.metric{background:linear-gradient(160deg,#16302d99,#101d2ca8);border:1px solid #426e695c;border-radius:16px;padding:13px 4px;text-align:center}.metric b{font-size:clamp(20px,5.5vw,34px);display:block}.metric span{font-size:10px;letter-spacing:.4px;color:#9cacc1}.sect{max-width:760px;margin:20px auto 0}.sectHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}h2{font-size:20px;letter-spacing:-.5px;margin:0}.status{font-size:10px;border:1px solid #3d786e;border-radius:25px;padding:7px 10px;color:#a1eac9;white-space:nowrap}.ticker,.activity-window{border:1px solid #36535d87;background:#071b1e9e;border-radius:17px;overflow:hidden;position:relative}.ticker{min-height:85px;padding:10px}.tickerTrack{display:flex;width:max-content;align-items:center;gap:12px;animation:tickerMove 25s linear infinite}.transfer{display:flex;align-items:center;gap:9px;flex:0 0 260px;background:#17303aaa;border:1px solid #447c8d55;border-radius:11px;padding:10px}.transfer b{font-size:12px;display:block;white-space:nowrap}.transfer small{font-size:10px;display:block;color:#8eaaba;margin-top:3px}.file-icon{font-size:20px;color:#67e6e0}@keyframes tickerMove{to{transform:translateX(-50%)}}.activity-window{height:320px;overflow-y:auto;padding:8px}.log-entry{display:flex;gap:11px;align-items:center;margin:7px 3px;padding:12px 10px;border:1px solid #3551696b;border-radius:11px;background:#122337dc;min-height:63px}.led{width:8px;height:8px;background:var(--accent);box-shadow:0 0 13px var(--accent);border-radius:50%;flex-shrink:0}.logbody{flex:1;min-width:0}.logbody b{display:block;font-size:12px;color:var(--accent)}.logbody span{display:block;font-size:11px;color:#b3c4d6;margin-top:5px;overflow-wrap:anywhere}.log-entry small{font-size:10px;color:#9fb0c2;text-align:right}.foot{text-align:center;color:#859bad;font-size:11px;margin:19px auto;line-height:1.5;max-width:650px}.node-title{fill:white;font-size:22px;font-weight:700;text-anchor:middle}.node-role{fill:#adc1d1;font-size:12px;text-anchor:middle;letter-spacing:1px}.update{max-width:760px;margin:14px auto;padding:10px 12px;border:1px solid #36535d;border-radius:12px;color:#a7b7cc;font-size:12px}.empty{padding:22px;color:#aac0d1}.controls{display:flex;gap:8px;flex-wrap:wrap}button{cursor:pointer;background:#1d4c43;border:1px solid #75cdaa;color:#eafff2;padding:9px 12px;border-radius:10px;font-weight:650}.muted{color:#8eaaba}#gate{margin:14px auto;max-width:760px;padding:18px;border:1px solid #426e69;border-radius:12px}.only-authorized{display:none}body.authorized .only-authorized{display:block}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}@media(max-width:480px){.metric{padding:12px 3px}.transfer{flex-basis:220px}.status{font-size:9px}}
+
+
+#network{--signal:#65efd0}
+.event-wave{pointer-events:none;opacity:0;transform-origin:350px 365px}
+.event-beam{pointer-events:none;opacity:0;stroke-dasharray:10 20;stroke-linecap:round}
+#network.pulse-verify{--signal:#77f5cc}
+#network.pulse-publish{--signal:#61dcff}
+#network.pulse-error{--signal:#ff986f}
+#network.pulse-verify .event-wave,#network.pulse-publish .event-wave,#network.pulse-error .event-wave{animation:eventWave 1.6s ease-out 1}
+#network.pulse-verify .event-beam,#network.pulse-publish .event-beam,#network.pulse-error .event-beam{animation:eventBeam 1.5s ease-out 1}
+#network.pulse-verify .event-reactor,#network.pulse-publish .event-reactor,#network.pulse-error .event-reactor{animation:eventHub 1.5s ease-out 1}
+#network.pulse-publish .event-wave{animation-duration:2.1s}
+#network.pulse-error .event-wave{animation-duration:1s;animation-iteration-count:2}
+#network.pulse-publish .event-mapnode,#network.pulse-error .event-mapnode{animation:eventNode 1.6s ease-in-out 1}
+@keyframes eventWave{0%{opacity:.95;transform:scale(.65);stroke-width:5}80%{opacity:.3}100%{opacity:0;transform:scale(1.8);stroke-width:1}}
+@keyframes eventBeam{0%{opacity:0;stroke-dashoffset:190}25%{opacity:1}80%{opacity:.8}100%{opacity:0;stroke-dashoffset:-190}}
+@keyframes eventHub{0%,100%{filter:none}28%{filter:drop-shadow(0 0 22px var(--signal))}55%{filter:drop-shadow(0 0 35px var(--signal))}}
+@keyframes eventNode{0%,100%{filter:none}35%{filter:drop-shadow(0 0 19px var(--signal))}}
+#signalLabel{font-weight:650;color:#a4dccd}
+#activityMode,#eventCounty,#eventAgent,#eventParcel{max-width:100%;font:inherit}
+.controls label{min-width:0}
+body.still .event-wave,body.still .event-beam,body.still .event-reactor{animation:none!important}
+@media(prefers-reduced-motion:reduce){.event-wave,.event-beam,.event-reactor,.event-mapnode{animation:none!important}}
+
+.health{max-width:760px;margin:13px auto;padding:14px 16px;border-radius:16px;border:1px solid #476a73;background:#0b1f2bdd}
+.health-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.health-title{font-weight:750;letter-spacing:.2px}
+.agentStrip{max-width:760px;margin:0 auto 13px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.agentChip{border:1px solid #476a73;border-radius:12px;padding:9px 11px;background:#0b1f2bdd;font-size:12px;color:#c9e7ea;min-width:0}
+.agentChip b{display:block;font-size:12px;letter-spacing:.3px}
+.agentChip span{display:block;font-size:11px;letter-spacing:.8px;font-weight:750;margin-top:3px}
+.agentChip small{display:block;color:#93a4b8;font-size:11px;margin-top:3px;letter-spacing:0;overflow-wrap:anywhere}
+.agentChip[data-state="active"] span{color:#a0f4ce}
+.agentChip[data-state="completed"] span{color:#8fd9ff}
+.agentChip[data-state="idle"] span{color:#c4c7d4}
+.agentChip[data-state="failed"] span{color:#ff9a92}
+.agentChip[data-state="quota_limited"] span{color:#ffd59c}
+.agentChip[data-state="not_connected"] span{color:#7d879c}
+.health-pill{font-size:11px;font-weight:750;letter-spacing:.8px;padding:6px 11px;border-radius:100px;border:1px solid #4e9b83;background:#183e35;color:#a0f4ce}
+.health[data-state="retrying"] .health-pill{color:#ffd59c;background:#443120;border-color:#bb854d}
+.health[data-state="attention"] .health-pill{color:#ff9a92;background:#46292c;border-color:#ad5e62}
+.health[data-state="paused"] .health-pill{color:#c4c7d4;background:#282f42;border-color:#69748d}
+.health[data-state="processing"] .health-pill{color:#c1fce4;box-shadow:0 0 16px #39e8b644}
+.health-detail{margin:11px 0 5px;color:#bfd2df;font-size:12px;line-height:1.5}
+.health-meta{color:#98b9c5;font-size:11px}
+ .fiber:not(.moving){animation:none;opacity:.3}
+@media(max-width:500px){.overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gis-trace{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.gis-stage{font-size:10px;padding:3px 6px;border:1px solid #56717b;border-radius:7px;color:#d5eaf1;background:#203345}
+/* iPhone preview: keep long GIS evidence readable and transfer cards inside viewport. */
+.log-entry{align-items:flex-start;min-width:0}
+.logbody{overflow-wrap:anywhere}
+.logbody small{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;line-height:1.5;margin-top:7px;color:#9fb0c2}
+.log-entry>small{flex:0 0 auto;max-width:35%;overflow-wrap:anywhere}
+.transfer{min-width:0}
+.transfer>div{min-width:0}
+.transfer b,.transfer small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:600px){
+ main{padding-left:12px;padding-right:12px}
+ .ticker{padding:10px 0;overflow:hidden}
+ .tickerTrack{gap:10px}
+ .transfer{flex:0 0 min(78vw,290px);max-width:calc(100vw - 56px)}
+ .activity-window{padding:6px}
+ .log-entry{display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;padding:12px}
+ .log-entry>small{grid-column:2;max-width:100%;text-align:left;margin-top:0}
+ .logbody b{font-size:13px}
+ .logbody span{font-size:12px;line-height:1.5}
+ .logbody small{font-size:11px}
+}
+.node ellipse{filter:drop-shadow(0 0 7px var(--c,#7bd3ff)) drop-shadow(0 0 1px var(--c,#7bd3ff))}
+.node .node-title{fill:#f4fbff;text-shadow:0 0 8px var(--c,#7bd3ff)}
+.stage{position:relative;width:100%;max-width:720px;margin:8px auto 0;background:radial-gradient(circle 260px at 50% 50%,rgba(90,255,200,.42),rgba(40,160,160,.12) 45%,rgba(0,0,0,0) 100%)}
+.stage .network{margin:0;max-width:none}
+.reactor-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+</style><link rel="stylesheet" href="/owner/brain/activity/reactor-ui.css"></head>
+<body><div class="world"></div><main><header><div class="brand">PricePocketAsset <span style="color:#88e7b9">/ Neural</span></div><span id="connection" class="on">CONNECTING</span></header>
+<div class="nav"><a href="/owner/brain/">← AI Brain</a><a href="/owner/">Owner Dashboard</a><a href="/owner/map-coverage/">Map Coverage</a></div>
+<h1>NVIDIA Pulse Reactor</h1><div class="sub">256 neural fibers · reactive visual pulse · recorded agent activity</div>
+<div id="gate" role="status">Verifying owner access and loading recorded agent activity…</div>
+<div class="only-authorized">
+<div class="stage"><canvas id="reactorCanvas" class="reactor-canvas" aria-hidden="true"></canvas><svg class="network" id="network" viewBox="0 0 700 730" role="img" aria-label="Decorative animated information paths connecting Gemini, Cloudflare, Groq and Mapping to NVIDIA">
+<defs><radialGradient id="nodeGlass" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#2d4d6e"/><stop offset="1" stop-color="#08111f"/></radialGradient><radialGradient id="core"><stop stop-color="#2a9476"/><stop offset=".62" stop-color="#143c3a"/><stop offset="1" stop-color="#071923"/></radialGradient><linearGradient id="sweep"><stop stop-color="#63f5ca" stop-opacity="0"/><stop offset=".5" stop-color="#d7fff4" stop-opacity=".95"/><stop offset="1" stop-color="#4e95fa" stop-opacity="0"/></linearGradient></defs>
+
+
+
+
+
+<circle class="event-reactor" cx="350" cy="365" r="91" fill="url(#core)" stroke="#96ffcf" stroke-width="2.6"/>
+
+<text x="350" y="351" fill="#baffd8" text-anchor="middle" font-size="32" font-weight="800">NVIDIA</text>
+<text x="350" y="378" fill="#d7fff0" text-anchor="middle" font-size="15">THE AI BRAIN</text><text x="350" y="398" fill="#82d7b3" text-anchor="middle" font-size="10" letter-spacing="1">RECEIVE · PULSE · ROUTE</text>
+<g id="eventLayer" aria-hidden="true"><path class="event-beam" id="reactorBeam" d="M580 610 Q510 485 414 405" fill="none" stroke="var(--signal)" stroke-width="5"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="3" fill="none"/><circle class="event-wave" cx="350" cy="365" r="95" stroke="var(--signal)" stroke-width="2" fill="none" style="animation-delay:.2s"/></g><g id="nodes"></g><text x="350" y="708" fill="#9eeedb" text-anchor="middle" font-size="10" letter-spacing="2">REACTOR VISUALIZATION</text>
+</svg></div>
+<section id="health" class="health" data-state="idle" aria-label="Official GIS agent health"><div class="health-head"><span class="health-title">Official GIS Agent Health</span><span id="healthState" class="health-pill">CHECKING</span></div><p id="healthDetail" class="health-detail" role="status">Reading worker status…</p><div id="healthMeta" class="health-meta">No live health report yet</div></section>
+<section id="agentStrip" class="agentStrip" aria-label="Agent states from stored records"></section>
+<div class="overview"><div class="metric"><b id="verified">—</b><span>VERIFIED MAP POLYGONS</span></div><div class="metric"><b id="published">—</b><span>WORKER PUBLICATIONS</span></div><div class="metric"><b id="cursor">—</b><span>WAYNE CURSOR</span></div><div class="metric"><b id="processed">—</b><span>PROCESSED</span></div><div class="metric"><b id="skipped">—</b><span>SKIPPED</span></div><div class="metric"><b id="pendingReview">—</b><span>PENDING REVIEW</span></div></div>
+<div class="update"><div id="signalLabel" role="status" aria-live="polite">Waiting for new recorded activity</div><strong id="county">Wayne County</strong><span> · </span><span id="workerState">Loading</span><span> · </span><span id="stamp">Not yet updated</span><div class="controls" style="margin-top:10px"><button id="refresh" type="button">Refresh activity</button><button id="motion" type="button" aria-pressed="false">Pause visual motion</button></div></div>
+<section class="sect"><div class="sectHead"><h2>Verified Transfers</h2><span class="status">RECORDED EVENTS</span></div><div class="ticker"><div id="ticker" class="tickerTrack"><span class="empty">Loading verified transfers…</span></div></div></section>
+<section class="sect"><div class="sectHead"><h2>Live Agent Activity</h2><span id="modeStatus" class="status">LIVE · AUTO REFRESH 20S</span></div>
+<div class="controls" aria-label="Activity controls">
+<label>Mode <select id="activityMode"><option value="live">Live</option><option value="replay">Historical Replay</option><option value="simulation">Simulation</option></select></label>
+<label>County <select id="eventCounty"><option value="">All counties</option></select></label>
+<label>Agent <select id="eventAgent"><option value="">All agents</option></select></label>
+<label>Parcel <input id="eventParcel" type="search" placeholder="Parcel ID"></label>
+<button id="replayToggle" type="button" hidden>Play replay</button>
+</div><div id="eventWindow" class="update" role="status">Showing recent recorded events only · historical archive not yet verified</div><div class="activity-window"  id="activity" role="log" aria-live="off"><p class="empty">Loading recorded activity…</p></div></section>
+<div class="foot">The reactor pathways are a visual representation. Each agent card shows its stored state: Gemini and Groq show stored results only, and Cloudflare shows second opinions on NVIDIA proposals, display only. Only recorded worker and publication events appear in this activity feed. An event reads “Helper agents → NVIDIA” only when stored helper results were actually sent to NVIDIA; other events show where the result was stored. New records refresh automatically while this page is visible.</div>
+</div></main>
+<script>
+'use strict';
+const NS='http://www.w3.org/2000/svg';
+const svg=(name,attrs={},parent)=>{const el=document.createElementNS(NS,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);if(parent)parent.append(el);return el};
+const positions=[{x:120,y:120,name:'Gemini',role:'DOCUMENTS',color:'#72b9ff'},{x:580,y:120,name:'Cloudflare',role:'SECOND OPINION',color:'#52ebba'},{x:120,y:610,name:'Groq',role:'PARCEL DATA',color:'#ffb477'},{x:580,y:610,name:'Mapping',role:'GIS LAYERS',color:'#bd9dff'}];
+const reactorFibers=[],fibersByNode=[];
+const CORE={x:350,y:365,r:84},RIM={rx:88,ry:57};
+for(const [group,n] of positions.entries()){
+ const list=[];fibersByNode.push(list);
+ // Each stream leaves the core as a fan and meets the node's inner rim, so it reads as a ribbon of threads.
+ const rimBase=Math.atan2((CORE.y-n.y)/RIM.ry,(CORE.x-n.x)/RIM.rx);
+ const coreBase=Math.atan2(n.y-CORE.y,n.x-CORE.x);
+ for(let i=0;i<64;i++){
+  const spread=(i+0.5)/64-0.5,scatter=((i*0.618034)%1)-0.5;
+  const f={node:n,color:n.color,dense:i%6===0,particle:i%2===0,phase:(i*0.31)%7,speed:0.05+(i%11)*0.006,spread,scatter,rimBase,coreBase};
+  list.push(f);reactorFibers.push(f);
+ }
+ const g=svg('g',{'class':'node'+(n.name==='Mapping'?' event-mapnode':''),style:'--c:'+n.color+';animation-delay:-'+group*1.3+'s'},document.getElementById('nodes'));
+ svg('ellipse',{cx:n.x,cy:n.y,rx:88,ry:57,fill:'url(#nodeGlass)',stroke:n.color,'stroke-width':'1.8'},g);
+ bindNode(g,n,list);
+ const title=svg('text',{x:n.x,y:n.y,'class':'node-title'},g);title.textContent=n.name;
+ const subtitle=svg('text',{x:n.x,y:n.y+24,'class':'node-role'},g);subtitle.textContent=n.role;
+}
+// Canvas layer: fibers, travelling light, base ripples and sparkles. SVG keeps the nodes, labels and event overlays.
+const reactorCanvas=document.getElementById('reactorCanvas'),rctx=reactorCanvas.getContext('2d'),stage=reactorCanvas.parentElement;
+const lowEnd=(navigator.hardwareConcurrency||4)<=4||(navigator.deviceMemory||8)<=4;
+const particles=reactorFibers.filter(f=>f.particle);
+const sparkles=Array.from({length:70},(_,i)=>({x:(i*97)%700,y:(i*131)%730,r:.6+(i%3)*.4,s:.2+(i%7)*.05,p:i*.7}));
+let dpr=1,scaleX=1,scaleY=1,running=false,rafId=0,lastRender=0,canvasVisible=true;
+const sprites={};
+function spriteFor(color){
+ if(sprites[color])return sprites[color];
+ const c=document.createElement('canvas');c.width=c.height=32;
+ const g=c.getContext('2d'),grd=g.createRadialGradient(16,16,0,16,16,16);
+ grd.addColorStop(0,'#ffffff');grd.addColorStop(.3,color);grd.addColorStop(1,'rgba(0,0,0,0)');
+ g.fillStyle=grd;g.fillRect(0,0,32,32);
+ return sprites[color]=c;
+}
+function haloFor(color){
+ const key='halo:'+color;
+ if(sprites[key])return sprites[key];
+ const c=document.createElement('canvas');c.width=c.height=64;
+ const g=c.getContext('2d'),grd=g.createRadialGradient(32,32,0,32,32,32);
+ grd.addColorStop(0,color);grd.addColorStop(.5,color);grd.addColorStop(1,'rgba(0,0,0,0)');
+ g.globalAlpha=.55;g.fillStyle=grd;g.fillRect(0,0,64,64);
+ return sprites[key]=c;
+}
+for(const f of particles){f.sprite=spriteFor(f.color);}
+const whiteSprite=spriteFor('#ffffff');
+const beamGradient=null;
+function updateFibers(time){
+ for(const f of reactorFibers){
+  const n=f.node;
+  const a0=f.coreBase+f.spread*0.9+f.scatter*0.12;
+  const a3=f.rimBase+f.spread*1.1+f.scatter*0.1;
+  const p0x=CORE.x+Math.cos(a0)*CORE.r,p0y=CORE.y+Math.sin(a0)*CORE.r;
+  const p3x=n.x+Math.cos(a3)*RIM.rx*0.98,p3y=n.y+Math.sin(a3)*RIM.ry*0.98;
+  const dx=p3x-p0x,dy=p3y-p0y,len=Math.hypot(dx,dy)||1;
+  const nx=-dy/len,ny=dx/len;                       // unit normal across the stream
+  const bow=f.spread*90+f.scatter*18;               // fibres fan across the stream's width
+  const w1=bow*0.8+Math.sin(time*0.9+f.phase)*20;
+  const w2=-bow*0.45+Math.sin(time*0.9+f.phase+1.9)*20; // opposite bend gives an S-curve
+  f.p0x=p0x;f.p0y=p0y;f.p3x=p3x;f.p3y=p3y;f.nx=nx;f.ny=ny;
+  f.c1x=p0x+dx*0.33+nx*w1;f.c1y=p0y+dy*0.33+ny*w1;
+  f.c2x=p0x+dx*0.68+nx*w2;f.c2y=p0y+dy*0.68+ny*w2;
+ }
+}
+function drawFrame(time){
+ updateFibers(time);
+ rctx.setTransform(scaleX,0,0,scaleY,0,0);
+ rctx.clearRect(0,0,700,730);
+ rctx.globalCompositeOperation='lighter';
+ // Node pulse behind each node.
+ positions.forEach((n,k)=>{const pulse=.5+.5*Math.sin(time*1.6+k*1.3);rctx.globalAlpha=.18+.16*pulse;rctx.drawImage(haloFor(n.color),n.x-100,n.y-100,200,200);});
+ // Base beam and ripples.
+ const beam=rctx.createLinearGradient(0,455,0,650);
+ beam.addColorStop(0,'rgba(120,255,225,.85)');beam.addColorStop(1,'rgba(120,255,225,0)');
+ rctx.globalAlpha=1;rctx.fillStyle=beam;rctx.fillRect(343,455,14,195);
+ rctx.lineWidth=1.2;
+ for(let k=0;k<4;k++){const s=(time*.22+k/4)%1,rx=60+230*s;rctx.strokeStyle='rgba(110,235,255,'+(0.75*(1-s)).toFixed(3)+')';rctx.beginPath();rctx.ellipse(350,650,rx,rx*.16,0,0,Math.PI*2);rctx.stroke();}
+ // Bright band around the core (replaces the blurred halo removed from SVG).
+ const band=rctx.createRadialGradient(350,365,84,350,365,132);
+ band.addColorStop(0,'rgba(63,245,184,0)');band.addColorStop(.45,'rgba(63,245,184,.85)');band.addColorStop(.75,'rgba(63,245,184,.38)');band.addColorStop(1,'rgba(63,245,184,0)');
+ rctx.globalAlpha=1;rctx.fillStyle=band;rctx.beginPath();rctx.arc(350,365,132,0,Math.PI*2);rctx.fill();
+ // Core waves and rotating rings (these were SVG elements before).
+ for(let k=0;k<2;k++){
+  const s=(time/3.1+k*.5)%1;if(s>=.72)continue;
+  const u=s/.72,a=.75*(1-u);
+  rctx.strokeStyle=k?'rgba(77,223,255,'+a.toFixed(3)+')':'rgba(115,255,205,'+a.toFixed(3)+')';
+  rctx.lineWidth=k?1.3:2;rctx.beginPath();rctx.arc(350,365,113*(.78+.87*u),0,Math.PI*2);rctx.stroke();
+ }
+ rctx.setLineDash([4,17]);rctx.strokeStyle='rgba(123,251,193,.6)';rctx.lineWidth=1.3;
+ rctx.save();rctx.translate(350,365);rctx.rotate(time*2*Math.PI/26);rctx.beginPath();rctx.arc(0,0,116,0,Math.PI*2);rctx.stroke();rctx.restore();
+ rctx.setLineDash([2,12]);rctx.strokeStyle='rgba(123,219,206,.65)';rctx.lineWidth=1;
+ rctx.save();rctx.translate(350,365);rctx.rotate(-time*2*Math.PI/19);rctx.beginPath();rctx.arc(0,0,105,0,Math.PI*2);rctx.stroke();rctx.restore();
+ rctx.setLineDash([]);
+ rctx.save();rctx.translate(350,365);rctx.rotate(time*2*Math.PI/9);rctx.strokeStyle='rgba(215,255,244,.85)';rctx.lineWidth=6;rctx.beginPath();rctx.arc(0,0,82,0,69/82);rctx.stroke();rctx.restore();
+ // Fibers, batched per node. Each fibre is a ribbon of three close threads (one on low-end devices).
+ const ribbon=lowEnd?[0]:[-3.5,0,3.5];
+ const thread=(f,o)=>{const ox=f.nx*o,oy=f.ny*o;rctx.moveTo(f.p0x+ox,f.p0y+oy);rctx.bezierCurveTo(f.c1x+ox,f.c1y+oy,f.c2x+ox,f.c2y+oy,f.p3x+ox,f.p3y+oy);};
+ for(const list of fibersByNode){
+  rctx.strokeStyle=list[0].color;
+  // Soft neon glow under the ribbons, then the threads and the brighter fibres.
+  if(!lowEnd){rctx.globalAlpha=.08;rctx.lineWidth=6;rctx.beginPath();
+   for(const f of list)thread(f,0);
+   rctx.stroke();}
+  rctx.globalAlpha=.36;rctx.lineWidth=.8;rctx.beginPath();
+  for(const f of list){if(lowEnd&&!f.particle)continue;for(const o of ribbon)thread(f,o);}
+  rctx.stroke();
+  rctx.globalAlpha=.9;rctx.lineWidth=1.6;rctx.beginPath();
+  for(const f of list){if(f.dense)thread(f,0);}
+  rctx.stroke();
+ }
+ // Travelling light.
+ for(const f of particles){
+  const p=(time*(.2+f.speed)+f.phase/7)%1,q=1-p;
+  const k0=q*q*q,k1=3*q*q*p,k2=3*q*p*p,k3=p*p*p;
+  const x=k0*f.p0x+k1*f.c1x+k2*f.c2x+k3*f.p3x,y=k0*f.p0y+k1*f.c1y+k2*f.c2y+k3*f.p3y;
+  rctx.globalAlpha=.35+.65*Math.sin(Math.PI*p);
+  rctx.drawImage(p>.82?whiteSprite:f.sprite,x-6,y-6,12,12);
+ }
+ rctx.globalAlpha=.6;rctx.fillStyle='#bff7ff';
+ for(const s of sparkles){rctx.fillRect((s.x+Math.sin(time*s.s+s.p)*18+700)%700,(s.y+Math.cos(time*s.s*.7+s.p)*14+730)%730,s.r,s.r);}
+ rctx.globalAlpha=1;rctx.globalCompositeOperation='source-over';
+}
+function frame(now){
+ rafId=0;
+ if(!running)return;
+ if(lowEnd&&now-lastRender<33){rafId=requestAnimationFrame(frame);return;}
+ lastRender=now;drawFrame(now/1000);
+ rafId=requestAnimationFrame(frame);
+}
+function start(){
+ if(running||!canvasVisible||document.hidden||reduced()||document.body.classList.contains('still'))return;
+ running=true;rafId=requestAnimationFrame(frame);
+}
+function stop(){running=false;if(rafId)cancelAnimationFrame(rafId);rafId=0;}
+// Named apart from the activity refresh below: two top-level functions named refresh made drag and resize
+// call the network refresh, and left the canvas undrawn when motion is reduced.
+function redrawReactor(){if(!running)drawFrame(performance.now()/1000);}
+function resize(){
+ dpr=Math.min(window.devicePixelRatio||1,lowEnd?1:2);
+ const cssW=stage.clientWidth||700,cssH=cssW*730/700;
+ reactorCanvas.width=Math.round(cssW*dpr);reactorCanvas.height=Math.round(cssH*dpr);
+ scaleX=reactorCanvas.width/700;scaleY=reactorCanvas.height/730;
+}
+function initReactorCanvas(){
+resize();
+new ResizeObserver(()=>{resize();redrawReactor();}).observe(stage);
+new IntersectionObserver(([entry])=>{canvasVisible=entry.isIntersecting;if(canvasVisible)start();else stop();}).observe(reactorCanvas);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else start();});
+new MutationObserver(()=>{if(document.body.classList.contains('still'))stop();else start();}).observe(document.body,{attributes:true,attributeFilter:['class']});
+redrawReactor();
+start();
+}
+function bindNode(node,position,paths){
+ const network=document.getElementById('network');
+ const origin={x:position.x,y:position.y};
+ let pointer=null,offset=null;
+ function point(event){
+  const matrix=network.getScreenCTM();
+  return matrix?new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse()):null;
+ }
+ node.addEventListener('pointerdown',event=>{
+  if(event.button!==0||pointer!==null)return;
+  const p=point(event);if(!p)return;
+  pointer=event.pointerId;offset={x:p.x-position.x,y:p.y-position.y};
+  node.setPointerCapture(pointer);
+ });
+ node.addEventListener('pointermove',event=>{
+  if(event.pointerId!==pointer)return;
+  const p=point(event);if(!p)return;
+  const x=Math.max(89,Math.min(611,p.x-offset.x)),y=Math.max(58,Math.min(670,p.y-offset.y));
+  const blockers=[...positions.filter(other=>other!==position),{x:350,y:365}];
+  const collides=(a,b)=>blockers.some(other=>Math.hypot((a-other.x)/184,(b-other.y)/(other.x===350&&other.y===365?155:120))<1);
+  if(!collides(x,position.y))position.x=x;
+  if(!collides(position.x,y))position.y=y;
+  if(signalNode===position)beamFrom(position);
+  const dx=position.x-origin.x,dy=position.y-origin.y;
+  node.setAttribute('transform','translate('+dx+' '+dy+')');
+  redrawReactor();
+ });
+ node.addEventListener('lostpointercapture',()=>{pointer=null;});
+}
+const $=id=>document.getElementById(id),text=(el,str)=>{el.textContent=str};
+const time=s=>s?new Date(s).toLocaleString():'Unknown time';
+const color={success:'#52ebba',warning:'#ffbd7d',error:'#ff8e8e',info:'#72b9ff'};
+let active=false,lastEventPayload=null,recorded=[],replay=[],replayShown=[],replayIndex=0,replayTimer=null;
+const mode=()=>$('activityMode').value;
+const simulation=[{id:'simulation',agent:'Simulation',from:'Simulation',to:'NVIDIA',status:'info',
+ message:'Simulation · Example source receipt for visual testing',type:'geometry_validated'}];
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+let seenEvents=new Set(),signalQueue=[],signalTimer=null;
+function classifyEvent(ev){
+ if(ev.status==='error'||ev.status==='warning')return 'pulse-error';
+ if(ev.type==='published')return 'pulse-publish';
+ if(ev.type==='nvidia_transfer'||ev.type==='nvidia_result')return 'pulse-verify';
+ if(ev.type==='geometry_validated'||ev.eventType==='request_reserved')return 'pulse-verify';
+ if(ev.type==='verification_result'&&ev.status==='success')return 'pulse-verify';
+ return null;
+}
+function signalFromEvents(events){
+ const current=new Set(events.map(e=>e.id));
+ if(!active){seenEvents=current;return;}
+ const fresh=events.filter(e=>!seenEvents.has(e.id)).reverse().slice(-8);
+ seenEvents=current;
+ for(const ev of fresh){const kind=classifyEvent(ev);if(kind)signalQueue.push({kind,ev});}
+ if(signalQueue.length>12)signalQueue=signalQueue.slice(-12);
+ playSignal();
+}
+let signalNode=null;
+function beamFrom(node){
+ $('reactorBeam').setAttribute('d','M'+node.x+' '+node.y+' Q '+(node.x+350)/2+' '+(node.y+365)/2+' 350 365');
+}
+function playSignal(){
+ if(signalTimer||!signalQueue.length||reduced()||document.hidden||document.body.classList.contains('still'))return;
+ const {kind,ev}=signalQueue.shift(),network=$('network');
+ network.classList.remove('pulse-verify','pulse-publish','pulse-error');
+ void network.getBoundingClientRect().width;
+ network.classList.add(kind);
+ signalNode=positions[kind==='pulse-publish'?3:ev.eventType==='request_reserved'?2:kind==='pulse-error'?0:1];
+ beamFrom(signalNode);
+ text($('signalLabel'),(mode()==='live'?'':mode()==='replay'?'REPLAY · ':'SIMULATION · ')+(kind==='pulse-publish'?'MAP PUBLICATION · '+ev.parcelId:
+  kind==='pulse-error'?'AGENT WARNING · '+(ev.parcelId||ev.agent):
+  ev.type==='nvidia_transfer'?'HELPER → NVIDIA · '+(ev.count||0)+' ITEMS':
+  ev.type==='nvidia_result'?'NVIDIA CONSOLIDATION · OWNER REVIEW':
+  (ev.eventType==='request_reserved'?'GIS REQUEST RESERVED · ':'GEOMETRY CHECK · ')+(ev.parcelId||ev.agent)));
+ signalTimer=setTimeout(()=>{
+  network.classList.remove(kind);signalTimer=null;signalNode=null;
+  playSignal();
+ },kind==='pulse-publish'?2200:1700);
+}
+// Explicit, text-labelled agent states. Colour supports the label; it never replaces it.
+const AGENT_LABEL={active:'ACTIVE',idle:'IDLE',completed:'COMPLETED',failed:'FAILED',quota_limited:'QUOTA LIMITED',not_connected:'NOT CONNECTED'};
+function renderAgents(agents){
+ const strip=$('agentStrip');if(!strip)return;
+ strip.replaceChildren();
+ for(const [name,info] of Object.entries(agents)){
+  const state=AGENT_LABEL[info?.state]?info.state:'idle';
+  const chip=document.createElement('div');chip.className='agentChip';chip.dataset.state=state;
+  const title=document.createElement('b');title.textContent=name;
+  const label=document.createElement('span');label.textContent=AGENT_LABEL[state];
+  const detail=document.createElement('small');detail.textContent=String(info?.detail||'');
+  chip.append(title,label,detail);strip.appendChild(chip);
+ }
+}
+function render(d){
+ recorded=[...new Map((d.events||[]).map(e=>[e.id,e])).values()].sort((a,b)=>b.at.localeCompare(a.at)||a.id.localeCompare(b.id));
+ const windowInfo=d.eventWindow||{};
+ const shown=Number.isInteger(windowInfo.returnedCount)?windowInfo.returnedCount:recorded.length;
+ const capped=windowInfo.truncated?' · Additional records omitted from this response':'';
+ text($('eventWindow'),'Showing '+shown+' recent saved events · Historical archive not yet verified'+capped);
+ if(mode()==='live')signalFromEvents(recorded);
+ document.body.classList.add('authorized');$('gate').hidden=true;active=true;
+ const health=d.health||{state:'idle',detail:'Health details unavailable'};
+ $('health').dataset.state=health.state;
+ text($('healthState'),health.state.replaceAll('_',' ').toUpperCase());
+ text($('healthDetail'),health.detail||'No current worker activity');
+ const retry=health.nextRetryAt?' · Next retry '+time(health.nextRetryAt)+' · Attempt '+health.retryAttempt+'/'+health.retryMaximum:'';
+ const failed=health.failedStage?' · Failed stage '+health.failedStage:'';
+ text($('healthMeta'),'GIS requests today: '+(health.dailyUsed??'—')+'/'+(health.dailyLimit??30)+' · Remaining '+(health.remaining??'unavailable')+retry+failed+
+  (health.lastCompleted?' · Last batch '+time(health.lastCompleted):' · No completed batch yet'));
+ text($('connection'),d.summary.paused?'PAUSED':'CONNECTED');
+ text($('verified'),String(d.summary.verifiedPolygons??'—'));text($('published'),String(d.summary.published));text($('cursor'),String(d.summary.cursor));
+ for(const field of ['processed','skipped','pendingReview'])text($(field),String(d.summary[field]??'—'));
+ text($('workerState'),health.state.replaceAll('_',' '));text($('stamp'),'Checked '+time(d.capturedAt));renderAgents(d.agents||{});
+ for(const [id,field] of [['eventCounty','county'],['eventAgent','agent']]){
+  const select=$(id),values=new Set([...select.options].map(option=>option.value));
+  for(const entry of recorded)if(entry[field]&&!values.has(entry[field])){
+   select.add(new Option(entry[field],entry[field]));values.add(entry[field]);
+  }
+ }
+ renderEvents();
+}
+function renderEvents(){
+ const events=mode()==='simulation'?simulation:filtered(mode()==='replay'?replayShown:recorded);
+ const payload=JSON.stringify([mode(),events]);
+ if(payload===lastEventPayload)return;
+ lastEventPayload=payload;
+ const live=$('activity'),ticker=$('ticker');live.replaceChildren();ticker.replaceChildren();
+ if(!events.length){const p=document.createElement('p');p.className='empty';p.textContent=mode()==='replay'?'No replay events shown yet.':recorded.length?'No events match these filters.':'No recorded agent events yet.';live.append(p);ticker.append(p.cloneNode(true));return;}
+ for(const ev of events){
+  const box=document.createElement('div');box.className='log-entry';box.style.setProperty('--accent',color[ev.status]||color.info);
+  const led=document.createElement('span');led.className='led';led.setAttribute('aria-hidden','true');
+  const body=document.createElement('div');body.className='logbody';
+  const heading=document.createElement('b');heading.textContent=ev.from+' → '+ev.to;
+  const description=document.createElement('span');description.textContent=ev.message;
+  const tm=document.createElement('small');tm.textContent=ev.timePrecision==='day'?ev.at+' · Time unavailable':(ev.approximateTime?'≈ ':'')+time(ev.at);
+  body.append(heading,description);
+  if(ev.source||ev.receiptId||ev.quotaImpact!=null){
+   const metadata=document.createElement('small');
+   metadata.textContent=[ev.source,ev.receiptId?'Receipt '+ev.receiptId:null,
+    ev.quotaImpact!=null?'GIS quota charged: '+ev.quotaImpact:null].filter(Boolean).join(' · ');
+   metadata.style.overflowWrap='anywhere';body.append(metadata);
+  }
+  if(ev.trace?.length){
+   const stages=document.createElement('div');stages.className='gis-trace';
+   for(const t of ev.trace){
+    const item=document.createElement('span');item.className='gis-stage';
+    item.textContent=t.stage.replaceAll('_',' ')+' · '+t.status.replaceAll('_',' ')+' · '+t.durationMs+'ms';
+    stages.append(item);
+   }
+   body.append(stages);
+  }
+  box.append(led,body,tm);live.append(box);
+ }
+ const transfers=events.filter(e=>e.type==='published').slice(0,15);
+ if(!transfers.length){const p=document.createElement('span');p.className='empty';p.textContent='No published polygon receipts recorded yet';ticker.append(p);return;}
+ for(const e of [...transfers,...transfers]){
+  const tr=document.createElement('div');tr.className='transfer';
+  const ico=document.createElement('span');ico.className='file-icon';ico.textContent='▤';
+  const body=document.createElement('div');const title=document.createElement('b');title.textContent='Parcel '+(e.parcelId||'record');
+  const detail=document.createElement('small');detail.textContent='Official GIS → Mapping · '+time(e.at);
+  body.append(title,detail);tr.append(ico,body);ticker.append(tr);
+ }
+}
+function filtered(events){
+ const county=$('eventCounty').value,agent=$('eventAgent').value,parcel=$('eventParcel').value.trim().toLowerCase();
+ return events.filter(e=>(!county||e.county===county)&&(!agent||e.agent===agent)&&
+  (!parcel||String(e.parcelId||'').toLowerCase().includes(parcel)));
+}
+function pauseReplay(){
+ clearTimeout(replayTimer);replayTimer=null;$('replayToggle').textContent='Play replay';
+}
+function playReplay(){
+ if(document.hidden||mode()!=='replay'||replayIndex>=replay.length){pauseReplay();return;}
+ const ev=replay[replayIndex++];replayShown.unshift(ev);renderEvents();
+ const kind=classifyEvent(ev);
+ if(kind){signalQueue.push({kind,ev});playSignal();}
+ $('replayToggle').textContent='Pause replay';
+ replayTimer=setTimeout(playReplay,2300);
+}
+$('activityMode').onchange=()=>{
+ pauseReplay();signalQueue=[];clearTimeout(signalTimer);signalTimer=null;signalNode=null;
+ $('network').classList.remove('pulse-verify','pulse-publish','pulse-error');
+ $('replayToggle').hidden=mode()!=='replay';
+ $('modeStatus').textContent=mode()==='live'?'LIVE · AUTO REFRESH 20S':mode()==='replay'?'HISTORICAL REPLAY':'SIMULATION · OFFLINE';
+ text($('signalLabel'),mode()==='live'?'Waiting for new recorded activity':mode()==='replay'?'Historical replay ready':'Simulation · Decorative example');
+ if(mode()==='replay'){replay=filtered(recorded).slice().reverse();replayShown=[];replayIndex=0;}
+ if(mode()==='live')seenEvents=new Set(recorded.map(e=>e.id));
+ if(mode()==='simulation'){signalQueue=[{kind:'pulse-verify',ev:simulation[0]}];playSignal();}
+ renderEvents();
+};
+$('replayToggle').onclick=()=>{
+ if(replayTimer){pauseReplay();return;}
+ if(replayIndex>=replay.length){replay=filtered(recorded).slice().reverse();replayShown=[];replayIndex=0;}
+ playReplay();
+};
+for(const id of ['eventCounty','eventAgent','eventParcel'])$(id).addEventListener('input',()=>{
+ if(mode()==='replay'){pauseReplay();replay=filtered(recorded).slice().reverse();replayShown=[];replayIndex=0;}
+ renderEvents();
+});
+async function refresh(){
+ // Revalidate owner access in replay and simulation too. The cached event view
+ // must not outlive an expired owner session.
+ if(document.hidden||refresh.busy)return;refresh.busy=true;
+ try{
+  const r=await fetch('/.netlify/functions/owner-brain-activity',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(12000)});
+  if(r.status===401||r.status===403){
+   pauseReplay();clearTimeout(signalTimer);signalTimer=null;
+   $('network').classList.remove('pulse-verify','pulse-publish','pulse-error');
+   document.body.classList.remove('authorized');$('gate').hidden=false;active=false;
+   text($('gate'),'Owner session expired. Sign in again to view recorded activity.');
+   recorded=[];replay=[];replayShown=[];signalQueue=[];seenEvents.clear();lastEventPayload=null;
+   text($('eventWindow'),'Owner authorization required to inspect recorded events');
+   $('activity').replaceChildren();$('ticker').replaceChildren();
+  }
+  const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Owner activity unavailable');
+  if(mode()==='live')render(d);
+  // A successful auth recheck in other modes must not restart replay,
+  // overwrite its event snapshot or present a simulation as live activity.
+ }catch(e){if(!active)text($('gate'),'Activity access unavailable: '+e.message);else text($('stamp'),'Update failed · '+e.message);}
+ finally{refresh.busy=false;}
+}
+$('refresh').onclick=()=>refresh();
+$('motion').onclick=()=>{const paused=document.body.classList.toggle('still');if(!paused)playSignal();const node=document.createElement('style');if(paused){node.id='motion-off';node.textContent='body.still *{animation-play-state:paused!important}';document.head.append(node);}else document.getElementById('motion-off')?.remove();$('motion').textContent=paused?'Resume visual motion':'Pause visual motion';$('motion').setAttribute('aria-pressed',String(paused));};
+refresh();const timer=setInterval(()=>{if(!document.hidden)refresh()},20000);
+window.addEventListener('pagehide',()=>{pauseReplay();if(signalTimer)clearTimeout(signalTimer);signalTimer=null;signalQueue=[];});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){pauseReplay();signalQueue=[];}else if(mode()==='live'){refresh();playSignal();}});
+initReactorCanvas();
+</script></body></html>

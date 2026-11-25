@@ -13,7 +13,7 @@ window.TaxRadarOn = true;
   const SS = (() => { try { return window.sessionStorage; } catch (e) { return null; } })();
   const LS = (() => { try { return window.localStorage; } catch (e) { return null; } })();
   const saved = (() => { try { return JSON.parse((SS && SS.getItem('ppa_radar')) || '{}'); } catch (e) { return {}; } })();
-  const S = {tab: saved.tab || 'opp', vac: !!saved.vac, types: new Set((saved.types || ['county-held', 'lien-sale', 'deed']).concat(saved.types && saved.types.includes('state-held') === false && saved.typesV2 ? [] : ['state-held'])), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
+  const S = {tab: ['cal','hist'].includes(saved.tab) ? saved.tab : 'cal', vac: !!saved.vac, types: new Set((saved.types || ['county-held', 'lien-sale', 'deed']).concat(saved.types && saved.types.includes('state-held') === false && saved.typesV2 ? [] : ['state-held'])), budget: saved.budget == null ? null : saved.budget, month: -1, sel: saved.sel || null, data: null};
   const persist = () => { try { SS && SS.setItem('ppa_radar', JSON.stringify({tab: S.tab, vac: S.vac, types: [...S.types], budget: S.budget, sel: S.sel, fOpen: typeof fOpen === 'undefined' ? false : fOpen})); } catch (e) {} };
   const TYPES = [['state-held', 'State-Held Land'], ['county-held', 'County-Held Liens'], ['lien-sale', 'Advertised Lien Sales'], ['deed', 'Tax Deed Auctions']];
   const GROUP_LABEL = {'state-held': 'State-held land', 'county-held': 'County-held', 'lien-sale': 'Advertised sale', 'deed': 'Tax deed'};
@@ -69,9 +69,27 @@ window.TaxRadarOn = true;
     if (c.type === 'result' && c.prices) li.appendChild(mk('p', 'small', 'Actual sale prices from ' + money(c.prices.min) + ' to ' + money(c.prices.max) + ' (first ' + c.items.length + ' shown by price order on the county page).'));
     if (c.type === 'missing') li.appendChild(mk('p', 'small', 'Not called sold, redeemed or withdrawn: that needs an official record.'));
     const meta = mk('p', 'small rmeta', 'Detected ' + fmtDate(c.detectedAt) + (c.publishedAt ? ' · published ' + fmtDate(c.publishedAt) : '') + ' · '); const a = mk('a', '', 'Source: ' + (c.source.name || 'official record')); a.href = c.source.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; meta.appendChild(a); li.appendChild(meta);
-    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
+    const act = mk('div', 'ract'); const b1 = mk('button', 'btn small', 'Show on map'); b1.type = 'button'; b1.addEventListener('click', () => { openState(c.state, c.id); if (!document.querySelector('.app-map-unified')) document.getElementById('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); });
     const l1 = mk('a', 'btn small ghost', 'See affected listings'); l1.href = c.link + '#' + encodeURIComponent(c.county);
-    act.append(b1, l1); const it = c.items[0]; if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
+    act.append(b1, l1);
+    // Same-origin homepage handoff: state-level only. Never infer parcel geometry
+    // from a county sale record without an exact verified dataset match.
+    if (document.getElementById('home-parcels') && /^[A-Z]{2}$/.test(c.state || '')) {
+      const mapBtn = mk('button', 'btn small ghost', 'Explore state on Parcel Map');
+      mapBtn.type = 'button';
+      mapBtn.addEventListener('click', () => window.dispatchEvent(new CustomEvent('ppa:radar-map-state', {detail:{state:c.state}})));
+      act.appendChild(mapBtn);
+    }
+    const it = c.items[0];
+    if (it && it.parcel && c.official === true && c.type !== 'missing' && c.type !== 'canceled' && document.getElementById('home-parcels')) {
+      const matchBtn=mk('button','btn small ghost','Locate verified parcel');
+      matchBtn.type='button';
+      matchBtn.addEventListener('click',()=>window.dispatchEvent(new CustomEvent('ppa:radar-map-parcel',{detail:{
+        state:c.state,county:c.county,parcel:String(it.parcel)
+      }})));
+      act.appendChild(matchBtn);
+    }
+    if (it && it.key) { const l2 = mk('a', 'btn small ghost', 'Open parcel ' + it.parcel); l2.href = '/liens/parcel/?k=' + encodeURIComponent(it.key); act.appendChild(l2); }
     li.appendChild(act); return li;
   }
 
@@ -192,6 +210,9 @@ window.TaxRadarOn = true;
   // ---- bottom panel for a state
   function openState(a, focusChange, onlyChanges) {
     S.sel = a; persist(); M.select(a); if (M.paths[a]) M.paths[a].classList.add('sel'); renderPanel(a, focusChange, onlyChanges);
+    // Keep the visible Parcel Map in sync when the home workspace is unified.
+    if (document.querySelector('.app-map-unified') && /^[A-Z]{2}$/.test(a))
+      window.dispatchEvent(new CustomEvent('ppa:radar-map-state', {detail:{state:a}}));
   }
   let panelState = null;
   function updatePanel() { if (panelState && !$('rpanel').hidden) renderPanel(panelState); }
@@ -257,7 +278,7 @@ window.TaxRadarOn = true;
       if (!opts.length) { const li = mk('li', 'none', 'No state matches that.'); list.appendChild(li); }
       list.hidden = false; input.setAttribute('aria-expanded', 'true');
     };
-    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
+    const pick = a => { input.value = by[a].n; list.hidden = true; input.setAttribute('aria-expanded', 'false'); M.select(a); openState(a); if (!document.querySelector('.app-map-unified')) $('usmap').scrollIntoView({block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); };
     input.addEventListener('input', () => { act = -1; draw(); }); input.addEventListener('focus', () => { input.select(); draw(); });
     input.addEventListener('keydown', e => {
       if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(act + 1, Math.min(opts.length, 60) - 1); draw(); }
@@ -274,6 +295,7 @@ window.TaxRadarOn = true;
     const bar = document.querySelector('.monbar'), cap = document.querySelector('.moncap'); if (bar) bar.hidden = t !== 'cal'; if (cap) cap.hidden = t !== 'cal';
     if (t !== 'cal' && S.month >= 0) { const all = bar && bar.querySelector('button'); all && all.click(); }
     renderFilters(); renderMap(); updatePanel();
+    window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:t,counties:S.data?.counties||[],month:S.month}}));
   }
 
   function start() {
@@ -285,7 +307,7 @@ window.TaxRadarOn = true;
       const redraw = () => { clearTimeout(rz); rz = setTimeout(() => { if (Math.abs(KS() - K) > 0.25) renderMap(); }, 200); };
       if (window.ResizeObserver) new ResizeObserver(redraw).observe(M.svg);
       else window.addEventListener('resize', redraw);
-      window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); } });
+      window.addEventListener('taxmap:month', e => { S.month = e.detail; if (S.tab === 'cal') { renderMap(); window.dispatchEvent(new CustomEvent('ppa:radar-category',{detail:{tab:S.tab,counties:S.data?.counties||[],month:S.month}})); } });
       document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rpanel').hidden) closePanel(); });
       setTab(S.tab); if (S.sel && M.by[S.sel]) { M.select(S.sel); }
       // remember this visit for next time (the comparison above already used the previous value)

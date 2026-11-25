@@ -128,9 +128,11 @@
     const root = $('root'); const x = await get({ admin: 1 }); if (x.s !== 200) { root.textContent = ''; root.append(mk('div', 'rt-empty', x.s === 401 ? 'Sign in as the owner.' : 'Owner only.')); return; }
     const meta = (await get({ feed: 1 })).j, cats = Object.entries(meta.categories), stores = Object.entries(meta.retailers);
     root.textContent = ''; root.append(mk('h1', '', 'Retail Alerts'), mk('p', 'rt-muted', 'Owner tools. Members never see this page.'));
+    let flash = ''; try { flash = sessionStorage.getItem('rt-flash') || ''; sessionStorage.removeItem('rt-flash'); } catch (e) { /* ignore */ }
+    if (flash) root.append(mk('div', 'rt-box rt-flash', flash));
     // add product
     const add = mk('div', 'rt-box'); add.append(mk('h3', '', 'Add a product'));
-    const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn', 'Read page'); look.type = 'button';
+    const url = input('', 'Paste a product link', 'url'), look = mk('button', 'rt-btn rt-read', 'Read page'); look.type = 'button';
     const name = input('', 'Product name'), img = input('', 'https://… image link (optional)', 'url'), price = input('', 'e.g. 54.99'); price.inputMode = 'decimal';
     const cat = select(cats), st = select(STOCK_OPTS, 'monitoring'), rel = input('', '', 'datetime-local'), vr = input('', 'Size / color (optional)');
     const [autoRow, auto] = toggle('Automatic stock checks', 'Only for pages where stock status could be read.', false); auto.disabled = true;
@@ -153,10 +155,21 @@
       const acts = mk('div', 'acts'), sel = select([['', 'Set status…']].concat(STOCK_OPTS, [['disabled', 'Disabled']]));
       sel.onchange = async () => { if (!sel.value) return; if ((sel.value === 'in_stock' || sel.value === 'low_stock') && !(await confirmSheet('Mark as ' + STATUS[sel.value].toLowerCase() + '?', 'If it was not in stock before, matching members get a push now. Only do this after you checked the store page.', 'Confirm'))) { sel.value = ''; return; } const r = await post({ action: 'update', id: p.id, status: sel.value }); const s = (r.j.sent || [])[0]; toast(r.s === 200 ? (s ? (s.skipped ? 'Saved. Alert held back (cooldown).' : 'Saved. Alert sent to ' + s.recipients + ' (' + s.pushed + ' push).') : 'Saved.') : (r.j.error || 'Error')); setTimeout(() => location.reload(), 900); };
       const ed = mk('button', '', 'Edit'); ed.type = 'button'; ed.onclick = () => editSheet(p, cats);
-      const ri = mk('button', '', 'Refresh image'); ri.type = 'button'; ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id }); ri.textContent = r.s === 200 ? (r.j.found ? 'Image saved' : 'Image not found') : 'Could not read'; setTimeout(() => location.reload(), 900); };
+      const ri = mk('button', '', 'Refresh image'); ri.type = 'button';
+      ri.onclick = async () => { ri.disabled = true; ri.textContent = 'Reading page…'; const r = await post({ action: 'refreshImage', id: p.id });
+        if (r.s !== 200) { ri.disabled = false; ri.textContent = 'Refresh image'; toast(r.j.error || 'Could not read the page.'); return; }
+        const msg = await waitCheck(r.j.jobId);
+        try { sessionStorage.setItem('rt-flash', msg); } catch (e) { /* private mode: the card still shows the result */ }
+        location.reload(); };
+      const ck = mk('button', '', 'Check now'); ck.type = 'button';
+      ck.onclick = async () => { ck.disabled = true; ck.textContent = 'Checking…'; const r = await post({ action: 'checkNow', id: p.id });
+        if (r.s !== 200) { ck.disabled = false; ck.textContent = 'Check now'; toast(r.j.error || 'Could not check.'); return; }
+        const msg = await waitCheck(r.j.jobId);
+        try { sessionStorage.setItem('rt-flash', msg); } catch (e) { /* private mode: the card still shows the result */ }
+        location.reload(); };
       const on = mk('button', '', p.active ? 'Turn off' : 'Turn on'); on.type = 'button'; on.onclick = async () => { await post({ action: 'update', id: p.id, active: !p.active }); location.reload(); };
       const op = mk('a', '', 'Open'); op.href = p.url; op.target = '_blank'; op.rel = 'noopener noreferrer'; op.style.cssText = 'display:inline-flex;align-items:center;min-height:38px;padding:0 12px;border-radius:999px;background:var(--fill);font-weight:600;font-size:.85rem;color:inherit;text-decoration:none';
-      acts.append(sel, ed, ri, on, op); g.append(acts); d.append(th, g); list.append(d); });
+      acts.append(sel, ed, ri); if (p.auto) acts.append(ck); acts.append(on, op); g.append(acts); d.append(th, g); list.append(d); });
     // requests
     const rq = mk('div'); rq.id = 'requests'; rq.append(mk('h2', '', 'Product requests (' + x.j.requests.length + ')')); root.append(rq);
     if (!x.j.requests.length) rq.append(mk('div', 'rt-empty', 'No requests waiting.'));
@@ -187,6 +200,17 @@
       const [ar, au] = toggle('Automatic stock checks', '', p.auto); const f = mk('div', 'rt-form'); f.append(field('Name', n), field('Image', im), field('Price', pr), field('Category', c), field('Release date', rd), field('Variant', v), ar); const msg = mk('p', 'rt-msg');
       const go = mk('button', 'rt-btn gold', 'Save'); go.type = 'button'; go.onclick = async () => { const r = await post({ action: 'update', id: p.id, name: n.value, image: im.value, price: pr.value, category: c.value, releaseDate: rd.value, variant: v.value, auto: au.checked }); if (r.s === 200) { close(); location.reload(); } else { msg.className = 'rt-msg bad'; msg.textContent = r.j.error || 'Could not save.'; } };
       sh.append(mk('h3', '', 'Edit product'), f, msg, go, mk('p', 'rt-muted rt-small', 'Changing the price to a lower one while in stock sends a price-drop alert.')); });
+  }
+  // Polls a queued check until it finishes, or about 100 seconds pass.
+  async function waitCheck(jobId) {
+    const until = Date.now() + 100e3;
+    while (Date.now() < until) {
+      await new Promise(res => setTimeout(res, 2000));
+      const s = await get({ checkJob: jobId });
+      if (s.s !== 200) return s.j.error || 'Could not read the check result.';
+      if (s.j.status === 'done') return (s.j.result && s.j.result.message) || 'Checked.';
+    }
+    return 'Still checking in the background. Reload in a minute to see the result.';
   }
   function toast(t) { const d = mk('div', 'rt-ov on'); d.style.alignItems = 'center'; const s = mk('div', 'rt-sheet', t); s.style.cssText = 'width:auto;border-radius:18px;padding:14px 20px;transform:none'; d.append(s); document.body.append(d); setTimeout(() => d.remove(), 1400); }
 

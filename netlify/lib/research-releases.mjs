@@ -1,6 +1,25 @@
 // Approved lien and parcel-land research release policy. Private server-side data only.
 export const PRO_EARLY_ACCESS_MS = 48 * 60 * 60 * 1000;
-export const RELEASE_TYPES = new Set(['lien', 'land']);
+
+// The end of free-access waiting for the released items of one state and county: the latest pro release plus the 48-hour
+// early-access window (an immediate critical release is free at once). Withdrawn items are not counted. Read-only.
+export function releaseWindowFor(releases, {state, county} = {}) {
+  let count = 0, latestStart = null, latestFree = null;
+  for (const r of releases || []) {
+    if (!r || r.withdrawn === true || r.state !== state || r.county !== county) continue;
+    const start = Date.parse(r.proReleaseAt);
+    if (!Number.isFinite(start)) continue;
+    const free = r.releaseMode === 'immediate_critical' ? start : start + PRO_EARLY_ACCESS_MS;
+    count++;
+    latestStart = latestStart === null ? start : Math.max(latestStart, start);
+    latestFree = latestFree === null ? free : Math.max(latestFree, free);
+  }
+  if (!count) return {releases: 0, latestProReleaseAt: null, latestFreeReleaseAt: null};
+  return {releases: count, latestProReleaseAt: new Date(latestStart).toISOString(), latestFreeReleaseAt: new Date(latestFree).toISOString()};
+}
+export const RELEASE_TYPES = new Set(['lien', 'land', 'tax_deed', 'property']);
+export const RELEASE_MODES = new Set(['pro_first_48h', 'immediate_critical']);
+export const STATES = new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WI WV WY'.split(' '));
 
 export function isProAccount(user, now = new Date()) {
   if (!user) return false;
@@ -16,6 +35,7 @@ export function releaseAtDate(item) {
   if (!item || !RELEASE_TYPES.has(item.type) || item.researchOnly !== true
       || item.availableForPurchase !== false || item.reviewApproved !== true
       || item.publicationApproved !== true) return null;
+  if (item.releaseMode !== undefined && !RELEASE_MODES.has(item.releaseMode)) return null;
   const ms = Date.parse(item.proReleaseAt);
   if (!Number.isFinite(ms) || typeof item.proReleaseAt !== 'string'
       || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(item.proReleaseAt)) return null;
@@ -23,12 +43,15 @@ export function releaseAtDate(item) {
 }
 
 export function audienceFor(item, user, now = Date.now()) {
+  if (item && item.withdrawn === true) return 'none'; // owner withdrew it: visible to no one
   const start = releaseAtDate(item);
   if (start === null) return 'none';
   const point = now instanceof Date ? now.getTime() : now;
   if (!Number.isFinite(point) || point < start) return 'none';
   if (isProAccount(user, new Date(point))) return 'pro';
-  return point >= start + PRO_EARLY_ACCESS_MS ? 'free' : 'none';
+  // A critical release is visible to everyone at approval; otherwise Free waits 48 hours.
+  const freeAt = item.releaseMode === 'immediate_critical' ? start : start + PRO_EARLY_ACCESS_MS;
+  return point >= freeAt ? 'free' : 'none';
 }
 
 export function safeResearchRecord(item) {
@@ -38,15 +61,16 @@ export function safeResearchRecord(item) {
     'sourceUrl','sourceCheckedAt','evidenceUrl','proReleaseAt','title','description','acreage'];
   const r = Object.fromEntries(keys.filter(k => item[k] !== null && item[k] !== undefined)
     .map(k => [k, item[k]]));
-  return {...r,researchOnly:true,availableForPurchase:false,
+  // mapRecord: the update is shown as a property record on the map, so the map does not add a research pin for it.
+  return {...r,researchOnly:true,availableForPurchase:false,mapRecord:!!item.property,
     disclaimer:'Research only; verify current county status and availability directly with the official source.'};
 }
 
 export function makeRelease(data, time, reviewer) {
   if (!data || !RELEASE_TYPES.has(data.type)) throw Error('Unsupported update type.');
-  if (!new Set('AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WI WV WY'.split(' ')).has(data.state)) throw Error('Unsupported state.');
+  if (!STATES.has(data.state)) throw Error('Unsupported state.');
   if (!/^[a-zA-Z0-9._ -]{2,80}$/.test(String(data.county || ''))) throw Error('Invalid county.');
-  if (!/^[a-zA-Z0-9._ -]{3,100}$/.test(String(data.parcelId || ''))) throw Error('Invalid parcel.');
+  if (!/^[a-zA-Z0-9._ /-]{3,100}$/.test(String(data.parcelId || ''))) throw Error('Invalid parcel.');
   if (typeof data.title !== 'string' || data.title.trim().length < 6 || data.title.length > 140) throw Error('Title required.');
   if (typeof data.description !== 'string' || data.description.trim().length < 20 || data.description.length > 1400) throw Error('Describe the verified update (20–1400 characters).');
   if (typeof data.evidenceUrl !== 'string' || data.evidenceUrl.length > 2000) throw Error('Official evidence URL required.');
@@ -54,6 +78,11 @@ export function makeRelease(data, time, reviewer) {
   if (u.protocol !== 'https:' || u.username || u.password || u.port) throw Error('Only HTTPS evidence URLs are allowed.');
   if (data.type === 'lien' && (!data.certificateNumber || String(data.certificateNumber).length > 80)) throw Error('Certificate number required.');
   if (!data.approvedForResearch) throw Error('Owner must explicitly approve publication of researched data.');
+  const releaseMode = data.releaseMode || 'pro_first_48h';
+  if (!RELEASE_MODES.has(releaseMode)) throw Error('Unknown release mode.');
+  const criticalReason = typeof data.criticalReason === 'string' ? data.criticalReason.trim() : '';
+  if (releaseMode === 'immediate_critical' && (data.criticalConfirmed !== true || criticalReason.length < 40))
+    throw Error('An immediate critical release needs confirmation and a reason of at least 40 characters.');
   if (!reviewer) throw Error('Owner identity required.');
   const date = time instanceof Date ? time : new Date(time);
   if (!Number.isFinite(date.getTime())) throw Error('Invalid release date.');
@@ -66,6 +95,7 @@ export function makeRelease(data, time, reviewer) {
     sourceCheckedAt:date.toISOString(),
     proReleaseAt:date.toISOString(),
     researchOnly:true,reviewApproved:true,publicationApproved:true,availableForPurchase:false,
+    releaseMode,...(releaseMode === 'immediate_critical' ? {criticalReason} : {}),
     reviewerAudit:reviewer,
     publishedToPublicMaps:false
   };

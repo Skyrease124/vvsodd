@@ -45,7 +45,7 @@
   const areaLink = document.querySelector('[data-open-map]');
   const recentLink = document.querySelector('[data-recent-link]');
   const showArea = area => {
-    areaLink.href = loc.mapPath(area);
+    if (areaLink) areaLink.href = loc.mapPath(area);
     if (!area) return;
     document.querySelector('[data-recent-label]').textContent = area.parcel ? 'Recent parcel' : 'Map area';
     document.querySelector('[data-recent]').textContent = area.label || 'Current map area';
@@ -67,21 +67,94 @@
   } catch(e) { /* optional storage */ }
   const mapWorkspace = document.getElementById('map');
   const mapViews = [...mapWorkspace.querySelectorAll('[data-home-map-view]')];
-  function showMapView(view) {
-    for (const control of mapViews) {
-      const selected = control.dataset.homeMapView === view;
-      control.setAttribute('aria-pressed', String(selected));
-      document.getElementById(control.getAttribute('aria-controls')).hidden = !selected;
+  const radarTabs = document.querySelector('#home-radar .rtabs');
+  const radarTabHome = radarTabs.parentNode;
+  const radarTabNext = radarTabs.nextSibling;
+  const radarDock = document.getElementById('home-radar-map-controls');
+  // No instructional banners: the three categories select the Radar dataset below.
+  const radarStatus = document.getElementById('home-radar-match-status');
+  if(radarStatus){radarStatus.hidden=true;radarStatus.textContent='';}
+  const radarSummary=document.getElementById('home-radar-map-summary');
+  let latestRadarCategory=null;
+  const radarFrame=document.querySelector('#home-parcels iframe');
+  function sendStateInventory(){
+    if(!latestRadarCategory)return;
+    const counts={};
+    for(const c of latestRadarCategory.counties||[]){
+      if(!/^[A-Z]{2}$/.test(c.state||''))continue;
+      const n=counts[c.state]||(counts[c.state]={liens:0,deeds:0,land:0});
+      const amount=Math.max(0,Number(c.open)||0);
+      if(c.group==='county-held'||c.group==='lien-sale')n.liens+=amount;
+      else if(c.group==='deed')n.deeds+=amount;
+      else if(c.group==='state-held')n.land+=amount;
     }
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-state-inventory',counts},location.origin);
   }
-  for (const control of mapViews) control.addEventListener('click', () => showMapView(control.dataset.homeMapView));
+  function sendRadarOverlay(){
+    if(!latestRadarCategory)return;
+    const data=latestRadarCategory;
+    const counties=(Array.isArray(data.counties)?data.counties:[]).map(c=>({
+      state:c.state,county:c.county,open:c.open,group:c.group,history:!!c.history,sale:{kind:c.sale?.kind,date:c.sale?.date}
+    }));
+    // The map remains opportunity-focused; calendar/history live only in Explore.
+    radarFrame.contentWindow?.postMessage({type:'ppa:radar-overlay',tab:'opp',month:-1,counties},location.origin);
+  }
+  radarFrame.addEventListener('load',()=>{sendRadarOverlay();sendStateInventory();});
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==radarFrame.contentWindow)return;
+    if(event.data?.type!=='ppa:radar-overlay-select'||!/^[A-Z]{2}$/.test(event.data.state||''))return;
+    window.TaxRadar?.openState(event.data.state);
+    document.getElementById('home-radar').scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+  function renderRadarSummary(){
+    if(!radarSummary)return;
+    const enabled=false; // No calendar, history or opportunity summary beneath the map.
+    if(!enabled||!latestRadarCategory){radarSummary.hidden=true;return;}
+    const {tab,counties}=latestRadarCategory;
+    const records=Array.isArray(counties)?counties:[];
+    const relevant=tab==='opp'
+      ?records.filter(c=>Number(c.open)>0)
+      :tab==='cal'
+        ?records.filter(c=>c.sale?.kind==='scheduled'||c.sale?.kind==='tentative')
+        :records.filter(c=>c.sale?.kind==='past'||c.sale?.kind==='completed');
+    const title=tab==='opp'?'Open opportunities':tab==='cal'?'Scheduled or tentative sales':'Past or completed sales';
+    radarSummary.hidden=false;
+    radarSummary.textContent='';
+    const label=document.createElement('strong');
+    label.textContent=title+': ';
+    radarSummary.append(label,document.createTextNode(relevant.length.toLocaleString()+' county records in Radar. Browse the matching details below; parcel pins remain independently GIS-verified.'));
+  }
+  window.addEventListener('ppa:radar-category',event=>{
+    const tab=event.detail?.tab;
+    if(!['opp','cal','hist'].includes(tab))return;
+    latestRadarCategory={tab,month:event.detail.month,counties:event.detail.counties};
+    renderRadarSummary();
+    sendRadarOverlay();
+    sendStateInventory();
+  });
+  function showMapView(view) {
+    for(const control of mapViews)control.setAttribute('aria-pressed',String(control.dataset.homeMapView===view));
+    // Keep the same parcel map for all modes; Explore owns the calendar/history UI.
+    document.getElementById('home-parcels').hidden=false;
+    document.getElementById('home-radar').hidden=false;
+    document.getElementById('home-combined-note').hidden=true;
+    radarDock.hidden=true;
+    mapWorkspace.classList.toggle('app-map-unified',view==='both');
+    renderRadarSummary();
+    sendRadarOverlay();
+  }
+  document.querySelectorAll('[data-explore-radar]').forEach(link=>link.addEventListener('click',()=>{
+    const tab=document.getElementById('tab-'+link.dataset.exploreRadar);
+    if(tab)tab.click();
+  }));
+  for(const control of mapViews)control.addEventListener('click',()=>showMapView(control.dataset.homeMapView));
+  showMapView('both');
   const openRadarLink = event => {
     event.preventDefault();
-    showMapView('radar');
-    mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
-    mapViews[1].focus({preventScroll:true});
+    document.getElementById('explore-radar').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+    document.getElementById('tab-cal')?.focus({preventScroll:true});
   };
-  document.querySelector('[data-open-radar]').addEventListener('click', openRadarLink);
+  document.querySelector('[data-open-radar]')?.addEventListener('click', openRadarLink);
   document.getElementById('home-radar').addEventListener('click', event => {
     const link = event.target.closest('[data-radar-parcel-state]');
     const state = link && mapWorkspace.querySelector('iframe').contentDocument?.querySelector('select[aria-label="State"]');
@@ -92,6 +165,50 @@
     state.dispatchEvent(new Event('change'));
     mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
     mapViews[0].focus({preventScroll:true});
+  });
+  let radarParcelRequest=0;
+  window.addEventListener('ppa:radar-map-parcel', event => {
+    const {state,county,parcel}=event.detail||{};
+    if(!/^[A-Z]{2}$/.test(state||'')||typeof county!=='string'||typeof parcel!=='string')return;
+    showMapView('both');
+    const frame=document.querySelector('#home-parcels iframe');
+    const requestId=++radarParcelRequest;
+    const status=document.getElementById('home-radar-match-status');
+    if(status){status.hidden=false;status.textContent='Checking exact parcel ID against verified GIS boundaries…';}
+    const send=()=>frame.contentWindow?.postMessage({type:'ppa:radar-parcel',state,county,parcel,requestId},location.origin);
+    if(frame.contentDocument?.readyState==='complete')send();
+    else frame.addEventListener('load',send,{once:true});
+    mapWorkspace.scrollIntoView({block:'start',behavior:'smooth'});
+  });
+  window.addEventListener('message',event=>{
+    if(event.origin!==location.origin||event.source!==document.querySelector('#home-parcels iframe')?.contentWindow)return;
+    const d=event.data;
+    if(d?.type!=='ppa:radar-parcel-result'||d.requestId!==radarParcelRequest)return;
+    const status=document.getElementById('home-radar-match-status');
+    if(status){status.hidden=false;status.textContent=d.matched
+      ?'Exact parcel ID matched a verified GIS polygon. Property opened on the map.'
+      :'No exact verified polygon match found. The Radar record remains available below; no location was invented.';}
+  });
+  window.addEventListener('ppa:radar-map-state', event => {
+    const stateCode = event.detail?.state;
+    if (typeof stateCode !== 'string' || !/^[A-Z]{2}$/.test(stateCode)) return;
+    // Preserve Radar below the map while exploring the state. This does not
+    // claim that any sale record has been matched to a verified parcel.
+    showMapView('both');
+    const frame = document.querySelector('#home-parcels iframe');
+    const focus=()=>frame.contentWindow?.postMessage({type:'ppa:radar-focus-state',state:stateCode},location.origin);
+    if(frame.contentDocument?.readyState==='complete')focus();else frame.addEventListener('load',focus,{once:true});
+    const selectState = () => {
+      try {
+        const select = frame.contentDocument?.querySelector('select[aria-label="State"]');
+        if (!select || ![...select.options].some(o => o.value === stateCode)) return false;
+        select.value = stateCode;
+        select.dispatchEvent(new Event('change', {bubbles:true}));
+        return true;
+      } catch (_) { return false; }
+    };
+    if (!selectState()) frame.addEventListener('load', selectState, {once:true});
+    mapWorkspace.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   });
   if (location.hash === '#map') showMapView('radar');
   window.addEventListener('hashchange', () => { if (location.hash === '#map') showMapView('radar'); });

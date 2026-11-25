@@ -1,0 +1,33 @@
+/* County Connectors: visual layer only. Loaded after dashboard.css; no markup, id or script changes. */
+:root{--c-ease:cubic-bezier(.2,.75,.22,1);--c-card:linear-gradient(180deg,#112236,#0d1b2d);--c-gold:#ffdc7a;--c-green:#65edab}
+body{background:radial-gradient(1200px 500px at 50% -10%,#10304a55,transparent),#07121e;-webkit-font-smoothing:antialiased}
+.topbar{background:#07121eeb;border:0;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.topbar nav{padding-block:.5rem}
+.topbar a{display:inline-flex;align-items:center;min-height:36px;text-decoration:none;font-size:.95rem;transition:transform .12s var(--c-ease)}
+.topbar a:active{transform:scale(.97)}
+main{max-width:46rem;padding-block:.8rem 4rem}
+.hero{padding:0 0 .3rem}.hero p:not(.eyebrow){display:none}
+.eyebrow{color:var(--c-gold);font-size:.72rem;letter-spacing:.09em;font-weight:600;margin:0}
+.hero h1{font-size:clamp(28px,6vw,36px);letter-spacing:-.02em;line-height:1.15;margin:.2rem 0 .4rem}
+section,details,.metric{border:0;background:var(--c-card);box-shadow:0 1px 0 #ffffff0d inset,0 8px 24px #0004;border-radius:16px}
+#dashboard{background:transparent;box-shadow:none}
+section,details{padding:14px 16px;margin-block:12px;animation:c-in .45s var(--c-ease) both}
+section>details{background:#ffffff0a;box-shadow:none;border-radius:12px;padding:6px 12px}
+summary{min-height:44px;display:flex;align-items:center;font-weight:600;list-style:none;-webkit-tap-highlight-color:transparent}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'';margin-left:auto;width:8px;height:8px;border-right:2px solid #6f8aa3;border-bottom:2px solid #6f8aa3;transform:rotate(-45deg);transition:transform .25s var(--c-ease)}
+details[open]>summary::after{transform:rotate(45deg);border-color:var(--c-green)}
+h2{font-size:1.05rem;font-weight:600;letter-spacing:-.01em}h3{font-size:.98rem;font-weight:600}
+select,input[type=search]{border:1px solid transparent;background:#0a1828;color:#f4f8ff;border-radius:11px;padding:10px 12px;transition:border-color .2s,box-shadow .2s}
+select:focus,input[type=search]:focus{border-color:#4aa984;box-shadow:0 0 0 3px #65edab26;outline:none}
+label{font-size:.78rem;font-weight:600;color:#9fb4c8}
+button{border:0;background:#1a5a47;color:#fff;border-radius:11px;font-weight:600;min-height:42px;transition:transform .12s var(--c-ease),filter .2s}
+button:enabled:hover{background:#1a5a47;filter:brightness(1.15)}button:active{transform:scale(.97)}
+button.secondary,#county-reset{background:#ffffff14;color:#f4f8ff}
+.metric{box-shadow:none;background:#ffffff0a;border-radius:12px}
+.metric strong{font-size:1.25rem;font-weight:600;color:#fff}
+.metric span,.muted,dd{color:#9fb4c8}
+progress{height:8px;border-radius:99px;overflow:hidden;accent-color:var(--c-green)}
+summary:focus-visible,a:focus-visible,button:focus-visible{outline:2px solid var(--c-green);outline-offset:2px}
+@keyframes c-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){section,details{animation:none}summary::after,button{transition:none}}

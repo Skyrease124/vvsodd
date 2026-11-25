@@ -1,12 +1,12 @@
 // Read-only address search for Detroit parcel candidates. Address results are NEVER approvable automatically.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1',LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
 const ROOT='https://pricepocketasset.com';
 const j=(code,body)=>new Response(JSON.stringify(body),{status:code,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const short=(s,n=150)=>String(s??'').slice(0,n);
 const clean=s=>String(s??'').toUpperCase().replace(/[^A-Z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
-export default async req=>{
+const handler=async req=>{
  if(req.method!=='POST')return j(405,{error:'POST only'});
  const owner=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!owner?.owner)return j(owner?403:401,{error:'Owner only'});
@@ -37,10 +37,10 @@ export default async req=>{
  const params=new URLSearchParams({f:'json',where:sql,outFields:'parcel_number,address,zip_code,object_id',returnGeometry:'false',resultRecordCount:'12'});
  let payload;
  try{
-  const response=await fetch(LAYER+'/query?'+params,{signal:AbortSignal.timeout(13000)});
+  const response=await auth.fetchWayneGis(LAYER+'/query?'+params,{signal:AbortSignal.timeout(13000)});
   if(!response.ok)throw Error('GIS HTTP '+response.status);
   payload=await response.json();if(payload.error)throw Error(short(payload.error.message,100));
- }catch(e){return j(502,{error:'Detroit street-address GIS query failed: '+short(e.message,100)})}
+ }catch(e){if(e.code==='QUOTA')return j(429,{ok:false,error:e.message});return j(502,{error:'Detroit street-address GIS query failed: '+short(e.message,100)})}
  const prefix=number+' '+street;
  const candidates=(payload.features||[]).map(f=>f.attributes||{}).filter(a=>{const aClean=clean(a.address);return aClean===prefix||aClean.startsWith(prefix+' ');}).slice(0,8).map(a=>({parcelId:short(a.parcel_number,60),address:short(a.address,160),zipCode:short(a.zip_code,15)}));
  const result={status:candidates.length?'address_candidates_unverified':'no_address_match',sourceAddress:address,streetSearched:prefix,candidates,sourceUrl:LAYER,checkedAt:new Date().toISOString(),note:candidates.length?'Address candidates only. Parcel number differences must be independently resolved; this is NOT an approved map location.':'No address candidates in this query. No coordinates inferred.',verified:false,approvable:false};
@@ -50,3 +50,5 @@ export default async req=>{
  target.detroitAddress=result;latest.updatedAt=new Date().toISOString();await auth.kvPut(STORE,latest);
  return j(200,{ok:true,match:result});
 };
+
+export default auth.withBrainStore(handler);

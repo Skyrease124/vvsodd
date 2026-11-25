@@ -5,12 +5,16 @@ import * as auth from '../lib/auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as X from '../lib/exports.mjs';
 import * as EV from '../lib/evidence.mjs';
+// Owner-approved records and corrections (preview reads its isolated store; production reads the shared store).
+import * as brain from '../lib/brain-auth.mjs';
+import { approvedForItem, correctionPatch } from '../lib/approved-records.mjs';
+import { cleanReleases, RELEASE_INDEX } from '../lib/property-intake.mjs';
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 const nice = d => { const t = new Date(d + 'T00:00:00Z'); return t.toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }); };
 const rid = () => crypto.randomBytes(5).toString('hex');
 
 const evCtx = req => ({ ip: (req.headers.get('x-nf-client-connection-ip') || req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || null, ua: req.headers.get('user-agent') || null, session: EV.sessionOf(req.headers.get('cookie') || '') });
-export default async (req) => {
+const handler = async (req) => {
   const me = await auth.userFromCookie(req.headers.get('cookie') || '');
   if (!me) return json(401, { error: 'Sign in to use property downloads.', needSignIn: true });
   const paid = auth.isPaid(me), url = new URL(req.url);
@@ -28,9 +32,18 @@ export default async (req) => {
   const act = String(b.action || '');
   if (!(await RL.hit('xp:' + me.email, 240, 60e3)).ok) return json(429, { error: 'Too many requests. Please wait a moment.' });
   const items = X.cleanItems(b.items, X.MAX_PER_REQUEST);
+  // Approved records follow the same Pro-first rule as the map; a correction updates the static record's fields.
+  let releases = null;
+  const rel = async () => { if (releases === null) { try { releases = cleanReleases(await brain.kvGet(RELEASE_INDEX)); } catch (e) { releases = []; } } return releases; };
+  const look = async (it) => {
+    const x = X.lookup(it), a = approvedForItem(await rel(), it.i, { user: me, now: Date.now() });
+    if (x) return a ? { r: { ...x.r, ...correctionPatch(a) }, meta: x.meta } : x;
+    if (!a) return null;
+    const [state, county] = String(it.i).split('|'); return { r: a, meta: { state, county, id: it.d || null } };
+  };
 
   if (act === 'info' || act === 'preview') {
-    const found = [], missing = []; for (const it of items) { const x = X.lookup(it); if (x) found.push({ it, x }); else missing.push(it.i); }
+    const found = [], missing = []; for (const it of items) { const x = await look(it); if (x) found.push({ it, x }); else missing.push(it.i); }
     if (act === 'info') return json(200, { rows: found.slice(0, 50).map(f => X.infoOf(f.x)), missing });
     const p = await X.plan(me, found.map(f => f.it.i)); return json(200, { ...p, missing, resetsText: nice(p.resets) });
   }
@@ -39,7 +52,7 @@ export default async (req) => {
     const fmt = String(b.format || ''); if (!X.FORMATS.includes(fmt)) return json(400, { error: 'Choose CSV, Excel, PDF or ZIP.' });
     if (!items.length) return json(400, { error: 'Select at least one property first.' });
     if (!(await RL.hit('xe:' + me.email, 30, 3600e3)).ok) return json(429, { error: 'Export limit reached for this hour. Browsing and saving are not limited.' });
-    const found = [], missing = []; for (const it of items) { const x = X.lookup(it); if (x) found.push({ it, x }); else missing.push(it.i); }
+    const found = [], missing = []; for (const it of items) { const x = await look(it); if (x) found.push({ it, x }); else missing.push(it.i); }
     if (missing.length) return json(422, { error: missing.length + ' selected ' + (missing.length === 1 ? 'property is' : 'properties are') + ' not in our records yet, so nothing was exported and nothing was used. Remove ' + (missing.length === 1 ? 'it' : 'them') + ' and try again.', missing });
     const r = await X.reserve(me, found.map(f => f.it.i), fmt);
     if (!r.ok) return json(429, { error: 'This would go over your weekly allowance. You have ' + r.remaining + ' of ' + X.WEEKLY_LIMIT + ' left. Your allowance resets on ' + nice(r.resets) + '.', limit: true, remaining: r.remaining, resets: r.resets, resetsText: nice(r.resets) });
@@ -63,3 +76,4 @@ export default async (req) => {
   else return json(400, { error: 'Unknown request.' });
   await X.putCollections(me, c); return json(200, { ok: true, lists: c.lists });
 };
+export default brain.withBrainStore(handler);

@@ -4,6 +4,19 @@
   const tabs = [...document.querySelectorAll('.work-tabs button')];
   const selected = $('work-state'), county = $('work-county');
   const map = $('work-geo').querySelector('iframe');
+  const mapParcel=$('work-map-parcel');
+  addEventListener('ppa:workshop-parcel',event=>{
+    const parcel=event.detail;
+    if(!parcel?.parcelId)return;
+    mapParcel.textContent='Parcel '+parcel.parcelId+' · '+parcel.county+', '+parcel.state+
+      (Number.isFinite(parcel.acres)?' · '+(parcel.estimated?'Estimated acreage ':'Acreage ')+parcel.acres.toFixed(2):'');
+    if(typeof parcel.source==='string'&&/^https:\/\//.test(parcel.source)){
+      const official=mk('a','Official GIS boundary source');
+      official.href=parcel.source;official.target='_blank';official.rel='noopener noreferrer';
+      mapParcel.append(document.createTextNode(' · '),official);
+    }
+    mapParcel.hidden=false;
+  });
   const history = [], files = new Map();
   let index, composer, resultVersion = 0;
   const datasetCounty = text => String(text || '').toLowerCase().replace(/ county$/, '');
@@ -15,6 +28,7 @@
   const scope = () => ({states:selected.value ? [selected.value] : [], county:countyMeta()?.county || null});
   window.ppaWorkshopScope = scope;
   const browse = () => {
+    mapParcel.hidden=true;
     const q = new URLSearchParams({embed:'1',picker:'1'});
     if (county.value) q.set('c',county.value);
     else if (selected.value) q.set('s',selected.value);
@@ -160,6 +174,30 @@
     if (!e.detail) return;
     index = e.detail.index; composer = e.detail;
     [...index.allStates].sort((a,b) => a.n.localeCompare(b.n)).forEach(s => selected.append(new Option(s.n,s.a)));
+    // Use the same Radar inventory source as the homepage and full AI map.
+    fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();}).then(data=>{
+      const counts={};
+      for(const row of data.counties||[]){
+        if(!/^[A-Z]{2}$/.test(row.state||''))continue;
+        const n=counts[row.state]||(counts[row.state]={liens:0,deeds:0,land:0});
+        const amount=Math.max(0,Number(row.open)||0);
+        if(row.group==='county-held'||row.group==='lien-sale')n.liens+=amount;
+        else if(row.group==='deed')n.deeds+=amount;
+        else if(row.group==='state-held')n.land+=amount;
+      }
+      const mapped={};
+      for(const ds of index.datasets||[])mapped[ds.state]=(mapped[ds.state]||0)+1;
+      for(const option of selected.options){
+        if(!option.value)continue;
+        const n=counts[option.value]||{},parts=[];
+        if(mapped[option.value])parts.push(mapped[option.value]+(mapped[option.value]===1?' county':' counties')+' with records');
+        if(n.liens)parts.push(n.liens.toLocaleString()+' liens');
+        if(n.deeds)parts.push(n.deeds.toLocaleString()+' deeds');
+        if(n.land)parts.push(n.land.toLocaleString()+' land records');
+        const state=index.allStates.find(s=>s.a===option.value);
+        option.textContent=(state?.n||option.value)+(parts.length?' · '+parts.join(' · '):'');
+      }
+    }).catch(()=>{/* Preserve normal state selection when Radar is unavailable. */});
     selected.addEventListener('change',() => { fillCounties(); browse(); });
     county.addEventListener('change',browse);
     addEventListener('ppa:workshop-area',event => {

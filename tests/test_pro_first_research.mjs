@@ -87,6 +87,9 @@ test('owner release menu visible and existing browse links remain intact',()=>{
  const dashboard=fs.readFileSync('kinvest-liens/owner/dashboard.js','utf8');
  assert.match(dashboard,/\/owner\/research-releases\//);
  const home=fs.readFileSync('kinvest-liens/index.html','utf8');
- assert.match(home,/href="\/reviewed-certificates\.html"/);
+ // Research updates are linked from the owner release workflow. The home page
+ // retains its general land browse link and does not own this navigation.
+ const release=fs.readFileSync('kinvest-liens/owner/research-releases/index.html','utf8');
+ assert.match(release,/href="\/reviewed-certificates\.html"/);
  assert.match(home,/href="land\/"/);
 });

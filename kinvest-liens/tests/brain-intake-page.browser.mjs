@@ -1,0 +1,354 @@
+// Browser test of the owner Property intake, research withdrawal and live-check panels on the owner dashboard.
+// Mocked endpoints carry synthetic records only. Run after the static server is up (see validate-map-polish.yml):
+//   node --experimental-vm-modules kinvest-liens/tests/brain-intake-page.browser.mjs
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require = createRequire(import.meta.url);
+const {chromium} = require('playwright');
+
+const PAGE = 'http://127.0.0.1:8765/owner/brain/';
+const DUMMY_KEY = 'test-dummy-key-not-a-credential-0000';
+const NOW = '2026-11-23T10:00:00.000Z';
+const FUTURE = '2026-11-25T10:00:00.000Z';
+const base = {kind: 'new_property', kindLabel: 'New property information', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200',
+  origin: 'owner-manual', description: 'Official county record reviewed against the source.', audit: [{at: NOW, action: 'submitted', by: 'owner', note: ''}],
+  createdAt: NOW, createdBy: 'owner', releaseId: null, approval: null, verification: null, sourceUrl: null, certificateNumber: null, taxYear: null};
+const ITEMS = [
+  {...base, id: '11111111-1111-4111-8111-111111111111', title: 'Parcel awaiting check', status: 'awaiting_verification',
+    property: {category: 'land_bank', address: '1 Test Way', ownerName: null, amount: 1000, acreage: null, hasCoordinates: true, hasBoundary: false}, locationVerified: false},
+  // Hostile text: must render as plain text, never as an element.
+  {...base, id: '22222222-2222-4222-8222-222222222222', title: 'Verified <img src=x onerror="window.__xss=1">', status: 'awaiting_approval',
+    verification: {evidenceUrl: 'https://www.pbcgov.org/records/2', notes: 'Checked the record.', verifiedAt: NOW},
+    property: {category: 'land_bank', address: '2 Test Way', ownerName: null, amount: null, acreage: null, hasCoordinates: false, hasBoundary: false}, locationVerified: false},
+  {...base, id: '33333333-3333-4333-8333-333333333333', title: 'Released parcel', status: 'released',
+    releaseId: 'rel-33333333-3333-4333-8333-333333333333', approval: {releaseMode: 'pro_first_48h', at: NOW}},
+  // Verified against the official layer and located: the only kind of record the batch bar can select.
+  {...base, id: '44444444-4444-4444-8444-444444444444', title: 'Verified official position', status: 'awaiting_approval', origin: 'gis-import',
+    verification: {evidenceUrl: 'https://maps.example.invalid/parcels/query?where=PRINTKEY%3D%27TEST-0001%27', notes: 'Matched on parcel number and address.', verifiedAt: NOW},
+    locationVerified: true, property: {category: 'tax_deed', address: '1 Example Road, Testville NY 00000', ownerName: null, amount: 1000, acreage: 0.1, hasCoordinates: true, hasBoundary: true}},
+];
+const MATCHES = {ok: true, dataset: 'NY-city-of-rochester', generatedAt: NOW, state: 'NY', county: 'City of Rochester',
+  summary: {records: 3, matched: 2, matchedWithBoundary: 2, matchedPointOnly: 0, pending: 1, byReason: {verified: 2, sbl_not_found: 1}},
+  sources: [{id: 'city-of-rochester-tax-parcels', label: 'City of Rochester Tax Parcels (Open Data, updated 2025)', dataDate: '2025', itemModified: '2025-06-09', retrievedAt: NOW,
+    coverage: {requested: 3, foundParcelNumbers: 2, features: 2}, terms: {summary: 'Free public informational service. Provided as is.'}, itemUrl: 'https://example.test/item'}],
+  pending: [{parcel: '999.99-9-99', address: '5 Nowhere St, Rochester NY 14604', reason: 'sbl_not_found', candidates: [{printKey: '120.74-2-14', siteAddress: '7 Nowhere St', zip: '14604'}], identifierNote: null}],
+  imported: 0};
+// The county datasets the server would list (sorted by state, then county). Palm Beach is the synthetic dataset the
+// intake items belong to; Scott and Rochester come from their own summaries.
+const PALM_MATCHES = {...MATCHES, dataset: 'FL-palm-beach', state: 'FL', county: 'Palm Beach'};
+const SCOTT_MATCHES = {ok: true, dataset: 'IA-scott', generatedAt: NOW, state: 'IA', county: 'Scott',
+  summary: {records: 144, matched: 22, matchedWithBoundary: 22, matchedPointOnly: 0, pending: 122, byReason: {verified: 22, identifier_only: 23}},
+  sources: [{id: 'scott-county-ia-parcels', label: 'Scott County, Iowa Cadastral service: Parcel layer (county GIS, ArcGIS)', dataDate: 'layer last data edit 2026-11-13',
+    itemModified: '2026-11-13', retrievedAt: NOW, coverage: {requested: 144, foundParcelNumbers: 45, features: 45}, terms: {summary: 'Free public county GIS. Provided as is.'}, itemUrl: 'https://example.test/item'}],
+  crossCheckSources: [{id: 'scott-county-ia-cadastral-parcels', label: 'Scott County Cadastral: parcel layer (legal description, owner, acreage, polygon)', layerUrl: 'https://example.test/layer', retrievedAt: NOW}],
+  pending: [{parcel: 'P1401C09A', address: null, reason: 'identifier_only', candidates: [], identifierNote: null,
+    candidate: {precision: 'parcel_polygon', strength: 'review', acres: 0.014}, crossChecks: [{check: 'acreage', result: 'differs', detail: '0.014 acre from the drawn parcel · assessor 0.023 acre'}], landContext: []}],
+  imported: 0};
+const DATASETS = [
+  {id: 'FL-palm-beach', state: 'FL', county: 'Palm Beach', generatedAt: NOW, records: 3, matched: 2, pending: 1, imported: 0},
+  {id: 'IA-scott', state: 'IA', county: 'Scott', generatedAt: NOW, records: 144, matched: 22, pending: 122, imported: 0},
+  {id: 'NY-city-of-rochester', state: 'NY', county: 'City of Rochester', generatedAt: NOW, records: 3, matched: 2, pending: 1, imported: 0},
+];
+const MATCHES_BY_ID = {'FL-palm-beach': PALM_MATCHES, 'IA-scott': SCOTT_MATCHES, 'NY-city-of-rochester': MATCHES};
+const RELEASES = [
+  {id: 'rel-33333333-3333-4333-8333-333333333333', type: 'property', state: 'FL', county: 'Palm Beach', parcelId: 'PB-100200', title: 'Released parcel',
+   releaseMode: 'pro_first_48h', proReleaseAt: NOW, freeReleaseAt: FUTURE, withdrawn: false, withdrawnAt: null, withdrawal: null,
+   audit: [{at: NOW, action: 'released', by: 'owner', note: ''}]},
+  {id: 'rel-44444444-4444-4444-8444-444444444444', type: 'lien', state: 'FL', county: 'Palm Beach', parcelId: 'PB-200300', title: 'Old withdrawn lien',
+   releaseMode: 'pro_first_48h', proReleaseAt: '2026-11-01T12:00:00.000Z', freeReleaseAt: '2026-11-03T12:00:00.000Z', withdrawn: true,
+   withdrawnAt: '2026-11-10T12:00:00.000Z', withdrawal: {reason: 'Duplicate of an earlier record.', at: '2026-11-10T12:00:00.000Z', by: 'owner'}, audit: []},
+];
+const LIVE = [
+  {name: 'nvidia', label: 'NVIDIA chat check', cost: 'One chat request.', available: false, missing: 'NVIDIA key is not configured. Nothing was sent.', limitPerDay: 3, usedToday: 0, last: null},
+  {name: 'geoapify', label: 'Geoapify geocode check', cost: 'One geocode request.', available: true, missing: null, limitPerDay: 5, usedToday: 0, last: null},
+  {name: 'wayne_gis', label: 'Wayne County GIS layer check', cost: 'One metadata request.', available: true, missing: null, limitPerDay: null, usedToday: null, last: null},
+  {name: 'intake_round_trip', label: 'Intake round trip (test item)', cost: 'Writes one test item.', available: true, missing: null, limitPerDay: 3, usedToday: 0, last: null},
+];
+
+// Installs the mocks and returns the list of writes the page sent.
+async function install(page, {liveHidden = false, storage = 'preview-isolated'} = {}) {
+  const writes = [];
+  writes.reads = [];   // every GET for a county summary, so the test can check which county was asked for
+  const live = structuredClone(LIVE);
+  await page.route('**/.netlify/functions/**', async route => {
+    const request = route.request();
+    const name = new URL(request.url()).pathname.split('/').pop();
+    const method = request.method();
+    const json = (status, body) => route.fulfill({status, contentType: 'application/json', body: JSON.stringify(body), headers: {'Cache-Control': 'no-store'}});
+    if (method === 'POST') writes.push({name, body: request.postDataJSON()});
+    if (name === 'owner-property-intake') {
+      const params = new URL(request.url()).searchParams;
+      if (method === 'GET' && params.get('scope') === 'datasets') return json(200, {ok: true, datasets: DATASETS});
+      if (method === 'GET' && params.get('scope') === 'matches') {
+        writes.reads.push({scope: 'matches', dataset: params.get('dataset')});
+        const summary = MATCHES_BY_ID[params.get('dataset')];
+        return summary ? json(200, summary) : json(400, {ok: false, error: 'Choose a county dataset.'});
+      }
+      if (method === 'GET') return json(200, {ok: true, items: ITEMS, count: ITEMS.length, storage});
+      const body = request.postDataJSON();
+      if (body.action === 'batch-approve') return json(200, {ok: true, batchId: body.batchId, approved: body.ids.length, refused: 0,
+        results: body.ids.map(id => ({id, ok: true, releaseId: 'rel-' + id}))});
+      if (body.action === 'import-matches') return json(200, {ok: true, created: 3, awaitingApproval: 2, pendingInvestigation: 1, skipped: 0, refused: [],
+        notice: 'Imported for review.'});
+      return json(200, {ok: true, item: null, notice: 'Saved.', created: 0, duplicates: [], withdrawnAt: NOW});
+    }
+    if (name === 'research-updates') return method === 'GET' ? json(200, {ok: true, releases: RELEASES}) : json(200, {ok: true, withdrawnAt: NOW});
+    if (name === 'owner-brain-live-checks') {
+      if (method === 'GET') return liveHidden ? json(404, {ok: false, error: 'Not available on this site.'}) : json(200, {ok: true, previewOnly: true, items: live});
+      const result = {name: 'wayne_gis', outcome: 'ok', detail: 'Wayne County GIS answered layer metadata. No parcel was queried.', at: NOW};
+      live[2].last = {outcome: result.outcome, detail: result.detail, at: NOW};
+      return json(200, {ok: true, result});
+    }
+    // The dashboard gate opens only when the queue snapshot loads; an empty snapshot keeps the page to this test's panels.
+    if (name === 'owner-brain-queue') return json(200, {ok: true, queue: [], status: 'idle', built: NOW, previewMode: true, updatedAt: NOW, automation: {state: 'idle'}});
+    if (name === 'owner-brain-review') return json(200, {ok: true, entries: [], items: []});
+    return json(404, {ok: false, error: 'not mocked'});
+  });
+  return writes;
+}
+
+const browser = await chromium.launch({headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist']});
+try {
+  // 1. Layout, hostile text, and the approval order.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const intake = page.locator('#intakeList article');
+    await intake.nth(0).waitFor();
+    await page.waitForTimeout(700); // the panels finish opening
+    assert.equal(await intake.count(), 4, 'four intake cards');
+    assert.equal(await page.evaluate(() => window.__xss), undefined, 'hostile title did not execute');
+    assert.equal(await page.locator('#intakeList img').count(), 0, 'hostile title rendered as text, not an element');
+    assert.match(await page.locator('#intakeList article').nth(1).innerText(), /Verified <img src=x/);
+    assert.equal(await page.locator('#researchList article').count(), 2, 'two research releases');
+    assert.equal(await page.locator('#researchList article').nth(1).getByRole('button', {name: /Withdraw/}).count(), 0, 'a withdrawn release has no withdraw button');
+    assert.equal(await page.locator('#liveChecksPanel').isVisible(), true, 'live checks panel shows on the preview');
+    const nvidiaCard = page.locator('#liveList article', {hasText: 'NVIDIA chat check'});
+    assert.equal(await nvidiaCard.getByRole('button', {name: 'Run once…'}).isDisabled(), true, 'NVIDIA run is disabled without a key');
+    const html = await page.content();
+    assert.equal(html.includes(DUMMY_KEY) || /nvapi-/.test(html), false, 'no key-like value on the page');
+    assert.equal(writes.length, 0, 'opening the page writes nothing');
+    assert.match(await page.locator('#intakeStorage').innerText(), /isolated preview store/, 'storage banner confirms isolation before any write');
+    assert.match(await page.locator('#intakeList article').nth(0).innerText(), /Coordinates supplied but not verified/);
+    assert.match(await page.locator('#intakeList article').nth(1).innerText(), /No coordinates: it will be listed as an unlocated property/);
+    await context.close();
+  }
+
+  // 2. Verification: the server-side rules are repeated in the form, and a valid submission sends the checklist.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#intakeList article', {hasText: 'Parcel awaiting check'});
+    await card.getByRole('button', {name: 'Verify this item'}).click();
+    await card.locator('.pi-form input[type=url]').fill('http://www.pbcgov.org/records/1');
+    await card.locator('.pi-form textarea').fill('Checked the record and the parcel number.');
+    await card.getByRole('button', {name: 'Save verification'}).click();
+    assert.match(await card.locator('.pi-status').innerText(), /must start with https/, 'http source is refused on the page');
+    assert.equal(writes.length, 0, 'nothing is sent for an http source');
+    await card.locator('.pi-form input[type=url]').fill('https://www.pbcgov.org/records/1');
+    await card.getByRole('button', {name: 'Save verification'}).click();
+    assert.match(await card.locator('.pi-status').innerText(), /Tick both checks first/, 'both checks are required');
+    assert.equal(writes.length, 0);
+    await card.locator('.pi-form input[type=checkbox]').nth(0).check();
+    await card.locator('.pi-form input[type=checkbox]').nth(1).check();
+    assert.equal(await card.locator('.pi-form input[type=checkbox]').nth(2).isVisible(), true, 'location check shown for an item with coordinates');
+    await card.locator('.pi-form input[type=checkbox]').nth(2).check();
+    await card.getByRole('button', {name: 'Save verification'}).click();
+    await page.waitForFunction(() => document.getElementById('intakeStatus').textContent.includes('Verified'));
+    const sent = writes.find(w => w.body && w.body.action === 'verify');
+    assert.ok(sent, 'verify was sent');
+    assert.equal(sent.body.confirmed, true);
+    assert.deepEqual(sent.body.checklist, {officialSource: true, identityMatched: true, locationVerified: true});
+    assert.equal(sent.body.evidenceUrl, 'https://www.pbcgov.org/records/1');
+    await context.close();
+  }
+
+  // 3. Approval: a critical release needs confirmation and a 40-character reason; the standard release needs the check.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#intakeList article', {hasText: 'Verified <img'});
+    await card.getByRole('button', {name: 'Approve…'}).click();
+    await card.getByRole('button', {name: 'Approve and release'}).click();
+    assert.match(await card.locator('.pi-status').innerText(), /Tick the check first/);
+    assert.equal(writes.length, 0);
+    await card.locator('.pi-form select').selectOption('immediate_critical');
+    await card.locator('.pi-form input[type=checkbox]').nth(1).check();
+    await card.getByRole('button', {name: 'Approve and release'}).click();
+    assert.match(await card.locator('.pi-status').innerText(), /critical release needs/, 'critical needs the confirmation and reason');
+    assert.equal(writes.length, 0);
+    await card.locator('.pi-form textarea').fill('The published record is wrong and could mislead bidders today.');
+    await card.locator('.pi-form input[type=checkbox]').nth(0).check();
+    await card.getByRole('button', {name: 'Approve and release'}).click();
+    await page.waitForFunction(() => document.getElementById('intakeStatus').textContent.includes('everyone now'));
+    const sent = writes.find(w => w.body && w.body.action === 'approve');
+    assert.equal(sent.body.releaseMode, 'immediate_critical');
+    assert.equal(sent.body.criticalConfirmed, true);
+    assert.equal(sent.body.id, '22222222-2222-4222-8222-222222222222');
+    await context.close();
+  }
+
+  // 4. Rejection needs a note.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#intakeList article', {hasText: 'Verified <img'});
+    await card.getByRole('button', {name: 'Reject…'}).click();
+    await card.getByRole('button', {name: /Reject: nothing is published/}).click();
+    assert.match(await card.locator('.pi-status').innerText(), /at least 15 characters/);
+    assert.equal(writes.length, 0);
+    await card.locator('.pi-form textarea').fill('The source is a third-party site, not the county.');
+    await card.getByRole('button', {name: /Reject: nothing is published/}).click();
+    await page.waitForFunction(() => document.getElementById('intakeStatus').textContent.includes('Nothing was published'));
+    assert.ok(writes.find(w => w.body && w.body.action === 'reject'), 'reject was sent');
+    await context.close();
+  }
+
+  // 5. Withdrawal dialog: confirmation, reason of 15 characters, and the request sent to the intake endpoint.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#intakeList article', {hasText: 'Released parcel'});
+    await card.getByRole('button', {name: 'Withdraw…'}).click();
+    assert.equal(await page.locator('#withdrawDialog').evaluate(d => d.open), true, 'confirmation dialog opens');
+    assert.match(await page.locator('#withdrawTitle').innerText(), /Withdraw: Released parcel/);
+    await page.locator('#withdrawConfirm').click();
+    assert.match(await page.locator('#withdrawError').innerText(), /at least 15 characters/);
+    assert.equal(writes.length, 0, 'a short reason sends nothing');
+    await page.locator('#withdrawReason').fill('Owner withdrew: the parcel number was copied in error.');
+    await page.locator('#withdrawConfirm').click();
+    await page.waitForFunction(() => !document.getElementById('withdrawDialog').open);
+    const sent = writes.find(w => w.body && w.body.action === 'withdraw');
+    assert.equal(sent.name, 'owner-property-intake');
+    assert.equal(sent.body.reason, 'Owner withdrew: the parcel number was copied in error.');
+    await context.close();
+  }
+
+  // 6. Research withdrawal uses the research endpoint, through the same dialog.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#researchList article', {hasText: 'Released parcel'});
+    await card.getByRole('button', {name: /Withdraw from every viewer/}).click();
+    await page.locator('#withdrawReason').fill('Withdrawn by owner from the research list.');
+    await page.locator('#withdrawConfirm').click();
+    await page.waitForFunction(() => !document.getElementById('withdrawDialog').open);
+    const sent = writes.find(w => w.name === 'research-updates' && w.body && w.body.action === 'withdraw');
+    assert.ok(sent, 'research withdraw was sent');
+    assert.equal(sent.body.id, 'rel-33333333-3333-4333-8333-333333333333');
+    await context.close();
+  }
+
+  // 7. Live check: one confirmed run; the request names the check and carries no key.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    const card = page.locator('#liveList article', {hasText: 'Wayne County GIS layer check'});
+    page.once('dialog', d => d.accept());
+    await card.getByRole('button', {name: 'Run once…'}).click();
+    await page.waitForFunction(() => document.querySelector('#liveList') && document.querySelector('#liveList').textContent.includes('answered layer metadata'));
+    const sent = writes.find(w => w.name === 'owner-brain-live-checks');
+    assert.deepEqual({action: sent.body.action, name: sent.body.name, confirmed: sent.body.confirmed}, {action: 'run', name: 'wayne_gis', confirmed: true});
+    assert.equal(JSON.stringify(sent.body).includes('apiKey'), false);
+    await context.close();
+  }
+
+  // 8. On a site where the live-check endpoint answers 404, the panel stays hidden.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    await install(page, {liveHidden: true, storage: 'production'});
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    await page.waitForSelector('#intakeList article');
+    assert.match(await page.locator('#intakeStorage').innerText(), /PRODUCTION/, 'production is announced before any write');
+    assert.equal(await page.locator('#liveChecksPanel').isVisible(), false, 'live checks stay hidden where they are not available');
+    await context.close();
+  }
+  // 9. Batch approval: only a verified, located record can be selected; one confirmed batch; the matches panel; import.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    await page.waitForSelector('#intakeList article');
+    assert.match(await page.locator('#batchCount').innerText(), /1 verified, located record ready in Palm Beach, FL · 0 selected/);
+    assert.equal(await page.locator('#batchApprove').isDisabled(), true, 'nothing selected, nothing to approve');
+    assert.equal(await page.locator('#intakeList input.pi-select').count(), 1, 'only the verified, located record can be selected');
+    await page.locator('#intakeList input.pi-select').check();
+    assert.match(await page.locator('#batchCount').innerText(), /1 selected/);
+    assert.equal(await page.locator('#batchApprove').isDisabled(), false);
+    page.once('dialog', d => d.accept());
+    await page.locator('#batchApprove').click();
+    await page.waitForFunction(() => document.getElementById('batchStatus').textContent.startsWith('Approved 1 of 1'));
+    const sent = writes.find(w => w.body && w.body.action === 'batch-approve');
+    assert.deepEqual(sent.body.ids, ['44444444-4444-4444-8444-444444444444']);
+    assert.equal(sent.body.confirmed, true);
+    assert.match(sent.body.batchId, /^batch-/);
+    assert.equal(sent.body.releaseMode, undefined, 'the dashboard never asks for a critical batch');
+    assert.match(await page.locator('#matchSummary').innerText(), /3 records · 2 matched to an official parcel \(2 with a boundary\) · 1 pending · 0 already in the approval queue/);
+    assert.match(await page.locator('#matchPending').innerText(), /999\.99-9-99 · 5 Nowhere St.*leads, not matches/);
+    assert.match(await page.locator('#matchSources').innerText(), /Open Data, updated 2025/);
+    page.once('dialog', d => d.accept());
+    await page.locator('#matchImport').click();
+    await page.waitForFunction(() => document.getElementById('matchStatus').textContent.startsWith('Imported 3'));
+    assert.ok(writes.find(w => w.body && w.body.action === 'import-matches'), 'import sent');
+    await context.close();
+  }
+
+  // 10. The county selector: states and counties come from the server; each county asks for its own summary and import;
+  // the intake follows the county, and every county is one tick away.
+  {
+    const context = await browser.newContext({viewport: {width: 1280, height: 900}});
+    const page = await context.newPage();
+    const writes = await install(page);
+    await page.goto(PAGE, {waitUntil: 'domcontentloaded'});
+    await page.evaluate(() => document.querySelectorAll('.bn-row[aria-expanded="false"]').forEach(a => a.click())); // panels open in place under their rows
+    await page.waitForSelector('#intakeList article');
+    assert.deepEqual(await page.locator('#datasetState option').allInnerTexts(), ['FL', 'IA', 'NY'], 'every registered state is listed');
+    assert.equal(await page.locator('#datasetState').inputValue(), 'FL', 'the first registered county is selected; no county is named in the page');
+    await page.locator('#datasetState').selectOption('IA');
+    await page.waitForFunction(() => document.getElementById('matchSummary').textContent.startsWith('Scott, IA'));
+    assert.match(await page.locator('#matchSummary').innerText(), /^Scott, IA: 144 records · 22 matched to an official parcel/);
+    assert.ok(writes.reads.some(r => r.scope === 'matches' && r.dataset === 'IA-scott'), 'Scott was asked for by its own id');
+    assert.equal(await page.locator('#intakeList article').count(), 0, 'no Palm Beach record is shown under Scott');
+    assert.equal(await page.locator('#batchCount').innerText(), '0 verified, located records ready in Scott, IA · 0 selected · 4 in other counties, not shown');
+    assert.match(await page.locator('#matchPending').innerText(), /P1401C09A · no address · identifier only · candidate: official parcel boundary, a check needs a look · checks: acreage: differs/);
+    page.once('dialog', d => d.accept());
+    await page.locator('#matchImport').click();
+    await page.waitForFunction(() => document.getElementById('matchStatus').textContent.startsWith('Imported 3 from Scott'));
+    const imports = writes.filter(w => w.body && w.body.action === 'import-matches');
+    assert.equal(imports.at(-1).body.dataset, 'IA-scott', 'the import names the county it was asked for');
+    await page.locator('#intakeAllCounties').check();
+    assert.equal(await page.locator('#intakeList article').count(), 4, 'every county shows when the owner asks for it');
+    await page.locator('#intakeAllCounties').uncheck();
+    assert.equal(await page.locator('#intakeList article').count(), 0, 'and the view returns to the selected county');
+    await context.close();
+  }
+
+  console.log('PASS: intake layout and escaping, verification rules, approval rules, rejection, intake and research withdrawal dialogs, live checks and hidden panel, county selector');
+} finally {
+  await browser.close();
+}

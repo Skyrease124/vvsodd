@@ -17,7 +17,7 @@
 .ocr textarea{width:100%;box-sizing:border-box;height:280px;font:13px/1.4 ui-monospace,monospace;background:#070d1c;color:#e6ecf7;border:1px solid #2a3c66;border-radius:10px;padding:10px}
 .ocr .st{color:#9fb1d6;font-size:14px}.ocr .good{color:#7bf0b0}.ocr .bad{color:#ff9b9b}.ocr .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.ocr .btn.ghost{color:#ffd166!important;border-color:#ffd166}
 .ocr ul{margin:6px 0 0 18px;padding:0;font-size:14px}
-</style>
+</style><link rel="stylesheet" href="/owner/owner-ui.css">
 </head>
 <body class="aibody">
 <header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketPro</a><nav><a href="/owner/keys/">API keys</a></nav></div></header>
@@ -35,6 +35,20 @@
     <ul id="samp"></ul>
     <textarea id="txt" readonly></textarea>
     <div class="row"><button class="btn small" id="dl" type="button">Download text</button><button class="btn small ghost" id="cp" type="button">Copy text</button></div>
+    <div id="gem" style="margin-top:14px">
+      <h2 style="margin:0 0 6px;font-size:16px">Gemini fact check</h2>
+      <p class="st">One request on this file. Gemini lists parcel numbers, amounts and dates, each with an exact quote. A value is kept only if its quote is found in the text above. Results stay unverified until you decide. Free tier only, at most 5 a day.</p>
+      <div class="row"><button class="btn small" id="gemBtn" type="button">Ask Gemini (1 request)</button></div>
+      <p id="gemSt" class="st" role="status"></p>
+      <ul id="gemOut"></ul>
+    </div>
+  </div>
+  <div class="box ou-card ou-pad" id="gemSaved">
+    <h2 style="margin:0 0 6px;font-size:18px">Saved Gemini results</h2>
+    <p class="st">Each result is unverified until you decide. Check every quote against the county file. To verify, enter the dataset and the official source link you checked it against. Nothing here is published.</p>
+    <p id="gemState" class="st" role="status"></p>
+    <div class="row"><button class="btn small ghost" id="gemResume" type="button" hidden>Turn Gemini on again</button></div>
+    <ul id="gemList" style="list-style:none;padding:0;margin:0"></ul>
   </div>
 </main>
 <script>
@@ -43,9 +57,9 @@
   const MAX = 4.2e6;
   const b64 = file => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(file); });
   const call = async (pdf, from) => { const r = await fetch('/.netlify/functions/ocr', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({pdf, from})}); return r.json().catch(() => ({ok: false, error: r.status === 413 ? 'File too big for one upload.' : 'No answer (HTTP ' + r.status + ').'})); };
-  let name = 'county-list';
+  let name = 'county-list', cur = null;
   $('f').onchange = async () => {
-    const file = $('f').files[0]; if (!file) return; name = file.name.replace(/\.pdf$/i, '');
+    const file = $('f').files[0]; if (!file) return; name = file.name.replace(/\.pdf$/i, ''); cur = null;
     $('res').hidden = true; $('bar').style.width = '0';
     if (file.size > MAX) { $('st').className = 'st bad'; $('st').textContent = 'That PDF is ' + (file.size / 1e6).toFixed(1) + ' MB. The limit is about 4 MB: send it to Claude directly instead.'; return; }
     $('st').className = 'st'; $('st').textContent = 'Reading pages 1–5…';
@@ -63,11 +77,45 @@
     const lines = text.split('\n'), pid = lines.filter(l => /\b\d{2,}[-.][0-9A-Z]{2,}[-.][0-9A-Z]{2,}/.test(l) || /\b[A-Z]?\d{3,4}-\d{4}\b/.test(l));
     $('sum').textContent = all.length + ' pages · ' + lines.length.toLocaleString() + ' lines of text · about ' + pid.length.toLocaleString() + ' lines that look like parcel IDs (a rough count: Claude checks the real total).';
     $('samp').textContent = ''; pid.slice(0, 5).forEach(l => { const li = document.createElement('li'); li.textContent = l.slice(0, 120); $('samp').appendChild(li); });
-    $('txt').value = text; $('res').hidden = false;
+    $('txt').value = text; $('res').hidden = false; cur = {pdf, file: file.name}; $('gemSt').textContent = ''; $('gemOut').textContent = ''; $('gemBtn').disabled = false;
   };
+  $('gemBtn').onclick = async () => {
+    if (!cur) return; const st = $('gemSt'); $('gemBtn').disabled = true; $('gemOut').textContent = '';
+    st.className = 'st'; st.textContent = 'Asking Gemini (one request)…';
+    let d; try { const r = await fetch('/.netlify/functions/owner-brain-gemini', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'gemini-extract', confirmed: true, pdf: cur.pdf, text: $('txt').value, fileName: cur.file})}); d = await r.json().catch(() => ({ok: false, error: 'No answer (HTTP ' + r.status + ').'})); } catch (e) { d = {ok: false, error: 'Request failed.'}; }
+    if (!d.ok) { st.className = 'st bad'; st.textContent = d.error || 'Stopped.'; return; }
+    st.className = 'st good'; st.textContent = 'Saved as ' + d.result.status + ' (not verified). ' + d.result.facts.length + ' fact' + (d.result.facts.length === 1 ? '' : 's') + ' passed the quote check' + (d.result.droppedCount ? ', ' + d.result.droppedCount + ' dropped' : '') + '.';
+    loadGem();
+    d.result.facts.forEach(f => { const li = document.createElement('li'); li.textContent = f.field + ': ' + f.value + '  (quote: ' + f.quote + ')'; $('gemOut').appendChild(li); });
+  };
+  const post = async o => { try { const r = await fetch('/.netlify/functions/owner-brain-gemini', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(o)}); return await r.json(); } catch (e) { return {ok: false, error: 'Request failed.'}; } };
+  const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  async function loadGem() {
+    let d; try { d = await (await fetch('/.netlify/functions/owner-brain-gemini', {cache: 'no-store'})).json(); } catch (e) { d = null; }
+    const list = $('gemList'); list.textContent = '';
+    if (!d || !d.ok) { $('gemState').className = 'st bad'; $('gemState').textContent = 'Could not load saved results.'; return; }
+    $('gemState').className = 'st'; $('gemState').textContent = (d.enabled ? 'Gemini is on' : 'Gemini is off') + (d.stopped ? ', stopped after a provider error' : '') + '. Used today: ' + d.used + ' of ' + d.daily + '.';
+    $('gemResume').hidden = !d.stopped;
+    if (!d.results.length) { list.appendChild(mk('li', 'st', 'No results yet.')); return; }
+    d.results.forEach(r => {
+      const li = mk('li'); li.style.cssText = 'border-top:1px solid #2a3c66;padding:10px 0';
+      li.appendChild(mk('div', 'st', (r.fileName || 'Uploaded file') + ' · ' + new Date(r.createdAt).toLocaleString() + ' · ' + r.status));
+      const ul = mk('ul'); r.facts.forEach(f => ul.appendChild(mk('li', '', f.field + ': ' + f.value + ' (quote: ' + f.quote + ')'))); li.appendChild(ul);
+      const ds = mk('input'); ds.placeholder = 'Dataset, e.g. IA-scott'; ds.value = r.dataset || ''; ds.setAttribute('aria-label', 'Dataset');
+      const lk = mk('input'); lk.placeholder = 'Official source link (https)'; lk.value = r.sourceUrl || ''; lk.setAttribute('aria-label', 'Official source link');
+      [ds, lk].forEach(i => { i.style.cssText = 'display:block;width:100%;box-sizing:border-box;margin:6px 0;padding:8px;border-radius:8px;border:1px solid #2a3c66;background:#070d1c;color:#e6ecf7'; });
+      li.append(ds, lk);
+      const row = mk('div', 'row'), tag = mk('span', 'st', r.decision === 'verified' ? 'Verified by you' : r.decision === 'rejected' ? 'Rejected by you' : 'Waiting for your decision');
+      const act = (label, decision, ghost) => { const b = mk('button', 'btn small' + (ghost ? ' ghost' : ''), label); b.type = 'button'; b.onclick = async () => { b.disabled = true; const x = await post({action: 'gemini-review', id: r.id, decision, dataset: ds.value.trim(), sourceUrl: lk.value.trim()}); if (!x.ok) { tag.textContent = x.error || 'Could not save.'; b.disabled = false; return; } loadGem(); }; return b; };
+      row.append(act('Verify', 'verified'), act('Reject', 'rejected', true), tag); li.appendChild(row); list.appendChild(li);
+    });
+  }
+  $('gemResume').onclick = async () => { await post({action: 'gemini-resume'}); loadGem(); };
+  loadGem();
   $('dl').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([$('txt').value], {type: 'text/plain'})); a.download = name + '-text.txt'; a.click(); };
   $('cp').onclick = async () => { try { await navigator.clipboard.writeText($('txt').value); $('cp').textContent = 'Copied'; } catch (e) { $('txt').select(); } };
 })();
 </script>
+<script src="/owner/owner-ui.js"></script><script src="/owner/ocr/ocr-ui.js"></script>
 </body>
 </html>

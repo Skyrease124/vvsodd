@@ -1,0 +1,2117 @@
+[
+  {
+    "county": "Alachua",
+    "field": "County_FIPS",
+    "original": "01",
+    "corrected": "001",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Alachua",
+    "field": "Full_FIPS",
+    "original": "1201",
+    "corrected": "12001",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Alachua",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Baker",
+    "field": "County_FIPS",
+    "original": "02",
+    "corrected": "003",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Baker",
+    "field": "Full_FIPS",
+    "original": "1202",
+    "corrected": "12003",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Baker",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Bay",
+    "field": "County_FIPS",
+    "original": "03",
+    "corrected": "005",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Bay",
+    "field": "Full_FIPS",
+    "original": "1203",
+    "corrected": "12005",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Bay",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Bay",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.baypa.net/",
+    "corrected": "https://baypa.net/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Bradford",
+    "field": "County_FIPS",
+    "original": "04",
+    "corrected": "007",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Bradford",
+    "field": "Full_FIPS",
+    "original": "1204",
+    "corrected": "12007",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Bradford",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Brevard",
+    "field": "County_FIPS",
+    "original": "05",
+    "corrected": "009",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Brevard",
+    "field": "Full_FIPS",
+    "original": "1205",
+    "corrected": "12009",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Brevard",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Broward",
+    "field": "County_FIPS",
+    "original": "06",
+    "corrected": "011",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Broward",
+    "field": "Full_FIPS",
+    "original": "1206",
+    "corrected": "12011",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Broward",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Broward",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://web.bcpa.net/",
+    "corrected": "https://bcpa.net/",
+    "evidence": [
+      "https://bcpa.net/"
+    ]
+  },
+  {
+    "county": "Calhoun",
+    "field": "County_FIPS",
+    "original": "07",
+    "corrected": "013",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Calhoun",
+    "field": "Full_FIPS",
+    "original": "1207",
+    "corrected": "12013",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Calhoun",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Calhoun",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.calhounpa.com/",
+    "corrected": "http://www.qpublic.net/calhoun/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Charlotte",
+    "field": "County_FIPS",
+    "original": "08",
+    "corrected": "015",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Charlotte",
+    "field": "Full_FIPS",
+    "original": "1208",
+    "corrected": "12015",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Charlotte",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Citrus",
+    "field": "County_FIPS",
+    "original": "09",
+    "corrected": "017",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Citrus",
+    "field": "Full_FIPS",
+    "original": "1209",
+    "corrected": "12017",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Citrus",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Citrus",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.citruspa.org/",
+    "corrected": "https://www.citruspa.org/_dnn/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Clay",
+    "field": "County_FIPS",
+    "original": "10",
+    "corrected": "019",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Clay",
+    "field": "Full_FIPS",
+    "original": "1210",
+    "corrected": "12019",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Clay",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Collier",
+    "field": "County_FIPS",
+    "original": "11",
+    "corrected": "021",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Collier",
+    "field": "Full_FIPS",
+    "original": "1211",
+    "corrected": "12021",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Collier",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Columbia",
+    "field": "County_FIPS",
+    "original": "12",
+    "corrected": "023",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Columbia",
+    "field": "Full_FIPS",
+    "original": "1212",
+    "corrected": "12023",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Columbia",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Columbia",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.columbiacountyfl.com/PropertyAppraiser/",
+    "corrected": "http://columbia.floridapa.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Miami-Dade",
+    "field": "County_FIPS",
+    "original": "13",
+    "corrected": "086",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Miami-Dade",
+    "field": "Full_FIPS",
+    "original": "1213",
+    "corrected": "12086",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Miami-Dade",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Miami-Dade",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.miamidade.gov/pa/",
+    "corrected": "https://www.miamidadepa.gov/pa/real-estate/property-search.page",
+    "evidence": [
+      "https://www.miamidadepa.gov/pa/real-estate/property-search.page"
+    ]
+  },
+  {
+    "county": "DeSoto",
+    "field": "County_FIPS",
+    "original": "14",
+    "corrected": "027",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "DeSoto",
+    "field": "Full_FIPS",
+    "original": "1214",
+    "corrected": "12027",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "DeSoto",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Dixie",
+    "field": "County_FIPS",
+    "original": "15",
+    "corrected": "029",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Dixie",
+    "field": "Full_FIPS",
+    "original": "1215",
+    "corrected": "12029",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Dixie",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Dixie",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.dixiepa.com/",
+    "corrected": "http://www.qpublic.net/dixie/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Duval",
+    "field": "County_FIPS",
+    "original": "16",
+    "corrected": "031",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Duval",
+    "field": "Full_FIPS",
+    "original": "1216",
+    "corrected": "12031",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Duval",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Duval",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.coj.net/departments/property-appraiser",
+    "corrected": "http://www.coj.net/Departments/Property-Appraiser.aspx",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Escambia",
+    "field": "County_FIPS",
+    "original": "17",
+    "corrected": "033",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Escambia",
+    "field": "Full_FIPS",
+    "original": "1217",
+    "corrected": "12033",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Escambia",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Flagler",
+    "field": "County_FIPS",
+    "original": "18",
+    "corrected": "035",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Flagler",
+    "field": "Full_FIPS",
+    "original": "1218",
+    "corrected": "12035",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Flagler",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Franklin",
+    "field": "County_FIPS",
+    "original": "19",
+    "corrected": "037",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Franklin",
+    "field": "Full_FIPS",
+    "original": "1219",
+    "corrected": "12037",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Franklin",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Franklin",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.franklinpa.net/",
+    "corrected": "http://www.qpublic.net/franklin/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Gadsden",
+    "field": "County_FIPS",
+    "original": "20",
+    "corrected": "039",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gadsden",
+    "field": "Full_FIPS",
+    "original": "1220",
+    "corrected": "12039",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gadsden",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Gadsden",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.gadsdenpa.com/",
+    "corrected": "https://gadsdenpa.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Gilchrist",
+    "field": "County_FIPS",
+    "original": "21",
+    "corrected": "041",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gilchrist",
+    "field": "Full_FIPS",
+    "original": "1221",
+    "corrected": "12041",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gilchrist",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Gilchrist",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.gilchristpa.com/",
+    "corrected": "https://www.qpublic.net/fl/gilchrist/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Glades",
+    "field": "County_FIPS",
+    "original": "22",
+    "corrected": "043",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Glades",
+    "field": "Full_FIPS",
+    "original": "1222",
+    "corrected": "12043",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Glades",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Glades",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.gladespa.com/",
+    "corrected": "http://www.gladesflpa.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Gulf",
+    "field": "County_FIPS",
+    "original": "23",
+    "corrected": "045",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gulf",
+    "field": "Full_FIPS",
+    "original": "1223",
+    "corrected": "12045",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Gulf",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Gulf",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.gulfpa.com/",
+    "corrected": "http://www.qpublic.net/gulf/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Hamilton",
+    "field": "County_FIPS",
+    "original": "24",
+    "corrected": "047",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hamilton",
+    "field": "Full_FIPS",
+    "original": "1224",
+    "corrected": "12047",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hamilton",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Hardee",
+    "field": "County_FIPS",
+    "original": "25",
+    "corrected": "049",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hardee",
+    "field": "Full_FIPS",
+    "original": "1225",
+    "corrected": "12049",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hardee",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Hardee",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.hardeepa.com/",
+    "corrected": "http://www.qpublic.net/hardee/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Hendry",
+    "field": "County_FIPS",
+    "original": "26",
+    "corrected": "051",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hendry",
+    "field": "Full_FIPS",
+    "original": "1226",
+    "corrected": "12051",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hendry",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Hendry",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.hendrypa.com/",
+    "corrected": "http://www.hendryprop.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Hernando",
+    "field": "County_FIPS",
+    "original": "27",
+    "corrected": "053",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hernando",
+    "field": "Full_FIPS",
+    "original": "1227",
+    "corrected": "12053",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hernando",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Hernando",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.hernandopa.com/",
+    "corrected": "https://hernandocountypa-florida.us/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Highlands",
+    "field": "County_FIPS",
+    "original": "28",
+    "corrected": "055",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Highlands",
+    "field": "Full_FIPS",
+    "original": "1228",
+    "corrected": "12055",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Highlands",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Hillsborough",
+    "field": "County_FIPS",
+    "original": "29",
+    "corrected": "057",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hillsborough",
+    "field": "Full_FIPS",
+    "original": "1229",
+    "corrected": "12057",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Hillsborough",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Holmes",
+    "field": "County_FIPS",
+    "original": "30",
+    "corrected": "059",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Holmes",
+    "field": "Full_FIPS",
+    "original": "1230",
+    "corrected": "12059",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Holmes",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Holmes",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.holmespa.com/",
+    "corrected": "http://www.qpublic.net/holmes/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Indian River",
+    "field": "County_FIPS",
+    "original": "31",
+    "corrected": "061",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Indian River",
+    "field": "Full_FIPS",
+    "original": "1231",
+    "corrected": "12061",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Indian River",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Jackson",
+    "field": "County_FIPS",
+    "original": "32",
+    "corrected": "063",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Jackson",
+    "field": "Full_FIPS",
+    "original": "1232",
+    "corrected": "12063",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Jackson",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Jackson",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.jacksonpa.com/",
+    "corrected": "http://www.qpublic.net/jackson/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Jefferson",
+    "field": "County_FIPS",
+    "original": "33",
+    "corrected": "065",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Jefferson",
+    "field": "Full_FIPS",
+    "original": "1233",
+    "corrected": "12065",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Jefferson",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Lafayette",
+    "field": "County_FIPS",
+    "original": "34",
+    "corrected": "067",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lafayette",
+    "field": "Full_FIPS",
+    "original": "1234",
+    "corrected": "12067",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lafayette",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Lake",
+    "field": "County_FIPS",
+    "original": "35",
+    "corrected": "069",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lake",
+    "field": "Full_FIPS",
+    "original": "1235",
+    "corrected": "12069",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lake",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Lee",
+    "field": "County_FIPS",
+    "original": "36",
+    "corrected": "071",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lee",
+    "field": "Full_FIPS",
+    "original": "1236",
+    "corrected": "12071",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Lee",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Leon",
+    "field": "County_FIPS",
+    "original": "37",
+    "corrected": "073",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Leon",
+    "field": "Full_FIPS",
+    "original": "1237",
+    "corrected": "12073",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Leon",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Levy",
+    "field": "County_FIPS",
+    "original": "38",
+    "corrected": "075",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Levy",
+    "field": "Full_FIPS",
+    "original": "1238",
+    "corrected": "12075",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Levy",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Levy",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.levypa.com/",
+    "corrected": "http://www.qpublic.net/fl/levy/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Liberty",
+    "field": "County_FIPS",
+    "original": "39",
+    "corrected": "077",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Liberty",
+    "field": "Full_FIPS",
+    "original": "1239",
+    "corrected": "12077",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Liberty",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Liberty",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.libertypa.com/",
+    "corrected": "http://www.qpublic.net/liberty/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Madison",
+    "field": "County_FIPS",
+    "original": "40",
+    "corrected": "079",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Madison",
+    "field": "Full_FIPS",
+    "original": "1240",
+    "corrected": "12079",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Madison",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Manatee",
+    "field": "County_FIPS",
+    "original": "41",
+    "corrected": "081",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Manatee",
+    "field": "Full_FIPS",
+    "original": "1241",
+    "corrected": "12081",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Manatee",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Manatee",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.manateepao.gov/",
+    "corrected": "http://www.manateepao.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Marion",
+    "field": "County_FIPS",
+    "original": "42",
+    "corrected": "083",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Marion",
+    "field": "Full_FIPS",
+    "original": "1242",
+    "corrected": "12083",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Marion",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Martin",
+    "field": "County_FIPS",
+    "original": "43",
+    "corrected": "085",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Martin",
+    "field": "Full_FIPS",
+    "original": "1243",
+    "corrected": "12085",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Martin",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Monroe",
+    "field": "County_FIPS",
+    "original": "44",
+    "corrected": "087",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Monroe",
+    "field": "Full_FIPS",
+    "original": "1244",
+    "corrected": "12087",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Monroe",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Monroe",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.mcpafl.org/",
+    "corrected": "http://qpublic.net/monroe/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Nassau",
+    "field": "County_FIPS",
+    "original": "45",
+    "corrected": "089",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Nassau",
+    "field": "Full_FIPS",
+    "original": "1245",
+    "corrected": "12089",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Nassau",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Nassau",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.nassauflpa.com/",
+    "corrected": "https://ncpafl.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Okaloosa",
+    "field": "County_FIPS",
+    "original": "46",
+    "corrected": "091",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Okaloosa",
+    "field": "Full_FIPS",
+    "original": "1246",
+    "corrected": "12091",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Okaloosa",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Okeechobee",
+    "field": "County_FIPS",
+    "original": "47",
+    "corrected": "093",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Okeechobee",
+    "field": "Full_FIPS",
+    "original": "1247",
+    "corrected": "12093",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Okeechobee",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Orange",
+    "field": "County_FIPS",
+    "original": "48",
+    "corrected": "095",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Orange",
+    "field": "Full_FIPS",
+    "original": "1248",
+    "corrected": "12095",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Orange",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Orange",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.ocpafl.org/",
+    "corrected": "https://ocpaweb.ocpafl.org/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Osceola",
+    "field": "County_FIPS",
+    "original": "49",
+    "corrected": "097",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Osceola",
+    "field": "Full_FIPS",
+    "original": "1249",
+    "corrected": "12097",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Osceola",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Palm Beach",
+    "field": "County_FIPS",
+    "original": "50",
+    "corrected": "099",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Palm Beach",
+    "field": "Full_FIPS",
+    "original": "1250",
+    "corrected": "12099",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Palm Beach",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Palm Beach",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.pbcgov.org/papa/",
+    "corrected": "https://pbcpao.gov/departments/gis.htm",
+    "evidence": [
+      "https://pbcpao.gov/departments/gis.htm"
+    ]
+  },
+  {
+    "county": "Pasco",
+    "field": "County_FIPS",
+    "original": "51",
+    "corrected": "101",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Pasco",
+    "field": "Full_FIPS",
+    "original": "1251",
+    "corrected": "12101",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Pasco",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Pinellas",
+    "field": "County_FIPS",
+    "original": "52",
+    "corrected": "103",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Pinellas",
+    "field": "Full_FIPS",
+    "original": "1252",
+    "corrected": "12103",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Pinellas",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Polk",
+    "field": "County_FIPS",
+    "original": "53",
+    "corrected": "105",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Polk",
+    "field": "Full_FIPS",
+    "original": "1253",
+    "corrected": "12105",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Polk",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Polk",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.polkpa.org/",
+    "corrected": "https://www.polkflpa.gov/default.aspx?cookie_test=true",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Putnam",
+    "field": "County_FIPS",
+    "original": "54",
+    "corrected": "107",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Putnam",
+    "field": "Full_FIPS",
+    "original": "1254",
+    "corrected": "12107",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Putnam",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Putnam",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.putnam-fl.com/pa/",
+    "corrected": "https://pa.putnam-fl.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "St. Johns",
+    "field": "County_FIPS",
+    "original": "55",
+    "corrected": "109",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "St. Johns",
+    "field": "Full_FIPS",
+    "original": "1255",
+    "corrected": "12109",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "St. Johns",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "St. Lucie",
+    "field": "County_FIPS",
+    "original": "56",
+    "corrected": "111",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "St. Lucie",
+    "field": "Full_FIPS",
+    "original": "1256",
+    "corrected": "12111",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "St. Lucie",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "St. Lucie",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.paslc.gov/",
+    "corrected": "http://www.paslc.org/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Santa Rosa",
+    "field": "County_FIPS",
+    "original": "57",
+    "corrected": "113",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Santa Rosa",
+    "field": "Full_FIPS",
+    "original": "1257",
+    "corrected": "12113",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Santa Rosa",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Santa Rosa",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://srcpa.gov/",
+    "corrected": "https://srcpa.gov",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Sarasota",
+    "field": "County_FIPS",
+    "original": "58",
+    "corrected": "115",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Sarasota",
+    "field": "Full_FIPS",
+    "original": "1258",
+    "corrected": "12115",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Sarasota",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Seminole",
+    "field": "County_FIPS",
+    "original": "59",
+    "corrected": "117",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Seminole",
+    "field": "Full_FIPS",
+    "original": "1259",
+    "corrected": "12117",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Seminole",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Sumter",
+    "field": "County_FIPS",
+    "original": "60",
+    "corrected": "119",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Sumter",
+    "field": "Full_FIPS",
+    "original": "1260",
+    "corrected": "12119",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Sumter",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Suwannee",
+    "field": "County_FIPS",
+    "original": "61",
+    "corrected": "121",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Suwannee",
+    "field": "Full_FIPS",
+    "original": "1261",
+    "corrected": "12121",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Suwannee",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Taylor",
+    "field": "County_FIPS",
+    "original": "62",
+    "corrected": "123",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Taylor",
+    "field": "Full_FIPS",
+    "original": "1262",
+    "corrected": "12123",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Taylor",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Taylor",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.taylorcountypa.com/",
+    "corrected": "https://qpublic.net/fl/taylor/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Union",
+    "field": "County_FIPS",
+    "original": "63",
+    "corrected": "125",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Union",
+    "field": "Full_FIPS",
+    "original": "1263",
+    "corrected": "12125",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Union",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Union",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.unionpa.com/",
+    "corrected": "http://union.floridapa.com",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Volusia",
+    "field": "County_FIPS",
+    "original": "64",
+    "corrected": "127",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Volusia",
+    "field": "Full_FIPS",
+    "original": "1264",
+    "corrected": "12127",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Volusia",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Volusia",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://vcpa.vcgov.org/",
+    "corrected": "https://vcpa.vcgov.org/#gsc.tab=0",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Wakulla",
+    "field": "County_FIPS",
+    "original": "65",
+    "corrected": "129",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Wakulla",
+    "field": "Full_FIPS",
+    "original": "1265",
+    "corrected": "12129",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Wakulla",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Wakulla",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.mywakullapa.com/",
+    "corrected": "https://mywakullapa.com/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  },
+  {
+    "county": "Walton",
+    "field": "County_FIPS",
+    "original": "66",
+    "corrected": "131",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Walton",
+    "field": "Full_FIPS",
+    "original": "1266",
+    "corrected": "12131",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Walton",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Washington",
+    "field": "County_FIPS",
+    "original": "67",
+    "corrected": "133",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Washington",
+    "field": "Full_FIPS",
+    "original": "1267",
+    "corrected": "12133",
+    "evidence": [
+      "https://www2.census.gov/geo/docs/reference/codes2020/cou/st12_fl_cou2020.txt"
+    ]
+  },
+  {
+    "county": "Washington",
+    "field": "FGIO_Statewide_Parcels_Portal",
+    "original": "https://geodata.floridagio.gov/datasets/FGIO::florida-statewide-parcels/about",
+    "corrected": "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2",
+    "evidence": [
+      "https://www.arcgis.com/home/item.html?id=efa909d6b1c841d298b0a649e7f71cf2"
+    ]
+  },
+  {
+    "county": "Washington",
+    "field": "County_Property_Appraiser_URL",
+    "original": "https://www.washingtonpa.com/",
+    "corrected": "http://www.qpublic.net/washington/",
+    "evidence": [
+      "https://floridarevenue.com/property/Pages/LocalOfficials.aspx"
+    ]
+  }
+]

@@ -1,0 +1,446 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {pureModule} from './support/policy-linker.mjs';
+import crypto from 'node:crypto';
+const code=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+const ui=fs.readFileSync('kinvest-liens/owner/brain/preview-test.js','utf8');
+
+async function setup({liveShapeFixture=false,snapshot=null,interruptAfterValid=false,paused=false,failedGIS=false,owner=true,preview=true,existing=false,cursor=0,timeoutFirst=false,dailyUsed=0,chargePublisher=false,pending=false,cutover=false,missingFirst=false,polygon404=false,rejectPublication=false}={}){
+ const store=new Map(snapshot?.entries||[]);
+ const versions=new Map();
+ if(pending)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{i:'r1',verifiedGeometry:true,verifiedAt:'2026-11-22T00:00:00Z',publicationPending:true}}});
+ if(existing)store.set('brain-map-county-v1-MI-wayne',{records:{r1:{verifiedGeometry:true},r2:{verifiedGeometry:true},r3:{verifiedGeometry:true}}});
+ if(cursor||dailyUsed)store.set('owner-brain-wayne-worker-v1',{cursor,day:new Date().toISOString().slice(0,10),dailyUsed,runs:2,verified:3,published:3,needsReview:0,failures:0,recent:[]});
+ if(paused)store.set('owner-brain-scanner-v1',{status:'paused'});
+ const rows=[{i:'r1',p:'01002754',a:'100 Test St, Detroit MI'},{i:'r2',p:'01002830',a:'102 Test St, Detroit MI'},
+ {i:'r3',p:'01003357',a:'104 Test St, Detroit MI'},{i:'r4',p:'01004444',a:'106 Test St, Detroit MI'}];
+ if(liveShapeFixture)rows.push({i:'r5',p:'01005555',a:'108 Test St, Detroit MI'});
+ let calls=0,publications=0,reserved=snapshot?.reserved??dailyUsed;
+ let networkFailure=true;
+ const upstreamIds=[];
+ const realVerifier=liveShapeFixture?await import('../../netlify/lib/brain-official-verification.mjs'):null;
+ const context=vm.createContext({Response,Request,URL,URLSearchParams,AbortSignal,Buffer,Date,console,crypto:undefined,
+ fetch:async u=>{
+  const url=new URL(u);if(url.hostname==='pricepocketasset.com')return Response.json({recs:rows});
+  calls++;
+  if(liveShapeFixture){
+   const where=url.searchParams.get('where')||'';
+   const idsOnly=url.searchParams.get('returnIdsOnly')==='true';
+   const index=idsOnly?rows.findIndex(row=>where.includes(row.p)):
+    Number(url.searchParams.get('objectIds')||where.replace('object_id=',''))-100;
+   if(index<0||!rows[index])throw Error('Unexpected official query');
+   const row=rows[index], objectId=100+index;
+   upstreamIds.push(row.p);
+   if(idsOnly){
+    if(index===4&&networkFailure){networkFailure=false;throw Error('Fixture connection reset');}
+    return Response.json({objectIds:index===0?[]:index===1?[objectId,999]:[objectId]});
+   }
+   const ring=[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],index===2?[-83.1,42.301]:[-83.1,42.3]];
+   return Response.json({features:[{attributes:{parcel_number:row.p,address:row.a.split(',')[0],object_id:objectId},
+    geometry:{rings:[ring]}}]});
+  }
+  if(failedGIS)throw Error('Simulated provider outage');
+  if(timeoutFirst&&calls===1)throw Object.assign(Error('The operation was aborted due to timeout'),{name:'TimeoutError'});
+  if(url.searchParams.get('returnIdsOnly')==='true'){
+   if(missingFirst&&url.searchParams.get('where')?.includes('01002754'))return Response.json({objectIds:[]});
+   return Response.json({objectIds:[100]});
+  }
+  if(polygon404&&calls<=6)return new Response(null,{status:404});
+  const id=(url.searchParams.get('where')||'01002754').match(/010[0-9]{5}/)?.[0]||'01002754';
+  return Response.json({features:[{attributes:{parcel_number:id+'.',address:'100 TEST ST',object_id:100},geometry:{rings:[[[-83.1,42.3],[-83.099,42.3],[-83.099,42.301],[-83.1,42.3]]]}}]});
+ }});
+ const auth=new vm.SyntheticModule(['userFromCookie','kvGet','kvPut','kvGetVersioned','kvPutVersioned','readWayneGisQuota','reserveWayneGisRequest','withBrainStore','isBrainPreview'],function(){
+  this.setExport('userFromCookie',async()=>owner?{owner:true}:null);
+  this.setExport('kvGet',async k=>{
+   if(interruptAfterValid&&k==='owner-brain-scanner-v1'&&store.get('owner-brain-wayne-worker-v1')?.cursor===4)
+    throw Error('Fixture interruption after cursor checkpoint');
+   return structuredClone(store.get(k));
+  });
+  this.setExport('kvPut',async(k,v)=>store.set(k,structuredClone(v)));
+  this.setExport('kvGetVersioned',async key=>store.has(key)
+   ? {data:structuredClone(store.get(key)),etag:versions.get(key)||'initial'} : null);
+  this.setExport('kvPutVersioned',async (key,value,expected)=>{
+   const current=store.has(key)?versions.get(key)||'initial':null;
+   if(current!==expected)return null;
+   const next=(versions.get(key)||'initial')+'-updated';
+   versions.set(key,next);
+   store.set(key,structuredClone(value));
+   return next;
+  });
+  this.setExport('readWayneGisQuota',async()=>({active:!cutover,count:reserved}));
+  this.setExport('reserveWayneGisRequest',async()=>{
+   if(cutover)throw Object.assign(Error('Cutover'),{code:'QUOTA',quotaState:'quota_cutover'});
+   if(reserved>=300)throw Object.assign(Error('Daily GIS request limit reached'),{code:'QUOTA'});
+   return ++reserved;
+  });
+  this.setExport('withBrainStore',fn=>fn);
+  this.setExport('isBrainPreview',()=>preview);
+ },{context});
+ const verify=new vm.SyntheticModule(['verifyOfficial','DETROIT_GIS'],function(){
+  this.setExport('DETROIT_GIS','https://services2.arcgis.com/example/FeatureServer/0');
+  this.setExport('verifyOfficial',realVerifier?.verifyOfficial||((r,features)=>{
+   if(!features.length||r.p!==(missingFirst||polygon404?'01002830':'01002754'))throw Error('No exact verified feature');
+   return {officialObjectId:100,evidenceUrl:'https://services2.arcgis.com/example',notes:'Verified',checks:[],
+    cx:[-83.0995,42.3005]};
+  }));
+ },{context});
+ const publisher=liveShapeFixture?new vm.SourceTextModule(fs.readFileSync('netlify/functions/brain-map-publish-auto.mjs','utf8'),{context}):new vm.SyntheticModule(['default'],function(){
+  this.setExport('default',async(_req,context)=>{
+   if(context.wayneRecoveryOnly){
+    const row=store.get('brain-map-county-v1-MI-wayne').records.r1;
+    delete row.publicationPending;
+    return;
+   }
+   if(chargePublisher){
+    try{await context.chargeWayneGisRequest();}catch(error){
+     if(error.code==='QUOTA')return;
+     throw error;
+    }
+    calls++;
+   }
+   if(rejectPublication&&context.wayneCurrentRecord==='r1'){
+    context.wayneRecordRejected('r1','Independent GIS lookup did not confirm exact identity');
+    return;
+   }
+   publications++;
+   const approvals=store.get('owner-brain-approvals-v1')?.entries||[];
+   const map=store.get('brain-map-county-v1-MI-wayne')||{records:{}};
+   for(const x of approvals)map.records[x.recordId]={verifiedGeometry:true};
+   store.set('brain-map-county-v1-MI-wayne',map);
+  });
+ },{context});
+ const cryptoModule=new vm.SyntheticModule(['default'],function(){
+  this.setExport('default',{randomUUID:()=>String('fixed-run'),createHash:()=>({update:input=>({digest:()=>liveShapeFixture?crypto.createHash('sha256').update(input).digest('hex'):String('a').repeat(32)})})});
+ },{context});
+ const module=new vm.SourceTextModule(code,{context});
+ await module.link(async s=>s.includes('brain-auth')?auth:s.includes('brain-official')?verify:s.includes('publish-auto')?publisher:(await pureModule(s,context))||cryptoModule);
+ await module.evaluate();
+ const url='https://preview.test/.netlify/functions/owner-brain-wayne-run';
+ const invoke=(method='POST',origin='https://preview.test',deploy='deploy-preview',body={action:'run-wayne-batch',confirmed:true})=>
+  module.namespace.default(new Request(url,{method,headers:{origin},...(method==='POST'?{body:JSON.stringify(body)}:{})}),{deploy:{context:deploy}});
+ return {store,invoke,reads:()=>calls,publications:()=>publications,upstreamIds,
+  snapshot:()=>structuredClone({entries:[...store],reserved})};
+}
+test('preview-only owner and same-origin guards run before GIS queries',async()=>{
+ const noOwner=await setup({owner:false});assert.equal((await noOwner.invoke()).status,401);assert.equal(noOwner.reads(),0);
+ const noPreview=await setup({preview:false});assert.equal((await noPreview.invoke()).status,404);
+ const h=await setup();assert.equal((await h.invoke('POST','https://other.example')).status,403);
+ assert.equal((await h.invoke('POST',undefined,'production')).status,404);
+});
+test('paused worker makes no external GIS calls or map writes',async()=>{
+ const h=await setup({paused:true});assert.equal((await h.invoke()).status,409);
+ assert.equal(h.reads(),0);assert.equal(h.publications(),0);
+});
+test('one run advances completed records, saves review failures, queues only verified corrections for owner approval',async()=>{
+ const h=await setup();const data=await (await h.invoke()).json();
+ assert.equal(data.attempted,3);assert.equal(data.verified,1);
+ assert.equal(data.published,0);assert.equal(data.pendingOwnerReview,1);assert.equal(data.needsReview,2);
+ assert.equal(data.cursor,3);assert.equal(h.publications(),0);
+ const second=await (await h.invoke()).json();
+ assert.equal(second.attempted,1);assert.equal(second.cursor,4);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,8);
+});
+test('existing published polygons skip duplicate GIS requests and do not republish',async()=>{
+ const h=await setup({existing:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.attempted,1);
+ assert.equal(result.cursor,4);
+ assert.equal(result.published,0);
+ assert.equal(h.reads(),2);
+ assert.equal(h.store.get('brain-map-county-v1-MI-wayne').records.r1.verifiedGeometry,true);
+});
+test('saved cursor resumes later source row rather than reprocessing earlier parcels',async()=>{
+ const h=await setup({existing:true,cursor:3});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.attempted,1);
+ assert.equal(result.cursor,4);
+ assert.equal(h.reads(),2);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').runs,3);
+});
+test('timed-out indexed ID lookup falls back to direct polygon, preserves verification and charges requests',async()=>{
+ const h=await setup({timeoutFirst:true});
+ const d=await (await h.invoke()).json();
+ assert.equal(d.attempted,3);
+ assert.equal(d.verified,1);
+ assert.equal(d.published,0);assert.equal(d.pendingOwnerReview,1);
+ assert.equal(d.rows[0].lookupMethod,'direct');
+ assert.equal(h.reads(),6);
+ assert.equal(d.dailyUsed,6);
+ assert.equal(h.publications(),0);
+});
+test('transient GIS outage schedules backoff without skipping or publishing',async()=>{
+ const h=await setup({failedGIS:true});const result=await (await h.invoke()).json();
+ assert.equal(result.state,'retry_wait');assert.equal(result.cursor,0);
+ assert.equal(result.failures,1);assert.equal(h.publications(),0);
+ assert.equal(result.retry.attempts,1);
+ assert.ok(Date.parse(result.retry.nextAt)>Date.now());
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,1);
+ const held=await (await h.invoke()).json();
+ assert.equal(held.state,'retry_wait');assert.equal(held.attempted,0);
+ assert.equal(held.cursor,0);assert.equal(h.reads(),1);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').dailyUsed,1);
+});
+test('source outage backs off and pauses without skipping or draining the quota',async()=>{
+ const h=await setup({failedGIS:true});
+ await h.invoke();
+ for(let attempt=2;attempt<=3;attempt++){
+  const saved=h.store.get('owner-brain-wayne-worker-v1');
+  saved.retry.nextAt=new Date(Date.now()-1000).toISOString();
+  h.store.set('owner-brain-wayne-worker-v1',saved);
+  const data=await (await h.invoke()).json();
+  assert.equal(data.retry.attempts,attempt===3?0:attempt);
+  assert.equal(data.cursor,0);
+ }
+ const terminal=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(terminal.retry.exhausted,false);
+ assert.equal(terminal.dailyUsed,3);
+ assert.equal(terminal.state,'source_paused');
+ assert.equal((await (await h.invoke()).json()).state,'source_paused');
+ assert.equal(h.reads(),3);assert.equal(h.publications(),0);
+});
+test('owner UI explicitly exposes next bounded preview run',()=>{
+ assert.match(ui,/Run next Wayne batch \(up to 3\)/);
+ assert.match(ui,/owner-brain-wayne-run/);
+ assert.match(code,/MAX_PER_DAY=300/);
+ assert.match(code,/controlNow\?\.status==='paused'/);
+ assert.match(code,/waynePublisherInternal:true,wayneRecoveryOnly:true/);
+});
+
+test('index-first request path keeps strict verification and fallback boundary',()=>{
+ assert.match(code,/official=await lookupWithObjectId\(id,i\)/);
+ assert.match(code,/method='direct'/);
+ assert.match(code,/official=await officialGet\(url,i,6500,'direct_polygon'\)/);
+ assert.match(code,/primary.code==='AMBIGUOUS'/);
+ assert.match(code,/verifyOfficial\(r,official.features\)/);
+});
+
+test('overlapping owner requests share one worker lease and charge one batch',async()=>{
+ const h=await setup({chargePublisher:true});
+ const responses=await Promise.all([h.invoke(),h.invoke()]);
+ assert.deepEqual(responses.map(r=>r.status).sort(),[200,409]);
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(saved.runs,1);
+ assert.equal(saved.cursor,3);
+ assert.equal(saved.dailyUsed,h.reads());
+ assert.equal(h.publications(),0);
+});
+test('verification that spends the final quota slot queues its correction and stops before another lookup',async()=>{
+ const h=await setup({dailyUsed:298,chargePublisher:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.dailyUsed,300);
+ assert.equal(result.cursor,1);
+ assert.equal(result.pendingOwnerReview,1);
+ assert.equal(h.reads(),2);
+ assert.equal(h.publications(),0);
+ assert.equal((await h.invoke()).status,429);
+});
+
+test('worker recovers saved publication at full quota without dispatch or cursor progress',async()=>{
+ const h=await setup({dailyUsed:300,pending:true,chargePublisher:true});
+ const response=await h.invoke();
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.equal(data.recovered,1);
+ assert.equal(data.attempted,0);
+ assert.equal(data.cursor,0);
+ assert.equal(data.dailyUsed,300);
+ assert.equal(h.reads(),0);
+ assert.equal(h.publications(),0);
+ assert.equal((await h.invoke()).status,429);
+});
+
+test('cutover reports historical usage separately without counting a parcel attempt',async()=>{
+ const h=await setup({dailyUsed:18,cutover:true,cursor:1});
+ const data=await (await h.invoke()).json();
+ assert.equal(data.state,'quota_cutover');
+ assert.equal(data.dailyUsed,null);
+ assert.equal(data.legacyDailyUsed,18);
+ assert.equal(data.attempted,0);
+ assert.equal(data.cursor,1);
+ assert.equal(h.reads(),0);
+ assert.equal(h.publications(),0);
+});
+
+
+test('a parcel missing from GIS is saved for review and the next parcel is queued for owner approval in the same batch',async()=>{
+ const h=await setup({missingFirst:true});
+ const result=await (await h.invoke()).json();
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal(result.cursor,3);
+ assert.equal(saved.reviewQueue[0].parcelId,'01002754');
+ assert.equal(saved.reviewQueue[0].reason,'Parcel missing from official GIS');
+ assert.equal(saved.reviewQueue[0].status,'skipped');
+ assert.equal(h.store.get('owner-brain-approvals-v1').entries.find(e=>e.recordId==='r2').decision,'pending_owner_review');
+ assert.equal(h.publications(),0);
+ assert.deepEqual(result.progress,{total:4,verified:0,pendingOwnerReview:1,skipped:2,failed:0,legacyProcessed:0,pending:1,processingPercent:75,verifiedPercent:0});
+});
+
+test('an exhausted parcel-specific error advances the cursor and remains reviewable',async()=>{
+ const h=await setup({polygon404:true});
+ const key='owner-brain-wayne-worker-v1';
+ for(let attempt=1;attempt<3;attempt++){
+  assert.equal((await (await h.invoke()).json()).state,'retry_wait');
+  const saved=h.store.get(key);
+  saved.retry.nextAt=new Date(Date.now()-1000).toISOString();
+  h.store.set(key,saved);
+ }
+ const result=await (await h.invoke()).json();
+ assert.equal(result.cursor,3);
+ assert.equal(result.progress.failed,1);
+ assert.equal(result.published,0);assert.equal(result.pendingOwnerReview,1);
+ assert.equal(h.store.get(key).reviewQueue[0].failed,true);
+});
+
+test('owner retry is bound to the saved entry and never rewinds the main cursor',async()=>{
+ const h=await setup({missingFirst:true});
+ await h.invoke();
+ const saved=h.store.get('owner-brain-wayne-worker-v1');
+ const entry=saved.reviewQueue[0];
+ const request={action:'retry-skipped-parcel',confirmed:true,index:0,parcelId:entry.parcelId,checkedAt:entry.checkedAt};
+ assert.equal((await h.invoke('POST',undefined,undefined,{...request,checkedAt:'stale'})).status,409);
+ const prior=h.reads();
+ const result=await (await h.invoke('POST',undefined,undefined,request)).json();
+ assert.equal(result.cursor,3);
+ assert.equal(result.attempted,1);
+ assert.equal(h.reads(),prior+1);
+ assert.equal(h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0].previousEvidence.length,1);
+});
+
+
+test('worker never dispatches publication, so a publisher rejection cannot strand a checkpoint in the batch',async()=>{
+ const h=await setup({rejectPublication:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.cursor,3);
+ assert.equal(result.published,0);
+ assert.equal(h.publications(),0);
+ assert.equal(h.store.get('owner-brain-approvals-v1').entries.filter(e=>e.decision==='pending_owner_review').length,1);
+});
+
+
+test('an owner-approved skipped parcel cannot dispatch after the shared quota closes',async()=>{
+ const h=await setup({dailyUsed:299,missingFirst:true});
+ const result=await (await h.invoke()).json();
+ assert.equal(result.dailyUsed,300);
+ const entry=h.store.get('owner-brain-wayne-worker-v1').reviewQueue[0];
+ const before=h.reads();
+ const retry=await h.invoke('POST',undefined,undefined,{action:'retry-skipped-parcel',
+  confirmed:true,index:0,parcelId:entry.parcelId,checkedAt:entry.checkedAt});
+ assert.equal(retry.status,429);
+ assert.equal(h.reads(),before);
+ assert.equal(h.publications(),0);
+});
+
+
+test('official-response fixtures survive an interruption between verification checkpoints',async()=>{
+ const key='owner-brain-wayne-worker-v1', overlayKey='brain-map-county-v1-MI-wayne';
+ const h=await setup({liveShapeFixture:true,interruptAfterValid:true});
+ const first=await (await h.invoke()).json();
+ assert.equal(first.cursor,3);
+ assert.deepEqual(first.rows.map(row=>row.reason),[
+  'Parcel missing from official GIS','Official object ID invalid or ambiguous','Open official polygon']);
+ const interrupted=await h.invoke();
+ assert.equal(interrupted.status,502);
+ assert.equal(h.store.get(key).cursor,4);
+ assert.equal(h.store.get(key).recent.filter(row=>row.status==='skipped').length,3);
+ assert.equal(h.store.get(key).recent.filter(row=>row.status==='pending_owner_review'&&row.parcelId==='01004444').length,1);
+ const saved=h.store.get('owner-brain-approvals-v1').entries.find(e=>e.parcelId==='01004444');
+ assert.equal(saved.decision,'pending_owner_review');
+ assert.equal(h.publications(),0);
+ const restarted=await setup({liveShapeFixture:true,snapshot:h.snapshot()});
+ // Force one transient failure in the restarted process, then expire only its test clock checkpoint.
+ const transient=await (await restarted.invoke()).json();
+ assert.equal(transient.state,'retry_wait');
+ assert.equal(transient.cursor,4);
+ assert.equal(transient.retry.attempts,1);
+ const before=restarted.reads();
+ assert.equal((await (await restarted.invoke()).json()).state,'retry_wait');
+ assert.equal(restarted.reads(),before);
+ const state=restarted.store.get(key);
+ state.retry.nextAt=new Date(Date.now()-1).toISOString();
+ restarted.store.set(key,state);
+ const final=await (await restarted.invoke()).json();
+ assert.equal(final.cursor,5);
+ assert.equal(final.published,0);
+ assert.deepEqual(final.progress,{total:5,verified:0,pendingOwnerReview:2,skipped:3,failed:0,legacyProcessed:0,pending:0,processingPercent:100,verifiedPercent:0});
+ assert.equal(Object.keys(restarted.store.get(key).reviewQueue).length,3);
+ assert.equal(restarted.store.get(overlayKey),undefined,'no public overlay write before owner approval');
+ assert.equal(restarted.store.get('owner-brain-approvals-v1').entries.filter(e=>e.decision==='pending_owner_review').length,2);
+ assert.ok(restarted.upstreamIds.every(id=>id==='01005555'));
+ const done=restarted.reads();
+ await restarted.invoke();
+ assert.equal(restarted.reads(),done);
+});
+
+const pilotRequest=(cursor=0,lastStarted=null)=>({action:'run-live-wayne-pilot',confirmed:true,cursor,lastStarted});
+const runPilot=(h,body=pilotRequest())=>h.invoke('POST',undefined,'deploy-preview',body);
+test('live pilot counts each official lookup once in its three-request ceiling; verified corrections wait for owner approval',async()=>{
+ const h=await setup({liveShapeFixture:true,cursor:3});
+ const response=await runPilot(h,pilotRequest(3));
+ assert.equal(response.status,200);
+ const {pilot}=await response.json();
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.published,0);
+ assert.equal(pilot.pendingOwnerReview,1);
+ assert.equal(pilot.cursor,4);
+ assert.equal(pilot.mapVersion,0);
+ assert.equal(pilot.remaining,297);
+ assert.deepEqual(h.upstreamIds,['01004444','01004444','01005555']);
+ assert.equal((await runPilot(h,pilotRequest(3))).status,409);
+ assert.equal(h.reads(),3);
+});
+
+test('pilot continues past skipped parcels and retains the cursor when the request ceiling interrupts a lookup',async()=>{
+ const h=await setup({liveShapeFixture:true});
+ const response=await runPilot(h);
+ const {pilot}=await response.json();
+ assert.equal(pilot.state,'pilot_limit');
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.skipped,2);
+ assert.equal(pilot.cursor,2);
+ assert.equal(pilot.published,0);
+ assert.equal(h.reads(),3);
+});
+
+test('live pilot refuses cutover, low budget, recovery, pause, and stale or unconfirmed requests',async()=>{
+ for(const [options,expected,body] of [
+  [{cutover:true},429], [{dailyUsed:298},429], [{pending:true},409], [{paused:true},409],
+  [{},400,{...pilotRequest(),confirmed:false}], [{},409,pilotRequest(1)], [{owner:false},401]
+ ]){
+  const h=await setup(options);
+  assert.equal((await runPilot(h,body)).status,expected);
+  assert.equal(h.reads(),0);
+ }
+ const h=await setup({failedGIS:true});
+ await h.invoke();
+ const s=h.store.get('owner-brain-wayne-worker-v1');
+ assert.equal((await runPilot(h,pilotRequest(s.cursor,s.lastStarted))).status,409);
+ assert.equal(h.reads(),1);
+});
+
+test('live pilot stops at its third official lookup and queues the verified parcel for owner approval',async()=>{
+ const h=await setup({missingFirst:true,chargePublisher:true});
+ const {pilot}=await (await runPilot(h)).json();
+ assert.equal(pilot.state,'pilot_limit');
+ assert.equal(pilot.requests,3);
+ assert.equal(pilot.cursor,2);
+ assert.equal(pilot.published,0);
+ assert.equal(pilot.pendingOwnerReview,1);
+ assert.equal(h.reads(),3);
+ assert.equal(h.publications(),0);
+});
+
+test('concurrent pilot confirmations share the worker lease',async()=>{
+ const h=await setup({liveShapeFixture:true,cursor:3});
+ const attempts=await Promise.all([runPilot(h,pilotRequest(3)),runPilot(h,pilotRequest(3))]);
+ assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);
+ assert.ok(h.reads()<=3);
+});
+
+
+test('manual Wayne worker rejects cross-site browser requests',()=>{
+ const source=fs.readFileSync('netlify/functions/owner-brain-wayne-run.mjs','utf8');
+ assert.match(source,/!scheduled&&req\.headers\.get\('sec-fetch-site'\)==='cross-site'/);
+ assert.match(source,/return response\(403,\{ok:false,error:'Cross-site request denied'\}\)/);
+});

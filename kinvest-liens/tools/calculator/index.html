@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lien calculator | PricePocketAsset</title>
+<meta name="description" content="Estimate interest, total repaid and annualized return on a tax lien, using each state's own rules where we have read the statute.">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/learn/law/law.css">
+<style>
+.lawbody .band{background:none;padding:0}.lawbody .section{padding:0}
+.lawbody .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+.lawbody .calc label{display:flex;flex-direction:column;gap:6px;color:var(--mut);font-size:13px}
+.lawbody .calc input,.lawbody .calc select{background:#0b0f0d;color:#f4f7f5;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px 14px;font:inherit;font-size:16px}
+.lawbody .results{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
+.lawbody .results>div{background:rgba(255,255,255,.04);border-radius:18px;padding:16px;border:0}
+.lawbody .results span{display:block;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.lawbody .results b{display:block;font-size:24px;margin-top:6px;color:#fff}
+.lawbody .results>div:last-child b{color:var(--gold)}
+.lawbody .cdetail,.lawbody .notice{color:#c9d6d0;font-size:14px}
+</style>
+</head>
+<body class="lawbody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a><nav><a href="/learn/">Academy</a></nav></div></header>
+<main class="law">
+<section id="calculator" class="band">
+  <div class="wrap section">
+    <p class="kick">Tools</p><h1>Lien <span class="g">calculator</span></h1>
+    <p class="muted" id="calcintro">Pick a state to use its own rules where we have read the statute (Florida, Arizona, Colorado and Iowa so far). Any other choice gives a basic simple-interest estimate only. Projected returns are never guaranteed.</p>
+    <form id="calc" class="calc" novalidate>
+      <label>State<select id="cstate"><option value="">Basic estimate (any state)</option><option value="FL">Florida (rules verified)</option><option value="AZ">Arizona (rules verified)</option><option value="CO">Colorado (interest rules verified)</option><option value="IA">Iowa (rules verified)</option></select></label>
+      <div id="cdates" class="cdates" hidden>
+        <label>Purchase date<input id="cbought" type="date"></label>
+        <label>Date the owner redeems (your guess)<input id="credeem" type="date"></label>
+        <label id="cevlabel">Notice, tax deed or foreclosure filed (optional)<input id="cevent" type="date"></label>
+      </div>
+      <label>Lien amount ($)<input id="amount" type="number" min="0" step="100" value="5000"></label>
+      <label id="crlabel"><span>Annual interest rate (%)</span><input id="rate" type="number" min="0" max="50" step="0.25" value="12"></label>
+      <label id="cmwrap"><span>Months until redemption</span><input id="months" type="number" min="1" max="60" step="1" value="12"></label>
+      <label>Fees &amp; costs ($)<input id="fees" type="number" min="0" step="10" value="100"></label>
+    </form>
+    <div id="cdetail" class="cdetail" aria-live="polite"></div>
+    <div class="results" aria-live="polite">
+      <div><span>Interest earned</span><b id="r-int">$0</b></div>
+      <div><span>Total repaid to you</span><b id="r-tot">$0</b></div>
+      <div><span>Net profit after fees</span><b id="r-net">$0</b></div>
+      <div><span>Net annualized return</span><b id="r-apr">0%</b></div>
+    </div>
+  </div>
+</section>
+<p class="note" style="margin-top:24px">Estimates only. Not legal, tax or investment advice. Confirm the rate, fees and timing with the county before you rely on them.</p>
+</main>
+<script src="/liens/lien-rules.js"></script>
+<script src="/script.js"></script>
+<script src="/auth-nav.js" defer></script>
+</body>
+</html>

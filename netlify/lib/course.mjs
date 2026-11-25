@@ -605,11 +605,20 @@ export const LESSONS = [
 ];
 export const outline = () => LESSONS.map(l => ({ id: l.id, title: l.title, mins: l.mins, free: !!l.free }));
 
-// Final exam: 20 questions drawn from every lesson quiz and drill. Members only (see learn.mjs).
-export const EXAM_PASS = 16;
-export function examQuestions() {
-  const all = [];
-  LESSONS.forEach(l => { (l.quiz || []).forEach(q => all.push(q)); (l.drill || []).forEach(q => all.push(q)); });
-  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
-  return all.slice(0, 20);
+// Final exam: 40 of the course's questions, 90% to pass, 45 minutes, graded on the server. Members only (see learn.mjs).
+// Answers never go to the browser before submission.
+export const EXAM_COUNT = 40, EXAM_PASS = 36, EXAM_MINUTES = 45;
+export const examPool = () => { const all = []; LESSONS.forEach(l => { (l.quiz || []).forEach(q => all.push(q)); (l.drill || []).forEach(q => all.push(q)); }); return all; };
+const shuf = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+export function newExam() {
+  const pool = examPool(), items = shuf(pool.map((_, i) => i)).slice(0, Math.min(EXAM_COUNT, pool.length)).map(qi => ({ qi, order: shuf(pool[qi].a.map((_, j) => j)) }));
+  return { session: { items, started: new Date().toISOString() }, questions: items.map(it => ({ q: pool[it.qi].q, a: it.order.map(j => pool[it.qi].a[j]) })) };
 }
+export function gradeExam(session, answers, now = Date.now()) {
+  const pool = examPool(); let score = 0;
+  const review = session.items.map((it, n) => { const q = pool[it.qi], pick = Array.isArray(answers) ? answers[n] : null, chosen = Number.isInteger(pick) ? it.order[pick] : null, ok = chosen === q.c; if (ok) score++;
+    return { ok, answered: chosen != null, answer: q.a[q.c], why: q.why }; });
+  const late = now - Date.parse(session.started) > (EXAM_MINUTES + 2) * 60e3;
+  return { score, of: session.items.length, passed: !late && score >= EXAM_PASS, late, review };
+}
+export const examPassed = r => !!r && (r.passed === true || (r.of === 20 && r.score >= 16)); // earlier 20-question passes still count

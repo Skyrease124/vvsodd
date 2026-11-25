@@ -1,13 +1,90 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>AI Brain Control Center | PricePocketAsset</title><style>
-:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}} </style></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. The current scheduled worker covers free Detroit GIS only; nationwide automation is not yet implemented.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
+:root{color-scheme:dark;font:15px system-ui;background:#081320;color:#e8f2fa}*{box-sizing:border-box}body{margin:0}main{max-width:940px;padding:20px;margin:auto}a{color:#9af6c8}h1{font-size:clamp(25px,5vw,36px)}h2{font-size:19px}.muted{color:#a6bccf;line-height:1.5}.panel{background:#111f38;border:1px solid #354a6b;border-radius:18px;padding:17px;margin:14px 0}button{background:#1a624c;color:white;border:1px solid #65be9d;padding:12px 16px;border-radius:10px;font-weight:700;margin:3px;cursor:pointer}button:disabled{opacity:.5}.secondary{background:#202f49;border-color:#59687e}.danger{background:#44303d;border-color:#c97d80}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stats div{background:#172942;border-radius:12px;padding:13px}.num{font-size:24px;font-weight:800}.case{border-top:1px solid #3c4b64;padding:12px 0;overflow-wrap:anywhere}.case b{display:block;margin-bottom:5px}.small{color:#9eb7cf;font-size:12px}input{padding:12px;border-radius:9px;border:1px solid #6b7892;background:#091628;color:white;max-width:100%}label{display:block;margin:8px 0}a{overflow-wrap:anywhere}@media(max-width:500px){.stats{grid-template-columns:1fr 1fr}}
+.wayne-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.wayne-metrics div{background:#102429;border:1px solid #41656a;border-radius:10px;padding:9px;overflow-wrap:anywhere}
+.wayne-metrics dt{font-size:12px;color:#b4d3cb}.wayne-metrics dd{margin:3px 0 0;font-weight:750}
+#wayneReviewQueue summary{cursor:pointer;padding:10px 0}#wayneReviewEntries{padding-inline-start:1.15rem}
+#wayneReviewEntries li{margin-block:8px}#wayneReviewEntries button{min-height:44px}
+@media(max-width:500px){.wayne-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style><link rel="stylesheet" href="/owner/brain/brain.css"></head><body><main><a href="/owner/">← Owner Dashboard</a><h1>AI Brain Control Center</h1>
+<section id="unattendedStatus" style="margin:14px 0;padding:16px;border:1px solid #537675;border-radius:14px;background:#142d32;color:#def6ed">
+ <h2 style="font-size:18px;margin:0 0 8px">24/7 Agent Readiness</h2>
+ <p id="unattendedSummary" role="status" style="margin:8px 0">Checking scheduled automation…</p>
+ <p id="unattendedChecks" style="font-size:13px;color:#b4d3cb;margin:8px 0"></p>
+ <button id="unattendedToggle" type="button" hidden style="border-radius:9px;padding:9px 12px;background:#215a46;border:1px solid #87d8b9;color:#fff">Enable 24/7 Wayne</button>
+ <dl class="wayne-metrics">
+  <div><dt>Processing complete</dt><dd id="wayneComplete">—</dd></div>
+  <div><dt>Verified coverage</dt><dd id="wayneCoverage">—</dd></div>
+  <div><dt>Shared GIS requests left</dt><dd id="wayneRemaining">—</dd></div>
+ </dl>
+ <p id="wayneReadiness" role="status"></p>
+ <p id="wayneTiming" class="small"></p>
+ <p id="wayneQueueProgress" aria-live="polite"></p>
+ <details id="wayneReviewQueue">
+  <summary>Skipped parcels needing review</summary>
+  <ul id="wayneReviewEntries" style="overflow-wrap:anywhere"></ul>
+ </details>
+ <div id="wayneRetryAlert" hidden style="padding:11px;margin:12px 0;border-radius:10px;border:1px solid #af9070;background:#3d302e">
+ <strong>Wayne County GIS retry needs review</strong>
+ <p id="wayneRetryDetail" style="font-size:13px;overflow-wrap:anywhere"></p>
+ <button id="wayneRetryRearm" type="button" style="background:#6c5234;border:1px solid #ecc288">Retry the same parcel</button>
+ </div>
+ <button id="wayneQuotaActivate" type="button" style="border-radius:9px;padding:11px 14px;background:#315574;border:1px solid #9ec9ed;color:white;font-weight:700">Activate Shared GIS Budget (Preview)</button>
+ <p id="wayneQuotaActivationResult" role="status" class="small"></p>
+ <button id="wayneTestBatch" type="button" hidden style="border-radius:9px;padding:11px 14px;background:#216347;border:1px solid #96ddbb;color:#fff;font-weight:700">Run Live Wayne Pilot</button>
+ <p id="wayneBatchResult" role="status" style="font-size:13px;line-height:1.5;overflow-wrap:anywhere" hidden></p>
+ <button id="unattendedRefresh" type="button" style="border-radius:9px;padding:9px 12px;background:#245544;border:1px solid #88d5bc;color:white">Check readiness</button>
+ <p id="unattendedRefreshStatus" role="status" class="small"></p>
+ <p style="font-size:12px;color:#a9c2c0;margin:10px 0 0">Preview auto batches require the dashboard open. Netlify unattended scheduling is disabled until production release approval.</p>
+</section><p><a href="/owner/brain/connectors/">County Connectors</a></p><p><a href="/owner/brain/activity/" style="display:inline-block;padding:12px 16px;border:1px solid #75d0b1;border-radius:12px;background:#1a433e;font-weight:700">✦ NVIDIA Pulse Reactor · Live Activity</a></p><p class="muted">AI Brain runs scheduled research automatically. This private dashboard is for monitoring, owner decisions and safety controls. Official polygon verification currently supports Detroit. Other counties remain research leads until a verified connector is available.</p><div id="gate">Checking owner access…</div><section id="app" hidden>
 <div class="stats"><div><div class="small">QUEUED</div><div class="num" id="count">0</div></div><div><div class="small">STATUS</div><div class="num" id="state">Idle</div></div><div><div class="small">SOURCE</div><div class="num" id="built">—</div></div></div>
-<section class="panel"><h2>Automatic Research Monitor</h2><p class="muted">Independent background schedules: Detroit GIS every 4 hours; Geocode.maps.co every 6 hours (max 20 requests/day). Each pulls only eligible Wayne cases and skips reviewed or already checked records. Open Topo Data elevation runs every 12 hours across mapped US parcels. Automated GIS/geocoding comparison runs every 8 hours and flags candidates for owner review. Other states still need verified location-repair connectors. No paid APIs, automatic map edits, or owner approval bypass.</p><p id="autoState" role="status">Waiting for first scheduled run…</p><p class="small" id="autoSummary"></p><p class="small" id="autoGeocode"></p><p class="small" id="autoElevation"></p><p class="small" id="autoCrosscheck"></p><p class="small">Owner-only controls:</p><button id="pause" class="danger">Pause automation</button><button id="resume" class="secondary">Resume automation</button><p class="small" id="note" role="status"></p></section>
+<section class="panel"><h2>Automatic Research Monitor</h2><p class="muted">Independent background schedules: Detroit GIS every 4 hours; Geocode.maps.co every 6 hours (max 20 requests/day). Each pulls only eligible Wayne cases and skips reviewed or already checked records. Open Topo Data elevation runs every 12 hours across mapped US parcels. Automated GIS/geocoding comparison runs every 8 hours and flags candidates for owner review. Other states still need verified location-repair connectors. Official ID, street address and polygon checks are required before an automated decision can reach the guarded publisher.</p><p id="autoState" role="status">Waiting for first scheduled run…</p><p class="small" id="autoSummary"></p><p class="small" id="autoGeocode"></p><p class="small" id="autoElevation"></p><p class="small" id="autoCrosscheck"></p><p class="small">Owner-only controls:</p><button id="pause" class="danger">Pause automation</button><button id="resume" class="secondary">Resume automation</button><p class="small" id="note" role="status"></p></section>
 <section class="panel"><h2>Photon — Automatic Address Discovery</h2><p class="muted">AI Brain searches up to five missing-location parcel addresses every four hours, stores results and continues through county datasets. Hard ceiling: 30 Photon public-service calls per UTC day. No manual search or Run button, no retries, and no map corrections. Parcels without a usable address stay with the official GIS research workers.</p><p class="small" id="photonStatus" role="status">Awaiting scheduled research…</p><div id="photonResults"></div></section>
 <section class="panel"><h2>Geoapify — Nationwide Saved Research</h2><p class="muted">Automatically researches missing-location parcel addresses across state/county datasets. Up to 50 lookups every 4 hours, 300 per day. Stores completed checks; no duplicate lookups for saved parcels. Address candidates are unverified and do not publish map changes.</p><p id="geoStatus" class="small" role="status">Awaiting first run…</p><div id="geoResults"></div></section>
-<section class="panel"><h2>Correction review ledger</h2><p class="muted">Only independently checked matches can be approved. Select Preview Map Repair on an approved decision to see the exact record-level proposed point correction. No updates are applied.</p><div id="ledger" class="small">Loading decisions…</div></section>
+<section class="panel"><h2>Brain-to-Map Publication Monitor</h2>
+<p class="muted">Dynamic verified parcel corrections use one shared county feed on the public parcel map, Workshop map, and private MapTiler preview. The current automatic GIS publication pilot is Detroit city only and requires an owner-approved official source match. No geocoding-only results are published.</p>
+<p class="small" id="pipelineStatus">Checking publication history…</p><div id="pipelineHistory"></div></section>
+<style>.approval-card{border:1px solid #d6dee8;border-radius:10px;padding:10px 12px;margin:10px 0;display:grid;gap:6px}.approval-card textarea,.approval-card select{width:100%;box-sizing:border-box}.approval-critical{display:grid;gap:6px;padding:8px;border-left:3px solid #c97a00}</style>
+<section class="panel" id="approvalQueue" aria-labelledby="approvalQueueTitle"><h2 id="approvalQueueTitle">Owner approval queue · Wayne corrections</h2><p class="muted">Agents verify official parcels and place them here. Nothing reaches the public map until you approve it. Pro members see an approved correction first; Free members and visitors see it 48 hours after your approval. A critical correction can be released to everyone at once.</p><p class="small" id="approvalStatus" role="status">Loading queue…</p><div id="approvalItems"></div><div class="controls"><button id="publishApprovedBtn" type="button">Publish approved corrections</button></div></section>
+<section class="panel" id="nvidiaPanel" aria-labelledby="nvidiaTitle"><h2 id="nvidiaTitle">NVIDIA consolidation</h2><p class="muted">NVIDIA reads stored helper results (official GIS, county worker evidence, owner side parcel matches, validator decisions and geocoder candidates), flags conflicts and drafts proposals with source references. It never publishes. Each run is one owner-triggered request, limited per day to protect free allowances.</p><p class="small" id="nvidiaStatus" role="status">Checking NVIDIA status…</p><div id="nvidiaReceipts"></div><div class="controls"><button id="nvidiaRun" type="button">Run NVIDIA consolidation</button><button id="cloudflareResume" type="button" hidden>Turn the Cloudflare second opinion on again</button></div></section>
+<style>
+.pi-card{border:1px solid #2a4a50;border-radius:12px;padding:12px;margin:10px 0;background:#0d2024}
+.pi-card h3{margin:4px 0 6px;font-size:16px}
+.pi-desc{font-size:14px;color:#def6ed}
+.pi-meta{font-size:12px;color:#9fb8bb;margin:3px 0}
+.pi-actions{margin-top:6px}
+.pi-form{margin-top:8px;display:grid;gap:6px}
+.pi-form label,#intakeSection label{display:block;font-size:13px;color:#cfe9e2}
+.pi-dataset-row{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}.pi-dataset-row>div{flex:1 1 220px;min-width:0}
+.pi-dataset-row label{display:block;font-size:13px;color:#cfe9e2;margin-bottom:4px}
+.pi-dataset-row select{width:100%;box-sizing:border-box;background:#081518;color:#def6ed;border:1px solid #365b61;border-radius:8px;padding:8px}
+.pi-form textarea,.pi-form input,.pi-form select,#intakeJson,#withdrawReason{width:100%;box-sizing:border-box;background:#081518;color:#def6ed;border:1px solid #365b61;border-radius:8px;padding:8px}
+.pi-form input[type=checkbox],.pi-check input{width:auto}
+.pi-btn{padding:9px 14px;border-radius:10px;border:1px solid #75d0b1;background:#174a44;color:#def6ed;cursor:pointer;margin:4px 4px 4px 0;font:inherit}
+.pi-btn:disabled{opacity:.45;cursor:not-allowed}
+.pi-quiet{background:transparent}
+.pi-danger{border-color:#d88;background:#4a1d1d}
+.pi-status{font-size:13px;color:#cfe9e2;min-height:1em}
+.pi-status.pi-bad{color:#ffb4b4}
+.pi-check{display:block;margin:8px 0}
+.pi-storage{font-size:13px;font-weight:700;color:#9be7c4;border:1px solid #2f6b5c;border-radius:8px;padding:8px;margin:8px 0}
+.pi-storage.pi-bad{color:#ffb4b4;border-color:#8a3b3b}
+.pi-audit{font-size:12px;color:#9fb8bb;padding-left:18px}
+.pi-batch{border:1px solid #2a4a50;border-radius:12px;padding:10px;margin:8px 0;background:#0a1a1e}
+.pi-select-row{margin:0 0 6px;color:#9be7c4}
+.pi-dialog{max-width:520px;width:calc(100% - 32px);border:1px solid #365b61;border-radius:14px;background:#0d2024;color:#def6ed;padding:18px}
+.pi-dialog::backdrop{background:rgba(0,0,0,.6)}
+.pi-dialog label{display:block;font-size:13px;color:#cfe9e2;margin:10px 0 4px}
+</style>
+<section class="panel" id="intakeSection" aria-labelledby="intakeTitle"><h2 id="intakeTitle">Property intake · owner approval</h2><p class="muted">Every new property fact waits here: county datasets, manual imports, tax lien and tax deed updates, GIS corrections and AI discoveries. The order is verify against an official source, approve (Pro first, then Free after 48 hours), or reject. Nothing is public until you approve it. Paste a JSON array of up to 50 items.</p><label for="intakeJson">Items to save for verification</label><textarea id="intakeJson" rows="7" maxlength="90000" spellcheck="false" placeholder='[{"kind":"new_property","origin":"owner-manual","state":"FL","county":"Palm Beach","parcelId":"PB-100200","title":"Parcel record update","description":"Official county record reviewed against the source.","category":"land_bank","address":"123 Main St","longitude":-80.1,"latitude":26.7}]'></textarea><label class="pi-check"><input type="checkbox" id="intakeConfirm"> I understand these items stay private until they are verified and approved.</label><p><button type="button" id="intakeSubmit" class="pi-btn">Save for verification</button> <button type="button" id="intakeRefresh" class="pi-btn pi-quiet">Refresh</button></p><p id="intakeStorage" class="pi-storage" aria-live="polite">Storage: checking…</p><div class="pi-batch" role="group" aria-label="Batch approval"><label class="pi-check"><input type="checkbox" id="intakeAllCounties"> Show records from every county, not only the selected county</label><p id="batchCount" class="pi-meta">0 verified, located records ready · 0 selected</p><p><button type="button" id="batchSelectAll" class="pi-btn pi-quiet">Select all ready</button> <button type="button" id="batchApprove" class="pi-btn" disabled>Approve selected…</button></p><p id="batchStatus" class="pi-status" aria-live="polite"></p></div><p id="intakeStatus" class="pi-status" aria-live="polite"></p><div id="intakeList"></div></section>
+<section class="panel" id="matchPanel" aria-labelledby="matchTitle"><h2 id="matchTitle">Parcel matches · official positions</h2><p class="muted">Each record is matched to the official tax parcel layer by its parcel number (SBL) and its verified street address. A position is used only when it comes from the official parcel polygon. Anything that does not match stays pending, with the reason. Matched records enter the approval queue above; nothing is shown on the map until you approve it.</p><div class="pi-dataset-row"><div><label for="datasetState">State</label><select id="datasetState"></select></div><div><label for="datasetCounty">County dataset</label><select id="datasetCounty"></select></div></div><p id="datasetNote" class="pi-meta" aria-live="polite">Loading the county datasets…</p><p id="matchSummary" class="pi-meta">Loading…</p><p><button type="button" id="matchImport" class="pi-btn">Import matched records for review…</button> <button type="button" id="matchRefresh" class="pi-btn pi-quiet">Refresh</button></p><p id="matchStatus" class="pi-status" aria-live="polite"></p><p class="pi-meta"><strong>Sources and terms</strong></p><ul id="matchSources" class="pi-audit"></ul><p class="pi-meta"><strong>Pending for investigation</strong></p><ul id="matchPending" class="pi-audit"></ul></section>
+<section class="panel" id="researchPanel" aria-labelledby="researchTitle"><h2 id="researchTitle">Research releases · withdraw</h2><p class="muted">Released lien, land, tax deed and property updates. Withdrawing removes an update for every viewer: maps, search results and downloads. The reason, the time and the audit history are kept.</p><p><button type="button" id="researchRefresh" class="pi-btn pi-quiet">Refresh releases</button></p><p id="researchStatus" class="pi-status" aria-live="polite"></p><div id="researchList"></div></section>
+<section class="panel" id="liveChecksPanel" aria-labelledby="liveTitle" hidden><h2 id="liveTitle">Live checks · preview only</h2><p class="muted">Each check sends one bounded request to confirm a helper works with the key saved on the server. A check runs only when you press its button and confirm. Keys are never shown; results show the outcome only. This panel is hidden on production.</p><p><button type="button" id="liveRefresh" class="pi-btn pi-quiet">Refresh availability</button></p><p id="liveStatus" class="pi-status" aria-live="polite"></p><div id="liveList"></div></section>
+<dialog id="withdrawDialog" class="pi-dialog" aria-labelledby="withdrawTitle"><form id="withdrawForm" method="dialog"><h3 id="withdrawTitle">Withdraw this update?</h3><p class="muted">It stops appearing for every viewer: maps, search results and downloads. The reason, the time and the audit history are kept.</p><label for="withdrawReason">Reason for withdrawal (at least 15 characters)</label><textarea id="withdrawReason" rows="3" maxlength="300" minlength="15"></textarea><p id="withdrawError" class="pi-status pi-bad" aria-live="polite"></p><p><button type="button" id="withdrawCancel" class="pi-btn pi-quiet">Cancel</button> <button type="submit" id="withdrawConfirm" class="pi-btn pi-danger">Withdraw now</button></p></form></dialog>
+<section class="panel"><h2>Correction review ledger</h2><p class="muted">Agents save official evidence and verification notes automatically when exact identity, address and polygon checks pass. Decisions wait in the owner approval queue above until you approve or reject them. Unresolved cases remain flagged. Select Preview Map Repair on an approved decision to see the exact record-level proposed point correction. No updates are applied.</p><div id="ledger" class="small">Loading decisions…</div></section>
 <section class="panel"><h2>Review queue <span id="queueCount" class="small"></span></h2><label for="filter">Filter by state</label><input id="filter" placeholder="Example: FL" maxlength="2"><div id="cases"></div></section>
-<p class="muted">Phase 3 GIS pilot: Wayne, Michigan, up to 15 lookup requests/hour. A separate City of Detroit assessor layer is now available for exact-ID lookups; all matches still require independent official verification. GIS candidate matches remain unverified, require current official county confirmation, and never publish automatically. Florida lookups require confirmation and have a strict pilot cap of 10 attempts total. No retries or purchases. Other county connectors and NVIDIA routing are still pending.</p></section></main>
-<script>
+<p class="muted">Automatic polygon verification currently supports Detroit. Agents compare the official parcel ID, street address and polygon with the county record, save attributed evidence and decisions, and pass verified cases to the owner approval queue. The guarded publisher runs only after you approve a case. Other counties and ambiguous records remain research leads; geocoded points alone never become boundaries.</p></section></main>
+<script src="requests.js"></script><script>
 'use strict';
 const $=id=>document.getElementById(id),endpoint='/.netlify/functions/owner-brain-queue';
 let data={queue:[]};
@@ -15,8 +92,9 @@ const el=(tag,txt,cls)=>{const e=document.createElement(tag);if(txt!==undefined)
 function draw(d){data=d;loadLedger();$('app').hidden=false;$('gate').hidden=true;$('count').textContent=d.queue.length;$('state').textContent=d.status==='paused'?'Paused':'Idle';$('built').textContent=d.built||'—';$('pause').disabled=d.status==='paused';$('resume').disabled=d.status!=='paused';$('autoState').textContent='Background: '+(d.status==='paused'?'Paused':(d.automation?.state||'Awaiting first run')).replaceAll('_',' ');$('autoSummary').textContent='Runs: '+(d.automation?.runs||0)+' · Checked: '+(d.automation?.checked||0)+' · Candidates: '+(d.automation?.candidates||0)+' · Last completed: '+(d.automation?.lastCompleted||'not yet')+(d.automation?.lastError?' · Error: '+d.automation.lastError:'');$('autoGeocode').textContent='Geocode.maps.co (every 6h): '+(d.geocodeAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Runs: '+(d.geocodeAutomation?.runs||0)+' · Checked: '+(d.geocodeAutomation?.checked||0)+' · Candidate groups: '+(d.geocodeAutomation?.candidates||0)+' · Last completed: '+(d.geocodeAutomation?.lastCompleted||'not yet')+'. Max 20 requests/day; unverified.';$('autoElevation').textContent='Open Topo Data (every 12h): '+(d.elevationAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Runs: '+(d.elevationAutomation?.runs||0)+' · Elevation points saved: '+(d.elevationAutomation?.filled||0)+' · Last batch: '+(d.elevationAutomation?.lastBatch?.filled||0)+' · Last completed: '+(d.elevationAutomation?.lastCompleted||'not yet')+' · Estimate only.';$('autoCrosscheck').textContent='Parcel cross-verification (every 8h): '+(d.crosscheckAutomation?.state||'awaiting first run').replaceAll('_',' ')+' · Checked: '+(d.crosscheckAutomation?.checked||0)+' · Private candidates: '+(d.crosscheckAutomation?.candidates||0)+' · Last completed: '+(d.crosscheckAutomation?.lastCompleted||'not yet');
 const geo=d.geoapifyAutomation||{},geoList=$('geoResults');$('geoStatus').textContent='Geoapify: '+(geo.state||'awaiting first run').replaceAll('_',' ')+' · Runs '+(geo.runs||0)+' · Saved '+(geo.checked||0)+' · Candidate groups '+(geo.found||0)+' · Daily usage '+(geo.dailyUsage||0)+'/300 · Last '+(geo.lastCompleted||'not yet')+(geo.lastError?' · Error '+geo.lastError:'');geoList.replaceChildren();for(const r of (geo.recent||[]).slice(0,12)){const p=el('div',undefined,'case');p.append(el('b',r.county+', '+r.state+' · Parcel '+r.parcelId),el('p',r.address+' · '+r.status.replaceAll('_',' ')+' · '+r.checkedAt,'small'));for(const candidate of (r.candidates||[]))p.append(el('p',(candidate.formatted||'Possible address')+' · '+candidate.lat+', '+candidate.lon+' (unverified)','small'));geoList.append(p);}
 const photon=d.photonAutomation||{},photonList=$('photonResults');$('photonStatus').textContent='Photon (every 4h): '+(photon.state||'awaiting first run').replaceAll('_',' ')+' · Runs '+(photon.runs||0)+' · Parcels checked '+(photon.checked||0)+' · Candidate groups '+(photon.candidateGroups||0)+' · Daily API usage '+(photon.dailyUsage||0)+'/30 · Last completed '+(photon.lastCompleted||'not yet')+(photon.lastWarning?' · '+photon.lastWarning:'');
-photonList.replaceChildren();for(const item of (photon.recent||[]).slice(0,10)){const p=el('div',undefined,'case');p.append(el('b',item.county+', '+item.state+' · Parcel '+item.parcelId),el('p',item.address+' · '+item.status.replaceAll('_',' ')+' · '+item.checkedAt,'small'));for(const match of (item.candidates||[]).slice(0,3)){p.append(el('p',[match.housenumber,match.street,match.city,match.state,match.postcode].filter(Boolean).join(' ')+' · '+match.lat+', '+match.lon+' (unverified address candidate)','small'));}photonList.append(p);}$('note').textContent=d.note||d.lastError||('Last scan: '+(d.updatedAt||'not started'));render();}
-function render(){const s=$('filter').value.trim().toUpperCase(),items=(data.queue||[]).filter(r=>!s||r.state===s);$('queueCount').textContent=items.length+' shown';const c=$('cases');c.replaceChildren();for(const r of items){const item=el('div',undefined,'case');item.append(el('b',(r.county||'County')+', '+r.state+' · parcel '+(r.parcelId||'unknown')),el('div','Status: Needs official verification','small'),el('div','Record: '+r.recordId,'small'),el('div','Issue: '+r.issue,'small'));if(r.gisUrl){const a=el('a','GIS reference');a.href=r.gisUrl;a.rel='noopener noreferrer';a.target='_blank';item.append(a);}
+photonList.replaceChildren();for(const item of (photon.recent||[]).slice(0,10)){const p=el('div',undefined,'case');p.append(el('b',item.county+', '+item.state+' · Parcel '+item.parcelId),el('p',item.address+' · '+item.status.replaceAll('_',' ')+' · '+item.checkedAt,'small'));for(const match of (item.candidates||[]).slice(0,3)){p.append(el('p',[match.housenumber,match.street,match.city,match.state,match.postcode].filter(Boolean).join(' ')+' · '+match.lat+', '+match.lon+' (unverified address candidate)','small'));}photonList.append(p);}$('note').textContent=d.note||d.lastError||('Last scan: '+(d.updatedAt||'not started'));render();window.PPABrainPreviewStatus(d);}
+function render(){const s=$('filter').value.trim().toUpperCase(),items=(data.queue||[]).filter(r=>!s||r.state===s);$('queueCount').textContent=items.length+' shown';const c=$('cases');c.replaceChildren();for(const r of items){const item=el('div',undefined,'case');item.append(el('b',(r.county||'County')+', '+r.state+' · parcel '+(r.parcelId||'unknown')),el('div','Status: '+(r.review?(r.review.publishStatus==='published'?'Verified by agent · Published':'Verified · Awaiting publication'):'Needs official verification'),'small'),el('div','Record: '+r.recordId,'small'),el('div','Issue: '+r.issue,'small'));if(r.gisUrl){const a=el('a','GIS reference');a.href=r.gisUrl;a.rel='noopener noreferrer';a.target='_blank';item.append(a);}
+if(r.verification?.notes){const evidence=el('div',undefined,'triage');evidence.append(el('b','Saved verification evidence'),el('p',r.verification.notes,'small'));if(r.verification.evidenceUrl){const source=el('a','Official evidence source');source.href=r.verification.evidenceUrl;source.target='_blank';source.rel='noopener noreferrer';evidence.append(source);}item.append(evidence);}
 if(r.state==='MI'&&/^(Wayne|Wayne County)$/i.test(r.county)){
 const g=r.gis;
 if(g){const d=el('div',undefined,'triage');d.append(el('b',g.status==='candidate_found'?'GIS candidate found · Unverified':g.status==='ambiguous'?'GIS results ambiguous':'No exact GIS match'),el('p',g.note,'small'));if(g.centroidApprox)d.append(el('p','Approximate candidate location: '+g.centroidApprox.lat+', '+g.centroidApprox.lon+' · Acreage: '+(g.acreage??'not supplied'),'small'));if(g.sourceUrl){const a=el('a','View public GIS layer');a.href=g.sourceUrl;a.target='_blank';a.rel='noopener noreferrer';d.append(a);}item.append(d);}
@@ -42,12 +120,12 @@ if(r.state==='FL'){
 }
 if(r.crosscheck){const x=r.crosscheck,p=el('div',undefined,'triage');p.append(el('b',x.status==='candidate_found'?'Cross-verified GIS candidate · Owner review required':'Cross-check · '+x.status.replaceAll('_',' ')),el('p',x.note,'small'));if(x.distanceMeters!=null)p.append(el('p','GIS-to-geocoder separation: '+x.distanceMeters+' m · Official ID: '+x.matchedId+' · '+x.address,'small'));item.append(p);}
 if(r.geocode){const z=el('div',undefined,'triage');z.append(el('b','Automatic geocoding · '+r.geocode.status.replaceAll('_',' ')),el('p',r.geocode.note,'small'));for(const candidate of r.geocode.candidates||[]){z.append(el('p',candidate.displayName+' · '+candidate.lat+', '+candidate.lon+' (unverified address point)','small'));}item.append(z);}
-if(r.review){item.append(el('p','Owner decision: '+r.review.decision.replaceAll('_',' ')+' · Not published','small'));}
+if(r.review){item.append(el('p','Verification: '+r.review.decision.replaceAll('_',' ')+' · '+(r.review.publishStatus||'awaiting publication'),'small'));}
 else if((r.crosscheck?.status==='candidate_found')||(r.detroit?.status==='candidate_found')||(r.gis?.status==='candidate_found')||(r.florida?.status==='candidate_found')){
  const block=el('details'),heading=el('summary','Review candidate for approval / rejection');block.append(heading);
  const form=el('form'),title=el('p','Check the current OFFICIAL county property appraiser / assessor / GIS record before approving. The source is not checked automatically.','small');
- const l1=el('label','Official county source URL (HTTPS)'),link=el('input');link.type='url';link.placeholder='https://official-county-site.example/parcel';link.required=true;link.maxLength=1000;
- const l2=el('label','Verification notes / rejection reason'),notes=el('textarea');notes.rows=3;notes.placeholder='State which parcel ID, address, and location you verified';notes.required=true;notes.minLength=15;notes.maxLength=1000;notes.style.cssText='display:block;width:100%;background:#091628;color:white;border:1px solid #6b7892;border-radius:9px;padding:10px';
+ const l1=el('label','Official county source URL (HTTPS)'),link=el('input');link.type='url';link.placeholder='https://official-county-site.example/parcel';link.required=true;link.maxLength=1000;link.value=r.verification?.evidenceUrl||r.detroit?.sourceUrl||r.gis?.sourceUrl||'';
+ const l2=el('label','Verification notes / rejection reason'),notes=el('textarea');notes.rows=3;notes.placeholder='State which parcel ID, address, and location you verified';notes.required=true;notes.minLength=15;notes.maxLength=1000;notes.value=r.verification?.notes||'';notes.style.cssText='display:block;width:100%;background:#091628;color:white;border:1px solid #6b7892;border-radius:9px;padding:10px';
  const checkbox=el('input');checkbox.type='checkbox';const tickLabel=el('label');tickLabel.append(checkbox,document.createTextNode(' I personally checked this parcel against an official current county record.'));
  const actions=el('div'),approve=el('button','Approve for staging'),reject=el('button','Reject candidate','danger');approve.type=reject.type='button';actions.append(approve,reject);
  approve.onclick=()=>reviewCase(r,'approve',link.value,notes.value,checkbox.checked,approve);
@@ -57,8 +135,8 @@ else if((r.crosscheck?.status==='candidate_found')||(r.detroit?.status==='candid
 if(r.triage?.status==='complete'){const d=el('div',undefined,'triage');d.append(el('b','Groq triage · Unverified'),el('p',r.triage.summary,'small'));const list=el('ol');for(const step of r.triage.checks||[])list.append(el('li',step));d.append(list,el('p',r.triage.limitations,'small'));item.append(d);}
 c.append(item);}if(!items.length)c.append(el('p','No queued cases in this filter.','muted'));}
 async function loadLedger(){
- try{const res=await fetch('/.netlify/functions/owner-brain-review',{credentials:'same-origin',cache:'no-store'}),d=await res.json();if(!res.ok)throw Error(d.error||'Unavailable');
- const area=$('ledger');area.replaceChildren(el('p',(d.entries||[]).length+' recorded decisions. None published to maps.','small'));
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-review',{credentials:'same-origin',cache:'no-store'}),d=await res.json();if(!res.ok)throw Error(d.error||'Unavailable');
+ const area=$('ledger');area.replaceChildren(el('p',(d.entries||[]).length+' saved verification decisions. Publication status is shown in the monitor above.','small'));
  for(const entry of (d.entries||[]).slice(0,20)){
  const block=el('div',undefined,'case');block.append(el('p',entry.state+' · '+entry.county+' · '+entry.parcelId+' — '+entry.decision.replaceAll('_',' ')+' ('+entry.reviewedAt.slice(0,10)+')','small'));
  if(entry.decision==='approved_for_staging'&&entry.publishStatus==='not_published'){
@@ -69,49 +147,301 @@ async function loadLedger(){
 }
 async function previewRepair(caseKey,btn,out){
  btn.disabled=true;out.textContent='Checking published parcel record…';
- try{const response=await fetch('/.netlify/functions/owner-brain-preview',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'preview',caseKey})}),d=await response.json();if(!response.ok)throw Error(d.error||'Preview failed');
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-preview',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'preview',caseKey})}),d=await response.json();if(!response.ok)throw Error(d.error||'Preview failed');
  out.textContent='DRY RUN — NOT PUBLISHED\nOriginal: '+JSON.stringify(d.patch.originalRecord)+'\nProposed: '+JSON.stringify(d.patch.proposedRecord)+'\nFile: '+d.patch.file+'\nDataset SHA256: '+d.patch.sourceDatasetHash+'\n'+d.warning;
  }catch(e){out.textContent='No changes made: '+e.message;}finally{btn.disabled=false;}
 }
 async function reviewCase(r,decision,url,notes,checked,btn){
  if(!confirm(decision==='approve'?'Confirm official evidence reviewed? This stages a PRIVATE correction only; public maps stay unchanged.':'Reject this candidate and retain the review record?'))return;
  btn.disabled=true;
- try{const res=await fetch('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-review',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:decision,dataset:r.dataset,recordId:r.recordId,evidenceUrl:url,notes,officialSourceConfirmed:checked,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Review could not be saved');await load();}
  catch(e){$('note').textContent=e.message;btn.disabled=false;}
 }
 async function lookupDetroitAddress(r,btn){
  if(!confirm('Search Detroit official parcel data using the street address recorded in your published property list? Only unverified candidates will be shown; no map changes.'))return;
  btn.disabled=true;btn.textContent='Searching street address…';
- try{const response=await fetch('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit-address',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Address search unavailable');await load();}
  catch(e){btn.disabled=false;btn.textContent='Search by street address';$('note').textContent=e.message;}
 }
 async function lookupDetroit(r,btn){
  if(!confirm('Check the City of Detroit assessor parcel dataset for an exact ID match? Free public GIS lookup; no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking Detroit GIS…';
- try{const response=await fetch('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-detroit',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'detroit-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'City assessor lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Check Detroit Assessor GIS';$('note').textContent=e.message;}
 }
 async function lookupFlorida(r,btn){
  if(!confirm('Use 1 Florida Property API trial credit to look up this parcel by exact county and parcel ID? This may reduce your trial balance. No paid fallback and no map edits.'))return;
  btn.disabled=true;btn.textContent='Checking Florida API…';
- try{const response=await fetch('/.netlify/functions/owner-brain-florida',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'florida-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Florida API lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-florida',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'florida-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'Florida API lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Florida API: Match parcel';$('note').textContent=e.message;}
 }
 async function lookupGIS(r,btn){
  if(!confirm('Search a public Wayne County GIS layer for an exact parcel-ID match? No paid API and no map updates.'))return;
  btn.disabled=true;btn.textContent='Checking GIS…';
- try{const response=await fetch('/.netlify/functions/owner-brain-gis',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'gis-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'GIS lookup failed');await load();}
+ try{const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-gis',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'gis-lookup',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await response.json();if(!response.ok)throw Error(d.error||'GIS lookup failed');await load();}
  catch(e){btn.disabled=false;btn.textContent='Find exact GIS match';$('note').textContent=e.message;}
 }
 async function triageCase(r,btn){
  if(!confirm('Use 1 Groq free-tier API request to prepare an unverified research checklist for this parcel?'))return;
  btn.disabled=true;btn.textContent='Groq researching…';
- try{const res=await fetch('/.netlify/functions/owner-brain-research',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'groq-triage',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Groq failed');$('note').textContent='Groq checklist saved (unverified).';await load();}
+ try{const res=await window.PPABrainRequest('/.netlify/functions/owner-brain-research',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'groq-triage',dataset:r.dataset,recordId:r.recordId,confirmed:true})}),d=await res.json();if(!res.ok)throw Error(d.error||'Groq failed');$('note').textContent='Groq checklist saved (unverified).';await load();}
  catch(e){btn.disabled=false;btn.textContent='Groq: Research this case';$('note').textContent=e.message;}
 }
-async function load(){try{const r=await fetch(endpoint,{credentials:'same-origin',cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'Access denied');draw(d)}catch(e){$('gate').textContent=e.message||'Unavailable';}}
-async function action(which){if(which==='clear'&&!confirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await fetch(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
+async function loadPublication(){
+ try{
+ const response=await window.PPABrainRequest('/.netlify/functions/owner-brain-map-status',{credentials:'same-origin',cache:'no-store'});
+ const d=await response.json();if(!response.ok||!d.ok)throw Error(d.error||'Unavailable');
+ const s=d.status||{};$('pipelineStatus').textContent='Publisher: '+(s.state||'not started').replaceAll('_',' ')+' · Runs '+(s.runs||0)+' · Published '+(s.published||0)+' · Skipped '+(s.skipped||0)+' · Last run '+(s.lastCompleted||'not yet')+(s.lastError?' · Error: '+s.lastError:'');
+ const box=$('pipelineHistory');box.replaceChildren();
+ for(const h of (d.history||[]).slice(0,15))box.append(el('p',(h.at||'')+' · '+h.dataset+' · Parcel '+h.parcelId+' · '+h.action+' · '+h.source,'small'));
+ if(!d.history?.length)box.append(el('p','No verified parcel corrections have been published yet.','small'));
+ }catch(e){$('pipelineStatus').textContent='Publication history unavailable: '+e.message;}
+}
+async function load(){loadPublication().catch(()=>{});try{const r=await window.PPABrainRequest(endpoint,{credentials:'same-origin',cache:'no-store'}),d=await r.json();if(!r.ok)throw Error(d.error||'Access denied');draw(d)}catch(e){$('gate').textContent=e.message||'Unavailable';$('note').textContent=e.message||'Status unavailable';}}
+async function action(which){if(which==='clear'&&!confirm('Clear all currently queued cases? No map records will be deleted.'))return;for(const b of document.querySelectorAll('button'))b.disabled=true;$('note').textContent=which==='scan'?'Scanning published map files…':'Saving…';try{const r=await window.PPABrainRequest(endpoint,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:which})}),d=await r.json();if(!r.ok)throw Error(d.error||'Request failed');draw(d)}catch(e){$('note').textContent=e.message;await load();}}
 for(const v of ['pause','resume'])$(v).addEventListener('click',()=>action(v));
 $('filter').addEventListener('input',render);
 load();setInterval(()=>{if(!document.hidden)load()},30000);
+</script><script src="brain-nav.js" defer></script><script src="approval-queue.js" defer></script><script src="property-intake.js" defer></script><script src="preview-test.js" defer></script><script src="/owner/pipeline.js" defer></script><script>
+(async()=>{
+ const summary=document.getElementById('unattendedSummary'),checks=document.getElementById('unattendedChecks');
+ let pilotRunning=false, shownPilotAt=null;
+ const pilotSleep=ms=>new Promise(done=>setTimeout(done,ms));
+ // A pilot can finish on the server while the browser loses its reply. The saved record is then the
+ // truth: show it, or say plainly that nothing finished. This only reads status; it never starts a run.
+ async function reconcilePilot(startedBefore,reason){
+  const out=document.getElementById('wayneBatchResult');
+  out.hidden=false;
+  out.textContent='The reply to the pilot was lost ('+reason+'). Checking the saved result on the server…';
+  const deadline=Date.now()+90000;
+  while(Date.now()<deadline){
+   try{
+    const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+    const d=await res.json();
+    if(res.ok&&d.ok){
+     const w=d.worker,newRun=!!w.lastStarted&&w.lastStarted!==startedBefore;
+     if(newRun&&w.lastPilot&&Date.parse(w.lastPilot.at)>=Date.parse(w.lastStarted)){
+      shownPilotAt=w.lastPilot.at;
+      showPilot(w.lastPilot);
+      const note=document.createElement('span');
+      note.style.display='block';note.style.color='#9fe8c8';
+      note.textContent='Saved result. The server finished this pilot; only the browser reply was lost.';
+      out.prepend(note);
+      return true;
+     }
+     if(Date.parse(w.lockedUntil)>Date.now()){
+      out.textContent='The pilot is still running on the server. Checking again…';
+     }else{
+      out.textContent=newRun
+       ?'The pilot stopped on the server'+(w.lastError?': '+w.lastError:'.')+' Check the status above before running again.'
+       :'The pilot did not start on the server, so no GIS request was made. You can run it again.';
+      return false;
+     }
+    }
+   }catch(e){/* status unreachable for a moment; keep checking until the deadline */}
+   await pilotSleep(3000);
+  }
+  out.textContent='Still unknown after 90 seconds. The server may still be finishing the pilot. Reload this page and check the saved result before running again.';
+  return false;
+ }
+ function showPilot(p){
+  const out=document.getElementById('wayneBatchResult');
+  out.hidden=false;
+  out.textContent='Pilot '+p.state.replaceAll('_',' ')+' · '+p.at+' · Cursor '+p.cursor+
+   ' · Attempted '+p.attempted+' · Processed '+p.processed+' · Verified '+p.verified+' · Skipped '+p.skipped+
+   ' · Published '+p.published+' · Map version '+p.mapVersion+' · GIS requests '+p.requests+'/'+p.requestLimit+
+   ' · Shared requests remaining '+p.remaining;
+  const source=document.createElement('a');
+  source.href=p.source;
+  source.textContent='Official Detroit GIS';
+  out.append(document.createTextNode(' · '),source);
+  for(const row of p.rows||[]){
+   const detail=document.createElement('span');
+   detail.style.display='block';
+   detail.textContent=row.parcelId+' · '+row.status.replaceAll('_',' ')+' · '+row.checkedAt+(row.reason?' · '+row.reason:'');
+   out.append(detail);
+  }
+ }
+ async function loadAutonomy(){
+  try{
+   const res=await fetch('/.netlify/functions/owner-brain-autonomy-status',{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(10000)});
+   const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Unavailable');
+   summary.textContent=d.unattendedProductionEnabled?'24/7 Wayne scheduler: ON':
+    d.preview?'Preview mode · 24/7 schedule only on the published website':'24/7 Wayne scheduler: OFF';
+   const retryPanel=document.getElementById('wayneRetryAlert');
+   retryPanel.hidden=!d.worker.retryExhausted;
+   document.getElementById('wayneRetryDetail').textContent=d.worker.retryExhausted?
+    'Parcel '+d.worker.retryParcel+' · Attempts '+d.worker.retryAttempt+
+    ' · '+(d.worker.retryLastError||'Provider error')+
+    ' · Re-arming keeps the cursor and daily limit unchanged.':'';
+   document.getElementById('wayneRetryRearm').dataset.parcel=d.worker.retryParcel||'';
+   document.getElementById('wayneRetryRearm').dataset.cursor=String(d.worker.cursor);
+   const progress=d.worker.progress;
+   const sourceCooling=Date.parse(d.worker.sourcePause?.nextAt)>Date.now();
+   document.getElementById('wayneQueueProgress').textContent=(progress?
+    'Detroit GIS queue · Total eligible '+progress.total+' · Processed '+(progress.total-progress.pending)+' · Verified '+progress.verified+' · Skipped '+progress.skipped+
+    ' · Failed after retries '+progress.failed+' · Pending '+progress.pending+
+    (progress.legacyProcessed?' · Earlier outcomes unavailable '+progress.legacyProcessed:''):
+    'Detroit GIS queue totals will appear after the next bounded batch.')+
+    (sourceCooling?' · Source paused until '+new Date(d.worker.sourcePause.nextAt).toLocaleString()+' · '+d.worker.sourcePause.reason:'');
+   document.getElementById('wayneComplete').textContent=progress?progress.processingPercent+'%':'—';
+   document.getElementById('wayneCoverage').textContent=progress?progress.verifiedPercent+'%':'—';
+   const readiness=d.pilotReadiness;
+   document.getElementById('wayneRemaining').textContent=readiness?.remaining??'Unavailable';
+   document.getElementById('wayneReadiness').textContent=readiness?.eligible?
+    'Pilot checks passed · awaiting explicit owner confirmation':
+    readiness?'Pilot blocked · '+readiness.blockers.join(' · '):'Pilot readiness unavailable';
+   const status=d.worker.paused?'paused':Date.parse(d.worker.lockedUntil)>Date.now()?'running':
+    sourceCooling||Date.parse(d.worker.retryNextAt)>Date.now()?'waiting':(d.worker.state||'idle').replaceAll('_',' ');
+   document.getElementById('wayneTiming').textContent='Worker '+status+
+    ' · Last successful batch '+(d.worker.lastSuccessfulBatch?new Date(d.worker.lastSuccessfulBatch).toLocaleString():'unrecorded')+
+    (readiness?.nextEligibleAt?' · Recheck after '+new Date(readiness.nextEligibleAt).toLocaleString():'')+
+    (d.worker.lastError?' · '+d.worker.lastError:'');
+   const entries=document.getElementById('wayneReviewEntries');
+   entries.replaceChildren();
+   for(const entry of d.worker.reviewQueue||[]){
+    const row=document.createElement('li');
+    row.textContent=entry.parcelId+' · Skipped · Needs Review · '+entry.reason+(entry.checkedAt?' · '+new Date(entry.checkedAt).toLocaleString():'')+' ';
+    if(d.preview){
+     const retry=document.createElement('button');
+     retry.type='button';
+     retry.textContent='Retry parcel';
+     retry.disabled=sourceCooling||d.worker.paused||Date.parse(d.worker.quotaResumeAt)>Date.now()||
+      (d.worker.quotaActive&&d.worker.dailyUsed>=d.worker.dailyLimit);
+     retry.onclick=async()=>{
+      if(!confirm('Run one bounded official GIS retry for '+entry.parcelId+' in preview? Verified results may be published to the preview map.'))return;
+      retry.disabled=true;
+      try{
+       const res=await fetch('/.netlify/functions/owner-brain-wayne-run',{method:'POST',credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'retry-skipped-parcel',confirmed:true,
+         index:entry.index,parcelId:entry.parcelId,checkedAt:entry.checkedAt})});
+       const result=await res.json();
+       if(!res.ok||!result.ok)throw Error(result.error||'Retry failed');
+       await loadAutonomy();
+       summary.textContent='Parcel '+entry.parcelId+' · '+(result.rows?.[0]?.status||result.state);
+      }catch(error){summary.textContent=error.message;retry.disabled=false;}
+     };
+     row.append(retry);
+    }
+    entries.append(row);
+   }
+   if(!entries.childElementCount){
+    const row=document.createElement('li');
+    row.textContent='No saved skip entries.';
+    entries.append(row);
+   }
+   const testButton=document.getElementById('wayneTestBatch');
+   testButton.hidden=!d.preview;
+   const remaining=d.worker.quotaActive?Math.max(0,d.worker.dailyLimit-d.worker.dailyUsed):null;
+   const hold=d.worker.paused?'Resume preview automation before running':
+    d.worker.publicationPending?'Finish saved publication recovery before running':
+    d.worker.retryExhausted?'Review the exhausted retry before running':
+    sourceCooling||Date.parse(d.worker.retryNextAt)>Date.now()?'Wait for the saved GIS cooldown':
+    Date.parse(d.worker.lockedUntil)>Date.now()?'Another batch is in progress':
+    remaining===null||remaining<3?'Three available shared GIS requests are required':readiness?.blockers[0]||'';
+   testButton.disabled=pilotRunning||!!hold;
+   testButton.title=hold||'Run one preview pilot using at most three official GIS requests, including publication';
+   testButton.dataset.cursor=String(d.worker.cursor);
+   testButton.dataset.lastStarted=d.worker.lastStarted||'';
+   if(d.worker.lastPilot&&!pilotRunning&&d.worker.lastPilot.at!==shownPilotAt){shownPilotAt=d.worker.lastPilot.at;showPilot(d.worker.lastPilot);}
+   document.getElementById('wayneQuotaActivationResult').textContent=d.worker.quotaActive
+    ?'Shared GIS budget active: '+Math.max(0,d.worker.dailyLimit-(d.worker.dailyUsed||0))+' of '+d.worker.dailyLimit+' requests left today. Activation itself sends no requests.'
+    :(d.worker.quotaResumeAt
+      ?'Budget marker saved. No GIS requests dispatched. Available after '+new Date(d.worker.quotaResumeAt).toISOString().replace('T',' ').slice(0,16)+' UTC.'
+      :'Shared GIS budget is not active. Activating it sends no GIS requests.');
+   const toggle=document.getElementById('unattendedToggle');
+   toggle.hidden=!!d.preview;toggle.textContent=d.unattendedProductionEnabled?'Disable 24/7 Wayne':'Enable 24/7 Wayne';
+   toggle.dataset.enabled=String(!!d.unattendedProductionEnabled);
+   checks.textContent='Wayne cursor '+d.worker.cursor+' · Map version '+d.worker.mapVersion+' · Verified map polygons '+d.worker.verifiedOverlayCount+' · Worker-published '+d.worker.published+' · Last scheduled run '+(d.lastScheduledRun?.at||'none')+
+    (d.worker.publicationPending?' · Saved publication needs recovery':'')+
+    (d.worker.quotaActive===false?(d.worker.quotaResumeAt?' · Shared GIS budget opens '+new Date(d.worker.quotaResumeAt).toISOString().replace('T',' ').slice(0,16)+' UTC':' · First batch request initializes the shared GIS budget. It opens the following UTC day.'):'')+
+    (d.worker.quotaActive?' · Shared GIS requests remaining '+remaining+'/'+d.worker.dailyLimit:'')+
+    ' · Other counties blocked until verified GIS connectors are configured';
+   return true;
+  }catch(e){summary.textContent='Readiness check unavailable: '+e.message;
+   document.getElementById('wayneReadiness').textContent='Pilot readiness blocked · '+e.message;return false;}
+ }
+ document.getElementById('wayneRetryRearm').onclick=async()=>{
+  const btn=document.getElementById('wayneRetryRearm'),parcelId=btn.dataset.parcel,cursor=Number(btn.dataset.cursor);
+  if(!parcelId||!Number.isSafeInteger(cursor))return;
+  if(!confirm('Allow a fresh official GIS verification attempt for parcel '+parcelId+'? This does NOT skip it, reset the daily request limit, or publish anything automatically.'))return;
+  btn.disabled=true;
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-retry-review',{method:'POST',
+    credentials:'same-origin',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'rearm-exhausted-parcel',confirmed:true,parcelId,cursor})});
+   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Retry review unsuccessful');
+   summary.textContent='Parcel '+parcelId+' re-armed for official GIS verification; no map change made';
+   await loadAutonomy();
+  }catch(e){summary.textContent='GIS retry review error: '+e.message;}
+  finally{btn.disabled=false;}
+ };
+ document.getElementById('wayneQuotaActivate').onclick=async()=>{
+  const btn=document.getElementById('wayneQuotaActivate'),out=document.getElementById('wayneQuotaActivationResult');
+  if(!confirm('Activate the shared Wayne GIS daily budget? This writes a shared activation marker but sends ZERO GIS requests. The 300-request limit and UTC-day wait remain enforced. Production scheduling stays OFF.'))return;
+  btn.disabled=true;out.textContent='Activating budget marker…';
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-quota-activate',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'activate-wayne-gis-quota',confirmed:true,scope:'wayne-preview-pilot'})
+   });
+   const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Activation unavailable');
+   out.textContent=d.active?'Budget activation saved. No GIS requests were sent.':'Budget marker saved. No GIS requests were sent.';
+   await loadAutonomy(); // replaces this message with the live budget count
+  }catch(e){out.textContent='Activation: '+e.message;}finally{btn.disabled=false;}
+ };
+ document.getElementById('wayneTestBatch').onclick=async()=>{
+  const btn=document.getElementById('wayneTestBatch'),out=document.getElementById('wayneBatchResult');
+  if(!confirm('Run one live Detroit GIS pilot in this preview? Up to three official GIS requests, including the independent publisher, count against the shared daily quota. Verified polygons may publish to the preview maps.'))return;
+  pilotRunning=true;
+  const startedBefore=btn.dataset.lastStarted||null;
+  btn.disabled=true;out.hidden=false;out.textContent='Running the live Wayne pilot…';
+  let reply=null,lost=null;
+  try{
+   const r=await fetch('/.netlify/functions/owner-brain-wayne-run',{
+    method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'run-live-wayne-pilot',confirmed:true,cursor:Number(btn.dataset.cursor),
+     lastStarted:startedBefore}),
+    signal:AbortSignal.timeout(60000)
+   });
+   try{reply={status:r.status,body:await r.json()};}
+   catch{lost='HTTP '+r.status+' with no readable reply';}
+  }catch(e){lost=e.message||'connection closed';}
+  try{
+   if(lost||reply.status>=500){
+    // The server may have finished: the browser lost the reply, or the server failed partway. Read the saved state.
+    await reconcilePilot(startedBefore,lost||reply.body?.error||'HTTP '+reply.status);
+   }else if(reply.status>=400||!reply.body?.pilot){
+    // Explicit refusals (checkpoint changed, budget, hold) come before any GIS request.
+    out.textContent='Pilot: '+(reply.body?.error||'the server did not run a pilot (state '+(reply.body?.state||'unknown')+')')+'. Nothing ran from this request.';
+   }else{
+    shownPilotAt=reply.body.pilot.at;
+    showPilot(reply.body.pilot);
+   }
+  }catch(e){out.textContent='Pilot display error: '+e.message;}
+  finally{pilotRunning=false;await loadAutonomy();}
+ };
+ const readinessButton=document.getElementById('unattendedRefresh');
+ const readinessFeedback=document.getElementById('unattendedRefreshStatus');
+ readinessButton.onclick=async()=>{
+  readinessButton.disabled=true;
+  readinessFeedback.textContent='Checking readiness…';
+  try{
+   const ok=await loadAutonomy();
+   readinessFeedback.textContent=ok?'Checked at '+new Date().toLocaleTimeString():'Readiness check failed. See the message above.';
+  }finally{readinessButton.disabled=false;}
+ };
+ document.getElementById('unattendedToggle').onclick=async()=>{
+  const btn=document.getElementById('unattendedToggle'),enable=btn.dataset.enabled!=='true';
+  if(!confirm(enable?'Enable scheduled Wayne County official GIS processing every 30 minutes on the published website, even while your phone is off? This uses Netlify function execution and GIS requests.':'Disable unattended Wayne County GIS processing? Existing verified parcels remain published.'))return;
+  btn.disabled=true;
+  try{
+   const res=await fetch('/.netlify/functions/owner-brain-scheduler-control',{method:'POST',credentials:'same-origin',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({action:enable?'enable':'disable',confirmed:true,scope:'wayne-verified-gis-only'})});
+   const d=await res.json();if(!res.ok||!d.ok)throw Error(d.error||'Control unavailable');
+   await loadAutonomy();
+  }catch(e){summary.textContent='Could not update scheduler: '+e.message;}finally{btn.disabled=false;}
+ };
+ await loadAutonomy();
+})();
 </script></body></html>

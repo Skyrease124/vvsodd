@@ -5,8 +5,14 @@ const js=readFileSync('kinvest-liens/map/parcel-map.js','utf8');
 const css=readFileSync('kinvest-liens/map/parcel-map.css','utf8');
 const src=readFileSync('kinvest-liens/map/index.html','utf8');
 
-test('white state overlays are default-hidden, parcel and state-fill layers preserved',()=>{
-  assert.match(js,/id: 'st-line'[^;\n]*layout: \{ visibility: 'none' \}/);
+test('black state borders stay on; thick white reference overlay is off by default',()=>{
+  // Design: satellite imagery + black state borders + parcel outlines. The ESRI 'ref' raster
+  // (white boundaries and place labels) is opt-in through Layers > Hybrid only.
+  assert.match(js,/let IDX = null[^\n]*base = 'satellite'/);
+  assert.match(js,/id: 'st-line'[^;\n]*layout: \{ visibility: 'visible' \}[^;\n]*'line-color': '#000000'/);
+  assert.match(js,/\{ id: 'ref', type: 'raster', source: 'ref', layout: \{ visibility: 'none' \} \}/);
+  assert.match(js,/map\.setLayoutProperty\('ref', 'visibility', b === 'hybrid' \? 'visible' : 'none'\)/);
+  assert.match(js,/map\.setLayoutProperty\('sat', 'visibility', b === 'map' \? 'none' : 'visible'\)/);
   assert.match(js,/id: 'st-sel'[^;\n]*layout: \{ visibility: 'none' \}/);
   for(const layer of ['p-fill','p-line','p-line-hist','p-vac','p-dots','st-fill','fl-gis-parcel-outline','fl-gis-building-outline']){
     assert.ok(js.includes("'"+layer+"'"),'Missing preserved map layer '+layer);
@@ -37,7 +43,8 @@ test('GIS respects state, uses Florida GIS only for Florida and verified links e
   assert.match(js,/x>-81\.05&&x<-79\.65/);
   assert.match(js,/x>-82\.35&&x<-81\.45/);
   assert.match(js,/syncGISButton\(\); refresh\(\)/);
-  assert.match(js,/syncGISButton\(\); aiRefresh\(\)/);
+  // Behaviour of syncGISButton() and aiRefresh() on a state change is verified in a real browser
+  // by tests/map_behavior.browser.cjs (CI: validate-map-polish.yml), not by matching adjacent lines.
 });
 test('styles support mobile homepage and full map without a second panel',()=>{
   assert.match(css,/\.ppa-map-home \.pm-tool-menu/);

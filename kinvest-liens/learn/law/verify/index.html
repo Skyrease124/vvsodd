@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify a certificate | PricePocket Academy</title>
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/learn/law/law.css">
+</head>
+<body class="lawbody">
+<header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a><nav><a href="/learn/law/">Law Studies</a></nav></div></header>
+<main class="law">
+  <p class="kick">PricePocket Academy</p><h1>Verify a <span class="g">certificate</span></h1>
+  <form id="f" class="pick"><input id="id" placeholder="PPA-XXXXX-XXXXX" aria-label="Certificate ID" autocomplete="off"><button class="btn">Verify</button></form>
+  <div id="out"></div>
+</main>
+<script>
+(function(){const f=document.getElementById('f'),i=document.getElementById('id'),o=document.getElementById('out');
+const go=()=>{o.textContent='Checking…';fetch('/.netlify/functions/academy?verify='+encodeURIComponent(i.value.trim())).then(r=>r.json()).then(d=>{o.textContent='';const p=document.createElement('div');p.className='tile';
+if(!d.ok){p.textContent=d.error||'Not found.';o.append(p);return;}const c=d.certificate;
+[['Certificate',c.title],['Holder',c.holder],['Score',c.score+'%'],['Issued',c.issued],['ID',c.id]].forEach(([k,v])=>{const r=document.createElement('div');r.className='row';const a=document.createElement('span');a.className='muted';a.textContent=k;const b=document.createElement('b');b.textContent=v;r.append(a,b);p.append(r);});
+const n=document.createElement('p');n.className='note';n.textContent=c.note;o.append(p,n);});};
+f.onsubmit=e=>{e.preventDefault();go();};const q=new URLSearchParams(location.search).get('id');if(q){i.value=q;go();}})();
+</script>
+<script src="/auth-nav.js" defer></script>
+</body>
+</html>

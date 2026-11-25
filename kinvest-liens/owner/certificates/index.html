@@ -31,7 +31,7 @@ nav a{display:inline-block;margin-right:14px}a:focus-visible,button:focus-visibl
 .auto-item{border-top:1px solid #e4ebf1;padding:12px 0;font-size:14px}
 .auto-item p{margin:5px 0;overflow-wrap:anywhere}
 .auto-item button{padding:8px 12px}
-</style></head>
+</style><link rel="stylesheet" href="/owner/owner-ui.css"></head>
 <body>
 <header><nav><a href="/owner/">← Owner Dashboard</a><a href="/">PricePocketAsset</a></nav></header>
 <main>
@@ -272,4 +272,5 @@ el('county').addEventListener('change',()=>{autoPage=0;loadAuto()});
 
 (async()=>{try{await request(null);el('workspace').hidden=false;await load();await loadAuto()}
 catch(e){say(e.message+' Sign in using your owner account.')}})();
-</script></body></html>
+</script><script src="/owner/owner-ui.js"></script><script src="/owner/certificates/cert-ui.js"></script>
+</body></html>

@@ -1,0 +1,471 @@
+[
+  {
+    "name": "Alachua",
+    "stateFips": "12",
+    "countyFips": "001",
+    "fdorCode": "11",
+    "appraiserUrl": "http://www.acpafl.org/"
+  },
+  {
+    "name": "Baker",
+    "stateFips": "12",
+    "countyFips": "003",
+    "fdorCode": "12",
+    "appraiserUrl": "http://www.bakerpa.com/"
+  },
+  {
+    "name": "Bay",
+    "stateFips": "12",
+    "countyFips": "005",
+    "fdorCode": "13",
+    "appraiserUrl": "https://baypa.net/"
+  },
+  {
+    "name": "Bradford",
+    "stateFips": "12",
+    "countyFips": "007",
+    "fdorCode": "14",
+    "appraiserUrl": "http://www.bradfordappraiser.com/"
+  },
+  {
+    "name": "Brevard",
+    "stateFips": "12",
+    "countyFips": "009",
+    "fdorCode": "15",
+    "appraiserUrl": "https://www.bcpao.us/"
+  },
+  {
+    "name": "Broward",
+    "stateFips": "12",
+    "countyFips": "011",
+    "fdorCode": "16",
+    "appraiserUrl": "http://www.bcpa.net"
+  },
+  {
+    "name": "Calhoun",
+    "stateFips": "12",
+    "countyFips": "013",
+    "fdorCode": "17",
+    "appraiserUrl": "http://www.qpublic.net/calhoun/"
+  },
+  {
+    "name": "Charlotte",
+    "stateFips": "12",
+    "countyFips": "015",
+    "fdorCode": "18",
+    "appraiserUrl": "https://www.ccappraiser.com/"
+  },
+  {
+    "name": "Citrus",
+    "stateFips": "12",
+    "countyFips": "017",
+    "fdorCode": "19",
+    "appraiserUrl": "https://www.citruspa.org/_dnn/"
+  },
+  {
+    "name": "Clay",
+    "stateFips": "12",
+    "countyFips": "019",
+    "fdorCode": "20",
+    "appraiserUrl": "http://www.ccpao.com/"
+  },
+  {
+    "name": "Collier",
+    "stateFips": "12",
+    "countyFips": "021",
+    "fdorCode": "21",
+    "appraiserUrl": "http://www.collierappraiser.com/"
+  },
+  {
+    "name": "Columbia",
+    "stateFips": "12",
+    "countyFips": "023",
+    "fdorCode": "22",
+    "appraiserUrl": "http://columbia.floridapa.com/"
+  },
+  {
+    "name": "DeSoto",
+    "stateFips": "12",
+    "countyFips": "027",
+    "fdorCode": "24",
+    "appraiserUrl": "http://www.desotopa.com/"
+  },
+  {
+    "name": "Dixie",
+    "stateFips": "12",
+    "countyFips": "029",
+    "fdorCode": "25",
+    "appraiserUrl": "http://www.qpublic.net/dixie/"
+  },
+  {
+    "name": "Duval",
+    "stateFips": "12",
+    "countyFips": "031",
+    "fdorCode": "26",
+    "appraiserUrl": "http://www.coj.net/Departments/Property-Appraiser.aspx"
+  },
+  {
+    "name": "Escambia",
+    "stateFips": "12",
+    "countyFips": "033",
+    "fdorCode": "27",
+    "appraiserUrl": "http://www.escpa.org"
+  },
+  {
+    "name": "Flagler",
+    "stateFips": "12",
+    "countyFips": "035",
+    "fdorCode": "28",
+    "appraiserUrl": "http://www.flaglerpa.com/"
+  },
+  {
+    "name": "Franklin",
+    "stateFips": "12",
+    "countyFips": "037",
+    "fdorCode": "29",
+    "appraiserUrl": "http://www.qpublic.net/franklin/"
+  },
+  {
+    "name": "Gadsden",
+    "stateFips": "12",
+    "countyFips": "039",
+    "fdorCode": "30",
+    "appraiserUrl": "https://gadsdenpa.com/"
+  },
+  {
+    "name": "Gilchrist",
+    "stateFips": "12",
+    "countyFips": "041",
+    "fdorCode": "31",
+    "appraiserUrl": "https://www.qpublic.net/fl/gilchrist/"
+  },
+  {
+    "name": "Glades",
+    "stateFips": "12",
+    "countyFips": "043",
+    "fdorCode": "32",
+    "appraiserUrl": "http://www.gladesflpa.com/"
+  },
+  {
+    "name": "Gulf",
+    "stateFips": "12",
+    "countyFips": "045",
+    "fdorCode": "33",
+    "appraiserUrl": "http://www.qpublic.net/gulf/"
+  },
+  {
+    "name": "Hamilton",
+    "stateFips": "12",
+    "countyFips": "047",
+    "fdorCode": "34",
+    "appraiserUrl": "http://www.hamiltonpa.com/"
+  },
+  {
+    "name": "Hardee",
+    "stateFips": "12",
+    "countyFips": "049",
+    "fdorCode": "35",
+    "appraiserUrl": "http://www.qpublic.net/hardee/"
+  },
+  {
+    "name": "Hendry",
+    "stateFips": "12",
+    "countyFips": "051",
+    "fdorCode": "36",
+    "appraiserUrl": "http://www.hendryprop.com/"
+  },
+  {
+    "name": "Hernando",
+    "stateFips": "12",
+    "countyFips": "053",
+    "fdorCode": "37",
+    "appraiserUrl": "https://hernandocountypa-florida.us/"
+  },
+  {
+    "name": "Highlands",
+    "stateFips": "12",
+    "countyFips": "055",
+    "fdorCode": "38",
+    "appraiserUrl": "http://www.hcpao.org"
+  },
+  {
+    "name": "Hillsborough",
+    "stateFips": "12",
+    "countyFips": "057",
+    "fdorCode": "39",
+    "appraiserUrl": "http://www.hcpafl.org"
+  },
+  {
+    "name": "Holmes",
+    "stateFips": "12",
+    "countyFips": "059",
+    "fdorCode": "40",
+    "appraiserUrl": "http://www.qpublic.net/holmes/"
+  },
+  {
+    "name": "Indian River",
+    "stateFips": "12",
+    "countyFips": "061",
+    "fdorCode": "41",
+    "appraiserUrl": "http://www.ircpa.org/"
+  },
+  {
+    "name": "Jackson",
+    "stateFips": "12",
+    "countyFips": "063",
+    "fdorCode": "42",
+    "appraiserUrl": "http://www.qpublic.net/jackson/"
+  },
+  {
+    "name": "Jefferson",
+    "stateFips": "12",
+    "countyFips": "065",
+    "fdorCode": "43",
+    "appraiserUrl": "http://www.JeffersonPA.net"
+  },
+  {
+    "name": "Lafayette",
+    "stateFips": "12",
+    "countyFips": "067",
+    "fdorCode": "44",
+    "appraiserUrl": "http://www.lafayettepa.com/"
+  },
+  {
+    "name": "Lake",
+    "stateFips": "12",
+    "countyFips": "069",
+    "fdorCode": "45",
+    "appraiserUrl": "http://www.lakecopropappr.com/"
+  },
+  {
+    "name": "Lee",
+    "stateFips": "12",
+    "countyFips": "071",
+    "fdorCode": "46",
+    "appraiserUrl": "http://www.leepa.org/"
+  },
+  {
+    "name": "Leon",
+    "stateFips": "12",
+    "countyFips": "073",
+    "fdorCode": "47",
+    "appraiserUrl": "http://www.leonpa.org/"
+  },
+  {
+    "name": "Levy",
+    "stateFips": "12",
+    "countyFips": "075",
+    "fdorCode": "48",
+    "appraiserUrl": "http://www.qpublic.net/fl/levy/"
+  },
+  {
+    "name": "Liberty",
+    "stateFips": "12",
+    "countyFips": "077",
+    "fdorCode": "49",
+    "appraiserUrl": "http://www.qpublic.net/liberty/"
+  },
+  {
+    "name": "Madison",
+    "stateFips": "12",
+    "countyFips": "079",
+    "fdorCode": "50",
+    "appraiserUrl": "http://www.madisonpa.com"
+  },
+  {
+    "name": "Manatee",
+    "stateFips": "12",
+    "countyFips": "081",
+    "fdorCode": "51",
+    "appraiserUrl": "http://www.manateepao.com/"
+  },
+  {
+    "name": "Marion",
+    "stateFips": "12",
+    "countyFips": "083",
+    "fdorCode": "52",
+    "appraiserUrl": "http://www.pa.marion.fl.us/"
+  },
+  {
+    "name": "Martin",
+    "stateFips": "12",
+    "countyFips": "085",
+    "fdorCode": "53",
+    "appraiserUrl": "http://www.pa.martin.fl.us/"
+  },
+  {
+    "name": "Miami-Dade",
+    "stateFips": "12",
+    "countyFips": "086",
+    "fdorCode": "23",
+    "appraiserUrl": "http://www.miamidade.gov/pa/"
+  },
+  {
+    "name": "Monroe",
+    "stateFips": "12",
+    "countyFips": "087",
+    "fdorCode": "54",
+    "appraiserUrl": "http://qpublic.net/monroe/"
+  },
+  {
+    "name": "Nassau",
+    "stateFips": "12",
+    "countyFips": "089",
+    "fdorCode": "55",
+    "appraiserUrl": "https://ncpafl.com/"
+  },
+  {
+    "name": "Okaloosa",
+    "stateFips": "12",
+    "countyFips": "091",
+    "fdorCode": "56",
+    "appraiserUrl": "http://www.okaloosapa.com/"
+  },
+  {
+    "name": "Okeechobee",
+    "stateFips": "12",
+    "countyFips": "093",
+    "fdorCode": "57",
+    "appraiserUrl": "http://www.okeechobeepa.com/"
+  },
+  {
+    "name": "Orange",
+    "stateFips": "12",
+    "countyFips": "095",
+    "fdorCode": "58",
+    "appraiserUrl": "https://ocpaweb.ocpafl.org/"
+  },
+  {
+    "name": "Osceola",
+    "stateFips": "12",
+    "countyFips": "097",
+    "fdorCode": "59",
+    "appraiserUrl": "http://www.property-appraiser.org/"
+  },
+  {
+    "name": "Palm Beach",
+    "stateFips": "12",
+    "countyFips": "099",
+    "fdorCode": "60",
+    "appraiserUrl": "http://www.co.palm-beach.fl.us/papa/index.htm"
+  },
+  {
+    "name": "Pasco",
+    "stateFips": "12",
+    "countyFips": "101",
+    "fdorCode": "61",
+    "appraiserUrl": "http://www.pascopa.com/"
+  },
+  {
+    "name": "Pinellas",
+    "stateFips": "12",
+    "countyFips": "103",
+    "fdorCode": "62",
+    "appraiserUrl": "https://www.pcpao.gov/"
+  },
+  {
+    "name": "Polk",
+    "stateFips": "12",
+    "countyFips": "105",
+    "fdorCode": "63",
+    "appraiserUrl": "https://www.polkflpa.gov/default.aspx?cookie_test=true"
+  },
+  {
+    "name": "Putnam",
+    "stateFips": "12",
+    "countyFips": "107",
+    "fdorCode": "64",
+    "appraiserUrl": "https://pa.putnam-fl.com/"
+  },
+  {
+    "name": "St. Johns",
+    "stateFips": "12",
+    "countyFips": "109",
+    "fdorCode": "65",
+    "appraiserUrl": "http://www.sjcpa.us"
+  },
+  {
+    "name": "St. Lucie",
+    "stateFips": "12",
+    "countyFips": "111",
+    "fdorCode": "66",
+    "appraiserUrl": "http://www.paslc.org/"
+  },
+  {
+    "name": "Santa Rosa",
+    "stateFips": "12",
+    "countyFips": "113",
+    "fdorCode": "67",
+    "appraiserUrl": "https://srcpa.gov"
+  },
+  {
+    "name": "Sarasota",
+    "stateFips": "12",
+    "countyFips": "115",
+    "fdorCode": "68",
+    "appraiserUrl": "http://www.SC-PA.com"
+  },
+  {
+    "name": "Seminole",
+    "stateFips": "12",
+    "countyFips": "117",
+    "fdorCode": "69",
+    "appraiserUrl": "http://www.scpafl.org/"
+  },
+  {
+    "name": "Sumter",
+    "stateFips": "12",
+    "countyFips": "119",
+    "fdorCode": "70",
+    "appraiserUrl": "http://www.SumterPA.com"
+  },
+  {
+    "name": "Suwannee",
+    "stateFips": "12",
+    "countyFips": "121",
+    "fdorCode": "71",
+    "appraiserUrl": "http://www.suwanneepa.com/"
+  },
+  {
+    "name": "Taylor",
+    "stateFips": "12",
+    "countyFips": "123",
+    "fdorCode": "72",
+    "appraiserUrl": "https://qpublic.net/fl/taylor/"
+  },
+  {
+    "name": "Union",
+    "stateFips": "12",
+    "countyFips": "125",
+    "fdorCode": "73",
+    "appraiserUrl": "http://union.floridapa.com"
+  },
+  {
+    "name": "Volusia",
+    "stateFips": "12",
+    "countyFips": "127",
+    "fdorCode": "74",
+    "appraiserUrl": "https://vcpa.vcgov.org/#gsc.tab=0"
+  },
+  {
+    "name": "Wakulla",
+    "stateFips": "12",
+    "countyFips": "129",
+    "fdorCode": "75",
+    "appraiserUrl": "https://mywakullapa.com/"
+  },
+  {
+    "name": "Walton",
+    "stateFips": "12",
+    "countyFips": "131",
+    "fdorCode": "76",
+    "appraiserUrl": "http://www.waltonpa.com/"
+  },
+  {
+    "name": "Washington",
+    "stateFips": "12",
+    "countyFips": "133",
+    "fdorCode": "77",
+    "appraiserUrl": "http://www.qpublic.net/washington/"
+  }
+]

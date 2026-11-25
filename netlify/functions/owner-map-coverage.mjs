@@ -1,6 +1,8 @@
 // Read-only nationwide map coverage + owner-assisted NVIDIA research.
 // Never writes to parcel datasets, maps, approved research, or public releases.
 import * as auth from '../lib/auth.mjs';
+import * as brain from '../lib/brain-auth.mjs';
+import correctionFeed from './brain-map-county.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as keys from '../lib/keystore.mjs';
 import * as APIKEYS from '../lib/apikeys.mjs';
@@ -26,14 +28,34 @@ function synopsis(d) {
     sourceCount:(d.sources||[]).length,sourceUrls:(d.sources||[]).filter(x=>/^https:\/\//.test(x)).slice(0,4),
     gis:d.gis&&/^https:\/\//.test(d.gis.url||'')?{name:d.gis.name||'GIS source',url:d.gis.url}:null};
 }
+async function patches(id){
+ if(id!=='MI-wayne')return {};
+ const response=await correctionFeed(new Request('https://coverage.internal/?dataset='+id));
+ if(!response.ok)throw Error('Verified correction feed unavailable');
+ return (await response.json()).records||{};
+}
+async function liveSynopsis(d){
+ const out=synopsis(d),records=await patches(d.id);
+ if(d.id!=='MI-wayne'){out.verifiedCorrections=0;return out;}
+ // Count only corrections for existing, previously unmapped source records.
+ // A stale/orphaned patch or an already mapped parcel must not inflate coverage.
+ const ds=await readStatic('/map/data/'+d.file);
+ const corrected=new Set(Object.keys(records));
+ const added=(ds.recs||[]).filter(r=>r?.i&&corrected.has(r.i)&&!r.g&&!r.cx).length;
+ out.mapped=Math.min(out.records,out.mapped+added);
+ out.missing=out.records-out.mapped;
+ out.verifiedCorrections=added;
+ return out;
+}
 async function datasetDetail(d) {
   const ds=await readStatic('/map/data/'+d.file);
   // Show source identifiers for owner investigation, not unverified coordinates.
-  const raw=(ds.recs||[]).filter(r=>!r.cx&&!r.g);
-  return {dataset:synopsis(d),examples:raw.slice(0,30).map(r=>({parcelId:plain(r.p),recordId:plain(r.i),taxYear:plain(r.ty)})),sampleSize:Math.min(raw.length,30),
+  const corrected=await patches(d.id);
+  const raw=(ds.recs||[]).filter(r=>!r.cx&&!r.g&&!corrected[r.i]);
+  return {dataset:await liveSynopsis(d),examples:raw.slice(0,30).map(r=>({parcelId:plain(r.p),recordId:plain(r.i),taxYear:plain(r.ty)})),sampleSize:Math.min(raw.length,30),
      sampleOnly:true,geometryWritten:false};
 }
-export default async req=>{
+const handler=async req=>{
   if(req.method!=='GET'&&req.method!=='POST')return json(405,{error:'GET or POST only'});
   const user=await auth.userFromCookie(req.headers.get('cookie')||'');
   if(!user)return json(401,{error:'Owner sign-in required'});
@@ -49,7 +71,7 @@ export default async req=>{
         if(!d)return json(404,{error:'County dataset not found'});
         return json(200,{ok:true,...await datasetDetail(d)});
       }
-      const summary=datasets.map(synopsis);
+      const summary=await Promise.all(datasets.map(liveSynopsis));
       const totals=summary.reduce((a,d)=>(a.records+=d.records,a.mapped+=d.mapped,a.missing+=d.missing,a.counties++,a),{records:0,mapped:0,missing:0,counties:0});
       return json(200,{ok:true,built:index.built||null,totals,datasets:summary,
         notes:'Coverage is from the existing published map index; this feature never modifies property boundaries or public listings.'});
@@ -88,3 +110,5 @@ export default async req=>{
   }catch(e){console.error('Owner map coverage:',String(e?.message||e).slice(0,150));
     return json(503,{error:'County research encountered a temporary server or map-data error. No map data was changed.',stage:'coverage_server'});}
 };
+
+export default brain.withBrainStore(handler);

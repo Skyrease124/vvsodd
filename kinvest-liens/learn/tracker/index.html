@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Curriculum tracker | PricePocketAsset</title>
+<title>State courses | PricePocketAsset</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PricePocket">
-<meta name="description" content="Which state tax sale courses are ready, and what remains for each state.">
+<meta name="description" content="Full state tax sale courses and a short class for every state.">
 <meta name="theme-color" content="#070d1c">
 <link rel="icon" type="image/png" href="/img/favicon.png">
 <link rel="stylesheet" href="/styles.css">
@@ -16,37 +16,34 @@
 <body class="aibody mcbody stbody">
 <header class="nav"><div class="wrap nav-in"><a class="logo" href="/"><img class="logoimg" src="/img/logo-mark.png" alt="" width="58" height="27">PricePocketAsset</a><nav><a href="/learn/">Master Class</a></nav></div></header>
 <main><section class="wrap section">
-  <p class="hgreet">Curriculum</p>
-  <h1 class="pfh">50-state <span class="gold">course tracker</span></h1>
-  <p class="lead">Each state course is released only when its lessons, citations, exercises and quizzes are complete. Here is where every state stands.</p>
-  <div id="tsum" class="crmeta"></div>
-  <div class="lientools"><input id="tq" type="search" placeholder="Find a state" aria-label="Find a state"><select id="tf" aria-label="Filter"><option value="">All states</option><option value="Published">Published</option><option value="Batch 1">Batch 1 (next)</option><option value="Batch 2">Batch 2</option><option value="Batch 3">Batch 3</option></select></div>
-  <div id="tlist" class="trlist"><p class="muted">Loading…</p></div>
-  <p class="small muted">Research = official statutes and agency guidance read and cited. Writing = the full course drafted. Review = checked against the sources; outside legal review is listed separately. Educational only.</p>
+  <p class="hgreet">Academy</p>
+  <h1 class="pfh">State <span class="gold">courses</span></h1>
+  <p class="lead">Full courses are written from official statutes and county sources, then reviewed before release. Every other state has a short class to start with.</p>
+  <h2 class="cath">Available now</h2>
+  <div id="full" class="grid3"><p class="muted">Loading…</p></div>
+  <h2 class="cath" style="margin-top:28px">Short classes</h2>
+  <input id="tq" type="search" placeholder="Find a state" aria-label="Find a state" style="margin:6px 0 12px;width:100%;max-width:360px">
+  <div id="short" class="trchips"></div>
+  <p id="next" class="small muted" style="margin-top:22px"></p>
+  <p class="small muted">Want to go deeper? <a href="/learn/law/">Law Studies</a> has the final examinations and certificates.</p>
 </section></main>
 <footer><div class="wrap"><p><b>PricePocketAsset</b></p></div></footer>
+<style>.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}.trchips{display:flex;flex-wrap:wrap;gap:8px}.trchips a{padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.06);color:inherit;text-decoration:none;font-size:14px}.trchips a:hover{background:rgba(16,185,129,.18)}</style>
 <script>
 (function () {
   const mk = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
-  let rows = [];
-  function draw() {
-    const q = document.getElementById('tq').value.trim().toLowerCase(), f = document.getElementById('tf').value, L = document.getElementById('tlist'); L.textContent = '';
-    rows.filter(r => (!q || (r.name + ' ' + r.state).toLowerCase().includes(q)) && (!f || (f === 'Published' ? r.publication.startsWith('Published') : r.batch === f))).forEach(r => {
-      const c = mk('article', 'trcard' + (r.publication.startsWith('Published') ? ' pub' : ''));
-      const h = mk('div', 'rsh'); h.append(mk('b', '', r.name), mk('span', 'rschip ' + (r.publication.startsWith('Published') ? 'verified' : r.research.startsWith('Partial') ? 'followup' : 'unknown'), r.publication.startsWith('Published') ? 'Published' : r.batch));
-      c.appendChild(h); c.appendChild(mk('p', 'small muted', r.system));
-      const dl = mk('dl', 'trdl'); [['Research', r.research], ['Writing', r.writing], ['Review', r.review], ['Publication', r.publication], ['What remains', r.remaining]].forEach(([k, v]) => { const d = mk('div'); d.append(mk('dt', '', k), mk('dd', '', v)); dl.appendChild(d); }); c.appendChild(dl);
-      const a = mk('a', 'btn small' + (r.publication.startsWith('Published') ? '' : ' ghost'), r.publication.startsWith('Published') ? 'Open the full course' : 'Open the short class'); a.href = r.publication.startsWith('Published') ? '/learn/course/?c=' + r.state.toLowerCase() : '/learn/state/?s=' + r.state; c.appendChild(a);
-      L.appendChild(c);
-    });
-  }
+  let rows = [], pub = [];
+  const drawShort = () => { const q = document.getElementById('tq').value.trim().toLowerCase(), S = document.getElementById('short'); S.textContent = '';
+    rows.filter(r => !pub.includes(r.state) && (!q || (r.name + ' ' + r.state).toLowerCase().includes(q))).forEach(r => { const a = mk('a', '', r.name); a.href = '/learn/state/?s=' + r.state; S.append(a); }); };
   fetch('/.netlify/functions/course?tracker=1').then(r => r.json()).then(d => {
-    rows = d.tracker || [];
-    const n = k => rows.filter(k).length, s = document.getElementById('tsum');
-    [n(r => r.publication.startsWith('Published')) + ' published', n(r => r.research.startsWith('Partial')) + ' with partial research', n(r => r.research.startsWith('Not')) + ' not started', rows.length + ' total (50 states and DC)'].forEach(t => s.appendChild(mk('span', '', t)));
-    draw();
-  }).catch(() => { document.getElementById('tlist').textContent = 'Could not load the tracker.'; });
-  ['tq', 'tf'].forEach(id => document.getElementById(id).addEventListener('input', draw));
+    rows = d.tracker || []; pub = d.published || [];
+    const F = document.getElementById('full'); F.textContent = '';
+    rows.filter(r => pub.includes(r.state)).forEach(r => { const c = mk('div', 'mccard'); c.append(mk('b', '', r.name), mk('span', 'small', r.system)); const a = mk('a', 'btn small', 'Start the course'); a.href = '/learn/course/?c=' + r.state.toLowerCase(); c.append(a); F.append(c); });
+    const nx = rows.filter(r => r.next && !pub.includes(r.state)).map(r => r.name);
+    if (nx.length) document.getElementById('next').textContent = 'Being written next: ' + nx.join(', ') + '.';
+    drawShort();
+  }).catch(() => { document.getElementById('full').textContent = 'Could not load the courses.'; });
+  document.getElementById('tq').addEventListener('input', drawShort);
 })();
 </script>
 <script src="/auth-nav.js"></script>

@@ -34,8 +34,9 @@ export const STATUSES = ['upcoming', 'monitoring', 'in_stock', 'low_stock', 'sol
 // Stock states shown to people. Price alone never means in_stock. 'sold_out' is kept for older records (same as out_of_stock).
 export const STOCK_LABEL = { in_stock: 'IN STOCK', low_stock: 'LOW STOCK', out_of_stock: 'OUT OF STOCK', sold_out: 'OUT OF STOCK', invite_only: 'Invite Only', preorder: 'Preorder', coming_soon: 'Coming Soon', waitlist: 'Waitlist', limited_access: 'Limited Access', unknown: 'Unknown', upcoming: 'UPCOMING', monitoring: 'MONITORING', disabled: 'DISABLED' };
 const AVAILABLE = new Set(['in_stock', 'low_stock']);
-const COOLDOWN_MS = () => +(process.env.RETAIL_COOLDOWN_MIN || 360) * 60e3;   // same alert type, same product: at most every 6 hours
-const FRESH_MS = 3 * 3600e3;   // "In Stock Now" only shows results confirmed in the last 3 hours
+const COOLDOWN_MS = () => +(process.env.RETAIL_COOLDOWN_MIN || 360) * 60e3;   // automatic changes: same alert type, same product, at most every 6 hours
+const OWNER_COOLDOWN_MS = () => +(process.env.RETAIL_OWNER_COOLDOWN_MIN || 30) * 60e3;   // owner-confirmed changes: a short guard against double taps
+const FRESH_MS = 3 * 3600e3;   // automatic checks: "In Stock Now" only shows a result confirmed in the last 3 hours. Owner-confirmed stock stays until the owner changes it.
 
 // ---- URL safety: https, a known store, no credentials, tracking parameters removed ----
 export function checkUrl(raw) {
@@ -127,12 +128,12 @@ async function bestBuy(url) {
   const d = await r.json(); return { name: clean(d.name, 160), image: d.image, price: +d.salePrice || undefined, releaseDate: d.releaseDate || undefined };
 }
 // {ok, info:{name,image,price,status,reason,releaseDate}, readable, note}. readable = a real state was found (not UNKNOWN), so automatic checks can run.
-export async function lookup(url) {
+export async function lookup(url, { timeoutMs = 9000 } = {}) {
   const c = checkUrl(url); if (!c) return err(400, 'Paste a https link from a supported store.');
   const store = RETAILERS[c.retailer].name;
   if (RETAILERS[c.retailer].noFetch) return { ok: true, info: { status: 'unknown', reason: store + ' does not allow automatic checks. You confirm stock yourself.' }, readable: false, note: store + ' does not allow automatic checks. You confirm stock yourself.' };
   try {
-    const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(9000) });
+    const r = await fetchImpl(c.url, { headers: { 'User-Agent': UA, Accept: 'text/html' }, redirect: 'follow', signal: AbortSignal.timeout(timeoutMs) });
     if (!r.ok) return { ok: true, info: { status: 'unknown', reason: store + ' answered ' + r.status }, readable: false, note: store + ' answered ' + r.status + '. Fill in the details yourself; stock is owner-confirmed.' };
     const html = (await r.text()).slice(0, 3e6); const info = parseHtml(html);
     if (c.retailer === 'bestbuy') { try { const a = await bestBuy(c.url); if (a) { info.name = a.name || info.name; if (a.price) info.price = a.price; if (a.releaseDate) info.releaseDate = a.releaseDate; } } catch (e) { /* the page still decides stock */ } }
@@ -199,7 +200,7 @@ export async function createProduct(owner, b) {
   if (!p.name) return err(400, 'Add a product name.'); if (!p.category) return err(400, 'Pick a category.');
   if (STATUSES.includes(b.status)) p.status = b.status;
   if (p.priceManual != null) p.price = p.priceManual;
-  if (AVAILABLE.has(p.status)) p.confirmedAt = p.checkedAt = now();
+  if (AVAILABLE.has(p.status)) { p.confirmedAt = p.checkedAt = now(); p.confirmedBy = 'owner'; }
   await auth.kvPut(KP(p.id), p); await auth.kvPut(KU(c.url), { id: p.id }); return { ok: true, product: p };
 }
 export async function updateProduct(id, b) {
@@ -217,7 +218,7 @@ export async function listProducts({ all } = {}) {
 }
 // Public card: verified facts only. "In stock" shows only while the last confirmation is fresh.
 export function card(p) {
-  const fresh = p.confirmedAt && Date.now() - Date.parse(p.confirmedAt) < FRESH_MS;
+  const fresh = p.confirmedAt && (p.confirmedBy === 'owner' || Date.now() - Date.parse(p.confirmedAt) < FRESH_MS);
   const status = AVAILABLE.has(p.status) && !fresh ? 'monitoring' : p.status;
   return { id: p.id, name: p.name, retailer: p.retailer, retailerName: RETAILERS[p.retailer].name, url: p.url, buyUrl: p.affiliateUrl || p.url, asin: p.asin || '', image: p.image, price: p.price, prevPrice: p.prevPrice, status, statusReason: p.statusReason || '', imageNote: p.image ? '' : (p.imageNote || 'Image not found'), imageSource: p.imageSource || '', category: p.category, variant: p.variant, releaseDate: p.releaseDate, checkedAt: p.confirmedAt && AVAILABLE.has(status) ? p.confirmedAt : (p.checkedAt || p.updated), auto: !!p.auto, watchers: p.watchers || 0 };
 }
@@ -226,7 +227,7 @@ export function card(p) {
 export async function applyResult(p, r, source) {
   const t = now(), prevStatus = p.status, prevPrice = p.price;
   const nextStatus = STATUSES.includes(r.status) ? r.status : prevStatus, nextPrice = r.price != null ? num(r.price) : prevPrice;
-  p.checkedAt = t; if (AVAILABLE.has(nextStatus)) p.confirmedAt = t;
+  p.checkedAt = t; if (AVAILABLE.has(nextStatus)) { p.confirmedAt = t; p.confirmedBy = source; }
   if (r.reason) p.statusReason = clean(r.reason, 240);
   const events = [];
   if (nextStatus !== prevStatus) {
@@ -238,7 +239,7 @@ export async function applyResult(p, r, source) {
   if (nextPrice != null && nextPrice !== prevPrice) { p.prevPrice = prevPrice; p.price = nextPrice; if (prevPrice != null && nextPrice < prevPrice && AVAILABLE.has(p.status)) events.push('price'); }
   p.updated = t; const sent = [];
   for (const kind of events) {
-    const last = (p.lastAlert || {})[kind]; if (last && Date.now() - Date.parse(last) < COOLDOWN_MS()) { sent.push({ kind, skipped: 'cooldown' }); continue; }
+    const last = (p.lastAlert || {})[kind]; if (last && Date.now() - Date.parse(last) < (source === 'owner' ? OWNER_COOLDOWN_MS() : COOLDOWN_MS())) { sent.push({ kind, skipped: 'cooldown' }); continue; }
     p.lastAlert = Object.assign({}, p.lastAlert, { [kind]: t }); sent.push(Object.assign({ kind }, await notifyProduct(p, kind)));
   }
   await auth.kvPut(KP(p.id), p); return sent;
@@ -367,14 +368,6 @@ export async function decide(owner, id, b) {
   return { ok: true, request: q };
 }
 
-// Re-reads only the product image. Stock status, watchers and alerts are not touched.
-export async function refreshImage(id) {
-  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
-  const r = await lookup(p.url); const img = r.ok && r.info && r.info.image;
-  if (img) { p.image = img; p.imageSource = 'page'; p.imageNote = ''; } else { p.imageNote = 'Image not found'; }
-  p.imageCheckedAt = now(); p.updated = now(); await auth.kvPut(KP(p.id), p);
-  return { ok: true, found: !!img, product: await getProduct(id) };
-}
 
 // ---- monitor: one check per product, faster near release, slower when a source keeps failing ----
 export function dueIn(p) {
@@ -382,17 +375,122 @@ export function dueIn(p) {
   if (p.status === 'upcoming' && p.releaseDate) { const ms = Date.parse(p.releaseDate) - Date.now(); if (ms > 7 * 864e5) return 12 * 3600e3; if (ms > 2 * 864e5) return 3 * 3600e3; if (ms > -864e5) return 10 * 60e3; }
   return AVAILABLE.has(p.status) ? 20 * 60e3 : 30 * 60e3;
 }
+// One automatic check of one product. The monitor and the owner's "Check now" both use it, so the rules are the same.
+export async function checkOne(p, opts = {}) {
+  const r = await lookup(p.url, opts);
+  if (!r.ok || !r.readable) {
+    p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable';
+    if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; }
+    await auth.kvPut(KP(p.id), p);
+    return { readable: false, failedNow: p.fails === 3, note: p.lastError, changed: false, alerts: 0, sent: [] };
+  }
+  p.fails = 0; p.lastError = '';
+  if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
+  const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
+  return { readable: true, failedNow: false, note: r.note, changed: p.status !== before, alerts: sent.filter(x => !x.skipped).length, sent };
+}
 export async function monitor({ limit = 25 } = {}) {
   const ps = (await listProducts()).filter(p => p.auto && !RETAILERS[p.retailer].noFetch && (!p.checkedAt || Date.now() - Date.parse(p.checkedAt) >= dueIn(p)));
   const res = { checked: 0, changed: 0, alerts: 0, failed: [] };
   for (const p of ps.slice(0, limit)) {
-    const r = await lookup(p.url); res.checked++;
-    if (!r.ok || !r.readable) { p.fails = (p.fails || 0) + 1; p.checkedAt = now(); p.lastError = r.note || r.error || 'unreadable'; if (AVAILABLE.has(p.status) && p.fails >= 2) { p.prevStatus = p.status; p.status = 'monitoring'; } await auth.kvPut(KP(p.id), p); if (p.fails === 3) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError }); continue; }
-    p.fails = 0; p.lastError = ''; if (r.info.image) { p.image = r.info.image; p.imageSource = 'page'; p.imageNote = ''; p.imageCheckedAt = now(); }
-    const before = p.status; const sent = await applyResult(p, { status: r.info.status, price: r.info.price, reason: r.info.reason }, 'auto');
-    if (p.status !== before) res.changed++; res.alerts += sent.filter(x => !x.skipped).length;
+    const c = await checkOne(p); res.checked++;
+    if (c.failedNow) res.failed.push({ id: p.id, name: p.name, retailer: p.retailer, error: p.lastError });
+    if (c.changed) res.changed++; res.alerts += c.alerts;
   }
   return res;
+}
+// ---- Owner "Check now" as a background job. The request queues a job and returns at once; a background function
+// runs it with a longer time limit; the owner page polls the job. Each job has a secret token that only the queued
+// request knows, so nothing else can start a job.
+const MANUAL_GUARD_MS = 15e3;   // owner double-tap guard, measured from the last tap
+const CHECK_TIMEOUT_MS = 25000;
+const JOB_STALE_MS = 10 * 60e3;
+const JK = id => 'rcheck_' + String(id || '').replace(/[^a-f0-9]/g, '');
+let dispatchImpl = null;
+export const _setDispatch = f => { dispatchImpl = f; };
+async function dispatchCheck({ origin, jobId, token }) {
+  if (dispatchImpl) return dispatchImpl({ origin, jobId, token });
+  const r = await fetch(origin + '/.netlify/functions/retail-check-background', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId, token }), signal: AbortSignal.timeout(8000) });
+  if (r.status !== 202 && !r.ok) throw Error('background check answered ' + r.status);
+}
+function tokenOk(expected, given) {
+  const a = Buffer.from(String(expected || '')), b = Buffer.from(String(given || ''));
+  return a.length > 0 && a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+async function clearJob(productId, jobId) {
+  const q = await getProduct(productId); if (q && q.checkJob === jobId) { q.checkJob = ''; await auth.kvPut(KP(q.id), q); }
+}
+// Shared by Check now and Refresh image: a short double-tap guard, and one job per product at a time.
+function tapGuard(p) {
+  const wait = Math.ceil(((p.manualCheckAt ? Date.parse(p.manualCheckAt) : 0) + MANUAL_GUARD_MS - Date.now()) / 1000);
+  return wait > 0 ? err(429, 'Checked a moment ago. Try again in ' + wait + ' seconds.') : null;
+}
+async function queueJob(p, kind, origin) {
+  const busy = p.checkJob ? await auth.kvGet(JK(p.checkJob)) : null;
+  if (busy && (busy.status === 'queued' || busy.status === 'running') && Date.now() - Date.parse(busy.createdAt) < JOB_STALE_MS) return err(409, 'This product is already being checked. Wait for the result.', { jobId: busy.id });
+  const job = { id: crypto.randomBytes(12).toString('hex'), product: p.id, kind, token: crypto.randomBytes(24).toString('hex'), status: 'queued', createdAt: now() };
+  p.manualCheckAt = now(); p.checkJob = job.id;
+  await auth.kvPut(JK(job.id), job); await auth.kvPut(KP(p.id), p);
+  try { await dispatchCheck({ origin, jobId: job.id, token: job.token }); }
+  catch (e) {
+    job.status = 'done'; job.finishedAt = now(); job.result = { readable: false, found: false, message: 'Could not start the check. Stock unchanged. Try again in a moment.' };
+    await auth.kvPut(JK(job.id), job); await clearJob(p.id, job.id);
+    return err(502, job.result.message);
+  }
+  return { ok: true, queued: true, jobId: job.id };
+}
+// The owner's "Check now": same rules as an automatic check.
+export async function checkNow(id, { origin = '' } = {}) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' is never checked automatically. Confirm the stock yourself.');
+  const g = tapGuard(p); if (g) return g;
+  return queueJob(p, 'stock', origin);
+}
+// The owner's "Refresh image": reads the store page for a picture only. Stock status is never touched.
+export async function refreshImageNow(id, { origin = '' } = {}) {
+  const p = await getProduct(id); if (!p) return err(404, 'Product not found.');
+  if (RETAILERS[p.retailer].noFetch) return err(400, RETAILERS[p.retailer].name + ' images are not read automatically. Paste an image link in Edit.');
+  const g = tapGuard(p); if (g) return g;
+  return queueJob(p, 'image', origin);
+}
+async function runImageJob(p) {
+  const r = await lookup(p.url, { timeoutMs: CHECK_TIMEOUT_MS });
+  const img = r.ok && r.info && r.info.image;
+  const fresh = await getProduct(p.id);
+  if (img) { fresh.image = img; fresh.imageSource = 'page'; fresh.imageNote = ''; } else { fresh.imageNote = 'Image not found'; }
+  fresh.imageCheckedAt = now(); fresh.updated = now(); await auth.kvPut(KP(fresh.id), fresh);
+  return { readable: true, found: !!img, message: img ? 'Image saved from the store page.' : 'No image found on the store page. Paste an image link in Edit.' };
+}
+// Runs one queued job. Called by the background function with the job's token. Returns false for a wrong token or unknown job.
+export async function runCheckJob(jobId, token) {
+  const job = await auth.kvGet(JK(jobId));
+  if (!job || !tokenOk(job.token, token)) return false;
+  if (job.status !== 'queued') return true;   // already ran (or running): never run twice
+  job.status = 'running'; job.startedAt = now(); await auth.kvPut(JK(job.id), job);
+  let result;
+  try {
+    const p = await getProduct(job.product);
+    if (!p) result = { readable: false, message: 'The product was removed. Nothing was checked.' };
+    else if (job.kind === 'image') result = await runImageJob(p);
+    else {
+      const c = await checkOne(p, { timeoutMs: CHECK_TIMEOUT_MS });
+      const after = await getProduct(p.id), held = (c.sent || []).some(x => x.skipped);
+      result = { readable: c.readable, changed: c.changed, alerts: c.alerts,
+        message: !c.readable ? 'Could not read the page. Stock unchanged. You can check again in 15 seconds.'
+          : 'Checked: ' + (STOCK_LABEL[after.status] || after.status) + (c.changed ? ' (changed)' : ' (no change)') + (c.alerts ? '. Alert sent.' : held ? '. Alert held back (cooldown).' : '.') };
+    }
+  } catch (e) {
+    result = { readable: false, message: 'The check stopped unexpectedly. Stock unchanged. Try again in a moment.' };
+  }
+  await clearJob(job.product, job.id).catch(() => {});
+  job.status = 'done'; job.finishedAt = now(); job.result = result; await auth.kvPut(JK(job.id), job);
+  return true;
+}
+// What the owner page reads. The token is never returned.
+export async function checkStatus(jobId) {
+  const job = await auth.kvGet(JK(jobId));
+  if (!job) return err(404, 'Check not found.');
+  return { ok: true, status: job.status, result: job.status === 'done' ? job.result : null };
 }
 
 // ---- private pushes to the owner only ----

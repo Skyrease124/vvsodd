@@ -51,7 +51,7 @@ test('Pro gets approved updates before Free; Free only sees them at hour 48',()=
 test('existing map keeps original datasets and only fetches gated release API',()=>{
  const js=fs.readFileSync('kinvest-liens/map/parcel-map.js','utf8');
  assert.match(js,/\/\.netlify\/functions\/research-updates/);
- assert.match(js,/window\.PPAResearchMap\.match\(researchUpdates, relevant\)/);
+ assert.match(js,/window\.PPAResearchMap\.match\(researchUpdates\.filter\(u => !u\.mapRecord\), relevant\)/);
  assert.match(js,/map\.addSource\('research-updates'/);
  assert.match(js,/map\.on\('click','research-pin',openResearchPin\)/);
  assert.match(js,/pmResearchCount/);

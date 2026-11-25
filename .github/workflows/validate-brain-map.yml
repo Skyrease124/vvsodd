@@ -1,0 +1,278 @@
+name: Validate Brain-to-Map pipeline
+on:
+  push:
+    branches: [brain-to-map-pipeline, integration/brain-map-452-453-preserve]
+    paths:
+      - 'kinvest-liens/map/**'
+      - 'kinvest-liens/ai/workshop.js'
+      - 'kinvest-liens/owner/maptiler/**'
+      - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'kinvest-liens/tests/brain-reactor-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-approval-gate.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-consolidation.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-release-policy.test.mjs'
+      - 'kinvest-liens/tests/brain-research-release-feed.test.mjs'
+      - 'kinvest-liens/tests/property-intake-endpoint.test.mjs'
+      - 'kinvest-liens/tests/property-intake-library.test.mjs'
+      - 'kinvest-liens/tests/live-checks.test.mjs'
+      - 'kinvest-liens/tests/static-map-baseline.test.mjs'
+      - 'kinvest-liens/tests/brain-intake-page.browser.mjs'
+      - 'netlify/lib/property-intake.mjs'
+      - 'netlify/lib/live-checks.mjs'
+      - 'netlify/lib/data/static-map-baseline.json'
+      - 'netlify/functions/owner-property-intake.mjs'
+      - 'netlify/functions/owner-brain-live-checks.mjs'
+      - 'tools/map/**'
+      - 'netlify/lib/approved-records.mjs'
+      - 'netlify/functions/export.mjs'
+      - 'kinvest-liens/tests/brain-map-records-merge.test.mjs'
+      - 'kinvest-liens/tests/export-approved-records.test.mjs'
+      - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
+      - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
+      - 'tests/parcel-match.test.mjs'
+      - 'tests/parcel-match-county.test.mjs'
+      - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
+      - 'tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - 'tests/location-coverage.test.mjs'
+      - 'tests/scott-county-match.test.mjs'
+      - 'tests/release-window.test.mjs'
+      - 'tests/scott-crosscheck.test.mjs'
+      - 'tests/parcel-match-registry.test.mjs'
+      - 'kinvest-liens/tests/groq-limits.test.mjs'
+      - 'netlify/lib/groq-limits.mjs'
+      - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'kinvest-liens/tests/helper-boundaries.test.mjs'
+      - 'kinvest-liens/tests/cloudflare-opinion.test.mjs'
+      - 'netlify/lib/cloudflare-limits.mjs'
+      - 'netlify/lib/cloudflare-opinion.mjs'
+      - 'netlify/functions/owner-brain-second-opinion.mjs'
+      - 'netlify/lib/gemini-limits.mjs'
+      - 'netlify/lib/gemini-extract.mjs'
+      - 'netlify/functions/owner-brain-gemini.mjs'
+      - 'docs/scott-county-ia.md'
+      - 'tools/rochester-ny/**'
+      - 'tools/coverage/**'
+      - 'docs/location-coverage.md'
+      - 'docs/location-coverage.csv'
+      - 'netlify/lib/parcel-match.mjs'
+      - 'netlify/lib/parcel-import.mjs'
+      - 'netlify/lib/gis-sources.mjs'
+      - 'netlify/lib/parcel-matches-registry.mjs'
+      - 'netlify/lib/data/parcel-matches/**'
+      - 'tools/parcel-match/**'
+      - 'kinvest-liens/map/brain-map-merge.js'
+      - 'kinvest-liens/map/parcel-map.js'
+      - 'netlify/lib/llm.mjs'
+      - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
+      - 'kinvest-liens/tests/support/**'
+      - 'netlify/lib/update-release.mjs'
+      - 'netlify/lib/research-releases.mjs'
+      - 'netlify/functions/research-updates.mjs'
+      - 'netlify/functions/owner-brain-nvidia.mjs'
+      - 'kinvest-liens/tests/brain-owner-free-access.test.mjs'
+      - 'kinvest-liens/tests/brain-pro-ai-access.test.mjs'
+      - 'kinvest-liens/tests/home-map-combined.test.mjs'
+      - 'kinvest-liens/index.html'
+      - 'kinvest-liens/app-ui.js'
+      - 'kinvest-liens/radar.js'
+      - 'kinvest-liens/styles.css'
+      - 'kinvest-liens/tests/fixtures/detroit-*.json'
+      - 'netlify/functions/brain-map-*.mjs'
+      - 'netlify/functions/brain-wayne-scheduled.mjs'
+      - 'netlify/functions/owner-brain-*.mjs'
+      - 'netlify/functions/brain-wayne-scheduled.mjs'
+      - 'netlify/lib/brain-wayne-gis-quota.mjs'
+      - 'netlify/lib/brain-auth.mjs'
+      - 'netlify/lib/brain-gis-*.mjs'
+      - 'netlify/lib/data/florida-gis-registry.json'
+      - 'tools/florida-gis/**'
+      - 'tools/florida-land/**'
+      - 'netlify/lib/brain-florida-land.mjs'
+      - 'netlify/lib/data/florida-land-discovery-audit.json'
+      - 'tests/test_pro_first_research.mjs'
+      - 'kinvest-liens/owner/brain/connectors/**'
+      - 'netlify/lib/brain-reconciliation-*.mjs'
+      - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
+      - 'netlify/lib/brain-county-sequence.mjs'
+      - 'netlify/lib/brain-official-verification.mjs'
+      - 'scripts/prepare-brain-preview.mjs'
+      - 'netlify.toml'
+      - 'netlify/functions/owner-map-coverage.mjs'
+      - 'netlify/functions/owner-maptiler-preview.mjs'
+      - 'netlify/functions/owner-intelligence*.mjs'
+      - 'netlify/lib/brain-source-leads.mjs'
+      - 'kinvest-liens/owner/pipeline.js'
+      - 'kinvest-liens/owner/brain/**'
+      - '.github/workflows/validate-brain-map.yml'
+  pull_request:
+    paths:
+      - 'kinvest-liens/map/**'
+      - 'kinvest-liens/ai/workshop.js'
+      - 'kinvest-liens/owner/maptiler/**'
+      - 'kinvest-liens/tests/brain-map-*.test.mjs'
+      - 'kinvest-liens/tests/brain-reactor-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-approval-gate.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-consolidation.test.mjs'
+      - 'kinvest-liens/tests/brain-nvidia-activity.test.mjs'
+      - 'kinvest-liens/tests/brain-release-policy.test.mjs'
+      - 'kinvest-liens/tests/brain-research-release-feed.test.mjs'
+      - 'kinvest-liens/tests/property-intake-endpoint.test.mjs'
+      - 'kinvest-liens/tests/property-intake-library.test.mjs'
+      - 'kinvest-liens/tests/live-checks.test.mjs'
+      - 'kinvest-liens/tests/static-map-baseline.test.mjs'
+      - 'kinvest-liens/tests/brain-intake-page.browser.mjs'
+      - 'netlify/lib/property-intake.mjs'
+      - 'netlify/lib/live-checks.mjs'
+      - 'netlify/lib/data/static-map-baseline.json'
+      - 'netlify/functions/owner-property-intake.mjs'
+      - 'netlify/functions/owner-brain-live-checks.mjs'
+      - 'tools/map/**'
+      - 'netlify/lib/approved-records.mjs'
+      - 'netlify/functions/export.mjs'
+      - 'kinvest-liens/tests/brain-map-records-merge.test.mjs'
+      - 'kinvest-liens/tests/export-approved-records.test.mjs'
+      - 'kinvest-liens/tests/brain-preview-isolation.test.mjs'
+      - 'kinvest-liens/tests/nvidia-client-errors.test.mjs'
+      - 'tests/parcel-match.test.mjs'
+      - 'tests/parcel-match-county.test.mjs'
+      - 'kinvest-liens/tests/rochester-matches-output.test.mjs'
+      - 'tests/rochester-map-merge.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - 'tests/location-coverage.test.mjs'
+      - 'tests/scott-county-match.test.mjs'
+      - 'tests/release-window.test.mjs'
+      - 'tests/scott-crosscheck.test.mjs'
+      - 'tests/parcel-match-registry.test.mjs'
+      - 'kinvest-liens/tests/groq-limits.test.mjs'
+      - 'netlify/lib/groq-limits.mjs'
+      - 'kinvest-liens/tests/gemini-extract.test.mjs'
+      - 'kinvest-liens/tests/helper-boundaries.test.mjs'
+      - 'kinvest-liens/tests/cloudflare-opinion.test.mjs'
+      - 'netlify/lib/cloudflare-limits.mjs'
+      - 'netlify/lib/cloudflare-opinion.mjs'
+      - 'netlify/functions/owner-brain-second-opinion.mjs'
+      - 'netlify/lib/gemini-limits.mjs'
+      - 'netlify/lib/gemini-extract.mjs'
+      - 'netlify/functions/owner-brain-gemini.mjs'
+      - 'docs/scott-county-ia.md'
+      - 'tools/rochester-ny/**'
+      - 'tools/coverage/**'
+      - 'docs/location-coverage.md'
+      - 'docs/location-coverage.csv'
+      - 'netlify/lib/parcel-match.mjs'
+      - 'netlify/lib/parcel-import.mjs'
+      - 'netlify/lib/gis-sources.mjs'
+      - 'netlify/lib/parcel-matches-registry.mjs'
+      - 'netlify/lib/data/parcel-matches/**'
+      - 'tools/parcel-match/**'
+      - 'kinvest-liens/map/brain-map-merge.js'
+      - 'kinvest-liens/map/parcel-map.js'
+      - 'netlify/lib/llm.mjs'
+      - 'kinvest-liens/tests/brain-activity-page.browser.mjs'
+      - 'kinvest-liens/tests/support/**'
+      - 'netlify/lib/update-release.mjs'
+      - 'netlify/lib/research-releases.mjs'
+      - 'netlify/functions/research-updates.mjs'
+      - 'netlify/functions/owner-brain-nvidia.mjs'
+      - 'kinvest-liens/tests/brain-owner-free-access.test.mjs'
+      - 'kinvest-liens/tests/brain-pro-ai-access.test.mjs'
+      - 'kinvest-liens/tests/home-map-combined.test.mjs'
+      - 'kinvest-liens/index.html'
+      - 'kinvest-liens/app-ui.js'
+      - 'kinvest-liens/radar.js'
+      - 'kinvest-liens/styles.css'
+      - 'kinvest-liens/tests/fixtures/detroit-*.json'
+      - 'netlify/functions/brain-map-*.mjs'
+      - 'netlify/functions/owner-brain-*.mjs'
+      - 'netlify/functions/brain-wayne-scheduled.mjs'
+      - 'netlify/lib/brain-wayne-gis-quota.mjs'
+      - 'netlify/lib/brain-auth.mjs'
+      - 'netlify/lib/brain-gis-*.mjs'
+      - 'netlify/lib/data/florida-gis-registry.json'
+      - 'tools/florida-gis/**'
+      - 'tools/florida-land/**'
+      - 'netlify/lib/brain-florida-land.mjs'
+      - 'netlify/lib/data/florida-land-discovery-audit.json'
+      - 'tests/test_pro_first_research.mjs'
+      - 'kinvest-liens/owner/brain/connectors/**'
+      - 'netlify/lib/brain-reconciliation-*.mjs'
+      - 'netlify/lib/brain-larimer-address-diagnostic.mjs'
+      - 'netlify/lib/brain-official-verification.mjs'
+      - 'scripts/prepare-brain-preview.mjs'
+      - 'netlify.toml'
+      - 'netlify/functions/owner-map-coverage.mjs'
+      - 'netlify/functions/owner-maptiler-preview.mjs'
+      - 'netlify/functions/owner-intelligence*.mjs'
+      - 'netlify/lib/brain-source-leads.mjs'
+      - 'kinvest-liens/owner/pipeline.js'
+      - 'kinvest-liens/owner/brain/**'
+      - '.github/workflows/validate-brain-map.yml'
+jobs:
+  offline-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node kinvest-liens/tests/brain-map-contract.test.mjs
+      - run: node kinvest-liens/tests/brain-map-coverage.test.mjs
+      - run: node kinvest-liens/tests/brain-map-sequence.test.mjs
+      - run: node kinvest-liens/tests/brain-map-county-progress.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-agent-dry-run.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-batch-test.mjs
+      - run: node kinvest-liens/tests/brain-map-batch-publish.test.mjs
+      - run: node kinvest-liens/tests/brain-map-wayne-gis-quota.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-wayne-run.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-scheduled.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-consolidation.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-reactor-activity.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-pipeline.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-preview.test.mjs
+      - run: node kinvest-liens/tests/brain-map-requests.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-autonomous.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-source-pipeline.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-maptiler.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-connectors.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-reconciliation-research.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-universal.test.mjs
+      - run: python3 tools/florida-gis/build.py --check
+      - run: python3 tools/florida-gis/test_build.py
+      - run: node kinvest-liens/tests/brain-map-florida-registry.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-florida-land.test.mjs
+      - run: python3 tools/florida-land/test_prepare.py
+      - run: node tests/test_pro_first_research.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-map-putnam-verification.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-approval-gate.test.mjs
+      - run: node kinvest-liens/tests/brain-nvidia-consolidation.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-nvidia-activity.test.mjs
+      - run: node kinvest-liens/tests/brain-release-policy.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-research-release-feed.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-owner-free-access.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-pro-ai-access.test.mjs
+      - run: node kinvest-liens/tests/home-map-combined.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/property-intake-endpoint.test.mjs
+      - run: node kinvest-liens/tests/property-intake-library.test.mjs
+      - run: node kinvest-liens/tests/live-checks.test.mjs
+      - run: node kinvest-liens/tests/static-map-baseline.test.mjs
+      - run: node kinvest-liens/tests/brain-map-records-merge.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/export-approved-records.test.mjs
+      - run: node --experimental-vm-modules kinvest-liens/tests/brain-preview-isolation.test.mjs
+      - run: node kinvest-liens/tests/nvidia-client-errors.test.mjs
+      - run: node tests/parcel-match.test.mjs
+      - run: node kinvest-liens/tests/rochester-matches-output.test.mjs
+      - run: node tests/rochester-map-merge.test.mjs
+      - run: node --test tests/parcel-match-county.test.mjs
+      - run: node tests/rochester-address-corrections.test.mjs
+      - run: python3 tools/rochester-ny/test_build.py
+      - run: node tests/location-coverage.test.mjs
+      - run: node --test tests/scott-county-match.test.mjs
+      - run: node --test tests/release-window.test.mjs
+      - run: node --test tests/scott-crosscheck.test.mjs
+      - run: node --test tests/parcel-match-registry.test.mjs
+      - run: node --test kinvest-liens/tests/groq-limits.test.mjs
+      - run: node --test kinvest-liens/tests/gemini-extract.test.mjs
+      - run: node --test kinvest-liens/tests/helper-boundaries.test.mjs
+      - run: node --test kinvest-liens/tests/cloudflare-opinion.test.mjs

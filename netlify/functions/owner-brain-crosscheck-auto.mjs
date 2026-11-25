@@ -1,7 +1,7 @@
 // Scheduled cross-verification, Detroit pilot. Compare a unique official parcel address/ID
 // and official parcel polygon with a prior independent geocoded address point.
 // Private candidate only; DOES NOT edit published maps, skip owner review or purchase API credits.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 const QUEUE='owner-brain-scanner-v1', STATUS='owner-brain-crosscheck-status-v1';
 const ROOT='https://pricepocketasset.com';
 const LAYER='https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Parcels_Current/FeatureServer/0';
@@ -10,7 +10,7 @@ const trim=(s,n=160)=>String(s??'').slice(0,n);
 const cityBounds=(lat,lon)=>Number.isFinite(lat)&&Number.isFinite(lon)&&lat>=42.2&&lat<=42.5&&lon>=-83.4&&lon<=-82.8;
 const rad=x=>x*Math.PI/180;
 function meters(a,b){const dLat=rad(a.lat-b.lat),dLon=rad(a.lon-b.lon),lat1=rad(a.lat),lat2=rad(b.lat);const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
-async function getJson(url,max=6000000){const r=await fetch(url,{signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error('HTTP '+r.status);const raw=await r.text();if(Buffer.byteLength(raw)>max)throw Error('Response too large');const data=JSON.parse(raw);if(data.error)throw Error(trim(data.error.message,80));return data;}
+async function getJson(url,max=6000000){const r=await (url.startsWith(LAYER+'/query?')?auth.fetchWayneGis:fetch)(url,{signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error('HTTP '+r.status);const raw=await r.text();if(Buffer.byteLength(raw)>max)throw Error('Response too large');const data=JSON.parse(raw);if(data.error)throw Error(trim(data.error.message,80));return data;}
 function officialStreet(s){
  const match=/^\s*(\d{1,6})\s+([A-Za-z][A-Za-z0-9 .'-]{2,70})/i.exec(s||'');
  if(!match)return null;
@@ -50,7 +50,7 @@ async function evaluate(item,record){
  if(matches.length>1&&matches[1].distance-matches[0].distance<25)return fail('ambiguous','Multiple geocoding candidates within 25 meters of one another');
  return {status:'candidate_found',verified:false,approvable:false,matchedId:trim(feature.attributes.parcel_number,80),address:trim(feature.attributes.address,120),centroidApprox:{lat:Number(lat.toFixed(6)),lon:Number(lon.toFixed(6))},geocodePosition:{lat:matches[0].p.lat,lon:matches[0].p.lon},distanceMeters:Math.round(matches[0].distance),geometryPoints:points.length,sourceUrl:LAYER,sourceType:'City of Detroit Assessor GIS + Geocode.maps.co',checkedAt:now,note:'Automated cross-check found a matching parcel ID and street address; GIS polygon and geocoded point are within 100m. Independently verify official current records before approval. No map edits.'};
 }
-export default async function(){
+async function handler(){
  const previous=await auth.kvGet(STATUS)||{runs:0,checked:0,candidates:0};
  const status={...previous,runs:(previous.runs||0)+1,state:'running',lastStarted:new Date().toISOString(),lastError:null};
  await auth.kvPut(STATUS,status);
@@ -87,3 +87,5 @@ export default async function(){
  finally{status.lastCompleted=new Date().toISOString();await auth.kvPut(STATUS,status);}
 };
 export const config={schedule:'0 1,9,17 * * *'};
+
+export default auth.withBrainStore(handler);

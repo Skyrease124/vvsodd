@@ -1,15 +1,17 @@
 // Approved lien and land research update feed with a strictly server-enforced Pro head start.
 // Does NOT alter free maps, Land for Sale, private certificate staging, or AI membership.
 import crypto from 'node:crypto';
-import * as auth from '../lib/auth.mjs';
+// Brain auth: the release index lives in the isolated store, so a preview never reads or writes production releases.
+import * as auth from '../lib/brain-auth.mjs';
 import { getSnapshot } from './certificate-review.mjs';
 import { audienceFor, isProAccount, makeRelease, safeResearchRecord, PRO_EARLY_ACCESS_MS } from '../lib/research-releases.mjs';
+import { withdrawReleaseInList, cleanReleases } from '../lib/property-intake.mjs';
 
 const INDEX='approved-research-releases-v1';
 const json=(status,data)=>new Response(JSON.stringify(data),{status,headers:{
   'Content-Type':'application/json; charset=utf-8','Cache-Control':'private, no-store',
   'X-Content-Type-Options':'nosniff'}});
-const permitted = new Set(['lien','land']);
+const permitted = new Set(['lien','land','tax_deed','property']);
 function cleanIndex(value) {
   if (!value || !Array.isArray(value.list)) return [];
   return value.list.filter(item=>item && typeof item === 'object').slice(0,2000);
@@ -17,6 +19,14 @@ function cleanIndex(value) {
 export default async function handler(req) {
   const u=new URL(req.url);
   const me=await auth.userFromCookie(req.headers.get('cookie'));
+  if(req.method==='GET' && u.searchParams.get('scope')==='owner'){
+    if(!me?.owner)return json(me?403:401,{ok:false,error:'Owner access required'});
+    const all=cleanReleases(await auth.kvGet(INDEX)).slice(0,300).map(item=>({id:item.id,type:item.type,state:item.state,county:item.county,
+      parcelId:item.parcelId,title:item.title,releaseMode:item.releaseMode||'pro_first_48h',proReleaseAt:item.proReleaseAt||null,
+      freeReleaseAt:item.releaseMode==='immediate_critical'?item.proReleaseAt:(item.proReleaseAt?new Date(Date.parse(item.proReleaseAt)+PRO_EARLY_ACCESS_MS).toISOString():null),
+      withdrawn:item.withdrawn===true,withdrawnAt:item.withdrawnAt||null,withdrawal:item.withdrawal||null,audit:(item.audit||[]).slice(-20)}));
+    return json(200,{ok:true,releases:all});
+  }
   if(req.method==='GET'){
     try {
       const type=u.searchParams.get('type')||'';
@@ -40,6 +50,16 @@ export default async function handler(req) {
   if(req.headers.get('origin')!==u.origin)return json(403,{ok:false,error:'Invalid request origin.'});
   if(Number(req.headers.get('content-length')||0)>10000)return json(413,{ok:false,error:'Request too large.'});
   let b;try{b=await req.json();}catch{return json(400,{ok:false,error:'Invalid JSON.'});}
+  if(b?.action==='withdraw'){
+    // Owner withdraws a released research item. It disappears for every viewer, Pro included.
+    // The reason, timestamp and actor are kept on the release, with its audit history.
+    if(typeof b.id!=='string'||!/^[A-Za-z0-9-]{8,80}$/.test(b.id))return json(400,{ok:false,error:'Invalid update id.'});
+    const now=new Date();
+    const result=withdrawReleaseInList(cleanReleases(await auth.kvGet(INDEX)),b.id,{reason:b.reason,now,actor:'owner'});
+    if(result.error)return json(result.error,{ok:false,error:result.message});
+    await auth.kvPut(INDEX,{schemaVersion:1,list:result.list});
+    return json(200,{ok:true,id:b.id,withdrawnAt:result.release.withdrawnAt,message:'Withdrawn. The update no longer appears for any viewer.'});
+  }
   if(b?.action!=='release')return json(400,{ok:false,error:'Unknown action.'});
   try {
     const id=crypto.randomUUID();

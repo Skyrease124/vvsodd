@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "dataset": "NY-city-of-rochester",
+  "purpose": "Corrections for the City of Rochester list, whose address text has a builder spelling defect. Each corrected address is the official City GIS address recorded in the matches audit. Parcel numbers are unchanged.",
+  "publicFiles": [
+    "kinvest-liens/liens/states/liens-rochester.js",
+    "kinvest-liens/map/data/NY-city-of-rochester.json"
+  ],
+  "appliedAt": null,
+  "corrections": [
+    {
+      "parcel": "106.22-4-23",
+      "id": "NY|City of Rochester|106.22-4-23|",
+      "listed": "363 Aveenue A, Rochester NY 14621",
+      "corrected": "363 Avenue A, Rochester NY 14621",
+      "official": {
+        "parcelId": "10622000040230000000",
+        "printKey": "106.22-4-23",
+        "siteAddress": "363 Avenue A",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'106.22-4-23'&outFields=*&f=html"
+    },
+    {
+      "parcel": "105.28-1-16",
+      "id": "NY|City of Rochester|105.28-1-16|",
+      "listed": "23 Aveenue C, Rochester NY 14621",
+      "corrected": "23 Avenue C, Rochester NY 14621",
+      "official": {
+        "parcelId": "10528000010160000000",
+        "printKey": "105.28-1-16",
+        "siteAddress": "23 Avenue C",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'105.28-1-16'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.77-4-26",
+      "id": "NY|City of Rochester|091.77-4-26|",
+      "listed": "156 Aveenue C, Rochester NY 14621",
+      "corrected": "156 Avenue C, Rochester NY 14621",
+      "official": {
+        "parcelId": "09177000040260000000",
+        "printKey": "091.77-4-26",
+        "siteAddress": "156 Avenue C",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.77-4-26'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.78-1-78",
+      "id": "NY|City of Rochester|091.78-1-78|",
+      "listed": "262-264 Aveenue C, Rochester NY 14621",
+      "corrected": "262-264 Avenue C, Rochester NY 14621",
+      "official": {
+        "parcelId": "09178000010780000000",
+        "printKey": "091.78-1-78",
+        "siteAddress": "262-264 Avenue C",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.78-1-78'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.77-5-26",
+      "id": "NY|City of Rochester|091.77-5-26|",
+      "listed": "150 Aveenue D, Rochester NY 14621",
+      "corrected": "150 Avenue D, Rochester NY 14621",
+      "official": {
+        "parcelId": "09177000050260000000",
+        "printKey": "091.77-5-26",
+        "siteAddress": "150 Avenue D",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.77-5-26'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.77-3-9",
+      "id": "NY|City of Rochester|091.77-3-9|",
+      "listed": "229 Aveenue D, Rochester NY 14621",
+      "corrected": "229 Avenue D, Rochester NY 14621",
+      "official": {
+        "parcelId": "09177000030090000000",
+        "printKey": "091.77-3-9",
+        "siteAddress": "229 Avenue D",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.77-3-9'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.79-4-37",
+      "id": "NY|City of Rochester|091.79-4-37|",
+      "listed": "481-483 Aveenue D, Rochester NY 14621",
+      "corrected": "481-483 Avenue D, Rochester NY 14621",
+      "official": {
+        "parcelId": "09179000040370000000",
+        "printKey": "091.79-4-37",
+        "siteAddress": "481-483 Avenue D",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.79-4-37'&outFields=*&f=html"
+    },
+    {
+      "parcel": "091.79-4-27",
+      "id": "NY|City of Rochester|091.79-4-27|",
+      "listed": "532 Aveenue D, Rochester NY 14621",
+      "corrected": "532 Avenue D, Rochester NY 14621",
+      "official": {
+        "parcelId": "09179000040270000000",
+        "printKey": "091.79-4-27",
+        "siteAddress": "532 Avenue D",
+        "zip": "14621"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'091.79-4-27'&outFields=*&f=html"
+    },
+    {
+      "parcel": "121.50-1-67",
+      "id": "NY|City of Rochester|121.50-1-67|",
+      "listed": "653 Aveerill Ave, Rochester NY 14607",
+      "corrected": "653 Averill Ave, Rochester NY 14607",
+      "official": {
+        "parcelId": "12150000010670000000",
+        "printKey": "121.50-1-67",
+        "siteAddress": "653 Averill Ave",
+        "zip": "14607"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'121.50-1-67'&outFields=*&f=html"
+    },
+    {
+      "parcel": "121.50-1-68",
+      "id": "NY|City of Rochester|121.50-1-68|",
+      "listed": "659 Aveerill Ave, Rochester NY 14607",
+      "corrected": "659 Averill Ave, Rochester NY 14607",
+      "official": {
+        "parcelId": "12150000010680000000",
+        "printKey": "121.50-1-68",
+        "siteAddress": "659 Averill Ave",
+        "zip": "14607"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'121.50-1-68'&outFields=*&f=html"
+    },
+    {
+      "parcel": "090.42-2-45",
+      "id": "NY|City of Rochester|090.42-2-45|",
+      "listed": "139 Aveis St, Rochester NY 14615",
+      "corrected": "139 Avis St, Rochester NY 14615",
+      "official": {
+        "parcelId": "09042000020450000000",
+        "printKey": "090.42-2-45",
+        "siteAddress": "139 Avis St",
+        "zip": "14615"
+      },
+      "source": "city-of-rochester-tax-parcels",
+      "evidenceUrl": "https://maps.cityofrochester.gov/server/rest/services/Open_Data/Tax_Parcels_Open_Data/FeatureServer/0/query?where=PRINTKEY%3D'090.42-2-45'&outFields=*&f=html"
+    }
+  ]
+}

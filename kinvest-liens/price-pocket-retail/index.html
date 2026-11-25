@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>
+  // Arriving from Assets: start hidden so the page fades in without a flash.
+  try { if (sessionStorage.getItem('ppx-enter') === 'assets' || sessionStorage.getItem('ppx-enter') === 'retail') { if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('ppx-entering'); } } catch (e) {}
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#07090d">
+<title>Price Pocket Retail | Demo preview</title>
+<meta name="description" content="Price Pocket Retail: stock and release alerts for approved products. In development.">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="stylesheet" href="/experience-switch.css">
+<link rel="stylesheet" href="/price-pocket-retail/retail-home.css">
+</head>
+<body class="pprt">
+<a class="pprt-skip" href="#main">Skip to content</a>
+<header class="pprt-bar">
+  <a class="pprt-brand" href="/price-pocket-retail/" aria-label="Price Pocket Retail home">
+    <span class="pprt-mark" aria-hidden="true"></span>
+    <span class="pprt-name">Price Pocket <b>Retail</b></span>
+  </a>
+  <nav class="pprt-links" aria-label="Retail sections">
+    <a href="#browse">Browse</a>
+    <a href="/retail/">Alerts</a>
+    <span class="pprt-soon" aria-disabled="true">Watchlist · soon</span>
+  </nav>
+  <a class="pprt-account" id="pprtAccount" href="/login/?next=%2Fprice-pocket-retail%2F">Sign in</a>
+</header>
+<main id="main" class="pprt-main">
+  <section class="pprt-hero" aria-labelledby="pprtHero">
+    <p class="pprt-kicker">In development · demonstration preview</p>
+    <h1 id="pprtHero">Know when it’s in stock.</h1>
+    <p class="pprt-lede">Price Pocket Retail watches approved products and tells you when they become available. We send alerts. We never buy anything for you.</p>
+    <div class="pprt-cta">
+      <a class="pprt-btn" href="#browse">Browse demo listings</a>
+      <a class="pprt-btn pprt-ghost" href="/retail/">Open Retail Alerts</a>
+    </div>
+  </section>
+
+  <section id="browse" class="pprt-section" aria-labelledby="pprtBrowse">
+    <h2 id="pprtBrowse">Featured products</h2>
+    <div class="pprt-search">
+      <label for="pprtQ">Search products</label>
+      <input id="pprtQ" type="search" placeholder="Search sneakers, cards, electronics…" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="pprt-chips" role="group" aria-label="Categories">
+      <button type="button" class="pprt-chip" data-cat="all" aria-pressed="true">All</button>
+      <button type="button" class="pprt-chip" data-cat="sneakers" aria-pressed="false">Sneakers &amp; releases</button>
+      <button type="button" class="pprt-chip" data-cat="cards" aria-pressed="false">Pokémon &amp; cards</button>
+      <button type="button" class="pprt-chip" data-cat="electronics" aria-pressed="false">Electronics &amp; gaming</button>
+      <button type="button" class="pprt-chip" data-cat="vehicles" aria-pressed="false">Vehicles</button>
+      <button type="button" class="pprt-chip" data-cat="collectibles" aria-pressed="false">Collectibles</button>
+      <button type="button" class="pprt-chip" data-cat="other" aria-pressed="false">Other approved</button>
+    </div>
+    <p class="pprt-notice"><b>Demonstration listings.</b> These are sample products and states, not live inventory. Availability is not verified.</p>
+    <div id="pprtGrid" class="pprt-grid"></div>
+    <p class="pprt-empty" id="pprtEmpty" hidden>No demo listings match that search.</p>
+  </section>
+
+  <section class="pprt-section" aria-labelledby="pprtWatch">
+    <h2 id="pprtWatch">Your watchlist</h2>
+    <div class="pprt-card pprt-soon-card">
+      <span class="pprt-pill">Coming soon</span>
+      <p>Save products and get stock alerts by push and email. Watchlists open with Retail memberships.</p>
+    </div>
+  </section>
+
+  <section class="pprt-section" aria-labelledby="pprtReq">
+    <h2 id="pprtReq">Request a product</h2>
+    <div class="pprt-card pprt-soon-card">
+      <span class="pprt-pill">Coming soon</span>
+      <p>Ask us to add a product. Every request is reviewed before we monitor it.</p>
+    </div>
+  </section>
+</main>
+<footer class="pprt-foot">
+  <p>Price Pocket Retail is in development. Listings on this page are demonstration content, not live inventory.</p>
+  <p class="pprt-foot-links">Terms · Privacy · Billing · Refunds <span>coming soon</span></p>
+</footer>
+<script src="/price-pocket-retail/retail-home.js"></script>
+<script src="/experience-switch.js"></script>
+</body>
+</html>

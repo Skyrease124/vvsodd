@@ -4,11 +4,29 @@ on:
     branches:
       - feature/map-polish-toolbar-gis
       - claude/engineering-workspace
+      - integration/brain-map-452-453-preserve
     paths:
       - kinvest-liens/map/parcel-map.js
+      - kinvest-liens/map/state-focus.js
       - kinvest-liens/map/parcel-map.css
       - tests/map_polish.test.mjs
       - tests/map_polish.browser.cjs
+      - tests/map_behavior.browser.cjs
+      - tests/map_state_strip.browser.cjs
+      - tests/map_state_focus.browser.cjs
+      - tests/map_polish.static-server.cjs
+      - kinvest-liens/map/index.html
+      - kinvest-liens/owner/brain/**
+      - kinvest-liens/tests/brain-activity-page.browser.mjs
+      - kinvest-liens/tests/cloudflare-opinion-page.browser.mjs
+      - kinvest-liens/tests/brain-nav-accordion.browser.mjs
+      - kinvest-liens/tests/brain-intake-page.browser.mjs
+      - kinvest-liens/tests/brain-reactor-mobile.cjs
+      - tests/map_approved_records.browser.cjs
+      - kinvest-liens/map/brain-map-merge.js
+      - kinvest-liens/map/parcel-map.js
+      - netlify/lib/data/parcel-matches/**
+      - kinvest-liens/tests/home-map-combined.test.mjs
       - .github/workflows/validate-map-polish.yml
   workflow_dispatch:
 permissions:
@@ -30,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.56.1-noble
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -41,3 +59,12 @@ jobs:
         run: |
           node tests/map_polish.static-server.cjs >/tmp/ppa-serve.log 2>&1 &
           NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_polish.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_behavior.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_state_strip.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_state_focus.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-activity-page.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/cloudflare-opinion-page.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-nav-accordion.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node --experimental-vm-modules kinvest-liens/tests/brain-intake-page.browser.mjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node tests/map_approved_records.browser.cjs
+          NODE_PATH=/tmp/ppa-browser/node_modules node kinvest-liens/tests/brain-reactor-mobile.cjs

@@ -99,10 +99,12 @@ ok(R.parseHtml('<meta property="og:image" content="http://insecure.example.com/x
 if (bbHtml) ok(R.parseHtml(bbHtml).image === 'https://pisces.bbystatic.com/image2/BestBuy_US/images/products/0a7fbcb9-cd3a-401d-8c6e-6f1facfe7c1a.jpg;maxHeight=1080;maxWidth=900?format=webp', 'the saved Best Buy page yields the real Prismatic ETB product image');
 { const ip = (await R.createProduct('founder', { url: 'https://www.target.com/p/img-test-1', name: 'Image test (TEST FIXTURE)', category: 'pokemon', status: 'in_stock' })).product;
   R._setFetch(async () => new Response('<meta property="og:image" content="https://cdn.example.com/found.jpg"><button>Add to Cart</button>', { status: 200 }));
-  const st0 = (await R.getProduct(ip.id)).status; const r1 = await R.refreshImage(ip.id);
+  R._setDispatch(async ({ jobId, token }) => { await R.runCheckJob(jobId, token); });
+  const refreshNow = async id => { const cur = await R.getProduct(id); cur.manualCheckAt = new Date(Date.now() - 60e3).toISOString(); await auth.kvPut('rp_' + id, cur); const q = await R.refreshImageNow(id, { origin: 'http://t' }); const sj = await R.checkStatus(q.jobId); return { found: sj.result.found, product: await R.getProduct(id) }; };
+  const st0 = (await R.getProduct(ip.id)).status; const r1 = await refreshNow(ip.id);
   ok(r1.found && r1.product.image === 'https://cdn.example.com/found.jpg' && r1.product.status === st0, 'refresh image saves the page image and does not change the stock status');
   R._setFetch(async () => new Response('<html>no picture here</html>', { status: 200 }));
-  const r2 = await R.refreshImage(ip.id);
+  const r2 = await refreshNow(ip.id);
   ok(!r2.found && r2.product.imageNote === 'Image not found' && r2.product.image === 'https://cdn.example.com/found.jpg', 'no image on the page -> "Image not found" flag; the saved image is not wiped by a failed read');
   ok(R.card(r2.product).imageNote === '' && R.card({ ...r2.product, image: '' }).imageNote === 'Image not found', 'cards show the flag only when there is no image');
   R._setFetch(async () => new Response('', { status: 503 })); }

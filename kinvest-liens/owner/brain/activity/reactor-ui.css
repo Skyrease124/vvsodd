@@ -1,0 +1,32 @@
+/* NVIDIA Pulse Reactor: surrounding interface only. The reactor canvas, SVG, animations and scripts are untouched. */
+:root{--r-ease:cubic-bezier(.2,.75,.22,1);--r-card:linear-gradient(180deg,#112236cc,#0d1b2dcc);--r-gold:#ffdc7a;--r-green:#65edab}
+main{max-width:760px}
+header{padding:12px 4px 4px}
+.brand{font-size:.95rem;font-weight:600;letter-spacing:-.01em}
+#connection{font-size:.68rem;font-weight:600;letter-spacing:.08em;padding:4px 10px;border-radius:99px;background:#ffffff14;color:#cfe0ee}
+#connection.on{background:#65edab1f;color:#7bf0b0}
+.nav{display:flex;gap:6px 14px;flex-wrap:wrap;margin:2px 4px 6px}
+.nav a{display:inline-flex;align-items:center;min-height:36px;font-size:.92rem;text-decoration:none;transition:transform .12s var(--r-ease)}
+.nav a:active{transform:scale(.97)}
+h1{font-size:clamp(28px,6vw,36px);letter-spacing:-.02em;margin:6px 4px 2px}
+.sub{margin:0 4px 6px;color:#9fb4c8;font-size:.85rem}
+#gate{color:#9fb4c8;font-size:.85rem;margin:6px 4px}
+.health,.agentChip,.sect,.update,.metric{border:0!important;background:var(--r-card)!important;box-shadow:0 1px 0 #ffffff0d inset,0 8px 24px #0004;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.health{border-radius:16px;padding:12px 16px}
+.health-title{font-size:.95rem;font-weight:600;letter-spacing:0}
+.agentChip{border-radius:12px}
+.overview{gap:8px}
+.metric{border-radius:14px}
+.metric b{font-weight:600}
+.metric span{font-size:.66rem;letter-spacing:.07em;color:var(--r-gold)}
+.update{border-radius:16px}
+.sect{border-radius:16px;padding:12px 14px;margin:12px 0;animation:r-in .45s var(--r-ease) both}
+.sectHead h2{font-size:1.02rem;font-weight:600;letter-spacing:-.01em}
+.sectHead .status{font-size:.66rem;letter-spacing:.08em;font-weight:600;color:var(--r-gold)}
+select,input[type=search]{border:1px solid transparent!important;border-radius:11px!important;background:#0a1828!important;color:#f4f8ff!important;padding:10px 12px;font:inherit;transition:border-color .2s,box-shadow .2s}
+select:focus,input[type=search]:focus{border-color:#4aa984!important;box-shadow:0 0 0 3px #65edab26;outline:none}
+button{border:0!important;border-radius:11px!important;background:#1a5a47!important;color:#fff!important;font:inherit;font-weight:600;min-height:42px;padding:9px 16px;transition:transform .12s var(--r-ease),filter .2s}
+button:hover{filter:brightness(1.15)}button:active{transform:scale(.97)}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--r-green);outline-offset:2px}
+@keyframes r-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.sect{animation:none}button,.nav a{transition:none}}

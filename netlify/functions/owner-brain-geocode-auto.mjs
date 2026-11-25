@@ -1,5 +1,5 @@
 // Independent scheduled Geocode.maps.co research. No paid calls or map publication.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
 const STORE='owner-brain-scanner-v1',STATUS='owner-brain-geocode-status-v1';
 const ROOT='https://pricepocketasset.com';
@@ -79,7 +79,7 @@ async function geocodeBatch(){
   return {state:errors?'partial_error':'idle',count:checked,candidates,errors,note:'Address candidates for private review only. Zero public map changes.'};
 }
 
-export default async function(){
+async function handler(){
  const old=await auth.kvGet(STATUS)||{runs:0,checked:0,candidates:0};
  const now=new Date().toISOString();
  const status={...old,runs:(old.runs||0)+1,lastStarted:now,state:'running',lastError:null};
@@ -100,3 +100,5 @@ export default async function(){
  await auth.kvPut(STATUS,status);
 };
 export const config={schedule:'30 */6 * * *'};
+
+export default auth.withBrainStore(handler);

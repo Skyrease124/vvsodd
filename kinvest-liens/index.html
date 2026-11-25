@@ -18,6 +18,23 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="radar.css">
 <link rel="stylesheet" href="/app-shell.css">
+<style>
+/* Unified view: one geographic canvas; Radar data and controls remain available. */
+.app-map.app-map-unified #home-radar .dmap.rmap{display:none!important}
+.app-map.app-map-unified #home-radar .rhead{display:none}
+.app-map.app-map-unified #home-radar .dhero{padding-top:0}
+.app-map.app-map-unified #home-radar .rfind{margin-top:12px}
+.app-map.app-map-unified #home-radar .rpanel{max-width:100%;overflow-wrap:anywhere}
+/* Radar categories have their own row, never overlay the iframe's Tools control. */
+#home-radar-map-controls[hidden],#home-radar-map-summary[hidden]{display:none!important}
+#home-radar-map-summary{margin:0 12px 10px;padding:9px 12px;border:1px solid rgba(126,218,200,.25);border-radius:10px;background:#0b2832;color:#c5e3dc;font:500 12px/1.45 system-ui,sans-serif}
+#home-radar-map-summary strong{color:#7ff0c2}
+#home-radar-map-controls{position:static;width:100%;padding:10px 12px;box-sizing:border-box;background:#0a2331}
+#home-radar-map-controls .rtabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:0;background:transparent;border:0;box-shadow:none}
+#home-radar-map-controls .rtabs button{min-width:0;min-height:46px;padding:8px 5px;border:1px solid rgba(126,218,200,.5);border-radius:12px;background:#10343d;color:#d6eee9;font:700 clamp(10px,2.7vw,14px)/1.2 system-ui,sans-serif;white-space:normal;overflow-wrap:normal;cursor:pointer}
+#home-radar-map-controls .rtabs button[aria-selected=true]{background:#15765c;color:white;border-color:#8de9c3}
+#home-radar-map-controls .rtabs button:focus-visible{outline:3px solid #ffe17b;outline-offset:2px}
+</style>
 </head>
 <body class="ppa-home">
 <header class="dnav">
@@ -29,7 +46,7 @@
     <nav class="dlinks" aria-label="Main">
       <a class="on" href="./">Home</a>
       <a href="#products">Explore</a>
-      <a href="liens/#calculator">Tools</a>
+      <a href="/tools/calculator/">Tools</a>
       <a href="learn/">Master Class</a>
       <a href="about/">About</a>
       <a href="account/">Account</a>
@@ -48,16 +65,82 @@
     <div id="homewx" class="homewx" aria-live="polite"></div>
   </section>
   <section class="app-map" id="map" aria-label="Property maps">
-    <div class="app-map-views" role="group" aria-label="Map view">
-      <button type="button" data-home-map-view="parcels" aria-controls="home-parcels" aria-pressed="true">Parcel Map</button>
-      <button type="button" data-home-map-view="radar" aria-controls="home-radar" aria-pressed="false">Tax Sale Radar</button>
+    <div class="app-map-views" role="group" aria-label="Map view" style="display:none!important">
+      <button type="button" data-home-map-view="parcels" aria-controls="home-parcels" aria-pressed="false" hidden style="display:none!important">Parcel Map</button>
+      <button type="button" data-home-map-view="radar" aria-controls="home-radar" aria-pressed="false" hidden style="display:none!important">Tax Sale Radar</button>
+      <button type="button" data-home-map-view="both" aria-controls="home-parcels home-radar" aria-pressed="true">Price Pocket Maps</button>
     </div>
+    <p class="app-map-combined-note" id="home-combined-note" hidden style="display:none!important" aria-hidden="true"></p>
+    <p id="home-radar-match-status" role="status" class="app-map-combined-note" hidden></p>
     <div id="home-parcels">
     <script src="/app-location.js"></script>
     <iframe src="/map/?embed=1&home=1" title="Interactive Parcel Map" allow="geolocation 'self'"></iframe>
-    <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span><a data-open-map href="/map/">Open full map →</a></div>
+    <div id="home-radar-map-controls" aria-label="Tax Sale Radar map controls" hidden></div><div id="home-radar-map-summary" role="status" aria-live="polite" hidden></div>
+    <div class="app-map-foot"><button type="button" data-use-location>◎ Use my location</button><span data-location-status role="status"></span></div>
     </div>
-<div class="app-radar" id="home-radar" hidden>
+
+  </section>
+  <aside class="flyover-teaser" aria-label="Upcoming Parcel Flyover feature"><span class="flyover-teaser-icon" aria-hidden="true">✈</span><div class="flyover-teaser-copy"><div class="flyover-teaser-heading"><strong>Parcel Flyover</strong><span class="flyover-teaser-badge">COMING SOON</span></div><p>Explore properties from above with immersive 3D flyovers.</p></div><span class="flyover-teaser-pro">Planned Pro feature</span></aside>
+  <style>
+  .flyover-teaser{display:flex;align-items:center;gap:14px;margin:14px auto 18px;padding:15px 18px;max-width:1100px;border:1px solid rgba(88,231,167,.36);border-radius:18px;background:linear-gradient(115deg,#102d35,#0b1c2d 70%);color:#f5faff;box-shadow:0 10px 28px rgba(0,0,0,.12);overflow:hidden}
+  .flyover-teaser-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:rgba(56,213,145,.14);color:#5df1ae;font-size:27px;animation:flyover-float 3.6s ease-in-out infinite}
+  .flyover-teaser-copy{flex:1;min-width:0}.flyover-teaser-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.flyover-teaser-heading strong{font-size:16px}.flyover-teaser-badge{border:1px solid rgba(243,195,87,.6);border-radius:999px;padding:3px 8px;font-size:10px;letter-spacing:.08em;font-weight:800;color:#f5d47a}.flyover-teaser-copy p{margin:5px 0 0;color:#b9cad4;font-size:13px;line-height:1.45}.flyover-teaser-pro{flex:none;font-size:12px;color:#f5d47a}
+  @keyframes flyover-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @media(max-width:650px){.flyover-teaser{margin:12px 14px 16px;padding:13px;gap:10px}.flyover-teaser-icon{width:40px;height:40px}.flyover-teaser-pro{display:none}.flyover-teaser-heading strong{font-size:15px}.flyover-teaser-copy p{font-size:12px}}
+  @media(prefers-reduced-motion:reduce){.flyover-teaser-icon{animation:none}}
+  .flyover-teaser{position:relative;isolation:isolate;max-width:none;margin:12px 16px 16px;padding:16px 18px;min-height:88px;border-radius:18px;border:1px solid rgba(93,241,174,.5);background:linear-gradient(100deg,#0d2b2e 0%,#0b1f2c 58%,#11343a 100%);box-shadow:0 0 0 1px rgba(93,241,174,.08),0 14px 34px rgba(0,0,0,.35)}
+  .flyover-teaser::before{content:"";position:absolute;inset:0 0 0 46%;z-index:-1;border-radius:0 18px 18px 0;background:repeating-linear-gradient(0deg,rgba(93,241,174,.10) 0 1px,transparent 1px 16px),repeating-linear-gradient(90deg,rgba(93,241,174,.10) 0 1px,transparent 1px 16px),linear-gradient(120deg,#16454a,#0d2a36);opacity:.85;-webkit-mask:linear-gradient(90deg,transparent,#000 40%);mask:linear-gradient(90deg,transparent,#000 40%)}
+  .flyover-teaser-heading strong{font-size:18px}.flyover-teaser-copy p{font-size:13.5px;max-width:58%}
+  @media(max-width:650px){.flyover-teaser::before{inset:0 0 0 55%}.flyover-teaser-copy p{max-width:70%}}
+  .hc-title-icon{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,#1d3d6b,#0f2440);border:1px solid rgba(93,160,255,.35);color:#9ec8ff;margin-right:10px;box-shadow:0 0 18px rgba(59,130,246,.25)}
+  </style>
+  <section class="app-section" aria-labelledby="foryou-title" hidden>
+    <div class="app-section-title"><h2 id="foryou-title">For You</h2></div>
+    <div class="app-suggestions">
+      <a href="/account/watchlist/"><span data-icon="bookmark"></span><span><b data-saved>Watchlist</b><small>Track saved properties</small></span></a>
+      <a data-recent-link href="/map/"><span data-icon="search"></span><span><b data-recent-label>Parcel search</b><small data-recent>Explore the map</small></span></a>
+    </div>
+  </section>
+</div>
+
+
+<div class="app-home">
+<section id="hcams-wrap" class="wrap section hcams-sec">
+  <div id="hcams" class="hcams" aria-live="polite">
+    <div class="hc-head"><div class="hc-title"><span class="hc-title-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg></span><h2>Live Cameras</h2><span class="app-badge">Pro</span></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
+    <p class="hc-sub">Public cameras from state transportation and tourism feeds. They show conditions at the camera, not at any property.</p>
+  </div>
+</section>
+<section id="products" class="app-section">
+  <div class="app-section-title"><h2>Explore</h2></div>
+  <nav class="app-explore" aria-label="Explore">
+    <a class="app-card app-primary" href="/community/profile/"><span data-icon="profile"></span><b>Profile</b><small>Your account and activity</small></a>
+    <a class="app-card" href="/map/"><span data-icon="map"></span><b data-map-label>Map</b><small>Search parcels and counties</small></a>
+    <a class="app-card" href="/account/watchlist/"><span data-icon="bookmark"></span><b>Watchlist</b><small>Saved properties and updates</small></a>
+    <a class="app-card" href="/portfolio/"><span data-icon="chart"></span><b>Portfolio</b><small>Track your deals</small></a>
+    <a class="app-card" href="/land/discover/"><span data-icon="pin"></span><b>Cheap Land</b><small>Browse government land leads</small></a>
+    <a class="app-card" href="/liens/states/"><span data-icon="layers"></span><b>County Data</b><small>Official records and sources</small></a>
+    <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Classes</b><small>Lessons and practice drills</small></a>
+    <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Workspace for research, lists and analysis</small></a>
+    <a class="app-card" href="/auction-calendar/"><span data-icon="calendar"></span><b>Auction Calendar</b><small>Upcoming and tentative sales</small></a>
+    <a class="app-card" href="/sale-history/"><span data-icon="file"></span><b>Sale History</b><small>Past and completed sales</small></a>
+    <a class="app-card" href="/state-dictionary/"><span data-icon="learn"></span><b>State Parcel Dictionary</b><small>How each state's sales work</small></a>
+  </nav>
+</section>
+<section id="explore-radar" class="app-section" hidden aria-label="Auction calendar and sale history">
+  <style>
+    #explore-radar .rmap, #explore-radar #mapstats, #explore-radar #rlegend, #explore-radar #rwhat {display:none!important}
+    #explore-radar .dhero{padding:0;background:transparent}
+    #explore-radar .dwrap{max-width:100%;padding:0}
+    #explore-radar .rhead{display:none}
+    #explore-radar .rtabs [data-tab="opp"]{display:none!important}
+    #explore-radar .rtabs{display:flex}
+    #explore-radar .rtabs button{flex:1}
+    #explore-radar #rpanel[hidden]{display:none}
+    #explore-radar .rfind{display:none}
+  </style>
+<div id="explore-sale-list" aria-live="polite"></div>
+<div class="app-radar" id="home-radar">
 <section class="dhero radar-on">
   <div class="dwrap">
     <div class="rhead">
@@ -68,7 +151,7 @@
     <div id="radar" class="radar">
       <section id="rwhat" class="rwhat" aria-labelledby="rwhath"></section>
       <div class="rtabs" role="tablist" aria-label="Map views">
-        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="true">Opportunities</button>
+        <button type="button" role="tab" id="tab-opp" data-tab="opp" aria-selected="false" hidden>Opportunities</button>
         <button type="button" role="tab" id="tab-cal" data-tab="cal" aria-selected="false">Auction Calendar</button>
         <button type="button" role="tab" id="tab-hist" data-tab="hist" aria-selected="false">Sale History</button>
       </div>
@@ -93,50 +176,6 @@
   </div>
 </section>
 </div>
-  </section>
-  <aside class="flyover-teaser" aria-label="Upcoming Parcel Flyover feature"><span class="flyover-teaser-icon" aria-hidden="true">✈</span><div class="flyover-teaser-copy"><div class="flyover-teaser-heading"><strong>Parcel Flyover</strong><span class="flyover-teaser-badge">COMING SOON</span></div><p>Explore properties from above with immersive 3D flyovers.</p></div><span class="flyover-teaser-pro">Planned Pro feature</span></aside>
-  <style>
-  .flyover-teaser{display:flex;align-items:center;gap:14px;margin:14px auto 18px;padding:15px 18px;max-width:1100px;border:1px solid rgba(88,231,167,.36);border-radius:18px;background:linear-gradient(115deg,#102d35,#0b1c2d 70%);color:#f5faff;box-shadow:0 10px 28px rgba(0,0,0,.12);overflow:hidden}
-  .flyover-teaser-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:rgba(56,213,145,.14);color:#5df1ae;font-size:27px;animation:flyover-float 3.6s ease-in-out infinite}
-  .flyover-teaser-copy{flex:1;min-width:0}.flyover-teaser-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.flyover-teaser-heading strong{font-size:16px}.flyover-teaser-badge{border:1px solid rgba(243,195,87,.6);border-radius:999px;padding:3px 8px;font-size:10px;letter-spacing:.08em;font-weight:800;color:#f5d47a}.flyover-teaser-copy p{margin:5px 0 0;color:#b9cad4;font-size:13px;line-height:1.45}.flyover-teaser-pro{flex:none;font-size:12px;color:#f5d47a}
-  @keyframes flyover-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-  @media(max-width:650px){.flyover-teaser{margin:12px 14px 16px;padding:13px;gap:10px}.flyover-teaser-icon{width:40px;height:40px}.flyover-teaser-pro{display:none}.flyover-teaser-heading strong{font-size:15px}.flyover-teaser-copy p{font-size:12px}}
-  @media(prefers-reduced-motion:reduce){.flyover-teaser-icon{animation:none}}
-  </style>
-  <nav class="app-tiles" id="app-tools" aria-label="Primary tools">
-    <a class="app-card app-primary" href="/community/profile/"><span data-icon="profile"></span><b>Profile</b><small>Your account and activity</small></a>
-    <a class="app-card" href="/map/"><span data-icon="map"></span><b data-map-label>Map</b><small>Search parcels and counties</small></a>
-    <a class="app-card" href="/portfolio/"><span data-icon="chart"></span><b>Portfolio</b><small>Track your deals</small></a>
-    <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Class</b><small>Lessons and practice</small></a>
-  </nav>
-  <section class="app-section" aria-labelledby="foryou-title">
-    <div class="app-section-title"><h2 id="foryou-title">For You</h2><a href="/account/watchlist/">View all →</a></div>
-    <div class="app-suggestions">
-      <a href="#map" data-open-radar><span data-icon="layers"></span><span><b data-updated>County updates</b><small data-updated-note>Tax Sale Radar</small></span></a>
-      <a href="/account/watchlist/"><span data-icon="bookmark"></span><span><b data-saved>Watchlist</b><small>Track saved properties</small></span></a>
-      <a data-recent-link href="/map/"><span data-icon="search"></span><span><b data-recent-label>Parcel search</b><small data-recent>Explore the map</small></span></a>
-    </div>
-  </section>
-</div>
-
-
-<div class="app-home">
-<section id="hcams-wrap" class="wrap section hcams-sec">
-  <div id="hcams" class="hcams" aria-live="polite">
-    <div class="hc-head"><div class="hc-title"><h2>Live Cameras</h2><span class="app-badge">Pro</span></div><a class="hc-all" href="/map/?cams=1" id="hcAll">Open on the map &rarr;</a></div>
-    <p class="hc-sub">Public cameras from state transportation and tourism feeds. They show conditions at the camera, not at any property.</p>
-  </div>
-</section>
-<section id="products" class="app-section">
-  <div class="app-section-title"><h2>Explore</h2><a href="/liens/#calculator">Browse tools →</a></div>
-  <nav class="app-explore" aria-label="Explore">
-    <a class="app-card" href="/map/"><span data-icon="map"></span><b>Parcel Map</b><small>Boundaries, records and sales</small></a>
-    <a class="app-card" href="/liens/"><span data-icon="file"></span><b>Tax Liens</b><small>Find lists and state rules</small></a>
-    <a class="app-card" href="/map/?sort=low&amp;vacant=1"><span data-icon="pin"></span><b>Cheap Land</b><small>Browse low listed amounts</small></a>
-    <a class="app-card" href="/liens/states/"><span data-icon="layers"></span><b>County Data</b><small>Official records and sources</small></a>
-    <a class="app-card" href="/learn/"><span data-icon="learn"></span><b>Master Classes</b><small>Lessons and practice drills</small></a>
-    <a class="app-card app-premium" data-full-ai href="/plans/?src=PricePocket%20AI"><span data-icon="lock"></span><b>PricePocket AI <span class="app-badge">Pro</span></b><small>Workspace for research, lists and analysis</small></a>
-  </nav>
 </section>
 <aside class="app-upgrade" data-upgrade><div><b>Upgrade to Pro</b><p>Unlock PricePocket AI, Map Assistant, live cameras and bulk downloads.</p></div><a class="app-button" href="/plans/">Compare Plans →</a></aside>
 </div>
@@ -153,12 +192,48 @@
 <script src="liens/states/lien-summary.js"></script>
 <script src="map.js"></script>
 <script src="radar.js"></script>
+<script>
+(function(){
+  const host=document.getElementById('explore-sale-list');
+  let records=[];
+  function draw(kind){
+    host.replaceChildren();
+    const matches=records.filter(r=>kind==='cal'
+      ?['scheduled','tentative'].includes(r.sale?.kind)
+      :['past','completed'].includes(r.sale?.kind));
+    const title=document.createElement('h3');
+    title.textContent=kind==='cal'?'Auction Calendar':'Sale History';
+    const count=document.createElement('p');
+    count.textContent=matches.length.toLocaleString()+' county sale records · Verify dates and status with the official source';
+    host.append(title,count);
+    if(!matches.length){const empty=document.createElement('p');empty.textContent='No matching sales in the current imported records.';host.append(empty);return;}
+    const list=document.createElement('div');
+    list.style.cssText='display:grid;gap:10px;margin:14px 0 24px';
+    for(const r of matches.slice(0,100)){
+      const row=document.createElement('a');
+      row.href=(typeof r.link==='string'&&r.link.startsWith('/'))?r.link:'/liens/states/state/?s='+encodeURIComponent(r.state||'');
+      row.style.cssText='display:block;padding:13px 15px;border:1px solid #385d69;border-radius:12px;color:inherit;text-decoration:none;background:#10283a';
+      const name=document.createElement('strong');
+      name.textContent=(r.county||'County')+', '+(r.state||'');
+      const detail=document.createElement('div');
+      detail.style.cssText='margin-top:4px;opacity:.8;font-size:13px';
+      detail.textContent=(r.sale?.date||'Date not confirmed')+' · '+(r.sale?.kind||'Sale')+' · Open county details';
+      row.append(name,detail);list.append(row);
+    }
+    host.append(list);
+  }
+  fetch('/liens/states/radar.json').then(r=>{if(!r.ok)throw Error('Unavailable');return r.json();}).then(d=>{
+    records=Array.isArray(d.counties)?d.counties:[];
+    draw(['cal','hist'].includes(window.TaxRadar?._state?.tab)?window.TaxRadar._state.tab:'cal');
+  }).catch(()=>{host.textContent='Sale records could not be loaded. Please try again later.';});
+  document.querySelectorAll('#explore-radar .rtabs [data-tab]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.tab==='cal'||b.dataset.tab==='hist')draw(b.dataset.tab);}));
+})();
+</script>
 <script src="home-state.js"></script>
 <script src="/app-ui.js" defer></script>
 <script src="/auth-nav.js" defer></script>
 <script src="/home-conditions.js" defer></script>
 <script src="/home-cams.js" defer></script>
-<script src="/hazard-ticker.js" defer></script>
 <script src="/home-a2hs.js" defer></script>
 </body>
 </html>

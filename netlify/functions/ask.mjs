@@ -1,7 +1,7 @@
 // "Ask about this state": answers only from the site's own verified state data.
 // Secrets live in Netlify environment variables, never in the browser:
 //   NVIDIA_API_KEY   (optional)  key from build.nvidia.com; if not set, the key saved from /admin/ is used
-//   NVIDIA_MODEL     (optional)  default meta/llama-3.3-70b-instruct
+//   NVIDIA_MODEL     (optional)  default nvidia/nemotron-3-ultra-550b-a55b (meta/llama-3.3-70b-instruct is retired)
 //   ASK_DAILY_LIMIT  (optional)  max questions per day per server instance, default 300
 //   NVIDIA_API_URL   (optional)  override, used by tests
 import fs from 'node:fs';

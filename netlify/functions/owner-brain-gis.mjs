@@ -1,12 +1,12 @@
 // Read-only candidate GIS lookup for the Wayne County, MI pilot. No third-party AI or paid API calls.
-import * as auth from '../lib/auth.mjs';
+import * as auth from '../lib/brain-auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 const STORE='owner-brain-scanner-v1';
 const LAYER='https://services1.arcgis.com/b6rkZNtCd6Mx2gvB/ArcGIS/rest/services/Wayne_County_Parcels/FeatureServer/0';
 const j=(status,data)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','Vary':'Cookie','X-Robots-Tag':'noindex'}});
 const short=(v,n=200)=>String(v??'').slice(0,n);
 function normalized(v){return String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
-export default async function handler(req){
+async function handler(req){
  if(req.method!=='POST')return j(405,{ok:false,error:'POST only'});
  const me=await auth.userFromCookie(req.headers.get('cookie')||'');
  if(!me?.owner)return j(me?403:401,{ok:false,error:'Owner only'});
@@ -26,7 +26,7 @@ export default async function handler(req){
  const params=new URLSearchParams({f:'json',where,outFields:'packedParcelNumber,Area_Ac,propcity,propstreetcombined,OBJECTID',returnGeometry:'true',outSR:'4326',resultRecordCount:'3'});
  let result;
  try{
-  const response=await fetch(LAYER+'/query?'+params.toString(),{signal:AbortSignal.timeout(12000)});
+  const response=await auth.fetchWayneGis(LAYER+'/query?'+params.toString(),{signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error('GIS endpoint HTTP '+response.status);
   const data=await response.json();
   if(data.error)throw Error(short(data.error.message,80));
@@ -41,7 +41,7 @@ export default async function handler(req){
     if(lon < -84.5||lon > -82||lat < 41.5||lat > 43.5)throw Error('GIS geometry falls outside the Wayne County region');
     result={status:'candidate_found',verified:false,parcelId:id,matchedId:short(f.attributes.packedParcelNumber,40),centroidApprox:{lat:Number(lat.toFixed(6)),lon:Number(lon.toFixed(6))},acreage:Number.isFinite(f.attributes.Area_Ac)?f.attributes.Area_Ac:null,city:short(f.attributes.propcity,80),street:short(f.attributes.propstreetcombined,120),sourceUrl:LAYER,sourceType:'public hosted ArcGIS layer (historical, not independently verified as current)',geometryPoints:points.length,foundAt:new Date().toISOString(),note:'A matching ID is only a GIS candidate. Check current county/municipal records before approval. No map geometry was written.'};
   }else result={status:exact.length>1?'ambiguous':'no_exact_match',verified:false,parcelId:id,sourceUrl:LAYER,foundAt:new Date().toISOString(),note:exact.length>1?'Multiple exact records returned; manual GIS verification required.':'No exact ID match on this GIS layer. No coordinates inferred.'};
- }catch(e){return j(502,{ok:false,error:'GIS lookup unavailable: '+short(e.message,110)})}
+ }catch(e){if(e.code==='QUOTA')return j(429,{ok:false,error:e.message});return j(502,{ok:false,error:'GIS lookup unavailable: '+short(e.message,110)})}
  const latest=await auth.kvGet(STORE);
  if(!latest?.queue||latest.status==='paused')return j(409,{ok:false,error:'Queue changed. Result was not saved'});
  const target=latest.queue.find(x=>x.dataset===item.dataset&&x.recordId===item.recordId);
@@ -51,3 +51,5 @@ export default async function handler(req){
  await auth.kvPut(STORE,latest);
  return j(200,{ok:true,match:result});
 }
+
+export default auth.withBrainStore(handler);

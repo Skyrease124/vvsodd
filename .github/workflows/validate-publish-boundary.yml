@@ -1,0 +1,40 @@
+name: Validate publish boundary
+# Nothing under kinvest-liens (the published site) may carry restricted parcel information, and the server functions
+# that read the release and intake stores must be owner-gated or visibility-filtered. Runs on any change that could affect either.
+on:
+  push:
+    branches:
+      - integration/brain-map-452-453-preserve
+    paths:
+      - 'kinvest-liens/**'
+      - 'netlify/functions/**'
+      - 'netlify/lib/**'
+      - 'netlify.toml'
+      - 'tools/rochester-ny/**'
+      - 'tests/publish_boundary.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - '.github/workflows/validate-publish-boundary.yml'
+  pull_request:
+    paths:
+      - 'kinvest-liens/**'
+      - 'netlify/functions/**'
+      - 'netlify/lib/**'
+      - 'netlify.toml'
+      - 'tools/rochester-ny/**'
+      - 'tests/publish_boundary.test.mjs'
+      - 'tests/rochester-address-corrections.test.mjs'
+      - '.github/workflows/validate-publish-boundary.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  publish-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/publish_boundary.test.mjs
+      - run: node --test tests/rochester-address-corrections.test.mjs

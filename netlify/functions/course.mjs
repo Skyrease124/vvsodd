@@ -10,7 +10,7 @@ export default async (req) => {
   const paid = auth.isPaid(me);
   const u = new URL(req.url);
   if (req.method === 'GET') {
-    if (u.searchParams.get('tracker')) return json(200, { tracker: TRACKER, published: Object.values(COURSES).filter(c => c.status === 'published').map(c => c.state) });
+    if (u.searchParams.get('tracker')) return json(200, { tracker: TRACKER.map(t => ({ state: t.state, name: t.name, system: t.system, next: t.batch === 'Batch 1' })), published: Object.values(COURSES).filter(c => c.status === 'published').map(c => c.state) });
     const c = COURSES[String(u.searchParams.get('c') || '').toLowerCase()];
     if (!c || c.status !== 'published') return json(404, { error: 'That course is not published yet.' });
     const lid = u.searchParams.get('l'), qid = u.searchParams.get('q'), ex = u.searchParams.get('x');

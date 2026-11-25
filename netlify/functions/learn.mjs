@@ -1,6 +1,6 @@
 // Master Class: outline and progress for everyone; lesson text for free lessons to anyone, the rest to members only.
 import * as auth from '../lib/auth.mjs';
-import { LESSONS, outline, examQuestions, EXAM_PASS } from '../lib/course.mjs';
+import { LESSONS, outline, newExam, gradeExam, EXAM_PASS, EXAM_MINUTES } from '../lib/course.mjs';
 
 const json = (code, body) => new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
 
@@ -9,7 +9,7 @@ export default async (req) => {
   const paid = auth.isPaid(me);
   if (req.method === 'GET') {
     const id = new URL(req.url).searchParams.get('id');
-    if (id === 'exam') { if (!paid) return json(403, { locked: true, signedIn: !!me, title: 'Final exam', error: 'The final exam is for members.' }); return json(200, { exam: { questions: examQuestions(), pass: EXAM_PASS } }); }
+    if (id === 'exam') { if (!paid) return json(403, { locked: true, signedIn: !!me, title: 'Final exam', error: 'The final exam is for members.' }); const x = newExam(); me.learnExam = x.session; await auth.saveUser(me); return json(200, { exam: { questions: x.questions, pass: EXAM_PASS, minutes: EXAM_MINUTES, started: x.session.started } }); }
     if (id) {
       const l = LESSONS.find(x => x.id === id); if (!l) return json(404, { error: 'Lesson not found.' });
       if (!l.free && !paid) return json(403, { locked: true, signedIn: !!me, title: l.title, error: 'This lesson is for members.' });
@@ -20,6 +20,14 @@ export default async (req) => {
   if (req.method !== 'POST') return json(405, { error: 'Use GET or POST.' });
   if (!me) return json(401, { error: 'Sign in to save progress.' });
   let b; try { b = JSON.parse(await req.text() || '{}'); } catch (e) { return json(400, { error: 'Bad request.' }); }
+  if (b.id === 'exam') {
+    if (!paid) return json(403, { error: 'The final exam is for members.' });
+    if (!me.learnExam) return json(400, { error: 'Start the exam again; this attempt was already submitted.' });
+    const g = gradeExam(me.learnExam, b.answers); delete me.learnExam;
+    const p = me.learn || {}, old = p.exam, rec = { score: g.score, of: g.of, passed: g.passed, at: new Date().toISOString() };
+    p.exam = old && (old.passed || (old.of === 20 && old.score >= 16)) && !g.passed ? old : rec; me.learn = p; await auth.saveUser(me);
+    return json(200, { progress: p, result: { score: g.score, of: g.of, passed: g.passed, late: g.late, pass: EXAM_PASS, review: g.review } });
+  }
   const isState = /^st_[A-Z]{2}$/.test(String(b.id || ''));
   const l = isState ? { id: b.id, free: false, quiz: [0, 0, 0] } : b.id === 'exam' ? { id: 'exam', free: false, quiz: new Array(20).fill(0) } : LESSONS.find(x => x.id === b.id); if (!l) return json(400, { error: 'Bad lesson.' });
   if (!l.free && !paid) return json(403, { error: 'This lesson is for members.' });

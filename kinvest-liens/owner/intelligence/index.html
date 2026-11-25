@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Owner Intelligence Center | PricePocketAsset</title>
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app-shell.css">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/app-shell.css"><link rel="stylesheet" href="/owner/owner-ui.css">
 <style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#edf7fa;background:#0a1a2a}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(#0e2638,#071522);min-height:100vh}
@@ -52,7 +52,7 @@ body,main,#ownerMain,#workspace{color:#eff9fd!important}
  #ownerMain .card h2{font-size:20px}
 }
 
-</style></head><body>
+</style></head><body class="ou">
 <main id="ownerMain" hidden><p><a href="/owner/">← Owner Dashboard</a></p>
 <section class="hero"><h1>Owner Intelligence Center</h1>
 <p class="muted">Your private command center for official county-source monitoring, research evidence and AI-assisted summaries. Certificate approvals and Research Releases stay separate.</p>
@@ -64,7 +64,7 @@ body,main,#ownerMain,#workspace{color:#eff9fd!important}
 <div><strong id="pendingCount">0</strong><span>Changes for review</span></div>
 </div>
 <div class="card"><h2>Private research controls</h2>
-<p class="muted">Choose a source and scan it. The first successful check records a baseline; later changes enter your private review queue. Research is never published automatically.</p>
+<p class="muted">The scheduled agent rotates through the three official sources, checking each approximately every six hours. It saves baselines and changes, then links explicitly identified parcels to Brain cases when the county and ID match exactly. Controls below are optional diagnostics. Source findings still need official polygon verification before any boundary can be published.</p>
 <div class="controls">
 <label>Research method <select id="provider">
 <option value="official">Official source direct (free)</option>
@@ -146,4 +146,4 @@ async function act(input){
 }
 reload().catch(()=>{window.location.replace('/owner/');});
 </script>
-</body></html>
+<script src="/owner/owner-ui.js" defer></script><script src="/owner/intelligence/intel-ui.js" defer></script><script src="/owner/pipeline.js" defer></script></body></html>

@@ -5,6 +5,8 @@
 import * as auth from '../lib/auth.mjs';
 import * as RL from '../lib/ratelimit.mjs';
 import * as KEYS from '../lib/apikeys.mjs';
+import * as GL from '../lib/groq-limits.mjs';
+import * as CO from '../lib/cloudflare-opinion.mjs';
 import { APP_ID as OSAPP, postAny as OSPOST, candidates as OSKEYS } from '../lib/onesignal.mjs';
 import { PROVIDERS } from './cameras.mjs';
 import * as FIRMS from '../lib/firms.mjs';
@@ -110,15 +112,20 @@ export default async function handler(req) {
       return json(200,{ok:true,nlr:true,text:'OpenAI API key authenticated. No model inference was requested and no text-generation tokens were spent. This does not verify your prepaid balance.'});
     } catch {return json(200,{ok:false,error:'OpenAI did not respond. Try again later.'});}
   }
+  if (b.test === 'cloudflare') {
+    // Free token check only: no Workers AI request is made and no allowance is used.
+    const r = await CO.keyCheck({token: KEYS.keyOf('CLOUDFLARE_API_TOKEN'), accountId: KEYS.keyOf('CLOUDFLARE_ACCOUNT_ID')});
+    return json(200, r.ok ? {ok: true, nlr: true, text: r.text} : r);
+  }
   if (b.test === 'groq') {
     const key=KEYS.keyOf('GROQ_API_KEY');
     if (!key) return json(200,{ok:false,error:'Save a Groq API key first.'});
     const settings=await controls();
-    if (!settings.groqEnabled) return json(200,{ok:false,error:'Groq is switched off in AI Research Controls.'});
-    if (!settings.groqDailyCap) return json(200,{ok:false,error:'Groq daily cap is 0. Increase it to test.'});
-    // Include connection tests in both rate counters, so testing cannot bypass the owner-configured limits.
-    if (!(await RL.hit('owner-groq-daily',settings.groqDailyCap,86400000)).ok) return json(200,{ok:false,error:'Groq daily request cap reached.'});
-    if (!(await RL.hit('owner-groq-minute',settings.groqMinuteCap,60000)).ok) return json(200,{ok:false,error:'Groq per-minute request cap reached.'});
+    const caps=GL.groqCaps(settings);
+    if (!caps.enabled) return json(200,{ok:false,error:'Groq is switched off, or its daily cap is 0, in AI Research Controls.'});
+    // Connection tests and triage share one allowance, so neither can bypass the owner's limits.
+    const slot=await GL.reserveGroq(RL,caps);
+    if (!slot.ok) return json(200,{ok:false,error:slot.error});
     try {
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
         method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
